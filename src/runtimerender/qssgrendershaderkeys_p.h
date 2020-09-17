@@ -59,9 +59,9 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGShaderKeyPropertyBase
 {
-    const char *name;
+    QByteArrayView name;
     quint32 offset;
-    explicit  QSSGShaderKeyPropertyBase(const char *inName = "") : name(inName), offset(0) {}
+    explicit constexpr QSSGShaderKeyPropertyBase(const char *inName = "") : name(inName), offset(0) {}
     quint32 getOffset() const { return offset; }
     void setOffset(quint32 of) { offset = of; }
 
@@ -77,30 +77,30 @@ struct QSSGShaderKeyPropertyBase
     quint32 getIdx() const { return offset / 32; }
 
 protected:
-    void internalToString(QString &ioStr, const char *inBuffer) const
+    void internalToString(QByteArray &ioStr, const QByteArrayView &inBuffer) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("="));
-        ioStr.append(QString::fromLocal8Bit(inBuffer));
+        ioStr.append(name);
+        ioStr.append('=');
+        ioStr.append(inBuffer);
     }
 
-    static void internalToString(QString &ioStr, const char *name, bool inValue)
+    static void internalToString(QByteArray &ioStr, const QByteArrayView &name, bool inValue)
     {
         if (inValue) {
-            ioStr.append(QString::fromLocal8Bit(name));
-            ioStr.append(QStringLiteral("="));
-            ioStr.append(inValue ? QStringLiteral("true") : QStringLiteral("false"));
+            ioStr.append(name);
+            ioStr.append('=');
+            ioStr.append(inValue ? QByteArrayView("true") : QByteArrayView("false"));
         }
     }
-    static bool getBoolValue(const QByteArray& str, const char *name)
+    static bool getBoolValue(const QByteArray& str, const QByteArrayView &name)
     {
         const int index = str.indexOf(name);
         if (index < 0)
             return false;
-        const int nameLen = qstrlen(name);
+        const qsizetype nameLen = name.size();
         if (str[index + nameLen] != '=')
             return false;
-        if (str.mid(index + nameLen + 1, 4) == "true")
+        if (str.mid(index + nameLen + 1, 4) == QByteArrayView("true"))
             return true;
         return false;
     }
@@ -112,7 +112,7 @@ struct QSSGShaderKeyBoolean : public QSSGShaderKeyPropertyBase
         BitWidth = 1,
     };
 
-    explicit QSSGShaderKeyBoolean(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
+    explicit constexpr QSSGShaderKeyBoolean(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
 
     quint32 getMask() const { return getMaskTemplate<BitWidth>(); }
     void setValue(QSSGDataRef<quint32> inDataStore, bool inValue) const
@@ -138,7 +138,7 @@ struct QSSGShaderKeyBoolean : public QSSGShaderKeyPropertyBase
         return (target & mask) ? true : false;
     }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         bool isHigh = getValue(inKeySet);
         internalToString(ioStr, name, isHigh);
@@ -155,7 +155,7 @@ struct QSSGShaderKeyUnsigned : public QSSGShaderKeyPropertyBase
     enum {
         BitWidth = TBitWidth,
     };
-    explicit QSSGShaderKeyUnsigned(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
+    explicit constexpr QSSGShaderKeyUnsigned(const char *inName = "") : QSSGShaderKeyPropertyBase(inName) {}
     quint32 getMask() const { return getMaskTemplate<BitWidth>(); }
     void setValue(QSSGDataRef<quint32> inDataStore, quint32 inValue) const
     {
@@ -185,18 +185,19 @@ struct QSSGShaderKeyUnsigned : public QSSGShaderKeyPropertyBase
         return retval;
     }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         quint32 value = getValue(inKeySet);
         char buf[64];
+        memset(buf, 0, sizeof (buf));
         toStr(value, toDataRef(buf, 64));
         internalToString(ioStr, buf);
     }
 
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
     {
-        const int nameLen = qstrlen(name);
-        const int strOffset = ioStr.indexOf(name);
+        const qsizetype nameLen = name.size();
+        const qsizetype strOffset = ioStr.indexOf(name);
         if (strOffset >= 0) {
             /* The key is stored as name=val */
             if (ioStr[strOffset + nameLen] != '=')
@@ -237,22 +238,22 @@ struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
     {
         setValue(inKeySet, quint32(channel));
     }
-    static constexpr QChar textureChannelToChar[4] = {
-        QChar(u'R'),
-        QChar(u'G'),
-        QChar(u'B'),
-        QChar(u'A'),
+    static constexpr char textureChannelToChar[4] = {
+        'R',
+        'G',
+        'B',
+        'A'
     };
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("="));
+        ioStr.append(name);
+        ioStr.append('=');
         ioStr.append(textureChannelToChar[getTextureChannel(inKeySet)]);
     }
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
     {
-        const int nameLen = qstrlen(name);
-        const int strOffset = ioStr.indexOf(name);
+        const qsizetype nameLen = name.size();
+        const qsizetype strOffset = ioStr.indexOf(name);
         if (strOffset >= 0) {
             /* The key is stored as name=ch */
             if (ioStr[strOffset + nameLen] != '=')
@@ -336,25 +337,25 @@ struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
     bool isL16Swizzled(QSSGDataView<quint32> inKeySet) const { return getBitValue(L16toR16, inKeySet); }
     void setL16Swizzled(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(L16toR16, val, inKeySet); }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("={"));
-        internalToString(ioStr, "noswizzle", isNoSwizzled(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "l8swizzle", isL8Swizzled(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "a8swizzle", isA8Swizzled(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "l8a8swizzle", isL8A8Swizzled(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "l16swizzle", isL16Swizzled(inKeySet));
-        ioStr.append(QStringLiteral("}"));
+        ioStr.append(name);
+        ioStr.append(QByteArrayView("={"));
+        internalToString(ioStr, QByteArrayView("noswizzle"), isNoSwizzled(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("l8swizzle"), isL8Swizzled(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("a8swizzle"), isA8Swizzled(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("l8a8swizzle"), isL8A8Swizzled(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("l16swizzle"), isL16Swizzled(inKeySet));
+        ioStr.append('}');
     }
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
     {
-        const int nameLen = qstrlen(name);
-        const int strOffset = ioStr.indexOf(name);
+        const qsizetype nameLen = name.size();
+        const qsizetype strOffset = ioStr.indexOf(name);
         if (strOffset >= 0) {
             /* The key is stored as name={;;;;;} */
             if (ioStr[strOffset + nameLen] != '=')
@@ -368,11 +369,11 @@ struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
             const QList<QByteArray> list = ioStr.mid(codeOffsetBegin, codeOffset).split(';');
             if (list.size() != 5)
                 return;
-            setNoSwizzled(inKeySet, getBoolValue(list[0], "noswizzle"));
-            setL8Swizzled(inKeySet, getBoolValue(list[1], "l8swizzle"));
-            setA8Swizzled(inKeySet, getBoolValue(list[2], "a8swizzle"));
-            setL8A8Swizzled(inKeySet, getBoolValue(list[3], "l8a8swizzle"));
-            setL16Swizzled(inKeySet, getBoolValue(list[4], "l16swizzle"));
+            setNoSwizzled(inKeySet, getBoolValue(list[0], QByteArrayView("noswizzle")));
+            setL8Swizzled(inKeySet, getBoolValue(list[1], QByteArrayView("l8swizzle")));
+            setA8Swizzled(inKeySet, getBoolValue(list[2],  QByteArrayView("a8swizzle")));
+            setL8A8Swizzled(inKeySet, getBoolValue(list[3], QByteArrayView("l8a8swizzle")));
+            setL16Swizzled(inKeySet, getBoolValue(list[4], QByteArrayView("l16swizzle")));
         }
     }
 };
@@ -426,22 +427,22 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
     bool isIdentityTransform(QSSGDataView<quint32> inKeySet) const { return getBitValue(Identity, inKeySet); }
     void setIdentityTransform(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Identity, val, inKeySet); }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("={"));
-        internalToString(ioStr, "enabled", isEnabled(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "envMap", isEnvMap(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "lightProbe", isLightProbe(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "invertUV", isInvertUVMap(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "premultiplied", isPremultiplied(inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "identity", isIdentityTransform(inKeySet));
-        ioStr.append(QStringLiteral("}"));
+        ioStr.append(name);
+        ioStr.append(QByteArrayView("={"));
+        internalToString(ioStr, QByteArrayView("enabled"), isEnabled(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("envMap"), isEnvMap(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("lightProbe"), isLightProbe(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("invertUV"), isInvertUVMap(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("premultiplied"), isPremultiplied(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("identity"), isIdentityTransform(inKeySet));
+        ioStr.append('}');
     }
 };
 
@@ -459,23 +460,23 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
         return static_cast<QSSGRenderDefaultMaterial::MaterialSpecularModel>(getValue(inKeySet));
     }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("="));
+        ioStr.append(name);
+        ioStr.append('=');
         switch (getSpecularModel(inKeySet)) {
         case QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX:
-            ioStr.append(QStringLiteral("KGGX"));
+            ioStr.append(QByteArrayView("KGGX"));
             break;
         case QSSGRenderDefaultMaterial::MaterialSpecularModel::Default:
-            ioStr.append(QStringLiteral("Default"));
+            ioStr.append(QByteArrayView("Default"));
             break;
         }
-        ioStr.append(QStringLiteral(";"));
+        ioStr.append(';');
     }
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
     {
-        const int nameLen = qstrlen(name);
+        const qsizetype nameLen = name.size();
         const int strOffset = ioStr.indexOf(name);
         if (strOffset >= 0) {
             /* The key is stored as name=specularMode; */
@@ -486,9 +487,9 @@ struct QSSGShaderKeySpecularModel : QSSGShaderKeyUnsigned<2>
             while (ioStr[codeOffsetBegin + codeOffset] != ';')
                 codeOffset++;
             const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
-            if (val == "KGGX")
+            if (val == QByteArrayView("KGGX"))
                 setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX);
-            if (val == "Default")
+            if (val == QByteArrayView("Default"))
                 setSpecularModel(inKeySet, QSSGRenderDefaultMaterial::MaterialSpecularModel::Default);
         }
     }
@@ -508,27 +509,27 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
         return static_cast<QSSGRenderDefaultMaterial::MaterialAlphaMode>(getValue(inKeySet));
     }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("="));
+        ioStr.append(name);
+        ioStr.append('=');
         switch (getAlphaMode(inKeySet)) {
         case QSSGRenderDefaultMaterial::MaterialAlphaMode::Default:
-            ioStr.append(QStringLiteral("Default"));
+            ioStr.append(QByteArrayView("Default"));
             break;
         case QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask:
-            ioStr.append(QStringLiteral("Mask"));
+            ioStr.append(QByteArrayView("Mask"));
             break;
         case QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend:
-            ioStr.append(QStringLiteral("Blend"));
+            ioStr.append(QByteArrayView("Blend"));
             break;
         }
-        ioStr.append(QStringLiteral(";"));
+        ioStr.append(';');
     }
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
     {
-        const int nameLen = qstrlen(name);
-        const int strOffset = ioStr.indexOf(name);
+        const qsizetype nameLen = name.size();
+        const qsizetype strOffset = ioStr.indexOf(name);
         if (strOffset >= 0) {
             /* The key is stored as name=alphaMode; */
             if (ioStr[strOffset + nameLen] != '=')
@@ -538,11 +539,11 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
             while (ioStr[codeOffsetBegin + codeOffset] != ';')
                 codeOffset++;
             const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
-            if (val == "Default")
+            if (val == QByteArrayView("Default"))
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Default);
-            if (val == "Mask")
+            if (val == QByteArrayView("Mask"))
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask);
-            if (val == "Blend")
+            if (val == QByteArrayView("Blend"))
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend);
         }
     }
@@ -574,31 +575,31 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
         setValue(inKeySet, v);
     }
 
-    void toString(QString &ioStr, QSSGDataView<quint32> inKeySet) const
+    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
-        ioStr.append(QString::fromLocal8Bit(name));
-        ioStr.append(QStringLiteral("={"));
-        internalToString(ioStr, "position", getBitValue(Position, inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "normal", getBitValue(Normal, inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "texcoord0", getBitValue(TexCoord0, inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "texcoord1", getBitValue(TexCoord1, inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "tangent", getBitValue(Tangent, inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "binormal", getBitValue(Binormal, inKeySet));
-        ioStr.append(QStringLiteral(";"));
-        internalToString(ioStr, "color", getBitValue(Color, inKeySet));
-        ioStr.append(QStringLiteral("}"));
-        internalToString(ioStr, "joint&weight", getBitValue(JointAndWeight, inKeySet));
-        ioStr.append(QStringLiteral("}"));
+        ioStr.append(name);
+        ioStr.append(QByteArrayView("={"));
+        internalToString(ioStr, QByteArrayView("position"), getBitValue(Position, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("normal"), getBitValue(Normal, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("texcoord0"), getBitValue(TexCoord0, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("texcoord1"), getBitValue(TexCoord1, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("tangent"), getBitValue(Tangent, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("binormal"), getBitValue(Binormal, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("color"), getBitValue(Color, inKeySet));
+        ioStr.append('}');
+        internalToString(ioStr, QByteArrayView("joint&weight"), getBitValue(JointAndWeight, inKeySet));
+        ioStr.append('}');
     }
     void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
     {
-        const int nameLen = qstrlen(name);
-        const int strOffset = ioStr.indexOf(name);
+        const qsizetype nameLen = name.size();
+        const qsizetype strOffset = ioStr.indexOf(name);
         if (strOffset >= 0) {
             /* The key is stored as name={;;;;;;} */
             if (ioStr[strOffset + nameLen] != '=')
@@ -613,13 +614,13 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
             const QVector<QByteArray> list = val.split(';');
             if (list.size() != 7)
                 return;
-            setBitValue(Position, inKeySet, getBoolValue(list[0], "position"));
-            setBitValue(Normal, inKeySet, getBoolValue(list[1], "normal"));
-            setBitValue(TexCoord0, inKeySet, getBoolValue(list[2], "texcoord0"));
-            setBitValue(TexCoord1, inKeySet, getBoolValue(list[3], "texcoord1"));
-            setBitValue(Tangent, inKeySet, getBoolValue(list[4], "tangent"));
-            setBitValue(Binormal, inKeySet, getBoolValue(list[5], "binormal"));
-            setBitValue(Color, inKeySet, getBoolValue(list[6], "color"));
+            setBitValue(Position, inKeySet, getBoolValue(list[0], QByteArrayView("position")));
+            setBitValue(Normal, inKeySet, getBoolValue(list[1], QByteArrayView("normal")));
+            setBitValue(TexCoord0, inKeySet, getBoolValue(list[2], QByteArrayView("texcoord0")));
+            setBitValue(TexCoord1, inKeySet, getBoolValue(list[3], QByteArrayView("texcoord1")));
+            setBitValue(Tangent, inKeySet, getBoolValue(list[4], QByteArrayView("tangent")));
+            setBitValue(Binormal, inKeySet, getBoolValue(list[5], QByteArrayView("binormal")));
+            setBitValue(Color, inKeySet, getBoolValue(list[6], QByteArrayView("color")));
         }
     }
 };
@@ -683,6 +684,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_usesPointsTopology;
     QSSGShaderKeyAlphaMode m_alphaMode;
     QSSGShaderKeyVertexAttribute m_vertexAttributes;
+    qsizetype m_stringBufferSizeHint = 0;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -803,7 +805,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureChannels[3].name = "occlusionMap_channel";
         m_textureChannels[4].name = "translucencyMap_channel";
 
-        setPropertyOffsets();
+        init();
     }
 
     template<typename TVisitor>
@@ -813,21 +815,17 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_hasIbl);
         inVisitor.visit(m_lightCount);
 
-        for (quint32 idx = 0, end = LightCount; idx < end; ++idx) {
-            inVisitor.visit(m_lightFlags[idx]);
-        }
+        for (auto &lightFlag : m_lightFlags)
+            inVisitor.visit(lightFlag);
 
-        for (quint32 idx = 0, end = LightCount; idx < end; ++idx) {
-            inVisitor.visit(m_lightSpotFlags[idx]);
-        }
+        for (auto &lightSpotFlag : m_lightSpotFlags)
+            inVisitor.visit(lightSpotFlag);
 
-        for (quint32 idx = 0, end = LightCount; idx < end; ++idx) {
-            inVisitor.visit(m_lightAreaFlags[idx]);
-        }
+        for (auto &lightAreaFlag : m_lightAreaFlags)
+            inVisitor.visit(lightAreaFlag);
 
-        for (quint32 idx = 0, end = LightCount; idx < end; ++idx) {
-            inVisitor.visit(m_lightShadowFlags[idx]);
-        }
+        for (auto &lightShadowFlag : m_lightShadowFlags)
+            inVisitor.visit(lightShadowFlag);
 
         inVisitor.visit(m_specularEnabled);
         inVisitor.visit(m_fresnelEnabled);
@@ -838,8 +836,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
             inVisitor.visit(m_imageMaps[idx]);
             inVisitor.visit(m_textureSwizzle[idx]);
         }
-        for (quint32 idx = 0, end = SingleChannelImageCount; idx < end; ++idx)
-            inVisitor.visit(m_textureChannels[idx]);
+
+        for (auto &textureChannel : m_textureChannels)
+            inVisitor.visit(textureChannel);
 
         inVisitor.visit(m_boneCount);
         inVisitor.visit(m_isDoubleSided);
@@ -872,12 +871,39 @@ struct QSSGShaderDefaultMaterialKeyProperties
         }
     };
 
-    void setPropertyOffsets()
+    struct StringSizeVisitor
     {
-        OffsetVisitor visitor;
+        qsizetype size = 0;
+        template<typename P>
+        constexpr void visit(const P &prop)
+        {
+            size += prop.name.size();
+        }
+    };
+
+    struct InitVisitor
+    {
+        OffsetVisitor offsetVisitor;
+        StringSizeVisitor stringSizeVisitor;
+
+        template<typename P>
+        void visit(P &prop)
+        {
+            offsetVisitor.visit(prop);
+            stringSizeVisitor.visit(prop);
+        }
+    };
+
+    void init()
+    {
+        InitVisitor visitor;
         visitProperties(visitor);
+
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.m_offset < 320);
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 320);
+        // This is so we can do some guestimate of how big the string buffer needs
+        // to be to avoid doing a lot of allocations when concatenating the strings.
+        m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
     }
 };
 
@@ -929,16 +955,14 @@ struct QSSGShaderDefaultMaterialKey
         template<typename TPropType>
         void visit(const TPropType &prop)
         {
-            quint32 originalSize = m_str.size();
+            const qsizetype originalSize = m_str.size();
             if (m_str.size())
-                m_str.append(";");
-            QString str = QString::fromUtf8(m_str);
-            prop.toString(str, m_keyStore);
+                m_str.append(';');
+            prop.toString(m_str, m_keyStore);
             // if the only thing we added was the semicolon
             // then nuke the semicolon
-            m_str = str.toLocal8Bit();
-            if (originalSize && m_str.size() == int(originalSize + 1))
-                m_str.resize(int(originalSize));
+            if (originalSize && m_str.size() == (originalSize + 1))
+                m_str.resize(originalSize);
         }
     };
 
@@ -957,6 +981,7 @@ struct QSSGShaderDefaultMaterialKey
 
     void toString(QByteArray &ioString, const QSSGShaderDefaultMaterialKeyProperties &inProperties) const
     {
+        ioString.reserve(inProperties.m_stringBufferSizeHint);
         StringVisitor theVisitor(ioString, *this);
         const_cast<QSSGShaderDefaultMaterialKeyProperties &>(inProperties).visitProperties(theVisitor);
     }
