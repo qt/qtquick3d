@@ -1297,7 +1297,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet, shaderLibraryManager, theCache);
 }
 
-void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)
+void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)
 {
     const QMatrix4x4 &textureTransform = inImage.m_image.m_textureTransform;
     // We separate rotational information from offset information so that just maybe the shader
@@ -1312,7 +1312,7 @@ void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(const QSSGRef<QSSGR
 
     // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
     const auto &names = imageStringTable[int(inImage.m_mapType)];
-    QSSGRhiShaderStagesWithResources::CommonUniformIndices &cui = inShader->commonUniformIndices;
+    QSSGRhiShaderStages::CommonUniformIndices &cui = inShader->stages()->commonUniformIndices;
     auto &indices = cui.imageIndices[idx];
 
     indices.imageRotationsUniformIndex = inShader->setUniform(names.imageRotations, &rotations, sizeof(rotations), indices.imageRotationsUniformIndex);
@@ -1338,7 +1338,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QVector2D &shadowDepthAdjust)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
-    QSSGRhiShaderStagesWithResources::CommonUniformIndices& cui = shaders->commonUniformIndices;
+    QSSGRhiShaderStages::CommonUniformIndices &cui = shaders->stages()->commonUniformIndices;
 
     materialAdapter->setCustomPropertyUniforms(shaders, renderContext);
 

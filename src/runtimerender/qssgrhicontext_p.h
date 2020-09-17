@@ -53,6 +53,7 @@ class QSSGRhiBuffer;
 class QSSGRhiShaderStagesWithResources;
 struct QSSGShaderLightProperties;
 struct QSSGRenderModel;
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
     QRhiVertexInputLayout inputLayout;
@@ -65,11 +66,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
     static QRhiGraphicsPipeline::Topology toTopology(QSSGRenderDrawMode drawMode);
 
     // Fills out inputLayout.attributes[].location based on
-    // inputLayoutInputNames and the provided shader reflection info (unless
-    // already done for the same 'shaders')
+    // inputLayoutInputNames and the provided shader reflection info.
     void bakeVertexInputLocations(const QSSGRhiShaderStagesWithResources &shaders);
-    const void *lastBakeVertexInputKey = nullptr;
-    QVector<QByteArray> lastBakeVertexInputNames;
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
@@ -96,12 +94,43 @@ public:
     }
     QRhiCommandBuffer::IndexFormat indexFormat() const { return m_indexFormat; }
 
-protected:
+private:
     QSSGRhiContext &m_context;
     QRhiBuffer *m_buffer = nullptr;
     quint32 m_stride;
     QRhiCommandBuffer::IndexFormat m_indexFormat;
 };
+
+struct QSSGRhiShaderUniform
+{
+    QByteArray name;
+    bool dirty = false;
+    size_t size = 0;
+    char data[256];
+
+private:
+    size_t offset = SIZE_MAX;
+    bool maybeExists = true;
+    friend class QSSGRhiShaderStagesWithResources;
+};
+
+struct QSSGRhiShaderUniformArray
+{
+    QByteArray name;
+    bool dirty = false;
+    size_t typeSize = 0;
+    size_t itemCount = 0;
+    QByteArray data;
+
+private:
+    size_t offset = SIZE_MAX;
+    bool maybeExists = true;
+    friend class QSSGRhiShaderStagesWithResources;
+};
+
+// QSSGRhiShaderStages represents a vertex+fragment shader combination and is
+// what is cached and reused when generating materials. So unlike
+// QSSGRhiShaderStagesWithResources the data here is persistent.
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStages
 {
@@ -114,7 +143,7 @@ public:
     QSSGRhiContext &context() const { return m_context; }
     bool isNull() const { return m_stages.isEmpty(); }
 
-    void addStage(const QRhiShaderStage &stage) { m_stages.append(stage); }
+    void addStage(const QRhiShaderStage &stage);
     const QVector<QRhiShaderStage> &stages() const { return m_stages; }
 
     const QRhiShaderStage *vertexStage() const {
@@ -132,33 +161,69 @@ public:
         return nullptr;
     }
 
+    int ub0Size() const { return m_ub0Size; }
+    const QHash<QByteArray, QShaderDescription::BlockVariable> &ub0Members() const { return m_ub0; }
+    const QHash<QByteArray, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
+
+    // This struct is used purely for performance. It is used to quickly store
+    // and index common uniform names using the storeIndex argument in the
+    // setUniform method.
+    struct CommonUniformIndices
+    {
+        int cameraPositionIdx = -1;
+        int cameraDirectionIdx = -1;
+        int viewProjectionMatrixIdx = -1;
+        int projectionMatrixIdx = -1;
+        int inverseProjectionMatrixIdx = -1;
+        int viewMatrixIdx = -1;
+        int normalAdjustViewportFactorIdx = -1;
+        int isClipDepthZeroToOneIdx = -1;
+        int modelViewProjectionIdx = -1;
+        int normalMatrixIdx = -1;
+        int modelMatrixIdx = -1;
+        int lightProbeRotationIdx = -1;
+        int lightProbeOffsetIdx = -1;
+        int lightProbeOptionsIdx = -1;
+        int lightProbeOrientationIdx = -1;
+        int lightProbePropertiesIdx = -1;
+        int material_emissiveColorIdx = -1;
+        int material_baseColorIdx = -1;
+        int material_specularIdx = -1;
+        int cameraPropertiesIdx = -1;
+        int fresnelPowerIdx = -1;
+        int light_ambient_totalIdx = -1;
+        int material_propertiesIdx = -1;
+        int bumpAmountIdx = -1;
+        int displaceAmountIdx = -1;
+        int translucentFalloffIdx = -1;
+        int diffuseLightWrapIdx = -1;
+        int occlusionAmountIdx = -1;
+        int alphaCutoffIdx = -1;
+        int boneTransformsIdx = -1;
+        int boneNormalTransformsIdx = -1;
+        int shadowDepthAdjustIdx = -1;
+        int pointSizeIdx = -1;
+
+        struct ImageIndices
+        {
+            int imageRotationsUniformIndex = -1;
+            int imageOffsetsUniformIndex = -1;
+        };
+
+        QHash<quint32, ImageIndices> imageIndices;
+    } commonUniformIndices;
+
 private:
     QSSGRhiContext &m_context;
     QVector<QRhiShaderStage> m_stages;
-};
+    int m_ub0Size = 0;
+    QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
+    QHash<QByteArray, QShaderDescription::InOutVariable> m_vertexInputs;
 
-struct QSSGRhiShaderUniform
-{
-    QByteArray name;
-    bool dirty = false;
-    size_t size = 0;
-    char data[256];
+    QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
+    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
+    QVector<QSSGRhiShaderUniformArray> m_uniformArrays;
 
-private:
-    size_t offset = SIZE_MAX;
-    friend class QSSGRhiShaderStagesWithResources;
-};
-
-struct QSSGRhiShaderUniformArray
-{
-    QByteArray name;
-    bool dirty = false;
-    size_t typeSize = 0;
-    size_t itemCount = 0;
-    QByteArray data;
-
-private:
-    size_t offset = SIZE_MAX;
     friend class QSSGRhiShaderStagesWithResources;
 };
 
@@ -247,63 +312,22 @@ struct QSSGRhiTexture
     QSSGRhiSamplerDescription samplerDesc;
 };
 
+// QSSGRhiShaderStagesWithResources wraps a QSSGRhiShaderStages object and
+// contains the texture and uniform data that is needed in a frame. This
+// should be considered transient. Constructing it is light, and no data is
+// guaranteed to survive to the next frame. Store persistent data in
+// QSSGRhiShaderStages instead.
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStagesWithResources
 {
     Q_DISABLE_COPY(QSSGRhiShaderStagesWithResources)
 public:
-    // This struct is used purely for performance. It is used to quickly store
-    // and index common uniform names using the storeIndex argument in the
-    // setUniform method.
-    struct CommonUniformIndices
-    {
-        int cameraPositionIdx = -1;
-        int cameraDirectionIdx = -1;
-        int viewProjectionMatrixIdx = -1;
-        int projectionMatrixIdx = -1;
-        int inverseProjectionMatrixIdx = -1;
-        int viewMatrixIdx = -1;
-        int normalAdjustViewportFactorIdx = -1;
-        int isClipDepthZeroToOneIdx = -1;
-        int modelViewProjectionIdx = -1;
-        int normalMatrixIdx = -1;
-        int modelMatrixIdx = -1;
-        int lightProbeRotationIdx = -1;
-        int lightProbeOffsetIdx = -1;
-        int lightProbeOptionsIdx = -1;
-        int lightProbeOrientationIdx = -1;
-        int lightProbePropertiesIdx = -1;
-        int material_emissiveColorIdx = -1;
-        int material_baseColorIdx = -1;
-        int material_specularIdx = -1;
-        int cameraPropertiesIdx = -1;
-        int fresnelPowerIdx = -1;
-        int light_ambient_totalIdx = -1;
-        int material_propertiesIdx = -1;
-        int bumpAmountIdx = -1;
-        int displaceAmountIdx = -1;
-        int translucentFalloffIdx = -1;
-        int diffuseLightWrapIdx = -1;
-        int occlusionAmountIdx = -1;
-        int alphaCutoffIdx = -1;
-        int boneTransformsIdx = -1;
-        int boneNormalTransformsIdx = -1;
-        int shadowDepthAdjustIdx = -1;
-        int pointSizeIdx = -1;
-
-        struct ImageIndices
-        {
-            int imageRotationsUniformIndex = -1;
-            int imageOffsetsUniformIndex = -1;
-        };
-
-        QHash<quint32, ImageIndices> imageIndices;
-    } commonUniformIndices;
-
     QAtomicInt ref;
 
     static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages);
 
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
+    QSSGRhiShaderStages *stages() { return m_shaderStages.data(); }
 
     int setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
     int setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex = -1);
@@ -370,14 +394,12 @@ public:
           m_shaderStages(shaderStages)
     {
     }
-    ~QSSGRhiShaderStagesWithResources();
 
-protected:
+private:
+    // transient per-frame data. preferably stuff that does not malloc.
+
     QSSGRhiContext &m_context;
     QSSGRef<QSSGRhiShaderStages> m_shaderStages;
-    QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
-    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
-    QVector<QSSGRhiShaderUniformArray *> m_uniformArrays;
     bool m_lightsEnabled[LightBufferMax] = {};
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;

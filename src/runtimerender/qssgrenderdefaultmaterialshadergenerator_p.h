@@ -99,7 +99,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                                                   QSSGRenderableImage *inFirstImage, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                                   const QSSGRef<QSSGShaderCache> &theCache);
 
-    static void setRhiImageShaderVariables(const QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx);
+    static void setRhiImageShaderVariables(QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx);
 
     static void setRhiMaterialProperties(const QSSGRenderContextInterface &,
                                          QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
