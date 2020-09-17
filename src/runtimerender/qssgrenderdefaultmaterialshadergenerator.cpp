@@ -1223,7 +1223,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // Metalness
         //fragmentShader.append("    debugOutput += vec3(qt_metalnessAmount);\n");
         // Specular
-        fragmentShader.append("    debugOutput += global_specular_light.rgb;\n");
+        //fragmentShader.append("    debugOutput += global_specular_light.rgb;\n");
         // Fresnel
         //fragmentShader.append("    debugOutput += vec3(qt_specularAmount);\n");
         //fragmentShader.append("    vec2 brdf = qt_brdfApproximation(qt_world_normal, qt_view_vector, qt_roughnessAmount);\n");
@@ -1232,7 +1232,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // F0
         //fragmentShader.append("    debugOutput += qt_F0(qt_metalnessAmount, qt_specularFactor, qt_diffuseColor.rgb);");
         // Diffuse
-        //fragmentShader.append("    debugOutput += global_diffuse_light.rgb;\n");
+        fragmentShader.append("    debugOutput += global_diffuse_light.rgb;\n");
+        //fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
         // Emission
         //if (hasEmissiveMap)
         //    fragmentShader.append("    debugOutput += qt_global_emission.rgb;\n");
