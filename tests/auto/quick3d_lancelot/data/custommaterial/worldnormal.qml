@@ -74,7 +74,6 @@ Rectangle {
 
         DirectionalLight {
             position: Qt.vector3d(-500, 500, -100)
-            color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
         }
 
