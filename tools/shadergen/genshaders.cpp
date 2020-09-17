@@ -72,7 +72,7 @@ using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSG
 static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &featureSet)
 {
     QQsbShaderFeatureSet ret;
-    for (const auto f : featureSet)
+    for (const auto &f : featureSet)
         ret.insert(f.name, f.enabled);
     return ret;
 }
