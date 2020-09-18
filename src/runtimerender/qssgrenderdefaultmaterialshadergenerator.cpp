@@ -431,7 +431,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe;
     bool hasEmissiveMap = false;
     bool hasLightmaps = false;
-    bool hasBaseColorMap = false;
     // Pull the bump out as
     QSSGRenderableImage *bumpImage = nullptr;
     quint32 imageIdx = 0;
@@ -479,7 +478,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (img->m_image.isImageTransformIdentity())
             identityImages.push_back(img);
         if (img->m_mapType == QSSGRenderableImage::Type::BaseColor || img->m_mapType == QSSGRenderableImage::Type::Diffuse) {
-            hasBaseColorMap = img->m_mapType == QSSGRenderableImage::Type::BaseColor;
             baseImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Bump) {
             bumpImage = img;
@@ -542,7 +540,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         specularLightingEnabled = false;
         vertexColorsEnabled = false;
 
-        hasBaseColorMap = false;
         baseImage = nullptr;
 
         includeCustomFragmentMain = false;
