@@ -712,8 +712,6 @@ public:
     float m_constantFade = 1;
     float m_linearFade = 0;
     float m_expFade = 0;
-    float m_areaWidth = 100;
-    float m_areaHeight = 100;
     bool m_castShadow = false;
     float m_shadowFactor = 10;
     float m_shadowFilter = 35;

@@ -201,8 +201,6 @@ PropertyMap::PropertyMap()
     light->insert(QStringLiteral("constantfade"), Property(QStringLiteral("constantFade"), Q3DS::Float, 1.0f));
     light->insert(QStringLiteral("linearfade"), Property(QStringLiteral("linearFade"), Q3DS::Float, 0.0f));
     light->insert(QStringLiteral("expfade"), Property(QStringLiteral("quadraticFade"), Q3DS::Float, 1.0f));
-    light->insert(QStringLiteral("areawidth"), Property(QStringLiteral("width"), Q3DS::Float, 100.0f));
-    light->insert(QStringLiteral("areaheight"), Property(QStringLiteral("height"), Q3DS::Float, 100.0f));
     light->insert(QStringLiteral("castshadow"), Property(QStringLiteral("castsShadow"), Q3DS::Boolean, false));
     light->insert(QStringLiteral("shdwbias"), Property(QStringLiteral("shadowBias"), Q3DS::Float, 0.0f));
     light->insert(QStringLiteral("shdwfactor"), Property(QStringLiteral("shadowFactor"), Q3DS::Float, 5.0f));
