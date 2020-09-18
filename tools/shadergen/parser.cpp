@@ -517,6 +517,7 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
                         return fromStringEnumHelper<QQuick3DCustomMaterial::ShadingMode>(ref, property);
                     if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::BlendMode>())
                         return fromStringEnumHelper<QQuick3DCustomMaterial::BlendMode>(ref, property);
+                    break;
                 case TypeInfo::SpotLight:
                     Q_FALLTHROUGH();
                 case TypeInfo::PointLight:
