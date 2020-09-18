@@ -232,7 +232,7 @@ QQuick3DSkeleton *QQuick3DModel::skeleton() const
 
     \sa skeleton
 */
-QVector<QMatrix4x4> QQuick3DModel::inverseBindPoses() const
+QList<QMatrix4x4> QQuick3DModel::inverseBindPoses() const
 {
     return m_inverseBindPoses;
 }
@@ -342,7 +342,7 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
     markDirty(SkeletonDirty);
 }
 
-void QQuick3DModel::setInverseBindPoses(const QVector<QMatrix4x4> &poses)
+void QQuick3DModel::setInverseBindPoses(const QList<QMatrix4x4> &poses)
 {
     if (m_inverseBindPoses == poses)
         return;
@@ -436,7 +436,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     }
 
     if (m_dirtyAttributes & PoseDirty) {
-        modelNode->inverseBindPoses = m_inverseBindPoses;
+        modelNode->inverseBindPoses = m_inverseBindPoses.toVector();
         modelNode->skinningDirty = true;
     }
 
