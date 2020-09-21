@@ -90,11 +90,11 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
     , m_inputStreamFactory(new QSSGInputStreamFactory)
-    , m_bufferManager(new QSSGBufferManager(ctx, m_inputStreamFactory))
+    , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
+    , m_bufferManager(new QSSGBufferManager(ctx, m_shaderCache, m_inputStreamFactory))
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(new QSSGRenderer)
     , m_shaderLibraryManager(new QSSGShaderLibraryManager(m_inputStreamFactory))
-    , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
     , m_customMaterialSystem(new QSSGCustomMaterialSystem)
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {

@@ -69,7 +69,7 @@ Window {
 
         DirectionalLight {
             ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
-            brightness: 2.0
+            brightness: 1.0
             eulerRotation.x: -25
         }
 

@@ -157,7 +157,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderImage *lightProbe;
     float probeExposure;
     float probeHorizon;
-    float probeFov;
     QMatrix4x4 probeOrientation;
     QVector3D probeOrientationAngles;
 

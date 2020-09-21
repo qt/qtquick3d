@@ -58,10 +58,6 @@ qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o orthoshadowblury.frag.qs
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o ssao.vert.qsb ssao.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o ssao.frag.qsb ssao.frag
 
-qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgbe8.comp.qsb miprgbe8.comp
-qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgba32f.comp.qsb miprgba32f.comp
-qsb --glsl "430,310 es" --hlsl 50 --msl 12 -O -c -o miprgba16f.comp.qsb miprgba16f.comp
-
 :: Skybox shader has several variants for both RGBE vs RGBA and tonemapping modes
 :: No tonemapping (skipped)
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o skybox_hdr_none.vert.qsb skybox.vert
@@ -102,3 +98,16 @@ qsb -p --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o progressiveaa.frag.qs
 
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o texturedquad.vert.qsb texturedquad.vert
 qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o texturedquad.frag.qsb texturedquad.frag
+
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o environmentmap.vert.qsb environmentmap.vert
+qsb --glsl "100 es,120,150" --hlsl 50 --msl 12 -O -c -o environmentmap.frag.qsb environmentmap.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o environmentmapprefilter.vert.qsb environmentmapprefilter.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o environmentmapprefilter.frag.qsb environmentmapprefilter.frag
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o environmentmapprefilter_rgbe.vert.qsb environmentmapprefilter.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o environmentmapprefilter_rgbe.frag.qsb environmentmapprefilter.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o environmentmapirradiance.vert.qsb environmentmapirradiance.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o environmentmapirradiance.frag.qsb environmentmapirradiance.frag
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o environmentmapirradiance_rgbe.vert.qsb environmentmapirradiance.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o environmentmapirradiance_rgbe.frag.qsb environmentmapirradiance.frag

@@ -89,8 +89,6 @@ following property values depending on the image and desired result:
         Increasing the value adds darkness (black) to the bottom half of the environment,
         forcing the lighting to come predominantly from the top of the image (and removing specific
         reflections from the lower half).
-  \li \l {SceneEnvironment::probeFieldOfView}{Field Of View Angle}
-        The image source field of view.
   \li \l {SceneEnvironment::probeOrientation}{Orientation}
         This property when defines the orientation of the light probe.
         Orientation is defined in terms of euler angles in degrees over the
@@ -110,10 +108,6 @@ following property values depending on the image and desired result:
   \li \b{Horizon Cut-Off}
   \li \image IBL-ball-environment-light-horiz.png
   \li \image IBL-ball-environment-light-horiz-matte.png
-\row
-  \li \b{FOV Angle}
-  \li \image IBL-ball-environment-light-fov.png
-  \li \image IBL-ball-environment-light-fov-matte.png
 \endtable
 
 \section1 Material Lighting

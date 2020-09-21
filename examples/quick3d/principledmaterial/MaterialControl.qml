@@ -147,7 +147,7 @@ Rectangle {
             spacing: 20
             Loader {
                 id: specular
-                property real sliderValue: 0.0
+                property real sliderValue: 0.5
                 property string name: "Specular Power"
                 property real fromValue: 0.0
                 property real toValue: 1.0

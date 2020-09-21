@@ -251,10 +251,12 @@ static constexpr QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
     return QSize(qMax(1, baseLevelSize.width() >> mipLevel), qMax(1, baseLevelSize.height() >> mipLevel));
 }
 
-QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &ctx,
+QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
+                                     const QSSGRef<QSSGShaderCache> &inShaderContext,
                                      const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory)
 {
-    context = ctx;
+    context = inRenderContext;
+    shaderCache = inShaderContext;
     inputStreamFactory = inInputStreamFactory;
 }
 
@@ -371,243 +373,471 @@ QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat
 
 }
 
-// CPU fallback for generating BSDF MipLevels
-static inline int wrapMod(int a, int base)
+// Vertex data for rendering environment cube map
+static const float cube[] = {
+    -1.0f,-1.0f,-1.0f,  // -X side
+    -1.0f,-1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+
+    -1.0f,-1.0f,-1.0f,  // -Z side
+    1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f, 1.0f,-1.0f,
+
+    -1.0f,-1.0f,-1.0f,  // -Y side
+    1.0f,-1.0f,-1.0f,
+    1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,
+    1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+
+    -1.0f, 1.0f,-1.0f,  // +Y side
+    -1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f,-1.0f,
+
+    1.0f, 1.0f,-1.0f,  // +X side
+    1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f,-1.0f,
+
+    -1.0f, 1.0f, 1.0f,  // +Z side
+    -1.0f,-1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+
+    0.0f, 1.0f,  // -X side
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+
+    1.0f, 1.0f,  // -Z side
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+
+    1.0f, 0.0f,  // -Y side
+    1.0f, 1.0f,
+    0.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 1.0f,
+    0.0f, 0.0f,
+
+    1.0f, 0.0f,  // +Y side
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+
+    1.0f, 0.0f,  // +X side
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+
+    0.0f, 0.0f,  // +Z side
+    0.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+};
+
+bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData)
 {
-    return (a >= 0) ? a % base : (a % base) + base;
-}
-
-static inline void getWrappedCoords(int &sX, int &sY, int width, int height)
-{
-    if (sY < 0) {
-        sX -= width >> 1;
-        sY = -sY;
-    }
-    if (sY >= height) {
-        sX += width >> 1;
-        sY = height - sY;
-    }
-    sX = wrapMod(sX, width);
-}
-
-static QSSGTextureData createBsdfMipLevel(QSSGTextureData &preallocData,
-                                          QSSGTextureData &inPrevMipLevel,
-                                          int width,
-                                          int height)
-{
-    QSSGTextureData retval;
-    int newWidth = width >> 1;
-    int newHeight = height >> 1;
-    newWidth = newWidth >= 1 ? newWidth : 1;
-    newHeight = newHeight >= 1 ? newHeight : 1;
-
-    if (preallocData.data) {
-        retval = preallocData;
-        retval.dataSizeInBytes = newWidth * newHeight * inPrevMipLevel.format.getSizeofFormat();
-    } else {
-        retval.dataSizeInBytes = newWidth * newHeight * inPrevMipLevel.format.getSizeofFormat();
-        retval.format = inPrevMipLevel.format; // inLoadedImage.format;
-        retval.data = ::malloc(retval.dataSizeInBytes);
-    }
-
-    for (int y = 0; y < newHeight; ++y) {
-        for (int x = 0; x < newWidth; ++x) {
-            float accumVal[4];
-            accumVal[0] = 0;
-            accumVal[1] = 0;
-            accumVal[2] = 0;
-            accumVal[3] = 0;
-            for (int sy = -2; sy <= 2; ++sy) {
-                for (int sx = -2; sx <= 2; ++sx) {
-                    int sampleX = sx + (x << 1);
-                    int sampleY = sy + (y << 1);
-                    getWrappedCoords(sampleX, sampleY, width, height);
-
-                    // Cauchy filter (this is simply because it's the easiest to evaluate, and
-                    // requires no complex
-                    // functions).
-                    float filterPdf = 1.f / (1.f + float(sx * sx + sy * sy) * 2.f);
-                    // With FP HDR formats, we're not worried about intensity loss so much as
-                    // unnecessary energy gain,
-                    // whereas with LDR formats, the fear with a continuous normalization factor is
-                    // that we'd lose
-                    // intensity and saturation as well.
-                    filterPdf /= (retval.format.getSizeofFormat() >= 8) ? 4.71238898f : 4.5403446f;
-                    // filterPdf /= 4.5403446f;        // Discrete normalization factor
-                    // filterPdf /= 4.71238898f;        // Continuous normalization factor
-                    float curPix[4];
-                    qint32 byteOffset = (sampleY * width + sampleX) * retval.format.getSizeofFormat();
-                    if (byteOffset < 0) {
-                        sampleY = height + sampleY;
-                        byteOffset = (sampleY * width + sampleX) * retval.format.getSizeofFormat();
-                    }
-
-                    retval.format.decodeToFloat(inPrevMipLevel.data, byteOffset, curPix);
-
-                    accumVal[0] += filterPdf * curPix[0];
-                    accumVal[1] += filterPdf * curPix[1];
-                    accumVal[2] += filterPdf * curPix[2];
-                    accumVal[3] += filterPdf * curPix[3];
-                }
-            }
-
-            quint32 newIdx = (y * newWidth + x) * retval.format.getSizeofFormat();
-
-            retval.format.encodeToPixel(accumVal, retval.data, newIdx);
-        }
-    }
-
-    return retval;
-}
-// End of copied code
-
-using TextureUploads = QVarLengthArray<QRhiTextureUploadEntry, 16>;
-
-static int createBsdfMipUpload(TextureUploads *uploads, const QSSGLoadedTexture *img)
-{
-    int currentWidth = img->width;
-    int currentHeight = img->height;
-    int maxDim = qMax(currentWidth, currentHeight);
-    int maxMipLevel = int(logf(maxDim) / logf(2.0f));
-    QSSGTextureData currentData{img->data, img->dataSizeInBytes, img->format};
-    QSSGTextureData nextData;
-    QSSGTextureData prevData; //we keep the old buffer around so we don't have to allocate new ones for each level
-
-    for (int i = 0; i <= maxMipLevel; ++i) {
-        *uploads << QRhiTextureUploadEntry{0, i, {currentData.data, int(currentData.dataSizeInBytes)}};
-        nextData = createBsdfMipLevel(prevData, currentData, currentWidth, currentHeight);
-        prevData = (i > 0) ? currentData : QSSGTextureData{}; // don't overwrite the input image
-        currentData = nextData;
-        currentWidth = qMax(currentWidth / 2, 1);
-        currentHeight = qMax(currentHeight / 2, 1);
-    }
-    ::free(nextData.data);
-    ::free(prevData.data);
-    return maxMipLevel;
-}
-
-static QShader getMipmapShader(const QSSGRenderTextureFormat inFormat)
-{
-    static QMap<QSSGRenderTextureFormat::Format, QShader> shaderMap;
-    const auto foundIt = shaderMap.constFind(inFormat.format);
-    if (foundIt != shaderMap.cend())
-        return foundIt.value();
-
-    // Load the shader
-    QShader theShader;
-    QFile f;
-    if (inFormat == QSSGRenderTextureFormat::RGBE8) {
-        f.setFileName(QLatin1String(":/res/rhishaders/miprgbe8.comp.qsb"));
-    } else if (inFormat == QSSGRenderTextureFormat::RGBA32F) {
-        f.setFileName(QLatin1String(":/res/rhishaders/miprgba32f.comp.qsb"));
-    } else if (inFormat == QSSGRenderTextureFormat::RGBA16F) {
-        f.setFileName(QLatin1String(":/res/rhishaders/miprgba16f.comp.qsb"));
-    } else {
-        qWarning("Unsupported Texture format for compute shader");
-        return theShader;
-    }
-
-    if (f.open(QIODevice::ReadOnly))
-        theShader = QShader::fromSerialized(f.readAll());
-    else
-        qWarning("Could not load compute shader");
-
-    shaderMap.insert(inFormat.format, theShader);
-
-    return theShader;
-}
-
-bool QSSGBufferManager::loadRenderImageComputeMipmap(const QSSGLoadedTexture *inLoadedImage, QSSGRenderImageTextureData *outImageData)
-{
-    static const int MAX_MIP_LEVELS = 20;
+    // The objective of this method is to take the equirectangular texture
+    // provided by inImage and create a cubeMap that contains both pre-filtered
+    // specular environment maps, as well as a irradiance map for diffuse
+    // operations.
+    // To achieve this though we first convert convert the Equirectangular texture
+    // to a cubeMap with genereated mip map levels (no filtering) to make the
+    // process of creating the prefiltered and irradiance maps eaiser. This
+    // intermediate texture as well as the original equirectangular texture are
+    // destroyed after this frame completes, and all further associations with
+    // the source lightProbe texture are instead associated with the final
+    // generated environment map.
+    // The intermediate environment cubemap is used to generate the final
+    // cubemap. This cubemap will generate 6 mip levels for each face
+    // (the remaining faces are unused).  This is what the contents of each
+    // face mip level looks like:
+    // 0: Pre-filtered with roughness 0 (basically unfiltered)
+    // 1: Pre-filtered with roughness 0.25
+    // 2: Pre-filtered with roughness 0.5
+    // 3: Pre-filtered with roughness 0.75
+    // 4: Pre-filtered with rougnness 1.0
+    // 5: Irradiance map (ideally at least 16x16)
+    // It would be better if we could use a separate cubemap for irradiance, but
+    // right now there is a 1:1 association between texture sources on the front-
+    // end and backend.
 
     auto *rhi = context->rhi();
-    if (!rhi->isFeatureSupported(QRhi::Compute))
-        return false;
+    // Right now minimum face size needs to be 512x512 to be able to have 6 reasonably sized mips
+    int suggestedSize = inImage->height * 0.5f;
+    suggestedSize = qMax(512, suggestedSize);
+    const QSize environmentMapSize(suggestedSize, suggestedSize);
+    const auto textureFormat = toRhiFormat(inImage->format.format);
+    // ### This doesn't always have to be true, but it is right now
+    const bool isRGBE = textureFormat == QRhiTexture::RGBA8;
 
-    if (!(inLoadedImage->format.format == QSSGRenderTextureFormat::RGBE8 ||
-        inLoadedImage->format.format == QSSGRenderTextureFormat::RGBA32F ||
-        inLoadedImage->format.format == QSSGRenderTextureFormat::RGBA16F)) {
-        qWarning() << "Unsupported HDR format";
-        return false;
-    }
-
-    QSize size(inLoadedImage->width, inLoadedImage->height);
-    int mipmapCount = rhi->mipLevelsForSize(size);
-
-    if (mipmapCount > MAX_MIP_LEVELS) {
-        qWarning("Texture too big for GPU compute");
+    // Phase 1: Convert the Equirectangular texture to a Cubemap
+    QRhiTexture *envCubeMap = rhi->newTexture(textureFormat, environmentMapSize, 1, QRhiTexture::RenderTarget | QRhiTexture::CubeMap | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
+    if (!envCubeMap->create()) {
+        qWarning("Failed to create Environment Cube Map");
         return false;
     }
+    envCubeMap->deleteLater();
 
-    auto computeShader = getMipmapShader(inLoadedImage->format.format);
-    if (!computeShader.isValid())
+    // Create a renderbuffer the size of a the cubeMap face
+    QRhiRenderBuffer *envMapRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, environmentMapSize);
+    if (!envMapRenderBuffer->create()) {
+        qWarning("Failed to create Environment Map Render Buffer");
         return false;
+    }
+    envMapRenderBuffer->deleteLater();
 
-    auto rhiCtx = context;
+    // Setup the 6 render targets for each cube face
+    QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
+    QRhiRenderPassDescriptor *renderPassDesc = nullptr;
+    for (int face = 0; face < 6; ++face) {
+        QRhiColorAttachment att(envCubeMap);
+        att.setLayer(face);
+        QRhiTextureRenderTargetDescription rtDesc;
+        rtDesc.setColorAttachments({att});
+        auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+        renderTarget->setDescription(rtDesc);
+        if (!renderPassDesc)
+            renderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();
+        renderTarget->setRenderPassDescriptor(renderPassDesc);
+        if (!renderTarget->create()) {
+            qWarning("Failed to build env map render target");
+            return false;
+        }
+        renderTarget->deleteLater();
+        renderTargets << renderTarget;
+    }
+    renderPassDesc->deleteLater();
 
-    auto *tex = rhi->newTexture(toRhiFormat(inLoadedImage->format.format), size, 1, QRhiTexture::UsedWithLoadStore | QRhiTexture::MipMapped);
-    tex->create();
+    // Setup the sampler for reading the equirectangular loaded texture
+    QSize size(inImage->width, inImage->height);
+    auto *sourceTexture = rhi->newTexture(textureFormat, size, 1);
+    if (!sourceTexture->create()) {
+        qWarning("failed to create source env map texture");
+        return false;
+    }
+    sourceTexture->deleteLater();
 
-    QRhiTextureUploadDescription desc{{0, 0, {inLoadedImage->data, int(inLoadedImage->dataSizeInBytes)}}};
-    auto *rub = rhi->nextResourceUpdateBatch(); // TODO: collect all image loading for one frame into one update batch?
-    rub->uploadTexture(tex, desc);
+    // Upload the equirectangular texture
+    QRhiTextureUploadDescription desc{{0, 0, {inImage->data, int(inImage->dataSizeInBytes)}}};
+    auto *rub = rhi->nextResourceUpdateBatch();
+    rub->uploadTexture(sourceTexture, desc);
 
-    int ubufElementSize = rhi->ubufAligned(12);
-    const QSSGRhiUniformBufferSetKey ubufKey = { inLoadedImage, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ComputeMipmap };
-    QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
-    QRhiBuffer *&ubuf = uniformBuffers.ubuf;
-    int ubufSize = ubufElementSize * mipmapCount;
-    if (!ubuf) {
-        ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-        ubuf->create();
-    } else if (ubuf->size() < ubufSize) {
-        ubuf->setSize(ubufSize);
-        ubuf->create();
+    const QSSGRhiSamplerDescription samplerDesc {
+        QRhiSampler::Linear,
+                QRhiSampler::Linear,
+                QRhiSampler::None,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::ClampToEdge
+    };
+    QRhiSampler *sampler = context->sampler(samplerDesc);
+
+    // Load shader and setup render pipeline
+    QSSGRef<QSSGRhiShaderStages> envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
+
+    // Vertex Buffer - Just a single cube that will be viewed from inside
+    QRhiBuffer *vertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(cube));
+    vertexBuffer->create();
+    vertexBuffer->deleteLater();
+    rub->uploadStaticBuffer(vertexBuffer, cube);
+
+    // Uniform Buffer - 2x mat4
+    int ubufElementSize = rhi->ubufAligned(128);
+    QRhiBuffer *uBuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufElementSize * 6);
+    uBuf->create();
+    uBuf->deleteLater();
+
+    // Shader Resource Bindings
+    QRhiShaderResourceBindings *envMapSrb = rhi->newShaderResourceBindings();
+    envMapSrb->setBindings({
+                         QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+                         QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, sourceTexture, sampler)
+                     });
+    envMapSrb->create();
+    envMapSrb->deleteLater();
+
+    // Pipeline
+    QRhiGraphicsPipeline *envMapPipeline = rhi->newGraphicsPipeline();
+    envMapPipeline->setCullMode(QRhiGraphicsPipeline::Front);
+    envMapPipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
+    envMapPipeline->setShaderStages({
+                            *envMapShaderStages->vertexStage(),
+                            *envMapShaderStages->fragmentStage()
+                        });
+
+    QRhiVertexInputLayout inputLayout;
+    inputLayout.setBindings({
+                                { 3 * sizeof(float) }
+                            });
+    inputLayout.setAttributes({
+                                  { 0, 0, QRhiVertexInputAttribute::Float3, 0 }
+                              });
+
+    envMapPipeline->setVertexInputLayout(inputLayout);
+    envMapPipeline->setShaderResourceBindings(envMapSrb);
+    envMapPipeline->setRenderPassDescriptor(renderPassDesc);
+    if (!envMapPipeline->create()) {
+        qWarning("failed to create source env map pipeline state");
+        return false;
+    }
+    envMapPipeline->deleteLater();
+
+    // Do the actual render passes
+    auto *cb = context->commandBuffer();
+    cb->debugMarkBegin("Environment Cubemap Generation");
+    const QRhiCommandBuffer::VertexInput vbufBinding(vertexBuffer, 0);
+
+    // Set the Uniform Data
+    QMatrix4x4 mvp = rhi->clipSpaceCorrMatrix();
+    mvp.perspective(90.0f, 1.0f, 0.1f, 10.0f);
+
+    auto lookAt = [](const QVector3D &eye, const QVector3D &center, const QVector3D &up) {
+        QMatrix4x4 viewMatrix;
+        viewMatrix.lookAt(eye, center, up);
+        return viewMatrix;
+    };
+    QVarLengthArray<QMatrix4x4, 6> views;
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(1.0, 0.0, 0.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(-1.0, 0.0, 0.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    if (rhi->isYUpInFramebuffer()) {
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 1.0, 0.0), QVector3D(0.0f, 0.0f, 1.0f)));
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, -1.0, 0.0), QVector3D(0.0f, 0.0f, -1.0f)));
+    } else {
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, -1.0, 0.0), QVector3D(0.0f, 0.0f, -1.0f)));
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 1.0, 0.0), QVector3D(0.0f, 0.0f, 1.0f)));
+    }
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, 1.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, -1.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    for (int face = 0; face < 6; ++face) {
+        rub->updateDynamicBuffer(uBuf, face * ubufElementSize, 64, mvp.constData());
+        rub->updateDynamicBuffer(uBuf, face * ubufElementSize + 64, 64, views[face].constData());
+    }
+    cb->resourceUpdate(rub);
+
+    for (int face = 0; face < 6; ++face) {
+        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 });
+
+        // Execute render pass
+        cb->setGraphicsPipeline(envMapPipeline);
+        cb->setVertexInput(0, 1, &vbufBinding);
+        cb->setViewport(QRhiViewport(0, 0, environmentMapSize.width(), environmentMapSize.height()));
+        QPair<int, quint32> dynamicOffset = { 0, quint32(ubufElementSize * face) };
+        cb->setShaderResources(envMapSrb, 1, &dynamicOffset);
+
+        cb->draw(36);
+        cb->endPass();
+    }
+    cb->debugMarkEnd();
+
+    if (!isRGBE) {
+        // Generate mipmaps for envMap
+        rub = rhi->nextResourceUpdateBatch();
+        rub->generateMips(envCubeMap);
+        cb->resourceUpdate(rub);
     }
 
-    QRhiShaderResourceBindings *computeBindings[MAX_MIP_LEVELS]; // TODO: QVarLengthArray to avoid having a maximum supported size?
-    quint32 numWorkGroups[MAX_MIP_LEVELS][3];
-    int mipW = size.width() >> 1;
-    int mipH = size.height() >> 1;
-    for (int level = 1; level < mipmapCount; ++level) {
-        const int i = level - 1;
-        numWorkGroups[i][0] = quint32(mipW);
-        numWorkGroups[i][1] = quint32(mipH);
-        numWorkGroups[i][2] = 0;
-        rub->updateDynamicBuffer(ubuf, ubufElementSize * i, 12, numWorkGroups[i]);
-        mipW = mipW > 2 ? mipW >> 1 : 1;
-        mipH = mipH > 2 ? mipH >> 1 : 1;
+    // Phase 2: Generate the pre-filtered environment cubemap
+    cb->debugMarkBegin("Pre-filtered Environment Cubemap Generation");
+    QRhiTexture *preFilteredEnvCubeMap = rhi->newTexture(textureFormat, environmentMapSize, 1, QRhiTexture::RenderTarget | QRhiTexture::CubeMap| QRhiTexture::MipMapped);
+    if (!preFilteredEnvCubeMap->create())
+        qWarning("Failed to create Pre-filtered Environment Cube Map");
+    int mipmapCount = rhi->mipLevelsForSize(environmentMapSize);
+    mipmapCount = qMin(mipmapCount, 6);  // don't create more than 6 mip levels
+    QMap<int, QSize> mipLevelSizes;
+    QMap<int, QVarLengthArray<QRhiTextureRenderTarget *, 6>> renderTargetsMap;
+    QRhiRenderPassDescriptor *renderPassDescriptorPhase2 = nullptr;
 
-        auto *srb = rhiCtx->srb({
-                                    QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::ComputeStage, ubuf, 12),
-                                    QRhiShaderResourceBinding::imageLoad(1, QRhiShaderResourceBinding::ComputeStage, tex, level - 1),
-                                    QRhiShaderResourceBinding::imageStore(2, QRhiShaderResourceBinding::ComputeStage, tex, level)
-                                });
-
-        computeBindings[i] = srb;
+    // Create a renderbuffer for each mip level
+    for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
+        const QSize levelSize = QSize(environmentMapSize.width() * std::pow(0.5, mipLevel),
+                                      environmentMapSize.height() * std::pow(0.5, mipLevel));
+        mipLevelSizes.insert(mipLevel, levelSize);
+        // Setup Render targets (6 * mipmapCount)
+        QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
+        for (int face = 0; face < 6; ++face) {
+            QRhiColorAttachment att(preFilteredEnvCubeMap);
+            att.setLayer(face);
+            att.setLevel(mipLevel);
+            QRhiTextureRenderTargetDescription rtDesc;
+            rtDesc.setColorAttachments({att});
+            auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+            renderTarget->setDescription(rtDesc);
+            if (!renderPassDescriptorPhase2)
+                renderPassDescriptorPhase2 = renderTarget->newCompatibleRenderPassDescriptor();
+            renderTarget->setRenderPassDescriptor(renderPassDescriptorPhase2);
+            if (!renderTarget->create())
+                qWarning("Failed to build prefilter env map render target");
+            renderTarget->deleteLater();
+            renderTargets << renderTarget;
+        }
+        renderTargetsMap.insert(mipLevel, renderTargets);
+        renderPassDescriptorPhase2->deleteLater();
     }
 
-    QRhiComputePipeline *computePipeline = rhiCtx->computePipeline({ computeShader,  computeBindings[0] });
+    // Load the prefilter shader stages
+    QSSGRef<QSSGRhiShaderStages> prefilterShaderStages;
+    if (isRGBE)
+        prefilterShaderStages = shaderCache->loadBuiltinForRhi("environmentmapprefilter_rgbe");
+    else
+        prefilterShaderStages = shaderCache->loadBuiltinForRhi("environmentmapprefilter");
 
-    auto *cb = rhiCtx->commandBuffer();
-    cb->beginComputePass(rub);
+    // Create a new Sampler
+    const QSSGRhiSamplerDescription samplerMipMapDesc {
+        QRhiSampler::Linear,
+                QRhiSampler::Linear,
+                QRhiSampler::Linear,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::ClampToEdge
+    };
 
-    cb->setComputePipeline(computePipeline);
-    for (int level = 1; level < mipmapCount; ++level) {
-        const int i = level - 1;
-        const int mipW = numWorkGroups[i][0];
-        const int mipH = numWorkGroups[i][1];
-        QPair<int, quint32> dynamicOffset = { 0, quint32(ubufElementSize * i) };
-        cb->setShaderResources(computeBindings[i], 1, &dynamicOffset);
-        cb->dispatch(mipW, mipH, 1);
+    QRhiSampler *envMapCubeSampler = nullptr;
+    // Only use mipmap interpoliation if not using RGBE
+    if (!isRGBE)
+        envMapCubeSampler = context->sampler(samplerMipMapDesc);
+    else
+        envMapCubeSampler = sampler;
+
+    // Reuse Vertex Buffer from phase 1
+    // Reuse UniformBuffer from phase 1 (for vertex shader)
+
+    // UniformBuffer (roughness + resolution)
+    int ubufRoughnessElementSize = rhi->ubufAligned(8);
+    QRhiBuffer *uBufRoughness = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufRoughnessElementSize * mipmapCount);
+    uBufRoughness->create();
+    uBufRoughness->deleteLater();
+
+    // Shader Resource Bindings
+    QRhiShaderResourceBindings *preFilterSrb = rhi->newShaderResourceBindings();
+    preFilterSrb->setBindings({
+                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, uBufRoughness, 8),
+                          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, envCubeMap, envMapCubeSampler)
+                      });
+    preFilterSrb->create();
+    preFilterSrb->deleteLater();
+
+    // Pipeline
+    QRhiGraphicsPipeline *prefilterPipeline = rhi->newGraphicsPipeline();
+    prefilterPipeline->setCullMode(QRhiGraphicsPipeline::Front);
+    prefilterPipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
+    prefilterPipeline->setDepthOp(QRhiGraphicsPipeline::LessOrEqual);
+    prefilterPipeline->setShaderStages({
+                            *prefilterShaderStages->vertexStage(),
+                            *prefilterShaderStages->fragmentStage()
+                        });
+    // same as phase 1
+    prefilterPipeline->setVertexInputLayout(inputLayout);
+    prefilterPipeline->setShaderResourceBindings(preFilterSrb);
+    prefilterPipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
+    if (!prefilterPipeline->create()) {
+        qWarning("failed to create pre-filter env map pipeline state");
+        return false;
     }
+    prefilterPipeline->deleteLater();
 
-    cb->endComputePass();
 
-    outImageData->m_rhiTexture = tex;
+    // Load the prefilter shader stages
+    QSSGRef<QSSGRhiShaderStages> irradianceShaderStages;
+    if (isRGBE)
+        irradianceShaderStages = shaderCache->loadBuiltinForRhi("environmentmapirradiance_rgbe");
+    else
+        irradianceShaderStages = shaderCache->loadBuiltinForRhi("environmentmapirradiance");
+
+    // Setup Irradiance pipline as well
+
+    QRhiGraphicsPipeline *irradiancePipeline = rhi->newGraphicsPipeline();
+    irradiancePipeline->setCullMode(QRhiGraphicsPipeline::Front);
+    irradiancePipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
+    irradiancePipeline->setDepthOp(QRhiGraphicsPipeline::LessOrEqual);
+    irradiancePipeline->setShaderStages({
+                             *irradianceShaderStages->vertexStage(),
+                             *irradianceShaderStages->fragmentStage()
+                         });
+    QRhiShaderResourceBindings *irradianceSrb = rhi->newShaderResourceBindings();
+    irradianceSrb->setBindings({
+                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+                          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, envCubeMap, sampler)
+                      });
+    irradianceSrb->create();
+    irradianceSrb->deleteLater();
+    irradiancePipeline->setShaderResourceBindings(irradianceSrb);
+    irradiancePipeline->setVertexInputLayout(inputLayout);
+    irradiancePipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
+    if (!irradiancePipeline->create()) {
+        qWarning("failed to create irradiance env map pipeline state");
+        return false;
+    }
+    irradiancePipeline->deleteLater();
+
+    // Uniform Data
+    // set the roughness uniform buffer data
+    rub = rhi->nextResourceUpdateBatch();
+    for (int mipLevel = 0; mipLevel < mipmapCount - 1; ++mipLevel) {
+        Q_ASSERT(mipmapCount - 2);
+        const float roughness = float(mipLevel) / float(mipmapCount - 2);
+        const float resolution = environmentMapSize.width();
+        rub->updateDynamicBuffer(uBufRoughness, mipLevel * ubufRoughnessElementSize, 4, &roughness);
+        rub->updateDynamicBuffer(uBufRoughness, mipLevel * ubufRoughnessElementSize + 4, 4, &resolution);
+    }
+    cb->resourceUpdate(rub);
+
+    // Render
+    for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
+        for (int face = 0; face < 6; ++face) {
+            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 });
+            if (mipLevel < mipmapCount - 1) {
+                // Specular pre-filtered Environment Map levels
+                cb->setGraphicsPipeline(prefilterPipeline);
+                cb->setVertexInput(0, 1, &vbufBinding);
+                cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
+                QVector<QPair<int, quint32>> dynamicOffsets = {
+                    { 0, quint32(ubufElementSize * face) },
+                    { 2, quint32(ubufRoughnessElementSize * mipLevel) }
+                };
+                cb->setShaderResources(preFilterSrb, 2, dynamicOffsets.constData());
+            } else {
+                // Diffuse Irradiance
+                cb->setGraphicsPipeline(irradiancePipeline);
+                cb->setVertexInput(0, 1, &vbufBinding);
+                cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
+                QVector<QPair<int, quint32>> dynamicOffsets = {
+                    { 0, quint32(ubufElementSize * face) },
+                };
+                cb->setShaderResources(irradianceSrb, 1, dynamicOffsets.constData());
+            }
+            cb->draw(36);
+            cb->endPass();
+        }
+    }
+    cb->debugMarkEnd();
+
+    outImageData->m_rhiTexture = preFilteredEnvCubeMap;
     outImageData->m_mipmapCount = mipmapCount;
-
     return true;
 }
 
@@ -643,15 +873,10 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
     if (inMipMode == MipModeBsdf && inTexture->data) {
-        if (loadRenderImageComputeMipmap(inTexture, &textureData)) {
-            context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
+        if (loadRenderImageEnvironmentMap(inTexture, &textureData)) {
+            context->registerTexture(textureData.m_rhiTexture);
             return true;
         }
-
-        size = QSize(inTexture->width, inTexture->height);
-        mipmapCount = createBsdfMipUpload(&textureUploads, inTexture) + 1;
-        textureFlags |= QRhiTexture::Flag::MipMapped;
-        rhiFormat = toRhiFormat(inTexture->format.format);
     } else if (inTexture->compressedData.isValid()) {
         const QTextureFileData &tex = inTexture->compressedData;
         size = tex.size();

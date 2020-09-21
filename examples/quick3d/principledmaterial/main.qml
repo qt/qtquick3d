@@ -94,6 +94,7 @@ Window {
             lightProbe: Texture {
                 source: "maps/OpenfootageNET_garage-1024.hdr"
             }
+            probeOrientation: Qt.vector3d(0, -90, 0)
         }
         //! [environment]
 

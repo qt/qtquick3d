@@ -17,7 +17,7 @@ layout(std140, binding = 0) uniform buf {
 } ubuf;
 
 layout(location = 0) in vec3 eye_direction;
-layout(binding = 1) uniform sampler2D skybox_image;
+layout(binding = 1) uniform samplerCube skybox_image;
 
 vec3 qt_linearTosRGB(vec3 color)
 {
@@ -94,19 +94,8 @@ vec3 qt_tonemap(vec3 color)
 
 void main()
 {
-    // nlerp direction vector, not entirely correct, but simple/efficient
     vec3 eye = normalize(eye_direction);
-
-    // Equirectangular textures project longitude and latitude to the xy plane
-    float longitude = atan(eye.x, eye.z) / PI_TWO + 0.5;
-    float latitude = asin(eye.y) / PI + 0.5;
-    vec2 uv = vec2(longitude, latitude);
-
-    // Because of the non-standard projection, the texture lookup for normal texture
-    // filtering is messed up.
-    // TODO: Alternatively, we could check if it's possible to disable some of the texture
-    // filtering just for the skybox part.
-    vec4 color = textureLod(skybox_image, uv, 0.0);
+    vec4 color = textureLod(skybox_image, eye, 0.0);
 #ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
     color = vec4(color.rgb * pow(2.0, color.a * 255.0 - 128.0), 1.0);
 #endif

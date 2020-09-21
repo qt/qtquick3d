@@ -343,17 +343,6 @@ float QQuick3DSceneEnvironment::probeHorizon() const
 }
 
 /*!
-    \qmlproperty float QtQuick3D::SceneEnvironment::probeFieldOfView
-
-    This property defines the image source field of view for the case of using
-    a camera source as the IBL probe.
-*/
-float QQuick3DSceneEnvironment::probeFieldOfView() const
-{
-    return m_probeFieldOfView;
-}
-
-/*!
     \qmlproperty vector3d QtQuick3D::SceneEnvironment::probeOrientation
 
     This property when defines the orientation of the light probe. Orientation
@@ -637,16 +626,6 @@ void QQuick3DSceneEnvironment::setProbeHorizon(float probeHorizon)
 
     m_probeHorizon = probeHorizon;
     emit probeHorizonChanged();
-    update();
-}
-
-void QQuick3DSceneEnvironment::setProbeFieldOfView(float probeFieldOfView)
-{
-    if (qFuzzyCompare(m_probeFieldOfView, probeFieldOfView))
-        return;
-
-    m_probeFieldOfView = probeFieldOfView;
-    emit probeFieldOfViewChanged();
     update();
 }
 

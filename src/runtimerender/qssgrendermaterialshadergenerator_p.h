@@ -74,7 +74,6 @@ struct QSSGLayerGlobalRenderProperties
     QSSGRenderImage *lightProbe;
     float probeHorizon;
     float probeExposure;
-    float probeFOV;
     const QMatrix4x4 &probeOrientation;
     bool isYUpInFramebuffer;
     bool isClipDepthZeroToOne;

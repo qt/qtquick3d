@@ -47,6 +47,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
@@ -90,6 +91,7 @@ private:
 
 
     QSSGRef<QSSGRhiContext> context;
+    QSSGRef<QSSGShaderCache> shaderCache;
     QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
     ImageMap imageMap;
     QSGImageMap qsgImageMap;
@@ -116,7 +118,8 @@ public:
     };
 
     QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
-                        const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
+                      const QSSGRef<QSSGShaderCache> &inShaderContext,
+                      const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
     ~QSSGBufferManager();
 
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderImage *image,
@@ -162,7 +165,7 @@ private:
                                                MipMode inMipMode = MipModeNone);
     QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
-    bool loadRenderImageComputeMipmap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
+    bool loadRenderImageEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);

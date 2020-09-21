@@ -191,9 +191,6 @@ public:
         int modelViewProjectionIdx = -1;
         int normalMatrixIdx = -1;
         int modelMatrixIdx = -1;
-        int lightProbeRotationIdx = -1;
-        int lightProbeOffsetIdx = -1;
-        int lightProbeOptionsIdx = -1;
         int lightProbeOrientationIdx = -1;
         int lightProbePropertiesIdx = -1;
         int material_emissiveColorIdx = -1;

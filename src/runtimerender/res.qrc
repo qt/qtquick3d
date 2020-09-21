@@ -34,7 +34,6 @@
         <file>res/rhishaders/orthoshadowblury.frag.qsb</file>
         <file>res/rhishaders/ssao.vert.qsb</file>
         <file>res/rhishaders/ssao.frag.qsb</file>
-        <file>res/rhishaders/miprgbe8.comp.qsb</file>
         <file>res/rhishaders/ssaaresolve.vert.qsb</file>
         <file>res/rhishaders/ssaaresolve.frag.qsb</file>
         <file>res/rhishaders/progressiveaa.vert.qsb</file>
@@ -62,10 +61,18 @@
         <file>res/rhishaders/skybox_rgbe_hejlrichard.vert.qsb</file>
         <file>res/rhishaders/skybox_rgbe_linear.vert.qsb</file>
         <file>res/rhishaders/skybox_rgbe_none.vert.qsb</file>
-        <file>res/rhishaders/miprgba16f.comp.qsb</file>
-        <file>res/rhishaders/miprgba32f.comp.qsb</file>
         <file>res/effectlib/funcdiffuseBurleyBSDF.glsllib</file>
         <file>res/effectlib/funcspecularGGXBSDF.glsllib</file>
         <file>res/effectlib/principledMaterialFresnel.glsllib</file>
+        <file>res/rhishaders/environmentmap.frag.qsb</file>
+        <file>res/rhishaders/environmentmap.vert.qsb</file>
+        <file>res/rhishaders/environmentmapprefilter.frag.qsb</file>
+        <file>res/rhishaders/environmentmapprefilter.vert.qsb</file>
+        <file>res/rhishaders/environmentmapirradiance.frag.qsb</file>
+        <file>res/rhishaders/environmentmapirradiance.vert.qsb</file>
+        <file>res/rhishaders/environmentmapirradiance_rgbe.frag.qsb</file>
+        <file>res/rhishaders/environmentmapirradiance_rgbe.vert.qsb</file>
+        <file>res/rhishaders/environmentmapprefilter_rgbe.frag.qsb</file>
+        <file>res/rhishaders/environmentmapprefilter_rgbe.vert.qsb</file>
     </qresource>
 </RCC>

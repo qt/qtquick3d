@@ -78,7 +78,6 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(float probeExposure READ probeExposure WRITE setProbeExposure NOTIFY probeExposureChanged)
     Q_PROPERTY(float probeHorizon READ probeHorizon WRITE setProbeHorizon NOTIFY probeHorizonChanged)
-    Q_PROPERTY(float probeFieldOfView READ probeFieldOfView WRITE setProbeFieldOfView NOTIFY probeFieldOfViewChanged)
     Q_PROPERTY(QVector3D probeOrientation READ probeOrientation WRITE setProbeOrientation NOTIFY probeOrientationChanged)
 
     Q_PROPERTY(QQuick3DEnvironmentTonemapModes tonemapMode READ tonemapMode WRITE setTonemapMode NOTIFY tonemapModeChanged)
@@ -143,7 +142,6 @@ public:
     QQuick3DTexture *lightProbe() const;
     float probeExposure() const;
     float probeHorizon() const;
-    float probeFieldOfView() const;
     QVector3D probeOrientation() const;
 
     bool depthTestEnabled() const;
@@ -173,7 +171,6 @@ public Q_SLOTS:
     void setLightProbe(QQuick3DTexture *lightProbe);
     void setProbeExposure(float probeExposure);
     void setProbeHorizon(float probeHorizon);
-    void setProbeFieldOfView(float probeFieldOfView);
     void setProbeOrientation(const QVector3D &orientation);
 
     void setDepthTestEnabled(bool depthTestEnabled);
@@ -200,7 +197,6 @@ Q_SIGNALS:
     void lightProbeChanged();
     void probeExposureChanged();
     void probeHorizonChanged();
-    void probeFieldOfViewChanged();
     void probeOrientationChanged();
 
     void depthTestEnabledChanged();
@@ -241,7 +237,6 @@ private:
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeExposure = 1.0f;
     float m_probeHorizon = -1.0f;
-    float m_probeFieldOfView = 180.0f;
     QVector3D m_probeOrientation;
 
     ConnectionMap m_connections;

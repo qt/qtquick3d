@@ -71,11 +71,11 @@ private:
     const QSSGRef<QSSGRhiContext> m_rhiContext;
 
     const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
+    const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
     const QSSGRef<QSSGResourceManager> m_resourceManager;
     const QSSGRef<QSSGRenderer> m_renderer;
     const QSSGRef<QSSGShaderLibraryManager> m_shaderLibraryManager;
-    const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGCustomMaterialSystem> m_customMaterialSystem;
     const QSSGRef<QSSGProgramGenerator> m_shaderProgramGenerator;
     QSSGPerFrameAllocator m_perFrameAllocator;

@@ -915,7 +915,6 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
 
     layerNode.probeExposure = view3D.environment()->probeExposure();
     layerNode.probeHorizon = view3D.environment()->probeHorizon();
-    layerNode.probeFov = view3D.environment()->probeFieldOfView();
     layerNode.setProbeOrientation(view3D.environment()->probeOrientation());
 
     if (view3D.camera())

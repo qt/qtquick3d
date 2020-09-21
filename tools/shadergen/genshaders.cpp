@@ -88,13 +88,14 @@ GenShaders::GenShaders(const QString &sourceDir)
     rhiContext->setCommandBuffer(cb);
 
     auto inputStreamFactory = new QSSGInputStreamFactory;
+    auto shaderCache = new QSSGShaderCache(rhiContext, inputStreamFactory, &initBaker);
     renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
                                                                                        inputStreamFactory,
-                                                                                       new QSSGBufferManager(rhiContext, inputStreamFactory),
+                                                                                       new QSSGBufferManager(rhiContext, shaderCache, inputStreamFactory),
                                                                                        new QSSGResourceManager(rhiContext),
                                                                                        new QSSGRenderer,
                                                                                        new QSSGShaderLibraryManager(inputStreamFactory),
-                                                                                       new QSSGShaderCache(rhiContext, inputStreamFactory, &initBaker),
+                                                                                       shaderCache,
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator,
                                                                                        sourceDir));

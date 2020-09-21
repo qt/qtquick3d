@@ -160,7 +160,6 @@ PropertyMap::PropertyMap()
 
     layer->insert(QStringLiteral("probebright"), Property(QStringLiteral("probeExposure"), Q3DS::Float, 1.0f));
     layer->insert(QStringLiteral("probehorizon"), Property(QStringLiteral("probeHorizon"), Q3DS::Float, -1.0f));
-    layer->insert(QStringLiteral("probefov"), Property(QStringLiteral("probeFieldOfView"), Q3DS::Float, 180.0f));
 
     layer->insert(QStringLiteral("environment.probebright"), Property(QStringLiteral("environment.probeExposure"), Q3DS::Float, 1.0f));
     layer->insert(QStringLiteral("environment.probehorizon"), Property(QStringLiteral("environment.probeHorizon"), Q3DS::Float, -1.0f));

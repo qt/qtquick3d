@@ -1092,8 +1092,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
-
-            fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_tanFrame).rgb;\n";
+            if (materialAdapter->isPrincipled()) {
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_tanFrame).rgb;\n";
+            } else {
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_tanFrame).rgb;\n";
+            }
             if (specularLightingEnabled) {
                 if (materialAdapter->isPrincipled()) {
                     fragmentShader << "    global_specular_light.rgb += "
@@ -1217,7 +1220,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // Metalness
         //fragmentShader.append("    debugOutput += vec3(qt_metalnessAmount);\n");
         // Specular
-        //fragmentShader.append("    debugOutput += global_specular_light.rgb;\n");
+        fragmentShader.append("    debugOutput += global_specular_light.rgb;\n");
         // Fresnel
         //fragmentShader.append("    debugOutput += vec3(qt_specularAmount);\n");
         //fragmentShader.append("    vec2 brdf = qt_brdfApproximation(qt_world_normal, qt_view_vector, qt_roughnessAmount);\n");
@@ -1226,7 +1229,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // F0
         //fragmentShader.append("    debugOutput += qt_F0(qt_metalnessAmount, qt_specularFactor, qt_diffuseColor.rgb);");
         // Diffuse
-        fragmentShader.append("    debugOutput += global_diffuse_light.rgb;\n");
+        //fragmentShader.append("    debugOutput += global_diffuse_light.rgb;\n");
         //fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
         // Emission
         //if (hasEmissiveMap)
@@ -1515,38 +1518,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightProbe = materialIblProbe;
 
     if (theLightProbe && theLightProbe->m_textureData.m_rhiTexture) {
-        QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode; //###??? was QSSGRenderTextureCoordOp::Repeat;
+        QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode;
         QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
-        const QMatrix4x4 &textureTransform = theLightProbe->m_textureTransform;
-        // We separate rotational information from offset information so that just maybe the
-        // shader
-        // will attempt to push less information to the card.
-        const float *dataPtr(textureTransform.constData());
-        // The third member of the offsets contains a flag indicating if the texture was
-        // premultiplied or not.
-        // We use this to mix the texture alpha.
-
         const int maxMipLevel = theLightProbe->m_textureData.m_mipmapCount - 1;
-
-        QVector4D offsets(dataPtr[12],
-                dataPtr[13],
-                theLightProbe->m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f,
-                float(maxMipLevel));
-
-        // Grab just the upper 2x2 rotation matrix from the larger matrix.
-        QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
-        cui.lightProbeRotationIdx = shaders->setUniform("qt_lightProbeRotation", &rotations, 4 * sizeof(float), cui.lightProbeRotationIdx);
-        cui.lightProbeOffsetIdx = shaders->setUniform("qt_lightProbeOffset", &offsets, 4 * sizeof(float), cui.lightProbeOffsetIdx);
-
-        if (!materialIblProbe && inRenderProperties.probeFOV < 180.f) {
-            QVector4D opts(0.01745329251994329547f * inRenderProperties.probeFOV, 0.0f, 0.0f, 0.0f);
-            cui.lightProbeOptionsIdx = shaders->setUniform("qt_lightProbeOptions", &opts, 4 * sizeof(float), cui.lightProbeOptionsIdx);
-        }
 
         if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity())
             cui.lightProbeOrientationIdx = shaders->setUniform("qt_lightProbeOrientation", inRenderProperties.probeOrientation.constData(), 16 * sizeof(float), cui.lightProbeOrientationIdx);
 
-        QVector4D props(0.0f, 0.0f, inRenderProperties.probeHorizon, inRenderProperties.probeExposure);
+        QVector4D props(0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure);
         cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", &props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
         shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
     } else {

@@ -856,7 +856,6 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               theLayer.lightProbe,
                                               theLayer.probeHorizon,
                                               theLayer.probeExposure,
-                                              theLayer.probeFov,
                                               theLayer.probeOrientation,
                                               isYUpInFramebuffer,
                                               isClipDepthZeroToOne};

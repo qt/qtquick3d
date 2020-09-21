@@ -49,6 +49,7 @@ private Q_SLOTS:
 private:
     QSSGRef<QSSGRhiContext> renderContext;
     QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
+    QSSGRef<QSSGShaderCache> shaderCache;
     QSSGRef<QSSGBufferManager> bufferManager;
 
     void benchImpl(int count, bool hit);
@@ -57,7 +58,8 @@ private:
 picking::picking()
     : renderContext(new QSSGRhiContext)
     , inputStreamFactory(new QSSGInputStreamFactory)
-    , bufferManager(new QSSGBufferManager(renderContext, inputStreamFactory))
+    , shaderCache(new QSSGShaderCache(renderContext, inputStreamFactory))
+    , bufferManager(new QSSGBufferManager(renderContext, shaderCache, inputStreamFactory))
 {
 }
 
