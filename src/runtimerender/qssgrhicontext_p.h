@@ -104,7 +104,6 @@ private:
 struct QSSGRhiShaderUniform
 {
     char name[32];
-    bool dirty = false;
     size_t size = 0;
     char data[64]; // big enough for a mat4
 
@@ -117,7 +116,6 @@ private:
 struct QSSGRhiShaderUniformArray
 {
     char name[32];
-    bool dirty = false;
     size_t typeSize = 0;
     size_t itemCount = 0;
     QByteArray data;

@@ -455,12 +455,10 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
     }
 
     QSSGRhiShaderUniform &u = m_shaderStages->m_uniforms[index];
-    if (size <= u.size) {
-        u.dirty = true;
+    if (size <= u.size)
         memcpy(u.data, data, size);
-    } else {
+    else
         qWarning("Attempted to set %u bytes to uniform %s with size %u", uint(size), name, uint(u.size));
-    }
 
     return index;
 }
@@ -699,17 +697,16 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
     if (index == -1)
         index = newIndex;
 
-    ua->dirty = true;
     return index;
 }
 
 void QSSGRhiShaderStagesWithResources::dumpUniforms()
 {
-    for (const QSSGRhiShaderUniform &u : m_shaderStages->m_uniforms) {
-        qDebug() << u.name << u.size << u.dirty << QByteArray(u.data, int(u.size));
+    for (const QSSGRhiShaderUniform &u : qAsConst(m_shaderStages->m_uniforms)) {
+        qDebug() << u.name << u.size << QByteArray(u.data, int(u.size));
     }
-    for (const QSSGRhiShaderUniformArray &ua : m_shaderStages->m_uniformArrays) {
-        qDebug() << ua.name << ua.typeSize << '[' << ua.itemCount << ']' << ua.dirty << ua.data;
+    for (const QSSGRhiShaderUniformArray &ua : qAsConst(m_shaderStages->m_uniformArrays)) {
+        qDebug() << ua.name << ua.typeSize << '[' << ua.itemCount << ']' << ua.data;
     }
 }
 
