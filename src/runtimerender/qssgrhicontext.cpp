@@ -116,7 +116,8 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
     QVarLengthArray<QRhiVertexInputAttribute, 8> attrs;
     int inputIndex = 0;
     for (auto it = inputLayout.cbeginAttributes(), itEnd = inputLayout.cendAttributes(); it != itEnd; ++it) {
-        auto vertexInputVar = vertexInputs.constFind(inputLayoutInputNames[inputIndex]);
+        const QByteArray &name(inputLayoutInputNames.at(inputIndex)); // avoid detaching - submeshes share the same name list
+        auto vertexInputVar = vertexInputs.constFind(name);
         if (vertexInputVar != vertexInputs.constEnd()) {
             attrs.append(*it);
             attrs.last().setLocation(vertexInputVar->location);
