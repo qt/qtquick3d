@@ -48,6 +48,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
 #include <QtCore/qhash.h>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMatrix3x3>
@@ -56,7 +57,6 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderCustomMaterial;
 struct QSSGRenderSubset;
-struct QSSGShaderMapKey;
 struct QSSGRenderModel;
 struct QSSGLayerRenderData;
 struct QSSGRenderableImage;
@@ -114,11 +114,11 @@ public:
     QAtomicInt ref;
 
 private:
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> RhiShaderMap;
     typedef QPair<QByteArray, QByteArray> TStrStrPair;
+    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TShaderMap;
 
     QSSGRenderContextInterface *context = nullptr;
-    RhiShaderMap rhiShaderMap;
+    TShaderMap shaderMap;
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
 

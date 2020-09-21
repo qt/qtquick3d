@@ -86,32 +86,6 @@ QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRende
 
 QSSGCustomMaterialRenderContext::~QSSGCustomMaterialRenderContext() = default;
 
-struct QSSGShaderMapKey
-{
-    QByteArray m_name;
-    ShaderFeatureSetList m_features;
-    QSSGShaderDefaultMaterialKey m_materialKey;
-    size_t m_hashCode;
-    QSSGShaderMapKey(const QByteArray &inName,
-                     const ShaderFeatureSetList &inFeatures,
-                     QSSGShaderDefaultMaterialKey inMaterialKey)
-        : m_name(inName), m_features(inFeatures), m_materialKey(inMaterialKey)
-    {
-        m_hashCode = qHash(m_name) ^ hashShaderFeatureSet(m_features)
-                ^ qHash(inMaterialKey.hash());
-    }
-    bool operator==(const QSSGShaderMapKey &inKey) const
-    {
-        return m_name == inKey.m_name && m_features == inKey.m_features
-                && m_materialKey == inKey.m_materialKey;
-    }
-};
-
-size_t qHash(const QSSGShaderMapKey &key)
-{
-    return key.m_hashCode;
-}
-
 QSSGCustomMaterialSystem::QSSGCustomMaterialSystem() = default;
 
 QSSGCustomMaterialSystem::~QSSGCustomMaterialSystem()
@@ -194,8 +168,8 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                    customMaterialContext.materialKey);
 
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
-    auto it = rhiShaderMap.find(skey);
-    if (it == rhiShaderMap.end()) {
+    auto it = shaderMap.find(skey);
+    if (it == shaderMap.end()) {
         // ### FIXME: this is null bones.
         // It should be replaced with custom material's boneTransforms
         QSSGDataView<QMatrix4x4> boneGlobals;
@@ -220,7 +194,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
         if (shaderStages)
             shaderPipeline = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
         // insert it no matter what, no point in trying over and over again
-        rhiShaderMap.insert(skey, shaderPipeline);
+        shaderMap.insert(skey, shaderPipeline);
     } else {
         shaderPipeline = it.value();
     }

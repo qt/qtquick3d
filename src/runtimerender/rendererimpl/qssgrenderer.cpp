@@ -269,6 +269,10 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStagesImpl(QSSGSubse
 {
     shaderString = logPrefix();
     QSSGShaderDefaultMaterialKey theKey(renderable.shaderDescription);
+
+    // This is not a cheap operation. This function assumes that it will not be
+    // hit for every material for every model in every frame (except of course
+    // for materials that got changed).
     theKey.toString(shaderString, shaderKeyProperties);
 
     // Check if there's a pre-built shader for available for this shader
@@ -783,25 +787,44 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
 }
 
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
-                                                                                       const ShaderFeatureSetList &inFeatureSet)
+                                                                                   const ShaderFeatureSetList &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);
         return nullptr;
     }
-    QSSGRef<QSSGRhiShaderStagesWithResources> generatedShaders;
-    const QSSGRef<QSSGRhiShaderStages> &shaderStages(generateRhiShaderStages(inRenderable, inFeatureSet));
-    if (shaderStages)
-        generatedShaders = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
 
-    if (!generatedShaders.isNull()) {
+    // This function is the main entry point for retrieving the shaders for a
+    // default material, and is called for every material for every model in
+    // every frame. Therefore, like with custom materials, employ a first level
+    // cache (a simple hash table), with a key that's quick to
+    // generate/hash/compare. Even though there are other levels of caching in
+    // the components that get invoked from here, those may not be suitable
+    // performance wise. So bail out right here as soon as possible.
+
+    QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
+    const QSSGShaderMapKey skey = QSSGShaderMapKey(QByteArray(),
+                                                   inFeatureSet,
+                                                   inRenderable.shaderDescription);
+    auto it = m_shaderMap.find(skey);
+    if (it == m_shaderMap.end()) {
+        QSSGRef<QSSGRhiShaderStages> shaderStages = generateRhiShaderStages(inRenderable, inFeatureSet);
+        if (shaderStages)
+            shaderPipeline = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
+        // insert it no matter what, no point in trying over and over again
+        m_shaderMap.insert(skey, shaderPipeline);
+    } else {
+        shaderPipeline = it.value();
+    }
+
+    if (!shaderPipeline.isNull()) {
         if (m_currentLayer && m_currentLayer->camera) {
             QSSGRenderCamera &theCamera(*m_currentLayer->camera);
             if (!m_currentLayer->cameraDirection.hasValue())
                 m_currentLayer->cameraDirection = theCamera.getScalingCorrectDirection();
         }
     }
-    return generatedShaders;
+    return shaderPipeline;
 }
 
 QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()

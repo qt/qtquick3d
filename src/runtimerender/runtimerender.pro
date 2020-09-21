@@ -34,7 +34,8 @@ HEADERS += \
     qssgrhiquadrenderer_p.h \
     qssgrhieffectsystem_p.h \
     qssgrhicontext_p.h \
-    qssgshadermaterialadapter_p.h
+    qssgshadermaterialadapter_p.h \
+    qssgshadermapkey_p.h
 
 SOURCES += \
     qssgrenderclippingfrustum.cpp \

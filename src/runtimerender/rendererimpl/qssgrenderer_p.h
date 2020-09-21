@@ -57,6 +57,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgoption_p.h>
@@ -99,6 +100,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
+    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TShaderMap;
 
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
@@ -137,10 +139,15 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 
     QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
 
+    TShaderMap m_shaderMap;
+
 public:
     QAtomicInt ref;
     QSSGRenderer();
     ~QSSGRenderer();
+
+    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> ShaderMap;
+
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
         return m_defaultMaterialShaderKeyProperties;

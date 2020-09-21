@@ -45,6 +45,7 @@ qt_add_module(Quick3DRuntimeRender
         qssgrhieffectsystem.cpp qssgrhieffectsystem_p.h
         qssgrhiquadrenderer.cpp qssgrhiquadrenderer_p.h
         qssgruntimerenderlogging.cpp qssgruntimerenderlogging_p.h
+        qssgshadermapkey_p.h
         qssgshadermaterialadapter.cpp qssgshadermaterialadapter_p.h
         qssgshaderresourcemergecontext_p.h
         qtquick3druntimerenderglobal_p.h
