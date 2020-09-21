@@ -237,6 +237,10 @@ void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage)
         for (const QShaderDescription::InOutVariable &var : inputs)
             m_vertexInputs[var.name] = var;
     }
+
+    const QVector<QShaderDescription::InOutVariable> combinedImageSamplers  = stage.shader().description().combinedImageSamplers();
+    for (const QShaderDescription::InOutVariable &var : combinedImageSamplers)
+        m_combinedImageSamplers[var.name] = var;
 }
 
 QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRhiShaderStagesWithResources::fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages)
@@ -707,20 +711,14 @@ void QSSGRhiShaderStagesWithResources::dumpUniforms()
 
 int QSSGRhiShaderStagesWithResources::bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims) const
 {
-    for (const QRhiShaderStage &stage : m_shaderStages->stages()) {
-        QVector<QShaderDescription::InOutVariable> samplers = stage.shader().description().combinedImageSamplers();
+    auto it = m_shaderStages->m_combinedImageSamplers.constFind(name);
+    if (it == m_shaderStages->m_combinedImageSamplers.constEnd())
+        return -1;
 
-        auto it = std::find_if(samplers.cbegin(), samplers.cend(), [&name](const QShaderDescription::InOutVariable &s) {
-            return s.name == name;
-        });
-        if (it != samplers.cend()) {
-            if (arrayDims)
-                *arrayDims = &it->arrayDims;
-            return it->binding;
-        }
-    }
+    if (arrayDims)
+        *arrayDims = &it->arrayDims; // valid until QSSGShaderStages is valid (or addStages() is called again but that should not happen)
 
-    return -1;
+    return it->binding;
 }
 
 void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)

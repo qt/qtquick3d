@@ -164,6 +164,7 @@ public:
     int ub0Size() const { return m_ub0Size; }
     const QHash<QByteArray, QShaderDescription::BlockVariable> &ub0Members() const { return m_ub0; }
     const QHash<QByteArray, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
+    const QHash<QByteArray, QShaderDescription::InOutVariable> &combinedImageSamplers() const { return m_combinedImageSamplers; }
 
     // This struct is used purely for performance. It is used to quickly store
     // and index common uniform names using the storeIndex argument in the
@@ -219,6 +220,7 @@ private:
     int m_ub0Size = 0;
     QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_vertexInputs;
+    QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
 
     QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
