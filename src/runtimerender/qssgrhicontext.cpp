@@ -248,7 +248,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRhiShaderStagesWithResources::from
     return QSSGRef<QSSGRhiShaderStagesWithResources>(new QSSGRhiShaderStagesWithResources(stages));
 }
 
-int QSSGRhiShaderStagesWithResources::setUniformValue(const QByteArray &name, const QVariant &inValue, QSSGRenderShaderDataType inType)
+int QSSGRhiShaderStagesWithResources::setUniformValue(const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
 {
     switch (inType) {
     case QSSGRenderShaderDataType::Integer:
@@ -425,28 +425,30 @@ int QSSGRhiShaderStagesWithResources::setUniformValue(const QByteArray &name, co
         break;
     default:
         qWarning("Attempted to set uniform %s value with unsupported data type %i",
-                 name.constData(), int(inType));
+                 name, int(inType));
         break;
     }
     return -1;
 }
 
-int QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex)
+int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *data, size_t size, int storeIndex)
 {
     int index = storeIndex;
     if (storeIndex == -1) {
-        auto it = m_shaderStages->m_uniformIndex.constFind(name);
+        const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
+        auto it = m_shaderStages->m_uniformIndex.constFind(ba);
         if (it != m_shaderStages->m_uniformIndex.cend()) {
             index = int(*it);
         } else {
             QSSGRhiShaderUniform u;
+            Q_ASSERT(ba.count() < sizeof(u.name) - 1);
             Q_ASSERT(size <= sizeof(u.data));
-            u.name = name;
+            strcpy(u.name, name);
             u.size = size;
             memcpy(u.data, data, size);
 
             const int new_idx = m_shaderStages->m_uniforms.size();
-            m_shaderStages->m_uniformIndex[name] = new_idx;
+            m_shaderStages->m_uniformIndex[name] = new_idx; // key is name, not ba, this has to be a deep copy QByteArray
             m_shaderStages->m_uniforms.push_back(u);
             index = new_idx;
         }
@@ -457,7 +459,7 @@ int QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const v
         u.dirty = true;
         memcpy(u.data, data, size);
     } else {
-        qWarning("Attempted to set %u bytes to uniform %s with size %u", uint(size), name.constData(), uint(u.size));
+        qWarning("Attempted to set %u bytes to uniform %s with size %u", uint(size), name, uint(u.size));
     }
 
     return index;
@@ -466,27 +468,29 @@ int QSSGRhiShaderStagesWithResources::setUniform(const QByteArray &name, const v
 // Quick3D uniform buffer is std140 type and all array data should be stored in this rule.
 // You can check it in glspec45.core.pdf's 7.6.2.2.(4)
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec45.core.pdf
-int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex)
+int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex)
 {
     int index = storeIndex;
     QSSGRhiShaderUniformArray *ua = nullptr;
     const size_t std140BaseTypeSize = 4 * sizeof(float);
 
-    if (index == -1) {
-        auto it = m_shaderStages->m_uniformIndex.constFind(name);
-        if (it != m_shaderStages->m_uniformIndex.cend())
-            index = int(*it);
-    }
-
     int newIndex = -1;
-    if (index != -1) {
-        ua = &m_shaderStages->m_uniformArrays[index];
+    if (index == -1) {
+        const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
+        auto it = m_shaderStages->m_uniformIndex.constFind(ba);
+        if (it != m_shaderStages->m_uniformIndex.cend()) {
+            index = int(*it);
+            ua = &m_shaderStages->m_uniformArrays[index];
+        } else {
+            newIndex = m_shaderStages->m_uniformArrays.size();
+            m_shaderStages->m_uniformArrays.push_back(QSSGRhiShaderUniformArray());
+            m_shaderStages->m_uniformIndex[name] = newIndex; // key needs deep copy
+            ua = &m_shaderStages->m_uniformArrays.last();
+            Q_ASSERT(ba.count() < sizeof(ua->name) - 1);
+            strcpy(ua->name, name);
+        }
     } else {
-        newIndex = m_shaderStages->m_uniformArrays.size();
-        m_shaderStages->m_uniformArrays.push_back(QSSGRhiShaderUniformArray());
-        m_shaderStages->m_uniformIndex[name] = newIndex;
-        ua = &m_shaderStages->m_uniformArrays.last();
-        ua->name = name;
+        ua = &m_shaderStages->m_uniformArrays[index];
     }
 
     if (!ua)
@@ -688,7 +692,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const QByteArray &name, co
     case QSSGRenderShaderDataType::Quaternion:
     default:
         qWarning("Attempted to set uniform %s value with type %d that is unsupported for uniform arrays",
-                 name.constData(), int(type));
+                 name, int(type));
         break;
     }
 
@@ -709,9 +713,9 @@ void QSSGRhiShaderStagesWithResources::dumpUniforms()
     }
 }
 
-int QSSGRhiShaderStagesWithResources::bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims) const
+int QSSGRhiShaderStagesWithResources::bindingForTexture(const char *name, const QVector<int> **arrayDims) const
 {
-    auto it = m_shaderStages->m_combinedImageSamplers.constFind(name);
+    auto it = m_shaderStages->m_combinedImageSamplers.constFind(QByteArray::fromRawData(name, strlen(name)));
     if (it == m_shaderStages->m_combinedImageSamplers.constEnd())
         return -1;
 
@@ -750,7 +754,7 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
     const auto &ub0Members = m_shaderStages->ub0Members();
     for (QSSGRhiShaderUniform &u : m_shaderStages->m_uniforms) {
         if (u.offset == SIZE_MAX && u.maybeExists) {
-            auto it = ub0Members.constFind(u.name);
+            auto it = ub0Members.constFind(QByteArray::fromRawData(u.name, strlen(u.name)));
             if (it != ub0Members.constEnd()) {
                 u.offset = it->offset;
                 if (int(u.size) != it->size) {
@@ -775,7 +779,7 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
         const size_t std140BaseTypeSize = 4 * sizeof(float);
         int uniformSize = (std140BaseTypeSize < ua.typeSize) ? ua.typeSize * ua.itemCount : std140BaseTypeSize * ua.itemCount;
         if (ua.offset == SIZE_MAX && ua.maybeExists) {
-            auto it = ub0Members.constFind(ua.name);
+            auto it = ub0Members.constFind(QByteArray::fromRawData(ua.name, strlen(ua.name)));
             if (it != ub0Members.constEnd()) {
                 ua.offset = it->offset;
                 if (uniformSize != it->size) {

@@ -103,10 +103,10 @@ private:
 
 struct QSSGRhiShaderUniform
 {
-    QByteArray name;
+    char name[32];
     bool dirty = false;
     size_t size = 0;
-    char data[256];
+    char data[64]; // big enough for a mat4
 
 private:
     size_t offset = SIZE_MAX;
@@ -116,7 +116,7 @@ private:
 
 struct QSSGRhiShaderUniformArray
 {
-    QByteArray name;
+    char name[32];
     bool dirty = false;
     size_t typeSize = 0;
     size_t itemCount = 0;
@@ -331,11 +331,11 @@ public:
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
     QSSGRhiShaderStages *stages() { return m_shaderStages.data(); }
 
-    int setUniformValue(const QByteArray &name, const QVariant &value, QSSGRenderShaderDataType type);
-    int setUniform(const QByteArray &name, const void *data, size_t size, int storeIndex = -1);
-    int setUniformArray(const QByteArray &name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
+    int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
+    int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1);
+    int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
     void dumpUniforms();
-    int bindingForTexture(const QByteArray &name, const QVector<int> **arrayDims = nullptr) const;
+    int bindingForTexture(const char *name, const QVector<int> **arrayDims = nullptr) const;
 
     enum LightBufferSlot {
         LightBuffer0,

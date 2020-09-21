@@ -326,7 +326,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
 
         if (shaderPipeline->lightProbeTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_lightProbe"));
+            int binding = shaderPipeline->bindingForTexture("qt_lightProbe");
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
@@ -341,7 +341,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->screenTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_screenTexture"));
+            int binding = shaderPipeline->bindingForTexture("qt_screenTexture");
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // linear min/mag, mipmap filtering depends on the
@@ -359,7 +359,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->depthTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_depthTexture"));
+            int binding = shaderPipeline->bindingForTexture("qt_depthTexture");
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // nearest min/mag, no mipmap
@@ -372,7 +372,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->ssaoTexture()) {
-            int binding = shaderPipeline->bindingForTexture(QByteArrayLiteral("qt_aoTexture"));
+            int binding = shaderPipeline->bindingForTexture("qt_aoTexture");
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // linear min/mag, no mipmap
