@@ -1586,7 +1586,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         }
     }
 
-    const QVector3D diffuse = color.toVector3D();
     const QVector3D diffuseLightAmbientTotal = theLightAmbientTotal;
     cui.light_ambient_totalIdx = shaders->setUniform("qt_light_ambient_total", &diffuseLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
 
