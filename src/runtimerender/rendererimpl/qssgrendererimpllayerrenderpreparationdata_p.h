@@ -269,7 +269,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     virtual void prepareForRender(const QSize &inViewportDimensions);
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
     void setShaderFeature(const char *inName, bool inValue);
-    ShaderFeatureSetList getShaderFeatureSet();
+    const ShaderFeatureSetList &getShaderFeatureSet();
     size_t getShaderFeatureSetHash();
 
     QVector3D getCameraDirection();

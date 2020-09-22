@@ -150,7 +150,7 @@ void QSSGLayerRenderPreparationData::setShaderFeature(const char *theStr, bool i
     }
 }
 
-ShaderFeatureSetList QSSGLayerRenderPreparationData::getShaderFeatureSet()
+const ShaderFeatureSetList &QSSGLayerRenderPreparationData::getShaderFeatureSet()
 {
     if (featuresDirty) {
         std::sort(features.begin(), features.end());

@@ -104,7 +104,7 @@ struct QSSGShaderPreprocessorFeature
     inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name == other.name && enabled == other.enabled; }
 };
 
-using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, QSSGShaderDefines::Count>;
+using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, 4>;
 
 // Hash is dependent on the order of the keys; so make sure their order is consistent!!
 Q_QUICK3DRUNTIMERENDER_EXPORT size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
