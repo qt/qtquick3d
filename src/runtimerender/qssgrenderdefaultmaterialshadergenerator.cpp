@@ -246,7 +246,6 @@ static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNa
 static void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader,
                                     const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                     QSSGDataView<quint32> inKey,
-                                    bool &fragmentHasSpecularAmount,
                                     bool hasMetalness,
                                     bool hasCustomFrag)
 {
@@ -746,8 +745,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 
     if (hasLighting) {
-        bool fragmentHasSpecularAmount = false;
-
         if (specularLightingEnabled) {
             vertexShader.generateViewVector();
             fragmentShader.addUniform("qt_material_properties", "vec4");
@@ -903,7 +900,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             } else {
                 fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
                 fragmentShader << "    qt_diffuseColor.rgb *= (1.0 - qt_dielectricSpecular(qt_material_specular.w)) * (1.0 - qt_metalnessAmount);\n";
-                maybeAddMaterialFresnel(fragmentShader, keyProps, inKey, fragmentHasSpecularAmount, metalnessEnabled, hasCustomFrag);
+                maybeAddMaterialFresnel(fragmentShader, keyProps, inKey, metalnessEnabled, hasCustomFrag);
             }
         }
 
@@ -1162,10 +1159,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     break;
                 case QSSGRenderableImage::Type::Specular:
                     fragmentShader.addInclude("tonemapping.glsllib");
-                    if (fragmentHasSpecularAmount)
-                        fragmentShader.append("    global_specular_light.rgb += qt_specularAmount * qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;");
-                    else
-                        fragmentShader.append("    global_specular_light.rgb += qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;");
+                    fragmentShader.append("    global_specular_light.rgb += qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;");
                     fragmentShader.append("    global_diffuse_light.a *= qt_texture_color.a;");
                     break;
                 case QSSGRenderableImage::Type::Opacity:
