@@ -11,6 +11,10 @@ project(QtQuick3D
 )
 
 # special case begin
+
+# Make sure we only use latest private CMake API, aka no compatibility wrappers.
+set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
+
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Qml Quick ShaderTools)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Network)
 
