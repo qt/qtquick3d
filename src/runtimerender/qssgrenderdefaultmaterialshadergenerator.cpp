@@ -1345,11 +1345,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.cameraDirectionIdx = shaders->setUniform("qt_cameraDirection", &inRenderProperties.cameraDirection, 3 * sizeof(float), cui.cameraDirectionIdx);
     cui.cameraPropertiesIdx = shaders->setUniform("qt_cameraProperties", &camProperties, 2 * sizeof(float), cui.cameraPropertiesIdx);
 
-    QMatrix4x4 viewProj;
-    inCamera.calculateViewProjectionMatrix(viewProj);
-    viewProj = clipSpaceCorrMatrix * viewProj;
-    cui.viewProjectionMatrixIdx = shaders->setUniform("qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), cui.viewProjectionMatrixIdx);
-    // Projection Matrices are only needed by CustomMaterial shaders
+    // Projection and view matrices are only needed by CustomMaterial shaders
     if (inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial) {
         const auto *customMaterial = static_cast<const QSSGRenderCustomMaterial *>(&inMaterial);
         const bool usesProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
@@ -1362,9 +1358,15 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             if (usesInvProjectionMatrix)
                 cui.inverseProjectionMatrixIdx = shaders->setUniform("qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), cui.inverseProjectionMatrixIdx);
         }
+
+        // ### these should use flags like the above two
+        QMatrix4x4 viewProj;
+        inCamera.calculateViewProjectionMatrix(viewProj);
+        viewProj = clipSpaceCorrMatrix * viewProj;
+        cui.viewProjectionMatrixIdx = shaders->setUniform("qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), cui.viewProjectionMatrixIdx);
+        const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
+        cui.viewMatrixIdx = shaders->setUniform("qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
     }
-    const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
-    cui.viewMatrixIdx = shaders->setUniform("qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
     // Skinning
     const bool hasSkinning = inBoneGlobals.size() > 0
