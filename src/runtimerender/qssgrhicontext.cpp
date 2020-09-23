@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qssgrhicontext_p.h"
-
+#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtCore/QVariant>
 
 QT_BEGIN_NAMESPACE
@@ -116,8 +116,8 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderSta
     QVarLengthArray<QRhiVertexInputAttribute, 8> attrs;
     int inputIndex = 0;
     for (auto it = inputLayout.cbeginAttributes(), itEnd = inputLayout.cendAttributes(); it != itEnd; ++it) {
-        const QByteArray &name(inputLayoutInputNames.at(inputIndex)); // avoid detaching - submeshes share the same name list
-        auto vertexInputVar = vertexInputs.constFind(name);
+        const QSSGRhiInputAssemblerState::InputSemantic sem = inputs.at(inputIndex); // avoid detaching - submeshes share the same name list
+        auto vertexInputVar = vertexInputs.constFind(sem);
         if (vertexInputVar != vertexInputs.constEnd()) {
             attrs.append(*it);
             attrs.last().setLocation(vertexInputVar->location);
@@ -234,8 +234,28 @@ void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage)
         }
         // Now the same for vertex inputs.
         const QVector<QShaderDescription::InOutVariable> inputs = stage.shader().description().inputVariables();
-        for (const QShaderDescription::InOutVariable &var : inputs)
-            m_vertexInputs[var.name] = var;
+        for (const QShaderDescription::InOutVariable &var : inputs) {
+            if (var.name == QSSGMeshUtilities::Mesh::getPositionAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::PositionSemantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getNormalAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::NormalSemantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getUVAttrName() || var.name == "attr_uv")
+                m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getUV2AttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getTexTanAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getTexBinormalAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::BinormalSemantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getColorAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::ColorSemantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getJointAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::JointSemantic] = var;
+            else if (var.name == QSSGMeshUtilities::Mesh::getWeightAttrName())
+                m_vertexInputs[QSSGRhiInputAssemblerState::WeightSemantic] = var;
+            else
+                qWarning("Ignoring vertex input %s in shader", var.name.constData());
+        }
     }
 
     const QVector<QShaderDescription::InOutVariable> combinedImageSamplers  = stage.shader().description().combinedImageSamplers();

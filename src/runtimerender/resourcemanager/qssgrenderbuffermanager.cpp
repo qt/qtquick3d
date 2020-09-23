@@ -1008,10 +1008,34 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         const QRhiVertexInputAttribute::Format format = QSSGRhiInputAssemblerState::toVertexInputFormat(
                     vbe.m_componentType, vbe.m_numComponents);
         const int offset = int(vbe.m_firstItemOffset);
-        QRhiVertexInputAttribute inputAttr(binding, location, format, offset);
 
-        inputAttrs.append(inputAttr);
-        rhi.ia.inputLayoutInputNames.append(QByteArray(vbe.m_name));
+        bool ok = true;
+        if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getPositionAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::PositionSemantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getNormalAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::NormalSemantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUVAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::TexCoord0Semantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUV2AttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::TexCoord1Semantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getTexTanAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::TangentSemantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getTexBinormalAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::BinormalSemantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getColorAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::ColorSemantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getJointAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::JointSemantic;
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getWeightAttrName())) {
+            rhi.ia.inputs << QSSGRhiInputAssemblerState::WeightSemantic;
+        } else {
+            qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+            ok = false;
+        }
+        if (ok) {
+            QRhiVertexInputAttribute inputAttr(binding, location, format, offset);
+            inputAttrs.append(inputAttr);
+        }
     }
     rhi.ia.inputLayout.setAttributes(inputAttrs.cbegin(), inputAttrs.cend());
     rhi.ia.inputLayout.setBindings({ result.m_mesh->m_vertexBuffer.m_stride });
@@ -1022,7 +1046,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
     rhi.iaDepth.inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float3, 0 } });
     rhi.iaDepth.inputLayout.setBindings({ rhi.posVertexBuffer ? quint32(3 * sizeof(float))
                                           : result.m_mesh->m_vertexBuffer.m_stride });
-    rhi.iaDepth.inputLayoutInputNames.append(QByteArrayLiteral("attr_pos"));
+    rhi.iaDepth.inputs.append(QSSGRhiInputAssemblerState::PositionSemantic);
     rhi.iaDepth.topology = QSSGRhiInputAssemblerState::toTopology(result.m_mesh->m_drawMode);
     rhi.iaDepth.vertexBuffer = rhi.posVertexBuffer ? rhi.posVertexBuffer : rhi.vertexBuffer;
     rhi.iaDepth.indexBuffer = rhi.indexBuffer;

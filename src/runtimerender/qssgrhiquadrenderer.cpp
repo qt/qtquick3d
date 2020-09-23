@@ -100,10 +100,10 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
                                             { 0, 0, QRhiVertexInputAttribute::Float3, 0 },
                                             { 0, 1, QRhiVertexInputAttribute::Float2, 3 * sizeof(float) }
                                         });
-        ps->ia.inputLayoutInputNames << QByteArrayLiteral("attr_pos") << QByteArrayLiteral("attr_uv");
+        ps->ia.inputs << QSSGRhiInputAssemblerState::PositionSemantic << QSSGRhiInputAssemblerState::TexCoord0Semantic;
     } else {
         ps->ia.inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float3, 0 } });
-        ps->ia.inputLayoutInputNames << QByteArrayLiteral("attr_pos");
+        ps->ia.inputs << QSSGRhiInputAssemblerState::PositionSemantic;
     }
     ps->ia.inputLayout.setBindings({ 5 * sizeof(float) });
     ps->ia.topology = QRhiGraphicsPipeline::Triangles;

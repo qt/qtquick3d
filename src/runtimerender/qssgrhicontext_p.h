@@ -56,8 +56,20 @@ struct QSSGRenderModel;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
+    enum InputSemantic {
+        PositionSemantic,  // attr_pos
+        NormalSemantic,    // attr_norm
+        TexCoord0Semantic, // attr_uv0
+        TexCoord1Semantic, // attr_uv1
+        TangentSemantic,   // attr_textan
+        BinormalSemantic,  // attr_binormal
+        JointSemantic,     // attr_joints
+        WeightSemantic,    // attr_weights
+        ColorSemantic      // attr_color
+    };
+
     QRhiVertexInputLayout inputLayout;
-    QVector<QByteArray> inputLayoutInputNames;
+    QVarLengthArray<InputSemantic, 8> inputs;
     QRhiGraphicsPipeline::Topology topology;
     QSSGRef<QSSGRhiBuffer> vertexBuffer;
     QSSGRef<QSSGRhiBuffer> indexBuffer;
@@ -161,7 +173,7 @@ public:
 
     int ub0Size() const { return m_ub0Size; }
     const QHash<QByteArray, QShaderDescription::BlockVariable> &ub0Members() const { return m_ub0; }
-    const QHash<QByteArray, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
+    const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
     const QHash<QByteArray, QShaderDescription::InOutVariable> &combinedImageSamplers() const { return m_combinedImageSamplers; }
 
     // This struct is used purely for performance. It is used to quickly store
@@ -217,7 +229,7 @@ private:
     QVector<QRhiShaderStage> m_stages;
     int m_ub0Size = 0;
     QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
-    QHash<QByteArray, QShaderDescription::InOutVariable> m_vertexInputs;
+    QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
 
     QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer

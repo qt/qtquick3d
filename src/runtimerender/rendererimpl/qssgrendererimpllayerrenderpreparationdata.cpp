@@ -769,27 +769,27 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         // APIs may treat unbound vertex inputs as a fatal error)
         bool hasJoint = false;
         bool hasWeight = false;
-        for (const QByteArray &attr : qAsConst(theSubset.rhi.ia.inputLayoutInputNames)) {
+        for (const QSSGRhiInputAssemblerState::InputSemantic &sem : qAsConst(theSubset.rhi.ia.inputs)) {
             using namespace QSSGMeshUtilities;
-            if (attr == Mesh::getPositionAttrName())
+            if (sem == QSSGRhiInputAssemblerState::PositionSemantic)
                 renderableFlagsForModel.setHasAttributePosition(true);
-            else if (attr == Mesh::getNormalAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::NormalSemantic)
                 renderableFlagsForModel.setHasAttributeNormal(true);
-            else if (attr == Mesh::getUVAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::TexCoord0Semantic)
                 renderableFlagsForModel.setHasAttributeTexCoord0(true);
-            else if (attr == Mesh::getUV2AttrName())
+            else if (sem == QSSGRhiInputAssemblerState::TexCoord1Semantic)
                 renderableFlagsForModel.setHasAttributeTexCoord1(true);
-            else if (attr == Mesh::getTexTanAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::TangentSemantic)
                 renderableFlagsForModel.setHasAttributeTangent(true);
-            else if (attr == Mesh::getTexBinormalAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::BinormalSemantic)
                 renderableFlagsForModel.setHasAttributeBinormal(true);
-            else if (attr == Mesh::getColorAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::ColorSemantic)
                 renderableFlagsForModel.setHasAttributeColor(true);
             // For skinning, we will set the HasAttribute only
             // if the mesh has both joint and weight
-            else if (attr == Mesh::getJointAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::JointSemantic)
                 hasJoint = true;
-            else if (attr == Mesh::getWeightAttrName())
+            else if (sem == QSSGRhiInputAssemblerState::WeightSemantic)
                 hasWeight = true;
         }
         renderableFlagsForModel.setHasAttributeJointAndWeight(hasJoint && hasWeight);
