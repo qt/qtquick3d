@@ -230,6 +230,7 @@ private:
     QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
     QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
+    QHash<int, int> m_materialImageSamplerBindings;
 
     QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
@@ -324,6 +325,14 @@ struct QSSGRhiTexture
     QSSGRhiSamplerDescription samplerDesc;
 };
 
+enum class QSSGRhiSamplerBindingHints
+{
+    LightProbe = 128,
+    ScreenTexture,
+    DepthTexture,
+    AoTexture
+};
+
 // QSSGRhiShaderStagesWithResources wraps a QSSGRhiShaderStages object and
 // contains the texture and uniform data that is needed in a frame. This
 // should be considered transient. Constructing it is light, and no data is
@@ -345,7 +354,7 @@ public:
     int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
     int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1);
     int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
-    int bindingForTexture(const char *name, const QVector<int> **arrayDims = nullptr) const;
+    int bindingForTexture(const char *name, int hint = -1);
 
     enum LightBufferSlot {
         LightBuffer0,

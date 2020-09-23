@@ -29,6 +29,7 @@
 
 #include "qssgrhicontext_p.h"
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtCore/QVariant>
 
 QT_BEGIN_NAMESPACE
@@ -874,20 +875,25 @@ void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(LightBufferSlot s
     }
 }
 
-int QSSGRhiShaderStagesWithResources::bindingForTexture(const char *name, const QVector<int> **arrayDims) const
+int QSSGRhiShaderStagesWithResources::bindingForTexture(const char *name, int hint)
 {
+    if (hint >= 0) {
+        auto it = m_shaderStages->m_materialImageSamplerBindings.constFind(hint);
+        if (it != m_shaderStages->m_materialImageSamplerBindings.cend())
+            return it.value();
+    }
+
     auto it = m_shaderStages->m_combinedImageSamplers.constFind(QByteArray::fromRawData(name, strlen(name)));
-    if (it == m_shaderStages->m_combinedImageSamplers.constEnd())
-        return -1;
+    const int binding = it != m_shaderStages->m_combinedImageSamplers.cend() ? it->binding : -1;
+    if (hint >= 0)
+        m_shaderStages->m_materialImageSamplerBindings[hint] = binding;
 
-    if (arrayDims)
-        *arrayDims = &it->arrayDims; // valid until QSSGShaderStages is valid (or addStages() is called again but that should not happen)
-
-    return it->binding;
+    return binding;
 }
 
 QSSGRhiContext::QSSGRhiContext()
 {
+    Q_STATIC_ASSERT(int(QSSGRhiSamplerBindingHints::LightProbe) > int(QSSGRenderableImage::Type::Occlusion));
 }
 
 QSSGRhiContext::~QSSGRhiContext()

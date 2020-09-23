@@ -327,7 +327,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
 
         if (shaderPipeline->lightProbeTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_lightProbe");
+            int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
@@ -342,7 +342,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->screenTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_screenTexture");
+            int binding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // linear min/mag, mipmap filtering depends on the
@@ -360,7 +360,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->depthTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_depthTexture");
+            int binding = shaderPipeline->bindingForTexture("qt_depthTexture", int(QSSGRhiSamplerBindingHints::DepthTexture));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // nearest min/mag, no mipmap
@@ -373,7 +373,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         if (shaderPipeline->ssaoTexture()) {
-            int binding = shaderPipeline->bindingForTexture("qt_aoTexture");
+            int binding = shaderPipeline->bindingForTexture("qt_aoTexture", int(QSSGRhiSamplerBindingHints::AoTexture));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
                 // linear min/mag, no mipmap
@@ -406,7 +406,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QSSGRenderableImage *renderableImage = renderable.firstImage;
         while (renderableImage) {
             const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
-            int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
+            const int samplerHint = int(renderableImage->m_mapType);
+            int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
             if (samplerBinding >= 0) {
                 QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
                 if (samplerBinding >= 0 && texture) {

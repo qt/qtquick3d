@@ -164,7 +164,7 @@ static void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
                                     QSSGRhiContext::ShaderResourceBindingList *bindings)
 {
     if (shaderPipeline->depthTexture()) {
-        int binding = shaderPipeline->bindingForTexture("qt_depthTexture");
+        int binding = shaderPipeline->bindingForTexture("qt_depthTexture", int(QSSGRhiSamplerBindingHints::DepthTexture));
         if (binding >= 0) {
              // nearest min/mag, no mipmap
              QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
@@ -177,7 +177,7 @@ static void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
 
     // SSAO texture
     if (shaderPipeline->ssaoTexture()) {
-        int binding = shaderPipeline->bindingForTexture("qt_aoTexture");
+        int binding = shaderPipeline->bindingForTexture("qt_aoTexture", int(QSSGRhiSamplerBindingHints::AoTexture));
         if (binding >= 0) {
             // linear min/mag, no mipmap
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
@@ -253,7 +253,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
             while (renderableImage) {
                 const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
-                int samplerBinding = shaderPipeline->bindingForTexture(samplerName);
+                const int samplerHint = int(renderableImage->m_mapType);
+                int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
                 if (samplerBinding >= 0) {
                     QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
                     if (samplerBinding >= 0 && texture) {
@@ -296,7 +297,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Light probe texture
             if (shaderPipeline->lightProbeTexture()) {
-                int binding = shaderPipeline->bindingForTexture("qt_lightProbe");
+                int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
                 if (binding >= 0) {
                     auto tiling = shaderPipeline->lightProbeTiling();
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
