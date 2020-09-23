@@ -972,14 +972,29 @@ void QQuick3DTexture::createLayerTexture()
     m_sceneManagerForLayer = manager;
 
     QQuickItem *sourceItem = m_sourceItem; // for capturing, recognizing in the lambda that m_sourceItem has changed is essential
-    connect(layer, &QObject::destroyed, manager.data(), [this, manager, layer, sourceItem]() {
-        // this is on the render thread so all borked threading-wise (all data here is gui thread stuff...) but will survive
-        if (m_initializedSourceItem == sourceItem) {
-            manager->qsgDynamicTextures.removeAll(layer);
-            m_sceneManagerForLayer = nullptr;
-            m_initializedSourceItem = nullptr;
-        }
-    }, Qt::DirectConnection);
+
+    connect(
+            layer,
+            &QObject::destroyed,
+            manager.data(),
+            [manager, layer]() {
+                // this is on the render thread so all borked threading-wise (all data here is gui thread stuff...) but will survive
+                manager->qsgDynamicTextures.removeAll(layer);
+            },
+            Qt::DirectConnection);
+
+    connect(
+            layer,
+            &QObject::destroyed,
+            this,
+            [this, sourceItem]() {
+                // this is on the render thread so all borked threading-wise (all data here is gui thread stuff...) but will survive
+                if (m_initializedSourceItem == sourceItem) {
+                    m_sceneManagerForLayer = nullptr;
+                    m_initializedSourceItem = nullptr;
+                }
+            },
+            Qt::DirectConnection);
 
     // When layer has been updated, take it into use.
     connect(layer, &QSGLayer::scheduledUpdateCompleted, this, [this, layer]() {
