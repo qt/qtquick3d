@@ -117,7 +117,6 @@ struct QSSGRhiShaderUniform
 {
     char name[64];
     size_t size = 0;
-    char data[64]; // big enough for a mat4
 
 private:
     size_t offset = SIZE_MAX;
@@ -130,10 +129,10 @@ struct QSSGRhiShaderUniformArray
     char name[64];
     size_t typeSize = 0;
     size_t itemCount = 0;
-    QByteArray data;
 
 private:
     size_t offset = SIZE_MAX;
+    size_t size = 0;
     bool maybeExists = true;
     friend class QSSGRhiShaderStagesWithResources;
 };
@@ -235,6 +234,7 @@ private:
     QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
     QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
     QVector<QSSGRhiShaderUniformArray> m_uniformArrays;
+    QVarLengthArray<char, 512> m_mainUniformBufferData;
 
     friend class QSSGRhiShaderStagesWithResources;
 };
@@ -341,6 +341,7 @@ public:
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
     QSSGRhiShaderStages *stages() { return m_shaderStages.data(); }
 
+    void beginMainUniformBuffer();
     int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
     int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1);
     int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);

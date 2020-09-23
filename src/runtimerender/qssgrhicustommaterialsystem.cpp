@@ -202,6 +202,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
     if (shaderPipeline) {
         ps->shaderStages = shaderPipeline->stages();
 
+        shaderPipeline->beginMainUniformBuffer();
         shaderPipeline->resetExtraTextures();
 
         const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();

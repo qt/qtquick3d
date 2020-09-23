@@ -105,6 +105,8 @@ static QSSGRef<QSSGRhiShaderStagesWithResources> shadersForDefaultMaterial(QSSGR
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = generator->getRhiShadersWithResources(subsetRenderable, featureSet);
     if (shaderPipeline) {
         ps->shaderStages = shaderPipeline->stages();
+        shaderPipeline->beginMainUniformBuffer();
+
         const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
         const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
                                                          : subsetRenderable.modelContext.modelViewProjection);
