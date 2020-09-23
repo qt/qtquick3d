@@ -1,3 +1,5 @@
+# Generated from qquick3dtexturedata.pro.
+
 if(NOT QT_FEATURE_private_tests)
     return()
 endif()
@@ -13,3 +15,7 @@ qt_add_test(qquick3dtexturedata
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
 )
+
+#### Keys ignored in scope 1:.:.:qquick3dtexturedata.pro:<TRUE>:
+# TEMPLATE = "app"
+# _REQUIREMENTS = "qtConfig(private_tests)"

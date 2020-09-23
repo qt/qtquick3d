@@ -9,7 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/quick3d/principledmaterial")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/principledmaterial")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -52,17 +56,6 @@ qt6_add_resources(principledmaterial "materials"
         "/"
     FILES
         ${materials_resource_files}
-)
-
-set(shader_gen_files
-    "main.qml"
-)
-
-qt6_quick3d_build_shaders(principledmaterial "shaders"
-    PREFIX
-        "/"
-    FILES
-        ${shader_gen_files}
 )
 
 install(TARGETS principledmaterial

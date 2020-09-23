@@ -35,8 +35,8 @@ target_link_libraries(customeffect PUBLIC
 set(qml_resource_files
     "checkers2.png"
     "effect.frag"
-    "effect2.vert"
     "effect2.frag"
+    "effect2.vert"
     "main.qml"
     "qt_logo_rect.png"
 )

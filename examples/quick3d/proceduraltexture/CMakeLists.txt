@@ -1,3 +1,5 @@
+# Generated from proceduraltexture.pro.
+
 cmake_minimum_required(VERSION 3.14)
 project(proceduraltexture LANGUAGES CXX)
 
@@ -31,15 +33,15 @@ target_link_libraries(proceduraltexture PUBLIC
 
 
 # Resources:
-set(resources_resource_files
+set(qml_resource_files
     "main.qml"
 )
 
-qt6_add_resources(proceduraltexture "resources"
+qt6_add_resources(proceduraltexture "qml"
     PREFIX
         "/"
     FILES
-        ${resources_resource_files}
+        ${qml_resource_files}
 )
 
 install(TARGETS proceduraltexture

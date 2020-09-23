@@ -9,7 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/quick3d/custommaterial")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/custommaterial")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -42,10 +46,10 @@ qt6_add_resources(custommaterial "qml"
 )
 set(materials_resource_files
     "maps/OpenfootageNET_garage-1024.hdr"
-    "material.vert"
     "material.frag"
-    "material_lightprobe.frag"
+    "material.vert"
     "material_builtinspecular.frag"
+    "material_lightprobe.frag"
     "screen.frag"
 )
 

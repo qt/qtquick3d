@@ -8,9 +8,9 @@ qt_add_module(Quick3DUtils
     SOURCES
         qqsbcollection.cpp qqsbcollection_p.h
         qssgbounds3.cpp qssgbounds3_p.h
-        qssgmeshbvh.cpp qssgmeshbvh_p.h
         qssgdataref.cpp qssgdataref_p.h
         qssginvasivelinkedlist_p.h
+        qssgmeshbvh.cpp qssgmeshbvh_p.h
         qssgoption_p.h
         qssgperftimer.cpp qssgperftimer_p.h
         qssgplane.cpp qssgplane_p.h

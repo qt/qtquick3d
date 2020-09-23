@@ -17,6 +17,7 @@ qt_add_manual_test(stereoscopic
 # Resources:
 set(qml_resource_files
     "SceneNode.qml"
+    "anaglyph.frag.qsb"
     "main.qml"
 )
 

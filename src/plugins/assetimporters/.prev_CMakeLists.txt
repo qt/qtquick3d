@@ -1,6 +1,6 @@
 # Generated from assetimporters.pro.
 
 add_subdirectory(uip)
-if(QT_FEATURE_assimp)
+if(QT_FEATURE_quick3d_assimp)
     add_subdirectory(assimp)
 endif()

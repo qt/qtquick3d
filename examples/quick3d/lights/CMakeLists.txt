@@ -9,7 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/quick3d/lights")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/lights")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -31,11 +35,11 @@ target_link_libraries(lights PUBLIC
 set(qml_resource_files
     "CustomCheckBox.qml"
     "CustomSlider.qml"
-    "main.qml"
     "RotatingTeaPot.qml"
+    "custom.vert"
+    "main.qml"
     "teapot.mesh"
     "white.png"
-    "custom.vert"
 )
 
 qt6_add_resources(lights "qml"

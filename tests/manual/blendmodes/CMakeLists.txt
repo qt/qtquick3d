@@ -29,5 +29,4 @@ qt_add_resource(blendmodes "qml"
 
 #### Keys ignored in scope 1:.:.:blendmodes.pro:<TRUE>:
 # INSTALLS = "target"
-# OTHER_FILES = "doc/src/*.*"
 # target.path = "$$[QT_INSTALL_EXAMPLES]/quick3d/blendmodes"
