@@ -435,15 +435,14 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
 {
     int index = storeIndex;
     if (storeIndex == -1) {
-        const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
+        const QByteArray ba = QByteArray::fromRawData(name, strlen(name) + 1);
         auto it = m_shaderStages->m_uniformIndex.constFind(ba);
         if (it != m_shaderStages->m_uniformIndex.cend()) {
             index = int(*it);
-        } else {
+        } else if (ba.size() <= qsizetype(sizeof(QSSGRhiShaderUniform::name))) {
             QSSGRhiShaderUniform u;
-            Q_ASSERT(ba.count() < sizeof(u.name) - 1);
             Q_ASSERT(size <= sizeof(u.data));
-            qstrcpy(u.name, name);
+            memcpy(u.name, name, ba.size());
             u.size = size;
             memcpy(u.data, data, size);
 
@@ -451,6 +450,9 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
             m_shaderStages->m_uniformIndex[name] = new_idx; // key is name, not ba, this has to be a deep copy QByteArray
             m_shaderStages->m_uniforms.push_back(u);
             index = new_idx;
+        } else {
+            qWarning("Attempted to set uniform with too long name: %s", name);
+            return index;
         }
     }
 
@@ -474,18 +476,20 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
 
     int newIndex = -1;
     if (index == -1) {
-        const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
+        const QByteArray ba = QByteArray::fromRawData(name, strlen(name) + 1);
         auto it = m_shaderStages->m_uniformIndex.constFind(ba);
         if (it != m_shaderStages->m_uniformIndex.cend()) {
             index = int(*it);
             ua = &m_shaderStages->m_uniformArrays[index];
-        } else {
+        } else if (ba.size() <= qsizetype(sizeof(QSSGRhiShaderUniformArray::name))) {
             newIndex = m_shaderStages->m_uniformArrays.size();
             m_shaderStages->m_uniformArrays.push_back(QSSGRhiShaderUniformArray());
             m_shaderStages->m_uniformIndex[name] = newIndex; // key needs deep copy
             ua = &m_shaderStages->m_uniformArrays.last();
-            Q_ASSERT(ba.count() < sizeof(ua->name) - 1);
-            qstrcpy(ua->name, name);
+            memcpy(ua->name, name, ba.size());
+        } else {
+            qWarning("Attempted to set uniform array with too long name: %s", name);
+            return index;
         }
     } else {
         ua = &m_shaderStages->m_uniformArrays[index];
