@@ -30,7 +30,7 @@ set(assimp_resource_files
     "options.json"
 )
 
-qt_add_resource(AssimpImporterPlugin "assimp"
+qt_internal_add_resource(AssimpImporterPlugin "assimp"
     PREFIX
         "/assimpimporter"
     FILES
@@ -46,12 +46,12 @@ qt_add_resource(AssimpImporterPlugin "assimp"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     LIBRARIES
         WrapAssimp::WrapAssimp
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_assimp OR (CMAKE_CROSSCOMPILING AND host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_assimp OR (CMAKE_CROSSCOMPILING AND host_build)
     SOURCES
         ../../../3rdparty/assimp/config.h
         ../../../3rdparty/assimp/revision.h
@@ -324,34 +324,34 @@ qt_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_assimp OR 
         ../../../3rdparty/assimp/unzip
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
     DEFINES
         _DEBUG
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION WIN32 AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION WIN32 AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
     DEFINES
         WindowsStore
         _CRT_SECURE_NO_WARNINGS
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_zlib AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_zlib AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     LIBRARIES
         ZLIB::ZLIB
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_zlib) AND (host_build OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_zlib)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_zlib) AND (host_build OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_zlib)
     LIBRARIES
         Qt::ZlibPrivate
 )
 
 # special case begin
-qt_extend_target(AssimpImporterPlugin CONDITION ICC AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION ICC AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     COMPILE_OPTIONS
         "-wd310" "-wd68" "-wd858"
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION (GCC OR CLANG) AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION (GCC OR CLANG) AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     COMPILE_OPTIONS
         "-Wno-ignored-qualifiers"
         "-Wno-unused-parameter"
@@ -361,7 +361,7 @@ qt_extend_target(AssimpImporterPlugin CONDITION (GCC OR CLANG) AND NOT QT_FEATUR
         "-Wno-reorder"
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION MSVC AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION MSVC AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     COMPILE_OPTIONS
         "-wd4100"
         "-wd4189"
@@ -370,13 +370,13 @@ qt_extend_target(AssimpImporterPlugin CONDITION MSVC AND NOT QT_FEATURE_system_a
         "-wd4828"
 )
 
-qt_extend_target(AssimpImporterPlugin CONDITION CLANG AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION CLANG AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     COMPILE_OPTIONS
         "-Wno-unused-private-field"
 )
 # special case end
 
-qt_extend_target(AssimpImporterPlugin CONDITION MSVC AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
+qt_internal_extend_target(AssimpImporterPlugin CONDITION MSVC AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
     DEFINES
         _CRT_SECURE_NO_WARNINGS
         _SCL_SECURE_NO_WARNINGS

@@ -4,7 +4,7 @@
 ## picking Test:
 #####################################################################
 
-qt_add_test(picking_test # special case
+qt_internal_add_test(picking_test # special case
     SOURCES
         tst_picking.cpp
     PUBLIC_LIBRARIES

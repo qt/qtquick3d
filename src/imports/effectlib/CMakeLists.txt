@@ -4,7 +4,7 @@
 ## qtquick3deffectplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquick3deffectplugin
+qt_internal_add_qml_module(qtquick3deffectplugin
     URI "QtQuick3D.Effects"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
@@ -66,7 +66,7 @@ set(qteffectlibrary_resource_files
     "shaders/vignette.frag"
 )
 
-qt_add_resource(qtquick3deffectplugin "qteffectlibrary"
+qt_internal_add_resource(qtquick3deffectplugin "qteffectlibrary"
     PREFIX
         "/qtquick3deffects"
     FILES

@@ -4,7 +4,7 @@
 ## qquick3dplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qquick3dplugin
+qt_internal_add_qml_module(qquick3dplugin
     URI "QtQuick3D"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
@@ -27,7 +27,7 @@ qt_add_qml_module(qquick3dplugin
 
 ## Scopes:
 #####################################################################
-qt_add_docs(qquick3dplugin
+qt_internal_add_docs(qquick3dplugin
     doc/qtquick3d.qdocconf
 )
 

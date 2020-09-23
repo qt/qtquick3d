@@ -8,7 +8,7 @@ endif()
 ## shadercollection Test:
 #####################################################################
 
-qt_add_test(shadercollection
+qt_internal_add_test(shadercollection
     SOURCES
         tst_shadercollection.cpp
     PUBLIC_LIBRARIES

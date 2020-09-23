@@ -4,7 +4,7 @@
 ## qtquick3dmaterialplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquick3dmaterialplugin
+qt_internal_add_qml_module(qtquick3dmaterialplugin
     URI "QtQuick3D.Materials"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED

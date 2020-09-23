@@ -8,7 +8,7 @@ endif()
 ## qquick3dmodel Test:
 #####################################################################
 
-qt_add_test(qquick3dmodel
+qt_internal_add_test(qquick3dmodel
     SOURCES
         tst_qquick3dmodel.cpp
     PUBLIC_LIBRARIES

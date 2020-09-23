@@ -4,7 +4,7 @@
 ## loader Binary:
 #####################################################################
 
-qt_add_manual_test(loader
+qt_internal_add_manual_test(loader
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(loader "qml"
+qt_internal_add_resource(loader "qml"
     PREFIX
         "/"
     FILES

@@ -4,7 +4,7 @@
 ## Quick3DUtils Module:
 #####################################################################
 
-qt_add_module(Quick3DUtils
+qt_internal_add_module(Quick3DUtils
     SOURCES
         qqsbcollection.cpp qqsbcollection_p.h
         qssgbounds3.cpp qssgbounds3_p.h

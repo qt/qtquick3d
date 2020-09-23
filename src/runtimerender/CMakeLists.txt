@@ -4,7 +4,7 @@
 ## Quick3DRuntimeRender Module:
 #####################################################################
 
-qt_add_module(Quick3DRuntimeRender
+qt_internal_add_module(Quick3DRuntimeRender
     SOURCES
         graphobjects/qssgrendercamera.cpp graphobjects/qssgrendercamera_p.h
         graphobjects/qssgrendercustommaterial_p.h
@@ -118,14 +118,14 @@ set(res_resource_files
     "res/rhishaders/cubeshadowblury.vert.qsb"
     "res/rhishaders/environmentmap.frag.qsb"
     "res/rhishaders/environmentmap.vert.qsb"
-    "res/rhishaders/environmentmapprefilter.frag.qsb"
-    "res/rhishaders/environmentmapprefilter.vert.qsb"
-    "res/rhishaders/environmentmapprefilter_rgbe.frag.qsb"
-    "res/rhishaders/environmentmapprefilter_rgbe.vert.qsb"
     "res/rhishaders/environmentmapirradiance.frag.qsb"
     "res/rhishaders/environmentmapirradiance.vert.qsb"
     "res/rhishaders/environmentmapirradiance_rgbe.frag.qsb"
     "res/rhishaders/environmentmapirradiance_rgbe.vert.qsb"
+    "res/rhishaders/environmentmapprefilter.frag.qsb"
+    "res/rhishaders/environmentmapprefilter.vert.qsb"
+    "res/rhishaders/environmentmapprefilter_rgbe.frag.qsb"
+    "res/rhishaders/environmentmapprefilter_rgbe.vert.qsb"
     "res/rhishaders/orthoshadowblurx.frag.qsb"
     "res/rhishaders/orthoshadowblurx.vert.qsb"
     "res/rhishaders/orthoshadowblury.frag.qsb"
@@ -160,7 +160,7 @@ set(res_resource_files
     "res/rhishaders/texturedquad.vert.qsb"
 )
 
-qt_add_resource(Quick3DRuntimeRender "res"
+qt_internal_add_resource(Quick3DRuntimeRender "res"
     PREFIX
         "/"
     FILES

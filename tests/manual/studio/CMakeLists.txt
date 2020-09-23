@@ -4,7 +4,7 @@
 ## studio Binary:
 #####################################################################
 
-qt_add_manual_test(studio
+qt_internal_add_manual_test(studio
     GUI
     SOURCES
         main.cpp
@@ -30,7 +30,7 @@ set(qml_resource_files
     "meshes/teapot.mesh"
 )
 
-qt_add_resource(studio "qml"
+qt_internal_add_resource(studio "qml"
     PREFIX
         "/"
     FILES

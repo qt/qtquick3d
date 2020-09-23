@@ -4,7 +4,7 @@
 ## invasivelist Test:
 #####################################################################
 
-qt_add_test(invasivelist
+qt_internal_add_test(invasivelist
     SOURCES
         tst_invasivelist.cpp
     PUBLIC_LIBRARIES

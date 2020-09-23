@@ -4,7 +4,7 @@
 ## bounds Test:
 #####################################################################
 
-qt_add_test(bounds
+qt_internal_add_test(bounds
     SOURCES
         tst_bounds.cpp
     PUBLIC_LIBRARIES

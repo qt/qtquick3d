@@ -4,7 +4,7 @@
 ## principledmaterial Binary:
 #####################################################################
 
-qt_add_manual_test(principledmaterial
+qt_internal_add_manual_test(principledmaterial
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(principledmaterial "qml"
+qt_internal_add_resource(principledmaterial "qml"
     PREFIX
         "/"
     FILES
@@ -32,7 +32,7 @@ set(materials_resource_files
     "maps/metallic/normalrough.astc"
 )
 
-qt_add_resource(principledmaterial "materials"
+qt_internal_add_resource(principledmaterial "materials"
     PREFIX
         "/"
     FILES

@@ -8,7 +8,7 @@ endif()
 ## qquick3ddirectionallight Test:
 #####################################################################
 
-qt_add_test(qquick3ddirectionallight
+qt_internal_add_test(qquick3ddirectionallight
     SOURCES
         tst_qquick3ddirectionallight.cpp
     PUBLIC_LIBRARIES

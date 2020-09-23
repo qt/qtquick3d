@@ -31,7 +31,7 @@ set(metadata_resource_files
     "options.json"
 )
 
-qt_add_resource(UipAssetImporterPlugin "metadata"
+qt_internal_add_resource(UipAssetImporterPlugin "metadata"
     PREFIX
         "/uipimporter"
     FILES

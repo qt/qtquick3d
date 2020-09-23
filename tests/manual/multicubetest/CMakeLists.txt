@@ -4,7 +4,7 @@
 ## multicubetest Binary:
 #####################################################################
 
-qt_add_manual_test(multicubetest
+qt_internal_add_manual_test(multicubetest
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(multicubetest "qml"
+qt_internal_add_resource(multicubetest "qml"
     PREFIX
         "/"
     FILES

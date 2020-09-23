@@ -4,7 +4,7 @@
 ## repeater3d Binary:
 #####################################################################
 
-qt_add_manual_test(repeater3d
+qt_internal_add_manual_test(repeater3d
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(repeater3d "qml"
+qt_internal_add_resource(repeater3d "qml"
     PREFIX
         "/"
     FILES

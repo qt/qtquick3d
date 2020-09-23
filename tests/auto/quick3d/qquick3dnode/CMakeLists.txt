@@ -8,7 +8,7 @@ endif()
 ## qquick3dnode Test:
 #####################################################################
 
-qt_add_test(qquick3dnode
+qt_internal_add_test(qquick3dnode
     SOURCES
         tst_qquick3dnode.cpp
     PUBLIC_LIBRARIES

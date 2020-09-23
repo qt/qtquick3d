@@ -4,7 +4,7 @@
 ## intersection Test:
 #####################################################################
 
-qt_add_test(intersection
+qt_internal_add_test(intersection
     SOURCES
         tst_intersection.cpp
     PUBLIC_LIBRARIES

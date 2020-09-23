@@ -8,7 +8,7 @@ endif()
 ## qquick3dpointlight Test:
 #####################################################################
 
-qt_add_test(qquick3dpointlight
+qt_internal_add_test(qquick3dpointlight
     SOURCES
         tst_qquick3dpointlight.cpp
     PUBLIC_LIBRARIES

@@ -8,7 +8,7 @@ endif()
 ## qquick3dorthographiccamera Test:
 #####################################################################
 
-qt_add_test(qquick3dorthographiccamera
+qt_internal_add_test(qquick3dorthographiccamera
     SOURCES
         tst_qquick3dorthographiccamera.cpp
     PUBLIC_LIBRARIES

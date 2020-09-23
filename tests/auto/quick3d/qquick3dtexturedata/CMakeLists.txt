@@ -8,7 +8,7 @@ endif()
 ## qquick3dtexturedata Test:
 #####################################################################
 
-qt_add_test(qquick3dtexturedata
+qt_internal_add_test(qquick3dtexturedata
     SOURCES
         tst_qquick3dtexturedata.cpp
     PUBLIC_LIBRARIES

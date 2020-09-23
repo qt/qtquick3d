@@ -4,7 +4,7 @@
 ## offscreenrendermode Binary:
 #####################################################################
 
-qt_add_manual_test(offscreenrendermode
+qt_internal_add_manual_test(offscreenrendermode
     GUI
     SOURCES
         offscreenrendermode.cpp
@@ -25,7 +25,7 @@ set(offscreenrendermode_resource_files
     "qt_logo.png"
 )
 
-qt_add_resource(offscreenrendermode "offscreenrendermode"
+qt_internal_add_resource(offscreenrendermode "offscreenrendermode"
     PREFIX
         "/"
     FILES

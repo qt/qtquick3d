@@ -4,7 +4,7 @@
 ## sourceitem Binary:
 #####################################################################
 
-qt_add_manual_test(sourceitem
+qt_internal_add_manual_test(sourceitem
     GUI
     SOURCES
         main.cpp
@@ -21,7 +21,7 @@ set(qml_resource_files
     "qt_logo_rect.png"
 )
 
-qt_add_resource(sourceitem "qml"
+qt_internal_add_resource(sourceitem "qml"
     PREFIX
         "/"
     FILES

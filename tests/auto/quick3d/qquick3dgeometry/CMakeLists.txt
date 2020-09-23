@@ -8,7 +8,7 @@ endif()
 ## qquick3dgeometry Test:
 #####################################################################
 
-qt_add_test(qquick3dgeometry
+qt_internal_add_test(qquick3dgeometry
     SOURCES
         tst_qquick3dgeometry.cpp
     PUBLIC_LIBRARIES

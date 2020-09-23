@@ -4,7 +4,7 @@
 ## blendmodes Binary:
 #####################################################################
 
-qt_add_manual_test(blendmodes
+qt_internal_add_manual_test(blendmodes
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(blendmodes "qml"
+qt_internal_add_resource(blendmodes "qml"
     PREFIX
         "/"
     FILES

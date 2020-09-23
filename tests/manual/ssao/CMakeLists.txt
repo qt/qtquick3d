@@ -4,7 +4,7 @@
 ## ssao Binary:
 #####################################################################
 
-qt_add_manual_test(ssao
+qt_internal_add_manual_test(ssao
     GUI
     SOURCES
         ssao.cpp
@@ -24,7 +24,7 @@ set(ssao_resource_files
     "ssao.qml"
 )
 
-qt_add_resource(ssao "ssao"
+qt_internal_add_resource(ssao "ssao"
     PREFIX
         "/"
     FILES

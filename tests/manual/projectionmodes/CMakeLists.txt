@@ -4,7 +4,7 @@
 ## projectionmodes Binary:
 #####################################################################
 
-qt_add_manual_test(projectionmodes
+qt_internal_add_manual_test(projectionmodes
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(projectionmodes "qml"
+qt_internal_add_resource(projectionmodes "qml"
     PREFIX
         "/"
     FILES

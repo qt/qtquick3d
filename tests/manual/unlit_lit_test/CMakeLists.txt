@@ -4,7 +4,7 @@
 ## unlit_lit_test Binary:
 #####################################################################
 
-qt_add_manual_test(unlit_lit_test
+qt_internal_add_manual_test(unlit_lit_test
     GUI
     SOURCES
         rhitest.cpp
@@ -25,7 +25,7 @@ set(rhitest_resource_files
     "rhitest.qml"
 )
 
-qt_add_resource(unlit_lit_test "rhitest"
+qt_internal_add_resource(unlit_lit_test "rhitest"
     PREFIX
         "/"
     FILES

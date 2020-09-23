@@ -4,7 +4,7 @@
 ## shadergen Test:
 #####################################################################
 
-qt_add_test(shadergen
+qt_internal_add_test(shadergen
     SOURCES
         ../../../../tools/shadergen/parser.cpp ../../../../tools/shadergen/parser.h
         tst_shadergen.cpp
@@ -25,7 +25,7 @@ set(qml_resource_files
     "qml/PrincipledMaterialA.qml"
 )
 
-qt_add_resource(shadergen "qml"
+qt_internal_add_resource(shadergen "qml"
     PREFIX
         "/"
     FILES

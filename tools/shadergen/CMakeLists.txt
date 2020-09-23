@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_get_tool_target_name(target_name shadergen)
-qt_add_tool(${target_name}
+qt_internal_add_tool(${target_name}
     TOOLS_TARGET Quick3D # special case
     SOURCES
         genshaders.cpp genshaders.h

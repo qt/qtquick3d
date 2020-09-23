@@ -4,7 +4,7 @@
 ## stereoscopic Binary:
 #####################################################################
 
-qt_add_manual_test(stereoscopic
+qt_internal_add_manual_test(stereoscopic
     GUI
     SOURCES
         main.cpp
@@ -21,7 +21,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(stereoscopic "qml"
+qt_internal_add_resource(stereoscopic "qml"
     PREFIX
         "/"
     FILES

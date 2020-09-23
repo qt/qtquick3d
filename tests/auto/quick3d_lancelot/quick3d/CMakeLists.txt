@@ -7,7 +7,7 @@
 # Collect test data
 list(APPEND test_data "../data")
 
-qt_add_test(tst_quick3d
+qt_internal_add_test(tst_quick3d
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
         ../shared/baselineprotocol.cpp ../shared/baselineprotocol.h

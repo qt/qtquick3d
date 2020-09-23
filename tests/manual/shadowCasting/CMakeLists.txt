@@ -4,7 +4,7 @@
 ## shadowCasting Binary:
 #####################################################################
 
-qt_add_manual_test(shadowCasting
+qt_internal_add_manual_test(shadowCasting
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(shadowCasting "qml"
+qt_internal_add_resource(shadowCasting "qml"
     PREFIX
         "/"
     FILES

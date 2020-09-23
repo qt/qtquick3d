@@ -4,7 +4,7 @@
 ## cameralookat Binary:
 #####################################################################
 
-qt_add_manual_test(cameralookat
+qt_internal_add_manual_test(cameralookat
     GUI
     SOURCES
         main.cpp
@@ -19,7 +19,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_add_resource(cameralookat "qml"
+qt_internal_add_resource(cameralookat "qml"
     PREFIX
         "/"
     FILES
