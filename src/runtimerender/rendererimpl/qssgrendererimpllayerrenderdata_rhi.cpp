@@ -112,6 +112,8 @@ static QSSGRef<QSSGRhiShaderStagesWithResources> shadersForDefaultMaterial(QSSGR
                                                               shaderPipeline,
                                                               ps,
                                                               subsetRenderable.material,
+                                                              subsetRenderable.shaderDescription,
+                                                              generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties(),
                                                               camera,
                                                               mvp,
                                                               subsetRenderable.modelContext.normalMatrix,

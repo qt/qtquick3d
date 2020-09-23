@@ -47,6 +47,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -105,6 +106,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                          QSSGRhiGraphicsPipelineState *inPipelineState,
                                          const QSSGRenderGraphObject &inMaterial,
+                                         const QSSGShaderDefaultMaterialKey &inKey,
+                                         QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                          QSSGRenderCamera &inCamera,
                                          const QMatrix4x4 &inModelViewProjection,
                                          const QMatrix3x3 &inNormalMatrix,

@@ -215,6 +215,8 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                               shaderPipeline,
                                                               ps,
                                                               material,
+                                                              renderable.shaderDescription,
+                                                              context->renderer()->defaultMaterialShaderKeyProperties(),
                                                               customMaterialContext.camera,
                                                               customMaterialContext.modelViewProjection,
                                                               customMaterialContext.normalMatrix,

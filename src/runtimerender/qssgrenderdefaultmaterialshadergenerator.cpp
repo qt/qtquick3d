@@ -1317,6 +1317,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
                                                            const QSSGRenderGraphObject &inMaterial,
+                                                           const QSSGShaderDefaultMaterialKey &inKey,
+                                                           QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                            QSSGRenderCamera &inCamera,
                                                            const QMatrix4x4 &inModelViewProjection,
                                                            const QMatrix3x3 &inNormalMatrix,
@@ -1365,8 +1367,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.viewMatrixIdx = shaders->setUniform("qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
 
     // Skinning
-    cui.boneTransformsIdx = shaders->setUniformArray("qt_boneTransforms", inBoneGlobals.mData, inBoneGlobals.mSize, QSSGRenderShaderDataType::Matrix4x4, cui.boneTransformsIdx);
-    cui.boneNormalTransformsIdx = shaders->setUniformArray("qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize, QSSGRenderShaderDataType::Matrix3x3, cui.boneNormalTransformsIdx);
+    const bool hasSkinning = inBoneGlobals.size() > 0
+            && inProperties.m_vertexAttributes.getBitValue(QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
+    if (hasSkinning) {
+        cui.boneTransformsIdx = shaders->setUniformArray("qt_boneTransforms", inBoneGlobals.mData, inBoneGlobals.mSize,
+                                                         QSSGRenderShaderDataType::Matrix4x4, cui.boneTransformsIdx);
+        cui.boneNormalTransformsIdx = shaders->setUniformArray("qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize,
+                                                               QSSGRenderShaderDataType::Matrix3x3, cui.boneNormalTransformsIdx);
+    }
 
     // In D3D, Vulkan and Metal Y points down and the origin is
     // top-left in the viewport coordinate system. OpenGL is
