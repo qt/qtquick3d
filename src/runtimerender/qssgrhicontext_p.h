@@ -526,12 +526,10 @@ struct QSSGRhiUniformBufferSet
 {
     QRhiBuffer *ubuf = nullptr;
     QRhiBuffer *lightsUbuf0 = nullptr;
-    QRhiBuffer *lightsUbuf1 = nullptr;
 
     void reset() {
         delete ubuf;
         delete lightsUbuf0;
-        delete lightsUbuf1;
         *this = QSSGRhiUniformBufferSet();
     }
 };
