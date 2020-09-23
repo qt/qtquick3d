@@ -332,7 +332,6 @@ public:
     int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
     int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1);
     int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
-    void dumpUniforms();
     int bindingForTexture(const char *name, const QVector<int> **arrayDims = nullptr) const;
 
     enum LightBufferSlot {

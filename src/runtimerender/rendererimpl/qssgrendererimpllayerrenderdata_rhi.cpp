@@ -206,8 +206,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                                                              QVector2D(),
                                                                                              nullptr);
         if (shaderPipeline) {
-            // shaderPipeline->dumpUniforms();
-
             ps->samples = samples;
 
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);

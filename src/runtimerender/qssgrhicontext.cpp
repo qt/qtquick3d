@@ -700,16 +700,6 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
     return index;
 }
 
-void QSSGRhiShaderStagesWithResources::dumpUniforms()
-{
-    for (const QSSGRhiShaderUniform &u : qAsConst(m_shaderStages->m_uniforms)) {
-        qDebug() << u.name << u.size << QByteArray(u.data, int(u.size));
-    }
-    for (const QSSGRhiShaderUniformArray &ua : qAsConst(m_shaderStages->m_uniformArrays)) {
-        qDebug() << ua.name << ua.typeSize << '[' << ua.itemCount << ']' << ua.data;
-    }
-}
-
 int QSSGRhiShaderStagesWithResources::bindingForTexture(const char *name, const QVector<int> **arrayDims) const
 {
     auto it = m_shaderStages->m_combinedImageSamplers.constFind(QByteArray::fromRawData(name, strlen(name)));

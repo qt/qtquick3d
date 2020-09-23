@@ -268,8 +268,6 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                                                         nullptr);
 
     if (shaderPipeline) {
-        //shaderPipeline->dumpUniforms();
-
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
         ps->samples = samples;
