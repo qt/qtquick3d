@@ -443,7 +443,7 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
             QSSGRhiShaderUniform u;
             Q_ASSERT(ba.count() < sizeof(u.name) - 1);
             Q_ASSERT(size <= sizeof(u.data));
-            strcpy(u.name, name);
+            qstrcpy(u.name, name);
             u.size = size;
             memcpy(u.data, data, size);
 
@@ -485,7 +485,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
             m_shaderStages->m_uniformIndex[name] = newIndex; // key needs deep copy
             ua = &m_shaderStages->m_uniformArrays.last();
             Q_ASSERT(ba.count() < sizeof(ua->name) - 1);
-            strcpy(ua->name, name);
+            qstrcpy(ua->name, name);
         }
     } else {
         ua = &m_shaderStages->m_uniformArrays[index];
