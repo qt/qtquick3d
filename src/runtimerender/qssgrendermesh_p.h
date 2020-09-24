@@ -78,10 +78,8 @@ struct QSSGRenderSubset : public QSSGRenderSubsetBase
 {
     struct {
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
-        QSSGRef<QSSGRhiBuffer> posVertexBuffer; ///< separate position buffer for fast depth path rendering
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
-        QSSGRhiInputAssemblerState iaDepth;
     } rhi;
     QString name;
     QVector<QSSGRenderSubsetBase> subSubsets;

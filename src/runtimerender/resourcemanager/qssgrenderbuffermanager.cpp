@@ -1093,28 +1093,6 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QStrin
     return QSSGMeshUtilities::MultiLoadResult();
 }
 
-QVector<QVector3D> QSSGBufferManager::createPackedPositionDataArray(
-        const QSSGMeshUtilities::MultiLoadResult &inResult) const
-{
-    // we assume a position consists of 3 floats
-    const auto mesh = inResult.m_mesh;
-    qint32 vertexCount = mesh->m_vertexBuffer.m_data.size() / mesh->m_vertexBuffer.m_stride;
-    QVector<QVector3D> positions(vertexCount);
-    quint8 *baseOffset = reinterpret_cast<quint8 *>(mesh);
-
-    // copy position data
-    float *srcData = reinterpret_cast<float *>(mesh->m_vertexBuffer.m_data.begin(baseOffset));
-    quint32 srcStride = mesh->m_vertexBuffer.m_stride / sizeof(float);
-    QVector3D *p = positions.data();
-
-    for (qint32 i = 0; i < vertexCount; ++i) {
-        p[i] = QVector3D(srcData[0], srcData[1], srcData[2]);
-        srcData += srcStride;
-    }
-
-    return positions;
-}
-
 QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderPath &inSourcePath) const
 {
     if (inSourcePath.isNull())
@@ -1157,10 +1135,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
     QSSGByteView vertexBufferData(result.m_mesh->m_vertexBuffer.m_data.begin(baseAddress),
                                   result.m_mesh->m_vertexBuffer.m_data.size());
 
-    // create a tight packed position data VBO
-    // this should improve our depth pre pass rendering
-    QVector<QVector3D> posData = createPackedPositionDataArray(result);
-
     QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::UnsignedInteger16;
     QRhiCommandBuffer::IndexFormat rhiIndexFormat = QRhiCommandBuffer::IndexUInt16;
     if (result.m_mesh->m_indexBuffer.m_data.size()) {
@@ -1181,12 +1155,9 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
 
     struct {
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
-        QSSGRef<QSSGRhiBuffer> posVertexBuffer;
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
-        QSSGRhiInputAssemblerState iaDepth;
     } rhi;
-
 
     newMesh->bufferResourceUpdates = context->rhi()->nextResourceUpdateBatch();
     rhi.vertexBuffer = new QSSGRhiBuffer(*context.data(),
@@ -1195,16 +1166,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
                                          result.m_mesh->m_vertexBuffer.m_stride,
                                          vertexBufferData.size());
     newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBufferData);
-
-    if (posData.size()) {
-        QSSGByteView posDataView = toByteView(posData);
-        rhi.posVertexBuffer = new QSSGRhiBuffer(*context.data(),
-                                                QRhiBuffer::Static,
-                                                QRhiBuffer::VertexBuffer,
-                                                3 * sizeof(float),
-                                                posDataView.size());
-        newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.posVertexBuffer->buffer(), posDataView);
-    }
 
     if (result.m_mesh->m_indexBuffer.m_data.size()) {
         QSSGByteView indexBufferData(result.m_mesh->m_indexBuffer.m_data.begin(baseAddress),
@@ -1268,14 +1229,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
     rhi.ia.vertexBuffer = rhi.vertexBuffer;
     rhi.ia.indexBuffer = rhi.indexBuffer;
 
-    rhi.iaDepth.inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float3, 0 } });
-    rhi.iaDepth.inputLayout.setBindings({ rhi.posVertexBuffer ? quint32(3 * sizeof(float))
-                                          : result.m_mesh->m_vertexBuffer.m_stride });
-    rhi.iaDepth.inputs.append(QSSGRhiInputAssemblerState::PositionSemantic);
-    rhi.iaDepth.topology = QSSGRhiInputAssemblerState::toTopology(result.m_mesh->m_drawMode);
-    rhi.iaDepth.vertexBuffer = rhi.posVertexBuffer ? rhi.posVertexBuffer : rhi.vertexBuffer;
-    rhi.iaDepth.indexBuffer = rhi.indexBuffer;
-
     for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
         QSSGRenderSubset subset;
         const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
@@ -1288,10 +1241,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         if (rhi.vertexBuffer) {
             subset.rhi.vertexBuffer = rhi.vertexBuffer;
             subset.rhi.ia = rhi.ia;
-        }
-        if (rhi.posVertexBuffer) {
-            subset.rhi.posVertexBuffer = rhi.posVertexBuffer;
-            subset.rhi.iaDepth = rhi.iaDepth;
         }
         if (rhi.indexBuffer)
             subset.rhi.indexBuffer = rhi.indexBuffer;
