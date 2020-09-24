@@ -1,7 +1,6 @@
 TEMPLATE=subdirs
 
-
-qtConfig(private_tests): SUBDIRS += \
+SUBDIRS += \
      qquick3dperspectivecamera \
      qquick3dorthographiccamera \
      qquick3dfrustumcamera \
