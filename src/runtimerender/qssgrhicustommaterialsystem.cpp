@@ -163,9 +163,11 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                           renderable.firstImage,
                                                           renderable.opacity);
 
-    const QSSGShaderMapKey skey = QSSGShaderMapKey(material.m_shaderPathKey,
-                                                   featureSet,
-                                                   customMaterialContext.materialKey);
+    // This just references inFeatureSet and inRenderable.shaderDescription -
+    // cheap to construct and is good enough for the find()
+    QSSGShaderMapKey skey = QSSGShaderMapKey(material.m_shaderPathKey,
+                                             featureSet,
+                                             customMaterialContext.materialKey);
 
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
     auto it = shaderMap.find(skey);
@@ -193,6 +195,8 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                                                                            context->shaderCache());
         if (shaderStages)
             shaderPipeline = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
+        // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
+        skey.detach();
         // insert it no matter what, no point in trying over and over again
         shaderMap.insert(skey, shaderPipeline);
     } else {

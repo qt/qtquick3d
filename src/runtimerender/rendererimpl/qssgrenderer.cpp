@@ -803,14 +803,19 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResourc
     // performance wise. So bail out right here as soon as possible.
 
     QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
-    const QSSGShaderMapKey skey = QSSGShaderMapKey(QByteArray(),
-                                                   inFeatureSet,
-                                                   inRenderable.shaderDescription);
+
+    // This just references inFeatureSet and inRenderable.shaderDescription -
+    // cheap to construct and is good enough for the find()
+    QSSGShaderMapKey skey = QSSGShaderMapKey(QByteArray(),
+                                             inFeatureSet,
+                                             inRenderable.shaderDescription);
     auto it = m_shaderMap.find(skey);
     if (it == m_shaderMap.end()) {
         QSSGRef<QSSGRhiShaderStages> shaderStages = generateRhiShaderStages(inRenderable, inFeatureSet);
         if (shaderStages)
             shaderPipeline = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
+        // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
+        skey.detach();
         // insert it no matter what, no point in trying over and over again
         m_shaderMap.insert(skey, shaderPipeline);
     } else {
