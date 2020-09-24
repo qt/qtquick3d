@@ -182,8 +182,10 @@ struct QSSGShaderLight
     }
 };
 
-
-typedef QVector<QSSGShaderLight> QSSGShaderLightList;
+// Having this as a QVLA is beneficial mainly because QVector would need to
+// detach somewhere in QSSGLayerRenderPreparationData::prepareForRender so the
+// implicit sharing's benefits do not outweigh the cost of allocations in this case.
+typedef QVarLengthArray<QSSGShaderLight, 16> QSSGShaderLightList;
 
 struct QSSGRenderableObject;
 
