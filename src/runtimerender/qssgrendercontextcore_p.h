@@ -54,8 +54,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
-#include <QtQuick3DUtils/private/qssgperftimer_p.h>
-
 #include <QtCore/QPair>
 #include <QtCore/QSize>
 
@@ -71,7 +69,6 @@ public:
     QAtomicInt ref;
 private:
     const QSSGRef<QSSGRhiContext> m_rhiContext;
-    QSSGPerfTimer m_perfTimer;
 
     const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
@@ -115,7 +112,6 @@ public:
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager() const;
     const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem() const;
-    QSSGPerfTimer *performanceTimer() { return &m_perfTimer; }
     const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator() const;
     // The memory used for the per frame allocator is released as the first step in BeginFrame.
     // This is useful for short lived objects and datastructures.

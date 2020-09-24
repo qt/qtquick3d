@@ -57,8 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static bool dumpPerfTiming = false;
-static int frameCount = 0;
 static bool dumpRenderTimes = false;
 
 SGFramebufferObjectNode::SGFramebufferObjectNode()
@@ -229,10 +227,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
         }
     }
 
-    dumpPerfTiming = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_PERFTIMERS") > 0);
     dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
-    if (dumpPerfTiming)
-        m_sgContext->performanceTimer()->setEnabled(true);
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
@@ -526,14 +521,7 @@ void QQuick3DSceneRenderer::rhiRender()
 
     m_sgContext->rhiRender(*m_layer);
 
-    if (m_sgContext->endFrame()) {
-        if (dumpPerfTiming) {
-            if (++frameCount == 60) {
-                m_sgContext->performanceTimer()->dump();
-                frameCount = 0;
-            }
-        }
-    }
+    m_sgContext->endFrame();
 }
 
 void QQuick3DSceneRenderer::cleanupResources()

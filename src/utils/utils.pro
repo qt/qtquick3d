@@ -14,7 +14,6 @@ HEADERS += \
     qssgoption_p.h \
     qssginvasivelinkedlist_p.h \
     qssgplane_p.h \
-    qssgperftimer_p.h \
     qssgrenderbasetypes_p.h \
     qtquick3dutilsglobal_p.h
 
@@ -23,7 +22,6 @@ SOURCES += \
     qssgbounds3.cpp \
     qssgdataref.cpp \
     qssgmeshbvh.cpp \
-    qssgperftimer.cpp \
     qssgplane.cpp \
     qssgutils.cpp
 

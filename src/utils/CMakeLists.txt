@@ -12,7 +12,6 @@ qt_add_module(Quick3DUtils
         qssginvasivelinkedlist_p.h
         qssgmeshbvh.cpp qssgmeshbvh_p.h
         qssgoption_p.h
-        qssgperftimer.cpp qssgperftimer_p.h
         qssgplane.cpp qssgplane_p.h
         qssgrenderbasetypes_p.h
         qssgutils.cpp qssgutils_p.h

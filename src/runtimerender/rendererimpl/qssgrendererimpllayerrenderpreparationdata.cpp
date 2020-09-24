@@ -37,7 +37,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderjoint_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -934,7 +933,6 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
-    QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     viewProjection = inViewProjection;
     bool wasDataDirty = false;
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
@@ -1031,7 +1029,6 @@ static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
 
 void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions)
 {
-    QSSGStackPerfTimer perfTimer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (layerPrepResult.hasValue())
         return;
 

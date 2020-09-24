@@ -48,7 +48,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
-#include <QtQuick3DUtils/private/qssgperftimer_p.h>
 #include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
 

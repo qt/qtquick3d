@@ -1343,7 +1343,6 @@ void QSSGLayerRenderData::rhiPrepare()
         }
     }
 
-    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera) {
         camera->dpr = renderer->contextInterface()->dpr();
         renderer->beginLayerRender(*this);
@@ -1630,7 +1629,6 @@ void QSSGLayerRenderData::rhiRender()
 {
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
 
-    QSSGStackPerfTimer ___timer(renderer->contextInterface()->performanceTimer(), Q_FUNC_INFO);
     if (camera) {
         renderer->beginLayerRender(*this);
 
