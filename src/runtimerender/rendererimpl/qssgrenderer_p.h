@@ -131,7 +131,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QMatrix4x4 m_viewProjection;
     QByteArray m_generatedShaderString;
 
-    bool m_layerGPuProfilingEnabled = false;
     bool m_progressiveAARenderRequest = false;
     QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
 
@@ -154,9 +153,6 @@ public:
     }
 
     void setRenderContextInterface(QSSGRenderContextInterface *ctx);
-
-    void enableLayerGpuProfiling(bool inEnabled) { m_layerGPuProfilingEnabled = inEnabled; }
-    bool isLayerGpuProfilingEnabled() const { return m_layerGPuProfilingEnabled; }
 
     // Returns true if this layer or a sibling was dirty.
     bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize);

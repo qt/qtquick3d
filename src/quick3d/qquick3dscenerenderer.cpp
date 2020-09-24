@@ -231,10 +231,8 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
 
     dumpPerfTiming = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_PERFTIMERS") > 0);
     dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
-    if (dumpPerfTiming) {
-        m_sgContext->renderer()->enableLayerGpuProfiling(true);
+    if (dumpPerfTiming)
         m_sgContext->performanceTimer()->setEnabled(true);
-    }
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
