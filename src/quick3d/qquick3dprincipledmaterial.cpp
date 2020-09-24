@@ -950,7 +950,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         }
 
         material->specularAmount = m_specularAmount;
-        material->specularTint = color::sRGBToLinear(m_specularTint).toVector3D();
+        material->specularTint = QVector3D(m_specularTint, m_specularTint, m_specularTint);
     }
 
     if (m_dirtyAttributes & OpacityDirty) {

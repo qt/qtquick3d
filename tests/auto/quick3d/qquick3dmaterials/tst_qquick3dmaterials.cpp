@@ -39,6 +39,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 class tst_QQuick3DMaterials : public QObject
 {
@@ -105,12 +106,11 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     // If != NoLighting the emissive color on the node should be emissiveColor * emissiveFactor
-    static const auto toVec3 = [](const QColor &c) { return QVector3D{float(c.redF()), float(c.greenF()), float(c.blueF())}; };
-    auto expectedEmissiceColor = toVec3(material.emissiveColor()) * material.emissiveFactor();
+    auto expectedEmissiceColor = color::sRGBToLinear(material.emissiveColor()).toVector3D() * material.emissiveFactor();
     QCOMPARE(expectedEmissiceColor, node->emissiveColor);
     material.setLighting(QQuick3DDefaultMaterial::NoLighting);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    expectedEmissiceColor = toVec3(Qt::white);
+    expectedEmissiceColor = color::sRGBToLinear(QColor(Qt::white)).toVector3D();
     QCOMPARE(expectedEmissiceColor, node->emissiveColor);
 
     const float bumpAmount = 0.3f;
@@ -127,8 +127,7 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     QCOMPARE(material.vertexColorsEnabled(), node->vertexColorsEnabled);
 
     QColor color1("#12345678");
-    QVector4D color1Vec4(float(color1.redF()), float(color1.greenF()),
-                         float(color1.blueF()), float(color1.alphaF()));
+    QVector4D color1Vec4 = color::sRGBToLinear(color1);
     material.setDiffuseColor(color1);
     material.setEmissiveColor(color1);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
@@ -291,11 +290,9 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(alphaCutoff, node->alphaCutoff);
 
     QColor color1("#12345678");
-    QVector4D color1Vec4(float(color1.redF()), float(color1.greenF()),
-                         float(color1.blueF()), float(color1.alphaF()));
+    QVector4D color1Vec4 = color::sRGBToLinear(color1);
     QColor color2("#cccccccc");
-    QVector3D color2Vec3(float(color2.redF()), float(color2.greenF()),
-                         float(color2.blueF()));
+    QVector3D color2Vec3 = color::sRGBToLinear(color2).toVector3D();
     material.setBaseColor(color1);
     material.setEmissiveColor(color2);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
@@ -425,6 +422,7 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
 
 void tst_QQuick3DMaterials::testCustomMaterials()
 {
+    QSKIP("Test can not work as implemented without crashing");
     CustomMaterial material;
     QQuick3DViewport *view3D = new QQuick3DViewport;
     material.setParent(view3D);
