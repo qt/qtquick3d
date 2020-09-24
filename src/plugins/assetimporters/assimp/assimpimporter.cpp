@@ -228,7 +228,7 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
             // Check if the embedded texture is referenced by filename, if so we create a file with that filename which we can reference later
             const char *filename = texture->mFilename.C_Str();
 
-            if (filename && *filename != '*')
+            if (filename && *filename != '\0' && *filename != '*')
                 imageName = getShortFilename(filename);
             else
                 imageName = QString::number(i);
