@@ -188,7 +188,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
     QSSGRef<QSSGRhiShaderStages> compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
                                                            const ShaderFeatureSetList &inFeatureSet,
                                                            const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                           const QSSGRef<QSSGShaderCache> &theCache);
+                                                           const QSSGRef<QSSGShaderCache> &theCache,
+                                                           QSSGRhiShaderStages::StageFlags stageFlags);
 };
 
 QT_END_NAMESPACE

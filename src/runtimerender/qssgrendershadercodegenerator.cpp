@@ -437,7 +437,8 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
 QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
                                                                              const ShaderFeatureSetList &inFeatureSet,
                                                                              const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                             const QSSGRef<QSSGShaderCache> &theCache)
+                                                                             const QSSGRef<QSSGShaderCache> &theCache,
+                                                                             QSSGRhiShaderStages::StageFlags stageFlags)
 {
     // No stages enabled
     if (((quint32)m_enabledStages) == 0) {
@@ -478,7 +479,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGProgramGenerator::compileGeneratedRhiShader(con
     return theCache->compileForRhi(inMaterialInfoString,
                                    m_vs.m_finalBuilder,
                                    m_fs.m_finalBuilder,
-                                   inFeatureSet);
+                                   inFeatureSet,
+                                   stageFlags);
 }
 
 QSSGVertexShaderGenerator::QSSGVertexShaderGenerator()

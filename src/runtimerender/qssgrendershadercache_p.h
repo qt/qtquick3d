@@ -184,7 +184,8 @@ public:
     QSSGRef<QSSGRhiShaderStages> compileForRhi(const QByteArray &inKey,
                                                const QByteArray &inVert,
                                                const QByteArray &inFrag,
-                                               const ShaderFeatureSetList &inFeatures);
+                                               const ShaderFeatureSetList &inFeatures,
+                                               QSSGRhiShaderStages::StageFlags stageFlags);
 
     QSSGRef<QSSGRhiShaderStages> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry);
     QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);

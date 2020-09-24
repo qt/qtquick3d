@@ -213,7 +213,7 @@ size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
     return qHash(k.state, seed); // rp and srb not included, intentionally (see ==, those are based on compatibility, not pointer equivalence)
 }
 
-void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage)
+void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage, StageFlags flags)
 {
     m_stages.append(stage);
 
@@ -234,28 +234,30 @@ void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage)
             }
         }
         // Now the same for vertex inputs.
-        const QVector<QShaderDescription::InOutVariable> inputs = stage.shader().description().inputVariables();
-        for (const QShaderDescription::InOutVariable &var : inputs) {
-            if (var.name == QSSGMeshUtilities::Mesh::getPositionAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::PositionSemantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getNormalAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::NormalSemantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getUVAttrName() || var.name == "attr_uv")
-                m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getUV2AttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getTexTanAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getTexBinormalAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::BinormalSemantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getColorAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::ColorSemantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getJointAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::JointSemantic] = var;
-            else if (var.name == QSSGMeshUtilities::Mesh::getWeightAttrName())
-                m_vertexInputs[QSSGRhiInputAssemblerState::WeightSemantic] = var;
-            else
-                qWarning("Ignoring vertex input %s in shader", var.name.constData());
+        if (!flags.testFlag(UsedWithoutIa)) {
+            const QVector<QShaderDescription::InOutVariable> inputs = stage.shader().description().inputVariables();
+            for (const QShaderDescription::InOutVariable &var : inputs) {
+                if (var.name == QSSGMeshUtilities::Mesh::getPositionAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::PositionSemantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getNormalAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::NormalSemantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getUVAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getUV2AttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getTexTanAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getTexBinormalAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::BinormalSemantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getColorAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::ColorSemantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getJointAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::JointSemantic] = var;
+                else if (var.name == QSSGMeshUtilities::Mesh::getWeightAttrName())
+                    m_vertexInputs[QSSGRhiInputAssemblerState::WeightSemantic] = var;
+                else
+                    qWarning("Ignoring vertex input %s in shader", var.name.constData());
+            }
         }
     }
 

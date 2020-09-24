@@ -443,7 +443,8 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     }
 
     const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
-    QSSGRef<QSSGRhiShaderStages> stages = generator->compileGeneratedRhiShader(key, ShaderFeatureSetList(), shaderLib, shaderCache);
+    QSSGRef<QSSGRhiShaderStages> stages = generator->compileGeneratedRhiShader(key, ShaderFeatureSetList(), shaderLib, shaderCache,
+                                                                               QSSGRhiShaderStages::UsedWithoutIa);
     if (stages) {
         m_shaderPipelines.insert(key, QSSGRhiShaderStagesWithResources::fromShaderStages(stages));
         m_currentShaderPipeline = m_shaderPipelines[key].data();

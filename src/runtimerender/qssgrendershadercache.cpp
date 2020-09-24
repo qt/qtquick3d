@@ -206,7 +206,7 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
 }
 
 QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                            const ShaderFeatureSetList &inFeatures)
+                                                            const ShaderFeatureSetList &inFeatures, QSSGRhiShaderStages::StageFlags stageFlags)
 {
     const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, inFeatures);
     if (rhiShaders)
@@ -279,8 +279,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
 
     if (valid) {
         shaders = new QSSGRhiShaderStages(*m_rhiContext.data());
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), stageFlags);
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
         if (shaderDebug)
             qDebug("Compilation for vertex and fragment stages succeeded");
     }
@@ -372,7 +372,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
     }
 
     if (vertexShader.isValid() && fragmentShader.isValid()) {
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), QSSGRhiShaderStages::UsedWithoutIa);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
         if (shaderDebug)
             qDebug("Loading of vertex and fragment stages succeeded");

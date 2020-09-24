@@ -152,7 +152,15 @@ public:
     QSSGRhiContext &context() const { return m_context; }
     bool isNull() const { return m_stages.isEmpty(); }
 
-    void addStage(const QRhiShaderStage &stage);
+    enum StageFlag {
+        // Indicates that this shaderstages object is not going to be used with
+        // a QSSGRhiInputAssemblerState, i.e. bakeVertexInputLocations() will
+        // not be called.
+        UsedWithoutIa = 0x01
+    };
+    Q_DECLARE_FLAGS(StageFlags, StageFlag)
+
+    void addStage(const QRhiShaderStage &stage, StageFlags flags = {});
     const QVector<QRhiShaderStage> &stages() const { return m_stages; }
 
     const QRhiShaderStage *vertexStage() const {
@@ -236,6 +244,8 @@ private:
 
     friend class QSSGRhiShaderStagesWithResources;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderStages::StageFlags)
 
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 15
