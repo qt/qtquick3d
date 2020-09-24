@@ -456,13 +456,13 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
 {
     int index = storeIndex;
     if (storeIndex == -1) {
-        const QByteArray ba = QByteArray::fromRawData(name, strlen(name) + 1);
+        const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
         auto it = m_shaderStages->m_uniformIndex.constFind(ba);
         if (it != m_shaderStages->m_uniformIndex.cend()) {
             index = int(*it);
-        } else if (ba.size() <= qsizetype(sizeof(QSSGRhiShaderUniform::name))) {
+        } else if (ba.size() < qsizetype(sizeof(QSSGRhiShaderUniform::name))) {
             QSSGRhiShaderUniform u;
-            memcpy(u.name, name, ba.size());
+            memcpy(u.name, name, ba.size() + 1);
             u.size = size;
 
             const int new_idx = m_shaderStages->m_uniforms.size();
@@ -516,17 +516,17 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
 
     int newIndex = -1;
     if (index == -1) {
-        const QByteArray ba = QByteArray::fromRawData(name, strlen(name) + 1);
+        const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
         auto it = m_shaderStages->m_uniformIndex.constFind(ba);
         if (it != m_shaderStages->m_uniformIndex.cend()) {
             index = int(*it);
             ua = &m_shaderStages->m_uniformArrays[index];
-        } else if (ba.size() <= qsizetype(sizeof(QSSGRhiShaderUniformArray::name))) {
+        } else if (ba.size() < qsizetype(sizeof(QSSGRhiShaderUniformArray::name))) {
             newIndex = m_shaderStages->m_uniformArrays.size();
             m_shaderStages->m_uniformArrays.push_back(QSSGRhiShaderUniformArray());
             m_shaderStages->m_uniformIndex[name] = newIndex; // key needs deep copy
             ua = &m_shaderStages->m_uniformArrays.last();
-            memcpy(ua->name, name, ba.size());
+            memcpy(ua->name, name, ba.size() + 1);
         } else {
             qWarning("Attempted to set uniform array with too long name: %s", name);
             return index;
