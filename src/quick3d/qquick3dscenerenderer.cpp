@@ -135,9 +135,9 @@ void SGFramebufferObjectNode::render()
         markDirty(QSGNode::DirtyMaterial);
         emit textureChanged();
 
-        if (renderer->renderStats()) {
+        if (renderer->renderStats())
             renderer->renderStats()->endRender(dumpRenderTimes);
-        }
+
         if (renderer->m_sgContext->renderer()->rendererRequestsFrames()
                 || requestedFramesCount > 0) {
             scheduleRender();
@@ -308,6 +308,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
     QRhiTexture *currentTexture = m_texture; // the result so far
 
     if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
+        if (m_renderStats)
+            m_renderStats->startRenderPrepare();
+
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
 
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
@@ -343,6 +346,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         float dpr = m_sgContext->dpr();
         const QRect vp = QRect(0, 0, ssaaAdjustedWidth, ssaaAdjustedHeight);
         rhiPrepare(vp, dpr);
+
+        if (m_renderStats)
+            m_renderStats->endRenderPrepare();
 
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
@@ -1145,6 +1151,12 @@ void QQuick3DSGDirectRenderer::prepare()
         return;
 
     if (m_renderer->m_sgContext->rhiContext()->isValid()) {
+        QQuick3DRenderStats *renderStats = m_renderer->renderStats();
+        if (renderStats) {
+            renderStats->startRender();
+            renderStats->startRenderPrepare();
+        }
+
         // this is outside the main renderpass
 
         queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
@@ -1152,6 +1164,9 @@ void QQuick3DSGDirectRenderer::prepare()
         const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
 
         m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
+
+        if (renderStats)
+            renderStats->endRenderPrepare();
     }
 }
 
@@ -1175,6 +1190,8 @@ void QQuick3DSGDirectRenderer::render()
 
         m_renderer->rhiRender();
 
+        if (m_renderer->renderStats())
+            m_renderer->renderStats()->endRender(dumpRenderTimes);
     }
 }
 

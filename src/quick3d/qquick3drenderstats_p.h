@@ -53,6 +53,7 @@ class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
     Q_PROPERTY(int fps READ fps NOTIFY fpsChanged)
     Q_PROPERTY(float frameTime READ frameTime NOTIFY frameTimeChanged)
     Q_PROPERTY(float renderTime READ renderTime NOTIFY renderTimeChanged)
+    Q_PROPERTY(float renderPrepareTime READ renderPrepareTime NOTIFY renderTimeChanged)
     Q_PROPERTY(float syncTime READ syncTime NOTIFY syncTimeChanged)
     Q_PROPERTY(float maxFrameTime READ maxFrameTime NOTIFY maxFrameTimeChanged)
 
@@ -62,12 +63,16 @@ public:
     int fps() const;
     float frameTime() const;
     float renderTime() const;
+    float renderPrepareTime() const;
     float syncTime() const;
     float maxFrameTime() const;
 
     void startSync();
     void endSync(bool dump = false);
+
     void startRender();
+    void startRenderPrepare();
+    void endRenderPrepare();
     void endRender(bool dump = false);
 
 Q_SIGNALS:
@@ -85,18 +90,23 @@ private:
     float m_secTimer = 0;
     float m_notifyTimer = 0;
     float m_renderStartTime = 0;
+    float m_renderPrepareStartTime = 0;
     float m_syncStartTime = 0;
 
     float m_internalMaxFrameTime = 0;
-    float m_notifiedFrameTime = 0;
-    float m_notifiedRenderTime = 0;
-    float m_notifiedSyncTime = 0;
+    float m_maxFrameTime = 0;
 
     int m_fps = 0;
-    float m_frameTime = 0;
-    float m_renderTime = 0;
-    float m_syncTime = 0;
-    float m_maxFrameTime = 0;
+
+    struct Results {
+        float frameTime = 0;
+        float renderTime = 0;
+        float renderPrepareTime = 0;
+        float syncTime = 0;
+    };
+
+    Results m_results;
+    Results m_notifiedResults;
 };
 
 QT_END_NAMESPACE

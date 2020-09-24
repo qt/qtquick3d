@@ -52,7 +52,7 @@ Rectangle {
             color: "white"
         }
         Text {
-            text: "Render: " + (source.renderStats.renderTime).toFixed(3) + "ms"
+            text: "Render: " + (source.renderStats.renderTime).toFixed(3) + "ms (prep: " + (source.renderStats.renderPrepareTime).toFixed(3) + "ms)"
             font.pointSize: 9
             color: "white"
         }
