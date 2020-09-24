@@ -236,10 +236,10 @@ private:
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
     QHash<int, int> m_materialImageSamplerBindings;
 
-    QVector<QSSGRhiShaderUniform> m_uniforms; // members of the main (binding 0) uniform buffer
-    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms
-    QVector<QSSGRhiShaderUniformArray> m_uniformArrays;
     QVarLengthArray<char, 512> m_mainUniformBufferData;
+    QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
+    QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;
+    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms and m_uniformArrays
 
     friend class QSSGRhiShaderStagesWithResources;
 };
