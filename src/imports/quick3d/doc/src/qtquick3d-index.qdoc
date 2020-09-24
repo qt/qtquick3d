@@ -67,6 +67,10 @@ In addition, examples use the modules \l {Qt Quick Controls} and
 It can also be helpful to build \l {Qt Image Formats} as this
 module provides support for additional texture formats.
 
+\section1 Module Evolution
+\l{Porting to Qt 6 - Qt Quick 3D} lists important changes in the module API
+and functionality that were done for the Qt 6 series of Qt.
+
 \section1 License and Attributions
 
 Qt Quick 3D is available under the commercial license from \l {The Qt Company}.
