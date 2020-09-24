@@ -846,7 +846,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 auto rhiCtx = renderer->contextInterface()->rhiContext();
                 // Skeletal Animation passes it's boneId as unsigned integers
                 if (inModel.skeleton) {
-                    if (!rhiCtx->rhi()->isFeatureSupported(QRhi::UIntAttributes)) {
+                    if (!rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes)) {
                         qWarning("Skinning needs IntAttributes feature. Check your API supports it.");
                         renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, 0);
                     } else {
