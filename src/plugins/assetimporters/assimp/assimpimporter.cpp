@@ -1543,6 +1543,20 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     //int textureFlags;
     //material->Get(AI_MATKEY_TEXFLAGS(textureType, index), textureFlags);
 
+    // Always generate and use mipmaps for imported assets
+    if (m_forceMipMapGeneration) {
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("generateMipmaps"),
+                                                 true);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("mipFilter"),
+                                                 QStringLiteral("Texture.Linear"));
+    }
+
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");
 
     return outputString;
@@ -1948,6 +1962,9 @@ void AssimpImporter::processOptions(const QVariantMap &options)
 
     bool preservePivots = checkBooleanOption(QStringLiteral("fbxPreservePivots"), optionsObject);
     m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, preservePivots);
+
+    if (checkBooleanOption(QStringLiteral("generateMipMaps"), optionsObject))
+        m_forceMipMapGeneration = true;
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)

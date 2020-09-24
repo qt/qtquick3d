@@ -129,6 +129,7 @@ private:
     bool m_gltfUsed = false;
     // Consider option for this
     bool m_binaryKeyframes = true;
+    bool m_forceMipMapGeneration = false;
 
     QVariantMap m_options;
     aiPostProcessSteps m_postProcessSteps;

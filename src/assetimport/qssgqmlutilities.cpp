@@ -426,6 +426,11 @@ PropertyMap::PropertyMap()
     texture->insert(QStringLiteral("positionV"), 0.0f);
     texture->insert(QStringLiteral("pivotU"), 0.0f);
     texture->insert(QStringLiteral("pivotV"), 0.0f);
+    texture->insert(QStringLiteral("indexUV"), 0);
+    texture->insert(QStringLiteral("magFilter"), QStringLiteral("Texture.Linear"));
+    texture->insert(QStringLiteral("minFilter"), QStringLiteral("Texture.Linear"));
+    texture->insert(QStringLiteral("mipFilter"), QStringLiteral("Texture.None"));
+    texture->insert(QStringLiteral("generateMipmaps"), false);
     m_properties.insert(Type::Texture, texture);
 }
 

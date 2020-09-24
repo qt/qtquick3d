@@ -168,7 +168,13 @@
             "description": "Set whether the fbx importer will preserve pivot points (as extra nodes)",
             "value": false,
             "type": "Boolean"
-        }
+        },
+        "generateMipMaps": {
+            "name": "Generate Mip Maps",
+            "description": "Force all imported texture components to generate mip maps for mip map texture filtering",
+            "value": true,
+            "type": "Boolean"
+        },
     },
     "groups": {
         "globalScale": {
