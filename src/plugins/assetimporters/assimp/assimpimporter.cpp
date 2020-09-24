@@ -329,14 +329,11 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
 void AssimpImporter::writeHeader(QTextStream &output)
 {
-    output << "import QtQuick 2.15\n";
-    output << "import QtQuick3D 1.15\n";
-    if (m_scene->HasAnimations()) {
-        if (m_binaryKeyframes)
-            output << "import QtQuick.Timeline 1.1\n";
-        else
-            output << "import QtQuick.Timeline 1.0\n";
-    }
+    output << "import QtQuick\n";
+    output << "import QtQuick3D\n";
+    if (m_scene->HasAnimations())
+        output << "import QtQuick.Timeline\n";
+
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
