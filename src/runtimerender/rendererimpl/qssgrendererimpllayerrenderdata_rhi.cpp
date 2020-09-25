@@ -98,7 +98,7 @@ static QSSGRef<QSSGRhiShaderStagesWithResources> shadersForDefaultMaterial(QSSGR
                                                                            QSSGSubsetRenderable &subsetRenderable,
                                                                            const ShaderFeatureSetList &featureSet,
                                                                            QSSGRenderCamera &camera,
-                                                                           const QVector2D &depthAdjust,
+                                                                           const QVector2D *depthAdjust,
                                                                            const QMatrix4x4 *alteredModelViewProjection)
 {
     const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
@@ -208,7 +208,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                                                              subsetRenderable,
                                                                                              featureSet,
                                                                                              *inData.camera,
-                                                                                             QVector2D(),
+                                                                                             nullptr,
                                                                                              nullptr);
         if (shaderPipeline) {
             ps->samples = samples;
@@ -353,7 +353,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
 
-        shaderPipeline = shadersForDefaultMaterial(rhiCtx, ps, subsetRenderable, featureSet, *layerData.camera, QVector2D(), nullptr);
+        shaderPipeline = shadersForDefaultMaterial(rhiCtx, ps, subsetRenderable, featureSet, *layerData.camera, nullptr, nullptr);
         if (shaderPipeline)
             material = &subsetRenderable.material;
         else
@@ -364,7 +364,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
         QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
         shaderPipeline = customMaterialSystem.shadersForCustomMaterial(rhiCtx, ps, renderable.material, renderable, featureSet,
-                                                                       layerData, *layerData.camera, QVector2D(), nullptr);
+                                                                       layerData, *layerData.camera, nullptr, nullptr);
 
         if (shaderPipeline)
             material = &renderable.material;
@@ -757,7 +757,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             QSSGLayerRenderData &inData,
                                             QSSGShadowMapEntry *pEntry,
                                             QSSGRhiGraphicsPipelineState *ps,
-                                            const QVector2D &depthAdjust,
+                                            const QVector2D *depthAdjust,
                                             const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                             QSSGRenderCamera &inCamera,
                                             bool orthographic,
@@ -1029,7 +1029,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
             QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-            rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, depthAdjust,
+            rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, &depthAdjust,
                                             sortedOpaqueObjects, theCamera, true, 0, rub);
             cb->resourceUpdate(rub);
 
@@ -1056,7 +1056,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 theCameras[face].calculateViewProjectionMatrix(pEntry->m_lightVP);
                 pEntry->m_lightCubeView[face] = theCameras[face].globalTransform.inverted(); // pre-calculate this for the material
 
-                rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, depthAdjust,
+                rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, &depthAdjust,
                                                 sortedOpaqueObjects, theCameras[face], false, face, rub);
             }
             cb->resourceUpdate(rub);

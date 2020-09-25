@@ -139,7 +139,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGCustomMaterialSystem::shadersForCu
                                                                                              const ShaderFeatureSetList &featureSet,
                                                                                              QSSGLayerRenderData &layerData,
                                                                                              QSSGRenderCamera &camera,
-                                                                                             const QVector2D &depthAdjust,
+                                                                                             const QVector2D *depthAdjust,
                                                                                              const QMatrix4x4 *alteredModelViewProjection)
 {
     const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
@@ -270,7 +270,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                                                         featureSet,
                                                                                         layerData,
                                                                                         *layerData.camera,
-                                                                                        QVector2D(),
+                                                                                        nullptr,
                                                                                         nullptr);
 
     if (shaderPipeline) {

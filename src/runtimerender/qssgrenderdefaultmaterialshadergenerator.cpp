@@ -1312,7 +1312,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                                            const QSSGShaderLightList &inLights,
                                                            bool receivesShadows,
-                                                           const QVector2D &shadowDepthAdjust)
+                                                           const QVector2D *shadowDepthAdjust)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     QSSGRhiShaderStages::CommonUniformIndices &cui = shaders->stages()->commonUniformIndices;
@@ -1468,7 +1468,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightAmbientTotal += theLight->m_ambientColor;
     }
 
-    cui.shadowDepthAdjustIdx = shaders->setUniform("qt_shadowDepthAdjust", &shadowDepthAdjust, 2 * sizeof(float), cui.shadowDepthAdjustIdx);
+    if (shadowDepthAdjust)
+        cui.shadowDepthAdjustIdx = shaders->setUniform("qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), cui.shadowDepthAdjustIdx);
 
     const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
     cui.modelViewProjectionIdx = shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);

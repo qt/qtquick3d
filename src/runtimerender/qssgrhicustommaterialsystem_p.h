@@ -147,7 +147,7 @@ public:
                                                                        const ShaderFeatureSetList &featureSet,
                                                                        QSSGLayerRenderData &layerData,
                                                                        QSSGRenderCamera &camera,
-                                                                       const QVector2D &depthAdjust,
+                                                                       const QVector2D *depthAdjust,
                                                                        const QMatrix4x4 *alteredModelViewProjection);
 
     void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,

@@ -118,7 +118,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                          const QSSGShaderLightList &inLights,
                                          bool receivesShadows,
-                                         const QVector2D &shadowDepthAdjust);
+                                         const QVector2D *shadowDepthAdjust);
 
     static const char *directionalLightProcessorArgumentList();
     static const char *pointLightProcessorArgumentList();

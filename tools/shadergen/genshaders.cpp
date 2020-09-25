@@ -244,7 +244,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                                                               features,
                                                               layerData,
                                                               *layerData.camera,
-                                                              QVector2D(),
+                                                              nullptr,
                                                               nullptr);
 
                 if (pipeline) {
