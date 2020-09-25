@@ -193,7 +193,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
                                  QRhiRenderPassDescriptor *renderPassDescriptor,
-                                 int samples)
+                                 int samples,
+                                 QRhiResourceUpdateBatch *resourceUpdates)
 {
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -218,8 +219,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             ps->ia = subsetRenderable.subset.rhi.ia;
             ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
-            QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
-
             // Unlike the subsetRenderable (which is allocated per frame so is
             // not persistent in any way), the model reference is persistent in
             // the sense that it references the model node in the scene graph.
@@ -240,8 +239,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderStagesWithResources::LightBuffer0, &uniformBuffers.lightsUbuf0, resourceUpdates);
                 lightsUbuf = uniformBuffers.lightsUbuf0;
             }
-
-            cb->resourceUpdate(resourceUpdates);
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
@@ -1513,11 +1510,12 @@ void QSSGLayerRenderData::rhiPrepare()
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
             if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), wantsMips, &m_rhiScreenTexture)) {
                 Q_ASSERT(m_rhiScreenTexture.isValid());
+                QRhiResourceUpdateBatch *updatesFromPrep = rhiCtx->rhi()->nextResourceUpdateBatch();
                 // NB: not compatible with disabling LayerEnableDepthTest
                 // because there are effectively no "opaque" objects then.
                 for (const auto &handle : sortedOpaqueObjects)
-                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
-                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 });
+                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1, updatesFromPrep);
+                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, updatesFromPrep);
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);
@@ -1541,10 +1539,12 @@ void QSSGLayerRenderData::rhiPrepare()
         QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
         const int samples = rhiCtx->mainPassSampleCount();
 
+        QRhiResourceUpdateBatch *updatesFromPrep = rhiCtx->rhi()->nextResourceUpdateBatch();
+
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
+            rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples, updatesFromPrep);
         }
 
         for (const auto &item: item2Ds) {
@@ -1572,8 +1572,10 @@ void QSSGLayerRenderData::rhiPrepare()
         for (const auto &handle : sortedTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
             if (!(theObject->renderableFlags.isCompletelyTransparent()))
-                rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
+                rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples, updatesFromPrep);
         }
+
+        cb->resourceUpdate(updatesFromPrep);
 
         cb->debugMarkEnd();
 
