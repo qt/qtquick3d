@@ -41,49 +41,49 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShader(const QByteArray &name,
-                                                                         QSSGRef<QSSGRhiShaderStagesWithResources> &storage)
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getBuiltinRhiShader(const QByteArray &name,
+                                                                 QSSGRef<QSSGRhiShaderPipeline> &storage)
 {
-    QSSGRef<QSSGRhiShaderStagesWithResources> &result = storage;
+    QSSGRef<QSSGRhiShaderPipeline> &result = storage;
     if (result.isNull()) {
-        // loadBuiltin must always return a valid QSSGRhiShaderStages.
+        // loadBuiltin must always return a valid QSSGRhiShaderPipeline.
         // There will just be no stages if loading fails.
-        result = QSSGRhiShaderStagesWithResources::fromShaderStages(m_contextInterface->shaderCache()->loadBuiltinForRhi(name));
+        result = m_contextInterface->shaderCache()->loadBuiltinForRhi(name);
     }
     return result;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowBlurXShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiCubemapShadowBlurXShader()
 {
-    return getRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cubemapShadowBlurXRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblurx"), m_cubemapShadowBlurXRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiCubemapShadowBlurYShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiCubemapShadowBlurYShader()
 {
-    return getRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cubemapShadowBlurYRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cubemapShadowBlurYRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiOrthographicShadowBlurXShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiOrthographicShadowBlurXShader()
 {
-    return getRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_orthographicShadowBlurXRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_orthographicShadowBlurXRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiOrthographicShadowBlurYShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiOrthographicShadowBlurYShader()
 {
-    return getRhiShader(QByteArrayLiteral("orthoshadowblury"), m_orthographicShadowBlurYRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblury"), m_orthographicShadowBlurYRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSsaoShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSsaoShader()
 {
-    return getRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
 {
     // Skybox shader is special and has multiple possible shaders so we have to do
     // a bit of manual work here.
 
-    QSSGRef<QSSGRhiShaderStagesWithResources> &result = m_skyBoxRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> &result = m_skyBoxRhiShader;
     if (result.isNull() || tonemapMode != m_skyboxTonemapMode || isRGBE != m_isSkyboxRGBE) {
         QByteArray name = QByteArrayLiteral("skybox");
         if (isRGBE)
@@ -109,24 +109,24 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSkyBoxShader(QSSGR
             name.append(QByteArrayLiteral("_linear"));
         }
 
-        result = QSSGRhiShaderStagesWithResources::fromShaderStages(m_contextInterface->shaderCache()->loadBuiltinForRhi(name));
+        result = m_contextInterface->shaderCache()->loadBuiltinForRhi(name);
     }
     return result;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiSupersampleResolveShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSupersampleResolveShader()
 {
-    return getRhiShader(QByteArrayLiteral("ssaaresolve"), m_supersampleResolveRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("ssaaresolve"), m_supersampleResolveRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiProgressiveAAShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiProgressiveAAShader()
 {
-    return getRhiShader(QByteArrayLiteral("progressiveaa"), m_progressiveAARhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("progressiveaa"), m_progressiveAARhiShader);
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiTexturedQuadShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiTexturedQuadShader()
 {
-    return getRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
+    return getBuiltinRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
 }
 
 QT_END_NAMESPACE

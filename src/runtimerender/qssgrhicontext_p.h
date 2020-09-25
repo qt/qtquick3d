@@ -50,9 +50,9 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRhiContext;
 class QSSGRhiBuffer;
-class QSSGRhiShaderStagesWithResources;
 struct QSSGShaderLightProperties;
 struct QSSGRenderModel;
+class QSSGRhiShaderPipeline;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
@@ -79,7 +79,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 
     // Fills out inputLayout.attributes[].location based on
     // inputLayoutInputNames and the provided shader reflection info.
-    void bakeVertexInputLocations(const QSSGRhiShaderStagesWithResources &shaders);
+    void bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders);
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
@@ -121,7 +121,7 @@ struct QSSGRhiShaderUniform
 private:
     size_t offset = SIZE_MAX;
     bool maybeExists = true;
-    friend class QSSGRhiShaderStagesWithResources;
+    friend class QSSGRhiShaderPipeline;
 };
 
 struct QSSGRhiShaderUniformArray
@@ -134,117 +134,47 @@ private:
     size_t offset = SIZE_MAX;
     size_t size = 0;
     bool maybeExists = true;
-    friend class QSSGRhiShaderStagesWithResources;
+    friend class QSSGRhiShaderPipeline;
 };
 
-// QSSGRhiShaderStages represents a vertex+fragment shader combination and is
-// what is cached and reused when generating materials. So unlike
-// QSSGRhiShaderStagesWithResources the data here is persistent.
+QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op);
+QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
 
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStages
+struct QSSGRhiSamplerDescription
 {
-    Q_DISABLE_COPY(QSSGRhiShaderStages)
-public:
-    QAtomicInt ref;
-
-    QSSGRhiShaderStages(QSSGRhiContext &context) : m_context(context) { }
-
-    QSSGRhiContext &context() const { return m_context; }
-    bool isNull() const { return m_stages.isEmpty(); }
-
-    enum StageFlag {
-        // Indicates that this shaderstages object is not going to be used with
-        // a QSSGRhiInputAssemblerState, i.e. bakeVertexInputLocations() will
-        // not be called.
-        UsedWithoutIa = 0x01
-    };
-    Q_DECLARE_FLAGS(StageFlags, StageFlag)
-
-    void addStage(const QRhiShaderStage &stage, StageFlags flags = {});
-    const QVector<QRhiShaderStage> &stages() const { return m_stages; }
-
-    const QRhiShaderStage *vertexStage() const {
-        for (const QRhiShaderStage &s : m_stages) {
-            if (s.type() == QRhiShaderStage::Vertex)
-                return &s;
-        }
-        return nullptr;
-    }
-    const QRhiShaderStage *fragmentStage() const {
-        for (const QRhiShaderStage &s : m_stages) {
-            if (s.type() == QRhiShaderStage::Fragment)
-                return &s;
-        }
-        return nullptr;
-    }
-
-    int ub0Size() const { return m_ub0Size; }
-    const QHash<QByteArray, QShaderDescription::BlockVariable> &ub0Members() const { return m_ub0; }
-    const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
-    const QHash<QByteArray, QShaderDescription::InOutVariable> &combinedImageSamplers() const { return m_combinedImageSamplers; }
-
-    // This struct is used purely for performance. It is used to quickly store
-    // and index common uniform names using the storeIndex argument in the
-    // setUniform method.
-    struct CommonUniformIndices
-    {
-        int cameraPositionIdx = -1;
-        int cameraDirectionIdx = -1;
-        int viewProjectionMatrixIdx = -1;
-        int projectionMatrixIdx = -1;
-        int inverseProjectionMatrixIdx = -1;
-        int viewMatrixIdx = -1;
-        int normalAdjustViewportFactorIdx = -1;
-        int isClipDepthZeroToOneIdx = -1;
-        int modelViewProjectionIdx = -1;
-        int normalMatrixIdx = -1;
-        int modelMatrixIdx = -1;
-        int lightProbeOrientationIdx = -1;
-        int lightProbePropertiesIdx = -1;
-        int material_emissiveColorIdx = -1;
-        int material_baseColorIdx = -1;
-        int material_specularIdx = -1;
-        int cameraPropertiesIdx = -1;
-        int fresnelPowerIdx = -1;
-        int light_ambient_totalIdx = -1;
-        int material_propertiesIdx = -1;
-        int bumpAmountIdx = -1;
-        int displaceAmountIdx = -1;
-        int translucentFalloffIdx = -1;
-        int diffuseLightWrapIdx = -1;
-        int occlusionAmountIdx = -1;
-        int alphaCutoffIdx = -1;
-        int boneTransformsIdx = -1;
-        int boneNormalTransformsIdx = -1;
-        int shadowDepthAdjustIdx = -1;
-        int pointSizeIdx = -1;
-
-        struct ImageIndices
-        {
-            int imageRotationsUniformIndex = -1;
-            int imageOffsetsUniformIndex = -1;
-        };
-        QVarLengthArray<ImageIndices, 16> imageIndices;
-    } commonUniformIndices;
-
-private:
-    QSSGRhiContext &m_context;
-    QVector<QRhiShaderStage> m_stages;
-    int m_ub0Size = 0;
-    QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
-    QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
-    QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
-    QHash<int, int> m_materialImageSamplerBindings;
-
-    QVarLengthArray<char, 512> m_mainUniformBufferData;
-    QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
-    QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;
-    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms and m_uniformArrays
-
-    friend class QSSGRhiShaderStagesWithResources;
+    QRhiSampler::Filter minFilter;
+    QRhiSampler::Filter magFilter;
+    QRhiSampler::Filter mipmap;
+    QRhiSampler::AddressMode hTiling;
+    QRhiSampler::AddressMode vTiling;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderStages::StageFlags)
+inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
+{
+   return a.hTiling == b.hTiling && a.vTiling == b.vTiling
+           && a.minFilter == b.minFilter && a.magFilter == b.magFilter
+           && a.mipmap == b.mipmap;
+}
+
+inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+struct QSSGRhiTexture
+{
+    QByteArray name;
+    QRhiTexture *texture;
+    QSSGRhiSamplerDescription samplerDesc;
+};
+
+enum class QSSGRhiSamplerBindingHints
+{
+    LightProbe = 128,
+    ScreenTexture,
+    DepthTexture,
+    AoTexture
+};
 
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 15
@@ -300,66 +230,94 @@ struct QSSGRhiShadowMapArrayProperties
     int cachedBinding = -1;
 };
 
-QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op);
-QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
-
-struct QSSGRhiSamplerDescription
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderPipeline
 {
-    QRhiSampler::Filter minFilter;
-    QRhiSampler::Filter magFilter;
-    QRhiSampler::Filter mipmap;
-    QRhiSampler::AddressMode hTiling;
-    QRhiSampler::AddressMode vTiling;
-};
-
-inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
-{
-   return a.hTiling == b.hTiling && a.vTiling == b.vTiling
-           && a.minFilter == b.minFilter && a.magFilter == b.magFilter
-           && a.mipmap == b.mipmap;
-}
-
-inline bool operator!=(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
-}
-
-struct QSSGRhiTexture
-{
-    QByteArray name;
-    QRhiTexture *texture;
-    QSSGRhiSamplerDescription samplerDesc;
-};
-
-enum class QSSGRhiSamplerBindingHints
-{
-    LightProbe = 128,
-    ScreenTexture,
-    DepthTexture,
-    AoTexture
-};
-
-// QSSGRhiShaderStagesWithResources wraps a QSSGRhiShaderStages object and
-// contains the texture and uniform data that is needed in a frame. This
-// should be considered transient. Constructing it is light, and no data is
-// guaranteed to survive to the next frame. Store persistent data in
-// QSSGRhiShaderStages instead.
-
-class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStagesWithResources
-{
-    Q_DISABLE_COPY(QSSGRhiShaderStagesWithResources)
+    Q_DISABLE_COPY(QSSGRhiShaderPipeline)
 public:
     QAtomicInt ref;
+
+    QSSGRhiShaderPipeline(QSSGRhiContext &context) : m_context(context) { }
+
+    QSSGRhiContext &context() const { return m_context; }
+    bool isNull() const { return m_stages.isEmpty(); }
+
+    enum StageFlag {
+        // Indicates that this shaderpipeline object is not going to be used with
+        // a QSSGRhiInputAssemblerState, i.e. bakeVertexInputLocations() will
+        // not be called.
+        UsedWithoutIa = 0x01
+    };
+    Q_DECLARE_FLAGS(StageFlags, StageFlag)
+
+    void addStage(const QRhiShaderStage &stage, StageFlags flags = {});
+    const QRhiShaderStage *cbeginStages() const { return m_stages.cbegin(); }
+    const QRhiShaderStage *cendStages() const { return m_stages.cend(); }
+
+    const QRhiShaderStage *vertexStage() const {
+        for (const QRhiShaderStage &s : m_stages) {
+            if (s.type() == QRhiShaderStage::Vertex)
+                return &s;
+        }
+        return nullptr;
+    }
+    const QRhiShaderStage *fragmentStage() const {
+        for (const QRhiShaderStage &s : m_stages) {
+            if (s.type() == QRhiShaderStage::Fragment)
+                return &s;
+        }
+        return nullptr;
+    }
+
+    const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
+
+    // This struct is used purely for performance. It is used to quickly store
+    // and index common uniform names using the storeIndex argument in the
+    // setUniform method.
+    struct CommonUniformIndices
+    {
+        int cameraPositionIdx = -1;
+        int cameraDirectionIdx = -1;
+        int viewProjectionMatrixIdx = -1;
+        int projectionMatrixIdx = -1;
+        int inverseProjectionMatrixIdx = -1;
+        int viewMatrixIdx = -1;
+        int normalAdjustViewportFactorIdx = -1;
+        int isClipDepthZeroToOneIdx = -1;
+        int modelViewProjectionIdx = -1;
+        int normalMatrixIdx = -1;
+        int modelMatrixIdx = -1;
+        int lightProbeOrientationIdx = -1;
+        int lightProbePropertiesIdx = -1;
+        int material_emissiveColorIdx = -1;
+        int material_baseColorIdx = -1;
+        int material_specularIdx = -1;
+        int cameraPropertiesIdx = -1;
+        int fresnelPowerIdx = -1;
+        int light_ambient_totalIdx = -1;
+        int material_propertiesIdx = -1;
+        int bumpAmountIdx = -1;
+        int displaceAmountIdx = -1;
+        int translucentFalloffIdx = -1;
+        int diffuseLightWrapIdx = -1;
+        int occlusionAmountIdx = -1;
+        int alphaCutoffIdx = -1;
+        int boneTransformsIdx = -1;
+        int boneNormalTransformsIdx = -1;
+        int shadowDepthAdjustIdx = -1;
+        int pointSizeIdx = -1;
+
+        struct ImageIndices
+        {
+            int imageRotationsUniformIndex = -1;
+            int imageOffsetsUniformIndex = -1;
+        };
+        QVarLengthArray<ImageIndices, 16> imageIndices;
+    } commonUniformIndices;
 
     enum class UniformFlag {
         Mat3 = 0x01
     };
     Q_DECLARE_FLAGS(UniformFlags, UniformFlag)
-
-    static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages);
-
-    const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
-    QSSGRhiShaderStages *stages() { return m_shaderStages.data(); }
 
     void beginMainUniformBuffer();
     int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
@@ -421,17 +379,21 @@ public:
     int extraTextureCount() const { return m_extraTextures.count(); }
     const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
-    QSSGRhiShaderStagesWithResources(QSSGRef<QSSGRhiShaderStages> shaderStages)
-        : m_context(shaderStages->context()),
-          m_shaderStages(shaderStages)
-    {
-    }
-
 private:
-    // transient per-frame data. preferably stuff that does not malloc.
-
     QSSGRhiContext &m_context;
-    QSSGRef<QSSGRhiShaderStages> m_shaderStages;
+    QVarLengthArray<QRhiShaderStage, 2> m_stages;
+    int m_ub0Size = 0;
+    QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
+    QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
+    QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
+    QHash<int, int> m_materialImageSamplerBindings;
+
+    QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
+    QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;
+    QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms and m_uniformArrays
+
+    // transient (per-frame) data
+    QVarLengthArray<char, 512> m_mainUniformBufferData;
     bool m_lightsEnabled[LightBufferMax] = {};
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
@@ -445,11 +407,12 @@ private:
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures; // does not own
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderStagesWithResources::UniformFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::StageFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::UniformFlags)
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 {
-    const QSSGRhiShaderStages *shaderStages;
+    const QSSGRhiShaderPipeline *shaderPipeline;
     int samples = 1;
 
     bool depthTestEnable = false;
@@ -474,7 +437,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 
 inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
 {
-    return a.shaderStages == b.shaderStages
+    return a.shaderPipeline == b.shaderPipeline
             && a.samples == b.samples
             && a.depthTestEnable == b.depthTestEnable
             && a.depthWriteEnable == b.depthWriteEnable
@@ -507,7 +470,7 @@ inline bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
 inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_NOTHROW
 {
     // do not bother with all fields
-    return qHash(s.shaderStages, seed)
+    return qHash(s.shaderPipeline, seed)
             ^ qHash(s.samples)
             ^ qHash(s.targetBlend.dstColor)
             ^ qHash(s.depthFunc)
@@ -600,7 +563,7 @@ struct QSSGRhiUniformBufferSetKey
 
 inline bool operator==(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
 {
-    return a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.index == b.index && a.selector == b.selector;
+    return a.selector == b.selector && a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.index == b.index;
 }
 
 inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW

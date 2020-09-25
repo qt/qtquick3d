@@ -139,7 +139,8 @@ QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
 {
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::getRhiShaderStages(const QByteArray &inKey, const ShaderFeatureSetList &inFeatures)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::getRhiShaderPipeline(const QByteArray &inKey,
+                                                                     const ShaderFeatureSetList &inFeatures)
 {
     m_tempKey.m_key = inKey;
     m_tempKey.m_features = inFeatures;
@@ -205,10 +206,10 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
     return QByteArrayLiteral("qtappshaders.qsbc");
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                            const ShaderFeatureSetList &inFeatures, QSSGRhiShaderStages::StageFlags stageFlags)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
+                                                              const ShaderFeatureSetList &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
-    const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, inFeatures);
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, inFeatures);
     if (rhiShaders)
         return rhiShaders;
 
@@ -227,7 +228,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
 
     // lo and behold the final shader strings are ready
 
-    QSSGRef<QSSGRhiShaderStages> shaders;
+    QSSGRef<QSSGRhiShaderPipeline> shaders;
     bool valid = true;
 
     QShaderBaker baker;
@@ -278,7 +279,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     }
 
     if (valid) {
-        shaders = new QSSGRhiShaderStages(*m_rhiContext.data());
+        shaders = new QSSGRhiShaderPipeline(*m_rhiContext.data());
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
         if (shaderDebug)
@@ -289,9 +290,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::compileForRhi(const QByteArray &in
     return inserted.value();
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry)
 {
-    const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, ShaderFeatureSetList());
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, ShaderFeatureSetList());
     if (rhiShaders)
         return rhiShaders;
 
@@ -300,7 +301,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadGeneratedShader(const QByteArr
         qDebug("Loading pre-compiled rhi shader(s)");
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderStages> shaders(new QSSGRhiShaderStages(*m_rhiContext.data()));
+    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
 
     const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
 
@@ -330,9 +331,9 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadGeneratedShader(const QByteArr
     return inserted.value();
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
 {
-    const QSSGRef<QSSGRhiShaderStages> &rhiShaders = getRhiShaderStages(inKey, ShaderFeatureSetList());
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, ShaderFeatureSetList());
     if (rhiShaders)
         return rhiShaders;
 
@@ -341,7 +342,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
         qDebug("Loading builtin rhi shader: %s", inKey.constData());
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderStages> shaders(new QSSGRhiShaderStages(*m_rhiContext.data()));
+    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
 
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.
@@ -372,7 +373,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGShaderCache::loadBuiltinForRhi(const QByteArray
     }
 
     if (vertexShader.isValid() && fragmentShader.isValid()) {
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), QSSGRhiShaderStages::UsedWithoutIa);
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), QSSGRhiShaderPipeline::UsedWithoutIa);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
         if (shaderDebug)
             qDebug("Loading of vertex and fragment stages succeeded");

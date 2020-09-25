@@ -391,7 +391,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
                 // The fragment shader relies on per-target compilation and
                 // QSHADER_ macros of qsb, hence no need to communicate a flip
                 // flag from here.
-                QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = renderer->getRhiProgressiveAAShader();
+                QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiProgressiveAAShader();
                 QRhiResourceUpdateBatch *rub = nullptr;
 
                 const QSSGRhiUniformBufferSetKey ubufKey = { m_layer, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ProgressiveAA };
@@ -422,7 +422,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
                 QSSGRhiGraphicsPipelineState ps;
                 const QSize textureSize = currentTexture->pixelSize();
                 ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
-                ps.shaderStages = shaderPipeline->stages();
+                ps.shaderPipeline = shaderPipeline.data();
 
                 renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, QSSGRhiQuadRenderer::UvCoords);
                 blendResult = m_temporalAATexture;
@@ -466,7 +466,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
             // flipping based on QSHADER_ macros) This is just better for
             // performance and the shaders are very simple so introducing a
             // uniform block and branching dynamically would be an overkill.
-            QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline = renderer->getRhiSupersampleResolveShader();
+            QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiSupersampleResolveShader();
 
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
@@ -477,7 +477,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 
             QSSGRhiGraphicsPipelineState ps;
             ps.viewport = QRhiViewport(0, 0, float(m_surfaceSize.width()), float(m_surfaceSize.height()));
-            ps.shaderStages = shaderPipeline->stages();
+            ps.shaderPipeline = shaderPipeline.data();
 
             renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, QSSGRhiQuadRenderer::UvCoords);
             cb->debugMarkEnd();

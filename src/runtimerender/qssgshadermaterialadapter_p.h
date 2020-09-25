@@ -88,7 +88,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
                                          const QByteArray &funcName,
                                          const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager);
-    virtual void setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
+    virtual void setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                            const QSSGRenderContextInterface &context);
 };
 
@@ -161,7 +161,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool hasCustomShaderFunction(QSSGShaderCache::ShaderType shaderType,
                                  const QByteArray &funcName,
                                  const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager) override;
-    void setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderStagesWithResources> &shaderPipeline,
+    void setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                    const QSSGRenderContextInterface &context) override;
 
     using StringPair = QPair<QByteArray, QByteArray>;

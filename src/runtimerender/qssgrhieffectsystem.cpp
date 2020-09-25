@@ -255,7 +255,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             if (applyCommand->m_samplerName.isEmpty())
                 currentInput = buffer;
             else
-                addTextureToShaderStages(applyCommand->m_samplerName, buffer->texture, buffer->desc);
+                addTextureToShaderPipeline(applyCommand->m_samplerName, buffer->texture, buffer->desc);
             break;
         }
 
@@ -360,7 +360,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                             toRhi(textureProperty.clampType),
                             toRhi(textureProperty.clampType)
                         };
-                        addTextureToShaderStages(textureProperty.name, theTextureData.m_rhiTexture, desc);
+                        addTextureToShaderPipeline(textureProperty.name, theTextureData.m_rhiTexture, desc);
                         texAdded = true;
                     }
                     image->m_textureData = theTextureData;
@@ -369,7 +369,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
             if (!texAdded) {
                 // Something went wrong, e.g. image file not found. Still need to add a dummy texture for the shader
                 qCDebug(lcEffectSystem) << "Using dummy texture for property" << textureProperty.name;
-                addTextureToShaderStages(textureProperty.name, nullptr, {});
+                addTextureToShaderPipeline(textureProperty.name, nullptr, {});
             }
         }
     }
@@ -443,10 +443,10 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     }
 
     const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
-    QSSGRef<QSSGRhiShaderStages> stages = generator->compileGeneratedRhiShader(key, ShaderFeatureSetList(), shaderLib, shaderCache,
-                                                                               QSSGRhiShaderStages::UsedWithoutIa);
+    QSSGRef<QSSGRhiShaderPipeline> stages = generator->compileGeneratedRhiShader(key, ShaderFeatureSetList(), shaderLib, shaderCache,
+                                                                                 QSSGRhiShaderPipeline::UsedWithoutIa);
     if (stages) {
-        m_shaderPipelines.insert(key, QSSGRhiShaderStagesWithResources::fromShaderStages(stages));
+        m_shaderPipelines.insert(key, stages);
         m_currentShaderPipeline = m_shaderPipelines[key].data();
         m_currentShaderPipeline->beginMainUniformBuffer();
     } else {
@@ -464,7 +464,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         return;
     }
 
-    addTextureToShaderStages(QByteArrayLiteral("qt_inputTexture"), inTexture->texture, inTexture->desc);
+    addTextureToShaderPipeline(QByteArrayLiteral("qt_inputTexture"), inTexture->texture, inTexture->desc);
 
     QRhiCommandBuffer *cb = m_rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
@@ -515,7 +515,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
-    ps.shaderStages = m_currentShaderPipeline->stages();
+    ps.shaderPipeline = m_currentShaderPipeline;
 
     m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);
     m_currentUbufIndex++;
@@ -557,13 +557,13 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
                     QRhiSampler::None,
                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
         };
-        addTextureToShaderStages("qt_depthTexture", m_depthTexture, depthSamplerDesc);
+        addTextureToShaderPipeline("qt_depthTexture", m_depthTexture, depthSamplerDesc);
     }
 }
 
-void QSSGRhiEffectSystem::addTextureToShaderStages(const QByteArray &name,
-                                                   QRhiTexture *texture,
-                                                   const QSSGRhiSamplerDescription &samplerDescription)
+void QSSGRhiEffectSystem::addTextureToShaderPipeline(const QByteArray &name,
+                                                     QRhiTexture *texture,
+                                                     const QSSGRhiSamplerDescription &samplerDescription)
 {
     if (!m_currentShaderPipeline)
         return;

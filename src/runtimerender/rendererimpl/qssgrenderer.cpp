@@ -259,13 +259,13 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 
-QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStagesImpl(QSSGSubsetRenderable &renderable,
-                                                                       const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                       const QSSGRef<QSSGShaderCache> &shaderCache,
-                                                                       const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
-                                                                       QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                       const ShaderFeatureSetList &featureSet,
-                                                                       QByteArray &shaderString)
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
+                                                                           const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                           const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                                           const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                                                                           QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                           const ShaderFeatureSetList &featureSet,
+                                                                           QByteArray &shaderString)
 {
     shaderString = logPrefix();
     QSSGShaderDefaultMaterialKey theKey(renderable.shaderDescription);
@@ -283,7 +283,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStagesImpl(QSSGSubse
     if (foundIt != shaderEntries.cend())
         return shaderCache->loadGeneratedShader(key, *foundIt);
 
-    const QSSGRef<QSSGRhiShaderStages> &cachedShaders = shaderCache->getRhiShaderStages(shaderString, featureSet);
+    const QSSGRef<QSSGRhiShaderPipeline> &cachedShaders = shaderCache->getRhiShaderPipeline(shaderString, featureSet);
     if (cachedShaders)
         return cachedShaders;
 
@@ -305,13 +305,13 @@ QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStagesImpl(QSSGSubse
                                                                   shaderCache);
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGRenderer::generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
-                                                                   const ShaderFeatureSetList &inFeatureSet)
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
+                                                                       const ShaderFeatureSetList &inFeatureSet)
 {
     const QSSGRef<QSSGShaderCache> &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
     const auto &shaderLibraryManager = contextInterface()->shaderLibraryManager();
-    return generateRhiShaderStagesImpl(inRenderable, shaderLibraryManager, theCache, shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
+    return generateRhiShaderPipelineImpl(inRenderable, shaderLibraryManager, theCache, shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
 void QSSGRenderer::beginFrame()
@@ -786,8 +786,8 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
     }
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
-                                                                                   const ShaderFeatureSetList &inFeatureSet)
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable &inRenderable,
+                                                           const ShaderFeatureSetList &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);
@@ -802,7 +802,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResourc
     // the components that get invoked from here, those may not be suitable
     // performance wise. So bail out right here as soon as possible.
 
-    QSSGRef<QSSGRhiShaderStagesWithResources> shaderPipeline;
+    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find()
@@ -811,9 +811,7 @@ QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRenderer::getRhiShadersWithResourc
                                              inRenderable.shaderDescription);
     auto it = m_shaderMap.find(skey);
     if (it == m_shaderMap.end()) {
-        QSSGRef<QSSGRhiShaderStages> shaderStages = generateRhiShaderStages(inRenderable, inFeatureSet);
-        if (shaderStages)
-            shaderPipeline = QSSGRhiShaderStagesWithResources::fromShaderStages(shaderStages);
+        shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
         // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
         skey.detach();
         // insert it no matter what, no point in trying over and over again

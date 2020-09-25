@@ -1268,16 +1268,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 }
 
-QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
-                                                                                    QSSGMaterialVertexPipeline &vertexPipeline,
-                                                                                    const QSSGShaderDefaultMaterialKey &key,
-                                                                                    QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                                                                    const ShaderFeatureSetList &inFeatureSet,
-                                                                                    const QSSGRenderGraphObject &inMaterial,
-                                                                                    const QSSGShaderLightList &inLights,
-                                                                                    QSSGRenderableImage *inFirstImage,
-                                                                                    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                                    const QSSGRef<QSSGShaderCache> &theCache)
+QSSGRef<QSSGRhiShaderPipeline> QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
+                                                                                      QSSGMaterialVertexPipeline &vertexPipeline,
+                                                                                      const QSSGShaderDefaultMaterialKey &key,
+                                                                                      QSSGShaderDefaultMaterialKeyProperties &inProperties,
+                                                                                      const ShaderFeatureSetList &inFeatureSet,
+                                                                                      const QSSGRenderGraphObject &inMaterial,
+                                                                                      const QSSGShaderLightList &inLights,
+                                                                                      QSSGRenderableImage *inFirstImage,
+                                                                                      const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                                      const QSSGRef<QSSGShaderCache> &theCache)
 {
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must
@@ -1297,7 +1297,7 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
 static float ZERO_MATRIX[16] = {};
 
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
-                                                           QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
+                                                           QSSGRef<QSSGRhiShaderPipeline> &shaders,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
                                                            const QSSGRenderGraphObject &inMaterial,
                                                            const QSSGShaderDefaultMaterialKey &inKey,
@@ -1317,7 +1317,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QVector2D *shadowDepthAdjust)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
-    QSSGRhiShaderStages::CommonUniformIndices &cui = shaders->stages()->commonUniformIndices;
+    QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders->commonUniformIndices;
 
     materialAdapter->setCustomPropertyUniforms(shaders, renderContext);
 
@@ -1378,14 +1378,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.normalAdjustViewportFactorIdx = shaders->setUniform("qt_normalAdjustViewportFactor", &normalVpFactor, sizeof(float), cui.normalAdjustViewportFactorIdx);
 
     QVector3D theLightAmbientTotal;
-    shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
+    shaders->resetLights(QSSGRhiShaderPipeline::LightBuffer0);
     shaders->resetShadowMaps();
 
     for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
-        QSSGShaderLightProperties &theLightProperties(shaders->addLight(QSSGRhiShaderStagesWithResources::LightBuffer0));
+        QSSGShaderLightProperties &theLightProperties(shaders->addLight(QSSGRhiShaderPipeline::LightBuffer0));
         float brightness = theLight->m_brightness;
 
         theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
@@ -1474,7 +1474,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.modelViewProjectionIdx = shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
 
     cui.normalMatrixIdx = shaders->setUniform("qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), cui.normalMatrixIdx,
-                                              QSSGRhiShaderStagesWithResources::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+                                              QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
 
     cui.modelMatrixIdx = shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), cui.modelMatrixIdx);
 
@@ -1536,10 +1536,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
      // metalnessAmount cannot be multiplied in here yet due to custom materials
     const bool hasLighting = materialAdapter->hasLighting();
-    shaders->setLightsEnabled(QSSGRhiShaderStagesWithResources::LightBuffer0, hasLighting);
+    shaders->setLightsEnabled(QSSGRhiShaderPipeline::LightBuffer0, hasLighting);
     if (hasLighting) {
-        for (int idx = 0, end = shaders->lightCount(QSSGRhiShaderStagesWithResources::LightBuffer0); idx < end; ++idx) {
-            QSSGShaderLightProperties &lightProp(shaders->lightAt(QSSGRhiShaderStagesWithResources::LightBuffer0, idx));
+        for (int idx = 0, end = shaders->lightCount(QSSGRhiShaderPipeline::LightBuffer0); idx < end; ++idx) {
+            QSSGShaderLightProperties &lightProp(shaders->lightAt(QSSGRhiShaderPipeline::LightBuffer0, idx));
             lightProp.lightData.diffuse = QVector4D(lightProp.lightColor, 1.0);
         }
     }
@@ -1569,9 +1569,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {
         // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
         const auto &names = imageStringTable[int(theImage->m_mapType)];
-        QSSGRhiShaderStages::CommonUniformIndices &cui = shaders->stages()->commonUniformIndices;
+        QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders->commonUniformIndices;
         if (imageIdx == cui.imageIndices.size())
-            cui.imageIndices.append(QSSGRhiShaderStages::CommonUniformIndices::ImageIndices());
+            cui.imageIndices.append(QSSGRhiShaderPipeline::CommonUniformIndices::ImageIndices());
         auto &indices = cui.imageIndices[imageIdx];
 
         const QMatrix4x4 &textureTransform = theImage->m_image.m_textureTransform;

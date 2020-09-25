@@ -223,11 +223,11 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         auto generateShader = [&](const ShaderFeatureSetList &features) {
             if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset)) {
-                auto stages = QSSGRenderer::generateRhiShaderStagesImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
-                if (!stages.isNull()) {
+                auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
+                if (!shaderPipeline.isNull()) {
                     const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
-                    const auto vertexStage = stages->vertexStage();
-                    const auto fragmentStage = stages->fragmentStage();
+                    const auto vertexStage = shaderPipeline->vertexStage();
+                    const auto fragmentStage = shaderPipeline->fragmentStage();
                     if (vertexStage && fragmentStage)
                         qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
                 }
@@ -237,25 +237,23 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 const auto &rhiContext = renderContext->rhiContext();
                 const auto pipelineState = rhiContext->graphicsPipelineState(&layerData);
                 const auto &cms = renderContext->customMaterialSystem();
-                auto pipeline = cms->shadersForCustomMaterial(rhiContext.data(),
-                                                              pipelineState,
-                                                              cmr.material,
-                                                              cmr,
-                                                              features,
-                                                              layerData,
-                                                              *layerData.camera,
-                                                              nullptr,
-                                                              nullptr);
+                auto shaderPipeline = cms->shadersForCustomMaterial(rhiContext.data(),
+                                                                    pipelineState,
+                                                                    cmr.material,
+                                                                    cmr,
+                                                                    features,
+                                                                    layerData,
+                                                                    *layerData.camera,
+                                                                    nullptr,
+                                                                    nullptr);
 
-                if (pipeline) {
-                    if (const auto stages = pipeline->stages()) {
-                        shaderString = cmr.material.m_shaderPathKey;
-                        const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
-                        const auto vertexStage = stages->vertexStage();
-                        const auto fragmentStage = stages->fragmentStage();
-                        if (vertexStage && fragmentStage)
-                            qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
-                    }
+                if (shaderPipeline) {
+                    shaderString = cmr.material.m_shaderPathKey;
+                    const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+                    const auto vertexStage = shaderPipeline->vertexStage();
+                    const auto fragmentStage = shaderPipeline->fragmentStage();
+                    if (vertexStage && fragmentStage)
+                        qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
                 }
             }
         };

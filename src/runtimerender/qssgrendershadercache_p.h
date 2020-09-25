@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRhiShaderStages;
+class QSSGRhiShaderPipeline;
 class QSSGInputStreamFactory;
 class QShaderBaker;
 
@@ -153,7 +153,7 @@ public:
 
     using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi::Implementation target);
 private:
-    typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderStages>> TRhiShaderMap;
+    typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderPipeline>> TRhiShaderMap;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     TRhiShaderMap m_rhiShaders;
     QString m_cacheFilePath;
@@ -178,17 +178,17 @@ public:
                     const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 
-    QSSGRef<QSSGRhiShaderStages> getRhiShaderStages(const QByteArray &inKey,
-                                                    const ShaderFeatureSetList &inFeatures);
+    QSSGRef<QSSGRhiShaderPipeline> getRhiShaderPipeline(const QByteArray &inKey,
+                                                        const ShaderFeatureSetList &inFeatures);
 
-    QSSGRef<QSSGRhiShaderStages> compileForRhi(const QByteArray &inKey,
+    QSSGRef<QSSGRhiShaderPipeline> compileForRhi(const QByteArray &inKey,
                                                const QByteArray &inVert,
                                                const QByteArray &inFrag,
                                                const ShaderFeatureSetList &inFeatures,
-                                               QSSGRhiShaderStages::StageFlags stageFlags);
+                                               QSSGRhiShaderPipeline::StageFlags stageFlags);
 
-    QSSGRef<QSSGRhiShaderStages> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry);
-    QSSGRef<QSSGRhiShaderStages> loadBuiltinForRhi(const QByteArray &inKey);
+    QSSGRef<QSSGRhiShaderPipeline> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry);
+    QSSGRef<QSSGRhiShaderPipeline> loadBuiltinForRhi(const QByteArray &inKey);
 
     static QByteArray resourceFolder();
     static QByteArray shaderCollectionFile();

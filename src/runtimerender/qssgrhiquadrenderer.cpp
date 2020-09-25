@@ -90,7 +90,7 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
                                            QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
                                            QRhiRenderPassDescriptor *rpDesc, Flags flags)
 {
-    // ps must have viewport and shaderStages set already
+    // ps must have viewport and shaderPipeline set already
 
     ps->ia.vertexBuffer = m_vbuf;
     ps->ia.indexBuffer = m_ibuf;

@@ -107,12 +107,12 @@ QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRender
     return QRhiGraphicsPipeline::Triangles;
 }
 
-void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderStagesWithResources &shaders)
+void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders)
 {
-    if (!shaders.stages()->vertexStage())
+    if (!shaders.vertexStage())
         return;
 
-    const auto &vertexInputs = shaders.stages()->vertexInputs();
+    const auto &vertexInputs = shaders.vertexInputs();
 
     QVarLengthArray<QRhiVertexInputAttribute, 8> attrs;
     int inputIndex = 0;
@@ -148,7 +148,7 @@ QRhiGraphicsPipeline::CullMode QSSGRhiGraphicsPipelineState::toCullMode(QSSGCull
     return QRhiGraphicsPipeline::None;
 }
 
-void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage, StageFlags flags)
+void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags flags)
 {
     m_stages.append(stage);
 
@@ -201,12 +201,7 @@ void QSSGRhiShaderStages::addStage(const QRhiShaderStage &stage, StageFlags flag
         m_combinedImageSamplers[var.name] = var;
 }
 
-QSSGRef<QSSGRhiShaderStagesWithResources> QSSGRhiShaderStagesWithResources::fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages)
-{
-    return QSSGRef<QSSGRhiShaderStagesWithResources>(new QSSGRhiShaderStagesWithResources(stages));
-}
-
-int QSSGRhiShaderStagesWithResources::setUniformValue(const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
+int QSSGRhiShaderPipeline::setUniformValue(const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
 {
     switch (inType) {
     case QSSGRenderShaderDataType::Integer:
@@ -389,22 +384,22 @@ int QSSGRhiShaderStagesWithResources::setUniformValue(const char *name, const QV
     return -1;
 }
 
-int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *data, size_t size, int storeIndex, UniformFlags flags)
+int QSSGRhiShaderPipeline::setUniform(const char *name, const void *data, size_t size, int storeIndex, UniformFlags flags)
 {
     int index = storeIndex;
     if (storeIndex == -1) {
         const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
-        auto it = m_shaderStages->m_uniformIndex.constFind(ba);
-        if (it != m_shaderStages->m_uniformIndex.cend()) {
+        auto it = m_uniformIndex.constFind(ba);
+        if (it != m_uniformIndex.cend()) {
             index = int(*it);
         } else if (ba.size() < qsizetype(sizeof(QSSGRhiShaderUniform::name))) {
             QSSGRhiShaderUniform u;
             memcpy(u.name, name, ba.size() + 1);
             u.size = size;
 
-            const int new_idx = m_shaderStages->m_uniforms.size();
-            m_shaderStages->m_uniformIndex[name] = new_idx; // key is name, not ba, this has to be a deep copy QByteArray
-            m_shaderStages->m_uniforms.push_back(u);
+            const int new_idx = m_uniforms.size();
+            m_uniformIndex[name] = new_idx; // key is name, not ba, this has to be a deep copy QByteArray
+            m_uniforms.push_back(u);
             index = new_idx;
         } else {
             qWarning("Attempted to set uniform with too long name: %s", name);
@@ -412,11 +407,11 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
         }
     }
 
-    QSSGRhiShaderUniform &u = m_shaderStages->m_uniforms[index];
+    QSSGRhiShaderUniform &u = m_uniforms[index];
     if (size <= u.size) {
         if (u.offset == SIZE_MAX && u.maybeExists) {
-            auto it = m_shaderStages->m_ub0.constFind(QByteArray::fromRawData(u.name, strlen(u.name)));
-            if (it != m_shaderStages->m_ub0.constEnd()) {
+            auto it = m_ub0.constFind(QByteArray::fromRawData(u.name, strlen(u.name)));
+            if (it != m_ub0.constEnd()) {
                 u.offset = it->offset;
 #ifdef QT_DEBUG
                 if (int(u.size) != it->size) {
@@ -435,7 +430,7 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
             return index;
         }
 
-        char *dst = m_shaderStages->m_mainUniformBufferData.data() + u.offset;
+        char *dst = m_mainUniformBufferData.data() + u.offset;
         if (flags.testFlag(UniformFlag::Mat3)) {
             // mat3 is still 4 floats per column in the uniform buffer (but there
             // is no 4th column), so 48 bytes altogether, not 36 or 64.
@@ -456,7 +451,7 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
 // Quick3D uniform buffer is std140 type and all array data should be stored in this rule.
 // You can check it in glspec45.core.pdf's 7.6.2.2.(4)
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec45.core.pdf
-int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex)
+int QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex)
 {
     int index = storeIndex;
     QSSGRhiShaderUniformArray *ua = nullptr;
@@ -465,30 +460,30 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
     int newIndex = -1;
     if (index == -1) {
         const QByteArray ba = QByteArray::fromRawData(name, strlen(name));
-        auto it = m_shaderStages->m_uniformIndex.constFind(ba);
-        if (it != m_shaderStages->m_uniformIndex.cend()) {
+        auto it = m_uniformIndex.constFind(ba);
+        if (it != m_uniformIndex.cend()) {
             index = int(*it);
-            ua = &m_shaderStages->m_uniformArrays[index];
+            ua = &m_uniformArrays[index];
         } else if (ba.size() < qsizetype(sizeof(QSSGRhiShaderUniformArray::name))) {
-            newIndex = m_shaderStages->m_uniformArrays.size();
-            m_shaderStages->m_uniformArrays.push_back(QSSGRhiShaderUniformArray());
-            m_shaderStages->m_uniformIndex[name] = newIndex; // key needs deep copy
-            ua = &m_shaderStages->m_uniformArrays.last();
+            newIndex = m_uniformArrays.size();
+            m_uniformArrays.push_back(QSSGRhiShaderUniformArray());
+            m_uniformIndex[name] = newIndex; // key needs deep copy
+            ua = &m_uniformArrays.last();
             memcpy(ua->name, name, ba.size() + 1);
         } else {
             qWarning("Attempted to set uniform array with too long name: %s", name);
             return index;
         }
     } else {
-        ua = &m_shaderStages->m_uniformArrays[index];
+        ua = &m_uniformArrays[index];
     }
 
     if (!ua)
         return index;
 
     if (ua->offset == SIZE_MAX && ua->maybeExists) {
-        auto it = m_shaderStages->m_ub0.constFind(QByteArray::fromRawData(ua->name, strlen(ua->name)));
-        if (it != m_shaderStages->m_ub0.constEnd()) {
+        auto it = m_ub0.constFind(QByteArray::fromRawData(ua->name, strlen(ua->name)));
+        if (it != m_ub0.constEnd()) {
             ua->offset = it->offset;
             ua->size = it->size;
         }
@@ -513,7 +508,7 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
     };
 #endif
 
-    char *p = m_shaderStages->m_mainUniformBufferData.data() + ua->offset;
+    char *p = m_mainUniformBufferData.data() + ua->offset;
 
     switch (type) {
     case QSSGRenderShaderDataType::Integer:
@@ -766,22 +761,21 @@ int QSSGRhiShaderStagesWithResources::setUniformArray(const char *name, const vo
     return index;
 }
 
-void QSSGRhiShaderStagesWithResources::beginMainUniformBuffer()
+void QSSGRhiShaderPipeline::beginMainUniformBuffer()
 {
-    m_shaderStages->m_mainUniformBufferData.resize(m_shaderStages->ub0Size());
+    m_mainUniformBufferData.resize(m_ub0Size);
 }
 
-void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)
+void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)
 {
     // We will assume that the main uniform buffer has the same layout in all
     // stages (the generator should ensure that), meaning it includes all
     // members in all shaders, even if a member is not used in that particular
     // shader.
-    const QRhiShaderStage *vertexStage = m_shaderStages->vertexStage();
-    if (!vertexStage)
+    if (!vertexStage())
         return;
 
-    const int size = m_shaderStages->ub0Size();
+    const int size = m_ub0Size;
     if (size < 1)
         return;
 
@@ -794,12 +788,12 @@ void QSSGRhiShaderStagesWithResources::bakeMainUniformBuffer(QRhiBuffer **ubuf, 
         (*ubuf)->create();
     }
 
-    resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, m_shaderStages->m_mainUniformBufferData.constData());
+    resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, m_mainUniformBufferData.constData());
 }
 
-void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(LightBufferSlot slot,
-                                                               QRhiBuffer **ubuf,
-                                                               QRhiResourceUpdateBatch *resourceUpdates)
+void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(LightBufferSlot slot,
+                                                    QRhiBuffer **ubuf,
+                                                    QRhiResourceUpdateBatch *resourceUpdates)
 {
     Q_ASSERT(m_lightsEnabled);
 
@@ -823,18 +817,18 @@ void QSSGRhiShaderStagesWithResources::bakeLightsUniformBuffer(LightBufferSlot s
     }
 }
 
-int QSSGRhiShaderStagesWithResources::bindingForTexture(const char *name, int hint)
+int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
 {
     if (hint >= 0) {
-        auto it = m_shaderStages->m_materialImageSamplerBindings.constFind(hint);
-        if (it != m_shaderStages->m_materialImageSamplerBindings.cend())
+        auto it = m_materialImageSamplerBindings.constFind(hint);
+        if (it != m_materialImageSamplerBindings.cend())
             return it.value();
     }
 
-    auto it = m_shaderStages->m_combinedImageSamplers.constFind(QByteArray::fromRawData(name, strlen(name)));
-    const int binding = it != m_shaderStages->m_combinedImageSamplers.cend() ? it->binding : -1;
+    auto it = m_combinedImageSamplers.constFind(QByteArray::fromRawData(name, strlen(name)));
+    const int binding = it != m_combinedImageSamplers.cend() ? it->binding : -1;
     if (hint >= 0)
-        m_shaderStages->m_materialImageSamplerBindings[hint] = binding;
+        m_materialImageSamplerBindings[hint] = binding;
 
     return binding;
 }
@@ -892,8 +886,7 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     // Build a new one. This is potentially expensive.
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
 
-    const QVector<QRhiShaderStage> &stages(key.state.shaderStages->stages());
-    ps->setShaderStages(stages.cbegin(), stages.cend());
+    ps->setShaderStages(key.state.shaderPipeline->cbeginStages(), key.state.shaderPipeline->cendStages());
     ps->setVertexInputLayout(key.state.ia.inputLayout);
     ps->setShaderResourceBindings(key.layoutCompatibleSrb);
     ps->setRenderPassDescriptor(key.compatibleRpDesc);

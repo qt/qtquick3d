@@ -100,7 +100,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> TShaderMap;
+    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
 
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
 
@@ -110,15 +110,15 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     // shader. This does not mean we were successul, however.
 
     // RHI
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurXRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_cubemapShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurXRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_orthographicShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_ssaoRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_skyBoxRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_supersampleResolveRhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_progressiveAARhiShader;
-    QSSGRef<QSSGRhiShaderStagesWithResources> m_texturedQuadRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurXRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurXRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_ssaoRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_skyBoxRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_supersampleResolveRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
 
     TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
@@ -145,7 +145,7 @@ public:
     QSSGRenderer();
     ~QSSGRenderer();
 
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderStagesWithResources>> ShaderMap;
+    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> ShaderMap;
 
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
@@ -211,18 +211,17 @@ public:
     //void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
-    static QSSGRef<QSSGRhiShaderStages> generateRhiShaderStagesImpl(QSSGSubsetRenderable &renderable, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                    const QSSGRef<QSSGShaderCache> &shaderCache,
-                                                                    const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
-                                                                    QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                    const ShaderFeatureSetList &featureSet,
-                                                                    QByteArray &shaderString);
+    static QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                                                        const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                                        const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                                                                        QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                        const ShaderFeatureSetList &featureSet,
+                                                                        QByteArray &shaderString);
 
-    // RHI-only
-    QSSGRef<QSSGRhiShaderStages> generateRhiShaderStages(QSSGSubsetRenderable &inRenderable,
-                                                         const ShaderFeatureSetList &inFeatureSet);
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShadersWithResources(QSSGSubsetRenderable &inRenderable,
-                                                                         const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
+                                                             const ShaderFeatureSetList &inFeatureSet);
+    QSSGRef<QSSGRhiShaderPipeline> getRhiShaders(QSSGSubsetRenderable &inRenderable,
+                                               const ShaderFeatureSetList &inFeatureSet);
 
 public:
     QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
@@ -272,22 +271,22 @@ protected:
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
 public:
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurXShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiCubemapShadowBlurYShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurXShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiOrthographicShadowBlurYShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSsaoShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiSupersampleResolveShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiProgressiveAAShader();
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiTexturedQuadShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurXShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurYShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurXShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurYShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiSsaoShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
+    QSSGRef<QSSGRhiShaderPipeline> getRhiSupersampleResolveShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiProgressiveAAShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiTexturedQuadShader();
 
 private:
     friend class QSSGRenderContextInterface;
     void releaseResources();
 
-    QSSGRef<QSSGRhiShaderStagesWithResources> getRhiShader(const QByteArray &name,
-                                                           QSSGRef<QSSGRhiShaderStagesWithResources> &storage);
+    QSSGRef<QSSGRhiShaderPipeline> getBuiltinRhiShader(const QByteArray &name,
+                                                       QSSGRef<QSSGRhiShaderPipeline> &storage);
     // Skybox shader state
     QSSGRenderLayer::TonemapMode m_skyboxTonemapMode = QSSGRenderLayer::TonemapMode::None;
     bool m_isSkyboxRGBE = false;

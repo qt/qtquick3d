@@ -78,7 +78,7 @@ private:
     void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
 
     void addCommonEffectUniforms(const QSize &inputSize, const QSize &outputSize);
-    void addTextureToShaderStages(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
+    void addTextureToShaderPipeline(const QByteArray &name, QRhiTexture *texture, const QSSGRhiSamplerDescription &samplerDesc);
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
     QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,
@@ -96,8 +96,8 @@ private:
     int m_currentUbufIndex = 0;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     QSSGRenderer *m_renderer = nullptr;
-    QHash<QByteArray, QSSGRef<QSSGRhiShaderStagesWithResources>> m_shaderPipelines;
-    QSSGRhiShaderStagesWithResources *m_currentShaderPipeline = nullptr;
+    QHash<QByteArray, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
+    QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;
     QHash<QByteArray, QSSGRhiTexture> m_currentTextures;
     QSet<QRhiTextureRenderTarget *> m_pendingClears;
 };
