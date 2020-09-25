@@ -1294,6 +1294,8 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet, shaderLibraryManager, theCache, {});
 }
 
+static float ZERO_MATRIX[16] = {};
+
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
@@ -1379,9 +1381,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
     shaders->resetShadowMaps();
 
-    float zero[16];
-    memset(zero, 0, sizeof(zero));
-
     for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
@@ -1417,7 +1416,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 if (receivesShadows)
                     shaders->setUniform(names.shadowMatrixStem, pEntry->m_lightView.constData(), 16 * sizeof(float));
                 else
-                    shaders->setUniform(names.shadowMatrixStem, zero, 16 * sizeof(float));
+                    shaders->setUniform(names.shadowMatrixStem, ZERO_MATRIX, 16 * sizeof(float));
             } else {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthMap;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowMapStem;
@@ -1431,7 +1430,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                     const QMatrix4x4 m = bias * pEntry->m_lightVP;
                     shaders->setUniform(names.shadowMatrixStem, m.constData(), 16 * sizeof(float));
                 } else {
-                    shaders->setUniform(names.shadowMatrixStem, zero, 16 * sizeof(float));
+                    shaders->setUniform(names.shadowMatrixStem, ZERO_MATRIX, 16 * sizeof(float));
                 }
             }
 
@@ -1442,7 +1441,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                               inRenderProperties.isYUpInFramebuffer ? 0.0f : 1.0f);
                 shaders->setUniform(names.shadowControlStem, &shadowControl, 4 * sizeof(float));
             } else {
-                shaders->setUniform(names.shadowControlStem, zero, 4 * sizeof(float));
+                shaders->setUniform(names.shadowControlStem, ZERO_MATRIX, 4 * sizeof(float));
             }
         }
 
