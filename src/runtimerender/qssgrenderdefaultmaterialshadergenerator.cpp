@@ -1342,6 +1342,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 cui.inverseProjectionMatrixIdx = shaders->setUniform("qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), cui.inverseProjectionMatrixIdx);
         }
 
+        const float isClipDepthZeroToOne = inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f;
+        cui.isClipDepthZeroToOneIdx = shaders->setUniform("qt_nearClipValue", &isClipDepthZeroToOne, sizeof(float), cui.isClipDepthZeroToOneIdx);
+
         // ### these should use flags like the above two
         QMatrix4x4 viewProj;
         inCamera.calculateViewProjectionMatrix(viewProj);
@@ -1373,9 +1376,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     // into our own hands)
     float normalVpFactor = inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f;
     cui.normalAdjustViewportFactorIdx = shaders->setUniform("qt_normalAdjustViewportFactor", &normalVpFactor, sizeof(float), cui.normalAdjustViewportFactorIdx);
-
-    const float isClipDepthZeroToOne = inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f;
-    cui.isClipDepthZeroToOneIdx = shaders->setUniform("qt_nearClipValue", &isClipDepthZeroToOne, sizeof(float), cui.isClipDepthZeroToOneIdx);
 
     QVector3D theLightAmbientTotal;
     shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
