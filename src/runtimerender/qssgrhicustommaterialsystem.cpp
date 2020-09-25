@@ -291,8 +291,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                                            0,
                                                                            QSSGRhiUniformBufferSetKey::Main }));
         shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
-        shaderPipeline->bakeLightsUniformBuffer(QSSGRhiShaderPipeline::LightBuffer0,
-                                                &uniformBuffers.lightsUbuf0,
+        shaderPipeline->bakeLightsUniformBuffer(&uniformBuffers.lightsUbuf0,
                                                 resourceUpdates);
 
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);

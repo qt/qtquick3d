@@ -219,17 +219,6 @@ struct QSSGRhiShadowMapProperties
     int cachedBinding = -1; // -1 == invalid
 };
 
-// Custom materials have an array of combined image samplers, one array for 2D
-// shadow maps, and one for cubemap ones.
-struct QSSGRhiShadowMapArrayProperties
-{
-    QVarLengthArray<QRhiTexture *, 8> shadowMapTextures;
-    QByteArray shadowMapArrayUniformName;
-    bool isCubemap = false;
-    int shaderArrayDim = 0;
-    int cachedBinding = -1;
-};
-
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderPipeline
 {
     Q_DISABLE_COPY(QSSGRhiShaderPipeline)
@@ -325,18 +314,13 @@ public:
     int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
     int bindingForTexture(const char *name, int hint = -1);
 
-    enum LightBufferSlot {
-        LightBuffer0,
-        LightBufferMax
-    };
-
-    void resetLights(LightBufferSlot slot) { m_lights[slot].clear(); }
-    QSSGShaderLightProperties &addLight(LightBufferSlot slot) { m_lights[slot].append(QSSGShaderLightProperties()); return m_lights[slot].last(); }
-    int lightCount(LightBufferSlot slot) const { return m_lights[slot].count(); }
-    const QSSGShaderLightProperties &lightAt(LightBufferSlot slot, int index) const { return m_lights[slot][index]; }
-    QSSGShaderLightProperties &lightAt(LightBufferSlot slot, int index) { return m_lights[slot][index]; }
-    void setLightsEnabled(LightBufferSlot slot, bool enable) { m_lightsEnabled[slot] = enable; }
-    bool isLightingEnabled(LightBufferSlot slot) const { return m_lightsEnabled[slot]; }
+    void resetLights() { m_lights.clear(); }
+    QSSGShaderLightProperties &addLight() { m_lights.append(QSSGShaderLightProperties()); return m_lights.last(); }
+    int lightCount() const { return m_lights.count(); }
+    const QSSGShaderLightProperties &lightAt(int index) const { return m_lights[index]; }
+    QSSGShaderLightProperties &lightAt(int index) { return m_lights[index]; }
+    void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }
+    bool isLightingEnabled() const { return m_lightsEnabled; }
 
     void resetShadowMaps() { m_shadowMaps.clear(); }
     QSSGRhiShadowMapProperties &addShadowMap() { m_shadowMaps.append(QSSGRhiShadowMapProperties()); return m_shadowMaps.last(); }
@@ -344,14 +328,8 @@ public:
     const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
-    void resetShadowMapArrays() { m_shadowMapArrays.clear(); }
-    QSSGRhiShadowMapArrayProperties &addShadowMapArray() { m_shadowMapArrays.append(QSSGRhiShadowMapArrayProperties()); return m_shadowMapArrays.last(); }
-    int shadowMapArrayCount() const { return m_shadowMapArrays.count(); }
-    const QSSGRhiShadowMapArrayProperties &shadowMapArrayAt(int index) const { return m_shadowMapArrays[index]; }
-    QSSGRhiShadowMapArrayProperties &shadowMapArrayAt(int index) { return m_shadowMapArrays[index]; }
-
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
-    void bakeLightsUniformBuffer(LightBufferSlot slot, QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
+    void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
     void setLightProbeTexture(QRhiTexture *texture,
                               QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge,
@@ -394,10 +372,9 @@ private:
 
     // transient (per-frame) data
     QVarLengthArray<char, 512> m_mainUniformBufferData;
-    bool m_lightsEnabled[LightBufferMax] = {};
-    QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights[LightBufferMax];
+    bool m_lightsEnabled = false;
+    QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
-    QVarLengthArray<QSSGRhiShadowMapArrayProperties, 2> m_shadowMapArrays;
     QRhiTexture *m_lightProbeTexture = nullptr; // not owned
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;

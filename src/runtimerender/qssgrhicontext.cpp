@@ -791,8 +791,7 @@ void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourc
     resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, m_mainUniformBufferData.constData());
 }
 
-void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(LightBufferSlot slot,
-                                                    QRhiBuffer **ubuf,
+void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(QRhiBuffer **ubuf,
                                                     QRhiResourceUpdateBatch *resourceUpdates)
 {
     Q_ASSERT(m_lightsEnabled);
@@ -808,12 +807,12 @@ void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(LightBufferSlot slot,
         (*ubuf)->create();
     }
 
-    const qint32 count = m_lights[slot].count();
+    const qint32 count = m_lights.count();
     resourceUpdates->updateDynamicBuffer(*ubuf, 0, sizeof(qint32), &count);
 
     for (int idx = 0; idx < count; ++idx) {
         const int offset = idx * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32));
-        resourceUpdates->updateDynamicBuffer(*ubuf, offset, sizeof(QSSGLightSourceShader), &m_lights[slot][idx].lightData);
+        resourceUpdates->updateDynamicBuffer(*ubuf, offset, sizeof(QSSGLightSourceShader), &m_lights[idx].lightData);
     }
 }
 

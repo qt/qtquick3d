@@ -1378,14 +1378,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.normalAdjustViewportFactorIdx = shaders->setUniform("qt_normalAdjustViewportFactor", &normalVpFactor, sizeof(float), cui.normalAdjustViewportFactorIdx);
 
     QVector3D theLightAmbientTotal;
-    shaders->resetLights(QSSGRhiShaderPipeline::LightBuffer0);
+    shaders->resetLights();
     shaders->resetShadowMaps();
 
     for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
-        QSSGShaderLightProperties &theLightProperties(shaders->addLight(QSSGRhiShaderPipeline::LightBuffer0));
+        QSSGShaderLightProperties &theLightProperties(shaders->addLight());
         float brightness = theLight->m_brightness;
 
         theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
@@ -1536,10 +1536,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
      // metalnessAmount cannot be multiplied in here yet due to custom materials
     const bool hasLighting = materialAdapter->hasLighting();
-    shaders->setLightsEnabled(QSSGRhiShaderPipeline::LightBuffer0, hasLighting);
+    shaders->setLightsEnabled(hasLighting);
     if (hasLighting) {
-        for (int idx = 0, end = shaders->lightCount(QSSGRhiShaderPipeline::LightBuffer0); idx < end; ++idx) {
-            QSSGShaderLightProperties &lightProp(shaders->lightAt(QSSGRhiShaderPipeline::LightBuffer0, idx));
+        for (int idx = 0, end = shaders->lightCount(); idx < end; ++idx) {
+            QSSGShaderLightProperties &lightProp(shaders->lightAt(idx));
             lightProp.lightData.diffuse = QVector4D(lightProp.lightColor, 1.0);
         }
     }
