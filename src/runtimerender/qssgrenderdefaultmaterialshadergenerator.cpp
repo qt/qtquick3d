@@ -1294,28 +1294,6 @@ QSSGRef<QSSGRhiShaderStages> QSSGMaterialShaderGenerator::generateMaterialRhiSha
     return vertexPipeline.programGenerator()->compileGeneratedRhiShader(materialInfoString, inFeatureSet, shaderLibraryManager, theCache, {});
 }
 
-void QSSGMaterialShaderGenerator::setRhiImageShaderVariables(QSSGRef<QSSGRhiShaderStagesWithResources> &inShader, QSSGRenderableImage &inImage, quint32 idx)
-{
-    const QMatrix4x4 &textureTransform = inImage.m_image.m_textureTransform;
-    // We separate rotational information from offset information so that just maybe the shader
-    // will attempt to push less information to the card.
-    const float *dataPtr(textureTransform.constData());
-    // The third member of the offsets contains a flag indicating if the texture was
-    // premultiplied or not.
-    // We use this to mix the texture alpha.
-    QVector3D offsets(dataPtr[12], dataPtr[13], inImage.m_image.m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f);
-    // Grab just the upper 2x2 rotation matrix from the larger matrix.
-    QVector4D rotations(dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5]);
-
-    // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
-    const auto &names = imageStringTable[int(inImage.m_mapType)];
-    QSSGRhiShaderStages::CommonUniformIndices &cui = inShader->stages()->commonUniformIndices;
-    auto &indices = cui.imageIndices[idx];
-
-    indices.imageRotationsUniformIndex = inShader->setUniform(names.imageRotations, &rotations, sizeof(rotations), indices.imageRotationsUniformIndex);
-    indices.imageOffsetsUniformIndex = inShader->setUniform(names.imageOffsets, &offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
-}
-
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
                                                            QSSGRef<QSSGRhiShaderStagesWithResources> &shaders,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
@@ -1397,7 +1375,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const float isClipDepthZeroToOne = inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f;
     cui.isClipDepthZeroToOneIdx = shaders->setUniform("qt_nearClipValue", &isClipDepthZeroToOne, sizeof(float), cui.isClipDepthZeroToOneIdx);
 
-    QVector3D theLightAmbientTotal = QVector3D(0, 0, 0);
+    QVector3D theLightAmbientTotal;
     shaders->resetLights(QSSGRhiShaderStagesWithResources::LightBuffer0);
     shaders->resetShadowMaps();
 
@@ -1569,8 +1547,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         }
     }
 
-    const QVector3D diffuseLightAmbientTotal = theLightAmbientTotal;
-    cui.light_ambient_totalIdx = shaders->setUniform("qt_light_ambient_total", &diffuseLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
+    cui.light_ambient_totalIdx = shaders->setUniform("qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
 
     const QVector4D materialProperties(materialAdapter->specularAmount(),
                                        materialAdapter->specularRoughness(),
@@ -1590,8 +1567,25 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     cui.alphaCutoffIdx = shaders->setUniform("qt_alphaCutoff", &alphaCutOff, sizeof(float), cui.alphaCutoffIdx);
 
     quint32 imageIdx = 0;
-    for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx)
-        setRhiImageShaderVariables(shaders, *theImage, imageIdx);
+    for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {
+        // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
+        const auto &names = imageStringTable[int(theImage->m_mapType)];
+        QSSGRhiShaderStages::CommonUniformIndices &cui = shaders->stages()->commonUniformIndices;
+        auto &indices = cui.imageIndices[imageIdx];
+
+        const QMatrix4x4 &textureTransform = theImage->m_image.m_textureTransform;
+        // We separate rotational information from offset information so that just maybe the shader
+        // will attempt to push less information to the card.
+        const float *dataPtr(textureTransform.constData());
+        // The third member of the offsets contains a flag indicating if the texture was
+        // premultiplied or not.
+        // We use this to mix the texture alpha.
+        const float offsets[3] = { dataPtr[12], dataPtr[13], theImage->m_image.m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f };
+        indices.imageOffsetsUniformIndex = shaders->setUniform(names.imageOffsets, offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
+        // Grab just the upper 2x2 rotation matrix from the larger matrix.
+        const float rotations[4] = { dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5] };
+        indices.imageRotationsUniformIndex = shaders->setUniform(names.imageRotations, rotations, sizeof(rotations), indices.imageRotationsUniformIndex);
+    }
 
     inPipelineState->lineWidth = materialAdapter->lineWidth();
 
