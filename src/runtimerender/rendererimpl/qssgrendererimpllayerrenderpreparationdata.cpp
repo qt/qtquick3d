@@ -1101,7 +1101,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
                 if (checkLightProbeDirty(*layer.lightProbe))
                     wasDataDirty = true;
-        }
+            }
 
             bool lightProbeValid = hasValidLightProbe(layer.lightProbe);
 
