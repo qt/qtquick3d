@@ -466,9 +466,53 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
     static QRhiGraphicsPipeline::CullMode toCullMode(QSSGCullFaceMode cullFaceMode);
 };
 
-bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW;
-bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW;
-size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed = 0) Q_DECL_NOTHROW;
+inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
+{
+    return a.shaderStages == b.shaderStages
+            && a.samples == b.samples
+            && a.depthTestEnable == b.depthTestEnable
+            && a.depthWriteEnable == b.depthWriteEnable
+            && a.depthFunc == b.depthFunc
+            && a.cullMode == b.cullMode
+            && a.depthBias == b.depthBias
+            && a.slopeScaledDepthBias == b.slopeScaledDepthBias
+            && a.blendEnable == b.blendEnable
+            && a.scissorEnable == b.scissorEnable
+            && a.viewport == b.viewport
+            && a.scissor == b.scissor
+            && a.ia.topology == b.ia.topology
+            && a.ia.inputLayout == b.ia.inputLayout
+            && a.targetBlend.colorWrite == b.targetBlend.colorWrite
+            && a.targetBlend.srcColor == b.targetBlend.srcColor
+            && a.targetBlend.dstColor == b.targetBlend.dstColor
+            && a.targetBlend.opColor == b.targetBlend.opColor
+            && a.targetBlend.srcAlpha == b.targetBlend.srcAlpha
+            && a.targetBlend.dstAlpha == b.targetBlend.dstAlpha
+            && a.targetBlend.opAlpha == b.targetBlend.opAlpha
+            && a.colorAttachmentCount == b.colorAttachmentCount
+            && a.lineWidth == b.lineWidth;
+}
+
+inline bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_NOTHROW
+{
+    // do not bother with all fields
+    return qHash(s.shaderStages, seed)
+            ^ qHash(s.samples)
+            ^ qHash(s.targetBlend.dstColor)
+            ^ qHash(s.depthFunc)
+            ^ qHash(s.cullMode)
+            ^ qHash(s.colorAttachmentCount)
+            ^ qHash(s.lineWidth)
+            ^ (s.depthTestEnable << 1)
+            ^ (s.depthWriteEnable << 2)
+            ^ (s.blendEnable << 3)
+            ^ (s.scissorEnable << 4);
+}
 
 struct QSSGGraphicsPipelineStateKey
 {
@@ -477,9 +521,22 @@ struct QSSGGraphicsPipelineStateKey
     QRhiShaderResourceBindings *layoutCompatibleSrb;
 };
 
-bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
-bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
-size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW;
+inline bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
+{
+    return a.state == b.state
+            && a.compatibleRpDesc->isCompatible(b.compatibleRpDesc)
+            && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
+}
+
+inline bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
+{
+    return qHash(k.state, seed); // rp and srb not included, intentionally (see ==, those are based on compatibility, not pointer equivalence)
+}
 
 struct QSSGComputePipelineStateKey
 {
