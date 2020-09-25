@@ -224,8 +224,7 @@ public:
             int imageRotationsUniformIndex = -1;
             int imageOffsetsUniformIndex = -1;
         };
-
-        QHash<quint32, ImageIndices> imageIndices;
+        QVarLengthArray<ImageIndices, 16> imageIndices;
     } commonUniformIndices;
 
 private:
