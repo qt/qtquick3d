@@ -210,19 +210,15 @@ struct QSSGRenderableObject
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
-    // For custom renderable objects the render function must be defined
-    TRenderFunction renderFunction;
     QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
                            const QVector3D &inWorldCenterPt,
                            const QMatrix4x4 &inGlobalTransform,
-                           const QSSGBounds3 &inBounds,
-                           TRenderFunction inFunction = nullptr)
+                           const QSSGBounds3 &inBounds)
 
         : globalTransform(inGlobalTransform)
         , bounds(inBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
-        , renderFunction(inFunction)
     {
     }
 };
