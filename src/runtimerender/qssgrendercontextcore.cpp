@@ -76,11 +76,11 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
                                                        const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
     , m_inputStreamFactory(inputStreamFactory)
+    , m_shaderCache(shaderCache)
     , m_bufferManager(bufferManager)
     , m_resourceManager(resourceManager)
     , m_renderer(renderer)
     , m_shaderLibraryManager(shaderLibraryManager)
-    , m_shaderCache(shaderCache)
     , m_customMaterialSystem(customMaterialSystem)
     , m_shaderProgramGenerator(shaderProgramGenerator)
 {
