@@ -1473,13 +1473,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
     cui.modelViewProjectionIdx = shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
 
-    // mat3 is still 4 floats per column in the uniform buffer (but there
-    // is no 4th column), so 48 bytes altogether, not 36 or 64.
-    float normalMatrix[12];
-    memcpy(normalMatrix, inNormalMatrix.constData(), 3 * sizeof(float));
-    memcpy(normalMatrix + 4, inNormalMatrix.constData() + 3, 3 * sizeof(float));
-    memcpy(normalMatrix + 8, inNormalMatrix.constData() + 6, 3 * sizeof(float));
-    cui.normalMatrixIdx = shaders->setUniform("qt_normalMatrix", normalMatrix, 12 * sizeof(float), cui.normalMatrixIdx);
+    cui.normalMatrixIdx = shaders->setUniform("qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), cui.normalMatrixIdx,
+                                              QSSGRhiShaderStagesWithResources::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+
     cui.modelMatrixIdx = shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), cui.modelMatrixIdx);
 
     shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
@@ -1503,13 +1499,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity())
             cui.lightProbeOrientationIdx = shaders->setUniform("qt_lightProbeOrientation", inRenderProperties.probeOrientation.constData(), 16 * sizeof(float), cui.lightProbeOrientationIdx);
 
-        QVector4D props(0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure);
-        cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", &props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
+        const float props[4] = { 0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure };
+        cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
+
         shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
     } else {
         // no lightprobe
-        QVector4D emptyProps(0.0f, 0.0f, -1.0f, 0.0f);
-        cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", &emptyProps, 4 * sizeof(float), cui.lightProbePropertiesIdx);
+        const float emptyProps[4] = { 0.0f, 0.0f, -1.0f, 0.0f };
+        cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", emptyProps, 4 * sizeof(float), cui.lightProbePropertiesIdx);
 
         shaders->setLightProbeTexture(nullptr);
     }
@@ -1549,11 +1546,13 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
     cui.light_ambient_totalIdx = shaders->setUniform("qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
 
-    const QVector4D materialProperties(materialAdapter->specularAmount(),
-                                       materialAdapter->specularRoughness(),
-                                       materialAdapter->metalnessAmount(),
-                                       inOpacity);
-    cui.material_propertiesIdx = shaders->setUniform("qt_material_properties", &materialProperties, 4 * sizeof(float), cui.material_propertiesIdx);
+    const float materialProperties[4] = {
+        materialAdapter->specularAmount(),
+        materialAdapter->specularRoughness(),
+        materialAdapter->metalnessAmount(),
+        inOpacity
+    };
+    cui.material_propertiesIdx = shaders->setUniform("qt_material_properties", materialProperties, 4 * sizeof(float), cui.material_propertiesIdx);
 
     const float bumpAmount = materialAdapter->bumpAmount();
     cui.bumpAmountIdx = shaders->setUniform("qt_bumpAmount", &bumpAmount, sizeof(float), cui.bumpAmountIdx);

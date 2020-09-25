@@ -389,7 +389,7 @@ int QSSGRhiShaderStagesWithResources::setUniformValue(const char *name, const QV
     return -1;
 }
 
-int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *data, size_t size, int storeIndex)
+int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *data, size_t size, int storeIndex, UniformFlags flags)
 {
     int index = storeIndex;
     if (storeIndex == -1) {
@@ -434,7 +434,18 @@ int QSSGRhiShaderStagesWithResources::setUniform(const char *name, const void *d
             u.maybeExists = false; // but do not try again
             return index;
         }
-        memcpy(m_shaderStages->m_mainUniformBufferData.data() + u.offset, data, size);
+
+        char *dst = m_shaderStages->m_mainUniformBufferData.data() + u.offset;
+        if (flags.testFlag(UniformFlag::Mat3)) {
+            // mat3 is still 4 floats per column in the uniform buffer (but there
+            // is no 4th column), so 48 bytes altogether, not 36 or 64.
+            const float *src = static_cast<const float *>(data);
+            memcpy(dst, src, 3 * sizeof(float));
+            memcpy(dst + 4 * sizeof(float), src + 3, 3 * sizeof(float));
+            memcpy(dst + 8 * sizeof(float), src + 6, 3 * sizeof(float));
+        } else {
+            memcpy(dst, data, size);
+        }
     } else {
         qWarning("Attempted to set %u bytes to uniform %s with size %u", uint(size), name, uint(u.size));
     }

@@ -351,6 +351,11 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderStagesWithResources
 public:
     QAtomicInt ref;
 
+    enum class UniformFlag {
+        Mat3 = 0x01
+    };
+    Q_DECLARE_FLAGS(UniformFlags, UniformFlag)
+
     static QSSGRef<QSSGRhiShaderStagesWithResources> fromShaderStages(const QSSGRef<QSSGRhiShaderStages> &stages);
 
     const QSSGRhiShaderStages *stages() const { return m_shaderStages.data(); }
@@ -358,7 +363,7 @@ public:
 
     void beginMainUniformBuffer();
     int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
-    int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1);
+    int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1, UniformFlags flags = {});
     int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
     int bindingForTexture(const char *name, int hint = -1);
 
@@ -439,6 +444,8 @@ private:
     QRhiTexture *m_ssaoTexture = nullptr; // not owned
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures; // does not own
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderStagesWithResources::UniformFlags)
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 {
