@@ -904,8 +904,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         Q_ASSERT(lights.size() < INT32_MAX);
         for (qint32 lightIdx = 0; lightIdx < lights.size(); ++lightIdx) {
             auto &shaderLight = lights[lightIdx];
-            if (!shaderLight.enabled)
-                continue;
             QSSGRenderLight *lightNode = shaderLight.light;
             auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode);
 
@@ -1371,8 +1369,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
         QSSGShaderLightProperties &theLightProperties(shaders->addLight());
-        float brightness = theLight->m_brightness;
-
+        float brightness = (inLights[lightIdx].enabled) ? theLight->m_brightness : 0.0f;
         theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
         const QVector3D &lightSpecular(theLight->m_specularColor);
         theLightProperties.lightData.specular[0] = lightSpecular.x() * brightness;
@@ -1385,6 +1382,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightProperties.lightData.direction[2] = lightDirection.z();
         theLightProperties.lightData.direction[3] = 1.0f;
 
+        // For all disabled lights, the shader code will be generated as the same as enabled.
+        // but the light color will be zero, and shadows will not be affected
+        if (!inLights[lightIdx].enabled)
+            continue;
+
         // When it comes to receivesShadows, it is a bit tricky: to stay
         // compatible with the old, direct OpenGL rendering path (and the
         // generated shader code), we will need to ensure the texture
@@ -1394,7 +1396,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (theLight->m_castShadow && !theLight->m_scope && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
+        if (theLight->m_castShadow && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
             ++shadowMapIdx;
 
