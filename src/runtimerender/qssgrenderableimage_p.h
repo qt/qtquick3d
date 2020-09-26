@@ -56,7 +56,7 @@ struct QSSGRenderableImage
 {
     enum class Type : quint8
     {
-        Unknown,
+        Unknown = 0,
         Diffuse,
         Opacity,
         Specular,

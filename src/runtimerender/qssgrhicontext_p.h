@@ -170,10 +170,12 @@ struct QSSGRhiTexture
 
 enum class QSSGRhiSamplerBindingHints
 {
-    LightProbe = 128,
+    LightProbe = 64, // must be larger than the largest value in SSGRenderableImage::Type
     ScreenTexture,
     DepthTexture,
-    AoTexture
+    AoTexture,
+
+    BindingMapSize
 };
 
 // these are our current shader limits
@@ -364,7 +366,7 @@ private:
     QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
     QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
-    QHash<int, int> m_materialImageSamplerBindings;
+    int m_materialImageSamplerBindings[size_t(QSSGRhiSamplerBindingHints::BindingMapSize)];
 
     QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
     QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;

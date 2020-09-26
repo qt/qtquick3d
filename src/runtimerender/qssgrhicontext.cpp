@@ -199,6 +199,10 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
     const QVector<QShaderDescription::InOutVariable> combinedImageSamplers  = stage.shader().description().combinedImageSamplers();
     for (const QShaderDescription::InOutVariable &var : combinedImageSamplers)
         m_combinedImageSamplers[var.name] = var;
+
+    std::fill(m_materialImageSamplerBindings,
+              m_materialImageSamplerBindings + size_t(QSSGRhiSamplerBindingHints::BindingMapSize),
+              -1);
 }
 
 int QSSGRhiShaderPipeline::setUniformValue(const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
@@ -819,9 +823,9 @@ void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(QRhiBuffer **ubuf,
 int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
 {
     if (hint >= 0) {
-        auto it = m_materialImageSamplerBindings.constFind(hint);
-        if (it != m_materialImageSamplerBindings.cend())
-            return it.value();
+        const int binding = m_materialImageSamplerBindings[hint];
+        if (binding >= 0)
+            return binding;
     }
 
     auto it = m_combinedImageSamplers.constFind(QByteArray::fromRawData(name, strlen(name)));
