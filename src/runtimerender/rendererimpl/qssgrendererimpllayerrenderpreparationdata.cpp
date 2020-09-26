@@ -834,7 +834,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor();
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights));
-                QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
+                QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
                 subsetDirty |= theMaterialPrepResult.dirty;
@@ -881,7 +881,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, subsetDirty,
                                                        lights, ioFlags));
-                QSSGShaderDefaultMaterialKey theGeneratedKey = theMaterialPrepResult.materialKey;
+                QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
                 renderableFlags = theMaterialPrepResult.renderableFlags;
