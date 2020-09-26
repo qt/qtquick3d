@@ -309,7 +309,18 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Depth and SSAO textures
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
 
-            QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+            // Instead of always doing a QHash find in srb(), store the binding
+            // list and the srb object in the per-model+material
+            // QSSGRhiUniformBufferSet. While this still needs comparing the
+            // binding list, to see if something has changed, it results in
+            // significant gains with lots of models in the scene (because the
+            // srb hash table becomes large then, so avoiding the lookup as
+            // much as possible is helpful)
+            QRhiShaderResourceBindings *&srb = uniformBuffers.srb;
+            if (!srb || bindings != uniformBuffers.bindings) {
+                srb = rhiCtx->srb(bindings);
+                uniformBuffers.bindings = bindings;
+            }
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
             subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);

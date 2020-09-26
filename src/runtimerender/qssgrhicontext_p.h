@@ -559,11 +559,15 @@ struct QSSGRhiUniformBufferSet
 {
     QRhiBuffer *ubuf = nullptr;
     QRhiBuffer *lightsUbuf0 = nullptr;
+    QRhiShaderResourceBindings *srb = nullptr; // not owned
+    QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
 
     void reset() {
         delete ubuf;
+        ubuf = nullptr;
         delete lightsUbuf0;
-        *this = QSSGRhiUniformBufferSet();
+        lightsUbuf0 = nullptr;
+        srb = nullptr;
     }
 };
 
