@@ -51,7 +51,6 @@
 import QtQuick 2.15
 import QtQuick.Window 2.12
 import QtQuick3D 1.15
-import QtQuick3D.Helpers 1.15
 import Example 1.0
 
 Window {
@@ -78,11 +77,6 @@ Window {
         }
 
         SimpleSkinning {
-        }
-
-        WasdController {
-            id: wasdController
-            controlledObject: camera
         }
     }
 }
