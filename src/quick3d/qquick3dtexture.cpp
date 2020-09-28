@@ -466,8 +466,6 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
 
         sourcePrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         disconnect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
-        if (m_sourceItem->window())
-            sourcePrivate->derefWindow(); // ### is this always correct?
         if (m_sourceItemReparented) {
             m_sourceItem->setParentItem(nullptr);
             m_sourceItemReparented = false;
