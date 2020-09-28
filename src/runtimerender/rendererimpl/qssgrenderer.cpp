@@ -90,21 +90,6 @@ void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
     m_contextInterface = ctx;
 }
 
-void QSSGRenderer::childrenUpdated(QSSGRenderNode &inParent)
-{   
-    if (inParent.type == QSSGRenderGraphObject::Type::Layer) {
-        const QSSGRenderLayer *theLayer = layerForNode(inParent);
-        auto theIter = m_instanceRenderMap.find(theLayer);
-        if (theIter != m_instanceRenderMap.end()) {
-            theIter.value()->cameras.clear();
-            theIter.value()->lights.clear();
-            theIter.value()->renderableNodes.clear();
-        }
-    } else if (inParent.parent) {
-        childrenUpdated(*inParent.parent);
-    }
-}
-
 static inline QSSGRenderLayer *getNextLayer(QSSGRenderLayer &inLayer)
 {
     if (inLayer.nextSibling && inLayer.nextSibling->type == QSSGRenderGraphObject::Type::Layer)

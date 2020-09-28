@@ -162,9 +162,6 @@ public:
 
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
 
-    // Called when you have changed the number or order of children of a given node.
-    void childrenUpdated(QSSGRenderNode &inParent);
-
     QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
     QSSGRef<QSSGLayerRenderData> getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode);
 
