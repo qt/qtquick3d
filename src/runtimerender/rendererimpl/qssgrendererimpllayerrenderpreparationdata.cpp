@@ -66,16 +66,29 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
         collectBoneTransforms(child, modelNode, poses);
 }
 
+template<typename T, typename V>
+inline void collectNode(const V &node, QVector<T> &dst, int &dstPos)
+{
+    if (dstPos < dst.size())
+        dst[dstPos] = node;
+    else
+        dst.append(node);
+    ++dstPos;
+}
+
 static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     QVector<QSSGRenderableNodeEntry> &outRenderables,
+                                    int &ioRenderableCount,
                                     QVector<QSSGRenderCamera *> &outCameras,
+                                    int &ioCameraCount,
                                     QVector<QSSGRenderLight *> &outLights,
+                                    int &ioLightCount,
                                     quint32 &ioDFSIndex)
 {
     ++ioDFSIndex;
     inNode.dfsIndex = ioDFSIndex;
     if (inNode.isRenderableType()) {
-        outRenderables.push_back(inNode);
+        collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
         if (inNode.type == QSSGRenderGraphObject::Type::Model) {
             auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
             auto skeletonNode = modelNode->skeleton;
@@ -94,13 +107,13 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
             }
         }
     } else if (inNode.type == QSSGRenderGraphObject::Type::Camera) {
-        outCameras.push_back(static_cast<QSSGRenderCamera *>(&inNode));
+        collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
     } else if (inNode.type == QSSGRenderGraphObject::Type::Light) {
-        outLights.push_back(static_cast<QSSGRenderLight *>(&inNode));
+        collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
     }
 
     for (QSSGRenderNode *theChild = inNode.firstChild; theChild != nullptr; theChild = theChild->nextSibling)
-        maybeQueueNodeForRender(*theChild, outRenderables, outCameras, outLights, ioDFSIndex);
+        maybeQueueNodeForRender(*theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex);
 }
 
 static inline bool hasValidLightProbe(QSSGRenderImage *inLightProbeImage)
@@ -1114,25 +1127,28 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 layer.lightProbe->m_textureData.m_rhiTexture->format() == QRhiTexture::RGBA8)
                 setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::RGBELightProbe), true);
 
-            // Push nodes in reverse depth first order
-//            if (renderableNodes.empty()) {
-//                camerasAndLights.clear();
-//                quint32 dfsIndex = 0;
-//                for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
-//                    MaybeQueueNodeForRender(*theChild, renderableNodes, camerasAndLights, dfsIndex);
-//                std::reverse(camerasAndLights.begin(), camerasAndLights.end());
-//                std::reverse(renderableNodes.begin(), renderableNodes.end());
-//                lightToNodeMap.clear();
-//            }
             // ### TODO: Really this should only be done if renderableNodes is empty or dirty
             // but we don't have a way to say it's dirty yet (new renderables added to the tree)
-            cameras.clear();
-            lights.clear();
-            renderableNodes.clear();
-            renderableItem2Ds.clear();
+
+            // Do not just clear() renderableNodes and friends. Rather, reuse
+            // the space (even if clear does not actually deallocate, it still
+            // costs time to run dtors and such). In scenes with a static node
+            // count in the range of thousands this may matter.
+            int renderableNodeCount = 0;
+            int cameraNodeCount = 0;
+            int lightNodeCount = 0;
             quint32 dfsIndex = 0;
             for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
-                maybeQueueNodeForRender(*theChild, renderableNodes, cameras, lights, dfsIndex);
+                maybeQueueNodeForRender(*theChild, renderableNodes, renderableNodeCount, cameras, cameraNodeCount, lights, lightNodeCount, dfsIndex);
+
+            if (renderableNodes.size() != renderableNodeCount)
+                renderableNodes.resize(renderableNodeCount);
+            if (cameras.size() != cameraNodeCount)
+                cameras.resize(cameraNodeCount);
+            if (lights.size() != lightNodeCount)
+                lights.resize(lightNodeCount);
+
+            renderableItem2Ds.clear();
 
             globalLights.clear();
             for (const auto &oo : qAsConst(opaqueObjects))

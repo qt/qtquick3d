@@ -194,10 +194,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
 
     // renderableNodes have all lights, but properties configured for specific node
     QVector<QSSGRenderableNodeEntry> renderableNodes;
-    QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
-    QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
     QVector<QSSGRenderCamera *> cameras;
     QVector<QSSGRenderLight *> lights;
+    QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
+    QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
 
     // Results of prepare for render.
     QSSGRenderCamera *camera;
