@@ -1348,8 +1348,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     // Skinning
-    const bool hasSkinning = inBoneGlobals.size() > 0
-            && inProperties.m_vertexAttributes.getBitValue(QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
+    const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
+    const bool hasSkinningInputs = inProperties.m_vertexAttributes.getBitValue(QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
+    const bool hasSkinning = inBoneGlobals.size() > 0 && (hasSkinningInputs || hasCustomVert);
     if (hasSkinning) {
         shaders->setUniformArray("qt_boneTransforms", inBoneGlobals.mData, inBoneGlobals.mSize,
                                  QSSGRenderShaderDataType::Matrix4x4, &cui.boneTransformsIdx);
