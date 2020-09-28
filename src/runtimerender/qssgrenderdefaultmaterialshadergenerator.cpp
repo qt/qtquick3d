@@ -1389,8 +1389,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         float brightness = theLight->m_brightness;
 
         theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
-        theLightProperties.lightData.specular = QVector4D(theLight->m_specularColor * brightness, 1.0);
-        theLightProperties.lightData.direction = QVector4D(inLights[lightIdx].direction, 1.0);
+        const QVector3D &lightSpecular(theLight->m_specularColor);
+        theLightProperties.lightData.specular[0] = lightSpecular.x() * brightness;
+        theLightProperties.lightData.specular[1] = lightSpecular.y() * brightness;
+        theLightProperties.lightData.specular[2] = lightSpecular.z() * brightness;
+        theLightProperties.lightData.specular[3] = 1.0f;
+        const QVector3D &lightDirection(inLights[lightIdx].direction);
+        theLightProperties.lightData.direction[0] = lightDirection.x();
+        theLightProperties.lightData.direction[1] = lightDirection.y();
+        theLightProperties.lightData.direction[2] = lightDirection.z();
+        theLightProperties.lightData.direction[3] = 1.0f;
 
         // When it comes to receivesShadows, it is a bit tricky: to stay
         // compatible with the old, direct OpenGL rendering path (and the
@@ -1447,7 +1455,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
         if (theLight->m_lightType == QSSGRenderLight::Type::Point
                 || theLight->m_lightType == QSSGRenderLight::Type::Spot) {
-            theLightProperties.lightData.position = QVector4D(theLight->getGlobalPos(), 1.0);
+            const QVector3D globalPos = theLight->getGlobalPos();
+            theLightProperties.lightData.position[0] = globalPos.x();
+            theLightProperties.lightData.position[1] = globalPos.y();
+            theLightProperties.lightData.position[2] = globalPos.z();
+            theLightProperties.lightData.position[3] = 1.0f;
             theLightProperties.lightData.constantAttenuation = aux::translateConstantAttenuation(theLight->m_constantFade);
             theLightProperties.lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
             theLightProperties.lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
@@ -1540,7 +1552,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     if (hasLighting) {
         for (int idx = 0, end = shaders->lightCount(); idx < end; ++idx) {
             QSSGShaderLightProperties &lightProp(shaders->lightAt(idx));
-            lightProp.lightData.diffuse = QVector4D(lightProp.lightColor, 1.0);
+            lightProp.lightData.diffuse[0] = lightProp.lightColor.x();
+            lightProp.lightData.diffuse[1] = lightProp.lightColor.y();
+            lightProp.lightData.diffuse[2] = lightProp.lightColor.z();
+            lightProp.lightData.diffuse[3] = 1.0f;
         }
     }
 

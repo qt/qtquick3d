@@ -800,6 +800,8 @@ void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(QRhiBuffer **ubuf,
 {
     Q_ASSERT(m_lightsEnabled);
 
+    // The number of lights is an int, but must allocate 4 ints in order to get
+    // the light array's first element vec4-aligned.
     const int size = int(sizeof(QSSGLightSourceShader) * QSSG_MAX_NUM_LIGHTS + (4 * sizeof(qint32)));
 
     if (!*ubuf) {

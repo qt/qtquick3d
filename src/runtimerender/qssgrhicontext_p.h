@@ -189,22 +189,16 @@ enum class QSSGRhiSamplerBindingHints
 // funcSampleLightVars.glsllib
 struct QSSGLightSourceShader
 {
-    QVector4D position;
-    QVector4D direction; // Specifies the light direction in world coordinates.
-    QVector4D diffuse;
-    QVector4D ambient;
-    QVector4D specular;
+    float position[4];
+    float direction[4]; // Specifies the light direction in world coordinates.
+    float diffuse[4];
+    float specular[4];
     float coneAngle; // Specifies the outer cone angle of the spot light.
     float innerConeAngle; // Specifies the inner cone angle of the spot light.
     float constantAttenuation; // Specifies the constant light attenuation factor.
     float linearAttenuation; // Specifies the linear light attenuation factor.
     float quadraticAttenuation; // Specifies the quadratic light attenuation factor.
-    float range; // Specifies the maximum distance of the light influence
-    float padding0[2];
-    QVector4D shadowControls;
-    float shadowView[16];
-    qint32 shadowIdx;
-    float padding1[3];
+    float padding[3]; // the next light array element must start at a vec4-aligned offset
 };
 
 struct QSSGShaderLightProperties
