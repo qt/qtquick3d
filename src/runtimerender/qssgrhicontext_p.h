@@ -266,8 +266,6 @@ public:
         int projectionMatrixIdx = -1;
         int inverseProjectionMatrixIdx = -1;
         int viewMatrixIdx = -1;
-        int normalAdjustViewportFactorIdx = -1;
-        int isClipDepthZeroToOneIdx = -1;
         int modelViewProjectionIdx = -1;
         int normalMatrixIdx = -1;
         int modelMatrixIdx = -1;
@@ -277,15 +275,11 @@ public:
         int material_baseColorIdx = -1;
         int material_specularIdx = -1;
         int cameraPropertiesIdx = -1;
-        int fresnelPowerIdx = -1;
         int light_ambient_totalIdx = -1;
         int material_propertiesIdx = -1;
-        int bumpAmountIdx = -1;
+        int material_properties2Idx = -1;
+        int material_properties3Idx = -1;
         int displaceAmountIdx = -1;
-        int translucentFalloffIdx = -1;
-        int diffuseLightWrapIdx = -1;
-        int occlusionAmountIdx = -1;
-        int alphaCutoffIdx = -1;
         int boneTransformsIdx = -1;
         int boneNormalTransformsIdx = -1;
         int shadowDepthAdjustIdx = -1;

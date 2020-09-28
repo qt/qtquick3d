@@ -221,7 +221,7 @@ static void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
     infragmentShader.addFunction("diffuseReflectionWrapBSDF");
     infragmentShader << "    tmp_light_color = " << lightVarNames.lightColor << ".rgb * (1.0 - qt_metalnessAmount);\n";
     infragmentShader << "    global_diffuse_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_translucent_thickness_exp * qt_diffuseReflectionWrapBSDF(-qt_world_normal, -"
-                     << lightVarNames.normalizedDirection << ", tmp_light_color, qt_diffuseLightWrap).rgb;\n";
+                     << lightVarNames.normalizedDirection << ", tmp_light_color, qt_material_properties2.w).rgb;\n";
 }
 
 static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNames(size_t lightIdx)
@@ -257,13 +257,12 @@ static void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnel(qt_specularBase, qt_metalnessAmount, qt_world_normal, qt_view_vector, "
                               "qt_dielectricSpecular(qt_customIOR), qt_customFresnelPower);\n";
         } else {
-            fragmentShader.addUniform("qt_fresnelPower", "float");
             if (hasMetalness) {
                 fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnel(qt_specularBase, qt_metalnessAmount, qt_world_normal, qt_view_vector, "
-                                  "qt_dielectricSpecular(qt_material_specular.w), qt_fresnelPower);\n";
+                                  "qt_dielectricSpecular(qt_material_specular.w), qt_material_properties2.x);\n";
             } else {
                 fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnelNoMetalness(qt_world_normal, qt_view_vector, "
-                                  "qt_dielectricSpecular(qt_material_specular.w), qt_fresnelPower);\n";
+                                  "qt_dielectricSpecular(qt_material_specular.w), qt_material_properties2.x);\n";
             }
         }
     }
@@ -565,6 +564,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     fragmentShader.addUniform("qt_material_emissive_color", "vec3");
     fragmentShader.addUniform("qt_material_base_color", "vec4");
     fragmentShader.addUniform("qt_material_properties", "vec4");
+    fragmentShader.addUniform("qt_material_properties2", "vec4");
+    fragmentShader.addUniform("qt_material_properties3", "vec4");
 
     if (vertexColorsEnabled)
         vertexShader.generateVertexColor(inKey);
@@ -582,11 +583,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldPosition();
 
         fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
-        fragmentShader.addUniform("qt_normalAdjustViewportFactor", "float"); // aka FRAMEBUFFER_Y_UP
-        fragmentShader.addUniform("qt_nearClipValue", "float"); // aka NEAR_CLIP_VALUE
         if (isDoubleSided) {
             fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
+            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_material_properties3.z);\n");
         }
     }
 
@@ -599,7 +598,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    float qt_customSpecularAmount = 0.0;\n"; // overrides qt_material_properties.x
         fragmentShader << "    float qt_customSpecularRoughness = 0.0;\n"; // overrides qt_material_properties.y
         fragmentShader << "    float qt_customMetalnessAmount = 0.0;\n"; // overrides qt_material_properties.z
-        fragmentShader << "    float qt_customFresnelPower = 5.0;\n"; // overrides qt_fresnelPower
+        fragmentShader << "    float qt_customFresnelPower = 5.0;\n"; // overrides qt_material_properties2.x
         fragmentShader << "    vec4 qt_customBaseColor = vec4(1.0);\n"; // overrides qt_material_base_color
         fragmentShader << "    vec3 qt_customEmissiveColor = vec3(0.0);\n"; // overrides qt_material_emissive_color
         // Generate the varyings for UV0 and UV1 since customer materials don't use image
@@ -670,7 +669,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         if (enableBumpNormal) {
-            fragmentShader.addUniform("qt_bumpAmount", "float");
             fragmentShader << "        qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
                            << "        qt_tangent = qt_tangent - dot(qt_org_normal, qt_tangent) * qt_org_normal;\n"
                            << "        qt_tangent = normalize(qt_tangent);\n"
@@ -690,15 +688,15 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
             fragmentShader.addUniform(names.imageSamplerSize, "vec2");
             fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-            fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal, " << names.imageSamplerSize << ");\n";
+            fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_material_properties2.y, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal, " << names.imageSamplerSize << ");\n";
             if (isDoubleSided)
-                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
+                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_material_properties3.z);\n");
         } else if (normalImage != nullptr) {
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
             fragmentShader.addFunction("sampleNormalTexture");
-            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", qt_bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal);\n";
+            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", qt_material_properties2.y, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal);\n";
             if (isDoubleSided)
-                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_normalAdjustViewportFactor);\n");
+                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_material_properties3.z);\n");
         }
 
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
@@ -840,9 +838,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         if (translucencyImage != nullptr) {
-            fragmentShader.addUniform("qt_translucentFalloff", "float");
-            fragmentShader.addUniform("qt_diffuseLightWrap", "float");
-
             const bool hasIdentityMap = identityImages.contains(translucencyImage);
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *translucencyImage, imageFragCoords);
@@ -854,7 +849,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    float qt_translucent_depth_range = texture2D(" << names.imageSampler
                            << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
             fragmentShader << "    float qt_translucent_thickness = qt_translucent_depth_range * qt_translucent_depth_range;\n";
-            fragmentShader << "    float qt_translucent_thickness_exp = exp(qt_translucent_thickness * qt_translucentFalloff);\n";
+            fragmentShader << "    float qt_translucent_thickness_exp = exp(qt_translucent_thickness * qt_material_properties2.z);\n";
         }
 
         fragmentShader.append("    float qt_lightAttenuation = 1.0;");
@@ -890,7 +885,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 if (hasCustomFrag)
                     fragmentShader << "    float qt_fresnelPower = qt_customFresnelPower;\n";
                 else
-                    fragmentShader.addUniform("qt_fresnelPower", "float");
+                    fragmentShader << "    float qt_fresnelPower = qt_material_properties2.x;\n";
                 fragmentShader << "    qt_specularAmount *= qt_principledMaterialFresnel(qt_world_normal, qt_view_vector, "
                                << "qt_metalnessAmount, qt_specularFactor, qt_diffuseColor.rgb, qt_roughnessAmount, qt_fresnelPower);\n";
 
@@ -1142,8 +1137,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     // color already taken care of
                     if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
                         // Apply the cutoff test. This matches the behavior documented in PrincipledMaterial.alphaMode.
-                        fragmentShader.addUniform("qt_alphaCutoff", "float");
-                        fragmentShader << "    if ((qt_texture_color.a * qt_material_base_color.a) < qt_alphaCutoff) {\n"
+                        fragmentShader << "    if ((qt_texture_color.a * qt_material_base_color.a) < qt_material_properties3.y) {\n"
                                           "        fragOutput = vec4(0);\n"
                                           "        return;\n"
                                           "    }\n";
@@ -1183,7 +1177,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // Occlusion Map
         if (occlusionImage) {
-            fragmentShader.addUniform("qt_occlusionAmount", "float");
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
             const bool hasIdentityMap = identityImages.contains(occlusionImage);
             if (hasIdentityMap)
@@ -1193,7 +1186,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
             fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
-            fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * qt_ao, qt_occlusionAmount);\n";
+            fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * qt_ao, qt_material_properties3.x);\n";
         }
 
         if (materialAdapter->isPrincipled()) {
@@ -1342,9 +1335,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 cui.inverseProjectionMatrixIdx = shaders->setUniform("qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), cui.inverseProjectionMatrixIdx);
         }
 
-        const float isClipDepthZeroToOne = inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f;
-        cui.isClipDepthZeroToOneIdx = shaders->setUniform("qt_nearClipValue", &isClipDepthZeroToOne, sizeof(float), cui.isClipDepthZeroToOneIdx);
-
         // ### these should use flags like the above two
         QMatrix4x4 viewProj;
         inCamera.calculateViewProjectionMatrix(viewProj);
@@ -1353,6 +1343,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
         cui.viewMatrixIdx = shaders->setUniform("qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
     }
+
+    const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
+    cui.modelViewProjectionIdx = shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
+
+    cui.normalMatrixIdx = shaders->setUniform("qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), cui.normalMatrixIdx,
+                                              QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+
+    cui.modelMatrixIdx = shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), cui.modelMatrixIdx);
 
     // Skinning
     const bool hasSkinning = inBoneGlobals.size() > 0
@@ -1363,19 +1361,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         cui.boneNormalTransformsIdx = shaders->setUniformArray("qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize,
                                                                QSSGRenderShaderDataType::Matrix3x3, cui.boneNormalTransformsIdx);
     }
-
-    // In D3D, Vulkan and Metal Y points down and the origin is
-    // top-left in the viewport coordinate system. OpenGL is
-    // bottom-left and Y up. This happens to match the framebuffer
-    // coordinate system with all APIs so we rely on that query.
-    // The winding order is calculated in window space so the
-    // double-sided logic in the shader needs to take this into account.
-    // (normally the correction matrix we multiply into the projection
-    // takes care of getting identical behavior regardless of the
-    // underlying API, but here it matters since we kind of take things
-    // into our own hands)
-    float normalVpFactor = inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f;
-    cui.normalAdjustViewportFactorIdx = shaders->setUniform("qt_normalAdjustViewportFactor", &normalVpFactor, sizeof(float), cui.normalAdjustViewportFactorIdx);
 
     QVector3D theLightAmbientTotal;
     shaders->resetLights();
@@ -1479,17 +1464,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightAmbientTotal += theLight->m_ambientColor;
     }
 
-    if (shadowDepthAdjust)
-        cui.shadowDepthAdjustIdx = shaders->setUniform("qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), cui.shadowDepthAdjustIdx);
-
-    const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
-    cui.modelViewProjectionIdx = shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
-
-    cui.normalMatrixIdx = shaders->setUniform("qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), cui.normalMatrixIdx,
-                                              QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
-
-    cui.modelMatrixIdx = shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), cui.modelMatrixIdx);
-
     shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
     shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
     shaders->setScreenTexture(inRenderProperties.rhiScreenTexture);
@@ -1543,8 +1517,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const float ior = materialAdapter->ior();
     QVector4D specularColor(specularTint, ior);
     cui.material_specularIdx = shaders->setUniform("qt_material_specular", &specularColor, 4 * sizeof(float), cui.material_specularIdx);
-    const float fresnelPower = materialAdapter->fresnelPower();
-    cui.fresnelPowerIdx = shaders->setUniform("qt_fresnelPower", &fresnelPower, sizeof(float), cui.fresnelPowerIdx);
 
      // metalnessAmount cannot be multiplied in here yet due to custom materials
     const bool hasLighting = materialAdapter->hasLighting();
@@ -1569,16 +1541,31 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     };
     cui.material_propertiesIdx = shaders->setUniform("qt_material_properties", materialProperties, 4 * sizeof(float), cui.material_propertiesIdx);
 
-    const float bumpAmount = materialAdapter->bumpAmount();
-    cui.bumpAmountIdx = shaders->setUniform("qt_bumpAmount", &bumpAmount, sizeof(float), cui.bumpAmountIdx);
-    const float translucentFallOff = materialAdapter->translucentFallOff();
-    cui.translucentFalloffIdx = shaders->setUniform("qt_translucentFalloff", &translucentFallOff, sizeof(float), cui.translucentFalloffIdx);
-    const float diffuseLightWrap = materialAdapter->diffuseLightWrap();
-    cui.diffuseLightWrapIdx = shaders->setUniform("qt_diffuseLightWrap", &diffuseLightWrap, sizeof(float), cui.diffuseLightWrapIdx);
-    const float occlusionAmount = materialAdapter->occlusionAmount();
-    cui.occlusionAmountIdx = shaders->setUniform("qt_occlusionAmount", &occlusionAmount, sizeof(float), cui.occlusionAmountIdx);
-    const float alphaCutOff = materialAdapter->alphaCutOff();
-    cui.alphaCutoffIdx = shaders->setUniform("qt_alphaCutoff", &alphaCutOff, sizeof(float), cui.alphaCutoffIdx);
+    const float materialProperties2[4] = {
+        materialAdapter->fresnelPower(),
+        materialAdapter->bumpAmount(),
+        materialAdapter->translucentFallOff(),
+        materialAdapter->diffuseLightWrap()
+    };
+    cui.material_properties2Idx = shaders->setUniform("qt_material_properties2", materialProperties2, 4 * sizeof(float), cui.material_properties2Idx);
+
+    const float materialProperties3[4] = {
+        materialAdapter->occlusionAmount(),
+        materialAdapter->alphaCutOff(),
+        // In D3D, Vulkan and Metal Y points down and the origin is
+        // top-left in the viewport coordinate system. OpenGL is
+        // bottom-left and Y up. This happens to match the framebuffer
+        // coordinate system with all APIs so we rely on that query.
+        // The winding order is calculated in window space so the
+        // double-sided logic in the shader needs to take this into account.
+        // (normally the correction matrix we multiply into the projection
+        // takes care of getting identical behavior regardless of the
+        // underlying API, but here it matters since we kind of take things
+        // into our own hands)
+        inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,
+        inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f
+    };
+    cui.material_properties3Idx = shaders->setUniform("qt_material_properties3", materialProperties3, 4 * sizeof(float), cui.material_properties3Idx);
 
     quint32 imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {
@@ -1602,10 +1589,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         indices.imageRotationsUniformIndex = shaders->setUniform(names.imageRotations, rotations, sizeof(rotations), indices.imageRotationsUniformIndex);
     }
 
-    inPipelineState->lineWidth = materialAdapter->lineWidth();
+    if (shadowDepthAdjust)
+        cui.shadowDepthAdjustIdx = shaders->setUniform("qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), cui.shadowDepthAdjustIdx);
 
-    const float pointSize = materialAdapter->pointSize();
-    cui.pointSizeIdx = shaders->setUniform("qt_materialPointSize", &pointSize, sizeof(float), cui.pointSizeIdx);
+    const bool usesPointsTopology = inProperties.m_usesPointsTopology.getValue(inKey);
+    if (usesPointsTopology) {
+        const float pointSize = materialAdapter->pointSize();
+        cui.pointSizeIdx = shaders->setUniform("qt_materialPointSize", &pointSize, sizeof(float), cui.pointSizeIdx);
+    }
+
+    inPipelineState->lineWidth = materialAdapter->lineWidth();
 }
 
 QT_END_NAMESPACE
