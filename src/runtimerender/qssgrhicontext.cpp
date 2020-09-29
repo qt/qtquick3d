@@ -462,7 +462,7 @@ void QSSGRhiShaderPipeline::setUniform(const char *name, const void *data, size_
 void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex)
 {
     QSSGRhiShaderUniformArray *ua = nullptr;
-    const size_t std140BaseTypeSize = 4 * sizeof(float);
+    constexpr size_t std140BaseTypeSize = 4 * sizeof(float);
 
     if (!storeIndex || *storeIndex == -1) {
         int index = -1;
@@ -505,6 +505,7 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
 
 #ifdef QT_DEBUG
     auto checkSize = [std140BaseTypeSize](QSSGRhiShaderUniformArray *ua) -> bool {
+        Q_UNUSED(std140BaseTypeSize); // Silence clang warning about unneeded lambda capture
         const size_t uniformSize = std140BaseTypeSize < ua->typeSize ? ua->typeSize * ua->itemCount : std140BaseTypeSize * ua->itemCount;
         if (uniformSize != ua->size) {
             qWarning("Uniform block member '%s' got %d bytes whereas the true size is %d",

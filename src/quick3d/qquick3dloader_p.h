@@ -147,7 +147,6 @@ private:
     QQuick3DLoaderIncubator *m_incubator;
     QV4::PersistentValue m_initialPropertyValues;
     QV4::PersistentValue m_qmlCallingContext;
-    bool m_updatingSize: 1;
     bool m_active : 1;
     bool m_loadingFromSource : 1;
     bool m_asynchronous : 1;

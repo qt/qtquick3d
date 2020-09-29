@@ -163,13 +163,6 @@ struct QSSGShaderLight
     bool shadows = false;
     QVector3D direction;
 
-    QSSGShaderLight() {}
-    QSSGShaderLight(const QSSGShaderLight &o)
-        : light(o.light), enabled(o.enabled),
-          shadows(o.shadows), direction(o.direction)
-    {
-
-    }
     inline bool operator < (const QSSGShaderLight &o) const
     {
         // sort by light type
