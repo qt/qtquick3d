@@ -58,8 +58,6 @@ int main(int argc, char *argv[])
 {
     qmlRegisterType<TestGeometry>("Example", 1, 0, "TestGeometry");
 
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
     QGuiApplication app(argc, argv);
 
     QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
