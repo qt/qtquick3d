@@ -1056,7 +1056,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             // Render into the 2D texture pEntry->m_rhiDepthMap, using
             // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
             QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[0];
-            cb->beginPass(rt, Qt::white, { 1.0f, 0 });
+            cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0);
             cb->endPass();
 
@@ -1109,7 +1109,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                         outFace = 2;
                 }
                 QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
-                cb->beginPass(rt, Qt::white, { 1.0f, 0 });
+                cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                 rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, face);
                 cb->endPass();
             }
@@ -1385,7 +1385,7 @@ void QSSGLayerRenderData::rhiPrepare()
                                         1))
                 {
                     bool needsSetVieport = true;
-                    cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 });
+                    cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                     // NB! We do not pass sortedTransparentObjects in the 4th
                     // argument to stay compatible with the 5.15 code base,
                     // which also does not include semi-transparent objects in
@@ -1533,7 +1533,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 // because there are effectively no "opaque" objects then.
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1, updatesFromPrep);
-                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, updatesFromPrep);
+                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, updatesFromPrep, QSSGRhiContext::commonPassFlags());
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);

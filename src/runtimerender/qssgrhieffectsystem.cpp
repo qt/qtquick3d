@@ -474,7 +474,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         // case of outputting into a texture because that will get a clear
         // anyway when rendering the quad.
         if (rt != target->renderTarget) {
-            cb->beginPass(rt, Qt::transparent, { 1.0f, 0 });
+            cb->beginPass(rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             cb->endPass();
         }
     }

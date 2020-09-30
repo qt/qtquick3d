@@ -647,6 +647,13 @@ public:
 
     QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub);
 
+    static inline QRhiCommandBuffer::BeginPassFlags commonPassFlags()
+    {
+        // We do not use GPU compute at all at the moment, this means we can
+        // get a small performance gain with OpenGL by declaring this.
+        return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
+    }
+
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;

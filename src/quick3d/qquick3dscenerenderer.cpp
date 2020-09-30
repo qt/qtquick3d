@@ -350,7 +350,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         QColor clearColor = Qt::transparent;
         if (m_backgroundMode == QSSGRenderLayer::Background::Color)
             clearColor = m_backgroundColor;
-        cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 });
+        cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
         rhiRender();
         cb->endPass();
 

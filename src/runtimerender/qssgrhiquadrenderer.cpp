@@ -133,7 +133,7 @@ void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
                                                QRhiTextureRenderTarget *rt, Flags flags)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->beginPass(rt, Qt::black, { 1.0f, 0 });
+    cb->beginPass(rt, Qt::black, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
     recordRenderQuad(rhiCtx, ps, srb, rt->renderPassDescriptor(), flags);
     cb->endPass();
 }

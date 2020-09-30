@@ -640,7 +640,7 @@ bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *i
     cb->resourceUpdate(rub);
 
     for (int face = 0; face < 6; ++face) {
-        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 });
+        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
 
         // Execute render pass
         cb->setGraphicsPipeline(envMapPipeline);
@@ -809,7 +809,7 @@ bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *i
     // Render
     for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
         for (int face = 0; face < 6; ++face) {
-            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 });
+            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             if (mipLevel < mipmapCount - 1) {
                 // Specular pre-filtered Environment Map levels
                 cb->setGraphicsPipeline(prefilterPipeline);
