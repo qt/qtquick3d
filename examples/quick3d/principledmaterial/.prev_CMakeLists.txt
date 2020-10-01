@@ -58,19 +58,6 @@ qt6_add_resources(principledmaterial "materials"
         ${materials_resource_files}
 )
 
-# special case begin
-set(shader_gen_files
-    "main.qml"
-)
-
-qt6_quick3d_build_shaders(principledmaterial "shaders"
-    PREFIX
-        "/"
-    FILES
-        ${shader_gen_files}
-)
-# special case end
-
 install(TARGETS principledmaterial
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
