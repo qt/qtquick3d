@@ -585,7 +585,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     const auto layerTextureFormat = [effectOutputFormatOverride](QRhi *rhi, bool postProc) {
         if (effectOutputFormatOverride != QSSGRenderTextureFormat::Unknown)
             return QSSGBufferManager::toRhiFormat(effectOutputFormatOverride);
-        const QRhiTexture::Format preferredPostProcFormat = QRhiTexture::RGBA32F;
+        const QRhiTexture::Format preferredPostProcFormat = QRhiTexture::RGBA16F;
         return postProc && rhi->isTextureFormatSupported(preferredPostProcFormat)
                 ? preferredPostProcFormat
                 : QRhiTexture::RGBA8;
@@ -663,7 +663,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                         // use the heavier AA path because the renderbuffer for
                         // MSAA and texture for SSAA may need a different
                         // format now since m_texture's format could have
-                        // changed between RBGA8 and RGBA32F (due to layerTextureFormat()).
+                        // changed between RBGA8 and RGBA16F (due to layerTextureFormat()).
                         if (postProcessingStateDirty && (m_layer->antialiasingMode != QSSGRenderLayer::AAMode::NoAA || temporalAA)) {
                             releaseAaDependentRhiResources();
                         } else {

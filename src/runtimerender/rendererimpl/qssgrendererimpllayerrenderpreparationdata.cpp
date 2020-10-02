@@ -1104,9 +1104,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
                     // Choose on a format that makes sense for a light probe
                     // At this point it's just a suggestion
-                    if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F))
-                        layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBA32F;
-                    else if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F))
+                    if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F))
                         layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBA16F;
                     else
                         layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBE8;
