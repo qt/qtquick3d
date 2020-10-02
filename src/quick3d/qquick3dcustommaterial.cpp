@@ -1326,7 +1326,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 {
     const auto &renderContext = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
     if (!renderContext) {
-        qWarning("QQuick3DEffect: No render context interface?");
+        qWarning("QQuick3DCustomMaterial: No render context interface?");
         return nullptr;
     }
 
