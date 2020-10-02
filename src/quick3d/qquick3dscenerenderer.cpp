@@ -559,6 +559,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     QQuick3DNode *importScene = view3D->importScene();
     if (importScene) {
         m_importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
+        if (!m_importSceneManager->rci)
+            m_importSceneManager->rci = m_sgContext.data();
         m_importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
         m_importSceneManager->updateDirtyNodes();
     } else {
