@@ -69,7 +69,6 @@ private:
     QString testSuitePath;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
-    bool usingRhi;
 };
 
 
@@ -235,9 +234,10 @@ quint16 tst_Quick3D::checksumFileOrDir(const QString &path)
         return 0;
     if (fi.isFile()) {
         QFile f(path);
-        f.open(QIODevice::ReadOnly);
+        bool isBinary = path.endsWith(".png") || path.endsWith(".jpg");
+        f.open(isBinary ? QIODevice::ReadOnly : QIODevice::ReadOnly | QIODevice::Text);
         QByteArray contents = f.readAll();
-        return qChecksum(contents.constData(), uint(contents.size()));
+        return qChecksum(contents);
     }
     if (fi.isDir()) {
         static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
