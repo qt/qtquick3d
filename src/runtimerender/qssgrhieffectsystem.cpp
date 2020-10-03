@@ -416,7 +416,6 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     auto it = m_shaderPipelines.find(key);
     if (it != m_shaderPipelines.end()) {
         m_currentShaderPipeline = it.value().data();
-        m_currentShaderPipeline->beginMainUniformBuffer();
         return;
     }
 
@@ -448,7 +447,6 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     if (stages) {
         m_shaderPipelines.insert(key, stages);
         m_currentShaderPipeline = m_shaderPipelines[key].data();
-        m_currentShaderPipeline->beginMainUniformBuffer();
     } else {
         m_currentShaderPipeline = nullptr;
     }

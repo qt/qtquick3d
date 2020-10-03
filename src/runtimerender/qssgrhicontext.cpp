@@ -163,6 +163,7 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
         for (const QShaderDescription::UniformBlock &blk : uniformBlocks) {
             if (blk.binding == 0) {
                 m_ub0Size = blk.size;
+                m_mainUniformBufferData.resize(m_ub0Size);
                 for (const QShaderDescription::BlockVariable &var : blk.members)
                     m_ub0[var.name] = var;
                 break;
@@ -761,11 +762,6 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
                  name, int(type));
         break;
     }
-}
-
-void QSSGRhiShaderPipeline::beginMainUniformBuffer()
-{
-    m_mainUniformBufferData.resize(m_ub0Size);
 }
 
 void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)

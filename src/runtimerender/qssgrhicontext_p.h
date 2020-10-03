@@ -298,7 +298,6 @@ public:
     };
     Q_DECLARE_FLAGS(UniformFlags, UniformFlag)
 
-    void beginMainUniformBuffer();
     void setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
     void setUniform(const char *name, const void *data, size_t size, int *storeIndex = nullptr, UniformFlags flags = {});
     void setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex = nullptr);
@@ -359,19 +358,19 @@ private:
     QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
     QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;
     QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms and m_uniformArrays
-
-    // transient (per-frame) data
     QVarLengthArray<char, 512> m_mainUniformBufferData;
+
+    // transient (per-object) data; pointers are all non-owning
     bool m_lightsEnabled = false;
     QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
-    QRhiTexture *m_lightProbeTexture = nullptr; // not owned
+    QRhiTexture *m_lightProbeTexture = nullptr;
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
-    QRhiTexture *m_screenTexture = nullptr; // not owned
-    QRhiTexture *m_depthTexture = nullptr; // not owned
-    QRhiTexture *m_ssaoTexture = nullptr; // not owned
-    QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures; // does not own
+    QRhiTexture *m_screenTexture = nullptr;
+    QRhiTexture *m_depthTexture = nullptr;
+    QRhiTexture *m_ssaoTexture = nullptr;
+    QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::StageFlags)
