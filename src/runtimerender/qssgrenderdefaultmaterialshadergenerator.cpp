@@ -1312,9 +1312,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QVector3D camGlobalPos = inCamera.getGlobalPos();
     const QVector2D camProperties(inCamera.clipNear, inCamera.clipFar);
 
-    cui.cameraPositionIdx = shaders->setUniform("qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), cui.cameraPositionIdx);
-    cui.cameraDirectionIdx = shaders->setUniform("qt_cameraDirection", &inRenderProperties.cameraDirection, 3 * sizeof(float), cui.cameraDirectionIdx);
-    cui.cameraPropertiesIdx = shaders->setUniform("qt_cameraProperties", &camProperties, 2 * sizeof(float), cui.cameraPropertiesIdx);
+    shaders->setUniform("qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
+    shaders->setUniform("qt_cameraDirection", &inRenderProperties.cameraDirection, 3 * sizeof(float), &cui.cameraDirectionIdx);
+    shaders->setUniform("qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
     // Projection and view matrices are only needed by CustomMaterial shaders
     if (inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial) {
@@ -1325,36 +1325,36 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         if (usesProjectionMatrix || usesInvProjectionMatrix) {
             const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
             if (usesProjectionMatrix)
-                cui.projectionMatrixIdx = shaders->setUniform("qt_projectionMatrix", projection.constData(), 16 * sizeof(float), cui.projectionMatrixIdx);
+                shaders->setUniform("qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
             if (usesInvProjectionMatrix)
-                cui.inverseProjectionMatrixIdx = shaders->setUniform("qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), cui.inverseProjectionMatrixIdx);
+                shaders->setUniform("qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
         }
 
         // ### these should use flags like the above two
         QMatrix4x4 viewProj;
         inCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;
-        cui.viewProjectionMatrixIdx = shaders->setUniform("qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), cui.viewProjectionMatrixIdx);
+        shaders->setUniform("qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
         const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
-        cui.viewMatrixIdx = shaders->setUniform("qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), cui.viewMatrixIdx);
+        shaders->setUniform("qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     }
 
     const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
-    cui.modelViewProjectionIdx = shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), cui.modelViewProjectionIdx);
+    shaders->setUniform("qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
 
-    cui.normalMatrixIdx = shaders->setUniform("qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), cui.normalMatrixIdx,
-                                              QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+    shaders->setUniform("qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
+                        QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
 
-    cui.modelMatrixIdx = shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), cui.modelMatrixIdx);
+    shaders->setUniform("qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     // Skinning
     const bool hasSkinning = inBoneGlobals.size() > 0
             && inProperties.m_vertexAttributes.getBitValue(QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
     if (hasSkinning) {
-        cui.boneTransformsIdx = shaders->setUniformArray("qt_boneTransforms", inBoneGlobals.mData, inBoneGlobals.mSize,
-                                                         QSSGRenderShaderDataType::Matrix4x4, cui.boneTransformsIdx);
-        cui.boneNormalTransformsIdx = shaders->setUniformArray("qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize,
-                                                               QSSGRenderShaderDataType::Matrix3x3, cui.boneNormalTransformsIdx);
+        shaders->setUniformArray("qt_boneTransforms", inBoneGlobals.mData, inBoneGlobals.mSize,
+                                 QSSGRenderShaderDataType::Matrix4x4, &cui.boneTransformsIdx);
+        shaders->setUniformArray("qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize,
+                                 QSSGRenderShaderDataType::Matrix3x3, &cui.boneNormalTransformsIdx);
     }
 
     QVector3D theLightAmbientTotal;
@@ -1482,22 +1482,22 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         const int maxMipLevel = theLightProbe->m_textureData.m_mipmapCount - 1;
 
         if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity())
-            cui.lightProbeOrientationIdx = shaders->setUniform("qt_lightProbeOrientation", inRenderProperties.probeOrientation.constData(), 16 * sizeof(float), cui.lightProbeOrientationIdx);
+            shaders->setUniform("qt_lightProbeOrientation", inRenderProperties.probeOrientation.constData(), 16 * sizeof(float), &cui.lightProbeOrientationIdx);
 
         const float props[4] = { 0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure };
-        cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", props, 4 * sizeof(float), cui.lightProbePropertiesIdx);
+        shaders->setUniform("qt_lightProbeProperties", props, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
         shaders->setLightProbeTexture(theLightProbe->m_textureData.m_rhiTexture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
     } else {
         // no lightprobe
         const float emptyProps[4] = { 0.0f, 0.0f, -1.0f, 0.0f };
-        cui.lightProbePropertiesIdx = shaders->setUniform("qt_lightProbeProperties", emptyProps, 4 * sizeof(float), cui.lightProbePropertiesIdx);
+        shaders->setUniform("qt_lightProbeProperties", emptyProps, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
         shaders->setLightProbeTexture(nullptr);
     }
 
     const QVector3D emissiveColor = materialAdapter->emissiveColor();
-    cui.material_emissiveColorIdx = shaders->setUniform("qt_material_emissive_color", &emissiveColor, 3 * sizeof(float), cui.material_emissiveColorIdx);
+    shaders->setUniform("qt_material_emissive_color", &emissiveColor, 3 * sizeof(float), &cui.material_emissiveColorIdx);
 
     const auto qMix = [](float x, float y, float a) {
         return (x * (1.0f - a) + (y * a));
@@ -1511,11 +1511,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QVector3D materialSpecularTint = materialAdapter->specularTint();
     const QVector3D specularTint = materialAdapter->isPrincipled() ? qMix3(QVector3D(1.0f, 1.0f, 1.0f), color.toVector3D(), materialSpecularTint.x())
                                                                    : materialSpecularTint;
-    cui.material_baseColorIdx = shaders->setUniform("qt_material_base_color", &color, 4 * sizeof(float), cui.material_baseColorIdx);
+    shaders->setUniform("qt_material_base_color", &color, 4 * sizeof(float), &cui.material_baseColorIdx);
 
     const float ior = materialAdapter->ior();
     QVector4D specularColor(specularTint, ior);
-    cui.material_specularIdx = shaders->setUniform("qt_material_specular", &specularColor, 4 * sizeof(float), cui.material_specularIdx);
+    shaders->setUniform("qt_material_specular", &specularColor, 4 * sizeof(float), &cui.material_specularIdx);
 
      // metalnessAmount cannot be multiplied in here yet due to custom materials
     const bool hasLighting = materialAdapter->hasLighting();
@@ -1530,7 +1530,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         }
     }
 
-    cui.light_ambient_totalIdx = shaders->setUniform("qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), cui.light_ambient_totalIdx);
+    shaders->setUniform("qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);
 
     const float materialProperties[4] = {
         materialAdapter->specularAmount(),
@@ -1538,7 +1538,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->metalnessAmount(),
         inOpacity
     };
-    cui.material_propertiesIdx = shaders->setUniform("qt_material_properties", materialProperties, 4 * sizeof(float), cui.material_propertiesIdx);
+    shaders->setUniform("qt_material_properties", materialProperties, 4 * sizeof(float), &cui.material_propertiesIdx);
 
     const float materialProperties2[4] = {
         materialAdapter->fresnelPower(),
@@ -1546,7 +1546,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->translucentFallOff(),
         materialAdapter->diffuseLightWrap()
     };
-    cui.material_properties2Idx = shaders->setUniform("qt_material_properties2", materialProperties2, 4 * sizeof(float), cui.material_properties2Idx);
+    shaders->setUniform("qt_material_properties2", materialProperties2, 4 * sizeof(float), &cui.material_properties2Idx);
 
     const float materialProperties3[4] = {
         materialAdapter->occlusionAmount(),
@@ -1564,7 +1564,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,
         inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f
     };
-    cui.material_properties3Idx = shaders->setUniform("qt_material_properties3", materialProperties3, 4 * sizeof(float), cui.material_properties3Idx);
+    shaders->setUniform("qt_material_properties3", materialProperties3, 4 * sizeof(float), &cui.material_properties3Idx);
 
     quint32 imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {
@@ -1582,19 +1582,19 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // premultiplied or not.
         // We use this to mix the texture alpha.
         const float offsets[3] = { dataPtr[12], dataPtr[13], theImage->m_image.m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f };
-        indices.imageOffsetsUniformIndex = shaders->setUniform(names.imageOffsets, offsets, sizeof(offsets), indices.imageOffsetsUniformIndex);
+        shaders->setUniform(names.imageOffsets, offsets, sizeof(offsets), &indices.imageOffsetsUniformIndex);
         // Grab just the upper 2x2 rotation matrix from the larger matrix.
         const float rotations[4] = { dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5] };
-        indices.imageRotationsUniformIndex = shaders->setUniform(names.imageRotations, rotations, sizeof(rotations), indices.imageRotationsUniformIndex);
+        shaders->setUniform(names.imageRotations, rotations, sizeof(rotations), &indices.imageRotationsUniformIndex);
     }
 
     if (shadowDepthAdjust)
-        cui.shadowDepthAdjustIdx = shaders->setUniform("qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), cui.shadowDepthAdjustIdx);
+        shaders->setUniform("qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), &cui.shadowDepthAdjustIdx);
 
     const bool usesPointsTopology = inProperties.m_usesPointsTopology.getValue(inKey);
     if (usesPointsTopology) {
         const float pointSize = materialAdapter->pointSize();
-        cui.pointSizeIdx = shaders->setUniform("qt_materialPointSize", &pointSize, sizeof(float), cui.pointSizeIdx);
+        shaders->setUniform("qt_materialPointSize", &pointSize, sizeof(float), &cui.pointSizeIdx);
     }
 
     inPipelineState->lineWidth = materialAdapter->lineWidth();

@@ -299,9 +299,9 @@ public:
     Q_DECLARE_FLAGS(UniformFlags, UniformFlag)
 
     void beginMainUniformBuffer();
-    int setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
-    int setUniform(const char *name, const void *data, size_t size, int storeIndex = -1, UniformFlags flags = {});
-    int setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int storeIndex = -1);
+    void setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
+    void setUniform(const char *name, const void *data, size_t size, int *storeIndex = nullptr, UniformFlags flags = {});
+    void setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex = nullptr);
     int bindingForTexture(const char *name, int hint = -1);
 
     void resetLights() { m_lights.clear(); }
