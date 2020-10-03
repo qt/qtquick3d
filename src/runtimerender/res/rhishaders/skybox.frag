@@ -101,10 +101,10 @@ void main()
 #endif
 
     // exposure
-    color = color * ubuf.exposure;
+    vec3 exposureCorrectedColor = vec3(1.0) - exp(-color.rgb * ubuf.exposure);
 
     // tonemapping
-    color = vec4(qt_tonemap(color.rgb), 1.0);
+    color = vec4(qt_tonemap(exposureCorrectedColor), 1.0);
 
     fragOutput = color;
 }
