@@ -317,6 +317,20 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 uniformBuffers.bindings = bindings;
             }
 
+            if (uniformBuffers.pipeline
+                    && uniformBuffers.pipeline->shaderResourceBindings() == srb
+                    && uniformBuffers.pipelineRpDesc == renderPassDescriptor
+                    && uniformBuffers.ps == *ps)
+            {
+                subsetRenderable.rhiRenderData.mainPass.pipeline = uniformBuffers.pipeline;
+            } else {
+                const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
+                subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
+                uniformBuffers.pipeline = subsetRenderable.rhiRenderData.mainPass.pipeline;
+                uniformBuffers.pipelineRpDesc = renderPassDescriptor;
+                uniformBuffers.ps = *ps;
+            }
+
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
             subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
             subsetRenderable.rhiRenderData.mainPass.srb = srb;

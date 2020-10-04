@@ -957,6 +957,13 @@ void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc
             ++it;
         }
     }
+
+    for (auto it = m_uniformBufferSets.begin(), end = m_uniformBufferSets.end(); it != end; ++it) {
+        if (it->pipelineRpDesc == rpDesc) {
+            it->pipeline = nullptr;
+            it->pipelineRpDesc = nullptr;
+        }
+    }
 }
 
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;

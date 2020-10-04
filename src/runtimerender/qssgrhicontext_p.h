@@ -579,11 +579,16 @@ struct QSSGRhiUniformBufferSet
     QRhiBuffer *ubuf = nullptr;
     QRhiShaderResourceBindings *srb = nullptr; // not owned
     QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
+    QRhiGraphicsPipeline *pipeline = nullptr;
+    QRhiRenderPassDescriptor *pipelineRpDesc = nullptr;
+    QSSGRhiGraphicsPipelineState ps;
 
     void reset() {
         delete ubuf;
         ubuf = nullptr;
         srb = nullptr;
+        pipeline = nullptr;
+        pipelineRpDesc = nullptr;
     }
 };
 
