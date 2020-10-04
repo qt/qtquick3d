@@ -78,7 +78,7 @@ size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
         // But we need to bind the feature flag together with its name, so that the flags will
         // influence
         // the final hash not only by the true-value count.
-        retval ^= (inFeatureSet.at(idx).key ^ size_t(inFeatureSet.at(idx).enabled));
+        retval ^= (qHash(int(inFeatureSet.at(idx).feature)) ^ size_t(inFeatureSet.at(idx).enabled));
     }
     return retval;
 }

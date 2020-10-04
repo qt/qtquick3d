@@ -350,10 +350,10 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
 
         if (!inData.layer.lightProbe && renderable.material.m_iblProbe) {
-            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe),
+            inData.setShaderFeature(QSSGShaderDefines::LightProbe,
                                     renderable.material.m_iblProbe->m_textureData.m_rhiTexture != nullptr);
         } else if (inData.layer.lightProbe) {
-            inData.setShaderFeature(QSSGShaderDefines::asString(QSSGShaderDefines::LightProbe),
+            inData.setShaderFeature(QSSGShaderDefines::LightProbe,
                                     inData.layer.lightProbe->m_textureData.m_rhiTexture != nullptr);
         }
         customMaterialSystem.rhiPrepareRenderable(ps, renderable, inData.getShaderFeatureSet(),
@@ -375,7 +375,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
     const QSSGRenderGraphObject *material = nullptr;
 
     ShaderFeatureSetList featureSet;
-    featureSet.append({ QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass), true });
+    featureSet.append({ QSSGShaderDefines::DepthPass, true });
 
     if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
@@ -794,9 +794,9 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 {
     ShaderFeatureSetList featureSet;
     if (orthographic)
-        featureSet.append({ QSSGShaderDefines::asString(QSSGShaderDefines::OrthoShadowPass), true });
+        featureSet.append({ QSSGShaderDefines::OrthoShadowPass, true });
     else
-        featureSet.append({ QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass), true });
+        featureSet.append({ QSSGShaderDefines::CubeShadowPass, true });
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;

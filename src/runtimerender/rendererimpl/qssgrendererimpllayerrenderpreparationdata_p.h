@@ -268,7 +268,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     // time.
     virtual void prepareForRender(const QSize &inViewportDimensions);
     bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
-    void setShaderFeature(const char *inName, bool inValue);
+    void setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue);
     const ShaderFeatureSetList &getShaderFeatureSet();
     size_t getShaderFeatureSetHash();
 

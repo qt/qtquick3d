@@ -262,18 +262,18 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             generateShader(features);
 
             ShaderFeatureSetList depthPassFeatures;
-            depthPassFeatures.append({ QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass), true });
+            depthPassFeatures.append({ QSSGShaderDefines::DepthPass, true });
             generateShader(depthPassFeatures);
 
             if (shadowCubePass) {
                 ShaderFeatureSetList shadowPassFeatures;
-                shadowPassFeatures.append({ QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass), true });
+                shadowPassFeatures.append({ QSSGShaderDefines::CubeShadowPass, true });
                 generateShader(shadowPassFeatures);
             }
 
             if (shadowMapPass) {
                 ShaderFeatureSetList shadowPassFeatures;
-                shadowPassFeatures.append({ QSSGShaderDefines::asString(QSSGShaderDefines::OrthoShadowPass), true });
+                shadowPassFeatures.append({ QSSGShaderDefines::OrthoShadowPass, true });
                 generateShader(shadowPassFeatures);
             }
         }

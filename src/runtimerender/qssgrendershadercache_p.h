@@ -89,18 +89,15 @@ Q_QUICK3DRUNTIMERENDER_EXPORT const char *asString(QSSGShaderDefines::Define def
 //#define name value where value is 1 or zero depending on if the feature is enabled or not.
 struct QSSGShaderPreprocessorFeature
 {
-    QByteArray name;
-    size_t key = 0;
+    QSSGShaderDefines::Define feature;
+    const char *name;
     mutable bool enabled = false;
     QSSGShaderPreprocessorFeature() = default;
-    QSSGShaderPreprocessorFeature(const QByteArray &inName, bool val) : name(inName), enabled(val)
-    {
-        static const size_t qhashSeed = 0xfee383a1;
-        Q_ASSERT(inName != nullptr);
-        key = qHash(inName, qhashSeed);
-    }
-    inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name < other.name; }
-    inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return name == other.name && enabled == other.enabled; }
+    QSSGShaderPreprocessorFeature(QSSGShaderDefines::Define inFeature, bool val)
+        : feature(inFeature), name(QSSGShaderDefines::asString(inFeature)), enabled(val)
+    { }
+    inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return strcmp(name, other.name) < 0; }
+    inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return feature == other.feature && enabled == other.enabled; }
 };
 
 using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, 4>;
