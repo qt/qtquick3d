@@ -488,8 +488,8 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    auto &ubs = m_rhiContext->uniformBufferSet({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiUniformBufferSetKey::Effects });
-    m_currentShaderPipeline->bakeMainUniformBuffer(&ubs.ubuf, rub);
+    auto &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+    m_currentShaderPipeline->bakeMainUniformBuffer(&dcd.ubuf, rub);
     m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), rub);
 
     // do resource bindings
@@ -508,7 +508,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
                                                                   texture,
                                                                   m_rhiContext->sampler(rhiTex.samplerDesc)));
     }
-    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubs.ubuf));
+    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf));
     QRhiShaderResourceBindings *srb = m_rhiContext->srb(bindings);
 
     QSSGRhiGraphicsPipelineState ps;

@@ -198,7 +198,7 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
             if (!model->geometry)
                 bufferManager->removeMeshReference(model->meshPath, model);
             else // Models with geometry should be cleaned up here
-                m_contextInterface->rhiContext()->cleanupUniformBufferSets(model);
+                m_contextInterface->rhiContext()->cleanupDrawCallData(model);
         }
 
         // ### There might be more types that need to be supported

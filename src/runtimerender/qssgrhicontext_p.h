@@ -526,9 +526,6 @@ inline size_t qHash(const QSSGComputePipelineStateKey &k, size_t seed = 0) Q_DEC
     return qHash(k.shader, seed);
 }
 
-// QSSGRhiContext acts as an owning container for various graphics resources,
-// including uniform buffers.
-//
 // The lookup keys can be somewhat complicated due to having to handle cases
 // like "render a model in a shared scene between multiple View3Ds" (here both
 // the View3D ('layer') and the model ('model') act as the lookup key since
@@ -536,13 +533,12 @@ inline size_t qHash(const QSSGComputePipelineStateKey &k, size_t seed = 0) Q_DEC
 // View3D), or the case of shadow maps where the shadow map (there can be as
 // many as lights) is taken into account too ('entry').
 //
-struct QSSGRhiUniformBufferSetKey
+struct QSSGRhiDrawCallDataKey
 {
     enum Selector {
         Main,
         Shadow,
-        ShadowBlurX,
-        ShadowBlurY,
+        ShadowBlur,
         ZPrePass,
         DepthTexture,
         AoTexture,
@@ -559,28 +555,28 @@ struct QSSGRhiUniformBufferSetKey
     Selector selector;
 };
 
-inline bool operator==(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
+inline bool operator==(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) Q_DECL_NOTHROW
 {
     return a.selector == b.selector && a.layer == b.layer && a.model == b.model && a.entry == b.entry && a.index == b.index;
 }
 
-inline bool operator!=(const QSSGRhiUniformBufferSetKey &a, const QSSGRhiUniformBufferSetKey &b) Q_DECL_NOTHROW
+inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDataKey &b) Q_DECL_NOTHROW
 {
     return !(a == b);
 }
 
-inline size_t qHash(const QSSGRhiUniformBufferSetKey &k, size_t seed = 0) Q_DECL_NOTHROW
+inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
     return uint(k.selector) ^ uint(k.index) ^ qHash(k.layer, seed) ^ qHash(k.model, seed) ^ qHash(k.entry, seed);
 }
 
-struct QSSGRhiUniformBufferSet
+struct QSSGRhiDrawCallData
 {
-    QRhiBuffer *ubuf = nullptr;
+    QRhiBuffer *ubuf = nullptr; // owned
     QRhiShaderResourceBindings *srb = nullptr; // not owned
     QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
-    QRhiGraphicsPipeline *pipeline = nullptr;
-    QRhiRenderPassDescriptor *pipelineRpDesc = nullptr;
+    QRhiGraphicsPipeline *pipeline = nullptr; // not owned
+    QRhiRenderPassDescriptor *pipelineRpDesc = nullptr; // not owned
     QSSGRhiGraphicsPipelineState ps;
 
     void reset() {
@@ -634,9 +630,9 @@ public:
 
     void invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc);
 
-    QSSGRhiUniformBufferSet &uniformBufferSet(const QSSGRhiUniformBufferSetKey &key)
+    QSSGRhiDrawCallData &drawCallData(const QSSGRhiDrawCallDataKey &key)
     {
-        return m_uniformBufferSets[key];
+        return m_drawCallData[key];
     }
 
     QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
@@ -646,7 +642,7 @@ public:
     void registerTexture(QRhiTexture *texture) { m_textures.insert(texture); }
     void releaseTexture(QRhiTexture *texture);
 
-    void cleanupUniformBufferSets(const QSSGRenderModel *model);
+    void cleanupDrawCallData(const QSSGRenderModel *model);
 
     QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub);
 
@@ -660,7 +656,7 @@ private:
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
     QHash<QSSGComputePipelineStateKey, QRhiComputePipeline *> m_computePipelines;
-    QHash<QSSGRhiUniformBufferSetKey, QSSGRhiUniformBufferSet> m_uniformBufferSets;
+    QHash<QSSGRhiDrawCallDataKey, QSSGRhiDrawCallData> m_drawCallData;
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
     QSet<QRhiTexture *> m_textures;
     QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;

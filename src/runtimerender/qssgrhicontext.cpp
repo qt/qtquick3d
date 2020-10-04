@@ -834,8 +834,8 @@ QSSGRhiContext::QSSGRhiContext()
 
 QSSGRhiContext::~QSSGRhiContext()
 {
-    for (QSSGRhiUniformBufferSet &uniformBufferSet : m_uniformBufferSets)
-        uniformBufferSet.reset();
+    for (QSSGRhiDrawCallData &dcd : m_drawCallData)
+        dcd.reset();
 
     qDeleteAll(m_pipelines);
     qDeleteAll(m_computePipelines);
@@ -958,7 +958,7 @@ void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc
         }
     }
 
-    for (auto it = m_uniformBufferSets.begin(), end = m_uniformBufferSets.end(); it != end; ++it) {
+    for (auto it = m_drawCallData.begin(), end = m_drawCallData.end(); it != end; ++it) {
         if (it->pipelineRpDesc == rpDesc) {
             it->pipeline = nullptr;
             it->pipelineRpDesc = nullptr;
@@ -993,18 +993,18 @@ void QSSGRhiContext::releaseTexture(QRhiTexture *texture)
     delete texture;
 }
 
-void QSSGRhiContext::cleanupUniformBufferSets(const QSSGRenderModel *model)
+void QSSGRhiContext::cleanupDrawCallData(const QSSGRenderModel *model)
 {
     // Find all QSSGRhiUniformBufferSet that reference model
     // and delete them
     const void *modelNode = model;
-    auto uniformBufferSetItr = m_uniformBufferSets.begin();
-    while (uniformBufferSetItr != m_uniformBufferSets.end()) {
-        if (uniformBufferSetItr.key().model == modelNode) {
-            uniformBufferSetItr.value().reset();
-            uniformBufferSetItr = m_uniformBufferSets.erase(uniformBufferSetItr);
+    auto it = m_drawCallData.begin();
+    while (it != m_drawCallData.end()) {
+        if (it.key().model == modelNode) {
+            it.value().reset();
+            it = m_drawCallData.erase(it);
         } else {
-            ++uniformBufferSetItr;
+            ++it;
         }
     }
 }

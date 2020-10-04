@@ -1333,7 +1333,7 @@ void QSSGBufferManager::removeMeshReference(const QSSGRenderPath &sourcePath, co
         meshItr.value().remove(model);
     }
     // Remove UniformBufferSets associated with the model
-    context->cleanupUniformBufferSets(model);
+    context->cleanupDrawCallData(model);
 
     cachedModelPathMap.remove(model);
 }

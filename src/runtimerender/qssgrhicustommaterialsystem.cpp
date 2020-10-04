@@ -284,15 +284,15 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
         QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
-        QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ &layerData.layer,
-                                                                           &renderable.modelContext.model,
-                                                                           &material,
-                                                                           0,
-                                                                           QSSGRhiUniformBufferSetKey::Main }));
+        QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layerData.layer,
+                                                        &renderable.modelContext.model,
+                                                        &material,
+                                                        0,
+                                                        QSSGRhiDrawCallDataKey::Main }));
 
         int lightDataOffset = 0;
         int lightDataSize = 0;
-        shaderPipeline->bakeCombinedMainLightsUniformBuffer(&uniformBuffers.ubuf, resourceUpdates,
+        shaderPipeline->bakeCombinedMainLightsUniformBuffer(&dcd.ubuf, resourceUpdates,
                                                             true, &lightDataOffset, &lightDataSize);
 
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
@@ -301,8 +301,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         cb->resourceUpdate(resourceUpdates);
 
         QSSGRhiContext::ShaderResourceBindingList bindings;
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, uniformBuffers.ubuf, 0, shaderPipeline->ub0Size()));
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, uniformBuffers.ubuf, lightDataOffset, lightDataSize));
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size()));
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, dcd.ubuf, lightDataOffset, lightDataSize));
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
@@ -463,10 +463,10 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         }
 
         // do the same srb lookup acceleration as default materials
-        QRhiShaderResourceBindings *&srb = uniformBuffers.srb;
-        if (!srb || bindings != uniformBuffers.bindings) {
+        QRhiShaderResourceBindings *&srb = dcd.srb;
+        if (!srb || bindings != dcd.bindings) {
             srb = rhiCtx->srb(bindings);
-            uniformBuffers.bindings = bindings;
+            dcd.bindings = bindings;
         }
 
         const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };

@@ -394,9 +394,8 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
                 QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiProgressiveAAShader();
                 QRhiResourceUpdateBatch *rub = nullptr;
 
-                const QSSGRhiUniformBufferSetKey ubufKey = { m_layer, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ProgressiveAA };
-                QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
-                QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+                QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ProgressiveAA }));
+                QRhiBuffer *&ubuf = dcd.ubuf;
                 const int ubufSize = 2 * sizeof(float);
                 if (!ubuf) {
                     ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);

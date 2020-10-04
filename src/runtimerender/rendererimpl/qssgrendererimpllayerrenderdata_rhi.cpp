@@ -227,18 +227,18 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             const void *layerNode = &inData.layer;
             const void *modelNode = &subsetRenderable.modelContext.model;
 
-            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ layerNode, modelNode,
-                                                                               &subsetRenderable.material, 0, QSSGRhiUniformBufferSetKey::Main }));
+            QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, modelNode,
+                                                            &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
             int lightDataOffset = 0;
             int lightDataSize = 0;
-            shaderPipeline->bakeCombinedMainLightsUniformBuffer(&uniformBuffers.ubuf, resourceUpdates,
+            shaderPipeline->bakeCombinedMainLightsUniformBuffer(&dcd.ubuf, resourceUpdates,
                                                                 shaderPipeline->isLightingEnabled(), &lightDataOffset, &lightDataSize);
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
-            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, uniformBuffers.ubuf, 0, shaderPipeline->ub0Size()));
+            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size()));
 
             if (shaderPipeline->isLightingEnabled())
-                bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, uniformBuffers.ubuf, lightDataOffset, lightDataSize));
+                bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, dcd.ubuf, lightDataOffset, lightDataSize));
 
             // Texture maps
             QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
@@ -311,24 +311,24 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // significant gains with lots of models in the scene (because the
             // srb hash table becomes large then, so avoiding the lookup as
             // much as possible is helpful)
-            QRhiShaderResourceBindings *&srb = uniformBuffers.srb;
-            if (!srb || bindings != uniformBuffers.bindings) {
+            QRhiShaderResourceBindings *&srb = dcd.srb;
+            if (!srb || bindings != dcd.bindings) {
                 srb = rhiCtx->srb(bindings);
-                uniformBuffers.bindings = bindings;
+                dcd.bindings = bindings;
             }
 
-            if (uniformBuffers.pipeline
-                    && uniformBuffers.pipeline->shaderResourceBindings() == srb
-                    && uniformBuffers.pipelineRpDesc == renderPassDescriptor
-                    && uniformBuffers.ps == *ps)
+            if (dcd.pipeline
+                    && dcd.pipeline->shaderResourceBindings() == srb
+                    && dcd.pipelineRpDesc == renderPassDescriptor
+                    && dcd.ps == *ps)
             {
-                subsetRenderable.rhiRenderData.mainPass.pipeline = uniformBuffers.pipeline;
+                subsetRenderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
             } else {
                 const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
                 subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
-                uniformBuffers.pipeline = subsetRenderable.rhiRenderData.mainPass.pipeline;
-                uniformBuffers.pipelineRpDesc = renderPassDescriptor;
-                uniformBuffers.ps = *ps;
+                dcd.pipeline = subsetRenderable.rhiRenderData.mainPass.pipeline;
+                dcd.pipelineRpDesc = renderPassDescriptor;
+                dcd.ps = *ps;
             }
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
@@ -360,7 +360,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
                                          QRhiRenderPassDescriptor *rpDesc,
                                          QSSGRhiGraphicsPipelineState *ps,
                                          QRhiResourceUpdateBatch *rub,
-                                         QSSGRhiUniformBufferSetKey::Selector ubufSel)
+                                         QSSGRhiDrawCallDataKey::Selector ubufSel)
 {
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
     const QSSGRenderGraphObject *material = nullptr;
@@ -401,9 +401,9 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         const void *layerNode = &layerData.layer;
         const void *modelNode = &subsetRenderable.modelContext.model;
 
-        QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ layerNode, modelNode, material, 0, ubufSel }));
-        shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, rub);
-        QRhiBuffer *ubuf = uniformBuffers.ubuf;
+        QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, modelNode, material, 0, ubufSel }));
+        shaderPipeline->bakeMainUniformBuffer(&dcd.ubuf, rub);
+        QRhiBuffer *ubuf = dcd.ubuf;
 
         QSSGRhiContext::ShaderResourceBindingList bindings;
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
@@ -427,7 +427,7 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                 QSSGLayerRenderData &inData,
                                 const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                 const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
-                                QSSGRhiUniformBufferSetKey::Selector ubufSel,
+                                QSSGRhiDrawCallDataKey::Selector ubufSel,
                                 int samples)
 {
     // Phase 1 (prepare) for the Z prepass or the depth texture generation.
@@ -828,11 +828,10 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             ps->ia = renderable->subset.rhi.ia;
             ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
-            const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, &renderable->modelContext.model,
-                                                         pEntry, cubeFace, QSSGRhiUniformBufferSetKey::Shadow };
-            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
-            shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, rub);
-            QRhiBuffer *ubuf = uniformBuffers.ubuf;
+            QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
+                                                            pEntry, cubeFace, QSSGRhiDrawCallDataKey::Shadow }));
+            shaderPipeline->bakeMainUniformBuffer(&dcd.ubuf, rub);
+            QRhiBuffer *ubuf = dcd.ubuf;
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
@@ -925,12 +924,10 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     // so even if the same key gets used in the next frame, just doing
     // updateDynamicBuffer() on the same QRhiBuffer is ok due to QRhi's
     // internal double buffering)
-    QSSGRhiUniformBufferSetKey ubufKey = { map, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ShadowBlurX };
-
-    QSSGRhiUniformBufferSet &ubufContainer = rhiCtx->uniformBufferSet(ubufKey);
-    if (!ubufContainer.ubuf) {
-        ubufContainer.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 8);
-        ubufContainer.ubuf->create();
+    QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ map, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ShadowBlur });
+    if (!dcd.ubuf) {
+        dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 8);
+        dcd.ubuf->create();
     }
     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
 
@@ -943,16 +940,16 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     // in NDC so that kind of self-corrects...
     if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
         flipY.data()[5] = -1.0f;
-    rub->updateDynamicBuffer(ubufContainer.ubuf, 0, 64, flipY.constData());
+    rub->updateDynamicBuffer(dcd.ubuf, 0, 64, flipY.constData());
     float cameraProperties[2] = { shadowFilter, shadowMapFar };
-    rub->updateDynamicBuffer(ubufContainer.ubuf, 64, 8, cameraProperties);
+    rub->updateDynamicBuffer(dcd.ubuf, 64, 8, cameraProperties);
 
     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
     Q_ASSERT(sampler);
 
     QSSGRhiContext::ShaderResourceBindingList bindings = {
-        QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubufContainer.ubuf),
+        QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf),
         QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, map, sampler)
     };
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
@@ -971,10 +968,8 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
         return;
     ps.shaderPipeline = shaderPipeline.data();
 
-    ubufKey = { map, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::ShadowBlurY };
-
     bindings = {
-        QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubufContainer.ubuf),
+        QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf),
         QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, workMap, sampler)
     };
     srb = rhiCtx->srb(bindings);
@@ -1196,9 +1191,8 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
 //        vec2 cameraProperties;
 
     const int UBUF_SIZE = 72;
-    const QSSGRhiUniformBufferSetKey ubufKey = { &inData.layer, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::AoTexture };
-    QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
-    QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &inData.layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::AoTexture }));
+    QRhiBuffer *&ubuf = dcd.ubuf;
     if (!ubuf) {
         ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
         ubuf->create();
@@ -1381,7 +1375,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 Q_ASSERT(m_rhiDepthTexture.isValid());
                 if (rhiPrepareDepthPass(rhiCtx, *ps, m_rhiDepthTexture.rpDesc, *this,
                                         sortedOpaqueObjects, sortedTransparentObjects,
-                                        QSSGRhiUniformBufferSetKey::DepthTexture,
+                                        QSSGRhiDrawCallDataKey::DepthTexture,
                                         1))
                 {
                     bool needsSetVieport = true;
@@ -1449,7 +1443,7 @@ void QSSGLayerRenderData::rhiPrepare()
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
             if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
                                      sortedOpaqueObjects, {},
-                                     QSSGRhiUniformBufferSetKey::ZPrePass,
+                                     QSSGRhiDrawCallDataKey::ZPrePass,
                                      rhiCtx->mainPassSampleCount()))
             {
                 // alas, no Z prepass for you
@@ -1482,10 +1476,9 @@ void QSSGLayerRenderData::rhiPrepare()
                                                                       QRhiShaderResourceBinding::FragmentStage,
                                                                       texture, sampler));
 
-            const QSSGRhiUniformBufferSetKey ubufKey = { &layer, nullptr, nullptr, 0, QSSGRhiUniformBufferSetKey::SkyBox };
-            QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet(ubufKey));
+            QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
 
-            QRhiBuffer *&ubuf = uniformBuffers.ubuf;
+            QRhiBuffer *&ubuf = dcd.ubuf;
             if (!ubuf) {
                 ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
                 ubuf->create();
