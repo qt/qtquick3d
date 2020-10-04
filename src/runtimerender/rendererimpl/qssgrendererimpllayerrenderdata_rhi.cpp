@@ -319,13 +319,15 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // srb hash table becomes large then, so avoiding the lookup as
             // much as possible is helpful)
             QRhiShaderResourceBindings *&srb = dcd.srb;
+            bool srbChanged = false;
             if (!srb || bindings != dcd.bindings) {
                 srb = rhiCtx->srb(bindings);
                 dcd.bindings = bindings;
+                srbChanged = true;
             }
 
             if (dcd.pipeline
-                    && dcd.pipeline->shaderResourceBindings() == srb
+                    && !srbChanged
                     && dcd.pipelineRpDesc == renderPassDescriptor
                     && dcd.ps == *ps)
             {
