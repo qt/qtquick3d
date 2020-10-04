@@ -206,7 +206,38 @@ struct QSSGShaderLightsUniformData
     qint32 count;
     float padding[3]; // first element must start at a vec4-aligned offset
     QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
+
+    inline QSSGShaderLightsUniformData &operator=(const QSSGShaderLightsUniformData &other) {
+        count = other.count;
+        for (int i = 0; i < count; ++i)
+            lightData[i] = other.lightData[i];
+        return *this;
+    }
 };
+
+inline bool operator==(const QSSGShaderLightsUniformData &a, const QSSGShaderLightsUniformData &b) Q_DECL_NOTHROW
+{
+    if (a.count != b.count)
+        return false;
+    bool ret = true;
+    for (int i = 0; i < a.count && ret; ++i) {
+        ret &= !memcmp(a.lightData[i].position, b.lightData[i].position, 4 * sizeof(float))
+                && !memcmp(a.lightData[i].direction, b.lightData[i].direction, 4 * sizeof(float))
+                && !memcmp(a.lightData[i].diffuse, b.lightData[i].diffuse, 4 * sizeof(float))
+                && !memcmp(a.lightData[i].specular, b.lightData[i].specular, 4 * sizeof(float))
+                && a.lightData[i].coneAngle == b.lightData[i].coneAngle
+                && a.lightData[i].innerConeAngle == b.lightData[i].innerConeAngle
+                && a.lightData[i].constantAttenuation == b.lightData[i].constantAttenuation
+                && a.lightData[i].linearAttenuation == b.lightData[i].linearAttenuation
+                && a.lightData[i].quadraticAttenuation == b.lightData[i].quadraticAttenuation;
+    }
+    return ret;
+}
+
+inline bool operator!=(const QSSGShaderLightsUniformData &a, const QSSGShaderLightsUniformData &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
 
 // Default materials work with a regular combined image sampler for each shadowmap.
 struct QSSGRhiShadowMapProperties
