@@ -766,10 +766,11 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
 }
 
 void QSSGRhiShaderPipeline::bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates,
-                                                                bool lightingEnabled, int *lightDataOffset, int *lightDataSize)
+                                                                bool updateLights, int *lightDataOffset, int *lightDataSize)
 {
     const int lightBufferSize = int(sizeof(QSSGShaderLightsUniformData));
     *lightDataOffset = m_ub0NextUBufOffset;
+    *lightDataSize = int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
 
     const int totalBufferSize = *lightDataOffset + lightBufferSize;
     if (!*ubuf) {
@@ -783,10 +784,8 @@ void QSSGRhiShaderPipeline::bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubu
 
     resourceUpdates->updateDynamicBuffer(*ubuf, 0, m_ub0Size, m_mainUniformBufferData.constData());
 
-    if (lightingEnabled) {
-        *lightDataSize = int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
+    if (updateLights)
         resourceUpdates->updateDynamicBuffer(*ubuf, *lightDataOffset, *lightDataSize, &m_lightsUniformData);
-    }
 }
 
 void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)

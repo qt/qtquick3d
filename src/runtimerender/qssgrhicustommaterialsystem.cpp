@@ -292,8 +292,13 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         int lightDataOffset = 0;
         int lightDataSize = 0;
+        bool updateLights = false;
+        if (dcd.prevLightsUniformData != shaderPipeline->lightsUniformData()) {
+            dcd.prevLightsUniformData = shaderPipeline->lightsUniformData();
+            updateLights = true;
+        }
         shaderPipeline->bakeCombinedMainLightsUniformBuffer(&dcd.ubuf, resourceUpdates,
-                                                            true, &lightDataOffset, &lightDataSize);
+                                                            updateLights, &lightDataOffset, &lightDataSize);
 
         QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);

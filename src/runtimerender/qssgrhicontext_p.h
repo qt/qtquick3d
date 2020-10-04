@@ -203,7 +203,7 @@ struct QSSGShaderLightData
 
 struct QSSGShaderLightsUniformData
 {
-    qint32 count;
+    qint32 count = -1;
     float padding[3]; // first element must start at a vec4-aligned offset
     QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
 
@@ -346,7 +346,7 @@ public:
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
     void bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates,
-                                             bool lightingEnabled, int *lightDataOffset, int *lightDataSize);
+                                             bool updateLights, int *lightDataOffset, int *lightDataSize);
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
     void setLightProbeTexture(QRhiTexture *texture,
@@ -578,6 +578,7 @@ struct QSSGRhiDrawCallData
     QRhiGraphicsPipeline *pipeline = nullptr; // not owned
     QRhiRenderPassDescriptor *pipelineRpDesc = nullptr; // not owned
     QSSGRhiGraphicsPipelineState ps;
+    QSSGShaderLightsUniformData prevLightsUniformData;
 
     void reset() {
         delete ubuf;

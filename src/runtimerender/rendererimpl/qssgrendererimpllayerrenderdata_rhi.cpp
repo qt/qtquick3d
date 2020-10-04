@@ -231,8 +231,15 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                             &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
             int lightDataOffset = 0;
             int lightDataSize = 0;
+            bool updateLights = false;
+            if (shaderPipeline->isLightingEnabled()) {
+                if (dcd.prevLightsUniformData != shaderPipeline->lightsUniformData()) {
+                    dcd.prevLightsUniformData = shaderPipeline->lightsUniformData();
+                    updateLights = true;
+                }
+            }
             shaderPipeline->bakeCombinedMainLightsUniformBuffer(&dcd.ubuf, resourceUpdates,
-                                                                shaderPipeline->isLightingEnabled(), &lightDataOffset, &lightDataSize);
+                                                                updateLights, &lightDataOffset, &lightDataSize);
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size()));
