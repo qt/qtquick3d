@@ -794,26 +794,18 @@ void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(QRhiBuffer **ubuf,
 {
     Q_ASSERT(m_lightsEnabled);
 
-    // The number of lights is an int, but must allocate 4 ints in order to get
-    // the light array's first element vec4-aligned.
-    const int size = int(sizeof(QSSGLightSourceShader) * QSSG_MAX_NUM_LIGHTS + (4 * sizeof(qint32)));
-
+    const int bufferSize = int(sizeof(QSSGShaderLightsUniformData));
     if (!*ubuf) {
-        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
+        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, bufferSize);
         (*ubuf)->create();
     }
-    if ((*ubuf)->size() < size) {
-        (*ubuf)->setSize(size);
+    if ((*ubuf)->size() < bufferSize) {
+        (*ubuf)->setSize(bufferSize);
         (*ubuf)->create();
     }
 
-    const qint32 count = m_lights.count();
-    resourceUpdates->updateDynamicBuffer(*ubuf, 0, sizeof(qint32), &count);
-
-    for (int idx = 0; idx < count; ++idx) {
-        const int offset = idx * sizeof(QSSGLightSourceShader) + (4 * sizeof(qint32));
-        resourceUpdates->updateDynamicBuffer(*ubuf, offset, sizeof(QSSGLightSourceShader), &m_lights[idx].lightData);
-    }
+    const int updateSize = int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
+    resourceUpdates->updateDynamicBuffer(*ubuf, 0, updateSize, &m_lightsUniformData);
 }
 
 int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)

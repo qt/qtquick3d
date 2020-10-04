@@ -1358,26 +1358,31 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     }
 
     QVector3D theLightAmbientTotal;
-    shaders->resetLights();
     shaders->resetShadowMaps();
+    float lightColor[QSSG_MAX_NUM_LIGHTS][3];
+    QSSGShaderLightsUniformData &lightsUniformData(shaders->lightsUniformData());
+    lightsUniformData.count = 0;
 
     for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
-        QSSGShaderLightProperties &theLightProperties(shaders->addLight());
         float brightness = (inLights[lightIdx].enabled) ? theLight->m_brightness : 0.0f;
-        theLightProperties.lightColor = theLight->m_diffuseColor * brightness;
+        lightColor[lightIdx][0] = theLight->m_diffuseColor.x() * brightness;
+        lightColor[lightIdx][1] = theLight->m_diffuseColor.y() * brightness;
+        lightColor[lightIdx][2] = theLight->m_diffuseColor.z() * brightness;
+        lightsUniformData.count += 1;
+        QSSGShaderLightData &lightData(lightsUniformData.lightData[lightIdx]);
         const QVector3D &lightSpecular(theLight->m_specularColor);
-        theLightProperties.lightData.specular[0] = lightSpecular.x() * brightness;
-        theLightProperties.lightData.specular[1] = lightSpecular.y() * brightness;
-        theLightProperties.lightData.specular[2] = lightSpecular.z() * brightness;
-        theLightProperties.lightData.specular[3] = 1.0f;
+        lightData.specular[0] = lightSpecular.x() * brightness;
+        lightData.specular[1] = lightSpecular.y() * brightness;
+        lightData.specular[2] = lightSpecular.z() * brightness;
+        lightData.specular[3] = 1.0f;
         const QVector3D &lightDirection(inLights[lightIdx].direction);
-        theLightProperties.lightData.direction[0] = lightDirection.x();
-        theLightProperties.lightData.direction[1] = lightDirection.y();
-        theLightProperties.lightData.direction[2] = lightDirection.z();
-        theLightProperties.lightData.direction[3] = 1.0f;
+        lightData.direction[0] = lightDirection.x();
+        lightData.direction[1] = lightDirection.y();
+        lightData.direction[2] = lightDirection.z();
+        lightData.direction[3] = 1.0f;
 
         // For all disabled lights, the shader code will be generated as the same as enabled.
         // but the light color will be zero, and shadows will not be affected
@@ -1440,23 +1445,23 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         if (theLight->m_lightType == QSSGRenderLight::Type::Point
                 || theLight->m_lightType == QSSGRenderLight::Type::Spot) {
             const QVector3D globalPos = theLight->getGlobalPos();
-            theLightProperties.lightData.position[0] = globalPos.x();
-            theLightProperties.lightData.position[1] = globalPos.y();
-            theLightProperties.lightData.position[2] = globalPos.z();
-            theLightProperties.lightData.position[3] = 1.0f;
-            theLightProperties.lightData.constantAttenuation = aux::translateConstantAttenuation(theLight->m_constantFade);
-            theLightProperties.lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
-            theLightProperties.lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
-            theLightProperties.lightData.coneAngle = 180.0f;
+            lightData.position[0] = globalPos.x();
+            lightData.position[1] = globalPos.y();
+            lightData.position[2] = globalPos.z();
+            lightData.position[3] = 1.0f;
+            lightData.constantAttenuation = aux::translateConstantAttenuation(theLight->m_constantFade);
+            lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
+            lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+            lightData.coneAngle = 180.0f;
             if (theLight->m_lightType == QSSGRenderLight::Type::Spot) {
-                theLightProperties.lightData.coneAngle
+                lightData.coneAngle
                         = qCos(qDegreesToRadians(theLight->m_coneAngle));
                 float innerConeAngle = theLight->m_innerConeAngle;
                 if (theLight->m_innerConeAngle < 0)
                     innerConeAngle = theLight->m_coneAngle * 0.7f;
                 else if (theLight->m_innerConeAngle > theLight->m_coneAngle)
                     innerConeAngle = theLight->m_coneAngle;
-                theLightProperties.lightData.innerConeAngle
+                lightData.innerConeAngle
                         = qCos(qDegreesToRadians(innerConeAngle));
             }
         }
@@ -1521,12 +1526,12 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const bool hasLighting = materialAdapter->hasLighting();
     shaders->setLightsEnabled(hasLighting);
     if (hasLighting) {
-        for (int idx = 0, end = shaders->lightCount(); idx < end; ++idx) {
-            QSSGShaderLightProperties &lightProp(shaders->lightAt(idx));
-            lightProp.lightData.diffuse[0] = lightProp.lightColor.x();
-            lightProp.lightData.diffuse[1] = lightProp.lightColor.y();
-            lightProp.lightData.diffuse[2] = lightProp.lightColor.z();
-            lightProp.lightData.diffuse[3] = 1.0f;
+        for (int lightIdx = 0; lightIdx < lightsUniformData.count; ++lightIdx) {
+            QSSGShaderLightData &lightData(lightsUniformData.lightData[lightIdx]);
+            lightData.diffuse[0] = lightColor[lightIdx][0];
+            lightData.diffuse[1] = lightColor[lightIdx][1];
+            lightData.diffuse[2] = lightColor[lightIdx][2];
+            lightData.diffuse[3] = 1.0f;
         }
     }
 

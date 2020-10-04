@@ -187,7 +187,7 @@ enum class QSSGRhiSamplerBindingHints
 
 // note this struct must exactly match the memory layout of the uniform block in
 // funcSampleLightVars.glsllib
-struct QSSGLightSourceShader
+struct QSSGShaderLightData
 {
     float position[4];
     float direction[4]; // Specifies the light direction in world coordinates.
@@ -201,10 +201,11 @@ struct QSSGLightSourceShader
     float padding[3]; // the next light array element must start at a vec4-aligned offset
 };
 
-struct QSSGShaderLightProperties
+struct QSSGShaderLightsUniformData
 {
-    QVector3D lightColor;
-    QSSGLightSourceShader lightData;
+    qint32 count;
+    float padding[3]; // first element must start at a vec4-aligned offset
+    QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
 };
 
 // Default materials work with a regular combined image sampler for each shadowmap.
@@ -303,11 +304,6 @@ public:
     void setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex = nullptr);
     int bindingForTexture(const char *name, int hint = -1);
 
-    void resetLights() { m_lights.clear(); }
-    QSSGShaderLightProperties &addLight() { m_lights.append(QSSGShaderLightProperties()); return m_lights.last(); }
-    int lightCount() const { return m_lights.count(); }
-    const QSSGShaderLightProperties &lightAt(int index) const { return m_lights[index]; }
-    QSSGShaderLightProperties &lightAt(int index) { return m_lights[index]; }
     void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }
     bool isLightingEnabled() const { return m_lightsEnabled; }
 
@@ -346,6 +342,8 @@ public:
     int extraTextureCount() const { return m_extraTextures.count(); }
     const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
+    QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
+
 private:
     QSSGRhiContext &m_context;
     QVarLengthArray<QRhiShaderStage, 2> m_stages;
@@ -362,7 +360,7 @@ private:
 
     // transient (per-object) data; pointers are all non-owning
     bool m_lightsEnabled = false;
-    QVarLengthArray<QSSGShaderLightProperties, QSSG_MAX_NUM_LIGHTS> m_lights;
+    QSSGShaderLightsUniformData m_lightsUniformData;
     QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
     QRhiTexture *m_lightProbeTexture = nullptr;
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
