@@ -163,6 +163,7 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
         for (const QShaderDescription::UniformBlock &blk : uniformBlocks) {
             if (blk.binding == 0) {
                 m_ub0Size = blk.size;
+                m_ub0NextUBufOffset = m_context.rhi()->ubufAligned(m_ub0Size);
                 m_mainUniformBufferData.resize(m_ub0Size);
                 for (const QShaderDescription::BlockVariable &var : blk.members)
                     m_ub0[var.name] = var;
@@ -764,15 +765,36 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
     }
 }
 
+void QSSGRhiShaderPipeline::bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates,
+                                                                bool lightingEnabled, int *lightDataOffset, int *lightDataSize)
+{
+    const int lightBufferSize = int(sizeof(QSSGShaderLightsUniformData));
+    *lightDataOffset = m_ub0NextUBufOffset;
+
+    const int totalBufferSize = *lightDataOffset + lightBufferSize;
+    if (!*ubuf) {
+        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalBufferSize);
+        (*ubuf)->create();
+    }
+    if ((*ubuf)->size() < totalBufferSize) {
+        (*ubuf)->setSize(totalBufferSize);
+        (*ubuf)->create();
+    }
+
+    resourceUpdates->updateDynamicBuffer(*ubuf, 0, m_ub0Size, m_mainUniformBufferData.constData());
+
+    if (lightingEnabled) {
+        *lightDataSize = int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
+        resourceUpdates->updateDynamicBuffer(*ubuf, *lightDataOffset, *lightDataSize, &m_lightsUniformData);
+    }
+}
+
 void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)
 {
     // We will assume that the main uniform buffer has the same layout in all
     // stages (the generator should ensure that), meaning it includes all
     // members in all shaders, even if a member is not used in that particular
     // shader.
-    if (!vertexStage())
-        return;
-
     const int size = m_ub0Size;
     if (size < 1)
         return;
@@ -787,25 +809,6 @@ void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourc
     }
 
     resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, m_mainUniformBufferData.constData());
-}
-
-void QSSGRhiShaderPipeline::bakeLightsUniformBuffer(QRhiBuffer **ubuf,
-                                                    QRhiResourceUpdateBatch *resourceUpdates)
-{
-    Q_ASSERT(m_lightsEnabled);
-
-    const int bufferSize = int(sizeof(QSSGShaderLightsUniformData));
-    if (!*ubuf) {
-        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, bufferSize);
-        (*ubuf)->create();
-    }
-    if ((*ubuf)->size() < bufferSize) {
-        (*ubuf)->setSize(bufferSize);
-        (*ubuf)->create();
-    }
-
-    const int updateSize = int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
-    resourceUpdates->updateDynamicBuffer(*ubuf, 0, updateSize, &m_lightsUniformData);
 }
 
 int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)

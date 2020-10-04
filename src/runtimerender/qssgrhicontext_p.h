@@ -254,6 +254,7 @@ public:
         return nullptr;
     }
 
+    int ub0Size() const { return m_ub0Size; }
     const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
 
     // This struct is used purely for performance. It is used to quickly store
@@ -313,8 +314,9 @@ public:
     const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
+    void bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates,
+                                             bool lightingEnabled, int *lightDataOffset, int *lightDataSize);
     void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
-    void bakeLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
 
     void setLightProbeTexture(QRhiTexture *texture,
                               QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge,
@@ -348,6 +350,7 @@ private:
     QSSGRhiContext &m_context;
     QVarLengthArray<QRhiShaderStage, 2> m_stages;
     int m_ub0Size = 0;
+    int m_ub0NextUBufOffset = 0;
     QHash<QByteArray, QShaderDescription::BlockVariable> m_ub0;
     QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
@@ -543,15 +546,12 @@ inline size_t qHash(const QSSGRhiUniformBufferSetKey &k, size_t seed = 0) Q_DECL
 struct QSSGRhiUniformBufferSet
 {
     QRhiBuffer *ubuf = nullptr;
-    QRhiBuffer *lightsUbuf0 = nullptr;
     QRhiShaderResourceBindings *srb = nullptr; // not owned
     QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
 
     void reset() {
         delete ubuf;
         ubuf = nullptr;
-        delete lightsUbuf0;
-        lightsUbuf0 = nullptr;
         srb = nullptr;
     }
 };

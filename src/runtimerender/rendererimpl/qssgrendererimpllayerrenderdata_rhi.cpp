@@ -229,20 +229,16 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             QSSGRhiUniformBufferSet &uniformBuffers(rhiCtx->uniformBufferSet({ layerNode, modelNode,
                                                                                &subsetRenderable.material, 0, QSSGRhiUniformBufferSetKey::Main }));
-            shaderPipeline->bakeMainUniformBuffer(&uniformBuffers.ubuf, resourceUpdates);
-            QRhiBuffer *ubuf = uniformBuffers.ubuf;
-
-            QRhiBuffer *lightsUbuf = nullptr;
-            if (shaderPipeline->isLightingEnabled()) {
-                shaderPipeline->bakeLightsUniformBuffer(&uniformBuffers.lightsUbuf0, resourceUpdates);
-                lightsUbuf = uniformBuffers.lightsUbuf0;
-            }
+            int lightDataOffset = 0;
+            int lightDataSize = 0;
+            shaderPipeline->bakeCombinedMainLightsUniformBuffer(&uniformBuffers.ubuf, resourceUpdates,
+                                                                shaderPipeline->isLightingEnabled(), &lightDataOffset, &lightDataSize);
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
-            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, uniformBuffers.ubuf, 0, shaderPipeline->ub0Size()));
 
-            if (lightsUbuf)
-                bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, lightsUbuf));
+            if (shaderPipeline->isLightingEnabled())
+                bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, uniformBuffers.ubuf, lightDataOffset, lightDataSize));
 
             // Texture maps
             QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
