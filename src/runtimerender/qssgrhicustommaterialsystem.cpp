@@ -469,14 +469,27 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         // do the same srb lookup acceleration as default materials
         QRhiShaderResourceBindings *&srb = dcd.srb;
+        bool srbChanged = false;
         if (!srb || bindings != dcd.bindings) {
             srb = rhiCtx->srb(bindings);
             dcd.bindings = bindings;
+            srbChanged = true;
         }
-
-        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
-        renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
         renderable.rhiRenderData.mainPass.srb = srb;
+
+        if (dcd.pipeline
+                && !srbChanged
+                && dcd.pipelineRpDesc == renderPassDescriptor
+                && dcd.ps == *ps)
+        {
+            renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
+        } else {
+            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
+            renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
+            dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
+            dcd.pipelineRpDesc = renderPassDescriptor;
+            dcd.ps = *ps;
+        }
     }
 }
 

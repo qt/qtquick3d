@@ -325,6 +325,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 dcd.bindings = bindings;
                 srbChanged = true;
             }
+            subsetRenderable.rhiRenderData.mainPass.srb = srb;
 
             if (dcd.pipeline
                     && !srbChanged
@@ -339,10 +340,6 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 dcd.pipelineRpDesc = renderPassDescriptor;
                 dcd.ps = *ps;
             }
-
-            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
-            subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
-            subsetRenderable.rhiRenderData.mainPass.srb = srb;
         }
     } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(inObject));
