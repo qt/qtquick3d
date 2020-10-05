@@ -1,9 +1,5 @@
 # Generated from qquick3dmaterials.pro.
 
-if(NOT QT_FEATURE_private_tests)
-    return()
-endif()
-
 #####################################################################
 ## qquick3dmaterials Test:
 #####################################################################
@@ -32,4 +28,3 @@ qt_internal_add_resource(qquick3dmaterials "qquick3dmaterials"
 
 #### Keys ignored in scope 1:.:.:qquick3dmaterials.pro:<TRUE>:
 # TEMPLATE = "app"
-# _REQUIREMENTS = "qtConfig(private_tests)"

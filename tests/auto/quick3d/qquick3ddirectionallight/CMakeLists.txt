@@ -1,9 +1,5 @@
 # Generated from qquick3ddirectionallight.pro.
 
-if(NOT QT_FEATURE_private_tests)
-    return()
-endif()
-
 #####################################################################
 ## qquick3ddirectionallight Test:
 #####################################################################
@@ -18,4 +14,4 @@ qt_internal_add_test(qquick3ddirectionallight
 
 #### Keys ignored in scope 1:.:.:qquick3ddirectionallight.pro:<TRUE>:
 # TEMPLATE = "app"
-# _REQUIREMENTS = "qtConfig(private_tests)"
+

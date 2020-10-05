@@ -1,9 +1,5 @@
 # Generated from qquick3dcustomcamera.pro.
 
-if(NOT QT_FEATURE_private_tests)
-    return()
-endif()
-
 #####################################################################
 ## qquick3dcustomcamera Test:
 #####################################################################
@@ -18,4 +14,3 @@ qt_internal_add_test(qquick3dcustomcamera
 
 #### Keys ignored in scope 1:.:.:qquick3dcustomcamera.pro:<TRUE>:
 # TEMPLATE = "app"
-# _REQUIREMENTS = "qtConfig(private_tests)"
