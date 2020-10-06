@@ -180,7 +180,7 @@
             "description": "Force all imported texture components to generate mip maps for mip map texture filtering",
             "value": true,
             "type": "Boolean"
-        },
+        }
     },
     "groups": {
         "globalScale": {
