@@ -66,10 +66,6 @@ public:
                                 float distanceFromCamera,
                                 const QVector2D &uvPosition,
                                 const QVector3D &scenePosition);
-    QQuick3DPickResult (const QQuick3DPickResult &obj);
-
-    ~QQuick3DPickResult();
-
     QQuick3DModel *objectHit() const;
     float distance() const;
     QVector2D uvPosition() const;

@@ -58,18 +58,6 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
 {
 }
 
-QQuick3DPickResult::QQuick3DPickResult(const QQuick3DPickResult &obj)
-    : m_objectHit(obj.m_objectHit)
-    , m_distance(obj.m_distance)
-    , m_uvPosition(obj.m_uvPosition)
-    , m_scenePosition(obj.m_scenePosition)
-{
-}
-
-QQuick3DPickResult::~QQuick3DPickResult()
-{
-}
-
 /*!
     \qmlproperty Model PickResult::objectHit
 
