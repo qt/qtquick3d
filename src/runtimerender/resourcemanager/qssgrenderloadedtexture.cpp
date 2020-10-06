@@ -270,7 +270,11 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
     int width = 0;
     int height = 0;
     // We only care about the standard orientation.
+#ifdef Q_CC_MSVC
+    if (!sscanf_s(line.constData(), "-Y %d +X %d", &height, &width)) {
+#else
     if (!sscanf(line.constData(), "-Y %d +X %d", &height, &width)) {
+#endif
         qWarning("Unsupported HDR resolution string '%s'", line.constData());
         return imageData;
     }

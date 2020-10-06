@@ -352,7 +352,7 @@ quint32 nextIndex(const quint8 *inBaseAddress, const OffsetDataRef<quint8> data,
 template<typename TDataType>
 quint32 nextIndex(const QByteArray &data, quint32 idx)
 {
-    quint32 numItems = data.size() / sizeof(TDataType);
+    quint32 numItems = quint32(data.size() / sizeof(TDataType));
     if (idx < numItems) {
         const TDataType *dataPtr(reinterpret_cast<const TDataType *>(data.begin()));
         return dataPtr[idx];
@@ -392,7 +392,7 @@ template<typename TMeshType>
 TMeshType *doInitialize(quint16 /*meshFlags*/, QSSGByteView data)
 {
     const quint8 *newMem = data.begin();
-    quint32 amountLeft = data.size() - sizeof(TMeshType);
+    quint32 amountLeft = quint32(data.size() - sizeof(TMeshType));
     MemoryAssigningSerializer s(newMem, amountLeft, sizeof(TMeshType));
     TMeshType *retval = (TMeshType *)newMem;
     serialize(s, *retval);
