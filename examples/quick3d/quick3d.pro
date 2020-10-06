@@ -16,4 +16,5 @@ SUBDIRS += \
     quickitems \
     customgeometry \
     customeffect \
-    skinning
+    skinning \
+    offlineshaders

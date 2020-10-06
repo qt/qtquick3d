@@ -1,7 +1,7 @@
-# Generated from principledmaterial.pro.
+# Generated from offlineshaders.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(principledmaterial LANGUAGES CXX)
+project(offlineshaders LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -13,17 +13,17 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/principledmaterial")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/offlineshaders")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(principledmaterial
+add_qt_gui_executable(offlineshaders
     main.cpp
 )
-target_link_libraries(principledmaterial PUBLIC
+target_link_libraries(offlineshaders PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
@@ -33,32 +33,38 @@ target_link_libraries(principledmaterial PUBLIC
 
 # Resources:
 set(qml_resource_files
-    "MaterialControl.qml"
+    "MaterialRed.qml"
+    "MaterialRedExtended.qml"
     "main.qml"
 )
 
-qt6_add_resources(principledmaterial "qml"
+qt6_add_resources(offlineshaders "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
 set(materials_resource_files
-    "maps/OpenfootageNET_garage-1024.hdr"
     "maps/metallic/basecolor.jpg"
-    "maps/metallic/metallic.jpg"
-    "maps/metallic/normal.jpg"
-    "maps/metallic/roughness.jpg"
 )
 
-qt6_add_resources(principledmaterial "materials"
+qt6_add_resources(offlineshaders "materials"
     PREFIX
         "/"
     FILES
         ${materials_resource_files}
 )
 
-install(TARGETS principledmaterial
+#! [CMake material build function]
+qt6_quick3d_build_shaders(offlineshaders "shaders"
+    PREFIX
+        "/"
+    FILES
+        ${qml_resource_files}
+)
+#! [CMake material build function]
+
+install(TARGETS offlineshaders
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

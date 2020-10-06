@@ -36,6 +36,7 @@
     \list
     \li \l {Optimizing 2D Assets}
     \li \l {Optimizing 3D Assets}
+    \li \l {Shadergen Tool} {Build-time materials}
     \endlist
 
     \section1 Best Practices
