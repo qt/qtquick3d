@@ -67,10 +67,20 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
     \qmltype Node
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \brief The base component for an object that exists in a 3D Scene.
+    \brief The base component for an object that exists in a 3D scene.
 
-    Node type can be used to wrap other objects for the purpose of grouping them, or animating them.
-    This snippet shows how to use Node to animate a camera.
+    Node serves as the base class for types, such as, \l Model, \l Camera, \l Light. These
+    objects represent an entity that exists in the 3D scene, due to having a position and
+    other properties in the 3D world.  In many ways it serves the same purpose for Qt
+    Quick 3D as \l Item does for Qt Quick scenes.
+
+    In addition to types deriving from Node, it is also possible to parent other types to
+    a Node.  This includes QObject instances, where the Node merely serves as the
+    \l{QObject::parent()}{QObject parent}, and \l{Qt Quick 3D Scenes with 2D Content}{Qt
+    Quick items}.
+
+    Node type can be used to wrap other objects for the purpose of grouping them, or
+    animating them. This snippet shows how to use Node to animate a camera:
 
     \qml
     Node {
@@ -89,8 +99,8 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
     }
     \endqml
 
-    Node has to be used also if creating a scene outside of \l View3D, for example for the purpose
-    of switching scenes on the fly, or showing the same scene on multiple views.
+    Node has to be used also if creating a scene outside of \l View3D, for example for the
+    purpose of switching scenes on the fly, or showing the same scene on multiple views.
 
     \qml
     Node {
@@ -100,11 +110,11 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
 
         Model {
             source: "#Sphere"
-            materials: [ CopperMaterial {} ]
+            materials: [ DefaultMaterial {} ]
         }
 
         PerspectiveCamera {
-            z: -600
+            z: 600
         }
     }
 

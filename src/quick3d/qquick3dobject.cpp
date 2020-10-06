@@ -49,6 +49,26 @@ QT_BEGIN_NAMESPACE
     \qmltype Object3D
     \inqmlmodule QtQuick3D
     \brief Abstract base type of all 3D nodes and resources.
+
+    Object3D is the base class for all Qt Quick 3D types. This includes:
+
+    \list
+
+    \li Types that represent objects in the 3D scene, often due to having a position,
+    direction, or other component in the 3D world. For example, \l Model, \l Camera, or \l
+    Light. Such types inherit from \l Node, which in turn inherits from Object3D.
+
+    \li Types that do not themselves represent an object in the 3D world, but rather serve
+    as components to \l Node subclasses, providing data of some kind. This includes, among
+    others, \l Material, \l Geometry, and \l Texture.
+
+    \endlist
+
+    In addition to the above types, Object3D can also serve as the parent for \l{Item}{Qt
+    Quick items}, as well as arbitrary QObject instances. For more information on adding
+    2D items to the 3D scene, refer to \l{Qt Quick 3D Scenes with 2D Content}.
+
+    \sa Node
 */
 
 /*!
