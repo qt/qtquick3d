@@ -394,8 +394,8 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         if (!m_materials.isEmpty()) {
             if (modelNode->materials.isEmpty()) {
                 // Easy mode, just add each material
-                for (auto material : m_materials) {
-                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(material)->spatialNode;
+                for (const Material &material : m_materials) {
+                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(material.material)->spatialNode;
                     if (graphObject)
                         modelNode->materials.append(graphObject);
                     else
@@ -406,7 +406,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
                 if (modelNode->materials.size() != m_materials.size())
                     modelNode->materials.resize(m_materials.size());
                 for (int i = 0; i < m_materials.size(); ++i) {
-                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(m_materials[i])->spatialNode;
+                    QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(m_materials[i].material)->spatialNode;
                     if (modelNode->materials[i] != graphObject)
                         modelNode->materials[i] = graphObject;
                 }
@@ -480,21 +480,36 @@ void QQuick3DModel::updateSceneManager(const QSharedPointer<QQuick3DSceneManager
         sceneManager->dirtyBoundingBoxList.append(this);
         QQuick3DObjectPrivate::refSceneManager(m_skeleton, sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_geometry, sceneManager);
-        for (const auto &mat : qAsConst(m_materials)) {
-            if (!mat->parentItem() && !QQuick3DObjectPrivate::get(mat)->sceneManager)
-                QQuick3DObjectPrivate::refSceneManager(mat, sceneManager);
+        for (Material &mat : m_materials) {
+            if (!mat.material->parentItem() && !QQuick3DObjectPrivate::get(mat.material)->sceneManager) {
+                if (!mat.refed) {
+                    QQuick3DObjectPrivate::refSceneManager(mat.material, sceneManager);
+                    mat.refed = true;
+                }
+            }
         }
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_skeleton);
         QQuick3DObjectPrivate::derefSceneManager(m_geometry);
-        for (const auto &mat : qAsConst(m_materials))
-            QQuick3DObjectPrivate::derefSceneManager(mat);
+        for (Material &mat : m_materials) {
+            if (mat.refed) {
+                QQuick3DObjectPrivate::derefSceneManager(mat.material);
+                mat.refed = false;
+            }
+        }
     }
 }
 
 void QQuick3DModel::onMaterialDestroyed(QObject *object)
 {
-    if (m_materials.removeAll(static_cast<QQuick3DMaterial *>(object)) > 0)
+    bool found = false;
+    for (int i = 0; i < m_materials.count(); ++i) {
+        if (m_materials[i].material == static_cast<QQuick3DMaterial *>(object)) {
+            m_materials.removeAt(i--);
+            found = true;
+        }
+    }
+    if (found)
         markDirty(QQuick3DModel::MaterialsDirty);
 }
 
@@ -503,7 +518,7 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
     if (material == nullptr)
         return;
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    self->m_materials.push_back(material);
+    self->m_materials.push_back({ material, false });
     self->markDirty(QQuick3DModel::MaterialsDirty);
 
     if (material->parentItem() == nullptr) {
@@ -513,9 +528,16 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
         if (parentItem) {
             material->setParentItem(parentItem);
         } else { // If no valid parent was found, make sure the material refs our scene manager
-            const auto &scenManager = QQuick3DObjectPrivate::get(self)->sceneManager;
-            if (scenManager)
-                QQuick3DObjectPrivate::get(material)->refSceneManager(scenManager);
+            const auto &sceneManager = QQuick3DObjectPrivate::get(self)->sceneManager;
+            if (sceneManager) {
+                QQuick3DObjectPrivate::get(material)->refSceneManager(sceneManager);
+                // Have to keep track if we called refSceneManager because we
+                // can end up in double deref attempts when a model is going
+                // away, due to updateSceneManager() being called on
+                // ItemSceneChanged (and also doing deref). We must ensure that
+                // is one deref for each ref.
+                self->m_materials.last().refed = true;
+            }
             // else: If there's no scene manager, defer until one is set, see itemChange()
         }
     }
@@ -527,7 +549,7 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
 QQuick3DMaterial *QQuick3DModel::qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, int index)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    return self->m_materials.at(index);
+    return self->m_materials.at(index).material;
 }
 
 int QQuick3DModel::qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list)
@@ -539,10 +561,14 @@ int QQuick3DModel::qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list)
 void QQuick3DModel::qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    for (const auto &mat : qAsConst(self->m_materials)) {
-        if (mat->parentItem() == nullptr)
-            QQuick3DObjectPrivate::get(mat)->derefSceneManager();
-        mat->disconnect(self, SLOT(onMaterialDestroyed(QObject*)));
+    for (Material &mat : self->m_materials) {
+        if (mat.material->parentItem() == nullptr) {
+            if (mat.refed) {
+                QQuick3DObjectPrivate::get(mat.material)->derefSceneManager();
+                mat.refed = false;
+            }
+        }
+        mat.material->disconnect(self, SLOT(onMaterialDestroyed(QObject*)));
     }
     self->m_materials.clear();
     self->markDirty(QQuick3DModel::MaterialsDirty);

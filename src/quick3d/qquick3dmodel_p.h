@@ -172,7 +172,11 @@ private:
     static int qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list);
     static void qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list);
 
-    QVector<QQuick3DMaterial *> m_materials;
+    struct Material {
+        QQuick3DMaterial *material;
+        bool refed;
+    };
+    QVector<Material> m_materials;
     QQuick3DGeometry *m_geometry = nullptr;
     QQuick3DBounds3 m_bounds;
     QQuick3DSkeleton *m_skeleton = nullptr;
