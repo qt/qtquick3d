@@ -180,6 +180,12 @@
             "description": "Force all imported texture components to generate mip maps for mip map texture filtering",
             "value": true,
             "type": "Boolean"
+        },
+        "useBinaryKeyframes": {
+            "name": "Use Binary Keyframes",
+            "description": "Record keyframe data as binary files",
+            "value": true,
+            "type": "Boolean"
         }
     },
     "groups": {

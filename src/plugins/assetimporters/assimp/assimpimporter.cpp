@@ -1979,6 +1979,9 @@ void AssimpImporter::processOptions(const QVariantMap &options)
 
     if (checkBooleanOption(QStringLiteral("generateMipMaps"), optionsObject))
         m_forceMipMapGeneration = true;
+
+    if (checkBooleanOption(QStringLiteral("useBinaryKeyframes"), optionsObject))
+        m_binaryKeyframes = true;
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)

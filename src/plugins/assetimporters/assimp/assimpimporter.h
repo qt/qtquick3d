@@ -126,8 +126,7 @@ private:
     QStringList m_generatedFiles;
     bool m_gltfMode = false;
     bool m_gltfUsed = false;
-    // Consider option for this
-    bool m_binaryKeyframes = true;
+    bool m_binaryKeyframes = false;
     bool m_forceMipMapGeneration = false;
     bool m_useFloatJointIndices = false;
 
