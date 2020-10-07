@@ -57,6 +57,9 @@ QT_BEGIN_NAMESPACE
     a convenient way. Such a path is resolved relative to the component's (the
     \c{.qml} file's) location.
 
+    For a getting started guide to custom materials, see the page \l{Programmable
+    Materials, Effects, Geometry, and Texture data}.
+
     \section1 Introduction
 
     Consider the following versions of the same scene. On the left, the cylinder
@@ -211,7 +214,7 @@ QT_BEGIN_NAMESPACE
     there will typically be tonemapping performed on the 3D scene.
     \li QRect, QRectF, \l{QtQml::Qt::rect()}{rect} -> vec4
     \li QPoint, QPointF, \l{QtQml::Qt::point()}{point}, QSize, QSizeF, \l{QtQml::Qt::size()}{size} -> vec2
-    \li QVector2D, \l{QtQml::Qt::vector2d()}{vector2d} -> vec3
+    \li QVector2D, \l{QtQml::Qt::vector2d()}{vector2d} -> vec2
     \li QVector3D, \l{QtQml::Qt::vector3d()}{vector3d} -> vec3
     \li QVector4D, \l{QtQml::Qt::vector4d()}{vector4d} -> vec4
     \li QMatrix4x4, \l{QtQml::Qt::matrix4x4()}{matrix4x4} -> mat4
@@ -961,7 +964,7 @@ QT_BEGIN_NAMESPACE
 
     \endlist
 
-    \sa {Qt Quick 3D - Custom Shaders Example}, {Qt Quick 3D - Custom Materials Example}
+    \sa {Qt Quick 3D - Custom Shaders Example}, {Qt Quick 3D - Custom Materials Example}, {Programmable Materials, Effects, Geometry, and Texture data}
 */
 
 /*!
