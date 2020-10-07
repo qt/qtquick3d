@@ -1,4 +1,4 @@
-// test VAR_VIEW_VECTOR, VAR_WORLD_NORMAL, NORMAL
+// test VIEW_VECTOR, VAR_WORLD_NORMAL, NORMAL
 
 void AMBIENT_LIGHT()
 {
@@ -17,8 +17,7 @@ void POINT_LIGHT()
 
 void SPECULAR_LIGHT()
 {
-    vec3 V = normalize(VAR_VIEW_VECTOR);
-    vec3 H = normalize(V + TO_LIGHT_DIR);
+    vec3 H = normalize(VIEW_VECTOR + TO_LIGHT_DIR);
     float cosAlpha = max(0.0, dot(H, normalize(NORMAL)));
     float shine = pow(cosAlpha, uShininess);
     const vec3 specularColor = vec3(1.0);

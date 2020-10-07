@@ -751,8 +751,7 @@ QT_BEGIN_NAMESPACE
     \badcode
         void SPECULAR_LIGHT()
         {
-            vec3 V = normalize(VAR_VIEW_VECTOR);
-            vec3 H = normalize(V + TO_LIGHT_DIR);
+            vec3 H = normalize(VIEW_VECTOR + TO_LIGHT_DIR);
             float cosAlpha = max(0.0, dot(H, normalize(NORMAL)));
             float shine = pow(cosAlpha, exp2(15.0 * (1.0 - ROUGHNESS) + 1.0) * 0.25);
             SPECULAR += shine * LIGHT_COLOR * FRESNEL_CONTRIB * SHADOW_CONTRIB * LIGHT_ATTENUATION;
@@ -778,12 +777,12 @@ QT_BEGIN_NAMESPACE
     \li vec3 \c VAR_WORLD_POSITION - Interpolated world space vertex position
     (\c{(MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz})
 
-    \li vec3 \c VAR_VIEW_VECTOR - Points towards the camera, meaning this is
-    effectively the interpolated \c{CAMERA_POSITION - (MODEL_MATRIX *
-    vec4(VERTEX, 1.0)).xyz}.
-
     \li vec4 \c VAR_COLOR - Relevant when vertex colors are provided in the
     mesh. \c{vec4(1.0)} otherwise.
+
+    \li vec3 \c VIEW_VECTOR - Points towards the camera. This is
+    effectively the \c{CAMERA_POSITION - VAR_WORLD_POSITION} vector normalized.
+    Only available in the fragment shader.
 
     \li vec4 \c FRAGCOORD - Contains the window-relative coordinates of the
     current fragment. Only available in the fragment shader.

@@ -428,10 +428,12 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     // can also calculate on its own and pass them on with VARYING but that's a
     // bit wasteful since we calculate these anyways.
     { "VAR_WORLD_NORMAL", "qt_varNormal" },
-    { "VAR_VIEW_VECTOR", "qt_varViewVector" },
     { "VAR_WORLD_POSITION", "qt_varWorldPos" },
     // vertex color is always enabled for custom materials (shaded)
     { "VAR_COLOR", "qt_varColor" },
+    // view vector is calculated in fragment shader
+    { "VIEW_VECTOR", "qt_view_vector" },
+
 
     // effects
     { "INPUT", "qt_inputTexture" },

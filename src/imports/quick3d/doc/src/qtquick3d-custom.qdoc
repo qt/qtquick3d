@@ -929,7 +929,7 @@ Any other type of data can be passed on to the fragment stage in a similar manne
 worth noting that in many cases setting up the material's own varyings is not necessary
 because there are builtins provided that cover many of typical needs. This includes making
 the (interpolated) normals, UVs, world position (\c VAR_WORLD_POSITION), or the vector
-pointing towards the camera (\c VAR_VIEW_VECTOR).
+pointing towards the camera (\c VIEW_VECTOR).
 
 The above example can in fact be simplified to the following as \c UV0 is automatically
 available in the fragment stage as well:

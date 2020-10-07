@@ -173,13 +173,9 @@ struct QSSGMaterialVertexPipeline
         if (setCode(GenerationFlag::ViewVector))
             return;
         generateWorldPosition();
-        QSSGStageGeneratorBase &activeGenerator(activeStage());
-        activeGenerator.addInclude("viewProperties.glsllib");
-        addInterpolationParameter("qt_varViewVector", "vec3");
+        activeStage().addUniform("qt_cameraPosition", "vec3");
 
-        activeGenerator.append("    vec3 qt_local_view_vector = normalize(qt_cameraPosition - qt_local_model_world_position);");
-        assignOutput("qt_varViewVector", "qt_local_view_vector");
-        fragment() << "    vec3 qt_view_vector = normalize(qt_varViewVector);\n";
+        fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition - qt_varWorldPos);\n";
     }
 
     // fragment shader expects varying vertex normal
