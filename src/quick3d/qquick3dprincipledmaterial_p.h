@@ -232,6 +232,13 @@ private:
     };
 
     void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &window);
+
+    // Note: The default values for properties that are also present in
+    // QSSGShaderCustomMaterialAdapter must match the values there, because a
+    // PrincipledMaterial { } and CustomMaterial { } must be identical. Same
+    // goes for the custom shader defaults in generateFragmentShader(), keep
+    // them in sync.
+
     Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     AlphaMode m_alphaMode = Default;
@@ -253,7 +260,7 @@ private:
     float m_specularAmount = 0.5f;
     float m_roughness = 0.0f;
     float m_opacity = 1.0f;
-    float m_metalnessAmount = 1.0f;
+    float m_metalnessAmount = 0.0f;
     float m_normalStrength = 1.0f;
     float m_occlusionAmount = 1.0f;
     float m_alphaCutoff = 0.5f;

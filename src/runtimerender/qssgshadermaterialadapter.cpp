@@ -213,6 +213,8 @@ QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRende
 }
 
 // Act like Principled. Lighting is always on, specular, metalness, etc. support should all be enabled.
+// Unlike Principled, the *enabled values do not depend on the metalness or specularAmount values
+// (we cannot tell what those are if they are written in the shader).
 
 bool QSSGShaderCustomMaterialAdapter::isPrincipled()
 {
@@ -256,6 +258,13 @@ QSSGRenderImage *QSSGShaderCustomMaterialAdapter::iblProbe()
     return m_material.m_iblProbe;
 }
 
+// The following are the values that get set into uniforms such as
+// qt_material_properties etc. When a custom shader is present, these values
+// are not used at all. However, a CustomMaterial is also valid without a
+// vertex/fragment shader, or with no custom shaders at all. Therefore the
+// values here must match the defaults of PrincipledMaterial, in order to make
+// PrincipledMaterial { } and CustomMaterial { } identical.
+
 QVector3D QSSGShaderCustomMaterialAdapter::emissiveColor()
 {
     return QVector3D(0, 0, 0);
@@ -273,57 +282,57 @@ QVector3D QSSGShaderCustomMaterialAdapter::specularTint()
 
 float QSSGShaderCustomMaterialAdapter::ior()
 {
-    return 1.45f; // unused in practice
+    return 1.45f;
 }
 
 float QSSGShaderCustomMaterialAdapter::fresnelPower()
 {
-    return 0.0f; // exposed as uniform but unused in practice
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::metalnessAmount()
 {
-    return 0.0f; // exposed as uniform but unused in practice
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::specularAmount()
 {
-    return 0.0f; // exposed as uniform but unused in practice
+    return 0.5f;
 }
 
 float QSSGShaderCustomMaterialAdapter::specularRoughness()
 {
-    return 50.0f; // exposed as uniform but unused in practice
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::bumpAmount()
 {
-    return 0.0f; // exposed as uniform but unused in practice
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::translucentFallOff()
 {
-    return 0.0f; // exposed as uniform but unused in practice
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::diffuseLightWrap()
 {
-    return 0.0f; // exposed as uniform but unused in practice
+    return 0.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::occlusionAmount()
 {
-    return 1.0f; // exposed as uniform but unused in practice
+    return 1.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::alphaCutOff()
 {
-    return 0.5f; // exposed as uniform but unused in practice
+    return 0.5f;
 }
 
 float QSSGShaderCustomMaterialAdapter::pointSize()
 {
-    return 1.0f; // not relevant, the actual one is up to the custom shader to set
+    return 1.0f;
 }
 
 float QSSGShaderCustomMaterialAdapter::lineWidth()

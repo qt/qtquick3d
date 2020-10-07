@@ -586,7 +586,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // PrincipledMaterial however, since this is more sensible here.
         // (because the shader has to state it to get things)
         vertexShader.generateVarTangentAndBinormal(inKey);
-        fragmentShader << "    float qt_customSpecularAmount = 0.0;\n"; // overrides qt_material_properties.x
+        // These should match the defaults of PrincipledMaterial.
+        fragmentShader << "    float qt_customSpecularAmount = 0.5;\n"; // overrides qt_material_properties.x
         fragmentShader << "    float qt_customSpecularRoughness = 0.0;\n"; // overrides qt_material_properties.y
         fragmentShader << "    float qt_customMetalnessAmount = 0.0;\n"; // overrides qt_material_properties.z
         fragmentShader << "    float qt_customFresnelPower = 5.0;\n"; // overrides qt_material_properties2.x

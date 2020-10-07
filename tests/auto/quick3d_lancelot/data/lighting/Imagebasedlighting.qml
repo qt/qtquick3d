@@ -116,6 +116,7 @@ Rectangle {
 
                 PrincipledMaterial {
                     id: default_001
+                    metalness: 1
                 }
                 materials: [default_001]
             }
@@ -197,6 +198,7 @@ Rectangle {
                 PrincipledMaterial {
                     id: default_005
                     lightProbe: default_005_lightProbe
+                    metalness: 1
 
                     Texture {
                         id: default_005_lightProbe
@@ -269,6 +271,7 @@ Rectangle {
                 PrincipledMaterial {
                     id: copper_001
                     lightProbe: copper_001_lightProbe
+                    metalness: 1
 
                     Texture {
                         id: copper_001_lightProbe
@@ -340,6 +343,7 @@ Rectangle {
 
                 PrincipledMaterial {
                     id: copper_002
+                    metalness: 1
                 }
                 materials: [copper_002]
             }
@@ -421,6 +425,7 @@ Rectangle {
                 PrincipledMaterial {
                     id: copper_003
                     lightProbe: copper_003_lightProbe
+                    metalness: 1
 
                     Texture {
                         id: copper_003_lightProbe
@@ -492,6 +497,7 @@ Rectangle {
 
                 PrincipledMaterial {
                     id: copper_004
+                    metalness: 1
                     lightProbe: copper_004_lightProbe
 
                     Texture {

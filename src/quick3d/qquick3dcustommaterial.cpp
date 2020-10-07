@@ -468,10 +468,8 @@ QT_BEGIN_NAMESPACE
 
     The function can write to the following special variables. The values
     written to these will typically be either hardcoded or be calculated based
-    on QML properties mapped to uniforms. The semantics are equivalant to
-    PrincipledMaterial, meaning in practice one is expected to set either \c
-    METALNESS (non-dielectric material) or \c SPECULAR_AMOUNT (dielectric) to a
-    non-zero value.
+    on QML properties mapped to uniforms. The semantics are identical to
+    PrincipledMaterial.
 
     \list
 
@@ -501,22 +499,21 @@ QT_BEGIN_NAMESPACE
     properties in QML, be aware that it is up to the shader to perform the sRGB
     to linear conversion, if needed.
 
-    \li float \c METALNESS Metalness amount in range 0.0 - 1.0. Must be set to
-    a non-zero value to have effect. \c SPECULAR_AMOUNT should be left at its
-    default 0.0 value then.
+    \li float \c METALNESS Metalness amount in range 0.0 - 1.0. The default
+    value is 0. Must be set to a non-zero value to have effect.
 
-    \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0.
+    \li float \c ROUGHNESS Roughness value in range 0.0 - 1.0. The default value is 0.
 
-    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value is
-    \c{5.0} as that is what a PrincipledMaterial would use.
+    \li float \c FRESNEL_POWER Specifies the fresnel power. A typical value,
+    and also the default, is \c{5.0} as that is what a PrincipledMaterial would use.
 
-    \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. Must be
-    set to a non-zero value to have effect. \c METALNESS must be left at its
-    default 0.0 value then.
+    \li float \c SPECULAR_AMOUNT Specular amount in range 0.0 - 1.0. The
+    default value is \c{0.5}, matching \l{PrincipledMaterial::specularAmount}. Must
+    be set to a non-zero value to have effect.
 
     \li vec3 \c NORMAL - The normal that comes from the vertex shader in world
-    space. While this property has the same initial value as \c VAR_WORLD_NORMAL
-    , only changing the value of \c NORMAL will have an effect on lighting.
+    space. While this property has the same initial value as \c VAR_WORLD_NORMAL,
+    only changing the value of \c NORMAL will have an effect on lighting.
 
     \li vec3 \c TANGENT - The tanget that comes from the vertex shader in world
     space.

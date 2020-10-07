@@ -107,14 +107,17 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     // lightmap section
     QSSGRenderLightmaps lightmaps;
 
+    // Note that most default values here are irrelevant as the material
+    // (Default or Principled) will write its own defaults or actual values
+    // during sync.
     QVector3D specularTint{ 1.0f, 1.0f, 1.0f };
-    float ior = 0.2f;
+    float ior = 1.45f; // relevant for Default only
     QVector3D emissiveColor = { 1.0f, 1.0f, 1.0f };
     QVector4D color{ 1.0f, 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
     float fresnelPower = 0.0f;
-    float specularAmount = 0.0f; // 0-??, defaults to 0
-    float specularRoughness = 50.0f; // 0-??, defaults to 50
+    float specularAmount = 0.0f; // 0-1
+    float specularRoughness = 0.0f; // 0-1
     float metalnessAmount = 0.0f;
     float opacity = 1.0f; // 0-1
     float bumpAmount = 0.0f; // 0-??

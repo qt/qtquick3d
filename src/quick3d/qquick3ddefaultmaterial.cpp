@@ -210,6 +210,7 @@ QT_BEGIN_NAMESPACE
     This property controls the size of the specular highlight generated from
     lights, and the clarity of reflections in general. Larger values increase
     the roughness, softening specular highlights and blurring reflections.
+    The range is [0.0, 1.0]. The default value is 0.
 */
 
 /*!

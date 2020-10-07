@@ -125,6 +125,8 @@ QT_BEGIN_NAMESPACE
     \note In principle, materials are either dielectrics with a metalness of 0, or metals with a
     metalness of 1. Metalness values between 0 and 1 are still allowed and will give a material that
     is a blend between the different models.
+
+    The range is [0.0, 1.0]. The default value is 0.
 */
 
 /*!
@@ -207,7 +209,7 @@ QT_BEGIN_NAMESPACE
     This property controls the strength of specularity (highlights and
     reflections).
 
-    The default value is \c 0.5
+    The range is [0.0, 1.0]. The default value is \c 0.5.
 
     \note For non-dielectrics (metals) this property has no effect.
 
@@ -225,6 +227,7 @@ QT_BEGIN_NAMESPACE
     This property controls the size of the specular highlight generated from
     lights, and the clarity of reflections in general. Larger values increase
     the roughness, softening specular highlights and blurring reflections.
+    The range is [0.0, 1.0]. The default value is 0.
 */
 
 /*!

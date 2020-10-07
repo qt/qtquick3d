@@ -248,7 +248,7 @@ private:
     float m_indexOfRefraction = 1.45f;
     float m_fresnelPower = 0.0f;
     float m_specularAmount = 0.0f;
-    float m_specularRoughness = 50.0f;
+    float m_specularRoughness = 0.0f;
     QQuick3DTexture *m_roughnessMap = nullptr;
     float m_opacity = 1.0f;
     QQuick3DTexture *m_opacityMap = nullptr;

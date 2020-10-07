@@ -114,6 +114,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColor: "#4080A0"
                     metalnessMap: tex_rgba
+                    metalness: 1
                 } ]
         }
 
@@ -151,6 +152,7 @@ Rectangle {
                     baseColor: "#4080A0"
                     roughness: 1
                     metalnessMap: tex_rgba
+                    metalness: 1
                 } ]
         }
 
@@ -162,7 +164,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColor: "#4080A0"
                     roughness: 1
-                    metalness: .5
+                    metalness: 0.5
                     metalnessMap: tex_rgba
                 } ]
         }
