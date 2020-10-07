@@ -202,7 +202,13 @@ QT_BEGIN_NAMESPACE
 
     \list
     \li bool, int, real -> bool, int, float
-    \li QColor, \l{QtQml::Qt::rgba()}{color} -> vec4
+    \li QColor, \l{QtQml::Qt::rgba()}{color} -> vec4, and the color gets
+    converted to linear, assuming sRGB space for the color value specified in
+    QML. The built-in Qt colors, such as \c{"green"} are in sRGB color space as
+    well, and the same conversion is performed for all color properties of
+    DefaultMaterial and PrincipledMaterial, so this behavior of CustomMaterial
+    matches those. Unlike Qt Quick, for Qt Quick 3D linearizing is essential as
+    there will typically be tonemapping performed on the 3D scene.
     \li QRect, QRectF, \l{QtQml::Qt::rect()}{rect} -> vec4
     \li QPoint, QPointF, \l{QtQml::Qt::point()}{point}, QSize, QSizeF, \l{QtQml::Qt::size()}{size} -> vec2
     \li QVector2D, \l{QtQml::Qt::vector2d()}{vector2d} -> vec3
@@ -474,13 +480,26 @@ QT_BEGIN_NAMESPACE
     color property}. When light processor functions are not implemented, it can
     be convenient to set a custom base color in \c MAIN because that is then
     taken into account in the default lighting calculations. The default value
-    is \c{vec4(1.0)}, meaning white with an alpha of 1.0. The alpha value effects
-    the final alpha of the fragment. The final alpha value is the object
-    (model) opacity multiplied by the base color alpha.
+    is \c{vec4(1.0)}, meaning white with an alpha of 1.0. The alpha value
+    effects the final alpha of the fragment. The final alpha value is the
+    object (model) opacity multiplied by the base color alpha. When specifying
+    the value directly in shader code, not relying on uniform values exposed
+    from \b color properties in QML, be aware that it is up to the shader to
+    perform the sRGB to linear conversion, if needed. For example, assuming
+    a \c{vec3 color} and \c{float alpha} this can be achieved like the following:
+    \badcode
+    float C1 = 0.305306011;
+    vec3 C2 = vec3(0.682171111, 0.682171111, 0.682171111);
+    vec3 C3 = vec3(0.012522878, 0.012522878, 0.012522878);
+    BASE_COLOR = vec4(rgb * (rgb * (rgb * C1 + C2) + C3), alpha);
+    \endcode
 
     \li vec3 \c EMISSIVE_COLOR - The color of self-illumination. Corresponds to
     the \l{PrincipledMaterial::emissiveColor}{built-in materials' emissiveColor
-    property}. The default value is \c{vec3(0.0)}.
+    property}. The default value is \c{vec3(0.0)}. When specifying the value
+    directly in shader code, not relying on uniform values exposed from \b color
+    properties in QML, be aware that it is up to the shader to perform the sRGB
+    to linear conversion, if needed.
 
     \li float \c METALNESS Metalness amount in range 0.0 - 1.0. Must be set to
     a non-zero value to have effect. \c SPECULAR_AMOUNT should be left at its

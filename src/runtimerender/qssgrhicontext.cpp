@@ -30,6 +30,7 @@
 #include "qssgrhicontext_p.h"
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtCore/QVariant>
 
 QT_BEGIN_NAMESPACE
@@ -301,9 +302,8 @@ void QSSGRhiShaderPipeline::setUniformValue(const char *name, const QVariant &in
         break;
     case QSSGRenderShaderDataType::Rgba:
     {
-        const QColor c = inValue.value<QColor>();
-        const float v[4] = { float(c.redF()), float(c.greenF()), float(c.blueF()), float(c.alphaF()) };
-        setUniform(name, v, 4 * sizeof(float));
+        const QVector4D v = color::sRGBToLinear(inValue.value<QColor>());
+        setUniform(name, &v, 4 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::UnsignedInteger:
@@ -664,8 +664,8 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
             return;
 #endif
         for (size_t i = 0; i < itemCount; ++i) {
-            const float vi[4] = { float(v[i].redF()), float(v[i].greenF()), float(v[i].blueF()), float(v[i].alphaF()) };
-            memcpy(p + i * std140BaseTypeSize, vi , ua->typeSize);
+            const QVector4D vi = color::sRGBToLinear(v[i]);
+            memcpy(p + i * std140BaseTypeSize, &vi, ua->typeSize);
         }
     }
         break;

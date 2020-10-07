@@ -108,7 +108,12 @@ QT_BEGIN_NAMESPACE
 
     \list
     \li bool, int, real -> bool, int, float
-    \li QColor, \l{QtQml::Qt::rgba()}{color} -> vec4
+    \li QColor, \l{QtQml::Qt::rgba()}{color} -> vec4, and the color gets
+    converted to linear, assuming sRGB space for the color value specified in
+    QML. The built-in Qt colors, such as \c{"green"} are in sRGB color space as
+    well, and the same conversion is performed for all color properties of
+    DefaultMaterial and PrincipledMaterial, so this behavior of Effect
+    matches those.
     \li QRect, QRectF, \l{QtQml::Qt::rect()}{rect} -> vec4
     \li QPoint, QPointF, \l{QtQml::Qt::point()}{point}, QSize, QSizeF, \l{QtQml::Qt::size()}{size} -> vec2
     \li QVector2D, \l{QtQml::Qt::vector2d()}{vector2d} -> vec3

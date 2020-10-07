@@ -243,27 +243,21 @@ static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNa
     return names;
 }
 
+// this is for DefaultMaterial only
 static void maybeAddMaterialFresnel(QSSGStageGeneratorBase &fragmentShader,
                                     const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                     QSSGDataView<quint32> inKey,
-                                    bool hasMetalness,
-                                    bool hasCustomFrag)
+                                    bool hasMetalness)
 {
-    if (hasCustomFrag || keyProps.m_fresnelEnabled.getValue(inKey)) {
+    if (keyProps.m_fresnelEnabled.getValue(inKey)) {
         fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
         fragmentShader << "    // Add fresnel ratio\n";
-        if (hasCustomFrag) {
-            // just use the metallic version, the results are identical to qt_defaultMaterialSimpleFresnelNoMetalness when metalnessAmount is 0
+        if (hasMetalness) { // this won't be hit in practice since DefaultMaterial does not offer metalness as a property
             fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnel(qt_specularBase, qt_metalnessAmount, qt_world_normal, qt_view_vector, "
-                              "qt_dielectricSpecular(qt_customIOR), qt_customFresnelPower);\n";
+                              "qt_dielectricSpecular(qt_material_specular.w), qt_material_properties2.x);\n";
         } else {
-            if (hasMetalness) {
-                fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnel(qt_specularBase, qt_metalnessAmount, qt_world_normal, qt_view_vector, "
-                                  "qt_dielectricSpecular(qt_material_specular.w), qt_material_properties2.x);\n";
-            } else {
-                fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnelNoMetalness(qt_world_normal, qt_view_vector, "
-                                  "qt_dielectricSpecular(qt_material_specular.w), qt_material_properties2.x);\n";
-            }
+            fragmentShader << "    qt_specularAmount *= qt_defaultMaterialSimpleFresnelNoMetalness(qt_world_normal, qt_view_vector, "
+                              "qt_dielectricSpecular(qt_material_specular.w), qt_material_properties2.x);\n";
         }
     }
 }
@@ -420,7 +414,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                                  shaderLibraryManager);
     };
 
-    bool metalnessEnabled = materialAdapter->isMetalnessEnabled();
+    bool metalnessEnabled = materialAdapter->isMetalnessEnabled(); // always true for Custom, true if > 0 with Principled
     bool vertexColorsEnabled = materialAdapter->isVertexColorsEnabled();
 
     bool hasLighting = materialAdapter->hasLighting();
@@ -428,7 +422,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool hasImage = firstImage != nullptr;
 
     bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
-    bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe;
+    bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe; // always true for Custom, depends for others
     bool hasEmissiveMap = false;
     bool hasLightmaps = false;
     // Pull the bump out as
@@ -890,9 +884,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 // We actually need to do this here because we won't know the final metalness value until this point.
                 fragmentShader << "    qt_specularTint = mix(vec3(1.0), qt_specularTint, 1.0 - qt_metalnessAmount);\n";
             } else {
+                Q_ASSERT(!hasCustomFrag);
                 fragmentShader.addInclude("defaultMaterialFresnel.glsllib");
                 fragmentShader << "    qt_diffuseColor.rgb *= (1.0 - qt_dielectricSpecular(qt_material_specular.w)) * (1.0 - qt_metalnessAmount);\n";
-                maybeAddMaterialFresnel(fragmentShader, keyProps, inKey, metalnessEnabled, hasCustomFrag);
+                maybeAddMaterialFresnel(fragmentShader, keyProps, inKey, metalnessEnabled);
             }
         }
 
@@ -946,11 +941,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else {
                     if (specularLightingEnabled) {
                         if (materialAdapter->isPrincipled()) {
-                            // Principaled materials always use GGX SpecularModel
+                            // Principled materials (and Custom without a specular processor function) always use GGX SpecularModel
                             fragmentShader.addFunction("specularGGXBSDF");
                             fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularTint"
                                               " * qt_specularGGXBSDF(qt_world_normal, -" << lightVarNames.lightDirection << ".xyz, qt_view_vector, "
-                                           << lightVarNames.lightSpecularColor << ".rgb, qt_material_properties.x, qt_roughnessAmount, qt_metalnessAmount, qt_diffuseColor.rgb).rgb;\n";
+                                           << lightVarNames.lightSpecularColor << ".rgb, qt_specularFactor, qt_roughnessAmount, qt_metalnessAmount, qt_diffuseColor.rgb).rgb;\n";
                         } else {
                             outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.lightDirection, lightVarNames.lightSpecularColor);
                         }
@@ -1039,11 +1034,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 } else {
                     if (specularLightingEnabled) {
                         if (materialAdapter->isPrincipled()) {
-                            // Principaled materials always use GGX SpecularModel
+                            // Principled materials (and Custom without a specular processor function) always use GGX SpecularModel
                             fragmentShader.addFunction("specularGGXBSDF");
                             fragmentShader << "    global_specular_light.rgb += qt_lightAttenuation * qt_shadow_map_occl * qt_specularTint"
                                               " * qt_specularGGXBSDF(qt_world_normal, -" << lightVarNames.normalizedDirection << ".xyz, qt_view_vector, "
-                                           << lightVarNames.lightSpecularColor << ".rgb, qt_material_properties.x, qt_roughnessAmount, qt_metalnessAmount, qt_diffuseColor.rgb).rgb;\n";
+                                           << lightVarNames.lightSpecularColor << ".rgb, qt_specularFactor, qt_roughnessAmount, qt_metalnessAmount, qt_diffuseColor.rgb).rgb;\n";
                         } else {
                             outputSpecularEquation(materialAdapter->specularModel(), fragmentShader, lightVarNames.normalizedDirection, lightVarNames.lightSpecularColor);
                         }
