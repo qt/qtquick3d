@@ -1364,7 +1364,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
-        float brightness = (inLights[lightIdx].enabled) ? theLight->m_brightness : 0.0f;
+        // For all disabled lights, the shader code will be generated as the same as enabled.
+        // but the light color will be zero, and shadows will not be affected
+        const bool lightEnabled = inLights[lightIdx].enabled;
+        const float brightness = lightEnabled ? theLight->m_brightness : 0.0f;
         lightColor[lightIdx][0] = theLight->m_diffuseColor.x() * brightness;
         lightColor[lightIdx][1] = theLight->m_diffuseColor.y() * brightness;
         lightColor[lightIdx][2] = theLight->m_diffuseColor.z() * brightness;
@@ -1381,11 +1384,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         lightData.direction[2] = lightDirection.z();
         lightData.direction[3] = 1.0f;
 
-        // For all disabled lights, the shader code will be generated as the same as enabled.
-        // but the light color will be zero, and shadows will not be affected
-        if (!inLights[lightIdx].enabled)
-            continue;
-
         // When it comes to receivesShadows, it is a bit tricky: to stay
         // compatible with the old, direct OpenGL rendering path (and the
         // generated shader code), we will need to ensure the texture
@@ -1395,7 +1393,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (theLight->m_castShadow && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
+        if (lightEnabled && theLight->m_castShadow && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
             ++shadowMapIdx;
 
@@ -1462,7 +1460,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                         = qCos(qDegreesToRadians(innerConeAngle));
             }
         }
-        theLightAmbientTotal += theLight->m_ambientColor;
+
+        if (lightEnabled)
+            theLightAmbientTotal += theLight->m_ambientColor;
     }
 
     shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
