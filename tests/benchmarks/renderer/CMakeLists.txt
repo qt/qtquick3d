@@ -1,0 +1,13 @@
+# Generated from renderer.pro.
+
+#####################################################################
+## renderer Test:
+#####################################################################
+
+qt_add_test(renderer
+    SOURCES
+        tst_renderer.cpp
+    PUBLIC_LIBRARIES
+        Qt::Quick3DPrivate
+        Qt::Quick3DRuntimeRenderPrivate
+)
