@@ -26,9 +26,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick
-import HelperWidgets
-import QtQuick.Layouts
+import QtQuick 2.15
+import HelperWidgets 2.0
+import QtQuick.Layouts 1.12
 
 Column {
     width: parent.width
