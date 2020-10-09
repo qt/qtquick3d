@@ -10,8 +10,6 @@ SOURCES += \
 DISTFILES += \
     qmldir
 
-!static: qtConfig(quick-designer): include(designer/designer.pri)
-
 load(qml_plugin)
 
 QMLTYPES_FILENAME = plugins.qmltypes
