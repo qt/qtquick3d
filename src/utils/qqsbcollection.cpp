@@ -160,13 +160,13 @@ void QQsbCollection::dumpQsbcInfoImp(QQsbCollection &qsbc)
 {
     if (qsbc.map(QQsbCollection::Read)) {
         const auto entries = qsbc.getEntries();
-        qDebug("Number of entries in collection: %llu\n", entries.size());
+        qDebug("Number of entries in collection: %zu\n", size_t(entries.size()));
         int i = 0;
         qDebug("Qsbc version: %uc", qsbc.version);
         for (const auto &e : qAsConst(entries)) {
             qDebug("%s\n"
                    "Entry %d\n%s\n"
-                   "Key: %lu\n"
+                   "Key: %zu\n"
                    "Offset: %llu", borderText(), i++, borderText(), e.hkey, e.offset);
 
             QByteArray descr;
