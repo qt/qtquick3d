@@ -44,18 +44,21 @@
 
 #include "parser.h"
 
+constexpr int DEAFULT_SEARCH_DEPTH = 0x10;
+
 static int generateShaders(QVector<QString> &qsbcFiles,
-                           const QVector<QStringView> &filePaths,
+                           const QVector<QString> &filePaths,
                            const QDir &sourceDir,
                            const QDir &outDir,
                            bool multilight,
-                           bool verboseOutput)
+                           bool verboseOutput,
+                           bool dryRun)
 {
     MaterialParser::SceneData sceneData;
     if (MaterialParser::parseQmlFiles(filePaths, sourceDir, sceneData, verboseOutput) == 0) {
         if (sceneData.hasData()) {
             GenShaders genShaders(sourceDir.canonicalPath());
-            if (!genShaders.process(sceneData, qsbcFiles, outDir, multilight))
+            if (!genShaders.process(sceneData, qsbcFiles, outDir, multilight, dryRun))
                 return -1;
         }
     }
@@ -90,24 +93,53 @@ static int writeResourceFile(const QString &resourceFile,
     return 0;
 }
 
+struct SearchDepthGuard
+{
+    explicit SearchDepthGuard(int m) : max(m) {}
+    int value = 0;
+    const int max = DEAFULT_SEARCH_DEPTH;
+};
+
+static void collectQmlFiles(const QList<QString> &pathArgs, QSet<QString> &filePaths, SearchDepthGuard &depth)
+{
+    QFileInfo fi;
+    QDir dir;
+    for (const auto &arg : pathArgs) {
+        fi.setFile(arg);
+        if (fi.isFile()) {
+             if (fi.suffix() == QLatin1String("qml"))
+                 filePaths.insert(fi.canonicalFilePath());
+        } else if (fi.isDir() && depth.value <= depth.max) {
+            dir.setPath(fi.filePath());
+            const auto entries = dir.entryList(QDir::Filter::Dirs | QDir::Filter::Files | QDir::Filter::NoDotAndDotDot);
+            const QString currentPath = QDir::currentPath();
+            QDir::setCurrent(dir.path());
+            ++depth.value;
+            collectQmlFiles(entries, filePaths, depth);
+            --depth.value;
+            QDir::setCurrent(currentPath);
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
     QCommandLineParser cmdLineparser;
     // File options
-    QCommandLineOption fileInputOption({QChar(u'f'), QLatin1String("files")},
-                                       QLatin1String("QML file(s) to be parsed. Multiple files needs to be inside quotation marks."),
-                                       QLatin1String("file"));
-    cmdLineparser.addOption(fileInputOption);
+    QCommandLineOption changeDirOption({QChar(u'C'), QLatin1String("directory")},
+                                       QLatin1String("Change the working directory"),
+                                       QLatin1String("dir"));
+    cmdLineparser.addOption(changeDirOption);
 
     // Debug options
     QCommandLineOption verboseOutputOption({QChar(u'v'), QLatin1String("verbose")}, QLatin1String("Turn on verbose output."));
     cmdLineparser.addOption(verboseOutputOption);
 
     // Generator options
-    QCommandLineOption generateShadersOption({QChar(u'g'), QLatin1String("generate")}, QLatin1String("Generate shaders."));
-    cmdLineparser.addOption(generateShadersOption);
+    QCommandLineOption dryRunOption({QChar(u'n'), QLatin1String("dry-run")}, QLatin1String("Runs as normal, but no files are created."));
+    cmdLineparser.addOption(dryRunOption);
 
     QCommandLineOption outputDirOption({QChar(u'o'), QLatin1String("output-dir")}, QLatin1String("Output directory for generated files."), QLatin1String("file"));
     cmdLineparser.addOption(outputDirOption);
@@ -115,28 +147,50 @@ int main(int argc, char *argv[])
     QCommandLineOption resourceFileOption({QChar(u'r'), QLatin1String("resource-file")}, QLatin1String("Name of generated resource file."), QLatin1String("file"));
     cmdLineparser.addOption(resourceFileOption);
 
-    QCommandLineOption sourceDirOption({QChar(u's'), QLatin1String("source-dir")}, QLatin1String("Source directory."), QLatin1String("dir"));
-    cmdLineparser.addOption(sourceDirOption);
-
-    QCommandLineOption dumpQsbcFileOption({QChar(u'd'), QLatin1String("dump-qsbc")}, QLatin1String("Dump qsbc file content."));
+    QCommandLineOption dumpQsbcFileOption({QChar(u'l'), QLatin1String("list-qsbc")}, QLatin1String("Lists qsbc file content."));
     cmdLineparser.addOption(dumpQsbcFileOption);
 
     QCommandLineOption extractQsbFileOption({QChar(u'e'), QLatin1String("extract-qsb")}, QLatin1String("Extract qsb from collection."), QLatin1String("key:[desc|vert|frag]"));
     cmdLineparser.addOption(extractQsbFileOption);
 
+    QCommandLineOption dirDepthOption(QLatin1String("depth"), QLatin1String("Override default max depth (16) value when traversing the filesystem."), QLatin1String("10"));
+    cmdLineparser.addOption(dirDepthOption);
+
     cmdLineparser.process(a);
 
-    const bool isFilePathSet = cmdLineparser.isSet(fileInputOption);
-    if (!isFilePathSet) {
-        qWarning("No input file(s) provided!");
+    if (cmdLineparser.isSet(changeDirOption))
+        QDir::setCurrent(cmdLineparser.value(changeDirOption));
+
+    QSet<QString> filePaths;
+    auto args = cmdLineparser.positionalArguments();
+
+    const bool collectQmlFilesMode = !(cmdLineparser.isSet(dumpQsbcFileOption) || cmdLineparser.isSet(extractQsbFileOption));
+    if (collectQmlFilesMode) {
+        if (args.isEmpty())
+            args.push_back(QDir::currentPath());
+
+        int searchDepth = DEAFULT_SEARCH_DEPTH;
+        if (cmdLineparser.isSet(dirDepthOption)) {
+            bool ok = false;
+            const int v = cmdLineparser.value(dirDepthOption).toInt(&ok);
+            if (ok)
+                searchDepth = v;
+        }
+
+        SearchDepthGuard depth(searchDepth);
+        collectQmlFiles(args, filePaths, depth);
+    } else if (!args.isEmpty()) {
+        filePaths.insert(args.first());
+    }
+
+    if (filePaths.isEmpty()) {
+        qWarning("No input file(s) found!");
         a.exit(-1);
         return -1;
     }
 
-    const QString &outputPath = cmdLineparser.value(outputDirOption);
-
     if (cmdLineparser.isSet(dumpQsbcFileOption)) {
-        const auto f = cmdLineparser.value(fileInputOption);
+        const auto &f = *filePaths.cbegin();
         if (!f.isEmpty()) {
             QQsbCollection::dumpQsbcInfo(f);
             a.exit(0);
@@ -150,7 +204,7 @@ int main(int argc, char *argv[])
     };
 
     if (cmdLineparser.isSet(extractQsbFileOption)) {
-        const auto f = cmdLineparser.value(fileInputOption);
+        const auto &f = *filePaths.cbegin();
         const auto k = cmdLineparser.value(extractQsbFileOption);
         const auto kl = QStringView(k).split(u':');
 
@@ -208,17 +262,11 @@ int main(int argc, char *argv[])
     if (resourceFile.isEmpty())
         resourceFile = QStringLiteral("genshaders.qrc");
 
-    // Best effort, this should be improved
-    QString sourceDirValue = cmdLineparser.value(sourceDirOption);
-    QDir sourceDir(sourceDirValue);
-    if (!sourceDir.exists(sourceDirValue)) {
-        qWarning("No source directory provided!");
-        a.exit(-1);
-        return -1;
-    }
-
+    const bool dryRun = cmdLineparser.isSet(dryRunOption);
+    const QString &outputPath = cmdLineparser.isSet(outputDirOption) ? cmdLineparser.value(outputDirOption) : QDir::currentPath();
     QDir outDir;
-    if (!outputPath.isEmpty()) {
+    if (!outputPath.isEmpty() && !dryRun) {
+        outDir.setPath(outputPath);
         if (outDir.exists(outputPath) || (!outDir.exists(outputPath) && outDir.mkpath(outputPath))) {
             outDir.setPath(outputPath);
             qDebug("Writing files to %s", qPrintable(outDir.canonicalPath()));
@@ -228,26 +276,16 @@ int main(int argc, char *argv[])
         }
     }
 
-    const QString fileInputValue = cmdLineparser.value(fileInputOption);
     const bool verboseOutput = cmdLineparser.isSet(verboseOutputOption);
-    const bool genShaders = cmdLineparser.isSet(generateShadersOption);
     const bool multilight = false;
 
     QVector<QString> qsbcFiles;
 
-    const auto &filePaths = QStringView(fileInputValue).split(u' ');
     int ret = 0;
-    if (fileInputValue.size()) {
-        if (genShaders) {
-            ret = generateShaders(qsbcFiles, filePaths, sourceDir, outDir, multilight, verboseOutput);
-        } else {
-            MaterialParser::SceneData sceneData;
-            ret = MaterialParser::parseQmlFiles(filePaths, sourceDir, sceneData, verboseOutput);
-            (void)sceneData;
-        }
-    }
+    if (filePaths.size())
+        ret = generateShaders(qsbcFiles, filePaths.values(), QDir::currentPath(), outDir, multilight, verboseOutput, dryRun);
 
-    if (ret == 0)
+    if (ret == 0 && !dryRun)
         writeResourceFile(resourceFile, qsbcFiles, outDir);
 
     a.exit(ret);

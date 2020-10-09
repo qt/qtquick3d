@@ -44,11 +44,10 @@ function(qt6_quick3d_build_shaders target resource_name)
         ${QT_TOOL_PATH_SETUP_COMMAND}
         COMMAND
             ${QT_CMAKE_EXPORT_NAMESPACE}::shadergen
-            -g
+            -C "${PROJECT_SOURCE_DIR}"
             -o "${output_dir}"
             -r "${output_qrc}"
-            -s "${PROJECT_SOURCE_DIR}"
-            -f \"${arg_FILES}\"
+            \""${arg_FILES}"\"
         DEPENDS
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::shadergen>
     )

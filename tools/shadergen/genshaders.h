@@ -51,7 +51,7 @@ struct GenShaders
     explicit GenShaders(const QString &sourceDir);
     ~GenShaders();
     bool process(const MaterialParser::SceneData &sceneData, QVector<QString> &qsbcFiles, const QDir &outDir,
-                 bool generateMultipleLights);
+                 bool generateMultipleLights, bool dryRun);
 
     QRhi *rhi = nullptr;
     QSSGRef<QSSGRenderContextInterface> renderContext;

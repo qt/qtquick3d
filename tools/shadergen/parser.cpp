@@ -1420,7 +1420,7 @@ int MaterialParser::parseQmlData(const QByteArray &code, const QString &fileName
     return ret;
 }
 
-int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
+int MaterialParser::parseQmlFiles(const QVector<QString> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
 {
     int ret = 0;
 
@@ -1451,10 +1451,10 @@ int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const Q
     // Go through and find the material components first
     for (const auto &v : filePaths) {
         QFileInfo &currentFileInfo = ctx.currentFileInfo;
-        if (!QFileInfo(v.toString()).isAbsolute())
-            currentFileInfo.setFile(sourcePath + v.toString());
+        if (!QFileInfo(v).isAbsolute())
+            currentFileInfo.setFile(sourcePath + v);
         else
-            currentFileInfo.setFile(v.toString());
+            currentFileInfo.setFile(v);
         const bool maybeComponent = currentFileInfo.fileName().at(0).isUpper();
         if (currentFileInfo.isFile() && currentFileInfo.suffix() == getQmlFileExtension()) {
             const QString filePath = currentFileInfo.canonicalFilePath();
@@ -1491,7 +1491,7 @@ int MaterialParser::parseQmlFiles(const QVector<QStringView> &filePaths, const Q
                 deferredOther.push_back(filePath);
             }
         } else {
-            qWarning("The file %s is either not a file or has the wrong extension!", qPrintable(v.toString()));
+            qWarning("The file %s is either not a file or has the wrong extension!", qPrintable(v));
         }
     }
 

@@ -115,7 +115,7 @@ struct SceneData
 };
 
 int parseQmlData(const QByteArray &code, const QString &fileName, SceneData &sceneData);
-int parseQmlFiles(const QVector<QStringView> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
+int parseQmlFiles(const QVector<QString> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
 
 }
 

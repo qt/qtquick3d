@@ -107,12 +107,13 @@ GenShaders::~GenShaders() = default;
 bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                          QVector<QString> &qsbcFiles,
                          const QDir &outDir,
-                         bool generateMultipleLights)
+                         bool generateMultipleLights,
+                         bool dryRun)
 {
     Q_UNUSED(generateMultipleLights);
 
     const QString resourceFolderRelative = QSSGShaderCache::resourceFolder().mid(2);
-    if (!outDir.exists(resourceFolderRelative)) {
+    if (!dryRun && !outDir.exists(resourceFolderRelative)) {
         if (!outDir.mkpath(resourceFolderRelative)) {
             qDebug("Unable to create folder: %s", qPrintable(outDir.path() + QDir::separator() + resourceFolderRelative));
             return false;
@@ -202,7 +203,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
     const QString outCollectionFile = outputFolder + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile());
     QQsbCollection qsbc(outCollectionFile);
-    if (!qsbc.map(QQsbCollection::Write))
+    if (!qsbc.map(dryRun ? QQsbCollection::Read : QQsbCollection::Write))
         return false;
 
     QByteArray shaderString;
