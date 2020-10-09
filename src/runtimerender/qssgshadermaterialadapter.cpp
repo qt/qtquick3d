@@ -77,7 +77,8 @@ bool QSSGShaderMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::ShaderT
     return false;
 }
 
-void QSSGShaderMaterialAdapter::setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderPipeline> &,
+void QSSGShaderMaterialAdapter::setCustomPropertyUniforms(char *,
+                                                          QSSGRef<QSSGRhiShaderPipeline> &,
                                                           const QSSGRenderContextInterface &)
 {
 }
@@ -372,10 +373,11 @@ bool QSSGShaderCustomMaterialAdapter::hasCustomShaderFunction(QSSGShaderCache::S
     return false;
 }
 
-void QSSGShaderCustomMaterialAdapter::setCustomPropertyUniforms(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void QSSGShaderCustomMaterialAdapter::setCustomPropertyUniforms(char *ubufData,
+                                                                QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                                                 const QSSGRenderContextInterface &context)
 {
-    context.customMaterialSystem()->applyRhiShaderPropertyValues(m_material, shaderPipeline);
+    context.customMaterialSystem()->applyRhiShaderPropertyValues(ubufData, m_material, shaderPipeline);
 }
 
 namespace {

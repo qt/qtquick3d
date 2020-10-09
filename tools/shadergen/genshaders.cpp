@@ -237,15 +237,10 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 const auto &rhiContext = renderContext->rhiContext();
                 const auto pipelineState = rhiContext->graphicsPipelineState(&layerData);
                 const auto &cms = renderContext->customMaterialSystem();
-                auto shaderPipeline = cms->shadersForCustomMaterial(rhiContext.data(),
-                                                                    pipelineState,
+                auto shaderPipeline = cms->shadersForCustomMaterial(pipelineState,
                                                                     cmr.material,
                                                                     cmr,
-                                                                    features,
-                                                                    layerData,
-                                                                    *layerData.camera,
-                                                                    nullptr,
-                                                                    nullptr);
+                                                                    features);
 
                 if (shaderPipeline) {
                     shaderString = cmr.material.m_shaderPathKey;

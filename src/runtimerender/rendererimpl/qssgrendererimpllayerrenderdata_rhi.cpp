@@ -93,43 +93,50 @@ void QSSGLayerRenderData::resetForFrame()
     QSSGLayerRenderPreparationData::resetForFrame();
 }
 
-static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiContext *rhiCtx,
-                                                                QSSGRhiGraphicsPipelineState *ps,
+static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                                 QSSGSubsetRenderable &subsetRenderable,
-                                                                const ShaderFeatureSetList &featureSet,
-                                                                QSSGRenderCamera &camera,
-                                                                const QVector2D *depthAdjust,
-                                                                const QMatrix4x4 *alteredModelViewProjection)
+                                                                const ShaderFeatureSetList &featureSet)
 {
     const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiShaders(subsetRenderable, featureSet);
-    if (shaderPipeline) {
+    if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.data();
-
-        const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
-        const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
-                                                         : subsetRenderable.modelContext.modelViewProjection);
-        QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
-                                                              shaderPipeline,
-                                                              ps,
-                                                              subsetRenderable.material,
-                                                              subsetRenderable.shaderDescription,
-                                                              generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties(),
-                                                              camera,
-                                                              mvp,
-                                                              subsetRenderable.modelContext.normalMatrix,
-                                                              subsetRenderable.modelContext.model.globalTransform,
-                                                              clipSpaceCorrMatrix,
-                                                              subsetRenderable.boneGlobals,
-                                                              subsetRenderable.boneNormals,
-                                                              subsetRenderable.firstImage,
-                                                              subsetRenderable.opacity,
-                                                              generator->getLayerGlobalRenderProperties(),
-                                                              subsetRenderable.lights,
-                                                              subsetRenderable.renderableFlags.receivesShadows(),
-                                                              depthAdjust);
-    }
     return shaderPipeline;
+}
+
+static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                             QSSGRhiContext *rhiCtx,
+                                             char *ubufData,
+                                             QSSGRhiGraphicsPipelineState *ps,
+                                             QSSGSubsetRenderable &subsetRenderable,
+                                             QSSGRenderCamera &camera,
+                                             const QVector2D *depthAdjust,
+                                             const QMatrix4x4 *alteredModelViewProjection)
+{
+    const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
+    const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
+    const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
+                                                     : subsetRenderable.modelContext.modelViewProjection);
+    QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
+                                                          shaderPipeline,
+                                                          ubufData,
+                                                          ps,
+                                                          subsetRenderable.material,
+                                                          subsetRenderable.shaderDescription,
+                                                          generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties(),
+                                                          camera,
+                                                          mvp,
+                                                          subsetRenderable.modelContext.normalMatrix,
+                                                          subsetRenderable.modelContext.model.globalTransform,
+                                                          clipSpaceCorrMatrix,
+                                                          subsetRenderable.boneGlobals,
+                                                          subsetRenderable.boneNormals,
+                                                          subsetRenderable.firstImage,
+                                                          subsetRenderable.opacity,
+                                                          generator->getLayerGlobalRenderProperties(),
+                                                          subsetRenderable.lights,
+                                                          subsetRenderable.renderableFlags.receivesShadows(),
+                                                          depthAdjust);
 }
 
 static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSGRenderDefaultMaterial::MaterialBlendMode materialBlend)
@@ -192,8 +199,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
                                  QRhiRenderPassDescriptor *renderPassDescriptor,
-                                 int samples,
-                                 QRhiResourceUpdateBatch *resourceUpdates)
+                                 int samples)
 {
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
 
@@ -201,22 +207,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
         const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
 
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(rhiCtx,
-                                                                                  ps,
-                                                                                  subsetRenderable,
-                                                                                  featureSet,
-                                                                                  *inData.camera,
-                                                                                  nullptr,
-                                                                                  nullptr);
+        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
         if (shaderPipeline) {
-            ps->samples = samples;
-
-            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
-            fillTargetBlend(&ps->targetBlend, subsetRenderable.material.blendMode);
-
-            ps->ia = subsetRenderable.subset.rhi.ia;
-            ps->ia.bakeVertexInputLocations(*shaderPipeline);
-
             // Unlike the subsetRenderable (which is allocated per frame so is
             // not persistent in any way), the model reference is persistent in
             // the sense that it references the model node in the scene graph.
@@ -229,23 +221,27 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, modelNode,
                                                             &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
-            int lightDataOffset = 0;
-            int lightDataSize = 0;
-            bool updateLights = false;
-            if (shaderPipeline->isLightingEnabled()) {
-                if (dcd.prevLightsUniformData != shaderPipeline->lightsUniformData()) {
-                    dcd.prevLightsUniformData = shaderPipeline->lightsUniformData();
-                    updateLights = true;
-                }
-            }
-            shaderPipeline->bakeCombinedMainLightsUniformBuffer(&dcd.ubuf, resourceUpdates,
-                                                                updateLights, &lightDataOffset, &lightDataSize);
+
+            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
+            char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
+            dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+            ps->samples = samples;
+
+            ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
+            fillTargetBlend(&ps->targetBlend, subsetRenderable.material.blendMode);
+
+            ps->ia = subsetRenderable.subset.rhi.ia;
+            ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
             QSSGRhiContext::ShaderResourceBindingList bindings;
             bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size()));
 
             if (shaderPipeline->isLightingEnabled())
-                bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, dcd.ubuf, lightDataOffset, lightDataSize));
+                bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, dcd.ubuf,
+                                                                         shaderPipeline->ub0LightDataOffset(),
+                                                                         shaderPipeline->ub0LightDataSize()));
 
             // Texture maps
             QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
@@ -374,27 +370,45 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
     ShaderFeatureSetList featureSet;
     featureSet.append({ QSSGShaderDefines::DepthPass, true });
 
+    QSSGRhiDrawCallData *dcd = nullptr;
+    if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
+        QSSGSubsetRenderableBase &subsetRenderable(static_cast<QSSGSubsetRenderableBase &>(*obj));
+        const void *layerNode = &layerData.layer;
+        const void *modelNode = &subsetRenderable.modelContext.model;
+        dcd = &rhiCtx->drawCallData({ layerNode, modelNode, material, 0, ubufSel });
+    }
+
     if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
 
-        shaderPipeline = shadersForDefaultMaterial(rhiCtx, ps, subsetRenderable, featureSet, *layerData.camera, nullptr, nullptr);
-        if (shaderPipeline)
+        shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
+        if (shaderPipeline) {
+            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+            char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *layerData.camera, nullptr, nullptr);
+            dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             material = &subsetRenderable.material;
-        else
+        } else {
             return false;
+        }
     } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(*obj));
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(renderable.material.m_cullMode);
 
         QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
-        shaderPipeline = customMaterialSystem.shadersForCustomMaterial(rhiCtx, ps, renderable.material, renderable, featureSet,
-                                                                       layerData, *layerData.camera, nullptr, nullptr);
+        shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, renderable.material, renderable, featureSet);
 
-        if (shaderPipeline)
+        if (shaderPipeline) {
+            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+            char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+            customMaterialSystem.updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, renderable.material, renderable,
+                                                                 layerData, *layerData.camera, nullptr, nullptr);
+            dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             material = &renderable.material;
-        else
+        } else {
             return false;
+        }
     }
 
     // the rest is common, only relying on QSSGSubsetRenderableBase, not the subclasses
@@ -404,15 +418,8 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         ps->ia = subsetRenderable.subset.rhi.ia;
         ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
-        const void *layerNode = &layerData.layer;
-        const void *modelNode = &subsetRenderable.modelContext.model;
-
-        QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, modelNode, material, 0, ubufSel }));
-        shaderPipeline->bakeMainUniformBuffer(&dcd.ubuf, rub);
-        QRhiBuffer *ubuf = dcd.ubuf;
-
         QSSGRhiContext::ShaderResourceBindingList bindings;
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd->ubuf));
 
         // Depth and SSAO textures, in case a custom material's shader code does something with them.
         addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
@@ -806,25 +813,39 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             modelViewProjection = pEntry->m_lightVP * renderable->globalTransform;
         }
 
+        QSSGRhiDrawCallData *dcd = nullptr;
+        if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
+            QSSGSubsetRenderableBase *renderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
+            dcd = &rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
+                                          pEntry, cubeFace, QSSGRhiDrawCallDataKey::Shadow });
+        }
+
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset()) {
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*theObject));
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.material.cullMode);
 
-            shaderPipeline = shadersForDefaultMaterial(rhiCtx, ps, subsetRenderable, featureSet, inCamera, depthAdjust, &modelViewProjection);
+            shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
             if (!shaderPipeline)
                 continue;
+            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+            char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
+            dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
         } else if (theObject->renderableFlags.isCustomMaterialMeshSubset()) {
             QSSGCustomMaterialRenderable &renderable(static_cast<QSSGCustomMaterialRenderable &>(*theObject));
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(renderable.material.m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
-            // inCamera is the shadow camera, not the same as inData.camera
-            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(rhiCtx, ps, renderable.material, renderable, featureSet,
-                                                                           inData, inCamera, depthAdjust, &modelViewProjection);
-
+            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, renderable.material, renderable, featureSet);
             if (!shaderPipeline)
                 continue;
+            shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
+            char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+            // inCamera is the shadow camera, not the same as inData.camera
+            customMaterialSystem.updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, renderable.material, renderable,
+                                                                 inData, inCamera, depthAdjust, &modelViewProjection);
+            dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
         }
 
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
@@ -834,13 +855,8 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             ps->ia = renderable->subset.rhi.ia;
             ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
-            QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
-                                                            pEntry, cubeFace, QSSGRhiDrawCallDataKey::Shadow }));
-            shaderPipeline->bakeMainUniformBuffer(&dcd.ubuf, rub);
-            QRhiBuffer *ubuf = dcd.ubuf;
-
             QSSGRhiContext::ShaderResourceBindingList bindings;
-            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, ubuf));
+            bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd->ubuf));
 
             // Depth and SSAO textures, in case a custom material's shader code does something with them.
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), &bindings);
@@ -1528,12 +1544,11 @@ void QSSGLayerRenderData::rhiPrepare()
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
             if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), wantsMips, &m_rhiScreenTexture)) {
                 Q_ASSERT(m_rhiScreenTexture.isValid());
-                QRhiResourceUpdateBatch *updatesFromPrep = rhiCtx->rhi()->nextResourceUpdateBatch();
                 // NB: not compatible with disabling LayerEnableDepthTest
                 // because there are effectively no "opaque" objects then.
                 for (const auto &handle : sortedOpaqueObjects)
-                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1, updatesFromPrep);
-                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, updatesFromPrep, QSSGRhiContext::commonPassFlags());
+                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
+                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);
@@ -1557,12 +1572,10 @@ void QSSGLayerRenderData::rhiPrepare()
         QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
         const int samples = rhiCtx->mainPassSampleCount();
 
-        QRhiResourceUpdateBatch *updatesFromPrep = rhiCtx->rhi()->nextResourceUpdateBatch();
-
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples, updatesFromPrep);
+            rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
 
         for (const auto &item: item2Ds) {
@@ -1590,10 +1603,8 @@ void QSSGLayerRenderData::rhiPrepare()
         for (const auto &handle : sortedTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
             if (!(theObject->renderableFlags.isCompletelyTransparent()))
-                rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples, updatesFromPrep);
+                rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
-
-        cb->resourceUpdate(updatesFromPrep);
 
         cb->debugMarkEnd();
 

@@ -332,7 +332,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
     const bool setAll = inCmd->m_propertyName.isEmpty();
     for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties)) {
         if (setAll || property.name == inCmd->m_propertyName) {
-            m_currentShaderPipeline->setUniformValue(property.name, property.value, property.shaderDataType);
+            m_currentShaderPipeline->setUniformValue(m_currentUBufData, property.name, property.value, property.shaderDataType);
             //qCDebug(lcEffectSystem) << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
         }
     }
@@ -386,7 +386,7 @@ void QSSGRhiEffectSystem::applyValueCmd(const QSSGApplyValue *inCmd, const QSSGR
     });
 
     if (foundIt != properties.cend())
-        m_currentShaderPipeline->setUniformValue(inCmd->m_propertyName, inCmd->m_value, foundIt->shaderDataType);
+        m_currentShaderPipeline->setUniformValue(m_currentUBufData, inCmd->m_propertyName, inCmd->m_value, foundIt->shaderDataType);
     else
         qWarning() << "Could not find effect property" << inCmd->m_propertyName;
 }
@@ -416,6 +416,13 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     auto it = m_shaderPipelines.find(key);
     if (it != m_shaderPipelines.end()) {
         m_currentShaderPipeline = it.value().data();
+
+        const void *cacheKey1 = reinterpret_cast<const void *>(this);
+        const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
+        QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+        m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
+        m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+
         return;
     }
 
@@ -447,8 +454,15 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     if (stages) {
         m_shaderPipelines.insert(key, stages);
         m_currentShaderPipeline = m_shaderPipelines[key].data();
+
+        const void *cacheKey1 = reinterpret_cast<const void *>(this);
+        const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
+        QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+        m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
+        m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     } else {
         m_currentShaderPipeline = nullptr;
+        m_currentUBufData = nullptr;
     }
 }
 
@@ -484,12 +498,13 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     const QSize outputSize = target->texture->pixelSize();
     addCommonEffectUniforms(inputSize, outputSize);
 
-    // bake uniform buffer
-    QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    auto &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
-    m_currentShaderPipeline->bakeMainUniformBuffer(&dcd.ubuf, rub);
+    QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+    dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+    m_currentUBufData = nullptr;
+
+    QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
     m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), rub);
 
     // do resource bindings
@@ -527,27 +542,27 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
     QMatrix4x4 mvp;
     if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
         mvp.data()[5] = -1.0f;
-    m_currentShaderPipeline->setUniformValue("qt_modelViewProjection", mvp, QSSGRenderShaderDataType::Matrix4x4);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_modelViewProjection", mvp, QSSGRenderShaderDataType::Matrix4x4);
 
     QVector2D size(inputSize.width(), inputSize.height());
-    m_currentShaderPipeline->setUniformValue("qt_inputSize", size, QSSGRenderShaderDataType::Vec2);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_inputSize", size, QSSGRenderShaderDataType::Vec2);
 
     size = QVector2D(outputSize.width(), outputSize.height());
-    m_currentShaderPipeline->setUniformValue("qt_outputSize", size, QSSGRenderShaderDataType::Vec2);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_outputSize", size, QSSGRenderShaderDataType::Vec2);
 
     float fc = float(m_sgContext->frameCount());
-    m_currentShaderPipeline->setUniformValue("qt_frame_num", fc, QSSGRenderShaderDataType::Float);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_frame_num", fc, QSSGRenderShaderDataType::Float);
 
     // Bames and values for uniforms that are also used by default and/or
     // custom materials must always match, effects must not deviate.
 
-    m_currentShaderPipeline->setUniformValue("qt_cameraProperties", m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_cameraProperties", m_cameraClipRange, QSSGRenderShaderDataType::Vec2);
 
     float vp = rhi->isYUpInFramebuffer() ? 1.0f : -1.0f;
-    m_currentShaderPipeline->setUniformValue("qt_normalAdjustViewportFactor", vp, QSSGRenderShaderDataType::Float);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_normalAdjustViewportFactor", vp, QSSGRenderShaderDataType::Float);
 
     const float nearClip = rhi->isClipDepthZeroToOne() ? 0.0f : -1.0f;
-    m_currentShaderPipeline->setUniformValue("qt_nearClipValue", nearClip, QSSGRenderShaderDataType::Float);
+    m_currentShaderPipeline->setUniformValue(m_currentUBufData, "qt_nearClipValue", nearClip, QSSGRenderShaderDataType::Float);
 
     if (m_depthTexture) {
         static const QSSGRhiSamplerDescription depthSamplerDesc {

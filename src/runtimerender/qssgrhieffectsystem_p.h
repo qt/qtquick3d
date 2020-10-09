@@ -98,6 +98,7 @@ private:
     QSSGRenderer *m_renderer = nullptr;
     QHash<QByteArray, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;
+    char *m_currentUBufData = nullptr;
     QHash<QByteArray, QSSGRhiTexture> m_currentTextures;
     QSet<QRhiTextureRenderTarget *> m_pendingClears;
 };

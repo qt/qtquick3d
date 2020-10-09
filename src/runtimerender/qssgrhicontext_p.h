@@ -206,38 +206,7 @@ struct QSSGShaderLightsUniformData
     qint32 count = -1;
     float padding[3]; // first element must start at a vec4-aligned offset
     QSSGShaderLightData lightData[QSSG_MAX_NUM_LIGHTS];
-
-    inline QSSGShaderLightsUniformData &operator=(const QSSGShaderLightsUniformData &other) {
-        count = other.count;
-        for (int i = 0; i < count; ++i)
-            lightData[i] = other.lightData[i];
-        return *this;
-    }
 };
-
-inline bool operator==(const QSSGShaderLightsUniformData &a, const QSSGShaderLightsUniformData &b) Q_DECL_NOTHROW
-{
-    if (a.count != b.count)
-        return false;
-    bool ret = true;
-    for (int i = 0; i < a.count && ret; ++i) {
-        ret &= !memcmp(a.lightData[i].position, b.lightData[i].position, 4 * sizeof(float))
-                && !memcmp(a.lightData[i].direction, b.lightData[i].direction, 4 * sizeof(float))
-                && !memcmp(a.lightData[i].diffuse, b.lightData[i].diffuse, 4 * sizeof(float))
-                && !memcmp(a.lightData[i].specular, b.lightData[i].specular, 4 * sizeof(float))
-                && a.lightData[i].coneAngle == b.lightData[i].coneAngle
-                && a.lightData[i].innerConeAngle == b.lightData[i].innerConeAngle
-                && a.lightData[i].constantAttenuation == b.lightData[i].constantAttenuation
-                && a.lightData[i].linearAttenuation == b.lightData[i].linearAttenuation
-                && a.lightData[i].quadraticAttenuation == b.lightData[i].quadraticAttenuation;
-    }
-    return ret;
-}
-
-inline bool operator!=(const QSSGShaderLightsUniformData &a, const QSSGShaderLightsUniformData &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
-}
 
 // Default materials work with a regular combined image sampler for each shadowmap.
 struct QSSGRhiShadowMapProperties
@@ -286,6 +255,12 @@ public:
     }
 
     int ub0Size() const { return m_ub0Size; }
+    int ub0LightDataOffset() const { return m_ub0NextUBufOffset; }
+    int ub0LightDataSize() const
+    {
+        return int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
+    }
+
     const QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> &vertexInputs() const { return m_vertexInputs; }
 
     // This struct is used purely for performance. It is used to quickly store
@@ -331,9 +306,9 @@ public:
     };
     Q_DECLARE_FLAGS(UniformFlags, UniformFlag)
 
-    void setUniformValue(const char *name, const QVariant &value, QSSGRenderShaderDataType type);
-    void setUniform(const char *name, const void *data, size_t size, int *storeIndex = nullptr, UniformFlags flags = {});
-    void setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex = nullptr);
+    void setUniformValue(char *ubufData, const char *name, const QVariant &value, QSSGRenderShaderDataType type);
+    void setUniform(char *ubufData, const char *name, const void *data, size_t size, int *storeIndex = nullptr, UniformFlags flags = {});
+    void setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex = nullptr);
     int bindingForTexture(const char *name, int hint = -1);
 
     void setLightsEnabled(bool enable) { m_lightsEnabled = enable; }
@@ -345,9 +320,7 @@ public:
     const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
-    void bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates,
-                                             bool updateLights, int *lightDataOffset, int *lightDataSize);
-    void bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates);
+    void ensureCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf);
 
     void setLightProbeTexture(QRhiTexture *texture,
                               QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge,
@@ -390,7 +363,6 @@ private:
     QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
     QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;
     QHash<QByteArray, size_t> m_uniformIndex; // Maps uniform name to index in m_uniforms and m_uniformArrays
-    QVarLengthArray<char, 512> m_mainUniformBufferData;
 
     // transient (per-object) data; pointers are all non-owning
     bool m_lightsEnabled = false;
@@ -578,7 +550,6 @@ struct QSSGRhiDrawCallData
     QRhiGraphicsPipeline *pipeline = nullptr; // not owned
     QRhiRenderPassDescriptor *pipelineRpDesc = nullptr; // not owned
     QSSGRhiGraphicsPipelineState ps;
-    QSSGShaderLightsUniformData prevLightsUniformData;
 
     void reset() {
         delete ubuf;

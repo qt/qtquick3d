@@ -178,7 +178,6 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
             if (blk.binding == 0) {
                 m_ub0Size = blk.size;
                 m_ub0NextUBufOffset = m_context.rhi()->ubufAligned(m_ub0Size);
-                m_mainUniformBufferData.resize(m_ub0Size);
                 for (const QShaderDescription::BlockVariable &var : blk.members)
                     m_ub0[var.name] = var;
                 break;
@@ -221,178 +220,174 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
               -1);
 }
 
-void QSSGRhiShaderPipeline::setUniformValue(const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
+void QSSGRhiShaderPipeline::setUniformValue(char *ubufData, const char *name, const QVariant &inValue, QSSGRenderShaderDataType inType)
 {
     switch (inType) {
     case QSSGRenderShaderDataType::Integer:
     {
         const qint32 v = inValue.toInt();
-        setUniform(name, &v, sizeof(qint32));
+        setUniform(ubufData, name, &v, sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::IntegerVec2:
     {
         const qint32_2 v = inValue.value<qint32_2>();
-        setUniform(name, &v, 2 * sizeof(qint32));
+        setUniform(ubufData, name, &v, 2 * sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::IntegerVec3:
     {
         const qint32_3 v = inValue.value<qint32_3>();
-        setUniform(name, &v, 3 * sizeof(qint32));
+        setUniform(ubufData, name, &v, 3 * sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::IntegerVec4:
     {
         const qint32_4 v = inValue.value<qint32_4>();
-        setUniform(name, &v, 4 * sizeof(qint32));
+        setUniform(ubufData, name, &v, 4 * sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::Boolean:
     {
         // whatever bool is does not matter, what matters is that the GLSL bool is 4 bytes
         const qint32 v = inValue.value<bool>();
-        setUniform(name, &v, sizeof(qint32));
+        setUniform(ubufData, name, &v, sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::BooleanVec2:
     {
         const bool_2 b = inValue.value<bool_2>();
         const qint32_2 v(b.x, b.y);
-        setUniform(name, &v, 2 * sizeof(qint32));
+        setUniform(ubufData, name, &v, 2 * sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::BooleanVec3:
     {
         const bool_3 b = inValue.value<bool_3>();
         const qint32_3 v(b.x, b.y, b.z);
-        setUniform(name, &v, 3 * sizeof(qint32));
+        setUniform(ubufData, name, &v, 3 * sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::BooleanVec4:
     {
         const bool_4 b = inValue.value<bool_4>();
         const qint32_4 v(b.x, b.y, b.z, b.w);
-        setUniform(name, &v, 4 * sizeof(qint32));
+        setUniform(ubufData, name, &v, 4 * sizeof(qint32));
     }
         break;
     case QSSGRenderShaderDataType::Float:
     {
         const float v = inValue.value<float>();
-        setUniform(name, &v, sizeof(float));
+        setUniform(ubufData, name, &v, sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Vec2:
     {
         const QVector2D v = inValue.value<QVector2D>();
-        setUniform(name, &v, 2 * sizeof(float));
+        setUniform(ubufData, name, &v, 2 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Vec3:
     {
         const QVector3D v = inValue.value<QVector3D>();
-        setUniform(name, &v, 3 * sizeof(float));
+        setUniform(ubufData, name, &v, 3 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Vec4:
     {
         const QVector4D v = inValue.value<QVector4D>();
-        setUniform(name, &v, 4 * sizeof(float));
+        setUniform(ubufData, name, &v, 4 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Rgba:
     {
         const QVector4D v = color::sRGBToLinear(inValue.value<QColor>());
-        setUniform(name, &v, 4 * sizeof(float));
+        setUniform(ubufData, name, &v, 4 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::UnsignedInteger:
     {
         const quint32 v = inValue.value<quint32>();
-        setUniform(name, &v, sizeof(quint32));
+        setUniform(ubufData, name, &v, sizeof(quint32));
     }
         break;
     case QSSGRenderShaderDataType::UnsignedIntegerVec2:
     {
         const quint32_2 v = inValue.value<quint32_2>();
-        setUniform(name, &v, 2 * sizeof(quint32));
+        setUniform(ubufData, name, &v, 2 * sizeof(quint32));
     }
         break;
     case QSSGRenderShaderDataType::UnsignedIntegerVec3:
     {
         const quint32_3 v = inValue.value<quint32_3>();
-        setUniform(name, &v, 3 * sizeof(quint32));
+        setUniform(ubufData, name, &v, 3 * sizeof(quint32));
     }
         break;
     case QSSGRenderShaderDataType::UnsignedIntegerVec4:
     {
         const quint32_4 v = inValue.value<quint32_4>();
-        setUniform(name, &v, 4 * sizeof(quint32));
+        setUniform(ubufData, name, &v, 4 * sizeof(quint32));
     }
         break;
     case QSSGRenderShaderDataType::Matrix3x3:
     {
         const QMatrix3x3 m = inValue.value<QMatrix3x3>();
-        float v[12]; // 4 floats per column, last one is unused
-        memcpy(v, m.constData(), 3 * sizeof(float));
-        memcpy(v + 4, m.constData() + 3, 3 * sizeof(float));
-        memcpy(v + 8, m.constData() + 6, 3 * sizeof(float));
-        setUniform(name, v, 12 * sizeof(float));
+        setUniform(ubufData, name, m.constData(), 12 * sizeof(float), nullptr, QSSGRhiShaderPipeline::UniformFlag::Mat3);
     }
         break;
     case QSSGRenderShaderDataType::Matrix4x4:
     {
         const QMatrix4x4 v = inValue.value<QMatrix4x4>();
-        setUniform(name, v.constData(), 16 * sizeof(float));
+        setUniform(ubufData, name, v.constData(), 16 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Size:
     {
         const QSize s = inValue.value<QSize>();
         float v[2] = { float(s.width()), float(s.height()) };
-        setUniform(name, v, 2 * sizeof(float));
+        setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::SizeF:
     {
         const QSizeF s = inValue.value<QSizeF>();
         float v[2] = { float(s.width()), float(s.height()) };
-        setUniform(name, v, 2 * sizeof(float));
+        setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Point:
     {
         const QPoint p = inValue.value<QPoint>();
         float v[2] = { float(p.x()), float(p.y()) };
-        setUniform(name, v, 2 * sizeof(float));
+        setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::PointF:
     {
         const QPointF p = inValue.value<QPointF>();
         float v[2] = { float(p.x()), float(p.y()) };
-        setUniform(name, v, 2 * sizeof(float));
+        setUniform(ubufData, name, v, 2 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Rect:
     {
         const QRect r = inValue.value<QRect>();
         float v[4] = { float(r.x()), float(r.y()), float(r.width()), float(r.height()) };
-        setUniform(name, v, 4 * sizeof(float));
+        setUniform(ubufData, name, v, 4 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::RectF:
     {
         const QRectF r = inValue.value<QRectF>();
         float v[4] = { float(r.x()), float(r.y()), float(r.width()), float(r.height()) };
-        setUniform(name, v, 4 * sizeof(float));
+        setUniform(ubufData, name, v, 4 * sizeof(float));
     }
         break;
     case QSSGRenderShaderDataType::Quaternion:
     {
         const QQuaternion q = inValue.value<QQuaternion>();
         float v[4] = { float(q.x()), float(q.y()), float(q.z()), float(q.scalar()) };
-        setUniform(name, v, 4 * sizeof(float));
+        setUniform(ubufData, name, v, 4 * sizeof(float));
     }
         break;
     default:
@@ -402,7 +397,7 @@ void QSSGRhiShaderPipeline::setUniformValue(const char *name, const QVariant &in
     }
 }
 
-void QSSGRhiShaderPipeline::setUniform(const char *name, const void *data, size_t size, int *storeIndex, UniformFlags flags)
+void QSSGRhiShaderPipeline::setUniform(char *ubufData, const char *name, const void *data, size_t size, int *storeIndex, UniformFlags flags)
 {
     int index = -1;
     if (!storeIndex || *storeIndex == -1) {
@@ -453,7 +448,7 @@ void QSSGRhiShaderPipeline::setUniform(const char *name, const void *data, size_
             return;
         }
 
-        char *dst = m_mainUniformBufferData.data() + u.offset;
+        char *dst = ubufData + u.offset;
         if (flags.testFlag(UniformFlag::Mat3)) {
             // mat3 is still 4 floats per column in the uniform buffer (but there
             // is no 4th column), so 48 bytes altogether, not 36 or 64.
@@ -472,7 +467,7 @@ void QSSGRhiShaderPipeline::setUniform(const char *name, const void *data, size_
 // Quick3D uniform buffer is std140 type and all array data should be stored in this rule.
 // You can check it in glspec45.core.pdf's 7.6.2.2.(4)
 // https://www.khronos.org/registry/OpenGL/specs/gl/glspec45.core.pdf
-void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex)
+void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, const void *data, size_t itemCount, QSSGRenderShaderDataType type, int *storeIndex)
 {
     QSSGRhiShaderUniformArray *ua = nullptr;
     constexpr size_t std140BaseTypeSize = 4 * sizeof(float);
@@ -531,7 +526,7 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
     };
 #endif
 
-    char *p = m_mainUniformBufferData.data() + ua->offset;
+    char *p = ubufData + ua->offset;
 
     switch (type) {
     case QSSGRenderShaderDataType::Integer:
@@ -779,14 +774,9 @@ void QSSGRhiShaderPipeline::setUniformArray(const char *name, const void *data, 
     }
 }
 
-void QSSGRhiShaderPipeline::bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates,
-                                                                bool updateLights, int *lightDataOffset, int *lightDataSize)
+void QSSGRhiShaderPipeline::ensureCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf)
 {
-    const int lightBufferSize = int(sizeof(QSSGShaderLightsUniformData));
-    *lightDataOffset = m_ub0NextUBufOffset;
-    *lightDataSize = int(4 * sizeof(qint32) + m_lightsUniformData.count * sizeof(QSSGShaderLightData));
-
-    const int totalBufferSize = *lightDataOffset + lightBufferSize;
+    const int totalBufferSize = m_ub0NextUBufOffset + int(sizeof(QSSGShaderLightsUniformData));
     if (!*ubuf) {
         *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalBufferSize);
         (*ubuf)->create();
@@ -795,33 +785,6 @@ void QSSGRhiShaderPipeline::bakeCombinedMainLightsUniformBuffer(QRhiBuffer **ubu
         (*ubuf)->setSize(totalBufferSize);
         (*ubuf)->create();
     }
-
-    resourceUpdates->updateDynamicBuffer(*ubuf, 0, m_ub0Size, m_mainUniformBufferData.constData());
-
-    if (updateLights)
-        resourceUpdates->updateDynamicBuffer(*ubuf, *lightDataOffset, *lightDataSize, &m_lightsUniformData);
-}
-
-void QSSGRhiShaderPipeline::bakeMainUniformBuffer(QRhiBuffer **ubuf, QRhiResourceUpdateBatch *resourceUpdates)
-{
-    // We will assume that the main uniform buffer has the same layout in all
-    // stages (the generator should ensure that), meaning it includes all
-    // members in all shaders, even if a member is not used in that particular
-    // shader.
-    const int size = m_ub0Size;
-    if (size < 1)
-        return;
-
-    if (!*ubuf) {
-        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, size);
-        (*ubuf)->create();
-    }
-    if ((*ubuf)->size() < size) {
-        (*ubuf)->setSize(size);
-        (*ubuf)->create();
-    }
-
-    resourceUpdates->updateDynamicBuffer(*ubuf, 0, size, m_mainUniformBufferData.constData());
 }
 
 int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)

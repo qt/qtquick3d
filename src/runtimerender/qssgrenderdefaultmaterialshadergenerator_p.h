@@ -102,6 +102,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 
     static void setRhiMaterialProperties(const QSSGRenderContextInterface &,
                                          QSSGRef<QSSGRhiShaderPipeline> &shaders,
+                                         char *ubufData,
                                          QSSGRhiGraphicsPipelineState *inPipelineState,
                                          const QSSGRenderGraphObject &inMaterial,
                                          const QSSGShaderDefaultMaterialKey &inKey,
