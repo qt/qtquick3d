@@ -39,17 +39,6 @@
 // qmlscenegrabber's default timeout, in ms
 #define SCENE_TIMEOUT 6000
 
-QString blockify(const QByteArray& s)
-{
-    const char* indent = "\n | ";
-    QByteArray block = s.trimmed();
-    block.replace('\n', indent);
-    block.prepend(indent);
-    block.append('\n');
-    return block;
-}
-
-
 class tst_Quick3D : public QObject
 {
     Q_OBJECT
@@ -117,7 +106,7 @@ void tst_Quick3D::cleanup()
 {
     // Allow subsystems time to settle
     if (!aborted)
-        QTest::qWait(20);
+        QTest::qWait(grabberTimeout / 100);
 }
 
 
@@ -220,8 +209,8 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
     bool res = usePipe ? img.load(&grabber, "ppm") : img.load(tmpfile);
     if (!res || img.isNull()) {
         if (errMsg) {
-            QString s("Failed to grab screen. qmlscenegrabber exitcode: %1. Process error: %2. Stderr:%3");
-            *errMsg = s.arg(grabber.exitCode()).arg(grabber.errorString()).arg(blockify(grabber.readAllStandardError()));
+            QString s("Failed to grab screen. qmlscenegrabber exitcode: %1. Process error: %2.");
+            *errMsg = s.arg(grabber.exitCode()).arg(grabber.errorString());
         }
         if (!usePipe)
             QFile::remove(tmpfile);
