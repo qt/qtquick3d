@@ -71,7 +71,10 @@ public:
 
         connect(this, SIGNAL(afterRendering()), SLOT(startGrabbing()));
 
-        QTimer::singleShot(SCENE_TIMEOUT, this, SLOT(timedOut()));
+        int sceneTimeout = qEnvironmentVariableIntValue("LANCELOT_SCENE_TIMEOUT");
+        if (!sceneTimeout)
+            sceneTimeout = SCENE_TIMEOUT;
+        QTimer::singleShot(sceneTimeout, this, SLOT(timedOut()));
     }
 
 private slots:
