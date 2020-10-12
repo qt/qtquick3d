@@ -4,7 +4,7 @@ SUBDIRS += \
     customshaders \
     effects \
     hellocube \
-    simple \
+    intro \
     view3d \
     picking \
     lights \

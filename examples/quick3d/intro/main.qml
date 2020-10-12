@@ -48,8 +48,10 @@
 **
 ****************************************************************************/
 
+//! [import]
 import QtQuick
 import QtQuick3D
+//! [import]
 
 Window {
     id: window
@@ -102,6 +104,7 @@ Window {
                 }
             ]
 
+            //! [animation]
             SequentialAnimation on y {
                 loops: Animation.Infinite
                 NumberAnimation {
@@ -117,6 +120,7 @@ Window {
                     easing.type:Easing.OutQuad
                 }
             }
+            //! [animation]
         }
         //! [objects]
     }

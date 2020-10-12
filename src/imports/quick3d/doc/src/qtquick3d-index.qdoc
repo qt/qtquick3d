@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2019-2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -86,6 +86,7 @@ under the following permissive licenses:
 \section1 Topics
 
 \list
+    \li \l{Qt Quick 3D - Introduction}{Qt Quick 3D Introduction Example}
     \li \l{Qt Quick 3D Graphics Requirements}
     \li \l{Qt Quick 3D Asset Conditioning}
     \li \l{Balsam Asset Import Tool}
@@ -104,7 +105,7 @@ under the following permissive licenses:
 \section1 Examples
 
 \list
-    \li \l{Qt Quick 3D - Simple Example}{Simple Scene}
+    \li \l{Qt Quick 3D - Introduction}{Introduction}
     \li \l{Qt Quick 3D - View3D Example}{View3D with Multiple Viewports}
     \li \l{Qt Quick 3D - Lights Example}{Lights and Shadows}
     \li \l{Qt Quick 3D - Dynamic Model Creation Example}{Dynamic Model Creation}

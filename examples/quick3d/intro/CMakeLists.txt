@@ -1,7 +1,7 @@
-# Generated from simple.pro.
+# Generated from intro.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(simple LANGUAGES CXX)
+project(intro LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -13,17 +13,17 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/simple")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/intro")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(simple
+add_qt_gui_executable(intro
     main.cpp
 )
-target_link_libraries(simple PUBLIC
+target_link_libraries(intro PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
@@ -36,14 +36,14 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt6_add_resources(simple "qml"
+qt6_add_resources(intro "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
 
-install(TARGETS simple
+install(TARGETS intro
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
