@@ -220,7 +220,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
                 // Now that setRhi() has been called, we can create the context interface.
                 m_sgContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext, QString::fromLatin1("./")));
                 WindowBindings::bind(*window, *m_sgContext.data());
-                QObject::connect(qw, &QQuickWindow::afterFrameEnd, [=](){
+                m_cleanupResourceConnection = QObject::connect(qw, &QQuickWindow::afterFrameEnd, [=](){
                     cleanupResources();
                 });
             }
@@ -238,6 +238,9 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
     releaseAaDependentRhiResources();
     delete m_effectSystem;
+
+    if (m_cleanupResourceConnection)
+        QObject::disconnect(m_cleanupResourceConnection);
 }
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()

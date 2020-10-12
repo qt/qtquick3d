@@ -124,6 +124,8 @@ private:
 
     bool m_prepared = false;
 
+    QMetaObject::Connection m_cleanupResourceConnection;
+
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;
     friend class QQuick3DSGDirectRenderer;
