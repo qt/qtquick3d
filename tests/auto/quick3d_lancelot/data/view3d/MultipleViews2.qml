@@ -131,7 +131,7 @@ Item {
         importScene: sceneRoot2
         Component.onCompleted: {
             // Currently this doesn't do anything
-            importScene = undefined;
+            importScene = null;
         }
         Model {
             // Behind, so partly visible
