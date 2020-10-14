@@ -361,7 +361,6 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
                                          QSSGRenderableObject *obj,
                                          QRhiRenderPassDescriptor *rpDesc,
                                          QSSGRhiGraphicsPipelineState *ps,
-                                         QRhiResourceUpdateBatch *rub,
                                          QSSGRhiDrawCallDataKey::Selector ubufSel)
 {
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
@@ -448,8 +447,6 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     // texture), objects with depth test/write enabled, and color write
     // disabled, using a very simple set of shaders.
 
-    QRhi *rhi = rhiCtx->rhi();
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     QSSGRhiGraphicsPipelineState ps = basePipelineState; // viewport and others are filled out already
     // We took a copy of the pipeline state since we do not want to conflict
     // with what rhiPrepare() collects for its own use. So here just change
@@ -460,19 +457,15 @@ static bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
     ps.depthWriteEnable = true;
     ps.targetBlend.colorWrite = {};
 
-    QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-
     for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {
-        if (!rhiPrepareDepthPassForObject(rhiCtx, inData, handle.obj, rpDesc, &ps, rub, ubufSel))
+        if (!rhiPrepareDepthPassForObject(rhiCtx, inData, handle.obj, rpDesc, &ps, ubufSel))
             return false;
     }
 
     for (const QSSGRenderableObjectHandle &handle : sortedTransparentObjects) {
-        if (!rhiPrepareDepthPassForObject(rhiCtx, inData, handle.obj, rpDesc, &ps, rub, ubufSel))
+        if (!rhiPrepareDepthPassForObject(rhiCtx, inData, handle.obj, rpDesc, &ps, ubufSel))
             return false;
     }
-
-    cb->resourceUpdate(rub);
 
     return true;
 }
@@ -793,8 +786,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                             QSSGRenderCamera &inCamera,
                                             bool orthographic,
-                                            int cubeFace,
-                                            QRhiResourceUpdateBatch *rub)
+                                            int cubeFace)
 {
     ShaderFeatureSetList featureSet;
     if (orthographic)
@@ -1064,10 +1056,8 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
-            QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
             rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, &depthAdjust,
-                                            sortedOpaqueObjects, theCamera, true, 0, rub);
-            cb->resourceUpdate(rub);
+                                            sortedOpaqueObjects, theCamera, true, 0);
 
             // Render into the 2D texture pEntry->m_rhiDepthMap, using
             // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
@@ -1087,15 +1077,13 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             pEntry->m_lightView = QMatrix4x4();
 
             const bool swapYFaces = !rhi->isYUpInFramebuffer();
-            QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
             for (int face = 0; face < 6; ++face) {
                 theCameras[face].calculateViewProjectionMatrix(pEntry->m_lightVP);
                 pEntry->m_lightCubeView[face] = theCameras[face].globalTransform.inverted(); // pre-calculate this for the material
 
                 rhiPrepareResourcesForShadowMap(rhiCtx, inData, pEntry, &ps, &depthAdjust,
-                                                sortedOpaqueObjects, theCameras[face], false, face, rub);
+                                                sortedOpaqueObjects, theCameras[face], false, face);
             }
-            cb->resourceUpdate(rub);
 
             for (int face = 0; face < 6; ++face) {
                 // Render into one face of the cubemap texture pEntry->m_rhiDephCube, using
