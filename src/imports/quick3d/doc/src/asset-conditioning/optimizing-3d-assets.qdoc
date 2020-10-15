@@ -62,8 +62,8 @@ Qt Quick 3D. For more detailed information, see the section for the
 \li
     \b {Transformation}
     As you would expect you can import full 3D transform information including position, rotation,
-    scale, and pivot. Qt Quick 3D can handle left and right-handed coordinate systems, Y-up or
-    Z-up and rotations applied in any order. The principal limitation in this area is pivot points.
+    scale, and pivot. Qt Quick 3D can handle right-handed coordinate systems, Y-up
+    and quaternion based rotation. The principal limitation in this area is pivot points.
     As discussed above, only simple edits to pivot points are supported.
 
     Most DCC tools allow artists to freeze transformations, and we highly recommend performing this
@@ -71,14 +71,14 @@ Qt Quick 3D. For more detailed information, see the section for the
     mesh has clean transformation data and no arbitrary transformation values, which can be
     confusing or an impediment to your work.
 
-     \note After freezing transforms, you may have to reposition the pivot point in some DCC tools.
+    \note After freezing transforms, you may have to reposition the pivot point in some DCC tools.
 \endlist
 
 \section2 Animations
 
 Animations are supported on any imported attribute. Position, rotation, scale, and pivot can all be
 animated. An example of our advanced support for animations would be a hierarchy of items, rotated
-simultaneously on arbitrary axes in arbitrary axis order. Bezier tangent value tweaked into
+simultaneously on arbitrary axis in arbitrary axis order. Bezier tangent value tweaked into
 animations is also supported.
 
 \list
@@ -135,11 +135,11 @@ Lights and cameras can be imported.
 \list
 \li
     \b {Lights}
-    For light, the type, position, rotation, scale, brightness, light color, and the cast shadows
-    properties will be imported.
+    For light, directional, point, and spot lights with position, rotation, light color, and
+    the attenuation factors properties will be imported.
 \li
     \b {Cameras}
-    Perspective and orthographic cameras can be imported. Position, rotation, and scale properties
+    Perspective and orthographic cameras can be imported. Position, and rotation properties
     are imported, as well as start and end clipping. For perspective cameras, field of view is
     also imported.
 \endlist

@@ -639,15 +639,6 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
             QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("innerConeAngle"), qRadiansToDegrees(light->mAngleInnerCone));
         }
     }
-
-    if (light->mType == aiLightSource_AREA) {
-        // areaWidth
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("width"), light->mSize.x);
-
-        // areaHeight
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("height"), light->mSize.y);
-    }
-
     // castShadow
 
     // shadowBias

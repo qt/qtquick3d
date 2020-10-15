@@ -65,7 +65,7 @@ This would generate the following files:
 
 Which can then be used in a Qt Quick 3D project by using that QML Component:
 \code \QtMinorVersion
-import QtQuick3D 1.\1
+import QtQuick3D
 
 TestModel {
    id: modelInstance
@@ -149,6 +149,8 @@ replaces them with references to the first mesh.
 of meshes.
 \row \li \c {--optimizeGraph} \li A postprocessing step to optimize the scene
 hierarchy.
+\row \li \c {--useFloatJointIndices} \li Stores joint indices as floating point
+numbers for GLES 2.0.
 \row \li \c {--globalScale} \li This step will perform a global scale of the
 model.
 \row \li \c {--globalScaleValue <value>} \li Global Scale factor used by
@@ -169,6 +171,9 @@ from meshes.
 components from meshes.
 \row \li \c {--fbxPreservePivots} \li Preserves extra pivot nodes created by
 FBX assets (can create deep node hierarchies)
+\row \li \c {--generateMipMaps} \li Force all imported texture components to
+generate mip maps for mip map texture filtering
+\row \li \c {--useBinaryKeyframes} \li Record keyframe data as binary files
 \endtable
 
 The following table lists the command-line options recognized by \c balsam when

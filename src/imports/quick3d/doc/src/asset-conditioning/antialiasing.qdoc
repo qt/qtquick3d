@@ -80,7 +80,7 @@ Using \l{multisample-aa}{Multisample Anti-Aliasing} will not fix this problem.
 \target reflection-aliasing
 \section2 Reflection Aliasing
 
-Similar to \ l{Texture Aliasing}, a material reflecting the environment will sub-sample the image.
+Similar to \l{texture-aliasing}{Texture Aliasing}, a material reflecting the environment will sub-sample the image.
 In some cases, as seen on the left in the image below, becomes obvious when fine details are being
 skipped.
 
@@ -121,7 +121,8 @@ however.
 \list
 \li
   \b{Pros}: Good results on geometry silhouettes, where aliasing is often most noticeable. Works
-    with fast animation without an issue.
+    with fast animation without an issue. Many recent GPUs support 2x or 4x MSAA without
+    any performance issue.
 \li
   \b{Cons}: Can be expensive to use. Does not help with texture or reflection issues.
 \endlist
