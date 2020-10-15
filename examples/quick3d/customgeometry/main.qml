@@ -49,8 +49,7 @@
 ****************************************************************************/
 
 import QtQuick
-import QtQuick.Window
-import QtQuick.Controls 2.15
+import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers

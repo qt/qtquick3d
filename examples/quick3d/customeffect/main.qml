@@ -49,11 +49,10 @@
 ****************************************************************************/
 
 import QtQuick
-import QtQuick.Window
 import QtQuick3D
 import QtQuick3D.Helpers
 import QtQuick3D.Effects
-import QtQuick.Controls 2.15
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Window {

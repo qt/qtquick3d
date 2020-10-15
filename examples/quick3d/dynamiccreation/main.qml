@@ -48,10 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.14
-import QtQuick.Controls 2.14
-import QtQuick3D 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick3D
 
 Window {
     id: window

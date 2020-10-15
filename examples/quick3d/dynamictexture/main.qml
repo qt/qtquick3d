@@ -49,7 +49,6 @@
 ****************************************************************************/
 
 import QtQuick
-import QtQuick.Window
 import QtQuick3D
 import QtQuick3D.Helpers
 

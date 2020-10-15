@@ -48,13 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick3D 1.16
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
+import QtQuick
+import QtQuick3D
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import ProceduralTextureExample 1.0
+import ProceduralTextureExample
 
 Window {
     id: window

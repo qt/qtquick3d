@@ -48,12 +48,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick3D 1.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import QtQuick3D.Effects 1.15
+import QtQuick
+import QtQuick3D
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick3D.Effects
 
 Window {
     visible: true
