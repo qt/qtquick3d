@@ -498,6 +498,103 @@ inline size_t qHash(const QSSGComputePipelineStateKey &k, size_t seed = 0) Q_DEC
     return qHash(k.shader, seed);
 }
 
+struct QSSGRhiShaderResourceBindingList
+{
+    static const int MAX_SIZE = 32;
+
+    int p = 0;
+    size_t h = 0;
+    QRhiShaderResourceBinding v[MAX_SIZE];
+
+    void clear() { p = 0; h = 0; }
+
+    QSSGRhiShaderResourceBindingList() { }
+
+    QSSGRhiShaderResourceBindingList(const QSSGRhiShaderResourceBindingList &other)
+        : p(other.p),
+          h(other.h)
+    {
+        for (int i = 0; i < p; ++i)
+            v[i] = other.v[i];
+    }
+
+    QSSGRhiShaderResourceBindingList &operator=(const QSSGRhiShaderResourceBindingList &other) Q_DECL_NOTHROW
+    {
+        if (this != &other) {
+            p = other.p;
+            h = other.h;
+            for (int i = 0; i < p; ++i)
+                v[i] = other.v[i];
+        }
+        return *this;
+    }
+
+    void addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, int offset, int size);
+    void addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler);
+};
+
+inline bool operator==(const QSSGRhiShaderResourceBindingList &a, const QSSGRhiShaderResourceBindingList &b) Q_DECL_NOTHROW
+{
+    if (a.h != b.h)
+        return false;
+    if (a.p != b.p)
+        return false;
+    for (int i = 0; i < a.p; ++i) {
+        if (a.v[i] != b.v[i])
+            return false;
+    }
+    return true;
+}
+
+inline bool operator!=(const QSSGRhiShaderResourceBindingList &a, const QSSGRhiShaderResourceBindingList &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+inline size_t qHash(const QSSGRhiShaderResourceBindingList &bl, size_t seed) Q_DECL_NOTHROW
+{
+    return bl.h ^ seed;
+}
+
+inline void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage,
+                                                               QRhiBuffer *buf, int offset = 0, int size = 0)
+{
+#ifdef QT_DEBUG
+    if (p == MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = v[p++].data();
+    h ^= qintptr(buf);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::UniformBuffer;
+    d->u.ubuf.buf = buf;
+    d->u.ubuf.offset = offset;
+    d->u.ubuf.maybeSize = size; // 0 = all
+    d->u.ubuf.hasDynamicOffset = false;
+}
+
+inline void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShaderResourceBinding::StageFlags stage,
+                                                         QRhiTexture *tex, QRhiSampler *sampler)
+{
+#ifdef QT_DEBUG
+    if (p == QSSGRhiShaderResourceBindingList::MAX_SIZE) {
+        qWarning("Out of shader resource bindings slots (max is %d)", MAX_SIZE);
+        return;
+    }
+#endif
+    QRhiShaderResourceBinding::Data *d = v[p++].data();
+    h ^= qintptr(tex) ^ qintptr(sampler);
+    d->binding = binding;
+    d->stage = stage;
+    d->type = QRhiShaderResourceBinding::SampledTexture;
+    d->u.stex.count = 1;
+    d->u.stex.texSamplers[0].tex = tex;
+    d->u.stex.texSamplers[0].sampler = sampler;
+}
+
 // The lookup keys can be somewhat complicated due to having to handle cases
 // like "render a model in a shared scene between multiple View3Ds" (here both
 // the View3D ('layer') and the model ('model') act as the lookup key since
@@ -546,7 +643,7 @@ struct QSSGRhiDrawCallData
 {
     QRhiBuffer *ubuf = nullptr; // owned
     QRhiShaderResourceBindings *srb = nullptr; // not owned
-    QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
+    QSSGRhiShaderResourceBindingList bindings;
     QRhiGraphicsPipeline *pipeline = nullptr; // not owned
     QRhiRenderPassDescriptor *pipelineRpDesc = nullptr; // not owned
     QSSGRhiGraphicsPipelineState ps;
@@ -595,8 +692,7 @@ public:
         return &m_gfxPs[key];
     }
 
-    using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
-    QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
+    QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key);
     QRhiComputePipeline *computePipeline(const QSSGComputePipelineStateKey &key);
 
@@ -632,7 +728,7 @@ private:
     QRhiRenderTarget *m_rt = nullptr;
     int m_mainSamples = 1;
     QHash<const void *, QSSGRhiGraphicsPipelineState> m_gfxPs;
-    QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
+    QHash<QSSGRhiShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
     QHash<QSSGComputePipelineStateKey, QRhiComputePipeline *> m_computePipelines;
     QHash<QSSGRhiDrawCallDataKey, QSSGRhiDrawCallData> m_drawCallData;

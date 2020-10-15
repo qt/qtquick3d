@@ -286,11 +286,11 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
-        QSSGRhiContext::ShaderResourceBindingList bindings;
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size()));
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(1, VISIBILITY_ALL, dcd.ubuf,
-                                                                 shaderPipeline->ub0LightDataOffset(),
-                                                                 shaderPipeline->ub0LightDataSize()));
+        QSSGRhiShaderResourceBindingList bindings;
+        bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
+        bindings.addUniformBuffer(1, VISIBILITY_ALL, dcd.ubuf,
+                                  shaderPipeline->ub0LightDataOffset(),
+                                  shaderPipeline->ub0LightDataSize());
 
         QVector<QShaderDescription::InOutVariable> samplerVars =
                 shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
@@ -321,9 +321,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 QPair<QSSGRenderTextureCoordOp, QSSGRenderTextureCoordOp> tiling = shaderPipeline->lightProbeTiling();
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
                                                          toRhi(tiling.first), toRhi(tiling.second) });
-                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                          QRhiShaderResourceBinding::FragmentStage,
-                                                                          shaderPipeline->lightProbeTexture(), sampler));
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->lightProbeTexture(), sampler);
             } else {
                 qWarning("Could not find sampler for light probe");
             }
@@ -341,9 +341,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                         ? QRhiSampler::Linear : QRhiSampler::None;
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, mipFilter,
                                                          QRhiSampler::Repeat, QRhiSampler::Repeat });
-                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                          QRhiShaderResourceBinding::FragmentStage,
-                                                                          shaderPipeline->screenTexture(), sampler));
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->screenTexture(), sampler);
             } // else ignore, not an error
         }
 
@@ -354,9 +354,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 // nearest min/mag, no mipmap
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                          QRhiShaderResourceBinding::FragmentStage,
-                                                                          shaderPipeline->depthTexture(), sampler));
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->depthTexture(), sampler);
             } // else ignore, not an error
         }
 
@@ -367,9 +367,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 // linear min/mag, no mipmap
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
-                bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                          QRhiShaderResourceBinding::FragmentStage,
-                                                                          shaderPipeline->ssaoTexture(), sampler));
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->ssaoTexture(), sampler);
             } // else ignore, not an error
         }
 
@@ -385,10 +385,10 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             if (shadowMapProperties.cachedBinding < 0) // may not be used in the shader with unshaded custom materials, that's normal
                 continue;
             samplerBindingsSpecified.setBit(shadowMapProperties.cachedBinding);
-            bindings.append(QRhiShaderResourceBinding::sampledTexture(shadowMapProperties.cachedBinding,
-                                                                      QRhiShaderResourceBinding::FragmentStage,
-                                                                      texture,
-                                                                      sampler));
+            bindings.addTexture(shadowMapProperties.cachedBinding,
+                                QRhiShaderResourceBinding::FragmentStage,
+                                texture,
+                                sampler);
         }
 
         QSSGRenderableImage *renderableImage = renderable.firstImage;
@@ -406,9 +406,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                              toRhi(renderableImage->m_image.m_horizontalTilingMode),
                                                              toRhi(renderableImage->m_image.m_verticalTilingMode) });
                     samplerBindingsSpecified.setBit(samplerBinding);
-                    bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
-                                                                              VISIBILITY_ALL,
-                                                                              texture, sampler));
+                    bindings.addTexture(samplerBinding,
+                                        VISIBILITY_ALL,
+                                        texture, sampler);
                 }
             } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
             renderableImage = renderableImage->m_nextImage;
@@ -423,29 +423,21 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 if (samplerBinding >= 0) {
                     samplerBindingsSpecified.setBit(samplerBinding);
                     QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
-                    bindings.append(QRhiShaderResourceBinding::sampledTexture(samplerBinding,
-                                                                              VISIBILITY_ALL,
-                                                                              t.texture,
-                                                                              sampler));
+                    bindings.addTexture(samplerBinding,
+                                        VISIBILITY_ALL,
+                                        t.texture,
+                                        sampler);
                 }
             }
 
             // use a dummy texture for the unused samplers in the shader
-            QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 16> texSamplers;
             QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                                           QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
 
             for (const QShaderDescription::InOutVariable &var : samplerVars) {
                 if (!samplerBindingsSpecified.testBit(var.binding)) {
                     QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
-                    texSamplers.clear();
-                    const int count = var.arrayDims.isEmpty() ? 1 : var.arrayDims.first();
-                    for (int i = 0; i < count; ++i)
-                        texSamplers.append({ t, dummySampler });
-                    bindings.append(QRhiShaderResourceBinding::sampledTextures(var.binding,
-                                                                               VISIBILITY_ALL,
-                                                                               texSamplers.count(),
-                                                                               texSamplers.constData()));
+                    bindings.addTexture(var.binding, VISIBILITY_ALL, t, dummySampler);
                 }
             }
         }

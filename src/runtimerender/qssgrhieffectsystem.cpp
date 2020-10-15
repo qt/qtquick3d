@@ -510,7 +510,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     // do resource bindings
     const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
             QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
-    QSSGRhiContext::ShaderResourceBindingList bindings;
+    QSSGRhiShaderResourceBindingList bindings;
     for (const QSSGRhiTexture &rhiTex : m_currentTextures) {
         int binding = m_currentShaderPipeline->bindingForTexture(rhiTex.name);
         if (binding < 0) // may not be used in the shader (think qt_inputTexture, it's not given a shader samples INPUT)
@@ -518,12 +518,12 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         qCDebug(lcEffectSystem) << "    -> texture binding" << binding << "for" << rhiTex.name;
         // Make sure to bind all samplers even if the texture is missing, otherwise we can get crash on some graphics APIs
         QRhiTexture *texture = rhiTex.texture ? rhiTex.texture : m_rhiContext->dummyTexture({}, rub);
-        bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                  QRhiShaderResourceBinding::FragmentStage,
-                                                                  texture,
-                                                                  m_rhiContext->sampler(rhiTex.samplerDesc)));
+        bindings.addTexture(binding,
+                            QRhiShaderResourceBinding::FragmentStage,
+                            texture,
+                            m_rhiContext->sampler(rhiTex.samplerDesc));
     }
-    bindings.append(QRhiShaderResourceBinding::uniformBuffer(0, VISIBILITY_ALL, dcd.ubuf));
+    bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
     QRhiShaderResourceBindings *srb = m_rhiContext->srb(bindings);
 
     QSSGRhiGraphicsPipelineState ps;

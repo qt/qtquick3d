@@ -829,14 +829,14 @@ void QSSGRhiContext::initialize(QRhi *rhi)
     m_rhi = rhi;
 }
 
-QRhiShaderResourceBindings *QSSGRhiContext::srb(const ShaderResourceBindingList &bindings)
+QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindingList &bindings)
 {
     auto it = m_srbCache.constFind(bindings);
     if (it != m_srbCache.constEnd())
         return *it;
 
     QRhiShaderResourceBindings *srb = m_rhi->newShaderResourceBindings();
-    srb->setBindings(bindings.cbegin(), bindings.cend());
+    srb->setBindings(bindings.v, bindings.v + bindings.p);
     if (srb->create()) {
         m_srbCache.insert(bindings, srb);
     } else {
