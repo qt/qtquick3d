@@ -30,7 +30,7 @@ function(_qt_internal_quick3d_generate_resource_from_qrc target qrcfile)
 endfunction()
 
 #generate shaders from the given files
-function(qt6_quick3d_build_shaders target resource_name)
+function(qt6_quick3d_generate_materials target resource_name)
 
     cmake_parse_arguments(arg
         "" "PREFIX" "FILES" ${ARGN}
@@ -57,6 +57,6 @@ endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     function(qt_quick3d_build_shaders)
-        qt6_quick3d_build_shaders(${ARGV})
+        qt6_quick3d_generate_materials(${ARGV})
     endfunction()
 endif()

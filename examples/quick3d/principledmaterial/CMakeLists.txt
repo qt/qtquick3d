@@ -63,7 +63,7 @@ set(shader_gen_files
     "main.qml"
 )
 
-qt6_quick3d_build_shaders(principledmaterial "shaders"
+qt6_quick3d_generate_materials(principledmaterial "shaders"
     PREFIX
         "/"
     FILES
