@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(customeffect
+qt_add_executable(customeffect
     main.cpp
 )
 target_link_libraries(customeffect PUBLIC

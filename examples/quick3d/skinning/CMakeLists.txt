@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(skinning
+qt_add_executable(skinning
     main.cpp
     skingeometry.cpp skingeometry.h
 )

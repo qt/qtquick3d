@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(view3d
+qt_add_executable(view3d
     main.cpp
 )
 target_link_libraries(view3d PUBLIC

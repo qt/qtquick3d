@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(principledmaterial
+qt_add_executable(principledmaterial
     main.cpp
 )
 target_link_libraries(principledmaterial PUBLIC

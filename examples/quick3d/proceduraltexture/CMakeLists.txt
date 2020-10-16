@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(proceduraltexture
+qt_add_executable(proceduraltexture
     gradienttexture.cpp gradienttexture.h
     main.cpp
 )
