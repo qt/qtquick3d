@@ -791,15 +791,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         if (!theObject->renderableFlags.castsShadows())
             continue;
 
+        QSSGRhiDrawCallData *dcd = nullptr;
         QMatrix4x4 modelViewProjection;
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
             QSSGSubsetRenderableBase *renderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
             modelViewProjection = pEntry->m_lightVP * renderable->globalTransform;
-        }
-
-        QSSGRhiDrawCallData *dcd = nullptr;
-        if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
-            QSSGSubsetRenderableBase *renderable(static_cast<QSSGSubsetRenderableBase *>(theObject));
             dcd = &rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
                                           pEntry, cubeFace, QSSGRhiDrawCallDataKey::Shadow });
         }
