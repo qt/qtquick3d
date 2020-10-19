@@ -214,8 +214,7 @@ directly by these snippets. Rather, the Qt Quick 3D engine will amend them as ap
 
 \table
 \header
-\li Change in main.qml
-\li material.vert
+\li Change in main.qml, material.vert
 \li Result
 \row
   \li \qml
@@ -223,7 +222,7 @@ directly by these snippets. Rather, the Qt Quick 3D engine will amend them as ap
       vertexShader: "material.vert"
   }
   \endqml
-  \li \badcode
+  \badcode
   void MAIN()
   {
   }
@@ -318,8 +317,7 @@ Quick 3D conveniently makes such details transparent to the custom material auth
 
 \table
 \header
-\li Change in main.qml
-\li material.vert
+\li Change in main.qml, material.vert
 \li Result
 \row
   \li \qml
@@ -335,7 +333,7 @@ Quick 3D conveniently makes such details transparent to the custom material auth
      }
   }
   \endqml
-  \li \badcode
+  \badcode
   void MAIN()
   {
       VERTEX.x += sin(uTime + VERTEX.y) * uAmplitude;
@@ -416,8 +414,7 @@ the Y axis, and a rotation is applied to have it pointing partly downwards. (thi
 
 \table
 \header
-\li main.qml
-\li material.vert
+\li main.qml, material.vert
 \li Result
 \row \li \qml
 import QtQuick
@@ -458,7 +455,7 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     VERTEX.x += sin(uTime + VERTEX.y) * uAmplitude;
@@ -476,15 +473,14 @@ property can be left out from the \l CustomMaterial.
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
     fragmentShader: "material.frag"
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
 }
@@ -560,15 +556,14 @@ Let's make the cube's base color red:
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
     fragmentShader: "material.frag"
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(1.0, 0.0, 0.0, 1.0);
@@ -581,15 +576,14 @@ Now strengthen the level of self-illumination a bit:
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
     fragmentShader: "material.frag"
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(1.0, 0.0, 0.0, 1.0);
@@ -604,8 +598,7 @@ as uniforms, even animated ones:
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
@@ -616,7 +609,7 @@ materials: CustomMaterial {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(baseColor.rgb, 1.0);
@@ -633,15 +626,14 @@ red, while V is also 0 to 1, black to green.
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
     fragmentShader: "material.frag"
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(UV0, 0.0, 1.0);
@@ -657,8 +649,7 @@ reflect those adjustments.
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 Model {
@@ -668,7 +659,7 @@ Model {
     fragmentShader: "material.frag"
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(NORMAL, 1.0);
@@ -685,8 +676,7 @@ to \c{(0, 128, 0)}, based on which our first attempt could be:
 
 \table
 \header
-\li main.qml
-\li material.frag
+\li main.qml, material.frag
 \li Result
 \row \li \qml
 import QtQuick
@@ -708,7 +698,7 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(0.0, 0.5, 0.0, 1.0);
@@ -724,8 +714,7 @@ This does not look entirely right. Compare with the second approach:
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
@@ -733,7 +722,7 @@ materials: CustomMaterial {
     property color uColor: "green"
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(uColor.rgb, 1.0);
@@ -801,8 +790,7 @@ To visualize, let's use a shader that assigns red with alpha \c 0.5 to \c BASE_C
 
 \table
 \header
-\li main.qml
-\li material.frag
+\li main.qml, material.frag
 \li Result
 \row \li \qml
 import QtQuick
@@ -853,7 +841,7 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(1.0, 0.0, 0.0, 0.5);
@@ -883,9 +871,7 @@ coordinates that can be passed to the \c{texture()} function in the shader.
 
 \table
 \header
-\li main.qml
-\li material.vert
-\li material.frag
+\li main.qml, material.vert, material.frag
 \row \li \qml
 import QtQuick
 import QtQuick3D
@@ -912,14 +898,14 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 VARYING vec2 uv;
 void MAIN()
 {
     uv = UV0;
 }
 \endcode
-\li \badcode
+\badcode
 VARYING vec2 uv;
 void MAIN()
 {
@@ -950,8 +936,7 @@ available in the fragment stage as well:
 
 \table
 \header
-\li Change in main.qml
-\li material.frag
+\li Change in main.qml, material.frag
 \li Result
 \row \li \qml
 materials: CustomMaterial {
@@ -962,7 +947,7 @@ materials: CustomMaterial {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = texture(someTextureMap, UV0);
@@ -1003,9 +988,8 @@ content:
 
 \table
 \header
-\li main.qml
-\li material.frag
-\li result
+\li main.qml, material.frag
+\li Result
 \row \li \qml
 import QtQuick
 import QtQuick3D
@@ -1046,7 +1030,7 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     vec2 uv = vec2(UV0.x, 1.0 - UV0.y);
@@ -1074,7 +1058,7 @@ more interesting by doing a simple emboss effect in addition:
 \table
 \header
 \li material.frag
-\li result
+\li Result
 \row \li \badcode
 void MAIN()
 {
@@ -1102,7 +1086,7 @@ First let's start with an empty CustomMaterial:
 \table
 \header
 \li main.qml
-\li result
+\li Result
 \row \li \qml
 import QtQuick
 import QtQuick3D
@@ -1145,8 +1129,7 @@ Now let's make some shaders that apply a height and normal map to the mesh:
 
 \table
 \header
-\li material.vert
-\li material.frag
+\li material.vert, material.frag
 \row
 \li \badcode
 float getHeight(vec2 pos)
@@ -1163,7 +1146,7 @@ void MAIN()
     NORMAL = cross(TANGENT, BINORMAL);
 }
 \endcode
-\li \badcode
+\badcode
 void MAIN()
 {
     vec3 normalValue = texture(normalMap, UV0).rgb;
@@ -1237,8 +1220,7 @@ depth buffer for the scene over its surface.
 
 \table
 \header
-\li main.qml
-\li material.frag
+\li main.qml, material.frag
 \li Result
 \row
 \li \qml
@@ -1300,7 +1282,7 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     float zNear = CAMERA_PROPERTIES.x;
@@ -1376,9 +1358,7 @@ color of the fragment, without any further adjustments by Qt Quick 3D.
 
 \table
 \header
-\li main.qml
-\li material.frag
-\li material2.frag
+\li main.qml, material.frag, material2.frag
 \li Result
 \row \li \qml
 import QtQuick
@@ -1412,13 +1392,13 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 void MAIN()
 {
     BASE_COLOR = vec4(1.0);
 }
 \endcode
-\li \badcode
+\badcode
 void MAIN()
 {
     FRAGCOLOR = vec4(1.0);
@@ -1443,9 +1423,7 @@ every fragment.
 
 \table
 \header
-\li main.qml
-\li material.vert
-\li material.frag
+\li main.qml, material.vert, material.frag
 \row \li \qml
 import QtQuick
 import QtQuick3D
@@ -1472,7 +1450,7 @@ Item {
     }
 }
 \endqml
-\li \badcode
+\badcode
 VARYING vec3 pos;
 void MAIN()
 {
@@ -1481,7 +1459,7 @@ void MAIN()
     POSITION = MODELVIEWPROJECTION_MATRIX * vec4(pos, 1.0);
 }
 \endcode
-\li \badcode
+\badcode
 VARYING vec3 pos;
 void MAIN()
 {
