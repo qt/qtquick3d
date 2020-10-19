@@ -702,12 +702,9 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateCameraProperties(aiN
 
     if (type == QSSGQmlUtilities::PropertyMap::PerspectiveCamera) {
         // fieldOfView
-        // fieldOfView
-        // mHorizontalFOV is a half horizontal fov
-        // FIXME : it shows different values according to the format
-        // FBX, COLLADA : half
-        // GLTF2, Blender : not half
-        float fov = qRadiansToDegrees(camera->mHorizontalFOV) * 2;
+        // mHorizontalFOV is defined as a half horizontal fov
+        // in the assimp header but it seems not half now.
+        float fov = qRadiansToDegrees(camera->mHorizontalFOV);
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfView"), fov);
 
         // isFieldOfViewHorizontal
