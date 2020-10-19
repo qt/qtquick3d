@@ -37,8 +37,8 @@ supported by Qt Quick in Qt 6.0. In some cases, with OpenGL and OpenGL ES in
 particular, the version requirement may be higher than Qt Quick.
 
 \list
-\li \l{https://www.khronos.org/opengl/}{OpenGL} 3.0 or higher; OpenGL 3.3 or higher is strongly recommended; OpenGL 4.3 for full feature set
-\li \l{OpenGL ES}{https://www.khronos.org/opengles/} 2.0 or higher; OpenGL ES 3.0 or higher is strongly recommended; OpenGL ES 3.1 for full feature set
+\li \l{https://www.khronos.org/opengl/}{OpenGL} 3.0 or higher; OpenGL 3.3 or higher is strongly recommended
+\li \l{https://www.khronos.org/opengles/}{OpenGL ES} 2.0 or higher; OpenGL ES 3.0 or higher is strongly recommended
 \li \l{https://docs.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11}{Direct3D 11.1}
 \li \l{https://www.khronos.org/vulkan/}{Vulkan} 1.0 or higher
 \li \l{https://developer.apple.com/metal/}{Metal} 1.2 or higher
@@ -95,7 +95,7 @@ main(), before constructing any QQuickWindow, forces the use of Vulkan (and
 will fail otherwise);
 
 \code
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 \endcode
 
 See QSGRendererInterface::GraphicsApi. The enum values ending in \c Rhi are
