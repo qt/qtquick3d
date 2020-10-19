@@ -32,6 +32,10 @@
     \brief Demonstrates the built-in post-processing effects.
     \image effects-example.jpg
 
-    This example demonstrates the post-processing that are available
-    in the \l{Qt Quick 3D Effects QML Types}{QtQuick3D.Effects} module.
+    This example demonstrates all the pre-made post-processing effects that are available
+    in the \l{Qt Quick 3D Effects QML Types}{QtQuick3D.Effects} module. It provides a
+    user interface for changing the property of each effect, and allows them to be chained together.
+
+    Note that chaining a large number of effects will incur a performance penalty. A
+    \l{Qt Quick 3D - Custom Effect Example}{custom effect} may be more suitable in this case.
 */

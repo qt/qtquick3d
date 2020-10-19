@@ -32,10 +32,10 @@
     \brief Demonstrates writing custom post-processing effects.
     \image customeffect-example.jpg
 
-    The example implements its custom post-processing effects, which are then applied on
+    The example implements its own custom post-processing effects, which are then applied on
     the scene via \l SceneEnvironment::effects. It demonstrates both the simplest type of
-    effects, that only have a fragment shader, and also the more advanced case with both a
-    vertex and fragment shader present, with data passed between the too.
+    effects that only have a fragment shader, and also the more advanced case with both a
+    vertex and fragment shader present, with data passed between the two.
 
     The shader snippets in the \c{.vert} and \c{.frag} files are written using the
     built-in keywords as described in the \l Effect documentation. Custom properties with

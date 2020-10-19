@@ -35,6 +35,8 @@
     own post-processing effects, use the \l Effect type. This module contains a number of
     useful effects built on top of the \l Effect type. They can be taken into use right
     away, without writing shader code manually.
+
+    The \l{Qt Quick 3D - Effects Example}{effects example} shows all the built-in effects.
  */
 
 /*!
