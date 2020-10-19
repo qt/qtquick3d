@@ -47,8 +47,9 @@ QT_BEGIN_NAMESPACE
     If \l {Light::castsShadow}{castsShadow} is enabled, shadows will be parallel to the light
     direction.
 
-    Moving a directional light does not have any effect. The light will always be emitted in the
-    direction of the light's Z axis.
+    A directional light effectively have no position, so moving it does not
+    have any effect. The light will always be emitted in the direction of the
+    light's Z axis.
 
     Rotating the light along its X or Y axis will change the direction of the light emission.
 
@@ -58,6 +59,8 @@ QT_BEGIN_NAMESPACE
     \li If the scale of any axis is set to 0, the light will be emitted along the world's Z axis.
     \note Rotating the light will then have no effect.
     \endlist
+
+    For usage examples, see \l{Qt Quick 3D - Lights Example}.
 
     \sa PointLight, SpotLight
 */

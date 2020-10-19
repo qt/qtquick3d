@@ -45,6 +45,8 @@ QT_BEGIN_NAMESPACE
     Light itself is an uncreatable base for all of its subtypes. The subtypes provide multiple
     options to determine the style of the light.
 
+    For usage examples, see \l{Qt Quick 3D - Lights Example}.
+
     \sa DirectionalLight, PointLight
 */
 
@@ -80,8 +82,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty real Light::shadowBias
-    This property is used to tweak the shadowing effect when when objects
-    are casting shadows on themselves. The value range is [-1.0, 1.0]. Generally value
+    This property is used to tweak the shadowing effect when objects
+    are casting shadows on themselves. The value range is [-1.0, 1.0]. Generally, a value
     inside [-0.1, 0.1] is sufficient.
     The default value is 0.
 */
@@ -89,7 +91,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real Light::shadowFactor
     This property determines how dark the cast shadows should be. The value range is [0, 100], where
-    0 mean no shadows and 100 means the light is fully shadowed.
+    0 means no shadows and 100 means the light is fully shadowed.
     The default value is 5.
 */
 
