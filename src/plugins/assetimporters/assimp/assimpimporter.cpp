@@ -831,14 +831,11 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateCameraProperties(aiN
 
         // isFieldOfViewHorizontal
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfViewOrientation"), "PerspectiveCamera.Horizontal");
-    //} else { //OrthographicCamera
-        // current version of the assimp does not support the OrthographicCamera's
-        // width and height.
-        // After updating assimp, mOrthographicWidth can be tested and added
-        //float width = camera->mOrthographicWidth * 2;
-        //float height = width / camera->mAspectRatio;
-        //QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("horizontalMagnification"), width);
-        //QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("verticalMagnification"), height);
+    } else { //OrthographicCamera
+        float width = camera->mOrthographicWidth * 2;
+        float height = width / camera->mAspect;
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("horizontalMagnification"), width);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("verticalMagnification"), height);
     }
     // projectionMode
 
