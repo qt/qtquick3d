@@ -43,9 +43,7 @@ View3D item, which itself is a Qt Quick \l Item.
 
 Consider the following example:
 
-\table
-\row
-\li \qml
+\qml
 import QtQuick
 import QtQuick3D
 
@@ -78,8 +76,8 @@ Rectangle {
     }
 }
 \endqml
-\li \image quick2d-3d-1.jpg
-\endtable
+
+\image quick2d-3d-1.jpg
 
 Here the 3D scene is the area with gray background. The rest of the window consists of 2D
 Qt Quick items. These can overlap with the View3D but are not part of the 3D world, are
@@ -124,9 +122,7 @@ render the 2D items in-line with the rest of the 3D scene, in the same render pa
 items have all 3D transformations applied. The transformations are inherited from the
 wrapping \l Node.
 
-\table
-\row
-\li \qml
+\qml
 import QtQuick
 import QtQuick3D
 
@@ -173,8 +169,8 @@ Rectangle {
     }
 }
 \endqml
-\li \image quick2d-3d-2.jpg
-\endtable
+
+\image quick2d-3d-2.jpg
 
 Compared to the first snippet, the \l Model node now has a child node, with a transform
 that places it somewhat above the cube's position. \c 150 is relative to the cube's
