@@ -42,7 +42,7 @@ class QtQuick3DMaterialPlugin : public QQmlExtensionPlugin
 
 public:
     QtQuick3DMaterialPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
-    virtual void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Materials"));
 
