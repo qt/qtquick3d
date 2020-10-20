@@ -69,18 +69,20 @@ void QQuick3DNodePrivate::setIsHiddenInEditor(bool isHidden)
     \inqmlmodule QtQuick3D
     \brief The base component for an object that exists in a 3D scene.
 
-    Node serves as the base class for types, such as, \l Model, \l Camera, \l Light. These
-    objects represent an entity that exists in the 3D scene, due to having a position and
-    other properties in the 3D world.  In many ways it serves the same purpose for Qt
-    Quick 3D as \l Item does for Qt Quick scenes.
+    The Node type serves as the base class for other spatial types, such as, \l Model, \l Camera, \l Light.
+    These objects represent an entity that exists in the 3D scene, due to having a position and
+    other properties in the 3D world. With the exception of the root node(s), all Node types are
+    transformed relative to their parent Node, that is, in local coordinates. In many ways the Node
+    type serves the same purpose in Qt Quick 3D scenes as \l Item does for Qt Quick scenes.
 
     In addition to types deriving from Node, it is also possible to parent other types to
     a Node.  This includes QObject instances, where the Node merely serves as the
     \l{QObject::parent()}{QObject parent}, and \l{Qt Quick 3D Scenes with 2D Content}{Qt
     Quick items}.
 
-    Node type can be used to wrap other objects for the purpose of grouping them, or
-    animating them. This snippet shows how to use Node to animate a camera:
+    Wrapping other objects for the purpose of grouping them into components or sub-trees can be
+    a convenient way to, for example, animated a group of nodes as a whole. This snippet shows how
+    to use Node to animate a camera:
 
     \qml
     Node {
