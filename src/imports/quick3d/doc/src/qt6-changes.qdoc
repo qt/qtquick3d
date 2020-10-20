@@ -34,10 +34,99 @@
 
     We try to maintain binary and source compatibility for all the public
     APIs in each release. But some changes were inevitable in an effort to
-    make Qt a better framework.
+    make Qt a better framework. Parts of the Qt Quick 3D API have been
+    substantially modified.
 
     In this topic we summarize those changes in Qt Quick 3D, and provide
     guidance to handle them.
 
-    \section1 ADD STUFF HERE
+    \section1 RHI
+
+    The biggest change is the introduction of the Rendering Hardware Interface, which
+    allows Qt Quick 3D to run on Direct3D, Metal and Vulkan in addition to OpenGL and OpenGL ES.
+    This means that all shader code needs to be updated, and that inline shaders are no longer
+    supported. All shader properties are now URLs referring to binary shader files.
+
+    See the \l {RHI porting guide} for detailed information.
+
+    \section1 Other API changes
+
+    \section2 QML import version
+
+    Starting with Qt 6.0, the version number for QML import statements is the
+    same as the Qt version number. It is now also possible to import a module
+    without specifying a version: this will import the latest version of the module.
+
+
+    \section2 Lighting
+
+    \l {Light::brightness}{Light brightness} now represents an energy multiplier defaulting to 1.0, where
+    Qt 5 would use a percentage value defaulting to 100. In practice this
+    means that all \c brightness values should be divided by 100.
+
+    \c SceneEnvironment.probeBrightness is renamed to
+    \l {SceneEnvironment::probeExposure}{probeExposure} and is also redefined to
+    be a multiplier with a default value of 1.0. That is, all \c probeBrightness values
+    should be renamed to \c probeExposure and divided by 100.
+
+
+    \c AreaLight has been removed for performance reasons. In many cases it can be replaced
+    with \l SpotLight, which was added in Qt Quick 5.15.
+
+    \section2 Custom Materials
+
+    The custom materials API has been completely reworked in 6.0.  This means
+    any existing custom materials will have to be substantially rewritten.
+    See the \l CustomMaterial documentation for details of the new API.
+
+    \section2 Principled Material
+
+    The \l PrincipledMaterial QML type has been greatly improved in Qt Quick
+    6.0, and now more closely follows the principles of Physically Based
+    Rendering. Imported models should now render correctly without changing
+    properties of the materials. Existing materials will need to be changed to
+    undo any compensations for previous inaccuracies.
+
+    \table
+    \header
+    \li PrincipledMaterial in Qt 5
+    \li PrincipledMaterial in Qt 6
+    \row
+    \li \image quick3d-principled-qt5.png
+    \li \image quick3d-principled-qt6.png
+    \endtable
+
+    \section2 Predefined materials
+
+    There are no predefined materials included in QtQuick3D 6.0.  Any
+    materials added in future releases will probably not be compatible with
+    the old ones. The Materials import does not exist. (The CustomMaterial
+    type is moved to the base QtQuick3D import.)
+
+    These are the material QML types that have been removed in Qt 6.0:
+
+    \list
+      \li AluminumAnodizedEmissiveMaterial
+      \li AluminumAnodizedMaterial
+      \li AluminumBrushedMaterial
+      \li AluminumEmissiveMaterial
+      \li AluminumMaterial
+      \li CopperMaterial
+      \li FrostedGlassMaterial
+      \li FrostedGlassSinglePassMaterial
+      \li GlassMaterial
+      \li GlassRefractiveMaterial
+      \li PaperArtisticMaterial
+      \li PaperOfficeMaterial
+      \li PlasticStructuredRedEmissiveMaterial
+      \li PlasticStructuredRedMaterial
+      \li SteelMilledConcentricMaterial
+    \endlist
+
+    \section2 Tesselation and displacement maps
+
+    Model tesselation mode is gone due to increased focus on supporting
+    embedded hardware. In addition, as a result, displacement map support has
+    been removed from materials. Similar effects can be achieved with a
+    \l {CustomMaterial}{custom material}.
 */
