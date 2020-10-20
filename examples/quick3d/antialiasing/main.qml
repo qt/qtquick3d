@@ -195,7 +195,7 @@ Window {
             id: antialiasingQualityColumn
             RadioButton {
                 id: qualityButton1
-                text: qsTr("Normal")
+                text: qsTr("Medium")
             }
             RadioButton {
                 id: qualityButton2

@@ -47,7 +47,7 @@
     Antialiasing is controlled by the \l [QML] {SceneEnvironment} object. The
     values are set based on the selection made in the user interface.
 
-    The {SceneEnvironment.antialiasingMode}{antialiasing mode} can be set to \c NoAA to disable antialiasing,
+    The \l [QML] {SceneEnvironment::antialiasingMode}{antialiasing mode} can be set to \c NoAA to disable antialiasing,
     or to one of the following:
     \list
     \li \c SSAA for supersample antialiasing
@@ -55,9 +55,11 @@
     \li \c ProgressiveAA for progressive antialiasing
     \endlist
 
-    The {SceneEnvironment.antialiasingQuality}{antialiasing quality} can be set to \c Medium, \c High, or \c VeryHigh.
+    The \l [QML] {SceneEnvironment::antialiasingQuality}{antialiasing quality} can be set to \c Medium, \c High, or \c VeryHigh.
 
-    In addition, {SceneEnvironment.temporalAAEnabled}{temporal antialiasing} can be enabled independently.
+    In addition, \l [QML] {SceneEnvironment::temporalAAEnabled}{temporal antialiasing} can be enabled independently.
 
     \snippet antialiasing/main.qml scene environment
+
+    See the \l{quick3d-asset-conditioning-anti-aliasing}{Anti-Aliasing} page in the asset conditioning section for further discussion on antialiasing.
 */
