@@ -765,33 +765,16 @@ QT_BEGIN_NAMESPACE
     The custom fragment shader code can freely access uniforms (such as, \c
     CAMERA_DIRECTION or \c CAMERA_POSITION), and varyings passed on from the
     custom vertex shader. Additionally, there are a number of built-in varyings
-    available as special keywords. These are optional in the sense that a
-    vertex \c MAIN could calculate and pass on these on its own, but to reduce
-    duplicated data fragment shaders can also rely on these built-ins instead:
+    available as special keywords. Some of these are optional in the sense that
+    a vertex \c MAIN could calculate and pass on these on its own, but to
+    reduce duplicated data fragment shaders can also rely on these built-ins
+    instead. These built-ins are available in light processor functions and in
+    the fragment MAIN.
 
     \list
 
     \li vec3 \c VAR_WORLD_NORMAL - Interpolated normal transformed by \c
     NORMAL_MATRIX.
-
-    \li vec3 \c VAR_WORLD_POSITION - Interpolated world space vertex position
-    (\c{(MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz})
-
-    \li vec4 \c VAR_COLOR - Relevant when vertex colors are provided in the
-    mesh. \c{vec4(1.0)} otherwise.
-
-    \li vec3 \c VIEW_VECTOR - Points towards the camera. This is
-    effectively the \c{CAMERA_POSITION - VAR_WORLD_POSITION} vector normalized.
-    Only available in the fragment shader.
-
-    \li vec4 \c FRAGCOORD - Contains the window-relative coordinates of the
-    current fragment. Only available in the fragment shader.
-    \endlist
-
-    Light processor functions, as well as the fragment shader's \c MAIN, also
-    have access to the following:
-
-    \list
 
     \li vec3 \c NORMAL - Unlike \c VAR_WORLD_NORMAL, which is the
     interpolated normal as-is, this value is potentially adjusted for
@@ -799,6 +782,18 @@ QT_BEGIN_NAMESPACE
     inverted as necessary. Therefore lighting and other calculations are
     recommended to use \c NORMAL instead of \c VAR_WORLD_NORMAL in order
     behave correctly with all culling modes.
+
+    \li vec3 \c VAR_WORLD_POSITION - Interpolated world space vertex position
+    (\c{(MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz})
+
+    \li vec4 \c VAR_COLOR - The interpolated vertex color when colors are
+    provided in the mesh. \c{vec4(1.0)} otherwise.
+
+    \li vec3 \c VIEW_VECTOR - Points towards the camera. This is
+    effectively the \c{CAMERA_POSITION - VAR_WORLD_POSITION} vector normalized.
+
+    \li vec4 \c FRAGCOORD - Contains the window-relative coordinates of the
+    current fragment.
 
     \li float \c FRAMEBUFFER_Y_UP - The value is \c 1 when the Y axis points up
     in the coordinate system for framebuffers (textures), meaning \c{(0, 0)} is
