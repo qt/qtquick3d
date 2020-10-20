@@ -275,7 +275,8 @@ struct QSSGMaterialVertexPipeline
             return;
 
         const bool meshHasColor = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Color, inKey);
-        if (hasCustomShadedMain || meshHasColor) {
+        const bool usesVarColor = defaultMaterialShaderKeyProperties.m_usesVarColor.getValue(inKey);
+        if (hasCustomShadedMain || usesVarColor || meshHasColor) {
             addInterpolationParameter("qt_varColor", "vec4");
             vertex().append("    qt_varColor = qt_vertColor;");
             fragment().append("    vec4 qt_vertColor = qt_varColor;\n");

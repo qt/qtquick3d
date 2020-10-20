@@ -67,7 +67,8 @@ struct QSSGCustomShaderMetaData
         OverridesPosition = 1 << 3,
         UsesProjectionMatrix = 1 << 4,
         UsesInverseProjectionMatrix = 1 << 5,
-        UsesScreenMipTexture = 1 << 6
+        UsesScreenMipTexture = 1 << 6,
+        UsesVarColor = 1 << 7
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

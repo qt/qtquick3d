@@ -520,6 +520,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
     // default materials dont make use of raw projection or inverse projection matrices
     renderer->defaultMaterialShaderKeyProperties().m_usesProjectionMatrix.setValue(theGeneratedKey, false);
     renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, false);
+    // nor they do rely on VAR_COLOR
+    renderer->defaultMaterialShaderKeyProperties().m_usesVarColor.setValue(theGeneratedKey, false);
 
     // alpha Mode
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
@@ -683,6 +685,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
 
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
+
+    // Knowing whether VAR_COLOR is used becomes relevant when there is no
+    // custom vertex shader, but VAR_COLOR is present in the custom fragment
+    // snippet, because that case needs special care.
+    const bool usesVarColor = inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor);
+    renderer->defaultMaterialShaderKeyProperties().m_usesVarColor.setValue(theGeneratedKey, usesVarColor);
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending))
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;

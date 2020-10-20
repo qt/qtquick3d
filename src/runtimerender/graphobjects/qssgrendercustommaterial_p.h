@@ -104,7 +104,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         OverridesPosition = 1 << 4,
         ProjectionMatrix = 1 << 5,
         InverseProjectionMatrix = 1 << 6,
-        ScreenMipTexture = 1 << 7
+        ScreenMipTexture = 1 << 7,
+        VarColor = 1 << 8
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

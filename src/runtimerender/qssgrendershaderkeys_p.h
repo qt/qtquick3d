@@ -682,6 +682,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_usesProjectionMatrix;
     QSSGShaderKeyBoolean m_usesInverseProjectionMatrix;
     QSSGShaderKeyBoolean m_usesPointsTopology;
+    QSSGShaderKeyBoolean m_usesVarColor;
     QSSGShaderKeyAlphaMode m_alphaMode;
     QSSGShaderKeyVertexAttribute m_vertexAttributes;
     QSSGShaderKeyBoolean m_usesFloatJointIndices;
@@ -701,6 +702,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_usesProjectionMatrix("usesProjectionMatrix")
         , m_usesInverseProjectionMatrix("usesInverseProjectionMatrix")
         , m_usesPointsTopology("usesPointsTopology")
+        , m_usesVarColor("usesVarColor")
         , m_alphaMode("alphaMode")
         , m_vertexAttributes("vertexAttributes")
         , m_usesFloatJointIndices("usesFloatJointIndices")
@@ -848,6 +850,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_usesProjectionMatrix);
         inVisitor.visit(m_usesInverseProjectionMatrix);
         inVisitor.visit(m_usesPointsTopology);
+        inVisitor.visit(m_usesVarColor);
         inVisitor.visit(m_alphaMode);
         inVisitor.visit(m_vertexAttributes);
         inVisitor.visit(m_usesFloatJointIndices);

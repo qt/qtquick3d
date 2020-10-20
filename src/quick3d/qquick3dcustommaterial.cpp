@@ -1348,6 +1348,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesInverseProjectionMatrix))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesVarColor))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor, true);
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
