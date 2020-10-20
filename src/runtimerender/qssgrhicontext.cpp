@@ -921,12 +921,15 @@ void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc
     if (!rpDesc)
         return;
 
+    QVarLengthArray<QRhiGraphicsPipeline *, 16> deletedPipelines;
+
     for (auto it = m_pipelines.begin(); it != m_pipelines.end(); ) {
         if (it.key().compatibleRpDesc == rpDesc) {
             // The QRhiGraphicsPipeline object is kept alive until the current
             // frame is submitted (by QRhi::endFrame()) The underlying native
             // graphics object(s) may live even longer in fact, but QRhi takes
             // care of that so that's no concern for us here.
+            deletedPipelines.append(it.value());
             it.value()->deleteLater();
             it = m_pipelines.erase(it);
         } else {
@@ -935,7 +938,7 @@ void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc
     }
 
     for (auto it = m_drawCallData.begin(), end = m_drawCallData.end(); it != end; ++it) {
-        if (it->pipelineRpDesc == rpDesc) {
+        if (deletedPipelines.contains(it->pipeline)) {
             it->pipeline = nullptr;
             it->pipelineRpDesc = nullptr;
         }
