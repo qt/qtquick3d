@@ -44,24 +44,33 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Defines a Perspective Camera for viewing the content of a 3D scene.
 
-    A Camera is always necessary to view the content of a 3D scene. A camera
-    defines how to project the content of a 3D scene into a 2D coordinate space,
-    which can then be used on a 2D surface. When a camera is present in the scene
-    it can be used to direct what is displayed in a View3D.
+    A \l Camera defines how the content of the 3D scene is projected onto a 2D surface,
+    such as a View3D. A scene needs at least one \l Camera in order to visualize its
+    contents.
 
-    To determine the projection of this camera a high level API is provided.
-    First it is possible to position this Camera like any other spatial Node in
-    the scene. This determines where the Camera is in the scene, and what
-    direction it is facing. The default direction of the camera is such that the
-    forward vector is looking up the +Z axis, and the up direction vector is up
-    the +Y axis. With this in mind any transformation applied to the camera as
-    well as the transformations inherited from it's parent Nodes you can define
-    exactly where and in what direction your camera is facing.
+    It is possible to position and rotate the \l Camera like any other spatial \l{QtQuick3D::Node}{Node} in
+    the scene. The \l{QtQuick3D::Node}{Node}'s location and orientation determines where the \l Camera is in
+    the scene, and what direction it is facing. The default orientation of the \l Camera
+    has its forward vector pointing along the negative Z axis and its up vector along
+    the positive Y axis.
 
-    Perspective camera is the standard camera type, which uses field of view and near and far
-    clip planes to specify the projection.
+    \image perspectivecamera.png
 
-    \sa OrthographicCamera, FrustumCamera, CustomCamera
+    PerspectiveCamera is the standard \l Camera type. It gives a realistic projection of the
+    scene, where distant objects are perceived as smaller. The frustum is defined by
+    the fieldOfView property as well as near and far clip planes.
+
+    The following example creates a PerspectiveCamera at position [0, 200, 300] in the scene, a
+    field of view of 90 degrees and with a 30 degree downward pitch.
+    \code
+    PerspectiveCamera {
+        position: Qt.vector3d(0, 200, 300)
+        eulerRotation.x: -30
+        fieldOfView: 90
+    }
+    \endcode
+
+    \sa {Qt Quick 3D - View3D Example}, OrthographicCamera, FrustumCamera, CustomCamera
 */
 
 /*!
@@ -72,8 +81,10 @@ QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera() {}
 /*!
     \qmlproperty real PerspectiveCamera::clipNear
 
-    This property holds the near value of the camara's view frustum. This value determines
-    what the closest distance to the camera that items will be shown.
+    This property defines the near clip plane of the PerspectiveCamera's frustum. Geometry which
+    is closer to the \l Camera than the near clip plane will not be visible.
+
+    The default value is 10.0.
 */
 
 float QQuick3DPerspectiveCamera::clipNear() const
@@ -84,8 +95,10 @@ float QQuick3DPerspectiveCamera::clipNear() const
 /*!
     \qmlproperty real PerspectiveCamera::clipFar
 
-    This property holds the far value of the camara's view frustum. This value determines
-    what the furthest distance to the camera that items will be shown.
+    This property defines the far clip plane of the PerspectiveCamera's frustum. Geometry which
+    is further away from the \l Camera than the far clip plane will not be visible.
+
+    The default value is 10000.0.
 */
 
 float QQuick3DPerspectiveCamera::clipFar() const
@@ -97,8 +110,10 @@ float QQuick3DPerspectiveCamera::clipFar() const
     \qmlproperty real PerspectiveCamera::fieldOfView
 
     This property holds the field of view of the camera in degrees. This can be either the
-    vertical or horizontal field of view depending on if the fieldOfViewOrientation property
+    vertical or horizontal field of view depending on whether the fieldOfViewOrientation property
     is set to \c {Camera.Vertical} or \c {Camera.Horizontal}.
+
+    The default value is 60.0.
  */
 
 float QQuick3DPerspectiveCamera::fieldOfView() const
@@ -110,7 +125,21 @@ float QQuick3DPerspectiveCamera::fieldOfView() const
     \qmlproperty enumeration PerspectiveCamera::fieldOfViewOrientation
 
     This property determines if the field of view property reflects the vertical or the horizontal
-    field of view. The default value is \c {Camera.Vertical}.
+    field of view.
+
+    It can be either of the following two values:
+    \list
+    \li Camera.Vertical - The provided field of view is vertical, meaning the field of view is the angle between
+          the line traced from the camera to the center top of the viewport and the line from
+          the camera to the center bottom of the viewport. The horizontal aspect ratio will be
+          adjusted to maintain aspect ratio. This is the default orientation.
+    \li Camera.Horizontal - The provided field of view is horizontal, meaning the field of view is the angle between
+          the line traced from the camera to the center left side of the viewport and the line from
+          the camera to the center right side of the viewport. The vertical aspect ratio will be
+          adjusted to maintain aspect ratio.
+    \endlist
+
+    The default value is \c {Camera.Vertical}.
 */
 
 QQuick3DCamera::FieldOfViewOrientation QQuick3DPerspectiveCamera::fieldOfViewOrientation() const

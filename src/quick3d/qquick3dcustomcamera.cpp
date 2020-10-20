@@ -42,24 +42,38 @@ QT_BEGIN_NAMESPACE
     \qmltype CustomCamera
     \inherits Camera
     \inqmlmodule QtQuick3D
-    \brief Defines a Custom Camera for viewing the content of a 3D scene.
+    \brief Defines a Camera with a custom projection matrix.
 
-    A Camera is always necessary to view the content of a 3D scene. A camera
-    defines how to project the content of a 3D scene into a 2D coordinate space,
-    which can then be used on a 2D surface. When a camera is present in the scene
-    it can be used to direct what is displayed in a View3D.
+    A \l Camera defines how the content of the 3D scene is projected onto a 2D surface,
+    such as a View3D. A scene needs at least one \l Camera in order to visualize its
+    contents.
 
-    To determine the projection of this camera a high level API is provided.
-    First it is possible to position this Camera like any other spatial Node in
-    the scene. This determines where the Camera is in the scene, and what
-    direction it is facing. The default direction of the camera is such that the
-    forward vector is looking up the +Z axis, and the up direction vector is up
-    the +Y axis. With this in mind any transformation applied to the camera as
-    well as the transformations inherited from it's parent Nodes you can define
-    exactly where and in what direction your camera is facing.
+    It is possible to position and rotate the \l Camera like any other spatial \l{QtQuick3D::Node}{Node} in
+    the scene. The \l{QtQuick3D::Node}{Node}'s location and orientation determines where the \l Camera is in
+    the scene, and what direction it is facing. The default orientation of the \l Camera
+    has its forward vector pointing along the negative Z axis and its up vector along
+    the positive Y axis.
 
-    If you need full-control over how the projection matrix is created, this is the camera
-    to use.
+    The CustomCamera type provides a \l Camera where the projection matrix can be customized
+    freely.
+
+    The following example creates a CustomCamera at position [0, 200, 300] in the scene, with
+    a 30 degree downward pitch, and a custom projection matrix based on custom near and far plane
+    distances, and a custom field of view.
+    \code
+    CustomCamera {
+        position: Qt.vector3d(0, 200, 300)
+        eulerRotation.x: -30
+
+        property real near: 10.0
+        property real far: 10000.0
+        property real fov: 60.0 * Math.PI / 180.0
+        projection: Qt.matrix4x4(Math.cos(fov / 2) / Math.sin(fov / 2) * (window.height / window.width), 0, 0, 0,
+                                 0, Math.cos(fov / 2) / Math.sin(fov / 2), 0, 0,
+                                 0, 0, -(near + far) / (far - near), -(2.0 * near * far) / (far - near),
+                                 0, 0, -1, 0);
+    }
+    \endcode
 
     \sa PerspectiveCamera, OrthographicCamera, FrustumCamera
 */
@@ -72,7 +86,7 @@ QQuick3DCustomCamera::QQuick3DCustomCamera() {}
 /*!
     \qmlproperty matrix4x4 CustomCamera::projection
 
-    This property defines a custom projection matrix.
+    This property defines the CustomCamera's projection matrix.
 */
 QMatrix4x4 QQuick3DCustomCamera::projection() const
 {

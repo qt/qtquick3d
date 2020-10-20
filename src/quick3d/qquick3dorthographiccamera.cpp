@@ -42,24 +42,35 @@ QT_BEGIN_NAMESPACE
     \qmltype OrthographicCamera
     \inherits Camera
     \inqmlmodule QtQuick3D
-    \brief Defines an Orthographic Camera for viewing the content of a 3D scene.
+    \brief Defines an Camera with an orthographic projection matrix.
 
-    A Camera is always necessary to view the content of a 3D scene. A camera
-    defines how to project the content of a 3D scene into a 2D coordinate space,
-    which can then be used on a 2D surface. When a camera is present in the scene
-    it can be used to direct what is displayed in a View3D.
+    A \l Camera defines how the content of the 3D scene is projected onto a 2D surface,
+    such as a View3D. A scene needs at least one \l Camera in order to visualize its
+    contents.
 
-    An orthographic camera implements a parallel projection that does not have perspective scaling.
-    As such, it can also be called a 2D camera.
+    It is possible to position and rotate the \l Camera like any other spatial \l{QtQuick3D::Node}{Node} in
+    the scene. The \l{QtQuick3D::Node}{Node}'s location and orientation determines where the \l Camera is in
+    the scene, and what direction it is facing. The default orientation of the \l Camera
+    has its forward vector pointing along the negative Z axis and its up vector along
+    the positive Y axis.
 
-    To determine the projection of this camera a high level API is provided:
-    First, it is possible to position and transform this Camera like any other spatial Node in
-    the scene. This determines where the Camera is in the scene, and what
-    direction it is facing. The default direction of the camera has the
-    forward vector looking up the +Z axis, with the up direction vector being
-    the +Y axis. Secondly, the camera's magnification is controlled using horizontalMagnification and verticalMagnification.
+    \image orthographiccamera.png
 
-    \sa PerspectiveCamera, FrustumCamera, CustomCamera
+    The OrthographicCamera is a parallel projection \l Camera, in which parallel lines remain
+    parallel and an object's perceived scale is unaffected by its distance from the \l Camera.
+    Typical use cases for this type of \l Camera are CAD (Computer-Assisted Design) applications
+    and cartography.
+
+    The following example creates a OrthographicCamera at position [0, 200, 300] in the scene, and
+    with a 30 degree downward pitch.
+    \code
+    OrthographicCamera {
+        position: Qt.vector3d(0, 200, 300)
+        eulerRotation.x: -30
+    }
+    \endcode
+
+    \sa {Qt Quick 3D - View3D Example}, PerspectiveCamera, FrustumCamera, CustomCamera
 */
 
 /*!
@@ -68,52 +79,58 @@ QT_BEGIN_NAMESPACE
 QQuick3DOrthographicCamera::QQuick3DOrthographicCamera() {}
 
 /*!
- * \qmlproperty real OrthographicCamera::clipNear
- *
- * This property holds the near value of the camara's view frustum. This value determines
- * what the closest distance to the camera that items will be shown.
- *
- */
+    \qmlproperty real OrthographicCamera::clipNear
 
+    This property defines the near clip plane of the OrthographicCamera's frustum. Geometry which
+    is closer to the \l Camera than the near clip plane will not be visible.
+
+    The default value is 10.0.
+
+    \sa clipFar
+ */
 float QQuick3DOrthographicCamera::clipNear() const
 {
     return m_clipNear;
 }
 
 /*!
- * \qmlproperty real OrthographicCamera::clipFar
- *
- * This property holds the far value of the camara's view frustum. This value determines
- * what the furthest distance to the camera that items will be shown.
- *
- */
+    \qmlproperty real OrthographicCamera::clipFar
 
+    This property defines the far clip plane of the OrthographicCamera's frustum. Geometry which
+    is further away from the \l Camera than the far clip plane will not be visible.
+
+    The default value is 10000.0.
+
+    \sa clipNear
+ */
 float QQuick3DOrthographicCamera::clipFar() const
 {
     return m_clipFar;
 }
 
 /*!
- * \qmlproperty real OrthographicCamera::horizontalMagnification
- *
- * This property holds the horizontal magnification of the view frustum. The default value is 1.0.
- *
- * \sa verticalMagnification
- */
+    \qmlproperty real OrthographicCamera::horizontalMagnification
 
+    This property holds the horizontal magnification of the OrthographicCamera's frustum.
+
+    The default value is 1.0.
+
+    \sa verticalMagnification
+ */
 float QQuick3DOrthographicCamera::horizontalMagnification() const
 {
     return m_horizontalMagnification;
 }
 
 /*!
- * \qmlproperty real OrthographicCamera::verticalMagnification
- *
- * This property holds the vertical magnification of the view frustum. The default value is 1.0.
- *
- * \sa horizontalMagnification
- */
+    \qmlproperty real OrthographicCamera::verticalMagnification
 
+    This property holds the vertical magnification of the OrthographicCamera's frustum.
+
+    The default value is 1.0.
+
+    \sa horizontalMagnification
+ */
 float QQuick3DOrthographicCamera::verticalMagnification() const
 {
     return m_verticalMagnification;
