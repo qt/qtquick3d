@@ -677,7 +677,6 @@ to \c{(0, 128, 0)}, based on which our first attempt could be:
 \table
 \header
 \li main.qml, material.frag
-\li Result
 \row \li \qml
 import QtQuick
 import QtQuick3D
@@ -707,8 +706,9 @@ void MAIN()
     ROUGHNESS = 0.4;
 }
 \endcode
-\li \image quick3d-custom-color1.jpg
 \endtable
+
+\image quick3d-custom-color1.jpg
 
 This does not look entirely right. Compare with the second approach:
 
@@ -989,7 +989,6 @@ content:
 \table
 \header
 \li main.qml, material.frag
-\li Result
 \row \li \qml
 import QtQuick
 import QtQuick3D
@@ -1038,8 +1037,9 @@ void MAIN()
     BASE_COLOR = c;
 }
 \endcode
-\li \image quick3d-custmat-tex1-anim.gif
 \endtable
+
+\image quick3d-custmat-tex1-anim.gif
 
 Here the 2D subtree (Rectangle with two children: another Rectangle and the Text) is
 rendered in to an 512x512 2D texture every time this mini-scene changes. The texture is
@@ -1468,11 +1468,7 @@ void MAIN()
 \endcode
 \endtable
 
-\table
-\header
-\li Result
-\row \li \image quick3d-custom-unshaded-anim.gif
-\endtable
+\image quick3d-custom-unshaded-anim.gif
 
 Unshaded materials are useful when interacting with scene lighting is not necessary or
 desired, and the material needs full control on the final fragment color. Notice how the
