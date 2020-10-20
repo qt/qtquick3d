@@ -56,11 +56,10 @@ QT_BEGIN_NAMESPACE
 
     \list
 
-    \li Types that represent objects in the 3D scene, often due to having a position,
-    direction, or other component in the 3D world. For example, \l Model, \l Camera, or \l
-    Light. Such types inherit from \l Node, which in turn inherits from Object3D.
+    \li Spatial types that represent objects in the 3D scene, these will normally have a position and/or a direction.
+    For example, \l Model, \l Camera, or \l Light. Such types inherit from \l Node, which in turn inherits from Object3D.
 
-    \li Types that do not themselves represent an object in the 3D world, but rather serve
+    \li Resource types that do not themselves represent an object in the 3D world, but rather serve
     as components to \l Node subclasses, providing data of some kind. This includes, among
     others, \l Material, \l Geometry, and \l Texture.
 
