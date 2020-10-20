@@ -1051,7 +1051,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
     // QRhiTexture in the first place).
     QRhi *rhi = context->rhi();
     QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-    qsgTexture->commitTextureOperations(rhi, rub);
     if (qsgTexture->isAtlasTexture()) {
         // This returns a non-atlased QSGTexture (or does nothing if the
         // extraction has already been done), the ownership of which stays with
@@ -1061,6 +1060,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
         // non-atlased QSGTexture in the first place.
         qsgTexture = qsgTexture->removedFromAtlas(rub);
     }
+    qsgTexture->commitTextureOperations(rhi, rub);
     context->commandBuffer()->resourceUpdate(rub);
 
     auto theImage = qsgImageMap.find(qsgTexture);
