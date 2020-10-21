@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     \section1 Materials
 
     A model can consist of several sub-meshes, each of which can have its own material.
-    The sub-mess uses a material from the \l{materials} list, corresponding to its index.
+    The sub-mesh uses a material from the \l{materials} list, corresponding to its index.
     If the number of materials is less than the sub-meshes, the last material in the list is used
     for subsequent sub-meshes.
 
