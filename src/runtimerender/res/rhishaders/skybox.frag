@@ -39,8 +39,8 @@ const float A = 2.51;
 }
 #endif
 
-#ifdef QSSG_ENABLE_HEJLRICHARD_TONEMAPPING
-vec3 qt_tonemapHejlRichard(vec3 color)
+#ifdef QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+vec3 qt_tonemapHejlDawson(vec3 color)
 {
     color = max(vec3(0.0), color - vec3(0.004));
     return (color * (6.2 * color + 0.5)) / (color * (6.2 * color + 1.7) + 0.06);
@@ -74,9 +74,9 @@ vec3 qt_tonemap(vec3 color)
 #ifdef QSSG_ENABLE_ACES_TONEMAPPING
     return qt_toneMapACES(color);
 #endif
-    // Hejl Richard
-#ifdef QSSG_ENABLE_HEJLRICHARD_TONEMAPPING
-    return qt_tonemapHejlRichard(color);
+    // Hejl-Dawson
+#ifdef QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+    return qt_tonemapHejlDawson(color);
 #endif
 
     // FILMIC

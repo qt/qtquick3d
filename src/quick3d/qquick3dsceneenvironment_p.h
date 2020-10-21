@@ -116,7 +116,7 @@ public:
         TonemapModeNone = 0,
         TonemapModeLinear,
         TonemapModeAces,
-        TonemapModeHejlRichard,
+        TonemapModeHejlDawson,
         TonemapModeFilmic
     };
     Q_ENUM(QQuick3DEnvironmentTonemapModes)

@@ -77,12 +77,12 @@ qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING
 
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_aces.vert.qsb skybox.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_ACES_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_aces.frag.qsb skybox.frag
-:: Hejl Richard Tonemapping
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING -O -c -o skybox_hdr_hejlrichard.vert.qsb skybox.vert
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING -O -c -o skybox_hdr_hejlrichard.frag.qsb skybox.frag
+:: Hejl Dawson Tonemapping
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLDAWSON_TONEMAPPING -O -c -o skybox_hdr_hejldawson.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLDAWSON_TONEMAPPING -O -c -o skybox_hdr_hejldawson.frag.qsb skybox.frag
 
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_hejlrichard.vert.qsb skybox.vert
-qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLRICHARD_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_hejlrichard.frag.qsb skybox.frag
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLDAWSON_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_hejldawson.vert.qsb skybox.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_HEJLDAWSON_TONEMAPPING --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o skybox_rgbe_hejldawson.frag.qsb skybox.frag
 :: Filmic Tonemapping
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_FILMIC_TONEMAPPING -O -c -o skybox_hdr_filmic.vert.qsb skybox.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_FILMIC_TONEMAPPING -O -c -o skybox_hdr_filmic.frag.qsb skybox.frag

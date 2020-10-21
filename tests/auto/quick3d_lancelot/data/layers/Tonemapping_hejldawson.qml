@@ -63,7 +63,7 @@ Rectangle {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.SkyBox
             lightProbe: layer_lightprobe
-            tonemapMode: SceneEnvironment.TonemapModeHejlRichard
+            tonemapMode: SceneEnvironment.TonemapModeHejlDawson
         }
 
         PerspectiveCamera {

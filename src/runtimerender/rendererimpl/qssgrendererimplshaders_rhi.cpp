@@ -98,8 +98,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer:
         case QSSGRenderLayer::TonemapMode::Aces:
             name.append(QByteArrayLiteral("_aces"));
             break;
-        case QSSGRenderLayer::TonemapMode::HejlRichard:
-            name.append(QByteArrayLiteral("_hejlrichard"));
+        case QSSGRenderLayer::TonemapMode::HejlDawson:
+            name.append(QByteArrayLiteral("_hejldawson"));
             break;
         case QSSGRenderLayer::TonemapMode::Filmic:
             name.append(QByteArrayLiteral("_filmic"));

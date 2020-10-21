@@ -478,8 +478,8 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
         in sRGB color space.
     \value SceneEnvironment.TonemapModeAces
         Academy Color Encoding System tonemapping is applied.
-    \value SceneEnvironment.TonemapModeHejlRichard
-        Hejl Richard tonemapping is applied.
+    \value SceneEnvironment.TonemapModeHejlDawson
+        Hejl-Dawson tonemapping is applied.
     \value SceneEnvironment.TonemapModeFilmic
         Filmic tonemapping is applied.
 

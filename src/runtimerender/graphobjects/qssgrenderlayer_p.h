@@ -106,7 +106,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         None = 0, // Bypass mode
         Linear,
         Aces,
-        HejlRichard,
+        HejlDawson,
         Filmic
     };
 

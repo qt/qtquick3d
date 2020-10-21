@@ -74,7 +74,7 @@ enum Define : quint8
     CubeShadowPass,
     LinearTonemapping,
     AcesTonemapping,
-    HejlRichardTonemapping,
+    HejlDawsonTonemapping,
     FilmicTonemapping,
     RGBELightProbe,
     Count /* New defines are added before this one! */

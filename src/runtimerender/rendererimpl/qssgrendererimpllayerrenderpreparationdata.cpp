@@ -1288,8 +1288,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
         setShaderFeature(QSSGShaderDefines::AcesTonemapping,
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
-        setShaderFeature(QSSGShaderDefines::HejlRichardTonemapping,
-                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::HejlRichard);
+        setShaderFeature(QSSGShaderDefines::HejlDawsonTonemapping,
+                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
         setShaderFeature(QSSGShaderDefines::FilmicTonemapping,
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
     }
