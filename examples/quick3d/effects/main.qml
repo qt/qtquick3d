@@ -120,6 +120,7 @@ Window {
             source: "texture.png"
         }
 
+        //! [scene]
         Node {
             id: scene
 
@@ -158,6 +159,7 @@ Window {
                 }
             }
         }
+        //! [scene]
     }
     Button {
         id: animationButton
@@ -267,6 +269,7 @@ Window {
                     }
                 }
 
+                //! [effect]
                 EffectBox {
                     id: chromaticBox
                     text: "ChromaticAberration"
@@ -294,6 +297,7 @@ Window {
                         description: "focus depth"
                     }
                 }
+                //! [effect]
 
                 EffectBox {
                     id: colorMasterBox
