@@ -169,7 +169,7 @@ bool QQuick3DFrustumCamera::checkSpatialNode(QSSGRenderCamera *camera)
     changed |= qUpdateIfNeeded(camera->clipFar, clipFar());
     changed |= qUpdateIfNeeded(camera->fov, qDegreesToRadians(fieldOfView()));
     changed |= qUpdateIfNeeded(camera->fovHorizontal, fieldOfViewOrientation()
-                               == QQuick3DCamera::FieldOfViewOrientation::Horizontal);
+                               == QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
     changed |= qUpdateIfNeeded(camera->top, m_top);
     changed |= qUpdateIfNeeded(camera->bottom, m_bottom);

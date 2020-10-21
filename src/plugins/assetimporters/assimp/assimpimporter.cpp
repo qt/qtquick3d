@@ -708,7 +708,7 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateCameraProperties(aiN
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfView"), fov);
 
         // isFieldOfViewHorizontal
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfViewOrientation"), "Camera.Horizontal");
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel + 1, type, QStringLiteral("fieldOfViewOrientation"), "PerspectiveCamera.Horizontal");
     //} else { //OrthographicCamera
         // current version of the assimp does not support the OrthographicCamera's
         // width and height.

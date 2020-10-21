@@ -54,13 +54,6 @@ class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
     QML_UNCREATABLE("Camera is Abstract")
     QML_ADDED_IN_VERSION(1, 14)
 public:
-
-    enum FieldOfViewOrientation {
-        Vertical,
-        Horizontal
-    };
-    Q_ENUM(FieldOfViewOrientation)
-
     explicit QQuick3DCamera(QQuick3DNode *parent = nullptr);
 
     Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;

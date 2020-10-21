@@ -107,11 +107,28 @@ float QQuick3DPerspectiveCamera::clipFar() const
 }
 
 /*!
+   \qmlproperty enumeration PerspectiveCamera::FieldOfViewOrientation
+
+   This enum type specifies the orientation in which camera field of view is given.
+
+   \value PerspectiveCamera.Vertical
+          The provided field of view is vertical, meaning the field of view is the angle between
+          the line traced from the camera to the center top of the viewport and the line from
+          the camera to the center bottom of the viewport. The horizontal aspect ratio will be
+          adjusted to maintain aspect ratio. This is the default orientation.
+   \value PerspectiveCamera.Horizontal
+          The provided field of view is horizontal, meaning the field of view is the angle between
+          the line traced from the camera to the center left side of the viewport and the line from
+          the camera to the center right side of the viewport. The vertical aspect ratio will be
+          adjusted to maintain aspect ratio.
+ */
+
+/*!
     \qmlproperty real PerspectiveCamera::fieldOfView
 
     This property holds the field of view of the camera in degrees. This can be either the
     vertical or horizontal field of view depending on whether the fieldOfViewOrientation property
-    is set to \c {Camera.Vertical} or \c {Camera.Horizontal}.
+    is set to \c {PerspectiveCamera.Vertical} or \c {PerspectiveCamera.Horizontal}.
 
     The default value is 60.0.
  */
@@ -129,20 +146,20 @@ float QQuick3DPerspectiveCamera::fieldOfView() const
 
     It can be either of the following two values:
     \list
-    \li Camera.Vertical - The provided field of view is vertical, meaning the field of view is the angle between
+    \li PerspectiveCamera.Vertical - The provided field of view is vertical, meaning the field of view is the angle between
           the line traced from the camera to the center top of the viewport and the line from
           the camera to the center bottom of the viewport. The horizontal aspect ratio will be
           adjusted to maintain aspect ratio. This is the default orientation.
-    \li Camera.Horizontal - The provided field of view is horizontal, meaning the field of view is the angle between
+    \li PerspectiveCamera.Horizontal - The provided field of view is horizontal, meaning the field of view is the angle between
           the line traced from the camera to the center left side of the viewport and the line from
           the camera to the center right side of the viewport. The vertical aspect ratio will be
           adjusted to maintain aspect ratio.
     \endlist
 
-    The default value is \c {Camera.Vertical}.
+    The default value is \c {PerspectiveCamera.Vertical}.
 */
 
-QQuick3DCamera::FieldOfViewOrientation QQuick3DPerspectiveCamera::fieldOfViewOrientation() const
+QQuick3DPerspectiveCamera::FieldOfViewOrientation QQuick3DPerspectiveCamera::fieldOfViewOrientation() const
 {
     return m_fieldOfViewOrientation;
 }
@@ -177,7 +194,7 @@ void QQuick3DPerspectiveCamera::setFieldOfView(float fieldOfView)
     update();
 }
 
-void QQuick3DPerspectiveCamera::setFieldOfViewOrientation(QQuick3DCamera::FieldOfViewOrientation
+void QQuick3DPerspectiveCamera::setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation
                                                           fieldOfViewOrientation)
 {
     if (m_fieldOfViewOrientation == fieldOfViewOrientation)
@@ -195,7 +212,7 @@ bool QQuick3DPerspectiveCamera::checkSpatialNode(QSSGRenderCamera *camera)
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
     changed |= qUpdateIfNeeded(camera->fov, qDegreesToRadians(m_fieldOfView));
     changed |= qUpdateIfNeeded(camera->fovHorizontal, m_fieldOfViewOrientation
-                               == QQuick3DCamera::FieldOfViewOrientation::Horizontal);
+                               == QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
 
     return changed;

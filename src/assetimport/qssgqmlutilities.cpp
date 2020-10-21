@@ -320,7 +320,7 @@ PropertyMap::PropertyMap()
     perspectiveCamera->insert(QStringLiteral("clipNear"), 10.0f);
     perspectiveCamera->insert(QStringLiteral("clipFar"), 10000.0f);
     perspectiveCamera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    perspectiveCamera->insert(QStringLiteral("fieldOfViewOrientation"), QStringLiteral("Camera.Vertical"));
+    perspectiveCamera->insert(QStringLiteral("fieldOfViewOrientation"), QStringLiteral("PerspectiveCamera.Vertical"));
     m_properties.insert(Type::PerspectiveCamera, perspectiveCamera);
 
     // OrthographicCamera

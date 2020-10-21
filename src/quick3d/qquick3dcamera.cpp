@@ -93,25 +93,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-   \qmlproperty enumeration Camera::FieldOfViewOrientation
-
-   This enum type specifies the orientation in which camera field of view is given.
-   Field of view can be set on cameras of the PerspectiveCamera and FrustumCamera types, and
-   affects the angle of the camera frustum.
-
-   \value Camera.Vertical
-          The provided field of view is vertical, meaning the field of view is the angle between
-          the line traced from the camera to the center top of the viewport and the line from
-          the camera to the center bottom of the viewport. The horizontal aspect ratio will be
-          adjusted to maintain aspect ratio. This is the default orientation.
-   \value Camera.Horizontal
-          The provided field of view is horizontal, meaning the field of view is the angle between
-          the line traced from the camera to the center left side of the viewport and the line from
-          the camera to the center right side of the viewport. The vertical aspect ratio will be
-          adjusted to maintain aspect ratio.
-  */
-
-/*!
     \internal
 */
 QQuick3DCamera::QQuick3DCamera(QQuick3DNode *parent)

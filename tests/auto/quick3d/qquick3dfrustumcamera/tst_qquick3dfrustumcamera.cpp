@@ -76,14 +76,14 @@ void tst_QQuick3DFrustumCamera::testClipAndFov()
     QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
     QCOMPARE(fov, qRadiansToDegrees(node->fov)); // It gets converted inside, so we convert back
 
-    const QQuick3DCamera::FieldOfViewOrientation fovOrientation
-            = QQuick3DCamera::FieldOfViewOrientation::Horizontal;
+    const QQuick3DPerspectiveCamera::FieldOfViewOrientation fovOrientation
+            = QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal;
     camera.setFieldOfViewOrientation(fovOrientation);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
     QVERIFY(node->fovHorizontal == true);
-    camera.setFieldOfViewOrientation(QQuick3DCamera::FieldOfViewOrientation::Vertical);
+    camera.setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation::Vertical);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QVERIFY(node->fovHorizontal == false);
 }

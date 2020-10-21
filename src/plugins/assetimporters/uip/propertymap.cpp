@@ -184,7 +184,7 @@ PropertyMap::PropertyMap()
     camera->insert(QStringLiteral("clipnear"), Property(QStringLiteral("clipNear"), Q3DS::Float, 10.0f));
     camera->insert(QStringLiteral("clipfar"), Property(QStringLiteral("clipFar"), Q3DS::Float, 10000.0f));
     camera->insert(QStringLiteral("fov"), Property(QStringLiteral("fieldOfView"), Q3DS::Float, 60.0f));
-    camera->insert(QStringLiteral("fovhorizontal"), Property(QStringLiteral("fieldOfViewOrientation"),  Q3DS::String, QStringLiteral("Camera.Vertical")));
+    camera->insert(QStringLiteral("fovhorizontal"), Property(QStringLiteral("fieldOfViewOrientation"),  Q3DS::String, QStringLiteral("PerspectiveCamera.Vertical")));
     camera->insert(QStringLiteral("enablefrustumculling"), Property(QStringLiteral("frustumCullingEnabled"), Q3DS::Boolean, false));
     m_properties.insert(GraphObject::Camera, camera);
 

@@ -58,6 +58,12 @@ class Q_QUICK3D_EXPORT QQuick3DPerspectiveCamera : public QQuick3DCamera
     QML_ADDED_IN_VERSION(1, 14)
 
 public:
+    enum FieldOfViewOrientation {
+        Vertical,
+        Horizontal
+    };
+    Q_ENUM(FieldOfViewOrientation)
+
     QQuick3DPerspectiveCamera();
 
     float clipNear() const;

@@ -1882,8 +1882,8 @@ void CameraNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isIn
     if (!m_orthographic) {
         writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fov"), m_fov);
         writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fovhorizontal"),
-                               m_fovHorizontal ? QStringLiteral("Camera.Horizontal")
-                                               : QStringLiteral("Camera.Vertical"));
+                               m_fovHorizontal ? QStringLiteral("PerspectiveCamera.Horizontal")
+                                               : QStringLiteral("PerspectiveCamera.Vertical"));
     }
 }
 
@@ -1907,8 +1907,8 @@ void CameraNode::writeQmlProperties(const PropertyChangeList &changeList, QTextS
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fov"), m_fov);
         } else if (targetProperty == QStringLiteral("fovhorizontal")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("fovhorizontal"),
-                                   m_fovHorizontal ? QStringLiteral("Camera.Horizontal")
-                                                   : QStringLiteral("Camera.Vertical"));
+                                   m_fovHorizontal ? QStringLiteral("PerspectiveCamera.Horizontal")
+                                                   : QStringLiteral("PerspectiveCamera.Vertical"));
         }
     }
 }

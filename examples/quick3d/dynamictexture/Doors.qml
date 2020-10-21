@@ -75,7 +75,7 @@ Node {
 
         eulerRotation.y: 171.605
 
-        fieldOfViewOrientation: Camera.Horizontal
+        fieldOfViewOrientation: PerspectiveCamera.Horizontal
     }
 
     Model {
