@@ -117,7 +117,7 @@ void tst_QQuick3DSpotLight::testProperties()
         QQuick3DAbstractLight::QSSGShadowMapQuality::ShadowMapQualityHigh,
         QQuick3DAbstractLight::QSSGShadowMapQuality::ShadowMapQualityVeryHigh
     };
-    const int mappedResolutions[] = {8, 9, 10, 11};
+    const unsigned int mappedResolutions[] = {8, 9, 10, 11};
 
     for (int i = 0; i < 4; ++i) {
         const auto shadowMapQuality = qualities[i];
