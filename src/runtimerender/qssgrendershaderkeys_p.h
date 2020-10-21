@@ -873,7 +873,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
             // This cost a few extra bits but prevents tedious errors like
             // loosing shader key bits because they got moved beyond the 32 border
             quint32 bit = m_offset % 32;
-            if (bit + TPropType::BitWidth > 31) {
+            if (bit + TPropType::BitWidth > 32) {
                 m_offset += 32 - bit;
             }
 
