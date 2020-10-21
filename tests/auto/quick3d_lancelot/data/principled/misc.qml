@@ -87,15 +87,15 @@ Rectangle {
             materials: [ DefaultMaterial {
                     lighting: DefaultMaterial.NoLighting
                     diffuseMap: Texture {
-                        source: "../shared/maps/checkerboard_1.png"
+                        source: "../shared/maps/checkers1.png"
                         tilingModeHorizontal: Texture.Repeat
                         tilingModeVertical: Texture.Repeat
-                        scaleU: 8
-                        scaleV: 8
+                        scaleU: 100
+                        scaleV: 100
                     }
                 } ]
             z: -500
-            scale: Qt.vector3d(8, 12, 1)
+            scale: Qt.vector3d(10, 10, 1)
         }
 
         Node {

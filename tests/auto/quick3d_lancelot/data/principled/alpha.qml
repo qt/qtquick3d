@@ -52,8 +52,8 @@ import QtQuick 2.14
 import QtQuick3D 1.15
 
 Rectangle {
-    width: 600
-    height: 600
+    width: 400
+    height: 500
     color: "lightgray"
 
     View3D {
@@ -83,12 +83,27 @@ Rectangle {
             source: "../shared/maps/oulu_2.jpeg"
         }
 
+        Model {
+            source: "#Rectangle"
+            materials: [ DefaultMaterial {
+                    lighting: DefaultMaterial.NoLighting
+                    diffuseMap: Texture {
+                        source: "../shared/maps/checkers1.png"
+                        tilingModeHorizontal: Texture.Repeat
+                        tilingModeVertical: Texture.Repeat
+                        scaleU: 100
+                        scaleV: 100
+                    }
+                } ]
+            z: -500
+            scale: Qt.vector3d(10, 10, 1)
+        }
 
         // Row 1, just baseColor with alpha == 64
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, 200, 0)
+            position: Qt.vector3d(-125, 175, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColor: "#404080A0"
@@ -100,7 +115,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, 200, 0)
+            position: Qt.vector3d(0, 175, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColor: "#404080A0"
@@ -112,7 +127,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, 200, 0)
+            position: Qt.vector3d(125, 175, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColor: "#404080A0"
@@ -125,7 +140,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, 50, 0)
+            position: Qt.vector3d(-125, 60, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -137,7 +152,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, 50, 0)
+            position: Qt.vector3d(0, 60, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -149,7 +164,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, 50, 0)
+            position: Qt.vector3d(125, 60, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -162,7 +177,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, -100, 0)
+            position: Qt.vector3d(-125, -60, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -175,7 +190,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, -100, 0)
+            position: Qt.vector3d(0, -60, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -188,7 +203,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, -100, 0)
+            position: Qt.vector3d(125, -60, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -202,7 +217,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(-125, -250, 0)
+            position: Qt.vector3d(-125, -175, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -215,7 +230,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(0, -250, 0)
+            position: Qt.vector3d(0, -175, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
@@ -228,7 +243,7 @@ Rectangle {
         Model {
             source: "#Cube"
             scale: Qt.vector3d(0.8, 0.8, 0.8)
-            position: Qt.vector3d(125, -250, 0)
+            position: Qt.vector3d(125, -175, 0)
             eulerRotation.y: 60
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
