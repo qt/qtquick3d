@@ -39,8 +39,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Lets you configure how a scene is rendered.
 
-    SceneEnvironment defines the environment in which the scene is rendered,
-    which defines how the scene gets rendered globaly.
+    SceneEnvironment defines a set of global properties for how a scene should be rendered.
 */
 
 QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
