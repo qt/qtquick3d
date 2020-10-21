@@ -176,9 +176,13 @@ Window {
         anchors.bottom: parent.bottom
         width: settingsRect.width
 
-        Rectangle {
+        Flickable {
+          clip: false
+          anchors.fill: parent
+          contentWidth: settingsRect.width
+          contentHeight: settingsRect.height
+          Rectangle {
             id: settingsRect
-
             implicitHeight: settingsArea.height
             width: settingsArea.width + 20
 
@@ -998,8 +1002,8 @@ Window {
                 }
 
             } // ColumnLayout settingsArea
-        } // Rectangle contentsRect
-
+          } // Rectangle contentsRect
+        } // Flickable
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
     } // ScrollView
