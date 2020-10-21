@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
     A model can consist of several sub-meshes, each of which can have its own material.
     The sub-mesh uses a material from the \l{materials} list, corresponding to its index.
     If the number of materials is less than the sub-meshes, the last material in the list is used
-    for subsequent sub-meshes.
+    for subsequent sub-meshes. This is demonstrated in the \l {Qt Quick 3D - Qt Quick 3D - Sub-mesh Example}{Sub-mesh example}.
 
     There are currently three different materials that can be used with the model item,
     the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
@@ -142,6 +142,8 @@ QUrl QQuick3DModel::source() const
     geometry. To render anything, there must be at least one material. Normally
     there should be one material for each sub-mesh included in the source
     geometry.
+
+    \sa \l {Qt Quick 3D - Qt Quick 3D - Sub-mesh Example}
 */
 
 

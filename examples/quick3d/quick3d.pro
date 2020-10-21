@@ -17,4 +17,5 @@ SUBDIRS += \
     customgeometry \
     customeffect \
     skinning \
-    offlineshaders
+    offlineshaders \
+    submeshes
