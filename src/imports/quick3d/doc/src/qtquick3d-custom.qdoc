@@ -1482,9 +1482,368 @@ materials that only have a vertex shader.
 
 \section1 Programmability for Effects
 
-\section1 Defining Mesh Data from C++
+Post-processing effects apply one or more fragment shaders to the result of a \l
+View3D. The output from these fragment shaders is then displayed instead of the original
+rendering results. This is conceptually very similar to Qt Quick's \l ShaderEffect and \l
+ShaderEffectSource.
 
-\section1 Defining Texture Data from C++
+\note Post-processing effects are only available when the
+\l{View3D::renderMode}{renderMode} for the View3D is set to View3D.Offscreen.
+
+Custom vertex shader snippets can also be specified for an effect, but they have limited
+usefulness and therefore are expected to be used relatively rarely. The vertex input for a
+post-processing effect is a quad (either two triangles or a triangle strip), transforming
+or displacing the vertices of that is often not helpful. It can however make sense to have
+a vertex shader in order to calculate and pass on data to the fragment shader using the \c
+VARYING keyword. As usual, the fragment shader will then receive an interpolated value
+based on the current fragment coordinate.
+
+The syntax of the shader snippets associated with a \l Effect is identical to the shaders
+for an unshaded \l CustomMaterial. When it comes to the built-in special keywords, \c
+VARYING, \c MAIN, \c FRAGCOLOR (fragment shader only), \c POSITION (vertex shader only), \c
+VERTEX (vertex shader only), and \c MODELVIEWPROJECTION_MATRIX work identically to \l
+CustomMaterial.
+
+The most important special keywords for \l Effect fragment shaders are the following:
+
+\table
+\header
+\li Name
+\li Type
+\li Description
+\row
+\li INPUT
+\li sampler2D
+\li The sampler for the input texture. An effect will typically sample this using \c INPUT_UV.
+\row
+\li INPUT_UV
+\li vec2
+\li UV coordinates for sampling \c INPUT.
+\row
+\li INPUT_SIZE
+\li vec2
+\li The size of the \c INPUT texture, in pixels. This is a convenient alternative to calling textureSize().
+\row
+\li OUTPUT_SIZE
+\li vec2
+\li The size of the output texture, in pixels. Equal to \c INPUT_SIZE in many cases, but a multi-pass effect
+may have passes that output to intermediate textures with different sizes.
+\row
+\li DEPTH_TEXTURE
+\li sampler2D
+\li Depth texture with the depth buffer contents with the opaque objects in the scene. Like with CustomMaterial,
+the presence of this keyword in the shader triggers generating the depth texture automatically.
+\endtable
+
+\section2 A post-processing effect
+
+Let's start with a simple scene, this time using a few more objects, including a textured
+rectangle that uses a checkerboard texture as its base color map.
+
+\table
+\header
+\li main.qml
+\li Result
+\row \li \qml
+import QtQuick
+import QtQuick3D
+Item {
+    View3D {
+        anchors.fill: parent
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: "black"
+        }
+
+        PerspectiveCamera { z: 400 }
+
+        DirectionalLight { }
+
+        Texture {
+            id: checkerboard
+            source: "checkerboard.png"
+            scaleU: 20
+            scaleV: 20
+            tilingModeHorizontal: Texture.Repeat
+            tilingModeVertical: Texture.Repeat
+        }
+
+        Model {
+            source: "#Rectangle"
+            scale: Qt.vector3d(10, 10, 1)
+            eulerRotation.x: -45
+            materials: PrincipledMaterial {
+                baseColorMap: checkerboard
+            }
+        }
+
+        Model {
+            source: "#Cone"
+            position: Qt.vector3d(100, -50, 100)
+            materials: PrincipledMaterial { }
+        }
+
+        Model {
+            source: "#Cube"
+            position.y: 100
+            eulerRotation.y: 20
+            materials: PrincipledMaterial { }
+        }
+
+        Model {
+            source: "#Sphere"
+            position: Qt.vector3d(-150, 200, -100)
+            materials: PrincipledMaterial { }
+        }
+    }
+}
+\endqml
+\li \image quick3d-custom-effect-section-scene.jpg
+\endtable
+
+Now let's apply an affect to the entire scene. More precisely, to the View3D. When there
+are multiple View3D items in the scene, each has its own SceneEnvironment and therefore
+have their own post-processing effect chain. In the example there is one single View3D
+covering the entire window.
+
+\table
+\header
+\li Change in main.qml
+\li effect.frag
+\row \li \qml
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: "black"
+            effects: redEffect
+        }
+
+        Effect {
+            id: redEffect
+            property real uRed: 1.0
+            NumberAnimation on uRed { from: 1; to: 0; duration: 5000; loops: -1 }
+            passes: Pass {
+                shaders: Shader {
+                    stage: Shader.Fragment
+                    shader: "effect.frag"
+                }
+            }
+        }
+\endqml
+\li \badcode
+void MAIN()
+{
+    vec4 c = texture(INPUT, INPUT_UV);
+    c.r = uRed;
+    FRAGCOLOR = c;
+}
+\endcode
+\endtable
+
+This simple effect alters the red color channel value. Exposing QML properties as uniforms
+works the same way with effects as with custom materials. The shader starts with a line
+that is going to be very common when writing fragment shaders fro effects: sampling \c
+INPUT at the UV coordinates \c INPUT_UV. It then performs its desired calculations, and
+assigns the final fragment color to \c FRAGCOLOR.
+
+\image quick3d-custom-first-effect-anim.gif
+
+Many properties set in the example are in plural (effects, passes, shaders). While the
+list \c{[ ]} syntax can be omitted when having a single element only, all these properties
+are lists, and can hold more than one element. Why is this?
+
+\list
+
+\li \l{SceneEnvironment::effects}{effects} is a list, because View3D allows chaining
+multiple effects together. The effects are applied in the order in which they are added to
+the list. This allows easily applying two or more effects together to the View3D, and is
+similar to what one can achieve in Qt Quick by nesting \l ShaderEffect items. The \c INPUT
+texture of the next effect is always a texture that contains the previous effect's
+output. The output of the last effect in what gets used as the final output of the View3D.
+
+\li \l{Effect::passes}{passes} is a list, because unlike ShaderEffect, Effect has built-in
+support for multiple passes. A multi-pass effect is more powerful than chaining together
+multiple, independent effects in \l{SceneEnvironment::effects}{effects}: a pass can output
+to a temporary, intermediate texture, which can then be used as input to subsequent
+passes, in addition to the original input texture of the effect. This allows creating
+complex effects that calculate, render, and blend together multiple textures in order to
+get to the final fragment color. This advanced use case is not going to be covered
+here. Refer to the \l Effect documentation page for details.
+
+\li \l{Pass::shaders}{shaders} is a list, because an effect may have both a vertex and a
+fragment shader associated.
+
+\endlist
+
+\section2 Chaining multiple effects
+
+Let's look at an example where the effect from the previous example gets complemented by
+another effect similar to the built-in \l DistortialSpiral effect.
+
+\table
+\header
+\li Change in main.qml
+\li effect2.frag
+\row \li \qml
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Color
+            clearColor: "black"
+            effects: [redEffect, distortEffect]
+        }
+
+        Effect {
+            id: redEffect
+            property real uRed: 1.0
+            NumberAnimation on uRed { from: 1; to: 0; duration: 5000; loops: -1 }
+            passes: Pass {
+                shaders: Shader {
+                    stage: Shader.Fragment
+                    shader: "effect.frag"
+                }
+            }
+        }
+
+        Effect {
+            id: distortEffect
+            property real uRadius: 0.1
+            NumberAnimation on uRadius { from: 0.1; to: 1.0; duration: 5000; loops: -1 }
+            passes: Pass {
+                shaders: Shader {
+                    stage: Shader.Fragment
+                    shader: "effect2.frag"
+                }
+            }
+        }
+\endqml
+\li \badcode
+void MAIN()
+{
+    vec2 center_vec = INPUT_UV - vec2(0.5, 0.5);
+    center_vec.y *= INPUT_SIZE.y / INPUT_SIZE.x;
+    float dist_to_center = length(center_vec) / uRadius;
+    vec2 texcoord = INPUT_UV;
+    if (dist_to_center <= 1.0) {
+        float rotation_amount = (1.0 - dist_to_center) * (1.0 - dist_to_center);
+        float r = radians(360.0) * rotation_amount / 4.0;
+        float cos_r = cos(r);
+        float sin_r = sin(r);
+        mat2 rotation = mat2(cos_r, sin_r, -sin_r, cos_r);
+        texcoord = vec2(0.5, 0.5) + rotation * (INPUT_UV - vec2(0.5, 0.5));
+    }
+    vec4 c = texture(INPUT, texcoord);
+    FRAGCOLOR = c;
+}
+\endcode
+\endtable
+
+\image quick3d-custom-chained-effect-anim.gif
+
+Now the perhaps surprising question: why is this a bad example?
+
+More precisely, it is not bad, but rather shows a pattern that can often be beneficial to
+avoid.
+
+Chaining effects this way can be useful, but it is important to keep in mind the
+performance implications: doing two render passes (one to generate a texture with the
+adjusted red color channel, and then another one two calculate the distortion) is quite
+wasteful when one would be enough. If the fragment shader snippets were combined, the same
+result could have been achieved with one single effect.
+
+\section1 Defining Mesh and Texture Data from C++
+
+Procedurally generating mesh and texture image data both follow similar steps:
+
+\list
+\li Subclass \l QQuick3DGeometry or \l QQuick3DTextureData
+\li Set the desired vertex or image data upon construction by calling the protected member functions
+from the base class
+\li If dynamic changes are needed afterwards at some point, set the new data and call update()
+\li Once the implementation is done, the class needs to be registered to make it visible in QML
+\li \l Model and \l Texture objects in QML can now use the custom vertex or image data provider by
+setting the \l{Model::geometry} or \l{Texture::textureData} property
+\endlist
+
+\section2 Custom vertex data
+
+Vertex data refers to the sequence of (typically \c float) values that make up a
+mesh. Instead of loading \c{.mesh} files, a custom geometry provider is responsible for
+providing the same data. The vertex data consist of \c attributes, such as position,
+texture (UV) coordinates, or normals. The specification of attributes describes what kind
+of attributes are present, the component type (for example, a 3 component float vector for
+vertex position consisting of x, y, z values), which offset they start at in the provided
+data, and what the stride (the increment that needs to be added to the offset to point to
+the next element for the same attribute) is.
+
+This may seem familiar if one has worked with graphics APIs, such as OpenGL or Vulkan
+directly, because the way vertex input is specified with those APIs maps loosely to what a
+\c{.mesh} file or a \l QQuick3DGeometry instance defines.
+
+In addition, the mesh topology (primitive type) must be specified too. For indexed
+drawing, the data for an index buffer must be provided as well.
+
+There is one built-in custom geometry implementation: the QtQuick3D.Helpers module
+includes a \l GridGeometry type. This allows rendering a grid in the scene with line
+primitives, without having to implement a custom \l QQuick3DGeometry subclass.
+
+One other common use cases is rendering points. This is fairly simple to do since the
+attribute specification is going to be minimal: we provide three floats (x, y, z) for each
+vertex, nothing else. A QQuick3DGeometry subclass could implement a geometry consisting of
+2000 points similarly to the following:
+
+\badcode
+    clear();
+    const int N = 2000;
+    const int stride = 3 * sizeof(float);
+    QByteArray v;
+    v.resize(N * stride);
+    float *p = reinterpret_cast<float *>(v.data());
+    QRandomGenerator *rg = QRandomGenerator::global();
+    for (int i = 0; i < N; ++i) {
+        const float x = float(rg->bounded(200.0f) - 100.0f) / 20.0f;
+        const float y = float(rg->bounded(200.0f) - 100.0f) / 20.0f;
+        *p++ = x;
+        *p++ = y;
+        *p++ = 0.0f;
+    }
+    setVertexData(v);
+    setStride(stride);
+    setPrimitiveType(QQuick3DGeometry::PrimitiveType::Points);
+    addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, 0, QQuick3DGeometry::Attribute::F32Type);
+\endcode
+
+Combined with a material of
+
+\qml
+DefaultMaterial {
+    lighting: DefaultMaterial.NoLighting
+    cullMode: DefaultMaterial.NoCulling
+    diffuseColor: "yellow"
+    pointSize: 4
+}
+\endqml
+
+the end result is similar to this (here viewed from an altered camera angle, with the help
+of \l WasdController):
+
+\image quick3d-custom-points.jpg
+
+\note Be aware that point sizes and line widths other than 1 may not be supported at run
+time, depending on the underlying graphics API. This is not something Qt has control
+over. Therefore, it can become necessary to implement alternative techniques instead of
+relying on point and line drawing.
+
+\section2 Custom texture data
+
+With textures, the data that needs to be provided is a lot simpler structurally: it is the
+raw pixel data, with a varying number of bytes per pixel, depending on the texture
+format. For example, an \c RGBA texture expects four bytes per pixel, whereas \c RGBA16F
+is four half-floats per pixel. This is similar to what a \l QImage stores
+internally. However, Qt Quick 3D textures can have formats the data for which cannot be
+represented by a QImage. For example, floating point HDR textures, or compressed
+textures. Therefore the data for \l QQuick3DTextureData is always provided as a raw
+sequence of bytes. This may seem familiar if one has worked with graphics APIs, such as
+OpenGL or Vulkan directly.
+
+For details, refer to the \l QQuick3DGeometry and \l QQuick3DTextureData documentation pages.
 
 \sa CustomMaterial, Effect, QQuick3DGeometry, QQuick3DTextureData, {Qt Quick 3D - Custom
 Effect Example}, {Qt Quick 3D - Custom Shaders Example}, {Qt Quick 3D - Custom Materials
