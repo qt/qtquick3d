@@ -66,6 +66,7 @@ Window {
     View3D {
         id: view3d
 
+        //! [eff1]
         Effect {
             id: eff1
             property TextureInput tex: TextureInput {
@@ -80,7 +81,9 @@ Window {
                 }
             }
         }
+        //! [eff1]
 
+        //! [eff2]
         Effect {
             id: eff2
             property real uRed: 0.0
@@ -105,6 +108,7 @@ Window {
                 shaders: [ vs2, fs2 ]
             }
         }
+        //! [eff2]
 
         Effect {
             id: eff3
