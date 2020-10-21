@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
     The model can load static meshes from storage or one of the built-in primitive types.
     The mesh format used is a run-time format that's native to the engine, but additional formats are
-    supported through the asset import tool \l {Balsam}.
+    supported through the asset import tool \l {Balsam Asset Import Tool}{Balsam}.
 
     The built-in primitives can be loaded by setting the \c source property to one of these values:
     \c {#Rectangle, #Sphere, #Cube, #Cylinder or #Cone}.
@@ -65,6 +65,12 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \section2 Custom geometry
+
+    In addition to using static meshes, it is possible to implement a \l {QQuick3DGeometry}{custom geometry} provider that
+    provides the model with custom vertex data at run-time. See the \l {Qt Quick 3D - Custom Geometry Example}{Custom Geometry Example}
+    for an example on how to create and use a custom material with your model.
+
     \section1 Materials
 
     A model can consist of several sub-meshes, each of which can have its own material.
@@ -74,8 +80,20 @@ QT_BEGIN_NAMESPACE
 
     There are currently three different materials that can be used with the model item,
     the \l {PrincipledMaterial}, the \l {DefaultMaterial}, and the \l {CustomMaterial}.
-    In addition the \l {Qt Quick 3D Materials QML Types}{Material Library} provides a set of
-    pre-made materials that can be used.
+
+    \section1 Picking
+
+    Picking is the process of sending a ray through the scene from some starting position to find which model(s) intersects
+    with the ray. In QtQuick3D the ray is normally sent from the view using 2D coordinates resulting from a touch or mouse
+    event. If a model was hit by the ray a \l {PickResult} will be returned with a handle to the model and information about
+    where the ray hit the model. For models that use \l {QQuick3DGeometry}{custom geometry} the picking is less accurate then
+    for static mesh data, as picking is only done against the models \l {Bounds}{bounding volume}.
+    If the ray goes through more then one model, the closest \l {Model::pickable}{pickable} model is selected.
+
+    Note that models are not \l {Model::pickable}{pickable} by default, so to be able to \l {View3D::pick}{pick} a model
+    in the scene, the model will need to make it self discoverable by setting the \l {Model::pickable}{pickable} property to true.
+    Visit the \l {Qt Quick 3D - Picking example} to see how picking can be enabled.
+
 */
 
 /*!
@@ -178,8 +196,8 @@ bool QQuick3DModel::castsShadows() const
 /*!
     \qmlproperty bool Model::receivesShadows
 
-    When this property is \c true, shadows can be cast onto this item. So the
-    shadow map is applied to this model by the renderer.
+    When this property is set to \c true, the model's materials take shadow contribution from
+    shadow casting lights into account.
 */
 
 bool QQuick3DModel::receivesShadows() const
@@ -190,8 +208,10 @@ bool QQuick3DModel::receivesShadows() const
 /*!
     \qmlproperty bool Model::pickable
 
-    This property controls whether the model is pickable or not. By default models are not pickable
-    and therefore not included when \l {View3D::pick} {picking} against the scene.
+    This property controls whether the model is pickable or not. Set this property
+    to \c true to make the model pickable. Models are not pickable by default.
+
+    \sa {View3D::pick}
 */
 bool QQuick3DModel::pickable() const
 {
@@ -201,8 +221,9 @@ bool QQuick3DModel::pickable() const
 /*!
     \qmlproperty Geometry Model::geometry
 
-    Specify custom geometry for the model. The Model::source must be empty when custom geometry
+    Specify a custom geometry for the model. The Model::source must be empty when custom geometry
     is used.
+
 */
 QQuick3DGeometry *QQuick3DModel::geometry() const
 {
@@ -212,9 +233,10 @@ QQuick3DGeometry *QQuick3DModel::geometry() const
 /*!
     \qmlproperty Skeleton Model::skeleton
 
-    Specify a skeleton for the model. It will be used for the skinning
-    with \l {inverseBindPoses}
-    Meshes of the model must have both joints and weights attributes.
+    Contains the skeleton for the model. The Skeleton is used together with \l {inverseBindPoses}
+    for skinning.
+
+    \note Meshes of the model must have both joints and weights attributes.
 
     \sa inverseBindPoses
 */
@@ -226,11 +248,11 @@ QQuick3DSkeleton *QQuick3DModel::skeleton() const
 /*!
     \qmlproperty List<matrix4x4> Model::inverseBindPoses
 
-    This property contains a list of inverseBindPose matrixes used for the
+    This property contains a list of Inverse Bind Pose matrixes used for the
     skeletal animation.
 
-    \note It is valid only if Model::skeleton is valid and the sequence must
-    be matched with the property Joint::index of \l {skeleton}.
+    \note This property is only used if the Model::skeleton is valid and the indexes of the
+    Inverse Bind Pose matrices maps to the property Joint::index of \l {skeleton}.
 
     \sa skeleton
 */
@@ -242,9 +264,9 @@ QList<QMatrix4x4> QQuick3DModel::inverseBindPoses() const
 /*!
     \qmlproperty Bounds Model::bounds
 
-    This holds the bounds of the model. It can be read from the model that is set as a \l source.
+    The bounds of the model descibes the extents of the bounding volume around the model.
 
-    \note Bounds might not be immediately available since the source might have not been loaded.
+    \note The bounds might not be immediately available if the model needs to be loaded first.
 
     \readonly
 */
