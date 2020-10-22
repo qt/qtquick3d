@@ -154,8 +154,11 @@ Window {
                 y: -40
                 z: 200
                 scale: Qt.vector3d(1.4, 1.4, 1.4)
-                materials: DefaultMaterial {
-                    diffuseColor: "#2abe25"
+                materials: PrincipledMaterial {
+                    baseColor: "#41cd52"
+                    metalness: 0.0
+                    roughness: 0.1
+                    opacity: 1.0
                 }
             }
         }
