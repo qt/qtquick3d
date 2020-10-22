@@ -438,37 +438,22 @@ QT_BEGIN_NAMESPACE
     samples the output of the second pass from the previous frame. A third pass
     can then blend the effect's input and the second pass' output together.
 
-    The BufferInput type can be used in three ways in practice:
-    \table 70%
-    \row
-    \li \qml
-    BufferInput { buffer: someBuffer }
-    \endqml
-    \li \c INPUT in the shader samples the intermediate texture for \c someBuffer.
-    \row
-    \li \qml
+    The BufferInput command type is used to expose custom texture buffers to the
+    render pass.
+
+    For instance, to access \c someBuffer in the render pass shaders under
+    the name, \c mySampler, the following can be added to its command list:
+    \qml
     BufferInput { buffer: someBuffer; sampler: "mySampler" }
     \endqml
-    \li \c mySampler in the shader samples the intermediate texture for \c someBuffer.
-    \row
-    \li \qml
-    BufferInput { sampler: "mySampler" }
-    \endqml
-    \li \c mySampler in the shader samples input texture of the effect.
-    \endtable
 
-    \note When specifying \l{BufferInput::sampler}{sampler}, it is up to the
-    Effect to provide a TextureInput property with the same name, otherwise a
-    shader compilation error will occur. This is typically achieved by a
-    declaration like the following:
+    If the \c sampler name is not specified, \c INPUT will be used as default.
 
-    \qml
-    property TextureInput mySampler: TextureInput { texture: Texture {} } }
-    \endqml
+    Buffers can be useful to share intermediate results between render passes.
 
-    For TextureInput properties, such as \c tex in the earlier example, a \l
-    BufferInput object is not necessary:
-
+    To expose preloaded textures to the effect, TextureInput should be used instead.
+    These can be defined as properties of the Effect itself, and will automatically
+    be accessible to the shaders by their property names.
     \qml
     property TextureInput tex: TextureInput {
         texture: Texture { source: "image.png" }
