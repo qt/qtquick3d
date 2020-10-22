@@ -43,17 +43,35 @@ QT_BEGIN_NAMESPACE
     \inherits Object
     \inqmlmodule QtQuick3D
     \brief Container component for defining shader code used by post-processing effects.
+
+    The Shader type is used for populating the \l{Pass::shaders}{shaders} list in the
+    render \l{Pass}{pass} of an \l Effect.
+
+    A shader is code which is executed directly on the graphic hardware at a particular
+    \l{Shader::stage}{stage} of the rendering pipeline.
+
+    \sa Effect
 */
 /*!
     \qmlproperty url Shader::shader
-    Specifies the name of the shader source file.
+    Specifies the name of the shader source file. For details on how to write shader code,
+    see the \l Effect documentation.
 */
 /*!
     \qmlproperty enumeration Shader::stage
-    Specifies the shader stage. The default is \c Shader.Fragment
+    Specifies the stage of the rendering pipeline when the shader code will be executed.
+    The default is \c Shader.Fragment
 
-    \value Shader.Vertex The shader is a vertex shader
-    \value Shader.Fragment The shader is a fragment shader
+    \value Shader.Vertex The shader is a vertex shader. This code is run once per vertex
+    in the input geometry and can be used to modify it before the geometry is rasterized
+    (scan converted). In the case of effects, the input geometry is always a quad (four
+    vertexes representing the corners of the render target).
+    \value Shader.Fragment The shader is a fragment shader. After vertex processing,
+    the modified geometry is turned into fragments (rasterization). Then a fragment shader
+    is executed for each fragment, assigning a color to it. Fragments are a related concept
+    to pixels, but with additional information attached. Also, as a result of some
+    anti-aliasing strategies, there may be more than one fragment for each pixel in the
+    output.
 */
 
 /*!
@@ -61,10 +79,19 @@ QT_BEGIN_NAMESPACE
     \inherits Object
     \inqmlmodule QtQuick3D
     \brief Specifies a texture exposed to the shaders of a CustomMaterial or Effect.
+
+    This is a type which can be used for exposing a \l Texture to a shader, either
+    in the \l{Pass}{render pass} of an \l Effect, or in a \l CustomMaterial. It exists
+    primarily to assign a local name to the \l Texture that can be referenced from
+    shaders.
+
+    When a TextureInput property is declared in an \l Effect or a \l CustomMaterial,
+    it will automatically be available as a sampler in all shaders by its property
+    name.
 */
 /*!
     \qmlproperty Texture TextureInput::texture
-    References the texture.
+    The texture for which this TextureInput serves as an indirection.
 */
 /*!
     \qmlproperty bool TextureInput::enabled
@@ -78,6 +105,14 @@ QT_BEGIN_NAMESPACE
     \inherits Object
     \inqmlmodule QtQuick3D
     \brief Defines a render pass in an Effect.
+
+    An \l Effect may consist of multiple render passes. Each render pass has a
+    setup phase where the list of \l{Pass::commands}{render commands} are executed,
+    a \l{Pass::output}{output buffer} and a list of \l{Pass::shaders}{shaders} to
+    use for rendering the effect.
+
+    See the documentation for \l Effect for more details on how to set up multiple
+    rendering passes.
 */
 /*!
     \qmlproperty Buffer Pass::output
@@ -96,38 +131,56 @@ QT_BEGIN_NAMESPACE
     \qmltype Command
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a command to be performed in a pass of an Effect.
+    \brief Supertype of commands to be performed as part of a pass in an Effect.
+
+    The Command type should not be instantiated by itself, but only exists as a
+    polymorphic supertype for the different actions that can be performed as part
+    of a \l{Pass}{render pass}.
+
+    \sa BufferInput, SetUniformValue, Effect
 */
 
 /*!
     \qmltype BufferInput
     \inherits Command
     \inqmlmodule QtQuick3D
-    \brief Defines an input texture to be used for a pass of an Effect.
+    \brief Defines an input buffer to be used as input for a pass of an Effect.
+
+    BufferInput is a \l Command which can be added to the list of commands in the \l Pass of
+    an \l Effect. When executed, it will expose the buffer as a sample to the shaders
+    in the render pass. The shaders must declare a sampler with the name given in the
+    BufferInput's \c sampler property.
+
+    This can be used for sharing intermediate results between the different passes of an
+    effect.
+
+    \sa TextureInput
 */
 /*!
     \qmlproperty Buffer BufferInput::buffer
-    Specifies the \l {Buffer}{buffer} used for the parameter. When not set,
-    the associated texture will be the effect's input texture.
+    Specifies the \l {Buffer}{buffer} which should be exposed to the shader.
 */
 /*!
     \qmlproperty string BufferInput::sampler
-    Specifies the name under which the texture is exposed in the shader.
-    When not set, the texture is exposed with the built-in name \c INPUT.
+    Specifies the name under which the buffer is exposed to the shader.
+    When this property is not set, the buffer is exposed with the built-in name \c INPUT.
 */
 
 /*!
     \qmltype Buffer
     \inherits Object
     \inqmlmodule QtQuick3D
-    \brief Defines a color buffer to be used for a pass of an Effect.
+    \brief Creates or references a color buffer to be used for a pass of an Effect.
 
-    In practice a Buffer is backed by a texture, unless the \l name property is
-    empty.
+    A Buffer can be used to create intermediate buffers to share data between
+    \l{Pass}{render passes} in an \l Effect.
+
+    \note If the \l name property of the Buffer is empty, it will reference the
+    default output texture of the render pass.
 */
 /*!
     \qmlproperty enumeration Buffer::format
-    Specifies the texture format. The default value is RGBA8.
+    Specifies the texture format. The default value is Buffer.RGBA8.
 
     \value Buffer.RGBA8
     \value Buffer.RGBA16F
@@ -139,41 +192,43 @@ QT_BEGIN_NAMESPACE
 */
 /*!
     \qmlproperty enumeration Buffer::textureFilterOperation
-    Specifies the texture filtering mode when sampling the texture backing the
-    Buffer.  The default value is Linear.
+    Specifies the texture filtering mode when sampling the contents of the
+    Buffer. The default value is Buffer.Linear.
 
-    \value Buffer.Nearest Use nearest-neighbor.
+    \value Buffer.Nearest Use nearest-neighbor filtering.
     \value Buffer.Linear Use linear filtering.
 */
 /*!
     \qmlproperty enumeration Buffer::textureCoordOperation
-    Specifies the behavior for texture coordinates outside the [0, 1] range. The default is ClampToEdge.
+    Specifies the behavior for texture coordinates when sampling outside the [0, 1] range.
+    The default is Buffer.ClampToEdge.
 
-    \value Buffer.ClampToEdge Clamp coordinate to edge.
-    \value Buffer.MirroredRepeat Repeat the coordinate, but flip direction at the beginning and end.
-    \value Buffer.Repeat Repeat the coordinate always from the beginning.
+    \value Buffer.ClampToEdge Clamp coordinates to the edges.
+    \value Buffer.Repeat Wrap the coordinates at the edges to tile the texture.
+    \value Buffer.MirroredRepeat Wrap the coordinate at the edges, but mirror the texture
+    when tiling it.
 */
 /*!
     \qmlproperty real Buffer::sizeMultiplier
-    Specifies the size multiplier of the buffer. \c 1.0 creates a buffer with
-    the same size as the effect's input texture while \c 0.5 creates buffer with
-    the width and height halved. The default value is 1.0
+    Specifies the size multiplier of the buffer. For instance, a value of \c 1.0 creates
+    a buffer with the same size as the effect's input texture while \c 0.5 creates buffer
+    where both width and height is half as big. The default value is 1.0.
 */
 /*!
     \qmlproperty enumeration Buffer::bufferFlags
-    Specifies the buffer allocation flags.
+    Specifies the buffer allocation flags. The default is Buffer.None.
 
-    \value Buffer.None No special behavior, this is the default.
+    \value Buffer.None No special behavior.
     \value Buffer.SceneLifetime The buffer is allocated for the whole lifetime of the scene.
 */
 /*!
     \qmlproperty string Buffer::name
     Specifies the name of the buffer.
 
-    It must be set to a non-empty value in most cases. An empty name refers to
-    the default output texture of an effect render pass. This is useful to
-    override certain settings of the output, such as the texture format,
-    without introducing a new, separate intermediate texture.
+    \note When this property is empty, the Buffer will refer to the default output texture
+    of the \l{Pass}{render pass} instead of allocating a buffer. This can be useful to
+    override certain settings of the output, such as the texture format, without introducing
+    a new, separate intermediate texture.
 */
 
 /*!
@@ -183,9 +238,15 @@ QT_BEGIN_NAMESPACE
     \brief Defines a value to be set during a single \l {Pass}{pass}.
     \since 5.15
 
+    SetUniformValue is a \l Command which can be added to the list of commands in a \l Pass. When
+    executed, it will set the uniform given by the \l{SetUniformValue::target}{target} property
+    to \l{SetUniformValue::value}{value}.
+
     \note The value set by this command is will only be set during the \l {Pass}{pass} it occurs in.
     For consecutive passes the value will be revert to the initial value of the uniform as it
-    was defined in the Effect item.
+    was defined in the \l Effect item.
+
+    \sa BufferInput
 */
 /*!
     \qmlproperty string SetUniformValue::target
