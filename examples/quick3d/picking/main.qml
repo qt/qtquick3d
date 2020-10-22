@@ -54,43 +54,68 @@ import QtQuick3D
 
 Window {
     visible: true
-    width: 1280
-    height: 720
+    width: 800
+    height: 500
     title: qsTr("Picking Example")
+    color: "#848895"
 
     Row {
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 20
-        Label {
-            id: pickName
-            color: "#222840"
-            font.pointSize: 14
-            text: "Last Pick: None"
+        anchors.left: parent.left
+        anchors.leftMargin: 8
+        spacing: 10
+        Column {
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "Last Pick:"
+            }
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "Screen Position:"
+            }
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "UV Position:"
+            }
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "Distance:"
+            }
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "World Position:"
+            }
         }
-        Label {
-            id: pickPosition
-            color: "#222840"
-            font.pointSize: 14
-            text: "Screen Position: (0, 0)"
-        }
-        Label {
-            id: uvPosition
-            color: "#222840"
-            font.pointSize: 14
-            text: "UV Position: (0.00, 0.00)"
-        }
-        Label {
-            id: distance
-            color: "#222840"
-            font.pointSize: 14
-            text: "Distance: 0.00"
-        }
-        Label {
-            id: scenePosition
-            color: "#222840"
-            font.pointSize: 14
-            text: "World Position: (0.00, 0.00)"
+        Column {
+            Label {
+                id: pickName
+                color: "white"
+                font.pointSize: 14
+            }
+            Label {
+                id: pickPosition
+                color: "white"
+                font.pointSize: 14
+            }
+            Label {
+                id: uvPosition
+                color: "white"
+                font.pointSize: 14
+            }
+            Label {
+                id: distance
+                color: "white"
+                font.pointSize: 14
+            }
+            Label {
+                id: scenePosition
+                color: "white"
+                font.pointSize: 14
+            }
         }
     }
 
@@ -109,11 +134,6 @@ Window {
 
         PerspectiveCamera {
             z: 500
-        }
-
-        environment: SceneEnvironment {
-            clearColor: "#848895"
-            backgroundMode: SceneEnvironment.Color
         }
 
         //! [pickable model]
@@ -166,7 +186,7 @@ Window {
             scale.z: 2
 
             materials: DefaultMaterial {
-                diffuseColor: coneModel.isPicked ? "#53586b" : "#21be2b"
+                diffuseColor: coneModel.isPicked ? "#21be2b" : "#53586b"
                 specularAmount: 1
                 specularRoughness: 0.1
                 roughnessMap: Texture { source: "maps/roughness.jpg" }
@@ -224,7 +244,7 @@ Window {
 
         onClicked: {
             // Get screen coordinates of the click
-            pickPosition.text = "Screen Position: (" + mouse.x + ", " + mouse.y + ")"
+            pickPosition.text = "(" + mouse.x + ", " + mouse.y + ")"
             //! [pick result]
             var result = view.pick(mouse.x, mouse.y);
             //! [pick result]
@@ -234,18 +254,21 @@ Window {
                 // Toggle the isPicked property for the model
                 pickedObject.isPicked = !pickedObject.isPicked;
                 // Get picked model name
-                pickName.text = "Last Pick: " + pickedObject.objectName;
+                pickName.text = pickedObject.objectName;
                 // Get other pick specifics
-                uvPosition.text = "UV Position: ("
+                uvPosition.text = "("
                         + result.uvPosition.x.toFixed(2) + ", "
                         + result.uvPosition.y.toFixed(2) + ")";
-                distance.text = "Distance: " + result.distance.toFixed(2);
-                scenePosition.text = "World Position: ("
+                distance.text = result.distance.toFixed(2);
+                scenePosition.text = "("
                         + result.scenePosition.x.toFixed(2) + ", "
                         + result.scenePosition.y.toFixed(2) + ")";
                 //! [pick specifics]
             } else {
-                pickName.text = "Last Pick: None";
+                pickName.text = "None";
+                uvPosition.text = "";
+                distance.text = "";
+                scenePosition.text = "";
             }
         }
     }
