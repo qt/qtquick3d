@@ -790,7 +790,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
         bool hasJoint = false;
         bool hasWeight = false;
         for (const QSSGRhiInputAssemblerState::InputSemantic &sem : qAsConst(theSubset.rhi.ia.inputs)) {
-            using namespace QSSGMeshUtilities;
             if (sem == QSSGRhiInputAssemblerState::PositionSemantic)
                 renderableFlagsForModel.setHasAttributePosition(true);
             else if (sem == QSSGRhiInputAssemblerState::NormalSemantic)
