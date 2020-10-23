@@ -47,21 +47,65 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Defines a texture for use in 3D scenes.
 
-    Texture defines an image and related settings, such as the minification and
-    magnification filters, scaling, and UV transformations.
+    A texture is technically any array of pixels (1D, 2D or 3D) and its related
+    settings, such as minification and magnification filters, scaling and UV
+    transformations.
+
+    The Texture type in Qt Quick 3D represents a two-dimensional image. Its use
+    is typically to map onto / wrap around three-dimensional geometry to emulate
+    additional detail which cannot be efficiently modelled in 3D. It can also be
+    used to emulate other lighting effects, such as reflections.
+
+    When the geometry is being rendered, each location on its surface will be
+    transformed to a corresponding location in the texture by transforming and
+    interpolating the UV coordinates (texture coordinate) that have been set for
+    the mesh's vertexes. The fragment shader program that is being used to render
+    the active material will then typically sample the material's texture(s) at
+    the given coordinates and use the sampled data in its light calculations.
+
+    \note A Material may use multiple textures to give the desired interaction with
+    light in the 3D scene. It can represent the color of each texel on the geometry
+    surface, but also other attributes of the surface. For instance, a "normal map"
+    can represent the deviation from the geometry normals for each texel on the
+    surface, emulating light interaction with finer details on the surface, such
+    as cracks or bumps. See \l{Qt Quick 3D - Principled Material Example}{the principled
+    material example} for a demonstration of a material with multiple texture maps.
 
     Texture objects can source image data from:
-
     \list
-
-    \li an image file using the \l source property,
-
-    \li a Qt Quick \l Item using the sourceItem property,
-
+    \li an image file by using the \l source property,
+    \li a Qt Quick \l Item by using the sourceItem property,
     \li or by setting the \l textureData property to a \l TextureData item
     subclass for defining the custom texture contents.
-
     \endlist
+
+    The following example maps the image "madewithqt.png" onto the default sphere
+    mesh, and scales the UV coordinates to tile the image on the sphere surface.
+    \qml
+    Model {
+        source: "#Sphere"
+        materials: [ PrincipledMaterial {
+                baseColorMap: Texture {
+                    source: "madewithqt.png"
+                    scaleU: 4.0
+                    scaleV: 4.0
+                }
+            }
+        ]
+    }
+    \endqml
+
+    The result looks as follows:
+    \table
+    \header
+    \li Original image
+    \li Mapped onto a sphere
+    \row
+    \li \image madewithqt.png
+    \li \image spheremap.png
+    \endtable
+
+    \sa {Qt Quick 3D - Dynamic Texture Example}, {Qt Quick 3D - Procedural Texture Example}
 */
 
 QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
@@ -138,6 +182,8 @@ QQuickItem *QQuick3DTexture::sourceItem() const
     Scaling the U value when using horizontal tiling will define how many times the
     texture is repeated from left to right.
 
+    The default is 1.0.
+
     \sa tilingModeHorizontal
  */
 float QQuick3DTexture::scaleU() const
@@ -153,6 +199,8 @@ float QQuick3DTexture::scaleU() const
 
     Scaling the V value when using vertical tiling will define how many times a
     texture is repeated from bottom to top.
+
+    The default is 1.0.
 
     \sa tilingModeVertical
 */
@@ -189,7 +237,7 @@ QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
 
     Controls how the texture is mapped when the U scaling value is greater than 1.
 
-    By default, this property is set to \c Texture.Repeat
+    By default, this property is set to \c{Texture.Repeat}.
 
     \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
     \value Texture.MirroredRepeat Texture is repeated and mirrored over the X axis.
@@ -208,7 +256,7 @@ QQuick3DTexture::TilingMode QQuick3DTexture::horizontalTiling() const
     This property controls how the texture is mapped when the V scaling value
     is greater than 1.
 
-    By default, this property is set to \c Texture.Repeat
+    By default, this property is set to \c{Texture.Repeat}.
 
     \value Texture.ClampToEdge Texture is not tiled, but the value on the edge is used instead.
     \value Texture.MirroredRepeat Texture is repeated and mirrored over the Y axis.
@@ -225,7 +273,9 @@ QQuick3DTexture::TilingMode QQuick3DTexture::verticalTiling() const
     \qmlproperty float QtQuick3D::Texture::rotationUV
 
     This property rotates the texture around the pivot point. This is defined
-    using euler angles and for a positve value rotation is clockwise.
+    using euler angles and for a positive value rotation is clockwise.
+
+    The default is 0.0.
 
     \sa pivotU, pivotV
 */
@@ -238,6 +288,8 @@ float QQuick3DTexture::rotationUV() const
     \qmlproperty float QtQuick3D::Texture::positionU
 
     This property offsets the U coordinate mapping from left to right.
+
+    The default is 0.0.
 */
 float QQuick3DTexture::positionU() const
 {
@@ -248,6 +300,8 @@ float QQuick3DTexture::positionU() const
     \qmlproperty float QtQuick3D::Texture::positionV
 
     This property offsets the V coordinate mapping from bottom to top.
+
+    The default is 0.0.
 
     \note Qt Quick 3D uses OpenGL-style vertex data, regardless of the graphics
     API used at run time. The UV position \c{(0, 0)} is therefore referring to
@@ -261,7 +315,10 @@ float QQuick3DTexture::positionV() const
 /*!
     \qmlproperty float QtQuick3D::Texture::pivotU
 
-    This property sets the pivot U position.
+    This property sets the pivot U position which is used when applying a
+    \l{QtQuick3D::Texture::rotationUV}{rotationUV}.
+
+    The default is 0.0.
 
     \sa rotationUV
 */
@@ -273,7 +330,10 @@ float QQuick3DTexture::pivotU() const
 /*!
     \qmlproperty float QtQuick3D::Texture::pivotV
 
-    This property sets the pivot V position.
+    This property sets the pivot V position which is used when applying a
+    \l{QtQuick3D::Texture::rotationUV}{rotationUV}.
+
+    The default is 0.0.
 
     \sa rotationUV
 */
@@ -286,6 +346,8 @@ float QQuick3DTexture::pivotV() const
     \qmlproperty bool QtQuick3D::Texture::flipV
 
     This property sets the use of the vertically flipped coordinates.
+
+    The default is false.
 */
 bool QQuick3DTexture::flipV() const
 {
@@ -298,6 +360,8 @@ bool QQuick3DTexture::flipV() const
     This property sets the UV coordinate index used by this texture. Since
     QtQuick3D supports 2 UV sets(0 or 1) for now, the value will be saturated
     to the range.
+
+    The default is 0.
 */
 int QQuick3DTexture::indexUV() const
 {
@@ -310,13 +374,12 @@ int QQuick3DTexture::indexUV() const
     This property determines how the texture is sampled when a texel covers
     more than one pixel.
 
-    The default value is \c Texture.Linear
+    The default value is \c{Texture.Linear}.
 
-    \value Texture.None defaults to \c Texture.Linear since it is not possible to disable
-    \value Texture.Nearest uses the value of the closest texel
+    \value Texture.Nearest uses the value of the closest texel.
     \value Texture.Linear takes the four closest texels and bilinearly interpolates them.
 
-    \note Using \c Texture.None is not possible and will default to \c Texture.Linear
+    \note Using \c Texture.None here will default to \c Texture.Linear instead.
 
     \sa minFilter, mipFilter
 */
@@ -331,12 +394,12 @@ QQuick3DTexture::Filter QQuick3DTexture::magFilter() const
     This property determines how the texture is sampled when a texel covers
     more than one pixel.
 
-    The default value is \c Texture.Linear
+    The default value is \c{Texture.Linear}.
 
-    \value Texture.Nearest uses the value of the closest texel
+    \value Texture.Nearest uses the value of the closest texel.
     \value Texture.Linear takes the four closest texels and bilinearly interpolates them.
 
-    \note Using \c Texture.None is not possible and will default to \c Texture.Linear
+    \note Using \c Texture.None here will default to \c Texture.Linear instead.
 
     \sa magFilter, mipFilter
 */
@@ -351,10 +414,10 @@ QQuick3DTexture::Filter QQuick3DTexture::minFilter() const
     This property determines how the texture mipmaps are sampled when a texel covers
     less than one pixel.
 
-    The default value is \c Texture.None
+    The default value is \c{Texture.None}.
 
-    \value Texture.None disables the usage of mipmap sampling
-    \value Texture.Nearest uses mipmapping and samples the value of the closest texel
+    \value Texture.None disables the usage of mipmap sampling.
+    \value Texture.Nearest uses mipmapping and samples the value of the closest texel.
     \value Texture.Linear uses mipmapping and interpolates between multiple texel values.
 
     \note This property will have no effect on Textures that do not have mipmaps.
@@ -376,7 +439,7 @@ QQuick3DTexture::Filter QQuick3DTexture::mipFilter() const
     Texture should use one method to provide image data, and set only one of
     source, \l sourceItem, or \l textureData.
 
-    \sa source, sourceItem
+    \sa source, sourceItem, {Qt Quick 3D - Procedural Texture Example}
 */
 
 QQuick3DTextureData *QQuick3DTexture::textureData() const
@@ -395,8 +458,8 @@ QQuick3DTextureData *QQuick3DTexture::textureData() const
 
     By default, this property is set to false.
 
-    \note It is necessary to set a \c QQuick3D::Texture::mipFilter mode for the
-    generated mipmaps to be be used.
+    \note It is necessary to set a \l{QQuick3D::Texture::mipFilter}{mipFilter} mode
+    for the generated mipmaps to be be used.
 
     \sa mipFilter
 */
