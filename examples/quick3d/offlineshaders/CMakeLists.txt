@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(offlineshaders
+qt_add_executable(offlineshaders
     main.cpp
 )
 target_link_libraries(offlineshaders PUBLIC
