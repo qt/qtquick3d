@@ -77,6 +77,21 @@ QT_BEGIN_NAMESPACE
     \inmodule QtQuick3D
     \since 5.15
     \brief Base class of all 3D nodes and resources.
+
+    Object3D is the base class for all Qt Quick 3D scene objects. Currently the
+    types available in C++ are:
+
+    \list
+    \li QQuick3DGeometry
+    \li QQuick3DTextureData
+    \endlist
+
+    Both of these types are resource objects which directly inherit QQuick3DObject.
+
+    It should not be necessary to use QQuick3DObject directly anywhere currently
+    because it is just an interface for supporting spatial items and resources in
+    a 3D scene, as well as exposing similar functionality as QQuickItem for 3D
+    scene content.
 */
 
 QQuick3DObject::QQuick3DObject(QQuick3DObject *parent)
@@ -111,6 +126,33 @@ void QQuick3DObject::update()
     Q_D(QQuick3DObject);
     d->dirty(QQuick3DObjectPrivate::Content);
 }
+
+/*!
+    \qmlproperty Object3D QtQuick::Object3D::parent
+    This property holds the parent of the Object3D in a 3D scene.
+
+    \note An Object3D's parent may not necessarily be the same as its object
+    parent. This is necessary because the object parent may be an item that is
+    not of type Object3D, for example the root object in a scene.
+*/
+/*!
+    \property QQuick3DObject::parent
+    This property holds the parent of the Object3D in a 3D scene.
+
+    \note An Object3D's parent may not necessarily be the same as its object
+    parent. This is necessary because the object parent may be an item that is
+    not of type Object3D, for example the root object in a scene.
+
+    \note Currently for 3D items to be correctly handled by the scene manager
+    when parenting 3D objects from C++ it is necessary to call
+    QQuick3DObject::setParentItem before the QObject::setParent. This requirement is
+    likely to change in a future release though.
+    \code
+    QQuick3DObject *newItem = new QQuick3DObject();
+    newItem->setParentItem(parentItem);
+    newItem->setParent(parentItem);
+    \endcode
+*/
 
 void QQuick3DObject::setParentItem(QQuick3DObject *parentItem)
 {
@@ -293,6 +335,45 @@ void QQuick3DObjectPrivate::init(QQuick3DObject *parent)
         q->setParentItem(parent);
 }
 
+/*!
+    \qmlproperty list<Object> QtQuick3D::Object3D::data
+    \default
+
+    The data property allows you to freely mix Object3D children and resources
+    in an object. If you assign a Object3D to the data list it becomes a child
+    and if you assign any other object type, it is added as a resource.
+
+    So you can write:
+    \qml
+    Object3D {
+        Node {}
+        DirectionalLight {}
+        Timer {}
+    }
+    \endqml
+
+    instead of:
+    \qml
+    Item {
+        children: [
+            Node {},
+            DirectionalLight {}
+        ]
+        resources: [
+            Timer {}
+        ]
+    }
+    \endqml
+
+    It should not generally be necessary to refer to the \c data property,
+    as it is the default property for Object3D and thus all child objects are
+    automatically assigned to this property.
+ */
+
+/*!
+  \property QQuick3DObject::data
+  \internal
+*/
 QQmlListProperty<QObject> QQuick3DObjectPrivate::data()
 {
     return QQmlListProperty<QObject>(q_func(),
@@ -303,6 +384,10 @@ QQmlListProperty<QObject> QQuick3DObjectPrivate::data()
                                      QQuick3DObjectPrivate::data_clear);
 }
 
+/*!
+    \property QQuick3DObject::resources
+    \internal
+*/
 QQmlListProperty<QObject> QQuick3DObjectPrivate::resources()
 {
     return QQmlListProperty<QObject>(q_func(),
@@ -313,6 +398,29 @@ QQmlListProperty<QObject> QQuick3DObjectPrivate::resources()
                                      QQuick3DObjectPrivate::resources_clear);
 }
 
+/*!
+    \qmlproperty list<Object3D> QtQuick3D::Object3D::children
+    \qmlproperty list<Object> QtQuick3D::Object3D::resources
+
+    The children property contains the list of visual children of this object.
+    The resources property contains non-visual resources that you want to
+    reference by name.
+
+    It is not generally necessary to refer to these properties when adding
+    child objects or resources, as the default \l data property will
+    automatically assign child objects to the \c children and \c resources
+    properties as appropriate. See the \l QtQuick3D::Object3D::data
+    documentation for details.
+
+    \note QtQuick3D::Object3D::resources does not return a list of 3D resources
+    despite the name. The name comes from the semantics of QQuickItem.  3D
+    resources are subclasses of QQuickObjec3D and thus will be returned in the
+    list of QtQuick3D::Objec3D::children.
+*/
+/*!
+    \property QQuick3DObject::children
+    \internal
+*/
 QQmlListProperty<QQuick3DObject> QQuick3DObjectPrivate::children()
 {
     return QQmlListProperty<QQuick3DObject>(q_func(),
@@ -323,15 +431,120 @@ QQmlListProperty<QQuick3DObject> QQuick3DObjectPrivate::children()
                                           QQuick3DObjectPrivate::children_clear);
 }
 
+/*!
+    \qmlproperty list<State> QtQuick3D::Object3D::states
+
+    This property holds the list of possible states for this object. To change
+    the state of this object, set the \l state property to one of these states,
+    or set the \l state property to an empty string to revert the object to its
+    default state.
+
+    This property is specified as a list of \l State objects. For example,
+    below is an QtQuick3D::Node with "above_state" and "below_state" states:
+
+    \qml
+    import QtQuick
+    import QtQuick3D
+
+    Node {
+        id: root
+        y: 0
+
+        states: [
+            State {
+                name: "above_state"
+                PropertyChanges { target: root; y: 100 }
+            },
+            State {
+                name: "below_state"
+                PropertyChanges { target: root; y: -100 }
+            }
+        ]
+    }
+    \endqml
+
+    See \l{Qt Quick States} and \l{Animation and Transitions in Qt Quick} for
+    more details on using states and transitions.
+
+    \note This property works the same as QtQuick::Item::states but is
+    necessary because QtQuick3D::Object3D is not a QtQuick::Item subclass.
+
+    \sa QtQuick3D::Object3D::transitions
+*/
+
+/*!
+    \property QQuick3DObject::states
+    \internal
+*/
 QQmlListProperty<QQuickState> QQuick3DObjectPrivate::states()
 {
     return _states()->statesProperty();
 }
 
+/*!
+    \qmlproperty list<Transition> QtQuick3D::Object3D::transitions
+
+    This property holds the list of transitions for this object. These define the
+    transitions to be applied to the object whenever it changes its \l state.
+
+    This property is specified as a list of \l Transition objects. For example:
+
+    \qml
+    import QtQuick
+    import QtQuick3D
+
+    Node {
+        transitions: [
+            Transition {
+                //...
+            },
+            Transition {
+                //...
+            }
+        ]
+    }
+    \endqml
+
+    See \l{Qt Quick States} and \l{Animation and Transitions in Qt Quick} for
+    more details on using states and transitions.
+
+    \note This property works the same as QtQuick::Item::transitions but is
+    necessary because QtQuick3D::Object3D is not a QtQuick::Item subclass.
+
+    \sa QtQuick3D::Object3D::states
+*/
+/*!
+    \property QQuick3DObject::transitions
+    \internal
+  */
+
 QQmlListProperty<QQuickTransition> QQuick3DObjectPrivate::transitions()
 {
     return _states()->transitionsProperty();
 }
+
+/*!
+    \qmlproperty string QtQuick3D::Object3D::state
+
+    This property holds the name of the current state of the object.
+
+    If the item is in its default state, that is, no explicit state has been
+    set, then this property holds an empty string. Likewise, you can return
+    an item to its default state by setting this property to an empty string.
+
+    \sa {Qt Quick States}
+*/
+/*!
+    \property QQuick3DObject::state
+
+    This property holds the name of the current state of the object.
+
+    If the item is in its default state, that is, no explicit state has been
+    set, then this property holds an empty string. Likewise, you can return
+    an item to its default state by setting this property to an empty string.
+
+    \sa {Qt Quick States}
+*/
 
 QString QQuick3DObjectPrivate::state() const
 {
