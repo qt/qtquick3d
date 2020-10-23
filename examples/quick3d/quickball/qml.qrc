@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>images/ball_icon.png</file>
+        <file>images/grass.jpg</file>
+        <file>images/grass_n.jpg</file>
+        <file>images/sky.jpg</file>
+        <file>images/ball.jpg</file>
+        <file>images/ball_n.jpg</file>
+        <file>images/qt_logo.jpg</file>
+        <file>images/qt_logo_n.jpg</file>
+        <file>images/quickball.png</file>
+    </qresource>
+</RCC>

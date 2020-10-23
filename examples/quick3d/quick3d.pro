@@ -18,4 +18,5 @@ SUBDIRS += \
     customeffect \
     skinning \
     offlineshaders \
-    submeshes
+    submeshes \
+    quickball
