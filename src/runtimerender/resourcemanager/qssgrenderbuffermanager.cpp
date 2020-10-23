@@ -865,7 +865,7 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
     QRhiTexture::Flags textureFlags;
-    int mipmapCount = 0;
+    int mipmapCount = 1;
     const bool checkTransp = inForceScanForTransparency;
     bool hasTransp = false;
 
@@ -914,13 +914,13 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     }
 
     bool generateMipmaps = false;
-    if (inMipMode == MipModeGenerated && mipmapCount == 0){
+    if (inMipMode == MipModeGenerated && mipmapCount == 1) {
         textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
         generateMipmaps = true;
         mipmapCount = rhi->mipLevelsForSize(size);
     }
 
-    if (mipmapCount)
+    if (mipmapCount > 1)
         textureFlags |= QRhiTexture::Flag::MipMapped;
 
     if (textureUploads.isEmpty() || size.isEmpty() || rhiFormat == QRhiTexture::UnknownFormat) {
