@@ -31,8 +31,9 @@
 \page quick3d-asset-conditioning-2d-assets howto
 \ingroup quick3d-asset-conditioning
 
-Optimizing the images in your presentation can substantially improve both the startup and runtime
-performance of your application, as well as the visual quality in certain situations.
+Optimizing the images used by Texture components in your scene can substantially
+improve both the startup and runtime performance of your application, as well as
+the visual quality in certain situations.
 
 \section1 Motivation
 
@@ -80,6 +81,12 @@ mipmap dimension is halved from the one preceding it, and is downsized in image 
 good image resampling. The result speeds up rendering, decreases the time that the GPU
 uses for texture lookup, and also reduces aliasing artifacts such as moiré effects or
 \l {quick3d-asset-conditioning-anti-aliasing#texture-aliasing}{texture subsampling}.
+
+To provide mipmaps at build time, the texture needs to be in a container format like KTX, as
+standard image formats do not have the capability of storing mipmaps.
+
+It is possible to generate mipmaps at runtime by setting the property Texture::generateMipmaps
+to \c true.
 
 \note Mipmaps require specific image dimensions to work correctly at all levels, depending on which
 encoding is used.
