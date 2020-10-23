@@ -54,12 +54,15 @@
     \section1 Draw a 3D Cube
 
     Drawing a cube is very simple. After defining a \l Camera, and a \l Light,
-    we make a cube with a built-in \l Model.
-    In this example, we render previous 2D Rectangle on this cube surface as
-    a diffuse \l Texture.
-    Back to the properties of the Rectangle, you can see layer.enabled.
-    This property makes the 2D item as a offscreen surface.
+    we make a cube with a built-in \l Model. In this example, we render the
+    previous 2D Rectangle on this cube surface as a diffuse \l Texture. In our
+    Rectangle, we set \c {layer.enabled} to \c true.
+
     \snippet hellocube/main.qml offscreenSurface
+
+    When enabled, this property makes the 2D
+    item render into a offscreen surface, which we then use as a texture for our
+    cube.
 
     \snippet hellocube/main.qml 3dcube
 */
