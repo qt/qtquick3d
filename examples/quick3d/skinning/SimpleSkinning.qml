@@ -48,11 +48,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick3D 1.15
-import QtQuick3D.Helpers 1.15
-import Example 1.0
-import QtQuick.Timeline 1.0
+import QtQuick
+import QtQuick3D
+import QtQuick3D.Helpers
+import Example
+import QtQuick.Timeline
 
 Node {
     PrincipledMaterial {
