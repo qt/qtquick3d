@@ -40,11 +40,49 @@
     \since 5.15
     \brief Helper class for selecting correct surface format.
 
-    Lets you select a \l {QSurfaceFormat}{surface format} that is appropriate for the application.
+    When using Qt Quick 3D with OpenGL it is necessary to take extra steps to
+    define what kind of \l {QSurfaceFormat}{surface format} is used when
+    initializing Qt Quick. This is because by the time Qt Quick is aware that
+    3D content is being used, the OpenGL context and window surface has already
+    been initialized. So this helper class is provided to request the ideal
+    surface format from Qt Quick 3D so that it can be set as the default surface
+    for Qt Quick before initialization.
 
-    Usage:
+    If this helper is run when using any other rendering backends than OpenGL
+    then it just returns a copy of the current default QSurfaceFormat with the
+    requested samples.
+
+    If this helper is run when using the OpenGL rendering backend, then it will
+    test for sufficiently modern versions of OpenGL and support for
+    multisampling if requested. Normally Qt Quick will request an OpenGL 2.0 or
+    OpenGL ES 2.0 context, which would limit the features available when using
+    Qt Quick 3D, so an extra step is needed to request a more capable context.
+
+    The correct usage pattern is to call \l QSurfaceFormat::setDefaultFormat
+    to set the \l QSurfaceFormat returned by \l QQuick3D::idealSurfaceFormat.
+    It is important that this method is called after \l QGuiApplication is
+    constructed, but before the Qt Quick application content is loaded. This
+    code snippet shows the correct usage pattern:
     \code
-    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
+    #include <QGuiApplication>
+    #include <QQmlApplicationEngine>
+
+    #include <QtGui>
+    #include <QtQuick3D/qquick3d.h>
+
+    int main(int argc, char *argv[])
+    {
+        QGuiApplication app(argc, argv);
+
+        QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
+
+        QQmlApplicationEngine engine;
+        engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+        if (engine.rootObjects().isEmpty())
+            return -1;
+
+        return app.exec();
+    }
     \endcode
 */
 
