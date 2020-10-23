@@ -229,7 +229,12 @@ struct QSSGModelContext
 
     QSSGModelContext(const QSSGRenderModel &inModel, const QMatrix4x4 &inViewProjection) : model(inModel)
     {
-        model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
+        // For skinning, node's global transformation will be ignored and
+        // an identity matrix will be used for the normalMatrix
+        if (!model.skeleton)
+            model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
+        else
+            modelViewProjection = inViewProjection;
     }
 };
 

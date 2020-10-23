@@ -237,8 +237,11 @@ QQuick3DGeometry *QQuick3DModel::geometry() const
     for skinning.
 
     \note Meshes of the model must have both joints and weights attributes.
+    \note If this property is set, skinning animation is enabled. It means
+    that \l {Model} is transformed based on \l {Skeleton} ignoring Model's global
+    transformation.
 
-    \sa inverseBindPoses
+    \sa {Model::inverseBindPoses}, {Qt Quick 3D - Simple Skinning Example}
 */
 QQuick3DSkeleton *QQuick3DModel::skeleton() const
 {
