@@ -80,7 +80,7 @@ Using \l{multisample-aa}{Multisample Anti-Aliasing} will not fix this problem.
 \section2 Reflection Aliasing
 
 Similar to \l{texture-aliasing}{Texture Aliasing}, a material reflecting the environment will sub-sample the image.
-In some cases, as seen on the left in the image below, becomes obvious when fine details are being
+In some cases, as seen on the left in the image below, it becomes obvious when fine details are being
 skipped.
 
 \image AA-ReflectionAliasing.png

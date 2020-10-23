@@ -209,7 +209,7 @@ are not supported.
 
 \note The shading language used is Vulkan-compatible GLSL. The \c{.vert} and \c{.frag}
 files are not complete shaders on their own, hence being often called \c snippets. That is
-why there are no uniform blocks, input and output variables, sampler uniforms provided
+why there are no uniform blocks, input and output variables, or sampler uniforms provided
 directly by these snippets. Rather, the Qt Quick 3D engine will amend them as appropriate.
 
 \table

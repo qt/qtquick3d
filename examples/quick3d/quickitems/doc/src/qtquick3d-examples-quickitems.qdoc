@@ -41,7 +41,7 @@
 
     \list
 
-    \li When a \l Item is inside a \l Node, its top-left corner is placed to the Node's
+    \li When an \l Item is inside a \l Node, its top-left corner is placed to the Node's
     origin. This means that the item will often want to specify \c{anchors.centerIn:
     parent} to ensure the \l{Node}'s origin serves the center point of the \l Item.
 
