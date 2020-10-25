@@ -139,7 +139,7 @@ struct QSSGLinkedListIterator
         return *this;
     }
 
-    Iterator &operator++(int)
+    Iterator operator++(int)
     {
         Iterator retval(*this);
         ++(*this);
