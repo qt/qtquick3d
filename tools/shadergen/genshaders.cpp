@@ -293,8 +293,9 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         qsbcFiles.push_back(resourceFolderRelative + QDir::separator() + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile()));
     qsbc.unmap();
 
-    for (auto c = layer.firstChild; c != nullptr; c = c->nextSibling)
-        layer.removeChild(*c);
+    auto &children = layer.children;
+    for (auto it = children.begin(), end = children.end(); it != end;)
+        children.remove(*it++);
 
     qDeleteAll(nodes);
 

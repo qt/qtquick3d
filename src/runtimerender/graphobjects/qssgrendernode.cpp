@@ -60,12 +60,6 @@ QSSGRenderNode::QSSGRenderNode(const QSSGRenderNode &inCloningObject)
     , globalOpacity(inCloningObject.globalOpacity)
     , skeletonId(inCloningObject.skeletonId)
 {
-    // for ( SNode* theChild = m_FirstChild; theChild != nullptr; theChild = theChild->m_NextSibling )
-    //{
-    //	SNode* theClonedChild = static_cast<SNode*>( CGraphObjectFactory::CloneGraphObject(
-    //*theChild, inAllocator ) );
-    //	AddChild( *theClonedChild );
-    //}
 }
 
 // Sets this object dirty and walks down the graph setting all
@@ -76,8 +70,8 @@ void QSSGRenderNode::markDirty(TransformDirtyFlag inTransformDirty)
         flags.setFlag(Flag::TransformDirty, inTransformDirty != TransformDirtyFlag::TransformNotDirty);
     if (!flags.testFlag(Flag::Dirty)) {
         flags.setFlag(Flag::Dirty, true);
-        for (QSSGRenderNode *child = firstChild; child; child = child->nextSibling)
-            child->markDirty(inTransformDirty);
+        for (auto &cld : children)
+            cld.markDirty(inTransformDirty);
     }
 }
 
@@ -199,81 +193,23 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
 {
     // Adding children to a layer does not reset parent
     // because layers can share children over with other layers
-    if (this->type != QSSGRenderNode::Type::Layer) {
-        if (inChild.parent)
+    if (type != QSSGRenderNode::Type::Layer) {
+        if (inChild.parent && inChild.parent != this)
             inChild.parent->removeChild(inChild);
         inChild.parent = this;
     }
-    if (firstChild == nullptr) {
-        firstChild = &inChild;
-        inChild.nextSibling = nullptr;
-        inChild.previousSibling = nullptr;
-    } else {
-        QSSGRenderNode *lastChild = getLastChild();
-        if (lastChild) {
-            lastChild->nextSibling = &inChild;
-            inChild.previousSibling = lastChild;
-            inChild.nextSibling = nullptr;
-        } else {
-            Q_ASSERT(false); // no last child but first child isn't null?
-        }
-    }
+    children.push_back(inChild);
 }
-
-void QSSGRenderNode::addChildrenToLayer(QSSGRenderNode &inChildren)
-{
-    // Adding children to a layer does not reset parent
-    // because layers can share children over with other layers
-    if (firstChild == nullptr) {
-        firstChild = &inChildren;
-        inChildren.previousSibling = nullptr;
-    } else {
-        QSSGRenderNode *lastChild = getLastChild();
-        if (lastChild) {
-            lastChild->nextSibling = &inChildren;
-            inChildren.previousSibling = lastChild;
-        } else {
-            Q_ASSERT(false); // no last child but first child isn't null?
-        }
-    }
-}
-
 
 void QSSGRenderNode::removeChild(QSSGRenderNode &inChild)
 {
-    // Removing children from a layer does not care about parenting
-    // because layers can share children over with other layers
-    if (this->type != QSSGRenderNode::Type::Layer) {
-        if (inChild.parent != this) {
-            Q_ASSERT(false);
-            return;
-        }
+    if (Q_UNLIKELY(type != QSSGRenderNode::Type::Layer && inChild.parent != this)) {
+        Q_ASSERT(inChild.parent == this);
+        return;
     }
 
-    for (QSSGRenderNode *child = firstChild; child; child = child->nextSibling) {
-        if (child == &inChild) {
-            if (child->previousSibling)
-                child->previousSibling->nextSibling = child->nextSibling;
-            if (child->nextSibling)
-                child->nextSibling->previousSibling = child->previousSibling;
-            child->parent = nullptr;
-            if (firstChild == child)
-                firstChild = child->nextSibling;
-            child->nextSibling = nullptr;
-            child->previousSibling = nullptr;
-            return;
-        }
-    }
-    Q_ASSERT(false);
-}
-
-QSSGRenderNode *QSSGRenderNode::getLastChild()
-{
-    QSSGRenderNode *lastChild = nullptr;
-    // empty loop intentional
-    for (lastChild = firstChild; lastChild && lastChild->nextSibling; lastChild = lastChild->nextSibling) {
-    }
-    return lastChild;
+    inChild.parent = nullptr;
+    children.remove(inChild);
 }
 
 void QSSGRenderNode::removeFromGraph()
@@ -281,15 +217,11 @@ void QSSGRenderNode::removeFromGraph()
     if (parent)
         parent->removeChild(*this);
 
-    nextSibling = nullptr;
-
     // Orphan all of my children.
-    QSSGRenderNode *nextSibling = nullptr;
-    for (QSSGRenderNode *child = firstChild; child != nullptr; child = nextSibling) {
-        child->previousSibling = nullptr;
-        child->parent = nullptr;
-        nextSibling = child->nextSibling;
-        child->nextSibling = nullptr;
+    for (auto it = children.begin(), end = children.end(); it != end;) {
+        auto &removedChild = *it++;
+        children.remove(removedChild);
+        removedChild.parent = nullptr;
     }
 }
 
@@ -308,14 +240,14 @@ QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManage
 QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inManager) const
 {
     QSSGBounds3 retval;
-    for (QSSGRenderNode *child = firstChild; child != nullptr; child = child->nextSibling) {
-        QSSGBounds3 childBounds;
-        if (child->flags.testFlag(Flag::TransformDirty))
-            child->calculateLocalTransform();
-        childBounds = child->getBounds(inManager);
+    QSSGBounds3 childBounds;
+    for (auto &child : children) {
+        if (child.flags.testFlag(Flag::TransformDirty))
+            child.calculateLocalTransform();
+        childBounds = child.getBounds(inManager);
         if (!childBounds.isEmpty()) {
             // Transform the bounds into our local space.
-            childBounds.transform(child->localTransform);
+            childBounds.transform(child.localTransform);
             retval.include(childBounds);
         }
     }

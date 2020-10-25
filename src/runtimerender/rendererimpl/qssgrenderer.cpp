@@ -566,8 +566,8 @@ void QSSGRenderer::endLayerRender()
 
 bool nodeContainsBoneRoot(QSSGRenderNode &childNode, qint32 rootID)
 {
-    for (QSSGRenderNode *childChild = childNode.firstChild; childChild != nullptr; childChild = childChild->nextSibling) {
-        if (childChild->skeletonId == rootID)
+    for (const auto &childChild : childNode.children) {
+        if (childChild.skeletonId == rootID)
             return true;
     }
 
@@ -578,8 +578,8 @@ void fillBoneIdNodeMap(QSSGRenderNode &childNode, QHash<long, QSSGRenderNode *> 
 {
     if (childNode.skeletonId >= 0)
         ioMap[childNode.skeletonId] = &childNode;
-    for (QSSGRenderNode *childChild = childNode.firstChild; childChild != nullptr; childChild = childChild->nextSibling)
-        fillBoneIdNodeMap(*childChild, ioMap);
+    for (auto &childChild : childNode.children)
+        fillBoneIdNodeMap(childChild, ioMap);
 }
 
 QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGLayerRenderData &inLayerRenderData,
@@ -639,8 +639,8 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
     if (node.isRenderableType())
         renderables.push_back(&node);
 
-    for (QSSGRenderNode *child = node.firstChild; child != nullptr; child = child->nextSibling)
-        dfs(*child, renderables);
+    for (const auto &child : node.children)
+        dfs(child, renderables);
 }
 
 void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
@@ -662,8 +662,8 @@ void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
         if (hitRay.hasValue()) {
             // Scale the mouse coords to change them into the camera's numerical space.
             RenderableList renderables;
-            for (QSSGRenderNode *childNode = layer.firstChild; childNode; childNode = childNode->nextSibling)
-                dfs(*childNode, renderables);
+            for (const auto &childNode : layer.children)
+                dfs(childNode, renderables);
 
             for (int idx = renderables.size(), end = 0; idx > end; --idx) {
                 const auto &pickableObject = renderables.at(idx - 1);

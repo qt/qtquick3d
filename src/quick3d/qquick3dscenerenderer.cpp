@@ -634,7 +634,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 sceneParent = sceneParent->parent();
             }
             if (!isEmbedded)
-                m_layer->addChildrenToLayer(*importRootNode);
+                m_layer->addChildrenToLayer(importRootNode->children);
         }
 
         m_importRootNode = importRootNode;

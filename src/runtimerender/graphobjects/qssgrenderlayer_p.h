@@ -190,6 +190,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     void addEffect(QSSGRenderEffect &inEffect);
 
     QSSGRenderEffect *getLastEffect();
+
+    // Special function for importScene
+    void addChildrenToLayer(ChildList &adoptList);
 };
 QT_END_NAMESPACE
 

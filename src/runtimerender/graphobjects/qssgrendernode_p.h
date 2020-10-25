@@ -45,6 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
+#include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QVector3D>
@@ -118,10 +119,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QSSGRenderNode *parent = nullptr;
     QSSGRenderNode *nextSibling = nullptr;
     QSSGRenderNode *previousSibling = nullptr;
-    QSSGRenderNode *firstChild = nullptr;
     // Property maintained solely by the render system.
     // Depth-first-search index assigned and maintained by render system.
     quint32 dfsIndex = 0;
+
+    using ChildList = QSSGInvasiveLinkedList<QSSGRenderNode, &QSSGRenderNode::previousSibling, &QSSGRenderNode::nextSibling>;
+    ChildList children;
 
     QSSGRenderNode();
     QSSGRenderNode(Type type);
@@ -133,10 +136,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     void markDirty(TransformDirtyFlag inTransformDirty = TransformDirtyFlag::TransformNotDirty);
 
     void addChild(QSSGRenderNode &inChild);
-    // Specital function for importScene
-    void addChildrenToLayer(QSSGRenderNode &inChildren);
     void removeChild(QSSGRenderNode &inChild);
-    QSSGRenderNode *getLastChild();
 
     // Remove this node from the graph.
     // It is no longer the the parent's child lists

@@ -62,8 +62,8 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
     QMatrix3x3 N = mat44::getUpper3x3(M);
     modelNode->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
 
-    for (QSSGRenderNode *child = node->firstChild; child != nullptr; child = child->nextSibling)
-        collectBoneTransforms(child, modelNode, poses);
+    for (auto &child : node->children)
+        collectBoneTransforms(&child, modelNode, poses);
 }
 
 template<typename T, typename V>
@@ -102,8 +102,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                     modelNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
                     modelNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
                 }
-                for (QSSGRenderNode *child = skeletonNode->firstChild; child != nullptr; child = child->nextSibling)
-                    collectBoneTransforms(child, modelNode, modelNode->inverseBindPoses);
+                for (auto &child : skeletonNode->children)
+                    collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
             }
         }
     } else if (inNode.type == QSSGRenderGraphObject::Type::Camera) {
@@ -112,8 +112,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
     }
 
-    for (QSSGRenderNode *theChild = inNode.firstChild; theChild != nullptr; theChild = theChild->nextSibling)
-        maybeQueueNodeForRender(*theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex);
+    for (auto &theChild : inNode.children)
+        maybeQueueNodeForRender(theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex);
 }
 
 static inline bool hasValidLightProbe(QSSGRenderImage *inLightProbeImage)
@@ -1021,14 +1021,14 @@ struct QSSGLightNodeMarker
         } else {
             firstValidIndex = inNode.dfsIndex;
             QSSGRenderNode *lastChild = nullptr;
-            QSSGRenderNode *firstChild = inNode.firstChild;
+            QSSGRenderNode *firstChild = inNode.children.front_ptr();
             // find deepest last child
             while (firstChild) {
                 for (QSSGRenderNode *childNode = firstChild; childNode; childNode = childNode->nextSibling)
                     lastChild = childNode;
 
                 if (lastChild)
-                    firstChild = lastChild->firstChild;
+                    firstChild = lastChild->children.front_ptr();
                 else
                     firstChild = nullptr;
             }
@@ -1150,8 +1150,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             int cameraNodeCount = 0;
             int lightNodeCount = 0;
             quint32 dfsIndex = 0;
-            for (QSSGRenderNode *theChild = layer.firstChild; theChild; theChild = theChild->nextSibling)
-                maybeQueueNodeForRender(*theChild, renderableNodes, renderableNodeCount, cameras, cameraNodeCount, lights, lightNodeCount, dfsIndex);
+            for (auto &theChild : layer.children)
+                maybeQueueNodeForRender(theChild, renderableNodes, renderableNodeCount, cameras, cameraNodeCount, lights, lightNodeCount, dfsIndex);
 
             if (renderableNodes.size() != renderableNodeCount)
                 renderableNodes.resize(renderableNodeCount);

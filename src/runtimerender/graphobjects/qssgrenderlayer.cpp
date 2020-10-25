@@ -91,6 +91,18 @@ void QSSGRenderLayer::addEffect(QSSGRenderEffect &inEffect)
     inEffect.m_layer = this;
 }
 
+void QSSGRenderLayer::addChildrenToLayer(QSSGRenderNode::ChildList &adoptList)
+{
+    if (children.empty()) {
+        children = adoptList;
+    } else if (!adoptList.empty()) {
+        // TODO: This is not the ideal solution, but it makes more sense to add this
+        // feature to the list then doing a one off solution here (append/insert list).
+        for (auto it = adoptList.begin(), end = adoptList.end(); it != end;)
+            children.push_back(*it++);
+    }
+}
+
 QSSGRenderEffect *QSSGRenderLayer::getLastEffect()
 {
     if (firstEffect) {
