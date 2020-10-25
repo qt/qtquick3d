@@ -170,7 +170,6 @@ public:
     QSSGRenderPickResult pick(QSSGRenderLayer &inLayer,
                                 const QVector2D &inViewportDimensions,
                                 const QVector2D &inMouseCoords,
-                                bool inPickSiblings = true,
                                 bool inPickEverything = false);
     QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
                                   const QSSGRef<QSSGBufferManager> &bufferManager,

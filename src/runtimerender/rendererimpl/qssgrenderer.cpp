@@ -88,13 +88,6 @@ void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
     m_contextInterface = ctx;
 }
 
-static inline QSSGRenderLayer *getNextLayer(QSSGRenderLayer &inLayer)
-{
-    if (inLayer.nextSibling && inLayer.nextSibling->type == QSSGRenderGraphObject::Type::Layer)
-        return static_cast<QSSGRenderLayer *>(inLayer.nextSibling);
-    return nullptr;
-}
-
 bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer,
                                                const QSize &surfaceSize)
 {
@@ -287,35 +280,21 @@ QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEvery
 }
 
 QSSGRenderPickResult QSSGRenderer::pick(QSSGRenderLayer &inLayer,
-                                                const QVector2D &inViewportDimensions,
-                                                const QVector2D &inMouseCoords,
-                                                bool inPickSiblings,
-                                                bool inPickEverything)
+                                        const QVector2D &inViewportDimensions,
+                                        const QVector2D &inMouseCoords,
+                                        bool inPickEverything)
 {
     m_lastPickResults.clear();
 
-    QSSGRenderLayer *theLayer = &inLayer;
-    // Stepping through how the original runtime did picking it picked layers in order
-    // stopping at the first hit.  So objects on the top layer had first crack at the pick
-    // vector itself.
-    do {
-        if (theLayer->flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-            if (auto renderData = theLayer->renderData) {
-                m_lastPickResults.clear();
-                getLayerHitObjectList(*renderData, inViewportDimensions, inMouseCoords, inPickEverything, m_lastPickResults);
-                QSSGPickResultProcessResult retval(processPickResultList(inPickEverything));
-                if (retval.m_wasPickConsumed)
-                    return retval;
-            } else {
-                // Q_ASSERT( false );
-            }
+    if (inLayer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+        if (auto renderData = inLayer.renderData) {
+            m_lastPickResults.clear();
+            getLayerHitObjectList(*renderData, inViewportDimensions, inMouseCoords, inPickEverything, m_lastPickResults);
+            QSSGPickResultProcessResult retval(processPickResultList(inPickEverything));
+            if (retval.m_wasPickConsumed)
+                return retval;
         }
-
-        if (inPickSiblings)
-            theLayer = getNextLayer(*theLayer);
-        else
-            theLayer = nullptr;
-    } while (theLayer != nullptr);
+    }
 
     return QSSGRenderPickResult();
 }
@@ -345,133 +324,6 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
     }
 
     return QSSGPickResultProcessResult();
-}
-
-QSSGOption<QVector2D> QSSGRenderer::facePosition(QSSGRenderNode &inNode,
-                                                         QSSGBounds3 inBounds,
-                                                         const QMatrix4x4 &inGlobalTransform,
-                                                         const QVector2D &inViewportDimensions,
-                                                         const QVector2D &inMouseCoords,
-                                                         QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
-                                                         QSSGRenderBasisPlanes inPlane)
-{
-    Q_UNUSED(inMapperObjects);
-    auto layer = layerForNode(inNode);
-    if (!layer)
-        QSSGEmpty();
-
-    QSSGLayerRenderData *theLayerData = getOrCreateLayerRenderData(*layer);
-    Q_ASSERT(theLayerData);
-    // This function assumes the layer was rendered to the scene itself.  There is another
-    // function
-    // for completely offscreen layers that don't get rendered to the scene.
-    bool wasRenderToTarget(theLayerData->layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (!wasRenderToTarget || theLayerData->camera == nullptr || !theLayerData->layerPrepResult.hasValue())
-        return QSSGEmpty();
-
-    QVector2D theMouseCoords(inMouseCoords);
-    QVector2D theViewportDimensions(inViewportDimensions);
-
-    const auto camera = theLayerData->layerPrepResult->camera();
-    const auto viewport = theLayerData->layerPrepResult->viewport();
-    QSSGOption<QSSGRenderRay> theHitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, theMouseCoords, theViewportDimensions, false);
-    if (!theHitRay.hasValue())
-        return QSSGEmpty();
-
-    // Scale the mouse coords to change them into the camera's numerical space.
-    QSSGRenderRay thePickRay = *theHitRay;
-    QSSGOption<QVector2D> newValue = thePickRay.relative(inGlobalTransform, inBounds, inPlane);
-    return newValue;
-}
-
-QVector3D QSSGRenderer::unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const
-{
-    auto layer = layerForNode(inNode);
-    if (!layer)
-        QVector3D();
-
-    // Translate mouse into layer's coordinates
-    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(*layer);
-    Q_ASSERT(theData);
-    if (theData->camera == nullptr)
-        return QVector3D(0, 0, 0);
-
-    QSize theWindow = m_contextInterface->windowDimensions();
-    QVector2D theDims(float(theWindow.width()), float(theWindow.height()));
-
-    QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
-    const auto camera = thePrepResult.camera();
-    const auto viewport = thePrepResult.viewport();
-    QSSGRenderRay theRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inMouseVec, theDims, true);
-
-    return theData->camera->unprojectToPosition(inPosition, theRay);
-}
-
-QVector3D QSSGRenderer::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &, const QVector3D &inMouseVec) const
-{
-    auto layer = layerForNode(inNode);
-    if (!layer)
-        QVector3D();
-
-    // Translate mouse into layer's coordinates
-    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(*layer);
-    Q_ASSERT(theData);
-    if (theData->camera == nullptr)
-        return QVector3D(0, 0, 0);
-
-    // Flip the y into gl coordinates from window coordinates.
-    QVector2D theMouse(inMouseVec.x(), inMouseVec.y());
-    float theDepth = inMouseVec.z();
-
-    QSSGLayerRenderPreparationResult &thePrepResult(*theData->layerPrepResult);
-    QSize theWindow = m_contextInterface->windowDimensions();
-    const auto camera = thePrepResult.camera();
-    const auto viewport = thePrepResult.viewport();
-    QSSGRenderRay theRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, theMouse, QVector2D(float(theWindow.width()), float(theWindow.height())), true);
-    QVector3D theTargetPosition = theRay.origin + theRay.direction * theDepth;
-    if (inNode.parent != nullptr && inNode.parent->type != QSSGRenderGraphObject::Type::Layer)
-        theTargetPosition = mat44::transform(inNode.parent->globalTransform.inverted(), theTargetPosition);
-    return theTargetPosition;
-}
-
-QVector3D QSSGRenderer::projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const
-{
-    auto layer = layerForNode(inNode);
-    if (!layer)
-        QVector3D();
-
-    // Translate mouse into layer's coordinates
-    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(*layer);
-    Q_ASSERT(theData);
-    if (theData->camera == nullptr)
-        return QVector3D(0, 0, 0);
-
-    QMatrix4x4 viewProj;
-    theData->camera->calculateViewProjectionMatrix(viewProj);
-    QVector4D projPos = mat44::transform(viewProj, QVector4D(inPosition, 1.0f));
-    projPos.setX(projPos.x() / projPos.w());
-    projPos.setY(projPos.y() / projPos.w());
-
-    QRectF theViewport = theData->layerPrepResult->viewport();
-    QVector2D theDims(float(theViewport.width()), float(theViewport.height()));
-    projPos.setX(projPos.x() + 1.0f);
-    projPos.setY(projPos.y() + 1.0f);
-    projPos.setX(projPos.x() * 0.5f);
-    projPos.setY(projPos.y() * 0.5f);
-    QVector3D cameraToObject = theData->camera->getGlobalPos() - inPosition;
-    projPos.setZ(sqrtf(QVector3D::dotProduct(cameraToObject, cameraToObject)));
-    QVector3D mouseVec = QVector3D(projPos.x(), projPos.y(), projPos.z());
-    mouseVec.setX(mouseVec.x() * theDims.x());
-    mouseVec.setY(mouseVec.y() * theDims.y());
-
-    mouseVec.setX(mouseVec.x() + float(theViewport.x()));
-    mouseVec.setY(mouseVec.y() + float(theViewport.y()));
-
-    // Flip the y into window coordinates so it matches the mouse.
-    QSize theWindow = m_contextInterface->windowDimensions();
-    mouseVec.setY(theWindow.height() - mouseVec.y());
-
-    return mouseVec;
 }
 
 QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
