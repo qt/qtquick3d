@@ -97,7 +97,6 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
-    typedef QHash<const QSSGRenderLayer *, QSSGRef<QSSGLayerRenderData>> TInstanceRenderMap;
     typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
     typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
@@ -120,7 +119,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
 
-    TInstanceRenderMap m_instanceRenderMap;
     TLayerRenderList m_lastFrameLayers;
 
     // Set from the first layer.
@@ -163,7 +161,7 @@ public:
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
 
     QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
-    QSSGRef<QSSGLayerRenderData> getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode);
+    QSSGLayerRenderData *getOrCreateLayerRenderData(QSSGRenderLayer &layer);
 
     // The QSSGRenderContextInterface calls these, clients should not.
     void beginFrame();

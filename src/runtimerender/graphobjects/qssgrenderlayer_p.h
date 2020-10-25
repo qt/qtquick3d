@@ -49,6 +49,7 @@ class QSSGRenderContextInterface;
 struct QSSGRenderPresentation;
 struct QSSGRenderEffect;
 struct QSSGRenderImage;
+struct QSSGLayerRenderData;
 
 class QRhiShaderResourceBindings;
 
@@ -112,6 +113,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
+    QSSGLayerRenderData *renderData = nullptr;
 
     // If a layer has a valid texture path (one that resolves to either a
     // an on-disk image or a offscreen renderer), then it does not render its

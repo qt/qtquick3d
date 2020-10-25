@@ -73,8 +73,6 @@ void QSSGRenderer::releaseResources()
 {
     delete m_rhiQuadRenderer; // TODO: pointer to incomplete type!
     m_rhiQuadRenderer = nullptr;
-
-    m_instanceRenderMap.clear();
 }
 
 QSSGRenderer::QSSGRenderer() = default;
@@ -97,83 +95,29 @@ static inline QSSGRenderLayer *getNextLayer(QSSGRenderLayer &inLayer)
     return nullptr;
 }
 
-// Found by fair roll of the dice (in practice we'll never have more then 1 layer!).
-using QSSGRenderLayerList = QVarLengthArray<QSSGRenderLayer *, 4>;
-
-static inline void maybePushLayer(QSSGRenderLayer &inLayer, QSSGRenderLayerList &outLayerList)
-{
-    inLayer.calculateGlobalVariables();
-    if (inLayer.flags.testFlag(QSSGRenderLayer::Flag::GloballyActive) && inLayer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget))
-        outLayerList.push_back(&inLayer);
-}
-
 bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer,
                                                const QSize &surfaceSize)
 {
-
-    QSSGRenderLayerList renderableLayers;
-    maybePushLayer(inLayer, renderableLayers);
-
-    bool retval = false;
-
-    auto iter = renderableLayers.crbegin();
-    const auto end = renderableLayers.crend();
-    for (; iter != end; ++iter) {
-        // Store the previous state of if we were rendering a layer.
-        QSSGRenderLayer *theLayer = *iter;
-        QSSGRef<QSSGLayerRenderData> theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
-
-        if (Q_LIKELY(theRenderData)) {
-            theRenderData->prepareForRender(surfaceSize);
-            retval = retval || theRenderData->layerPrepResult->flags.wasDirty();
-        } else {
-            Q_ASSERT(false);
-        }
-    }
-
-    return retval;
+    QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
+    Q_ASSERT(theRenderData);
+    theRenderData->prepareForRender(surfaceSize);
+    return theRenderData->layerPrepResult->flags.wasDirty();
 }
 
 void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
 {
-    QSSGRenderLayerList renderableLayers;
-    maybePushLayer(inLayer, renderableLayers);
-
-    auto iter = renderableLayers.crbegin();
-    const auto end = renderableLayers.crend();
-
-    for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
-        QSSGRenderLayer *theLayer = *iter;
-        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
-
-        if (Q_LIKELY(theRenderData)) {
-            if (theRenderData->layerPrepResult->isLayerVisible())
-                theRenderData->rhiPrepare();
-        } else {
-            Q_ASSERT(false);
-        }
-    }
+    QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
+    Q_ASSERT(theRenderData);
+    if (theRenderData->layerPrepResult->isLayerVisible())
+        theRenderData->rhiPrepare();
 }
 
 void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 {
-    QSSGRenderLayerList renderableLayers;
-    maybePushLayer(inLayer, renderableLayers);
-
-    auto iter = renderableLayers.crbegin();
-    const auto end = renderableLayers.crend();
-
-    for (iter = renderableLayers.crbegin(); iter != end; ++iter) {
-        QSSGRenderLayer *theLayer = *iter;
-        const QSSGRef<QSSGLayerRenderData> &theRenderData = getOrCreateLayerRenderDataForNode(*theLayer);
-
-        if (Q_LIKELY(theRenderData)) {
-            if (theRenderData->layerPrepResult->isLayerVisible())
-                theRenderData->rhiRender();
-        } else {
-            Q_ASSERT(false);
-        }
-    }
+    QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
+    Q_ASSERT(theRenderData);
+    if (theRenderData->layerPrepResult->isLayerVisible())
+        theRenderData->rhiRender();
 }
 
 void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
@@ -221,19 +165,12 @@ QSSGRenderLayer *QSSGRenderer::layerForNode(const QSSGRenderNode &inNode) const
     return nullptr;
 }
 
-QSSGRef<QSSGLayerRenderData> QSSGRenderer::getOrCreateLayerRenderDataForNode(const QSSGRenderNode &inNode)
+QSSGLayerRenderData *QSSGRenderer::getOrCreateLayerRenderData(QSSGRenderLayer &layer)
 {
-    const QSSGRenderLayer *theLayer = layerForNode(inNode);
-    if (theLayer) {
-        auto it = m_instanceRenderMap.constFind(theLayer);
-        if (it != m_instanceRenderMap.cend())
-            return it.value();
+    if (layer.renderData == nullptr)
+        layer.renderData = new QSSGLayerRenderData(layer, this);
 
-        it = m_instanceRenderMap.insert(theLayer, new QSSGLayerRenderData(const_cast<QSSGRenderLayer &>(*theLayer), this));
-
-        return *it;
-    }
-    return nullptr;
+    return layer.renderData;
 }
 
 void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
@@ -363,10 +300,9 @@ QSSGRenderPickResult QSSGRenderer::pick(QSSGRenderLayer &inLayer,
     // vector itself.
     do {
         if (theLayer->flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-            const auto theIter = m_instanceRenderMap.constFind(theLayer);
-            if (theIter != m_instanceRenderMap.cend()) {
+            if (auto renderData = theLayer->renderData) {
                 m_lastPickResults.clear();
-                getLayerHitObjectList(*theIter.value(), inViewportDimensions, inMouseCoords, inPickEverything, m_lastPickResults);
+                getLayerHitObjectList(*renderData, inViewportDimensions, inMouseCoords, inPickEverything, m_lastPickResults);
                 QSSGPickResultProcessResult retval(processPickResultList(inPickEverything));
                 if (retval.m_wasPickConsumed)
                     return retval;
@@ -420,9 +356,12 @@ QSSGOption<QVector2D> QSSGRenderer::facePosition(QSSGRenderNode &inNode,
                                                          QSSGRenderBasisPlanes inPlane)
 {
     Q_UNUSED(inMapperObjects);
-    const QSSGRef<QSSGLayerRenderData> &theLayerData = getOrCreateLayerRenderDataForNode(inNode);
-    if (theLayerData == nullptr)
-        return QSSGEmpty();
+    auto layer = layerForNode(inNode);
+    if (!layer)
+        QSSGEmpty();
+
+    QSSGLayerRenderData *theLayerData = getOrCreateLayerRenderData(*layer);
+    Q_ASSERT(theLayerData);
     // This function assumes the layer was rendered to the scene itself.  There is another
     // function
     // for completely offscreen layers that don't get rendered to the scene.
@@ -447,11 +386,15 @@ QSSGOption<QVector2D> QSSGRenderer::facePosition(QSSGRenderNode &inNode,
 
 QVector3D QSSGRenderer::unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const
 {
+    auto layer = layerForNode(inNode);
+    if (!layer)
+        QVector3D();
+
     // Translate mouse into layer's coordinates
-    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inNode);
-    if (theData == nullptr || theData->camera == nullptr) {
+    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(*layer);
+    Q_ASSERT(theData);
+    if (theData->camera == nullptr)
         return QVector3D(0, 0, 0);
-    } // Q_ASSERT( false ); return QVector3D(0,0,0); }
 
     QSize theWindow = m_contextInterface->windowDimensions();
     QVector2D theDims(float(theWindow.width()), float(theWindow.height()));
@@ -466,11 +409,15 @@ QVector3D QSSGRenderer::unprojectToPosition(QSSGRenderNode &inNode, QVector3D &i
 
 QVector3D QSSGRenderer::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &, const QVector3D &inMouseVec) const
 {
+    auto layer = layerForNode(inNode);
+    if (!layer)
+        QVector3D();
+
     // Translate mouse into layer's coordinates
-    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inNode);
-    if (theData == nullptr || theData->camera == nullptr) {
+    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(*layer);
+    Q_ASSERT(theData);
+    if (theData->camera == nullptr)
         return QVector3D(0, 0, 0);
-    } // Q_ASSERT( false ); return QVector3D(0,0,0); }
 
     // Flip the y into gl coordinates from window coordinates.
     QVector2D theMouse(inMouseVec.x(), inMouseVec.y());
@@ -489,11 +436,15 @@ QVector3D QSSGRenderer::unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &, 
 
 QVector3D QSSGRenderer::projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const
 {
+    auto layer = layerForNode(inNode);
+    if (!layer)
+        QVector3D();
+
     // Translate mouse into layer's coordinates
-    const QSSGRef<QSSGLayerRenderData> &theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inNode);
-    if (theData == nullptr || theData->camera == nullptr) {
+    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(*layer);
+    Q_ASSERT(theData);
+    if (theData->camera == nullptr)
         return QVector3D(0, 0, 0);
-    }
 
     QMatrix4x4 viewProj;
     theData->camera->calculateViewProjectionMatrix(viewProj);
@@ -836,7 +787,8 @@ QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGRenderLayer &inLayer
                                                                 const QVector2D &inViewportDimensions,
                                                                 bool forceImageIntersect) const
 {
-    QSSGRef<QSSGLayerRenderData> theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderDataForNode(inLayer);
+    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(inLayer);
+    Q_ASSERT(theData);
     return getLayerMouseCoords(*theData, inMouseCoords, inViewportDimensions, forceImageIntersect);
 }
 

@@ -367,7 +367,8 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         // Do effects before antialiasing
         if (m_effectSystem /* && m_effectSystem->isActive() */) {
             const auto &renderer = m_sgContext->renderer();
-            const QSSGRef<QSSGLayerRenderData> &theRenderData = renderer->getOrCreateLayerRenderDataForNode(*m_layer);
+            QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
+            Q_ASSERT(theRenderData);
             QRhiTexture *theDepthTexture = theRenderData->m_rhiDepthTexture.texture;
             QVector2D cameraClipRange(m_layer->renderedCamera->clipNear, m_layer->renderedCamera->clipFar);
 
