@@ -816,7 +816,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
 
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
-    auto rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     // Skeletal Animation passes it's boneId as unsigned integers
     if (inModel.skeleton) {
         boneGlobals = toDataView(inModel.boneTransforms);
@@ -870,7 +870,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
                 // Skin
-                auto rhiCtx = renderer->contextInterface()->rhiContext();
                 renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
@@ -904,7 +903,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
                 // Skin
-                auto rhiCtx = renderer->contextInterface()->rhiContext();
                 renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
@@ -940,7 +938,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                 // last possible place to kick this off because the rest of the
                 // rendering pipeline will only see the individual sub-objects
                 // as "renderable objects".
-                auto rhiCtx = renderer->contextInterface()->rhiContext();
                 if (rhiCtx->isValid()) {
                     if (theMesh->bufferResourceUpdates) {
                         rhiCtx->commandBuffer()->resourceUpdate(theMesh->bufferResourceUpdates);

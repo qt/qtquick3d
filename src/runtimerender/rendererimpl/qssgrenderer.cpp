@@ -115,7 +115,7 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 
 void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
 {
-    auto rhi = contextInterface()->rhiContext();
+    const auto &rhi = contextInterface()->rhiContext();
     if (!rhi->isValid())
         return;
 
@@ -135,7 +135,7 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
             if (!model->geometry)
                 bufferManager->removeMeshReference(model->meshPath, model);
             else // Models with geometry should be cleaned up here
-                m_contextInterface->rhiContext()->cleanupDrawCallData(model);
+                rhi->cleanupDrawCallData(model);
         }
 
         // ### There might be more types that need to be supported
