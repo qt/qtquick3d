@@ -56,6 +56,24 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item, QQuick3DNode *parent)
 QQuick3DItem2D::~QQuick3DItem2D()
 {
     delete m_contentItem;
+
+    // This is sketchy. Similarly to the problems QQuick3DTexture has with its
+    // QSGTexture, the same problems arise here with the QSGRenderer. The
+    // associated scenegraph resource must be destroyed on the render thread,
+    // if there is one. If the scenegraph gets invalidated, that's easy due to
+    // signals/slots, but there's no such signal if an object with Item2Ds in
+    // it gets dynamically destroyed.
+    // Here on the gui thread in this dtor there's no way to properly manage
+    // the QSG resource's releasing anymore. Rather, as QSGRenderer is a
+    // QObject, do a deleteLater(), which typically works, but is not a 100%
+    // guarantee that the object will get destroyed on the render thread
+    // eventually, since in theory it could happen that the render thread is
+    // not even running at this point anymore (if the window is closing / the
+    // app is shutting down) - although in practice that won't be an issue
+    // since that case is taken care of the sceneGraphInvalidated signal.
+    // So while unlikely, a leak may still occur under certain circumstances.
+    if (m_renderer)
+        m_renderer->deleteLater();
 }
 
 void QQuick3DItem2D::addChildItem(QQuickItem *item)
