@@ -504,39 +504,65 @@
 
     \image effect_scurve_tonemap.png
 
-    The SCurveTonemap effect can be used to map the colors in the scene to others, to approximate
-    the appearance of high-dynamic-range result.
+    The SCurveTonemap effect maps the luminance of each pixel in the Scene
+    according to an s-shaped curve:
+
+    \image effect_scurve_graph.png
+
+    The curve has three parts. The \e {toe area} determines the shadows, and
+    is governed by \l toeSlope and \l toeEmphasis. The middle part determines
+    overall contrast, and is changed by \l contrastBoost. The \e {shoulder
+    area} determines the highlights, and is governed by \l shoulderSlope and
+    \l shoulderEmphasis.
+
 */
 /*!
     \qmlproperty real SCurveTonemap::shoulderSlope
-    Sets the S-Curve shoulder slope. The shoulder defines where highlights lose contrast.
+    Sets the slope of the \e shoulder part of the s-curve. The shoulder defines
+    where highlights lose contrast.
+
     The range is \c {[0...3]}. The default value is \c {1}.
+
+    \sa shoulderEmphasis
 */
 /*!
     \qmlproperty real SCurveTonemap::shoulderEmphasis
+    Modifies the shape of the \e shoulder part of the s-curve.
     The range is \c {[-1...1]}. The default value is \c {0}.
+
+    \sa shoulderSlope
 */
 /*!
     \qmlproperty real SCurveTonemap::toeSlope
-    Sets the S-Curve toe slope. The toe defines where shadows lose contrast. The range is \c {[0...3]}.
-    The default value is \c {1}.
+    Sets the slope of the \e toe part of the s-curve. The toe defines where
+    shadows lose contrast.
+
+    The range is \c {[0...3]}.  The default value is \c {1}.
+
+    \sa toeEmphasis
 */
 /*!
     \qmlproperty real SCurveTonemap::toeEmphasis
+    Modifies the shape of the \e toe part of the s-curve.
     The range is \c {[-1...1]}. The default value is \c {0}.
+
+    \sa toeSlope
 */
 /*!
     \qmlproperty real SCurveTonemap::contrastBoost
-    Enhances or reduces the overall contrast of the tonemap. The range is \c {[-1...2]}. The default value is \c {0}.
+    Enhances or reduces the overall contrast of the tonemap. This changes
+    the slope of the middle part of the s-curve.
+
+    The range is \c {[-1...2]}. The default value is \c {0}.
 */
 /*!
     \qmlproperty real SCurveTonemap::saturationLevel
-    Sets the overall saturation level of the tonemap. The range is \c {[0...2]}, with \c 0 being fully
+    Sets the overall saturation level of the tonemap effect. The range is \c {[0...2]}, with \c 0 being fully
     grayscale and \c 2 being very oversaturated. The default value is \c {1}.
 */
 /*!
     \qmlproperty real SCurveTonemap::gammaValue
-    Sets the gamma of the tonemap. Sensible values are in the range \c {[0.1...8]}. The default value is \c {2.2}.
+    Sets the gamma value for the tonemap effect. Sensible values are in the range \c {[0.1...8]}. The default value is \c {2.2}.
 */
 /*!
     \qmlproperty bool SCurveTonemap::useExposure
@@ -550,7 +576,7 @@
 */
 /*!
     \qmlproperty real SCurveTonemap::exposureValue
-    Specifies the exposure of the tonemap. This value is only used if \l useExposure is \c {true}.
+    Specifies the exposure for the tonemap effect. This value is only used if \l useExposure is \c {true}.
     The range is \c {[0.01...16]}. The default value is \c {1}.
 */
 
