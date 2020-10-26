@@ -32,22 +32,22 @@
     \brief Demonstrates the use of Principled Material.
     \image principledmaterial-example.png
 
-    This example demonstrates how to use the principled material in two different ways in an
-    application.
+    This example demonstrates two different ways to use \l PrincipledMaterial
+    in an application.
 
     \section1 Setting Up the Scene
 
     \section2 Light Probe
 
-    We want to use a \l {SceneEnvironment::lightProbe}{light probe}, as we're going to use
-    reflective metallic materials. We need to enable light probe and adjust its settings to get
-    the result we want.
+    We specify a \l {SceneEnvironment::lightProbe}{light probe}, since we are
+    using reflective metallic materials in the scene. We need to enable the
+    light probe and adjust its settings to get the result we want.
 
     \snippet principledmaterial/main.qml environment
 
     \section2 Rotating Light
 
-    Then we add \l DirectionalLight and add a rotation for it, to better demonstrate the effect of
+    Then we add \l DirectionalLight and add a rotation for it, to better demonstrate the effect that
     the \l {PrincipledMaterial::metalness}{metalness} and
     \l {PrincipledMaterial::roughness}{roughness} properties have on the materials.
 
@@ -57,24 +57,27 @@
 
     \section2 Basic
 
-    We will apply a basic principled material on to the sphere on the left. By basic we mean just
-    using the non-texture properties of the material.
+    We apply a basic principled material onto the sphere on the left. By this
+    we mean a material that only uses the basic, numeric properties without
+    any texture properties.
 
     \snippet principledmaterial/main.qml basic principled
 
     \section2 Textured
 
-    We will apply a textured principled material on to the sphere on the right. When using textures
+    We apply a textured principled material onto the sphere on the right.
+
+    \note When using textures
     for \l {PrincipledMaterial::metalnessMap}{metalness},
     \l {PrincipledMaterial::roughnessMap}{roughness},
-    \l {PrincipledMaterial::normalMap}{bumpiness}, and \l {PrincipledMaterial::baseColorMap}{color}
-    the basic property values are applied as multipliers for the values gotten from the textures.
+    \l {PrincipledMaterial::normalMap}{bumpiness}, and \l {PrincipledMaterial::baseColorMap}{color},
+    the basic property values are applied as multipliers for the values from the textures.
 
     \snippet principledmaterial/main.qml textured principled
 
     \section1 Controlling the Property Values
 
-    There are some sliders for adjusting the values of the different basic properties.
+    There are sliders for adjusting the values of the different basic properties.
     \note If \c Metalness has a non-zero value, adjusting \c {Specular Power} or \c {Specular Tint}
     has no effect.
 */
