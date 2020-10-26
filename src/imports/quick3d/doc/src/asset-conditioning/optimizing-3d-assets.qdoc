@@ -47,10 +47,12 @@ Qt Quick 3D. For more detailed information, see the section for the
     \b {Use Triangles}
     Qt Quick 3D only supports geometry exported as triangles. Many 3D modeling tools provide an
     option to triangulate meshes during export, while you must do it manually before the export
-    with some tools.
+    with some tools. If models are not triangulated on export, they will be triangulated on import
+    which may lead to less than optimal results. If models are exported using primitives that can
+    not be triangulated, then those primitives will be ignored on import.
 \li
     \b {Handling Pivot Points}
-    DCC (Digital Content Creation) tools all handle pivot points differently. In Qt Quick 3D, there
+    Each DCC (Digital Content Creation) tool handles pivot points differently. In Qt Quick 3D, there
     is only one pivot per object and it is used as the origin for position, scale, and rotation
     operations. In your DCC tool, feel free to adjust the position of a 3D model's pivot as needed.
     However, extreme edits to pivots in 3D modeling tools can cause problems upon import, especially
@@ -76,10 +78,9 @@ Qt Quick 3D. For more detailed information, see the section for the
 
 \section2 Animations
 
-Animations are supported on any imported attribute. Position, rotation, scale, and pivot can all be
+Animations are supported on imported attribute. Position, rotation, scale, and pivot can all be
 animated. An example of our advanced support for animations would be a hierarchy of items, rotated
-simultaneously on arbitrary axis in arbitrary axis order. Bezier tangent value tweaked into
-animations is also supported.
+simultaneously on an arbitrary axis.
 
 \list
 \li
