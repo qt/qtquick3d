@@ -58,7 +58,7 @@ void QQuick3DLoaderIncubator::setInitialState(QObject *o)
 
     \brief Allows dynamic loading of a 3D subtree from a URL or Component.
 
-    Loader3D is used to dynamically load 3D QML components.
+    Loader3D is used to dynamically load QML components for Qt Quick 3D.
 
     Loader3D can load a
     QML file (using the \l source property) or a \l Component object (using
@@ -67,8 +67,10 @@ void QQuick3DLoaderIncubator::setInitialState(QObject *o)
     be created on demand, or when a component should not be created
     unnecessarily for performance reasons.
 
-    \note Loader3D works like \l Loader, but does not provide or load Item
-    based 2D components.
+    \note Loader3D works the same way as \l Loader. The difference between the
+    two is that \l Loader provides a way to dynamically load objects that inherit
+    \l Item, whereas Loader3D provides a way to load objects that inherit \l Object3D
+    and is part of a 3D scene.
 */
 
 QQuick3DLoader::QQuick3DLoader(QQuick3DNode *parent)
