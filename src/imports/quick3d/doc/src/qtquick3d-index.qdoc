@@ -44,28 +44,27 @@ Qt Quick 2D content with 3D content.
 The \l{Qt Quick 3D QML Types}{QML Types} can be imported into your
 application using the following import statement in your \c {.qml} file:
 
-\code \QtMinorVersion
-import QtQuick3D 1.\1
+\code
+import QtQuick3D
 \endcode
 
 In addition to the base Qt Quick 3D Model, additional functionality is
 provided by the following module imports:
 
-\code \QtMinorVersion
-import QtQuick3D.Effects 1.\1
-import QtQuick3D.Helpers 1.\1
+\code
+import QtQuick3D.Effects
+import QtQuick3D.Helpers
 \endcode
 
 \section1 Building From Source
 
-When building from source, ensure that the \e qtdeclarative module
-is also built, as it is not possible to use Qt Quick 3D without it.
+When building from source, ensure that the modules and tools from the
+\e qtdeclarative and \e qtshadertools repositories are built first, as
+it is not possible to use Qt Quick 3D without these. Having \e
+qtquicktimeline available is strongly recommended as well, since
+keyframe-based animations will not be available otherwise.
 
-In addition, examples use the modules \l {Qt Quick Controls} and
-\l {Qt Graphical Effects} for additional functionality.
-
-It can also be helpful to build \l {Qt Image Formats} as this
-module provides support for additional texture formats.
+In addition, some of the examples rely on \l {Qt Quick Controls}.
 
 \section1 Module Evolution
 \l{Porting to Qt 6 - Qt Quick 3D} lists important changes in the module API
