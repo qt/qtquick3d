@@ -610,33 +610,33 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
 
     // diffuseColor
     QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r, light->mColorDiffuse.g, light->mColorDiffuse.b);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("color"), diffuseColor);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("color"), diffuseColor);
 
     // ambientColor
     if (light->mType == aiLightSource_AMBIENT) {
         // We only want ambient light color if it is explicit
         QColor ambientColor = QColor::fromRgbF(light->mColorAmbient.r, light->mColorAmbient.g, light->mColorAmbient.b);
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("ambientColor"), ambientColor);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("ambientColor"), ambientColor);
     }
     // brightness
     // Its default value is 100 and the normalized value 1 will be used.
 
     if (light->mType == aiLightSource_POINT || light->mType == aiLightSource_SPOT) {
         // constantFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
 
         // linearFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("linearFade"), light->mAttenuationLinear);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("linearFade"), light->mAttenuationLinear);
 
         // exponentialFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic);
 
         if (light->mType == aiLightSource_SPOT) {
             // coneAngle
-            QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("coneAngle"), qRadiansToDegrees(light->mAngleOuterCone));
+            QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("coneAngle"), qRadiansToDegrees(light->mAngleOuterCone));
 
             // innerConeAngle
-            QSSGQmlUtilities::writeQmlPropertyHelper(output,tabLevel, lightType, QStringLiteral("innerConeAngle"), qRadiansToDegrees(light->mAngleInnerCone));
+            QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("innerConeAngle"), qRadiansToDegrees(light->mAngleInnerCone));
         }
     }
     // castShadow
