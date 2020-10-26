@@ -138,7 +138,7 @@ void QQuick3DCamera::setFrustumCullingEnabled(bool frustumCullingEnabled)
     The returned position is normalized, with the top-left of the viewport
     at [0, 0] and the bottom-right at [1, 1]. The returned z-value will contain
     the distance from the near clip plane of the frustum (clipNear) to \a scenePos in
-    view coordinates. If the distance is negative, the point is behind camera.
+    scene coordinates. If the distance is negative, the point is behind camera.
 
     If \a scenePos cannot successfully be mapped to a position in the viewport, a
     position of [0, 0, 0] is returned.

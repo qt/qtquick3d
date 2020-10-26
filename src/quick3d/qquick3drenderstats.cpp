@@ -36,7 +36,8 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Provides information of the scene rendering.
 
-    Uncreatable accessor to scene rendering statistics.
+    The RenderStats type provides information about scene rendering statistics. This
+    cannot be created directly, but can be retrieved from a \l View3D.
 */
 
 QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
@@ -48,8 +49,7 @@ QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
 /*!
     \qmlproperty int QtQuick3D::RenderStats::fps
 
-    This property holds the amount of frames rendered
-    during the last second i.e. frames per second.
+    This property holds the number of frames rendered during the last second.
 */
 int QQuick3DRenderStats::fps() const
 {

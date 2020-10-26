@@ -55,36 +55,41 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Provides a viewport on which to render a 3D scene.
 
-    View3D provides a 2D surface for 3D content to be rendered to. Before 3D
-    content can be displayed in a Qt Quick scene, it must first be flattend.
+    View3D provides a 2D surface on which a 3D scene can be rendered. This
+    surface is a Qt Quick \l Item and can be placed in a Qt Quick scene.
 
-    There are two ways to define a 3D scene for View3D to view.  The first
-    and easiest is to just define a higharchy of \l Node based items as
-    children of the View3D. This becomes the implicit scene of the viewport.
+    There are two ways to define the 3D scene that is visualized on the View3D:
+    If you define a hierarchy of \l{Node}{Node-based} items as children of
+    the View3D directly, then this will become the implicit scene of the View3D.
 
-    It is also possible to reference an existing scene by using the
-    \l importScene property of the scene you want to render.
-    This scene does not have to exist as a child of the current View3D.
+    It is also possible to reference an existing scene by using the \l importScene
+    property and setting it to the root \l Node of the scene you want to visualize.
+    This \l Node does not have to be an ancestor of the View3D, and you can have
+    multiple View3Ds that import the same scene.
 
-    There is also a combination approach where you define both a scene with
-    children nodes, as well as define a scene that is being referenced. In this
-    case you can treat the referenced scene as a sibling of the child scene.
+    This is demonstrated in \l {Qt Quick 3D - View3D example}{View3D example}.
 
-    This is demonstrated in \l {Qt Quick 3D - View3D example}{View3D example}
+    If the View3D both has child \l{Node}{Nodes} and the \l importScene property is
+    set simultaneously, then both scenes will be rendered as if they were sibling
+    subtrees in the same scene.
 
-    To control how a scene is rendered, it is necessary to define a
-    \l SceneEnvironment to the \l environment property.
+    To control how a scene is rendered, you can set the \l environment property.
+    The type \l SceneEnvironment has a number of visual properties that can be
+    adjusted, such as background color, tone mapping, anti-aliasing and more.
 
-    To project a 3D scene to a 2D viewport, it is necessary to view the scene
-    from a camera. If a scene has more than one camera it is possible to set
-    which camera is used to render the scene to this viewport by setting the
-    \l camera property.
+    In addition, in order for anything to be rendered in the View3D, the scene
+    needs a \l Camera. If there is only a single \l Camera in the scene, then
+    this will automatically be picked. Otherwise, the \l camera property can
+    be used to select the camera. The \l Camera decides which parts of the scene
+    are visible, and how they are projected onto the 2D surface.
 
-    It is also possible to define where the 3D scene is rendered to using
-    the \l renderMode property. This can be necessary for performance
-    reasons on certain platforms where it is expensive to render to
-    intermediate offscreen surfaces. There are certain tradeoffs to rendering
-    directly to the window though, so this is not the default.
+    By default, the 3D scene will first be rendered into an off-screen buffer and
+    then composited with the rest of the Qt Quick scene when it is done. This provides
+    the maximum level of compatibility, but may have performance implications on some
+    graphics hardware. If this is the case, the \l renderMode property can be used to
+    switch how the View3D is rendered into the window.
+
+    \sa {Qt Quick 3D - View3D example}
 */
 
 QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
@@ -167,12 +172,8 @@ QQmlListProperty<QObject> QQuick3DViewport::data()
 /*!
     \qmlproperty QtQuick3D::Camera QtQuick3D::View3D::camera
 
-    This property specifies which camera is used to render the scene. It is
-    possible for this value to be undefined, in which case the first enabled
-    camera in the scene will be used instead.
-
-    If it is desired to not render anything in the scene, then make sure all
-    cameras are disabled.
+    This property specifies which \l Camera is used to render the scene. If this
+    property is not set, then the first enabled camera in the scene will be used.
 
     \sa PerspectiveCamera, OrthographicCamera, FrustumCamera, CustomCamera
 */
@@ -196,7 +197,7 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::scene
 
-    Holds the root scene of the View3D.
+    Holds the root \l Node of the View3D's scene.
 
     \sa importScene
 */
@@ -208,10 +209,12 @@ QQuick3DNode *QQuick3DViewport::scene() const
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::importScene
 
-    This property defines the reference node of the scene to render to the
-    viewport. The node does not have to be a child of the View3D.
-    This referenced node becomes sibling with possible child nodes of View3D.
-    \note This property can only be set once, not removed or changed later.
+    This property defines the reference node of the scene to render to the viewport.
+    The node does not have to be a child of the View3D. This referenced node becomes
+    a sibling with child nodes of View3D, if there are any.
+
+    \note This property can only be set once, and subsequent changes will have no
+    effect.
 
     \sa Node
 */
@@ -223,14 +226,35 @@ QQuick3DNode *QQuick3DViewport::importScene() const
 /*!
     \qmlproperty enumeration QtQuick3D::View3D::renderMode
 
-    This property determines how the scene is rendered to the viewport.
+    This property determines how the View3D is combined with the other parts of the
+    Qt Quick scene.
 
-    \value View3D.Offscreen Scene is rendered to a texture. Comes with no limitations.
-    \value View3D.Underlay Scene is rendered directly to the window before Qt Quick is rendered.
-    \value View3D.Overlay Scene is rendered directly to the window after Qt Quick is rendered.
-    \value View3D.Inline Scene is rendered to the current render target using QSGRenderNode.
+    By default, the scene will be rendered into an off-screen buffer as an intermediate
+    step. This off-screen buffer is then rendered into the window (or render target) like any
+    other Qt Quick \l Item.
 
-    The default mode is \c View3D.Offscreen as this is the offers the best compatibility.
+    For most users, there will be no need to change the render mode, and this property can
+    safely be ignored. But on some graphics hardware, the use of an off-screen buffer can be
+    a performance bottleneck. If this is the case, it might be worth experimenting with other
+    modes.
+
+    \note When changing the render mode, it is important to note that \c{View3D.Offscreen} (the
+    default) is the only mode which guarantees perfect graphics fidelity. The other modes
+    all have limitations that can cause visual glitches, so it is important to check that
+    the visual output still looks correct when changing this property.
+
+    \value View3D.Offscreen The scene is rendered into an off-screen buffer as an intermediate
+    step. This off-screen buffer is then composited with the rest of the Qt Quick scene.
+    \value View3D.Underlay The scene is rendered directly to the window before the rest of the
+    Qt Quick scene is rendered. With this mode, the View3D cannot be placed on top of other
+    Qt Quick items.
+    \value View3D.Overlay The scene is rendered directly to the window after Qt Quick is rendered.
+    With this mode, the View3D will always be on top of other Qt Quick items.
+    \value View3D.Inline The View3D's scene graph is embedded into the main scene graph, and the
+    same ordering semantics are applied as to any other Qt Quick \l Item. This may have subtle
+    fidelity issues, depending on how the depth buffer is used in the other parts of the graph.
+
+    The default is \c{View3D.Offscreen}.
 */
 QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 {
@@ -240,7 +264,7 @@ QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 /*!
     \qmlproperty QtQuick3D::RenderStats QtQuick3D::View3D::renderStats
 
-    Accessor to \l {RenderStats}, which can be used to gain information of
+    This property provides statistics about the rendering of a frame, such as
     \l {RenderStats::fps}{fps}, \l {RenderStats::frameTime}{frameTime},
     \l {RenderStats::renderTime}{renderTime}, \l {RenderStats::syncTime}{syncTime},
     and \l {RenderStats::maxFrameTime}{maxFrameTime}.
@@ -520,12 +544,16 @@ void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
 /*!
     \qmlmethod vector3d View3D::mapFrom3DScene(vector3d scenePos)
 
-    Transforms \a scenePos from scene space (3D) into view space (2D). The
-    returned x- and y-values will be be in view coordinates. The returned z-value
-    will contain the distance from the near side of the frustum (clipNear) to
-    \a scenePos in scene coordinates. If the distance is negative, the point is behind the camera.
-    If \a scenePos cannot be mapped to a position in the scene, a position of [0, 0, 0] is returned.
-    This function requires that a camera is assigned to the view.
+    Transforms \a scenePos from scene space (3D) into view space (2D).
+
+    The returned x- and y-values will be be in view coordinates, with the top-left
+    corner at [0, 0] and the bottom-right corner at [width, height]. The returned
+    z-value contains the distance from the near clip plane of the frustum (clipNear) to
+    \a scenePos in scene coordinates. If the distance is negative, that means the \a scenePos
+    is behind the active camera. If \a scenePos cannot be mapped to a position in the scene,
+    a position of [0, 0, 0] is returned.
+
+    This function requires that \l camera is assigned to the view.
 
     \sa mapTo3DScene(), {Camera::mapToViewport()}{Camera.mapToViewport()}
 */
@@ -548,11 +576,17 @@ QVector3D QQuick3DViewport::mapFrom3DScene(const QVector3D &scenePos) const
 /*!
     \qmlmethod vector3d View3D::mapTo3DScene(vector3d viewPos)
 
-    Transforms \a viewPos from view space (2D) into scene space (3D). The x- and
-    y-values of \a viewPos should be in view coordinates. The z-value should be
-    the distance from the near side of the frustum (clipNear) into the scene in scene
-    coordinates. If \a viewPos cannot be mapped to a position in the scene, a
-    position of [0, 0, 0] is returned.
+    Transforms \a viewPos from view space (2D) into scene space (3D).
+
+    The x- and y-values of \a viewPos should be in view coordinates, with the top-left
+    corner at [0, 0] and the bottom-right corner at [width, height]. The z-value is
+    interpreted as the distance from the near clip plane of the frustum (clipNear) in
+    scene coordinates.
+
+    If \a viewPos cannot successfully be mapped to a position in the scene, a position of
+    [0, 0, 0] is returned.
+
+    This function requires that a \l camera is assigned to the view.
 
     \sa mapFrom3DScene(), {Camera::mapFromViewport}{Camera.mapFromViewport()}
 */
@@ -575,8 +609,13 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 /*!
     \qmlmethod PickResult View3D::pick(float x, float y)
 
-    Transforms the screen space coordinates \a x and \a y to a ray cast towards that position
-    in scene space. Returns information about the ray hit.
+    This method will "shoot" a ray into the scene from view coordinates \a x and \a y
+    and return information about the nearest intersection with an object in the scene.
+
+    This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
+
+    \note For an object with a custom \l Geometry, intersections will be approximated based on its bounding
+    box.
 */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
