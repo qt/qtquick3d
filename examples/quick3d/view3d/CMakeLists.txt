@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Quick3D)
 qt_add_executable(view3d
     main.cpp
 )
+set_target_properties(view3d PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(view3d PUBLIC
     Qt::Core
     Qt::Gui

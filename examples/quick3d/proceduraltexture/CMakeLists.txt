@@ -24,6 +24,10 @@ qt_add_executable(proceduraltexture
     gradienttexture.cpp gradienttexture.h
     main.cpp
 )
+set_target_properties(proceduraltexture PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(proceduraltexture PUBLIC
     Qt::Core
     Qt::Gui

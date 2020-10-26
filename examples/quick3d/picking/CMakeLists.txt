@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Quick3D)
 qt_add_executable(picking
     main.cpp
 )
+set_target_properties(picking PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(picking PUBLIC
     Qt::Core
     Qt::Gui

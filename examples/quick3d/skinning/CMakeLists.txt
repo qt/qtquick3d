@@ -24,6 +24,10 @@ qt_add_executable(skinning
     main.cpp
     skingeometry.cpp skingeometry.h
 )
+set_target_properties(skinning PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(skinning PUBLIC
     Qt::Core
     Qt::Gui

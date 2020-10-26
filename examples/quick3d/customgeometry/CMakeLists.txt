@@ -24,6 +24,10 @@ qt_add_executable(customgeometry
     examplegeometry.cpp examplegeometry.h
     main.cpp
 )
+set_target_properties(customgeometry PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(customgeometry PUBLIC
     Qt::Core
     Qt::Gui

@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Quick3D)
 qt_add_executable(offlineshaders
     main.cpp
 )
+set_target_properties(offlineshaders PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(offlineshaders PUBLIC
     Qt::Core
     Qt::Gui
@@ -55,6 +59,7 @@ qt6_add_resources(offlineshaders "materials"
         ${materials_resource_files}
 )
 
+# special case begin
 #! [CMake material build function]
 qt6_quick3d_build_shaders(offlineshaders "shaders"
     PREFIX
@@ -63,6 +68,7 @@ qt6_quick3d_build_shaders(offlineshaders "shaders"
         ${qml_resource_files}
 )
 #! [CMake material build function]
+# special case end
 
 install(TARGETS offlineshaders
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

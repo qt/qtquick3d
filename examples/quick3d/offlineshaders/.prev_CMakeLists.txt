@@ -1,7 +1,7 @@
-# Generated from submeshes.pro.
+# Generated from offlineshaders.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(submeshes LANGUAGES CXX)
+project(offlineshaders LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -13,21 +13,21 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/submeshes")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/offlineshaders")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-qt_add_executable(submeshes
+qt_add_executable(offlineshaders
     main.cpp
 )
-set_target_properties(submeshes PROPERTIES
+set_target_properties(offlineshaders PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(submeshes PUBLIC
+target_link_libraries(offlineshaders PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
@@ -36,29 +36,30 @@ target_link_libraries(submeshes PUBLIC
 
 
 # Resources:
-set(meshes_resource_files
-    "meshes/distortedcube.mesh"
-)
-
-qt6_add_resources(submeshes "meshes"
-    PREFIX
-        "/"
-    FILES
-        ${meshes_resource_files}
-)
 set(qml_resource_files
-    "qml/DistortedCube.qml"
-    "qml/main.qml"
+    "MaterialRed.qml"
+    "MaterialRedExtended.qml"
+    "main.qml"
 )
 
-qt6_add_resources(submeshes "qml"
+qt6_add_resources(offlineshaders "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
+set(materials_resource_files
+    "maps/metallic/basecolor.jpg"
+)
 
-install(TARGETS submeshes
+qt6_add_resources(offlineshaders "materials"
+    PREFIX
+        "/"
+    FILES
+        ${materials_resource_files}
+)
+
+install(TARGETS offlineshaders
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
