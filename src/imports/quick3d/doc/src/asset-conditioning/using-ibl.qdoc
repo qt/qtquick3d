@@ -49,16 +49,22 @@ directional light:
 \table
 \header
   \li Light
-  \li Reflective material
-  \li Matte material
+  \li Smooth Dielectric material
+  \li Rough Dielectric material
+  \li Smooth Metallic material
+  \li Rough Metallic material
 \row
   \li \b{Single directional light}
-  \li \image IBL-ball-directional-light.png
-  \li \image IBL-ball-directional-light-matte.png
+  \li \image IBL-sphere-smooth-directional-light.png
+  \li \image IBL-sphere-rough-directional-light.png
+  \li \image IBL-sphere-metallic-smooth-directional-light.png
+  \li \image IBL-sphere-metallic-rough-directional-light.png
 \row
   \li \b{Image-based light}
-  \li \image IBL-ball-environment-light.png
-  \li \image IBL-ball-environment-light-matte.png
+  \li \image IBL-sphere-smooth-environment-light.png
+  \li \image IBL-sphere-rough-environment-light.png
+  \li \image IBL-sphere-metallic-smooth-environment-light.png
+  \li \image IBL-sphere-metallic-rough-environment-light.png
 \endtable
 
 \section1 Scene Lighting
@@ -87,8 +93,8 @@ following property values depending on the image and desired result:
         The amount of light emitted by the light probe.
   \li \l {SceneEnvironment::probeHorizon}{Horizon Cut-Off}
         Increasing the value adds darkness (black) to the bottom half of the environment,
-        forcing the lighting to come predominantly from the top of the image (and removing specific
-        reflections from the lower half).
+        forcing the lighting to come predominantly from the top of the image
+        (and removing specific reflections from the lower half).
   \li \l {SceneEnvironment::probeOrientation}{Orientation}
         This property when defines the orientation of the light probe.
         Orientation is defined in terms of euler angles in degrees over the
@@ -98,16 +104,24 @@ following property values depending on the image and desired result:
 \table
 \header
   \li Property
-  \li Reflective material
-  \li Matte material
+  \li Metallic material
+  \li Dielectric material
 \row
   \li \e{\b{Default settings}}
-  \li \image IBL-ball-environment-light.png
-  \li \image IBL-ball-environment-light-matte.png
+  \li \image IBL-sphere-metallic-smooth-environment-light.png
+  \li \image IBL-sphere-smooth-environment-light.png
 \row
-  \li \b{Horizon Cut-Off}
-  \li \image IBL-ball-environment-light-horiz.png
-  \li \image IBL-ball-environment-light-horiz-matte.png
+  \li \e{\b{Exposure}}
+  \li \image IBL-sphere-metallic-smooth-environment-light-exposure.png
+  \li \image IBL-sphere-smooth-environment-light-exposure.png
+\row
+  \li \e{\b{Horizon Cut-off}}
+  \li \image IBL-sphere-metallic-smooth-environment-light-horizon.png
+  \li \image IBL-sphere-smooth-environment-light-horizon.png
+\row
+  \li \e{\b{Orientation}}
+  \li \image IBL-sphere-metallic-smooth-environment-light-orientation.png
+  \li \image IBL-sphere-smooth-environment-light-orientation.png
 \endtable
 
 \section1 Material Lighting
