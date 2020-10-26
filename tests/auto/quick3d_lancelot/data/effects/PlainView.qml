@@ -111,7 +111,7 @@ View3D {
         NumberAnimation on displacement {
             // Short-lasting animation that stops is acceptable to lancelot
             // It will grab the steady state when animation is finished
-            duration: 150
+            duration: 50
             loops: 1
             running: view3d.animated
             from: 0
