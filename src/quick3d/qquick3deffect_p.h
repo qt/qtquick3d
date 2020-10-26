@@ -96,7 +96,7 @@ private:
     friend class QQuick3DSceneRenderer;
     QVector<QQuick3DShaderUtilsRenderPass *> m_passes;
     QVector<QQuick3DTexture *> m_dynamicTextureMaps;
-    ConnectionMap m_connections;
+    QHash<QByteArray, QMetaObject::Connection> m_connections;
 };
 
 QT_END_NAMESPACE

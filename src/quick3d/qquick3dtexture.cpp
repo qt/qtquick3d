@@ -700,7 +700,7 @@ void QQuick3DTexture::setTextureData(QQuick3DTextureData *textureData)
         return;
 
     // Make sure to disconnect if the geometry gets deleted out from under us
-    updatePropertyListener(textureData, m_textureData, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("textureData"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(textureData, m_textureData, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("textureData"), m_connections, [this](QQuick3DObject *n) {
         setTextureData(qobject_cast<QQuick3DTextureData *>(n));
     });
 

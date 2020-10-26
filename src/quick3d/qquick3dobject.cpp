@@ -277,12 +277,12 @@ void QQuick3DObject::preSync()
 
 }
 
-void QQuick3DObject::updatePropertyListener(QQuick3DObject *newO,
-                                            QQuick3DObject *oldO,
-                                            const QSharedPointer<QQuick3DSceneManager> &window,
-                                            const QByteArray &propertyKey,
-                                            QQuick3DObject::ConnectionMap &connections,
-                                            const std::function<void(QQuick3DObject *)> &callFn)
+void QQuick3DObjectPrivate::updatePropertyListener(QQuick3DObject *newO,
+                                                   QQuick3DObject *oldO,
+                                                   const QSharedPointer<QQuick3DSceneManager> &window,
+                                                   const QByteArray &propertyKey,
+                                                   ConnectionMap &connections,
+                                                   const std::function<void(QQuick3DObject *)> &callFn)
 {
     // disconnect previous destruction listener
     if (oldO) {

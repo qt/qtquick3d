@@ -323,7 +323,7 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
         return;
 
     // Make sure to disconnect if the geometry gets deleted out from under us
-    updatePropertyListener(geometry, m_geometry, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("geometry"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(geometry, m_geometry, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("geometry"), m_connections, [this](QQuick3DObject *n) {
         setGeometry(qobject_cast<QQuick3DGeometry *>(n));
     });
 
@@ -347,7 +347,7 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
         return;
 
     // Make sure to disconnect if the skeleton gets deleted out from under us
-    updatePropertyListener(skeleton, m_skeleton, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skeleton"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(skeleton, m_skeleton, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skeleton"), m_connections, [this](QQuick3DObject *n) {
         setSkeleton(qobject_cast<QQuick3DSkeleton *>(n));
     });
 

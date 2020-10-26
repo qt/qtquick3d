@@ -137,7 +137,7 @@ void QQuick3DMaterial::setLightmapIndirect(QQuick3DTexture *lightmapIndirect)
     if (m_lightmapIndirect == lightmapIndirect)
         return;
 
-    updatePropertyListener(lightmapIndirect, m_lightmapIndirect, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapIndirect"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(lightmapIndirect, m_lightmapIndirect, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapIndirect"), m_connections, [this](QQuick3DObject *n) {
         setLightmapIndirect(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -151,7 +151,7 @@ void QQuick3DMaterial::setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity)
     if (m_lightmapRadiosity == lightmapRadiosity)
         return;
 
-    updatePropertyListener(lightmapRadiosity, m_lightmapRadiosity, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapRadiosity"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(lightmapRadiosity, m_lightmapRadiosity, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapRadiosity"), m_connections, [this](QQuick3DObject *n) {
         setLightmapRadiosity(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -165,7 +165,7 @@ void QQuick3DMaterial::setLightmapShadow(QQuick3DTexture *lightmapShadow)
     if (m_lightmapShadow == lightmapShadow)
         return;
 
-    updatePropertyListener(lightmapShadow, m_lightmapShadow, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapShadow"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(lightmapShadow, m_lightmapShadow, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapShadow"), m_connections, [this](QQuick3DObject *n) {
         setLightmapShadow(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -179,7 +179,7 @@ void QQuick3DMaterial::setLightProbe(QQuick3DTexture *iblProbe)
     if (m_iblProbe == iblProbe)
         return;
 
-    updatePropertyListener(iblProbe, m_iblProbe, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightProbe"), m_connections, [this](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(iblProbe, m_iblProbe, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightProbe"), m_connections, [this](QQuick3DObject *n) {
         setLightProbe(qobject_cast<QQuick3DTexture *>(n));
     });
 
@@ -279,7 +279,7 @@ void QQuick3DMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap, const Q
     if (it != end)
         return;
 
-    updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
         setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n), name);
     });
 

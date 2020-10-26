@@ -118,7 +118,6 @@ Q_SIGNALS:
     void stateChanged();
 
 protected:
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;
     virtual void markAllDirty();
     virtual void itemChange(ItemChange, const ItemChangeData &);
@@ -130,13 +129,6 @@ protected:
     bool isComponentComplete() const;
 
     virtual void preSync();
-
-    static void updatePropertyListener(QQuick3DObject *newO,
-                                       QQuick3DObject *oldO,
-                                       const QSharedPointer<QQuick3DSceneManager> &window,
-                                       const QByteArray &propertyKey,
-                                       ConnectionMap &connections,
-                                       const std::function<void(QQuick3DObject *o)> &callFn);
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))

@@ -245,7 +245,7 @@ private:
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;
     QQuick3DTexture *m_emissiveMap = nullptr;
-    ConnectionMap m_connections;
+    QHash<QByteArray, QMetaObject::Connection> m_connections;
 
     QColor m_emissiveColor = Qt::black;
     QQuick3DTexture *m_specularReflectionMap = nullptr;

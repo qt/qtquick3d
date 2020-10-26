@@ -1099,7 +1099,7 @@ void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap, const QBy
     if (it != end)
         return;
 
-    updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
+    QQuick3DObjectPrivate::updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
         setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n), name);
     });
 
