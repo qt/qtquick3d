@@ -231,7 +231,7 @@ private:
         LineWidthDirty = 0x00001000
     };
 
-    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &window);
+    void updateSceneManager(QQuick3DSceneManager *window);
 
     // Note: The default values for properties that are also present in
     // QSSGShaderCustomMaterialAdapter must match the values there, because a

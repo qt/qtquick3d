@@ -1040,11 +1040,11 @@ void QQuick3DEffect::markDirty(QQuick3DEffect::Dirty type)
     }
 }
 
-void QQuick3DEffect::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager)
+void QQuick3DEffect::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     if (sceneManager) {
         for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::refSceneManager(it, sceneManager);
+            QQuick3DObjectPrivate::refSceneManager(it, *sceneManager);
     } else {
         for (auto it : m_dynamicTextureMaps)
             QQuick3DObjectPrivate::derefSceneManager(it);

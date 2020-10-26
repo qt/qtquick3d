@@ -680,10 +680,10 @@ void QQuick3DSceneEnvironment::itemChange(QQuick3DObject::ItemChange change, con
         updateSceneManager(value.sceneManager);
 }
 
-void QQuick3DSceneEnvironment::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &manager)
+void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
 {
     if (manager)
-        QQuick3DObjectPrivate::refSceneManager(m_lightProbe, manager);
+        QQuick3DObjectPrivate::refSceneManager(m_lightProbe, *manager);
     else
         QQuick3DObjectPrivate::derefSceneManager(m_lightProbe);
 }

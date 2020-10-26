@@ -86,8 +86,8 @@ private:
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
     QSSGRef<QSSGRenderContextInterface> m_sgContext;
-    QSharedPointer<QQuick3DSceneManager> m_sceneManager;
-    QSharedPointer<QQuick3DSceneManager> m_importSceneManager;
+    QQuick3DSceneManager *m_sceneManager = nullptr;
+    QQuick3DSceneManager *m_importSceneManager = nullptr;
     QSSGRenderLayer *m_layer = nullptr;
     QSize m_surfaceSize;
     void *data = nullptr;

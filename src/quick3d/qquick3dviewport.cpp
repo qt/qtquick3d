@@ -100,9 +100,10 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     m_sceneRoot = new QQuick3DSceneRootNode(this);
     m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
     m_renderStats = new QQuick3DRenderStats(m_sceneRoot);
-    QSharedPointer<QQuick3DSceneManager> sceneManager(new QQuick3DSceneManager(m_sceneRoot));
-    QQuick3DObjectPrivate::get(m_sceneRoot)->refSceneManager(sceneManager);
-    connect(QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager.data(), &QQuick3DSceneManager::needsUpdate,
+    QQuick3DSceneManager *sceneManager = new QQuick3DSceneManager(m_sceneRoot);
+    QQuick3DObjectPrivate::get(m_sceneRoot)->refSceneManager(*sceneManager);
+    Q_ASSERT(sceneManager == QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager);
+    connect(sceneManager, &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);
 }
 
@@ -110,11 +111,14 @@ QQuick3DViewport::~QQuick3DViewport()
 {
     for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
-    // Do not delete scenemanager along with sceneroot
-    auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+    auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     if (sceneManager)
         sceneManager->setParent(nullptr);
+
     delete m_sceneRoot;
+    m_sceneRoot = nullptr;
+
+    delete sceneManager;
 
     // m_directRenderer must be destroyed on the render thread at the proper time, not here.
     // That's handled in releaseResources() + upon sceneGraphInvalidated
@@ -501,15 +505,17 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
 
     m_importScene = inScene;
     if (m_importScene) {
-        // If the referenced scene doesn't have a manager, add one (scenes defined outside of an view3d)
+        // If the referenced scene doesn't have a manager use the one from the sceen root (scenes defined outside of an view3d)
         auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
         if (!privateObject->sceneManager) {
-            QSharedPointer<QQuick3DSceneManager> manager(new QQuick3DSceneManager);
-            manager->setWindow(window());
-            privateObject->refSceneManager(manager);
+            if (QQuick3DSceneManager *manager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager) {
+                manager->setWindow(window());
+                privateObject->refSceneManager(*manager);
+            }
+            Q_ASSERT(privateObject->sceneManager);
         }
 
-        connect(privateObject->sceneManager.data(), &QQuick3DSceneManager::needsUpdate,
+        connect(privateObject->sceneManager, &QQuick3DSceneManager::needsUpdate,
                 this, &QQuickItem::update);
 
         QQuick3DNode *scene = inScene;
@@ -518,7 +524,7 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
             scene = rn ? rn->view3D()->importScene() : nullptr;
 
             if (scene) {
-                connect(QQuick3DObjectPrivate::get(scene)->sceneManager.data(),
+                connect(QQuick3DObjectPrivate::get(scene)->sceneManager,
                         &QQuick3DSceneManager::needsUpdate,
                         this, &QQuickItem::update);
             }

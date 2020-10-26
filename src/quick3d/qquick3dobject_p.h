@@ -94,7 +94,7 @@ public:
 
     static void updatePropertyListener(QQuick3DObject *newO,
                                        QQuick3DObject *oldO,
-                                       const QSharedPointer<QQuick3DSceneManager> &window,
+                                       QQuick3DSceneManager *sceneManager,
                                        const QByteArray &propertyKey,
                                        ConnectionMap &connections,
                                        const std::function<void(QQuick3DObject *o)> &callFn);
@@ -233,8 +233,8 @@ public:
 
     void setCulled(bool);
 
-    QSharedPointer<QQuick3DSceneManager> sceneManager;
-    int windowRefCount;
+    QQuick3DSceneManager *sceneManager = nullptr;
+    int sceneRefCount;
 
     QQuick3DObject *parentItem;
 
@@ -247,10 +247,10 @@ public:
 
     void markSortedChildrenDirty(QQuick3DObject *child);
 
-    void refSceneManager(const QSharedPointer<QQuick3DSceneManager> &);
+    void refSceneManager(QQuick3DSceneManager &);
     void derefSceneManager();
 
-    static void refSceneManager(QQuick3DObject *obj,const QSharedPointer<QQuick3DSceneManager> &mgr)
+    static void refSceneManager(QQuick3DObject *obj, QQuick3DSceneManager &mgr)
     {
         if (obj)
             QQuick3DObjectPrivate::get(obj)->refSceneManager(mgr);

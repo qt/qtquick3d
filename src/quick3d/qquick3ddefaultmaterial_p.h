@@ -232,7 +232,7 @@ private:
         LineWidthDirty = 0x00000800
     };
 
-    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
     Lighting m_lighting = FragmentLighting;
     BlendMode m_blendMode = SourceOver;
     QColor m_diffuseColor;

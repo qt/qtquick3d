@@ -1007,19 +1007,19 @@ void QQuick3DPrincipledMaterial::itemChange(QQuick3DObject::ItemChange change, c
         updateSceneManager(value.sceneManager);
 }
 
-void QQuick3DPrincipledMaterial::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &window)
+void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
-    // Check all the resource value's windows, and update as necessary
-    if (window) {
-        QQuick3DObjectPrivate::refSceneManager(m_baseColorMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_emissiveMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_specularReflectionMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_specularMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_roughnessMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_opacityMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_normalMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_metalnessMap, window);
-        QQuick3DObjectPrivate::refSceneManager(m_occlusionMap, window);
+    // Check all the resource value's scene manager, and update as necessary.
+    if (sceneManager) {
+        QQuick3DObjectPrivate::refSceneManager(m_baseColorMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_emissiveMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_specularReflectionMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_specularMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_roughnessMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_opacityMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_normalMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_metalnessMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_occlusionMap, *sceneManager);
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_baseColorMap);
         QQuick3DObjectPrivate::derefSceneManager(m_emissiveMap);

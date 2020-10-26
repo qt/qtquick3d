@@ -501,16 +501,16 @@ void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)
     }
 }
 
-void QQuick3DModel::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager)
+void QQuick3DModel::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     if (sceneManager) {
         sceneManager->dirtyBoundingBoxList.append(this);
-        QQuick3DObjectPrivate::refSceneManager(m_skeleton, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_geometry, sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_skeleton, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_geometry, *sceneManager);
         for (Material &mat : m_materials) {
             if (!mat.material->parentItem() && !QQuick3DObjectPrivate::get(mat.material)->sceneManager) {
                 if (!mat.refed) {
-                    QQuick3DObjectPrivate::refSceneManager(mat.material, sceneManager);
+                    QQuick3DObjectPrivate::refSceneManager(mat.material, *sceneManager);
                     mat.refed = true;
                 }
             }
@@ -557,7 +557,7 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
         } else { // If no valid parent was found, make sure the material refs our scene manager
             const auto &sceneManager = QQuick3DObjectPrivate::get(self)->sceneManager;
             if (sceneManager) {
-                QQuick3DObjectPrivate::get(material)->refSceneManager(sceneManager);
+                QQuick3DObjectPrivate::get(material)->refSceneManager(*sceneManager);
                 // Have to keep track if we called refSceneManager because we
                 // can end up in double deref attempts when a model is going
                 // away, due to updateSceneManager() being called on

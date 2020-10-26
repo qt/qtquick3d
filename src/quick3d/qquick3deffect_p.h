@@ -91,7 +91,7 @@ private:
 
     quint32 m_dirtyAttributes = 0xffffffff;
 
-    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
 
     friend class QQuick3DSceneRenderer;
     QVector<QQuick3DShaderUtilsRenderPass *> m_passes;

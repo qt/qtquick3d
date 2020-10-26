@@ -983,7 +983,7 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
         if (m_textureData) {
             const auto &sceneManager = value.sceneManager;
             if (sceneManager)
-                QQuick3DObjectPrivate::refSceneManager(m_textureData, sceneManager);
+                QQuick3DObjectPrivate::refSceneManager(m_textureData, *sceneManager);
             else
                 QQuick3DObjectPrivate::derefSceneManager(m_textureData);
         }
@@ -1037,7 +1037,7 @@ void QQuick3DTexture::createLayerTexture()
     connect(
             layer,
             &QObject::destroyed,
-            manager.data(),
+            manager,
             [manager, layer]() {
                 // this is on the render thread so all borked threading-wise (all data here is gui thread stuff...) but will survive
                 manager->qsgDynamicTextures.removeAll(layer);

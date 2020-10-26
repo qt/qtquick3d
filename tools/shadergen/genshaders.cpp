@@ -77,7 +77,7 @@ static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &fe
 
 GenShaders::GenShaders(const QString &sourceDir)
 {
-    sceneManager.reset(new QQuick3DSceneManager);
+    sceneManager = new QQuick3DSceneManager;
 
     rhi = QRhi::create(QRhi::Null, nullptr);
     QRhiCommandBuffer *cb;

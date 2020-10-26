@@ -165,7 +165,7 @@ private:
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(QSSGModelDirtyType type);
-    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager);
+    void updateSceneManager(QQuick3DSceneManager *sceneManager);
 
     static void qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, QQuick3DMaterial *material);
     static QQuick3DMaterial *qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, int index);

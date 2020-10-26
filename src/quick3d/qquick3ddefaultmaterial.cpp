@@ -1000,19 +1000,19 @@ void QQuick3DDefaultMaterial::itemChange(QQuick3DObject::ItemChange change, cons
         updateSceneManager(value.sceneManager);
 }
 
-void QQuick3DDefaultMaterial::updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &sceneManager)
+void QQuick3DDefaultMaterial::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     // Check all the resource value's windows, and update as necessary
     if (sceneManager) {
-        QQuick3DObjectPrivate::refSceneManager(m_diffuseMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_emissiveMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_specularReflectionMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_specularMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_roughnessMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_opacityMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_bumpMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_normalMap, sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_translucencyMap, sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_diffuseMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_emissiveMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_specularReflectionMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_specularMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_roughnessMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_opacityMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_bumpMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_normalMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_translucencyMap, *sceneManager);
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_diffuseMap);
         QQuick3DObjectPrivate::derefSceneManager(m_emissiveMap);

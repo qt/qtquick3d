@@ -104,13 +104,6 @@ QQuick3DObject::QQuick3DObject(QQuick3DObject *parent)
 QQuick3DObject::~QQuick3DObject()
 {
     Q_D(QQuick3DObject);
-    if (d->windowRefCount > 1)
-        d->windowRefCount = 1; // Make sure window is set to null in next call to derefWindow().
-    if (d->parentItem)
-        setParentItem(nullptr);
-    else if (d->sceneManager)
-        QQuick3DObjectPrivate::derefSceneManager(this);
-
     // XXX todo - optimize
     while (!d->childItems.isEmpty())
         d->childItems.constFirst()->setParentItem(nullptr);
@@ -119,6 +112,17 @@ QQuick3DObject::~QQuick3DObject()
     d->_stateGroup = nullptr;
     delete d->contentItem2d;
     d->contentItem2d = nullptr;
+
+    if (d->parentItem)
+        setParentItem(nullptr);
+
+    if (d->sceneRefCount > 1) {
+        qWarning("Unexpected ref. count %d\n", d->sceneRefCount);
+        d->sceneRefCount = 1; // Make sure the scene is set to null in next call to derefSceneManager().
+    }
+
+    if (!d->parentItem && d->sceneManager)
+        QQuick3DObjectPrivate::derefSceneManager(this);
 }
 
 void QQuick3DObject::update()
@@ -192,7 +196,7 @@ void QQuick3DObject::setParentItem(QQuick3DObject *parentItem)
             QQuick3DObjectPrivate::derefSceneManager(this);
         d->parentItem = parentItem;
         if (parentSceneManager)
-            QQuick3DObjectPrivate::refSceneManager(this, parentSceneManager);
+            QQuick3DObjectPrivate::refSceneManager(this, *parentSceneManager);
     }
 
     d->dirty(QQuick3DObjectPrivate::ParentChanged);
@@ -279,14 +283,14 @@ void QQuick3DObject::preSync()
 
 void QQuick3DObjectPrivate::updatePropertyListener(QQuick3DObject *newO,
                                                    QQuick3DObject *oldO,
-                                                   const QSharedPointer<QQuick3DSceneManager> &window,
+                                                   QQuick3DSceneManager *sceneManager,
                                                    const QByteArray &propertyKey,
                                                    ConnectionMap &connections,
                                                    const std::function<void(QQuick3DObject *)> &callFn)
 {
     // disconnect previous destruction listener
     if (oldO) {
-        if (window)
+        if (sceneManager)
             QQuick3DObjectPrivate::derefSceneManager(oldO);
 
         auto connection = connections.find(propertyKey);
@@ -298,8 +302,8 @@ void QQuick3DObjectPrivate::updatePropertyListener(QQuick3DObject *newO,
 
     // listen for new map's destruction
     if (newO) {
-        if (window)
-            QQuick3DObjectPrivate::refSceneManager(newO, window);
+        if (sceneManager)
+            QQuick3DObjectPrivate::refSceneManager(newO, *sceneManager);
         auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
             callFn(nullptr);
         });
@@ -313,7 +317,7 @@ QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
     , sceneManager(nullptr)
-    , windowRefCount(0)
+    , sceneRefCount(0)
     , parentItem(nullptr)
     , sortedChildItems(&childItems)
     , subFocusItem(nullptr)
@@ -978,28 +982,27 @@ void QQuick3DObjectPrivate::markSortedChildrenDirty(QQuick3DObject *child)
     Q_UNUSED(child);
 }
 
-void QQuick3DObjectPrivate::refSceneManager(const QSharedPointer<QQuick3DSceneManager> &c)
+void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
 {
-    // An item needs a window if it is referenced by another item which has a window.
+    // An item needs a scene manager if it is referenced by another item which has a scene manager.
     // Typically the item is referenced by a parent, but can also be referenced by a
-    // ShaderEffect or ShaderEffectSource. 'windowRefCount' counts how many items with
-    // a window is referencing this item. When the reference count goes from zero to one,
-    // or one to zero, the window of this item is updated and propagated to the children.
-    // As long as the reference count stays above zero, the window is unchanged.
-    // refWindow() increments the reference count.
-    // derefWindow() decrements the reference count.
+    // ShaderEffect or ShaderEffectSource. 'sceneRefCount' counts how many items with
+    // a scene manager is referencing this item. When the reference count goes from zero to one,
+    // or one to zero, the scene manager of this item is updated and propagated to the children.
+    // As long as the reference count stays above zero, the scene manager is unchanged.
+    // refSceneManager() increments the reference count.
+    // derefSceneManager() decrements the reference count.
 
     Q_Q(QQuick3DObject);
-    Q_ASSERT((sceneManager != nullptr) == (windowRefCount > 0));
-    Q_ASSERT(c);
-    if (++windowRefCount > 1) {
-        if (c != sceneManager)
+    Q_ASSERT((sceneManager != nullptr) == (sceneRefCount > 0));
+    if (++sceneRefCount > 1) {
+        if (&c != sceneManager)
             qWarning("QSSGObject: Cannot use same item on different windows at the same time.");
         return; // Window already set.
     }
 
     Q_ASSERT(sceneManager == nullptr);
-    sceneManager = c;
+    sceneManager = &c;
 
     //    if (polishScheduled)
     //        QSSGWindowPrivate::get(window)->itemsToPolish.append(q);
@@ -1014,7 +1017,7 @@ void QQuick3DObjectPrivate::refSceneManager(const QSharedPointer<QQuick3DSceneMa
 
     dirty(Window);
 
-    itemChange(QQuick3DObject::ItemSceneChange, c);
+    itemChange(QQuick3DObject::ItemSceneChange, &c);
 }
 
 void QQuick3DObjectPrivate::derefSceneManager()
@@ -1024,8 +1027,8 @@ void QQuick3DObjectPrivate::derefSceneManager()
     if (!sceneManager)
         return; // This can happen when destroying recursive shader effect sources.
 
-    if (--windowRefCount > 0)
-        return; // There are still other references, so don't set window to null yet.
+    if (--sceneRefCount > 0)
+        return; // There are still other references, so don't set the scene manager to null yet.
 
     removeFromDirtyList();
     if (sceneManager) {
@@ -1038,14 +1041,14 @@ void QQuick3DObjectPrivate::derefSceneManager()
     if (!parentItem)
         sceneManager->parentlessItems.remove(q);
 
-    sceneManager.reset();
-
     spatialNode = nullptr;
 
     for (int ii = 0; ii < childItems.count(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
         QQuick3DObjectPrivate::derefSceneManager(child);
     }
+
+    sceneManager = nullptr;
 
     dirty(Window);
 

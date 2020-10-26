@@ -218,7 +218,7 @@ private:
     static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
     static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
 
-    void updateSceneManager(const QSharedPointer<QQuick3DSceneManager> &manager);
+    void updateSceneManager(QQuick3DSceneManager *manager);
 
     QQuick3DEnvironmentAAModeValues m_antialiasingMode = NoAA;
     QQuick3DEnvironmentAAQualityValues m_antialiasingQuality = High;

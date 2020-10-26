@@ -221,7 +221,7 @@ private:
                               | DirtyFlags(DirtyFlag::TextureDataDirty);
     QMetaObject::Connection m_textureProviderConnection;
     QMetaObject::Connection m_textureUpdateConnection;
-    QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
+    QQuick3DSceneManager *m_sceneManagerForLayer = nullptr;
     QQuickItem *m_initializedSourceItem = nullptr;
     void trySetSourceParent();
     QHash<QByteArray, QMetaObject::Connection> m_connections;
