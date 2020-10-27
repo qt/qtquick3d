@@ -340,11 +340,11 @@ float QQuick3DSceneEnvironment::probeExposure() const
     come directily from the image without consideration for the content of the
     scene.
 
-    The expected value range for the probeHorizon property is between -1.0
-    and -0.001.  Any value outside of this range will be clamped to the
+    The expected value range for the probeHorizon property is between 0.0
+    and 1.0. Any value outside of this range will be clamped to the
     expected range.
 
-    By default probeHorizon is set to -1.0 which means the whole light probe
+    By default probeHorizon is set to 0.0 which means the whole light probe
     is used without adjustment.
 
     \note The probeHorizon property only affects materials lighting, and has
@@ -652,9 +652,7 @@ void QQuick3DSceneEnvironment::setProbeExposure(float probeExposure)
 void QQuick3DSceneEnvironment::setProbeHorizon(float probeHorizon)
 {
     // clamp value to expected range
-    const float LOW = -1.0;
-    const float HIGH = -0.001;
-    probeHorizon = (probeHorizon < LOW) ? LOW : (HIGH < probeHorizon) ? HIGH : probeHorizon;
+    probeHorizon = qBound(0.0f, probeHorizon, 1.0f);
 
     if (qFuzzyCompare(m_probeHorizon, probeHorizon))
         return;

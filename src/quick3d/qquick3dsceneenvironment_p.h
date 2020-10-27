@@ -236,7 +236,7 @@ private:
     float m_aoBias = 0.0f;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeExposure = 1.0f;
-    float m_probeHorizon = -1.0f;
+    float m_probeHorizon = 0.0f;
     QVector3D m_probeOrientation;
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;
