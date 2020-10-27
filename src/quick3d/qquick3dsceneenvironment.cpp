@@ -394,16 +394,33 @@ float QQuick3DSceneEnvironment::temporalAAStrength() const
 /*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
-    When this property is set to \c {false}, the Z-buffer is not used, the
-    depth test is skipped, and all objects, including fully opaque ones, are
-    rendered in one go sorted back to front.
+    The default value is \c true. By default the renderer classifies the objects
+    in the scene either as \c opaque or as \c semi-transparent. The objects
+    (sub-meshes with the associated material) in the \c opaque list are rendered
+    first, with depth testing and depth write enabled, providing optimal
+    Z-culling for typical 3D objects that have no semi-transparent regions. The
+    objects in the \c semi-transparent list are rendered with depth write
+    disabled, although still with depth testing enabled (to test against the
+    opaque objects), in back to front order (sorted based on their center point's
+    distance from the camera). This allows correct blending ("see through") for
+    3D objects that involve semi-transparent regions on their surface, either
+    due to the \l{Model::opacity}{model opacity} or due to some color or texture
+    map in the material.
 
-    This is an optimization that can cause rendering errors if disabled. In
-    addition, some features, such as shadows, SSAO, or the custom materials'
-    SCREEN_TEXTURE, will not behave correctly without enabling depth buffer
-    usage.
+    When this property is set to \c {false}, the Z-buffer is not written and
+    tested against, the depth test is skipped, and all objects, including fully
+    opaque ones, are rendered in one go, sorted back to front.
 
-    The default value is \c true.
+    Setting this property to \c false should be rarely needed. It can be useful
+    in scenes where it is known that there is little benefit in the two-round
+    approach because either there are very few opaque objects, or they are
+    transformed in a way that a single back to front sorted pass performs
+    better.
+
+    \note Setting this property to \c false may cause rendering errors in
+    certain scenes. In addition, some features, such as shadows, ambient
+    occlusion, \c SCREEN_TEXTURE and \c DEPTH_TEXTURE in custom materials and
+    effects, will not behave correctly without enabling depth buffer usage.
 
     \note This flag has no control over the presence of a depth or
     depth-stencil buffer. Such buffers may still be allocated even when this is
