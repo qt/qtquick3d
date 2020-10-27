@@ -334,7 +334,21 @@ float QQuick3DSceneEnvironment::probeExposure() const
     This property when defined with increasing values adds darkness (black)
     to the bottom half of the environment, forcing the lighting to come
     predominantly from the top of the image (and removing specific reflections
-    from the lower half).
+    from the lower half). This property is useful for accounting for a ground
+    plane that would have the effect of obscuring the reflection of the light
+    probe from the ground. This is necessary because light probe contributions
+    come directily from the image without consideration for the content of the
+    scene.
+
+    The expected value range for the probeHorizon property is between -1.0
+    and -0.001.  Any value outside of this range will be clamped to the
+    expected range.
+
+    By default probeHorizon is set to -1.0 which means the whole light probe
+    is used without adjustment.
+
+    \note The probeHorizon property only affects materials lighting, and has
+    no effect on the rendering of the sky box.
 */
 float QQuick3DSceneEnvironment::probeHorizon() const
 {
@@ -637,6 +651,11 @@ void QQuick3DSceneEnvironment::setProbeExposure(float probeExposure)
 
 void QQuick3DSceneEnvironment::setProbeHorizon(float probeHorizon)
 {
+    // clamp value to expected range
+    const float LOW = -1.0;
+    const float HIGH = -0.001;
+    probeHorizon = (probeHorizon < LOW) ? LOW : (HIGH < probeHorizon) ? HIGH : probeHorizon;
+
     if (qFuzzyCompare(m_probeHorizon, probeHorizon))
         return;
 
