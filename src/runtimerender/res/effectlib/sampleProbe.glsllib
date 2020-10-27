@@ -130,7 +130,7 @@ vec4 qt_sampleGlossyPrincipled(mat3 tanFrame, vec3 viewDir, vec3 F, float roughn
     vec3 specularSample = qt_textureProbe(qt_lightProbe, smpDir, lod);
     vec2 brdf = qt_brdfApproximation(tanFrame[2], viewDir, roughness);
 
-    return vec4(specularSample * (F * brdf.x + brdf.y), 1.0);
+    return vec4(qt_lightProbeProperties.w * (specularSample * (F * brdf.x + brdf.y)), 1.0);
 }
 
 #endif
