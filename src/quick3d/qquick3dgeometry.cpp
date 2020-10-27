@@ -56,7 +56,7 @@
 
     \code
 
-    import QtQuick3D.Helpers 1.15
+    import QtQuick3D.Helpers
 
     Model {
         geometry: GridGeometry {
