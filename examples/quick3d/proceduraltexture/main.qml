@@ -71,6 +71,7 @@ Window {
             z: 300
         }
 
+        //! [model]
         Model {
             source: "#Cube"
 
@@ -88,6 +89,8 @@ Window {
                     magFilter: size256.checked ? Texture.Linear : Texture.Nearest
                 }
             }
+        //! [model]
+
             PropertyAnimation on eulerRotation.y {
                 from: 0
                 to: 360

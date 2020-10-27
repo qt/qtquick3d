@@ -55,6 +55,7 @@
 
 #include <QtGui/QColor>
 
+//! [class definition]
 class GradientTexture : public QQuick3DTextureData
 {
     Q_OBJECT
@@ -63,6 +64,7 @@ class GradientTexture : public QQuick3DTextureData
     Q_PROPERTY(QColor startColor READ startColor WRITE setStartColor NOTIFY startColorChanged)
     Q_PROPERTY(QColor endColor READ endColor WRITE setEndColor NOTIFY endColorChanged)
     QML_NAMED_ELEMENT(GradientTexture)
+//! [class definition]
 
 public:
     GradientTexture();

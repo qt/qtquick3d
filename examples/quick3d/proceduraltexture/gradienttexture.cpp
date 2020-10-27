@@ -98,6 +98,7 @@ void GradientTexture::setWidth(int width)
     updateTexture();
 }
 
+//! [property]
 void GradientTexture::setStartColor(QColor startColor)
 {
     if (m_startColor == startColor)
@@ -107,6 +108,7 @@ void GradientTexture::setStartColor(QColor startColor)
     emit startColorChanged(m_startColor);
     updateTexture();
 }
+//! [property]
 
 void GradientTexture::setEndColor(QColor endColor)
 {
@@ -118,6 +120,7 @@ void GradientTexture::setEndColor(QColor endColor)
     updateTexture();
 }
 
+//! [updateTexture]
 void GradientTexture::updateTexture()
 {
     setSize(QSize(m_width, m_height));
@@ -125,7 +128,9 @@ void GradientTexture::updateTexture()
     setHasTransparency(false);
     setTextureData(generateTexture());
 }
+//! [updateTexture]
 
+//! [generateTexture]
 QByteArray GradientTexture::generateTexture()
 {
     QByteArray imageData;
@@ -149,6 +154,7 @@ QByteArray GradientTexture::generateTexture()
 
     return imageData;
 }
+//! [generateTexture]
 
 QColor GradientTexture::linearInterpolate(const QColor &color1, const QColor &color2, float value)
 {
