@@ -78,7 +78,13 @@ QQuick3DJoint::~QQuick3DJoint()
 /*!
     \qmlproperty int Joint::index
 
-    Specifies the joint index
+    Specifies the joint index.
+
+    \note It must be a unique value in the same \l {Skeleton}.
+    \note A \l {Model} using the \l {Skeleton} containing this \l {Joint} must
+    have proper joint indexes as an input attribute.
+
+    \sa {Model::inverseBindPoses}, {Qt Quick 3D - Simple Skinning Example}
 */
 
 qint32 QQuick3DJoint::index() const
@@ -89,7 +95,12 @@ qint32 QQuick3DJoint::index() const
 /*!
     \qmlproperty Skeleton Joint::skeletonRoot
 
-    Specifies \l {Skeleton} which contains this joint
+    Specifies \l {Skeleton} which contains this joint.
+
+    \note All the \l {Joint}s in the \l {Skeleton} should have the same skeletonRoot.
+    If not, the animation will be broken.
+
+    \sa {Skeleton}
 */
 
 QQuick3DSkeleton *QQuick3DJoint::skeletonRoot() const

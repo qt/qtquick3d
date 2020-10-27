@@ -252,12 +252,14 @@ QQuick3DSkeleton *QQuick3DModel::skeleton() const
     \qmlproperty List<matrix4x4> Model::inverseBindPoses
 
     This property contains a list of Inverse Bind Pose matrixes used for the
-    skeletal animation.
+    skeletal animation. Each inverseBindPose matrix means the inverse of the
+    global transform of the repective \l {Joint::index} in \l {skeleton}, which
+    will be used initially.
 
-    \note This property is only used if the Model::skeleton is valid and the indexes of the
-    Inverse Bind Pose matrices maps to the property Joint::index of \l {skeleton}.
+    \note This property is only used if the Model::skeleton is valid.
+    \note If some of the matrices are not set, identity values will be used.
 
-    \sa skeleton
+    \sa {skeleton} {Joint::index}
 */
 QList<QMatrix4x4> QQuick3DModel::inverseBindPoses() const
 {
