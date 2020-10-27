@@ -100,7 +100,7 @@ void ExampleTriangleGeometry::setUVAdjust(float f)
     update();
 }
 
-
+//! [update data]
 void ExampleTriangleGeometry::updateData()
 {
     clear();
@@ -111,9 +111,8 @@ void ExampleTriangleGeometry::updateData()
     if (m_hasUV)
         stride += 2 * sizeof(float);
 
-    QByteArray v;
-    v.resize(3 * stride);
-    float *p = reinterpret_cast<float *>(v.data());
+    QByteArray vertexData(3 * stride, Qt::Initialization::Uninitialized);
+    float *p = reinterpret_cast<float *>(vertexData.data());
 
     // a triangle, front face = counter-clockwise
     *p++ = -1.0f; *p++ = -1.0f; *p++ = 0.0f;
@@ -138,7 +137,7 @@ void ExampleTriangleGeometry::updateData()
         *p++ = 1.0f - m_uvAdjust; *p++ = 1.0f - m_uvAdjust;
     }
 
-    setVertexData(v);
+    setVertexData(vertexData);
     setStride(stride);
 
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
@@ -159,8 +158,7 @@ void ExampleTriangleGeometry::updateData()
                      QQuick3DGeometry::Attribute::F32Type);
     }
 }
-
-
+//! [update data]
 
 ExamplePointGeometry::ExamplePointGeometry()
 {
@@ -171,15 +169,14 @@ void ExamplePointGeometry::updateData()
 {
     clear();
 
-    const int N = 2000;
+    constexpr int NUM_POINTS = 2000;
+    constexpr int stride = 3 * sizeof(float);
 
-    const int stride = 3 * sizeof(float);
+    QByteArray vertexData;
+    vertexData.resize(NUM_POINTS * stride);
+    float *p = reinterpret_cast<float *>(vertexData.data());
 
-    QByteArray v;
-    v.resize(N * stride);
-    float *p = reinterpret_cast<float *>(v.data());
-
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < NUM_POINTS; ++i) {
         const float x = float(QRandomGenerator::global()->bounded(200.0f) - 100.0f) / 20.0f;
         const float y = float(QRandomGenerator::global()->bounded(200.0f) - 100.0f) / 20.0f;
         *p++ = x;
@@ -187,7 +184,7 @@ void ExamplePointGeometry::updateData()
         *p++ = 0.0f;
     }
 
-    setVertexData(v);
+    setVertexData(vertexData);
     setStride(stride);
 
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Points);

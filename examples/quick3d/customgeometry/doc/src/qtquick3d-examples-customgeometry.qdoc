@@ -39,4 +39,42 @@
     In addition, the \l GridGeometry is also demonstrated. GridGeometry is a
     built-in QQuick3DGeometry implementation that provides a mesh with line
     primitives suitable for displaying a grid.
+
+    The focus on this example will be on the code that provides the custom
+    geometry, so let's first have a look at the \c ExampleTriangleGeometry C++
+    header file:
+
+    \snippet customgeometry/examplegeometry.h triangle geometry
+
+    The most important thing to notice is that our \c ExampleTriangleGeometry
+    class inherits from QQuick3DGeometry and that we call the \c
+    QML_NAMED_ELEMENT(ExampleTriangleGeometry) macro, making our class
+    accessible in QML. There are also a few properties defined through the \c
+    Q_PROPERTY macro which are automatically exposed in our QML object. Now,
+    let's look at the QML Model:
+
+    \snippet customgeometry/main.qml model triangle
+
+    Note that we specify the \c geometry property to use our \c
+    ExampleTriangleGeometry class, with the relevant properties specified. This
+    is all that is needed on the QML side to use a custom geometry.
+
+    Now, lets look at the other important part of the C++ code, namely the \c
+    updateData() method. This method creates and uploads the data for our custom
+    geometry whenever a \c ExampleTriangleGeometry class is created or any of
+    its QML properties are updated.
+
+    \snippet customgeometry/examplegeometry.cpp update data
+
+    The method starts by calling \c clear() to clear all previously uploaded
+    data. It then computes the stride for the vertices, taking into account the
+    presence of normals and uv coordinates. Then a byte array is created to hold
+    the vertex buffer, which is then filled with vertices for a single triangle
+    with corners in (-1, -1, 0), (1, -1, 0) and (0, 1, 0).
+
+    Then the vertex data is uploaded and the stride is set by calling \c
+    setVertexData() and \c setStride(). Then the primitive type is set by
+    calling \c setPrimitiveType(). Lastly, we specify how the attributes for
+    position, normal and uv coords are laid out in memory in the previously
+    uploaded buffer by calling \c addAttribute() for each attribute.
 */

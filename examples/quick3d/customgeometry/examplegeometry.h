@@ -53,6 +53,7 @@
 
 #include <QQuick3DGeometry>
 
+//! [triangle geometry]
 class ExampleTriangleGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
@@ -91,6 +92,7 @@ private:
     bool m_hasUV = false;
     float m_uvAdjust = 0.0f;
 };
+//! [triangle geometry]
 
 class ExamplePointGeometry : public QQuick3DGeometry
 {

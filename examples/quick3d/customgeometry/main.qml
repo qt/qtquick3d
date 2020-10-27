@@ -99,6 +99,7 @@ Window {
             ]
         }
 
+        //! [model triangle]
         Model {
             visible: radioCustGeom.checked
             scale: Qt.vector3d(100, 100, 100)
@@ -120,6 +121,7 @@ Window {
                 }
             ]
         }
+        //! [model triangle]
 
         Model {
             visible: radioPointGeom.checked
