@@ -1,4 +1,4 @@
-import QtQuick3D 1.15
+import QtQuick3D
 
 PointLight {
     color: "yellow"

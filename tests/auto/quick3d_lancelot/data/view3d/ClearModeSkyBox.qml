@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick3D 1.14
+import QtQuick
+import QtQuick3D
 
 import "../shared/"
 

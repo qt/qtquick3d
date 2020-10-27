@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
+import QtQuick3D
 
 CustomMaterial {
     shadingMode: CustomMaterial.Unshaded

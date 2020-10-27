@@ -1,7 +1,7 @@
-import QtQuick 2.11
-import QtQuick.Window 2.11
-import QtQuick3D 1.15
-import QtQuick3D.Helpers 1.15
+import QtQuick
+import QtQuick.Window
+import QtQuick3D
+import QtQuick3D.Helpers
 
 Window {
     visible: true

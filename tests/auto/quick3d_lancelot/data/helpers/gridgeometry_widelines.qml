@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
-import QtQuick3D.Helpers 1.15
-import QtQuick 2.15
+import QtQuick3D
+import QtQuick3D.Helpers
+import QtQuick
 
 // This test is only different from gridgeometry on systems there the graphics API supports wide lines.
 // On desktops Vulkan can be typically expected to support this. Others (D3D, Metal) won't for sure, whereas OpenGL may or may not.

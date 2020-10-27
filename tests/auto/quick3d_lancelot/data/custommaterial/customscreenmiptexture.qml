@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
-import QtQuick 2.15
+import QtQuick3D
+import QtQuick
 
 // There are three monkey things here, with two spheres on top.
 // The left sphere uses mip level 0 and just colorizes a bit.

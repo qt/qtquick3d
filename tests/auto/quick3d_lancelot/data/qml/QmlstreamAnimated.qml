@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick3D 1.15
-import QtQuick.Window 2.12
+import QtQuick
+import QtQuick3D
+import QtQuick.Window
 import "qml"
 
 Rectangle {

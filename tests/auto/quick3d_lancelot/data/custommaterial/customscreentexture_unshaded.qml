@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick3D 1.15
-import QtQuick 2.15
+import QtQuick3D
+import QtQuick
 
 // This is like customdiffuse but a sphere in front that reads SCREEN_TEXTURE
 // with the cylinder and the ground rectangle, and changes red to 1.0. Also

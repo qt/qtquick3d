@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick3D 1.15
-import QtQuick3D.Helpers 1.15
+import QtQuick
+import QtQuick3D
+import QtQuick3D.Helpers
 import Example 1.0
 
 Node {

@@ -48,13 +48,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick3D 1.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import QtQml 2.15
-import QtQuick3D.Helpers 1.15
+import QtQuick
+import QtQuick.Window
+import QtQuick3D
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQml
+import QtQuick3D.Helpers
 
 Window {
     width: 1280
