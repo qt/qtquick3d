@@ -38,12 +38,4 @@
     \li \l {Optimizing 3D Assets}
     \li \l {Shadergen Tool} {Build-time materials}
     \endlist
-
-    \section1 Best Practices
-
-    \list
-    \li \l {Anti-Aliasing}
-    \li \l {Using Image-Based Lighting}
-    \endlist
-
 */
