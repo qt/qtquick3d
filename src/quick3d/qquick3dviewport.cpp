@@ -499,7 +499,7 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
             return;
         }
 
-        QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+        QQuick3DSceneRootNode *rn = qobject_cast<QQuick3DSceneRootNode *>(scene);
         scene = rn ? rn->view3D()->importScene() : nullptr;
     }
 
@@ -520,7 +520,7 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
 
         QQuick3DNode *scene = inScene;
         while (scene) {
-            QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+            QQuick3DSceneRootNode *rn = qobject_cast<QQuick3DSceneRootNode *>(scene);
             scene = rn ? rn->view3D()->importScene() : nullptr;
 
             if (scene) {
@@ -693,7 +693,7 @@ void QQuick3DViewport::updateDynamicTextures()
         }
 
         // if importScene has another import
-        QQuick3DSceneRootNode *rn = dynamic_cast<QQuick3DSceneRootNode *>(scene);
+        QQuick3DSceneRootNode *rn = qobject_cast<QQuick3DSceneRootNode *>(scene);
         scene = rn ? rn->view3D()->importScene() : nullptr;
     }
 }

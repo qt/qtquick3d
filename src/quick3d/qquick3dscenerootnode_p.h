@@ -48,6 +48,7 @@ class QQuick3DViewport;
 
 class QQuick3DSceneRootNode : public QQuick3DNode
 {
+    Q_OBJECT
 public:
     explicit QQuick3DSceneRootNode(QQuick3DViewport *view3D = nullptr, QQuick3DNode *parent = nullptr);
     ~QQuick3DSceneRootNode() override;
