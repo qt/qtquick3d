@@ -302,7 +302,6 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
     imageData->data = ::malloc(dataSize);
     imageData->width = width;
     imageData->height = height;
-    imageData->m_bitCount = bitCount;
     imageData->format = format;
     imageData->components = format.getNumberOfComponent();
 
@@ -340,7 +339,6 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
     imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
     imageData->width = textureData->size().width();
     imageData->height = textureData->size().height();
-    imageData->m_bitCount = bitCount;
     imageData->format = textureData->format();
     imageData->components = textureData->format().getNumberOfComponent();
 
@@ -385,13 +383,8 @@ bool scanImageForAlpha(const void *inData, quint32 inWidth, quint32 inHeight, qu
 
 QSSGLoadedTexture::~QSSGLoadedTexture()
 {
-    if (data && image.sizeInBytes() <= 0 && ownsData) {
+    if (data && image.sizeInBytes() <= 0 && ownsData)
         ::free(data);
-    }
-    if (m_palette)
-        ::free(m_palette);
-    if (m_transparencyTable)
-        ::free(m_transparencyTable);
 }
 
 bool QSSGLoadedTexture::scanForTransparency() const

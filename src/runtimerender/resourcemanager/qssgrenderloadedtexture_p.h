@@ -60,12 +60,7 @@ struct QSSGTextureData
     quint32 dataSizeInBytes = 0;
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::Unknown;
 };
-enum class QSSGExtendedTextureFormats
-{
-    NoExtendedFormat = 0,
-    Palettized,
-    CustomRGB,
-};
+
 // Utility class used for loading image data from disk.
 // Supports jpg, png, and dds.
 struct QSSGLoadedTexture
@@ -80,14 +75,6 @@ public:
     QImage image;
     quint32 dataSizeInBytes = 0;
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA8;
-    QSSGExtendedTextureFormats m_ExtendedFormat = QSSGExtendedTextureFormats::NoExtendedFormat;
-    // Used for palettized images.
-    void *m_palette = nullptr;
-    qint32 m_customMasks[3]{ 0, 0, 0 };
-    int m_bitCount = 0;
-    char m_backgroundColor[3]{ 0, 0, 0 };
-    quint8 *m_transparencyTable = nullptr;
-    qint32 m_transparentPaletteIndex = -1;
 
     ~QSSGLoadedTexture();
     void setFormatFromComponents()
