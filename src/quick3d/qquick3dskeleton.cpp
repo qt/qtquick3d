@@ -41,9 +41,9 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Contain model's skeleton information.
 
-    It's a simple container module including \l {Joint} hierarchy. Only id and
-    internal \l {Joint} will be meaningful.
-    Each joint can be transformed for a skeletal animation.
+    It's a simple container type including \l {Joint} hierarchy. Only the id
+    attribute and internal \l {Joint} are meaningful.
+    Each joint can be transformed for a skinning animation.
 
     \qml
     Skeleton {
@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \sa {Joint::skeletonRoot}, {Model::skeleton}, {Qt Quick 3D - Simple Skinning Example#skeleton-and-joint-hierarchy}
 */
 
 QQuick3DSkeleton::QQuick3DSkeleton(QQuick3DNode *parent)

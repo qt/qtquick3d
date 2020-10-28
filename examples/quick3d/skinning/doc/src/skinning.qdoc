@@ -73,7 +73,7 @@
 
     \image jointinfo.png "2 joints in the geometry"
 
-    \section2 \l Skeleton and \l Joint hierarchy
+    \section2 Skeleton and Joint hierarchy
 
     These 2 \l {Joint}{Joint}s are connected in a \l Skeleton. We will rotate joint1
     45 degrees around the z-axis. For skinning, \l Model should have a proper
@@ -85,14 +85,24 @@
 
     \section2 inverseBindPoses
 
-    We want to place our \l Model into the origin. It is possible to transform
-    it but in this example, we will move it with a property \e inverseBindPoses.
-    For two \l {Joint}{Joint}s' initial position we will simply give the same
-    transform which translates -0.5 along the x-axis and -1.0 along the y-axis.
+    Now the model is placed on the upper right position on the screen.
+
+    \image inverseBindPoses.png "Initial Position"
+
+    Once a model has a valid \l {Model::skeleton}{skeleton}, it cannot be
+    transformed by its global transformation. You need to transform it with
+    each \l Joint's transformation. However, it is cumbersome to calculate
+    the Joint's transform when considering the initial positions.
+    \l {Model::inverseBindPoses}{inverseBindPoses} can be used to set the
+    initial states of the \l {Joint}{Joint}s. In order to move it to the center,
+    we will simply set the same transform, which translates -0.5 along the
+    x-axis, and -1.0 along the y-axis.
 
     \snippet skinning/SimpleSkinning.qml poses
 
-    \section1 Animate with \l Joint nodes
+    \image inverseBindPoses2.png "Transformed by InversebindPoses"
+
+    \section1 Animate with Joint nodes
 
     \image skinning2.png "Final Scene"
 
