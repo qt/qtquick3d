@@ -57,6 +57,7 @@ Window {
     width: 1280
     height: 720
     visible: true
+    color: "black"
     title: "Dynamic Model Creation example"
 
     Button {
@@ -77,10 +78,7 @@ Window {
             radius: 5
         }
 
-        onClicked: {
-            if (shapeSpawner.instances.length < shapeSpawner.maxInstances)
-                shapeSpawner.addOrRemove(true);
-        }
+        onClicked: shapeSpawner.addShape()
     }
 
     Label {
@@ -91,6 +89,8 @@ Window {
         font.pointSize: 20
         font.bold: true
         color: "#848895"
+
+        text: "Models in Scene: " + shapeSpawner.count
     }
 
     Button {
@@ -100,6 +100,7 @@ Window {
         anchors.margins: 20
         text: "Remove Model"
         implicitWidth: 150
+        enabled: shapeSpawner.count > 0
 
         background: Rectangle {
             implicitWidth: 150
@@ -111,10 +112,7 @@ Window {
             radius: 5
         }
 
-        onClicked: {
-            if (shapeSpawner.instances.length > 0)
-                shapeSpawner.addOrRemove(false);
-        }
+        onClicked: shapeSpawner.removeShape()
     }
 
     View3D {
@@ -131,7 +129,7 @@ Window {
 
         PointLight {
             position: Qt.vector3d(0, 0, 0);
-            brightness: 1.5
+            brightness: 2.5
         }
 
         Node {
@@ -158,46 +156,39 @@ Window {
             id: shapeSpawner
             property real range: 300
             property var instances: []
-            readonly property int maxInstances: 100
+            property int count
+        //! [spawner node]
 
-            function addOrRemove(add) {
-                //! [spawner node]
-                if (add) {
-                    //! [adding]
-                    // Create a new weirdShape at random postion
-                    var xPos = (2 * Math.random() * range) - range;
-                    var yPos = (2 * Math.random() * range) - range;
-                    var zPos = (2 * Math.random() * range) - range;
-                    var weirdShapeComponent = Qt.createComponent("WeirdShape.qml");
-                    let instance = weirdShapeComponent.createObject(
-                            shapeSpawner, { "x": xPos, "y": yPos, "z": zPos,
-                                "scale": Qt.vector3d(0.25, 0.25, 0.25)});
-                    instances.push(instance);
-                    //! [adding]
-                    if (instances.length === maxInstances)
-                        addButton.enabled = false;
-                    else if (instances.length > 0)
-                        removeButton.enabled = true;
-                } else {
-                    //! [removing]
-                    // Remove last item in instances list
+            //! [adding]
+            function addShape()
+            {
+                var xPos = (2 * Math.random() * range) - range;
+                var yPos = (2 * Math.random() * range) - range;
+                var zPos = (2 * Math.random() * range) - range;
+                var shapeComponent = Qt.createComponent("WeirdShape.qml");
+                let instance = shapeComponent.createObject(shapeSpawner,
+                    { "x": xPos, "y": yPos, "z": zPos, "scale": Qt.vector3d(0.25, 0.25, 0.25)});
+                instances.push(instance);
+                count = instances.length
+            }
+            //! [adding]
+
+            //! [removing]
+            function removeShape()
+            {
+                if (instances.length > 0) {
                     let instance = instances.pop();
                     instance.destroy();
-                    //! [removing]
-                    if (instances.length === 0)
-                        removeButton.enabled = false;
-                    else if (instances.length < maxInstances)
-                        addButton.enabled = true;
+                    count = instances.length
                 }
-                countLabel.text = "Models in Scene: " + instances.length;
             }
+            //! [removing]
         }
 
         //! [startup]
         Component.onCompleted: {
-            // Create 10 instances to get started
             for (var i = 0; i < 10; ++i)
-                shapeSpawner.addOrRemove(true);
+                shapeSpawner.addShape()
         }
         //! [startup]
     }

@@ -33,9 +33,7 @@
 
     This example demonstrates creating models dynamically in an application. 10 models are created
     dynamically at the start of the application, and more can be added or removed using the
-    \c {Add Model} and \c {Remove Model} buttons. Dynamic model count is limited to 100 in
-    this example, but that is in no way a limitation of QtQuick3D.
-
+    \e {Add Model} and \e {Remove Model} buttons.
     \image dynamiccreation-example.png
 
     \section1 Setting Up
@@ -49,18 +47,18 @@
 
     \section2 Startup
 
-    We're creating 10 models at \c Component.onCompleted to avoid opening into an empty view.
+    We're creating 10 models at \c Component.onCompleted so the example shows something at startup.
 
     \snippet dynamiccreation/main.qml startup
 
     \section1 Dynamic Models
 
-    The \c addOrRemove() function called during startup can add or remove the models.
-
     \section2 Adding Models
 
-    A model component is created using the \c{Qt.createComponent} function, and instantiated with
-    \c position and \c scale parameters using the \c createObject function.
+    In order to add a new item to the scene, we first use the \l {Qt::createComponent}{Qt.createComponent}
+    function to create a \l {Component} for our model. Then we use the component's
+    \l {Component::createObject}{createObject} function to instantiate the item, passing in the
+    position and scale as parameters.
 
     \snippet dynamiccreation/main.qml adding
 
@@ -71,5 +69,3 @@
 
     \snippet dynamiccreation/main.qml removing
 */
-
-

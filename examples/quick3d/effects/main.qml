@@ -93,7 +93,7 @@ Window {
 
         environment: SceneEnvironment {
             id: sceneEnvironment
-            clearColor: "#f0f0f0"
+            clearColor: "#f040f0"
             backgroundMode: motionBox.checked ? SceneEnvironment.Transparent : SceneEnvironment.Color
 
             antialiasingMode: modeButton1.checked ? SceneEnvironment.NoAA : modeButton2.checked
