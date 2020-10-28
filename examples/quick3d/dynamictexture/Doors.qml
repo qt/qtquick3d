@@ -77,29 +77,31 @@ Node {
 
         fieldOfViewOrientation: PerspectiveCamera.Horizontal
     }
+    //! [material]
+    DefaultMaterial {
+        id: doorMaterial
+        diffuseMap: Texture {
+            sourceItem: object2d
+        }
+    }
+    //! [material]
 
+    //! [model heading]
     Model {
         id: door1
+    //! [model heading]
         pivot.x: 20
         x: 80
         y: 70
         scale.x: 2
         scale.y: 3.5
         scale.z: 0.5
-        source: "meshes/door1.mesh"
-        pickable: true
 
-        //! [material]
-        DefaultMaterial {
-            id: material_001_material
-            diffuseMap: Texture {
-                sourceItem: object2d
-            }
-        }
-        materials: [
-            material_001_material
-        ]
-        //! [material]
+    //! [model content]
+        source: "meshes/door1.mesh"
+        materials: doorMaterial
+        pickable: true
+    //! [model content]
 
         //! [state]
         states: State {
@@ -128,11 +130,11 @@ Node {
         source: "meshes/wall.mesh"
 
         DefaultMaterial {
-            id: material_material
+            id: wallMaterial
             diffuseColor: "lightgreen"
         }
         materials: [
-            material_material
+            wallMaterial
         ]
     }
 
@@ -146,9 +148,8 @@ Node {
         pivot.x: -20
         source: "meshes/door2.mesh"
         pickable: true
-        materials: [
-            material_001_material
-        ]
+        materials: doorMaterial
+
         states: State {
             name: "opened"
             PropertyChanges {

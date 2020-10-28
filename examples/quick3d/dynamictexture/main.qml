@@ -71,6 +71,7 @@ Window {
 
         Doors { id: door }
 
+        //! [picking]
         MouseArea {
             anchors.fill: parent
 
@@ -86,6 +87,7 @@ Window {
                 }
             }
         }
+        //! [picking]
     }
 
     //! [2d layer]
