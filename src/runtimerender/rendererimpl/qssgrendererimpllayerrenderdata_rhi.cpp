@@ -1657,7 +1657,7 @@ void QSSGLayerRenderData::rhiRender()
         if (layer.background == QSSGRenderLayer::Background::SkyBox
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch))
         {
-            const bool isRGBE = layer.lightProbe->m_textureData.m_rhiTexture->format() == QRhiTexture::RGBA8;
+            const bool isRGBE = layer.lightProbe->m_textureData.m_textureFlags.isRgbe8();
             auto shaderPipeline = renderer->getRhiSkyBoxShader(layer.tonemapMode, isRGBE);
             Q_ASSERT(shaderPipeline);
             QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);

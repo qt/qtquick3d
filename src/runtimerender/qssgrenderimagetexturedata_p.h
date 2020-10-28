@@ -51,6 +51,7 @@ enum class QSSGImageTextureFlagValue
     HasTransparency = 1,
     InvertUVCoords = 1 << 1,
     PreMultiplied = 1 << 2,
+    RGBE8 = 1 << 3
 };
 
 struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
@@ -63,6 +64,9 @@ struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
 
     bool isPreMultiplied() const { return this->operator&(QSSGImageTextureFlagValue::PreMultiplied); }
     void setPreMultiplied(bool inValue) { setFlag(QSSGImageTextureFlagValue::PreMultiplied, inValue); }
+
+    bool isRgbe8() const { return this->operator&(QSSGImageTextureFlagValue::RGBE8); }
+    void setRgbe8(bool inValue) { setFlag(QSSGImageTextureFlagValue::RGBE8, inValue); }
 };
 
 struct QSSGRenderImageTextureData

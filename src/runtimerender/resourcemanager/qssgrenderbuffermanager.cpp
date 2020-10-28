@@ -492,9 +492,8 @@ bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *i
     int suggestedSize = inImage->height * 0.5f;
     suggestedSize = qMax(512, suggestedSize);
     const QSize environmentMapSize(suggestedSize, suggestedSize);
+    const bool isRGBE = inImage->format.format == QSSGRenderTextureFormat::Format::RGBE8;
     const auto textureFormat = toRhiFormat(inImage->format.format);
-    // ### This doesn't always have to be true, but it is right now
-    const bool isRGBE = textureFormat == QRhiTexture::RGBA8;
 
     // Phase 1: Convert the Equirectangular texture to a Cubemap
     QRhiTexture *envCubeMap = rhi->newTexture(textureFormat, environmentMapSize, 1, QRhiTexture::RenderTarget | QRhiTexture::CubeMap | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
@@ -872,6 +871,8 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
     auto *rhi = context->rhi();
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
+    if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
+        textureData.m_textureFlags.setRgbe8(true);
     if (inMipMode == MipModeBsdf && inTexture->data) {
         if (loadRenderImageEnvironmentMap(inTexture, &textureData)) {
             context->registerTexture(textureData.m_rhiTexture);

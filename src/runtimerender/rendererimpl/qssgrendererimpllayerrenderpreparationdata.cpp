@@ -1134,8 +1134,10 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
             if (lightProbeValid &&
                 layer.lightProbe->m_textureData.m_rhiTexture &&
-                layer.lightProbe->m_textureData.m_rhiTexture->format() == QRhiTexture::RGBA8)
+                layer.lightProbe->m_textureData.m_textureFlags.isRgbe8())
+            {
                 setShaderFeature(QSSGShaderDefines::RGBELightProbe, true);
+            }
 
             // ### TODO: Really this should only be done if renderableNodes is empty or dirty
             // but we don't have a way to say it's dirty yet (new renderables added to the tree)
