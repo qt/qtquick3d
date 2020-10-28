@@ -1004,43 +1004,6 @@ bool QSSGLayerRenderPreparationData::checkLightProbeDirty(QSSGRenderImage &inLig
     return inLightProbe.clearDirty(bufferManager, true);
 }
 
-struct QSSGLightNodeMarker
-{
-    QSSGRenderLight *light = nullptr;
-    quint32 lightIndex = 0;
-    quint32 firstValidIndex = 0;
-    quint32 justPastLastValidIndex = 0;
-    bool addOrRemove = false;
-    QSSGLightNodeMarker() = default;
-    QSSGLightNodeMarker(QSSGRenderLight &inLight, quint32 inLightIndex, QSSGRenderNode &inNode, bool aorm)
-        : light(&inLight), lightIndex(inLightIndex), addOrRemove(aorm)
-    {
-        if (inNode.type == QSSGRenderGraphObject::Type::Layer) {
-            firstValidIndex = 0;
-            justPastLastValidIndex = std::numeric_limits<quint32>::max();
-        } else {
-            firstValidIndex = inNode.dfsIndex;
-            QSSGRenderNode *lastChild = nullptr;
-            QSSGRenderNode *firstChild = inNode.children.front_ptr();
-            // find deepest last child
-            while (firstChild) {
-                for (QSSGRenderNode *childNode = firstChild; childNode; childNode = childNode->nextSibling)
-                    lastChild = childNode;
-
-                if (lastChild)
-                    firstChild = lastChild->children.front_ptr();
-                else
-                    firstChild = nullptr;
-            }
-            if (lastChild)
-                // last valid index would be the last child index + 1
-                justPastLastValidIndex = lastChild->dfsIndex + 1;
-            else // no children.
-                justPastLastValidIndex = firstValidIndex + 1;
-        }
-    }
-};
-
 static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
 {
     // check if the node is parent of the lightScope
@@ -1169,7 +1132,6 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             for (const auto &to : qAsConst(transparentObjects))
                 delete to.obj;
             transparentObjects.clear();
-            QVector<QSSGLightNodeMarker> theLightNodeMarkers;
 
             // Cameras
             // First, check the activeCamera is GloballyActive
