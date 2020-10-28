@@ -29,7 +29,6 @@
 
 \title Exporting from Blender
 \page quick3d-asset-conditioning-export-blender howto
-\ingroup quick3d-asset-conditioning
 
 It is possible to export meshes, lights, cameras, transform animations (scale/rotation/location),
 UV layouts, pivot points, object hierarchy, and material slots from Blender.

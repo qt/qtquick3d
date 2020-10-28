@@ -27,35 +27,20 @@
 
 /*!
 
-\title Exporting from Maya
-\page quick3d-asset-conditioning-export-maya howto
-\ingroup quick3d-asset-conditioning
+\title Exporting from 3D Studio Max
+\page quick3d-asset-conditioning-export-max howto
 
-\section1 Exporting OpenCOLLADA from Maya
+\section1 Exporting OpenCOLLADA from 3D Studio Max
 
-In order for the OpenCOLLADA exporter to be active, some options must be enabled or disabled in the
-\c {Plug-in Manager}. To find it, go to \uicontrol{Window > Settings/Preferences > Plug-in Manager}.
+Select the object to be exported. Next, open the \uicontrol Export dialog box.
 
-The \e fbxmaya.mll plug-in must be unchecked. The \e COLLADAMaya.mll must be checked as
-both \c Loaded and \c {Auto Load}.
+\image export-colladaMax01.png
 
-\image export-colladaMaya01.png
+Be sure to select \b OpenCOLLADA and \b {\e not} Autodesk Collada.
 
-Next, select \uicontrol{File > Export Selection} and open the dialog box.
+Next, you will be prompted with another set of options for the OpenCOLLADA exporter.
 
-\image export-colladaMaya02.png
+\image export-colladaMax02.png
 
-Under \uicontrol{General Options}, be sure that \b OpenCOLLADA exporter is selected and
-set as the default file extension. Under \uicontrol{General export options}, check
-that the following options are active.
-
-\image export-colladaMaya03.png
-
-The \b triangulate option must be checked before exporting.
-
-Finally, choose the location for the COLLADA file to be saved. It is a good practice to keep all
-source art, including COLLADA files, in a folder outside of your project folder.
-
-\image export-colladaMaya04.png
-
+Make sure that the \uicontrol triangulate option is checked.
 */

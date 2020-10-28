@@ -88,12 +88,14 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D - Introduction}{Qt Quick 3D Introduction Example}
     \li \l{Qt Quick 3D Graphics Requirements}
     \li \l{Qt Quick 3D Architecture}
-    \li \l{Qt Quick 3D Asset Conditioning}
     \li \l{Balsam Asset Import Tool}
-    \li \l{Qt Quick 3D Scenes with 2D Content}
-    \li \l{Programmable Materials, Effects, Geometry, and Texture data}
+    \li \l{Optimizing 2D Assets}
+    \li \l{Optimizing 3D Assets}
     \li \l{Using Image-Based Lighting}
     \li \l{Anti-Aliasing Best Practices}
+    \li \l{Qt Quick 3D Scenes with 2D Content}
+    \li \l{Programmable Materials, Effects, Geometry, and Texture data}
+    \li \l{Shadergen Tool}{Build-time materials}
 \endlist
 
 \section1 Reference

@@ -27,21 +27,33 @@
 
 /*!
 
-\title Exporting from 3D Studio Max
-\page quick3d-asset-conditioning-export-max howto
-\ingroup quick3d-asset-conditioning
+\title Exporting from Modo
+\page quick3d-asset-conditioning-export-modo howto
 
-\section1 Exporting OpenCOLLADA from 3D Studio Max
+\section1 Exporting COLLADA from Modo
 
-Select the object to be exported. Next, open the \uicontrol Export dialog box.
+\list 1
+    \li With the mesh object selected, triangulate the mesh by pressing \e Shift+T.
+    \image export-colladaModo01.png
+    \li Next, select \uicontrol{System > Preferences} from the menu bar to configure the COLLADA
+    exporter.
+    \li In the preferences dialog box, locate the \uicontrol{Collada I/O} section under
+    \uicontrol{File I/O}. Ensure that the  \uicontrol{Save Triangles as Triangles} option is
+    checked.
+    \image export-colladaModo02.png
+    \li Close the preferences dialog box.
+    \li From the menu bar, select \uicontrol{File > Export As}.
+    \li Select \b Collada in the \uicontrol{Save as Type} drop-down list.
+    \li Press \uicontrol{Save}.
+\endlist
 
-\image export-colladaMax01.png
+\section1 Exporting FBX from Modo
 
-Be sure to select \b OpenCOLLADA and \b {\e not} Autodesk Collada.
-
-Next, you will be prompted with another set of options for the OpenCOLLADA exporter.
-
-\image export-colladaMax02.png
-
-Make sure that the \uicontrol triangulate option is checked.
+\list 1
+    \li With the mesh object selected, triangulate the mesh by pressing \e Shift+T.
+    \image export-colladaModo01.png
+    \li From the menu bar, select \uicontrol{File > Export As}.
+    \li Select \b FBX in the \uicontrol{Save as Type} drop-down list.
+    \li Select \uicontrol{Save}.
+\endlist
 */

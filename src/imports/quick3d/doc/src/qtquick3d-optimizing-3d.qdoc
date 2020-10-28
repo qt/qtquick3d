@@ -29,7 +29,6 @@
 
 \title Optimizing 3D Assets
 \page quick3d-asset-conditioning-3d-assets howto
-\ingroup quick3d-asset-conditioning
 
 In Qt Quick 3D, you can import 3D models and scenes that are created using 3D modeling tools. To
 see the supported file formats, see the \l {Balsam Asset Import Tool}{Balsam tool} documentation.
