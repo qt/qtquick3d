@@ -87,10 +87,10 @@
     Enables the grid on XZ plane. The default value is true.
 */
 /*! \qmlproperty bool AxisHelper::enableXYGrid
-    Enables the grid on XY plane. The default value is true.
+    Enables the grid on XY plane. The default value is false.
 */
 /*! \qmlproperty bool AxisHelper::enableYZGrid
-    Enables the grid on YZ plane. The default value is true.
+    Enables the grid on YZ plane. The default value is false.
 */
 /*! \qmlproperty bool AxisHelper::enableAxisLines
     Enables showing the axis lines. The default value is true.
@@ -204,7 +204,8 @@
     \inherits Rectangle
     \brief View to show render statistics.
 
-    This helper allows viewing the renders statistics of a View3D.
+    This helper allows viewing render performance statistics of a View3D.
+    It shows the FPS, sync and render times.
 
     For example, the following snippet shows how a DebugView can be added that
     shows its information in the top-left corner of the Qt Quick scene:
