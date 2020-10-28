@@ -70,6 +70,8 @@
             }
         }
     \endcode
+
+    \sa {Qt Quick 3D - Custom Geometry Example}, Model
 */
 
 /*! \qmlproperty int GridGeometry::horizontalLines

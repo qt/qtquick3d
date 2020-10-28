@@ -45,17 +45,16 @@
     Instead, set its \l{Model::geometry}{geometry} property to reference a
     Geometry object.
 
-    Custom geometry is implemented in C++ by setting up a QQuick3DGeometry
-    instance, often subclassing it. The QQuick3DGeometry type is registered to
-    QML under the name of Geometry. Once the subclass is registered to QML,
-    Model objects can start referencing it.
+    A typical way of implementing custom geometry is by creating a
+    \l QQuick3DGeometry subclass in C++ and registering the new type for use
+    with QML.
 
-    One built-in custom geometry provider is the GridGeometry type in the
-    Helpers module. This can be used like the following. Any other
-    application-provided Geometry can be taken into use in the same manner.
+    It is also possible to use the built-in custom geometry provider
+    \l GridGeometry in the \c Helpers module. The following is an example of
+    \l GridGeometry. Any application-provided Geometry subclass can be taken into
+    use in the same manner.
 
     \code
-
     import QtQuick3D.Helpers
 
     Model {
@@ -70,7 +69,7 @@
     }
     \endcode
 
-    \sa Model, QQuick3DGeometry
+    \sa {Qt Quick 3D - Custom Geometry Example}, Model, QQuick3DGeometry
 */
 
 /*!
