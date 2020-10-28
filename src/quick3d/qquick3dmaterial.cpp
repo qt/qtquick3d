@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Material
     \inherits Object3D
     \inqmlmodule QtQuick3D
-    \brief Lets you define material for the 3D item.
+    \brief Abstract base type providing functionality common to materials.
 */
 
 /*!
@@ -80,7 +80,10 @@ QT_BEGIN_NAMESPACE
     \qmlproperty Texture Material::lightProbe
 
     This property defines a Texture for overriding or setting an image based
-    lighting Texture for use with this material.
+    lighting Texture for use with this material only.
+
+    \note Setting a light probe on the material will override the
+    \l {SceneEnvironment::lightProbe} {scene's light probe} for models using this material.
 
     \sa SceneEnvironment::lightProbe
 */
