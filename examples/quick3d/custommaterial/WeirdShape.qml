@@ -56,23 +56,10 @@ Node {
 
     property CustomMaterial customMaterial
 
-    property real xRotation: Math.random() * (360 - (-360)) + -360
-    property real yRotation: Math.random() * (360 - (-360)) + -360
-    property real zRotation: Math.random() * (360 - (-360)) + -360
-
     Model {
         source: "weirdShape.mesh"
-        scale: Qt.vector3d(150, 150, 150)
+        scale: Qt.vector3d(100, 100, 100)
         rotation: Quaternion.fromEulerAngles(-90, 0, 0)
-
-        SequentialAnimation on eulerRotation {
-            loops: Animation.Infinite
-            PropertyAnimation {
-                duration: Math.random() * (9000 - 1) + 1000
-                to: Qt.vector3d(xRotation -  360, yRotation - 360, zRotation - 360)
-                from: Qt.vector3d(xRotation, yRotation, zRotation)
-            }
-        }
 
         materials: [ customMaterial ]
     }

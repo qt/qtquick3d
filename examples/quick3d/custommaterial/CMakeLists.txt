@@ -49,11 +49,12 @@ qt6_add_resources(custommaterial "qml"
         ${qml_resource_files}
 )
 set(materials_resource_files
-    "maps/OpenfootageNET_garage-1024.hdr"
+    "maps/OpenfootageNET_lowerAustria01-1024.hdr"
     "material.frag"
     "material.vert"
     "material_builtinspecular.frag"
     "material_lightprobe.frag"
+    "material_default.frag"
     "screen.frag"
 )
 

@@ -1,10 +1,11 @@
 <RCC>
     <qresource prefix="/">
-        <file>maps/OpenfootageNET_garage-1024.hdr</file>
+        <file>maps/OpenfootageNET_lowerAustria01-1024.hdr</file>
         <file>material.vert</file>
         <file>material.frag</file>
         <file>material_lightprobe.frag</file>
         <file>material_builtinspecular.frag</file>
+        <file>material_default.frag</file>
         <file>screen.frag</file>
     </qresource>
 </RCC>

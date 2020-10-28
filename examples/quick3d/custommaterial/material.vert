@@ -1,4 +1,4 @@
 void MAIN()
 {
-    VERTEX.x += sin(uTime * 4.0 + VERTEX.y) * uAmplitude;
+    VERTEX.y += sin(uTime + VERTEX.x*10.0) * uAmplitude;
 }
