@@ -564,24 +564,6 @@ void QSSGRenderer::endLayerRender()
 //        inImage.m_textureData.m_texture->generateMipmaps();
 //}
 
-bool nodeContainsBoneRoot(QSSGRenderNode &childNode, qint32 rootID)
-{
-    for (const auto &childChild : childNode.children) {
-        if (childChild.skeletonId == rootID)
-            return true;
-    }
-
-    return false;
-}
-
-void fillBoneIdNodeMap(QSSGRenderNode &childNode, QHash<long, QSSGRenderNode *> &ioMap)
-{
-    if (childNode.skeletonId >= 0)
-        ioMap[childNode.skeletonId] = &childNode;
-    for (auto &childChild : childNode.children)
-        fillBoneIdNodeMap(childChild, ioMap);
-}
-
 QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGLayerRenderData &inLayerRenderData,
                                                                 const QVector2D &inMouseCoords,
                                                                 const QVector2D &inViewportDimensions,
