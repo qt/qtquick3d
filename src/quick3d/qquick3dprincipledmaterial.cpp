@@ -39,19 +39,61 @@ QT_BEGIN_NAMESPACE
     \qmltype PrincipledMaterial
     \inherits Material
     \inqmlmodule QtQuick3D
-    \brief Lets you define a material for 3D items.
+    \brief Lets you define a material for 3D items using the metal/roughness workflow.
 
-    Before a Model can be rendered in a scene, it must have at least one
-    material to define how the mesh is shaded. The PrincipledMaterial aims to be
-    easy to use and with as few parameters as possible. In addition to having few
-    parameters, all input values are strictly normalized between 0 and 1.
-    Even if you define a PrincipledMaterial with no properties set, a valid mesh will be rendered,
-    because the mesh defines some sensible defaults.
+    Before a Model can be rendered in a scene, it must have at least one material attached
+    to it that describes how the mesh should be shaded. The PrincipledMaterial is a PBR
+    metal/roughness material that aims at being an easy to use material with a minimal
+    set of parameters.
+    In addition to having few parameters, all input values are strictly normalized
+    between 0 and 1 and have sensible defaults, meaning even without changing any values,
+    the material can be used to shader a model. For an introduction on how the
+    different properties of the principled material affects how a model is shaded,
+    see the \l{Qt Quick 3D - Principled Material Example}{Principled Material example}.
 
-    As you change the properties of the PrincipledMaterial, behind the scenes
-    new shaders are generated, and the property values are bound. The
-    complexity of a shader depends on a combination of the properties that
-    are set on it, and the context of the scene itself.
+    \section1 Metal/Roughness workflow
+
+    The Principled material is what's known as a metal/roughness material, in essence
+    that means the main characteristics of the material is controlled through
+    the \l {PrincipledMaterial::metalnessMap} {metallness}, \l {PrincipledMaterial::roughnessMap} {roughness},
+    and the \l {PrincipledMaterial::baseColorMap} {base color} property.
+
+    \section2 Metalness
+
+    Real world materials are put into two main categories, metals and dielectrics (non-metals).
+    In the Principled material, the category a material belongs to is decided by the
+    \c metalness value. Setting the \c metalness value to 0, means the material is a dialectric,
+    while everything above 0 is a considered to be a metal. In reality metals will have
+    a \c metalness value of 1, but values between 0 and 1 are possible, and usually used
+    for metals with reduced reflectance. For example, to render corrosion, or similar,
+    on a material, the \c metalness of the material should be reduced to give the output
+    properties more similar to a dielectric material.
+    Since the \c metalness value affects the reflectance of the material it might be tempting to
+    use the metalness to adjust glossiness, but consider what type of material you want
+    to describe first. Increasing the \c metalness value to give a dielectric material
+    a more polished look, will introduce properties that are not accurate for a dielectric
+    material, so consider if it would be more appropriate to adjust, for example,
+    the \c roughness value instead.
+
+    \section2 Roughness
+
+    The \c roughness of a material describes the condition of an object's surface.
+    A low \c roughness value means the object has a smooth surface and therefore be more
+    reflective then a material with a higher \c roughness value.
+
+    \section2 Base color
+
+    The \l {PrincipledMaterial::baseColorMap} {base color} of a metal/roughness material
+    contains both the diffuse and the specular data, how much the base color is interpreted
+    as one or the other is primarily dictated by the \c metalness value. For example,
+    a material with a metalness value of 1, will have most of its base color interpreted
+    as specular color, while the diffuse color would be a black tint. The opposite would
+    happen for a material with a metalness value of 0. This is of course a bit simplified,
+    but gives a rough idea how the \l {PrincipledMaterial::baseColor} {base color} and
+    \c metalness value interacts. For those more familiar with a Specular/Glossiness workflow,
+    there's a clear difference here which is worth noting, namely that the color data of the
+    two materials are not directly compatible, since in a Specular/Glossiness
+    \l {DefaultMaterial} {material}, the diffuse and specular color comes from separate inputs.
 */
 
 /*!
@@ -327,7 +369,7 @@ QT_BEGIN_NAMESPACE
     alpha channel of a \l{baseColorMap}{base color map} are used.
 
     \note The alpha cutoff test only considers the base color alpha. \l opacity
-    and \l Model::opacity are not taken into account there.
+    and \l [QtQuick3D] {Node::opacity} are not taken into account there.
 
     \note When sampling a base color map, the effective alpha value is the
     sampled alpha multiplied by the \l baseColor alpha.
