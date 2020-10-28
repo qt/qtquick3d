@@ -42,39 +42,34 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath,
-                                                               const QSSGRenderTextureFormat &inFormat,
-                                                               qint32 flipVertical)
+QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 flipVertical)
 {
     Q_UNUSED(flipVertical);
     static constexpr bool systemIsLittleEndian = QSysInfo::ByteOrder == QSysInfo::LittleEndian;
     QSSGLoadedTexture *retval = nullptr;
     QImage image(inPath);
-    if (inFormat == QSSGRenderTextureFormat::Unknown) {
-        switch (image.format()) {
-        case QImage::Format_Mono:
-        case QImage::Format_MonoLSB:
-        case QImage::Format_Indexed8: // Convert palleted images
-            image.convertTo(QImage::Format_RGBA8888_Premultiplied);
-            break;
-        case QImage::Format_RGBA64:
-            image.convertTo(QImage::Format_RGBA8888);
-            break;
-        case QImage::Format_RGBA64_Premultiplied:
-            image.convertTo(QImage::Format_RGBA8888_Premultiplied);
-            break;
-        case QImage::Format_RGBX64:
-            image.convertTo(QImage::Format_RGBX8888);
-            break;
-        default:
-            break;
-        }
+    switch (image.format()) {
+    case QImage::Format_Mono:
+    case QImage::Format_MonoLSB:
+    case QImage::Format_Indexed8: // Convert palleted images
+        image.convertTo(QImage::Format_RGBA8888_Premultiplied);
+        break;
+    case QImage::Format_RGBA64:
+        image.convertTo(QImage::Format_RGBA8888);
+        break;
+    case QImage::Format_RGBA64_Premultiplied:
+        image.convertTo(QImage::Format_RGBA8888_Premultiplied);
+        break;
+    case QImage::Format_RGBX64:
+        image.convertTo(QImage::Format_RGBX8888);
+        break;
+    default:
+        break;
     }
     bool swizzleNeeded = image.pixelFormat().colorModel() == QPixelFormat::RGB
             && image.pixelFormat().typeInterpretation() == QPixelFormat::UnsignedInteger
             && systemIsLittleEndian;
-    //??? What does inFormat mean? Is it even in use? Why always swizzle? Why do the musicians come out gradually?
-    if (swizzleNeeded || inFormat != QSSGRenderTextureFormat::Unknown)
+    if (swizzleNeeded)
         image = std::move(image).rgbSwapped();
     image = std::move(image).mirrored();
     retval = new QSSGLoadedTexture;
@@ -84,14 +79,11 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath,
     retval->image = image;
     retval->data = (void *)retval->image.bits();
     retval->dataSizeInBytes = image.sizeInBytes();
-    if (inFormat != QSSGRenderTextureFormat::Unknown)
-        retval->format = inFormat;
-    else
-        retval->setFormatFromComponents();
+    retval->setFormatFromComponents();
     return retval;
 }
 
-QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath, const QSSGRenderTextureFormat &inFormat, bool inFlipY)
+QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath, bool inFlipY)
 {
     Q_UNUSED(inFlipY);
 
@@ -112,8 +104,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath,
     }
     retval = new QSSGLoadedTexture;
     retval->compressedData = reader->read();
-    if (inFormat != QSSGRenderTextureFormat::Unknown)
-        retval->format = inFormat;
+    // retval->format stays set to Unknown, compressedData is what specifies the compressed format
 
     delete reader;
     imageFile.close();
@@ -446,9 +437,9 @@ bool QSSGLoadedTexture::scanForTransparency() const
 }
 
 QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
-                                                         const QSSGRenderTextureFormat &inFormat,
-                                                         QSSGInputStreamFactory &inFactory,
-                                                         bool inFlipY)
+                                           const QSSGRenderTextureFormat &inFormat,
+                                           QSSGInputStreamFactory &inFactory,
+                                           bool inFlipY)
 {
     if (inPath.isEmpty())
         return nullptr;
@@ -462,13 +453,15 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
             || inPath.endsWith(QStringLiteral("peg"), Qt::CaseInsensitive)
             || inPath.endsWith(QStringLiteral("gif"), Qt::CaseInsensitive)
             || inPath.endsWith(QStringLiteral("bmp"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadQImage(fileName, inFormat, inFlipY);
+            theLoadedImage = loadQImage(fileName, inFlipY);
         } else if (inPath.endsWith(QStringLiteral("dds"), Qt::CaseInsensitive)
                    || inPath.endsWith(QStringLiteral("ktx"), Qt::CaseInsensitive)
                    || inPath.endsWith(QStringLiteral("pkm"), Qt::CaseInsensitive)
                    || inPath.endsWith(QStringLiteral("astc"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadCompressedImage(fileName, inFormat, inFlipY);
+            theLoadedImage = loadCompressedImage(fileName, inFlipY);
         } else if (inPath.endsWith(QStringLiteral("hdr"), Qt::CaseInsensitive)) {
+            // inFormat is a suggestion that's only relevant for HDR images
+            // (tells if we want want RGBA16F or RGBE-on-RGBA8)
             theLoadedImage = loadHdrImage(theStream, inFormat);
         } else {
             qCWarning(INTERNAL_ERROR, "Unrecognized image extension: %s", qPrintable(inPath));
