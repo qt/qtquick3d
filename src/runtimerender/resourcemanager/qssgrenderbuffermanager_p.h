@@ -103,6 +103,7 @@ private:
     ImagePathReferenceMap imageRefMap;
     ModelPathMap cachedModelPathMap;
     ImagePathMap cachedImagePathMap;
+    QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
 
     void clear();
 
@@ -146,6 +147,9 @@ public:
     void releaseTextureData(QSSGRenderTextureData *textureData);
 
     static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
+
+    QRhiResourceUpdateBatch *meshBufferUpdateBatch();
+    void commitBufferResourceUpdates();
 
 private:
     QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inImagePath,

@@ -87,7 +87,9 @@ QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderCont
 }
 
 QSSGBufferManager::~QSSGBufferManager()
-{ clear(); }
+{
+    clear();
+}
 
 QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
                                                               bool inForceScanForTransparency,
@@ -999,13 +1001,13 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         QSSGRhiInputAssemblerState ia;
     } rhi;
 
-    newMesh->bufferResourceUpdates = context->rhi()->nextResourceUpdateBatch();
+    QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
     rhi.vertexBuffer = new QSSGRhiBuffer(*context.data(),
                                          QRhiBuffer::Static,
                                          QRhiBuffer::VertexBuffer,
                                          result.m_mesh->m_vertexBuffer.m_stride,
                                          vertexBufferData.size());
-    newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBufferData);
+    rub->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBufferData);
 
     if (result.m_mesh->m_indexBuffer.m_data.size()) {
         QSSGByteView indexBufferData(result.m_mesh->m_indexBuffer.m_data.begin(baseAddress),
@@ -1016,7 +1018,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
                                             0,
                                             indexBufferData.size(),
                                             rhiIndexFormat);
-        newMesh->bufferResourceUpdates->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBufferData);
+        rub->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBufferData);
     }
 
     const QSSGMeshUtilities::OffsetDataRef<QSSGMeshUtilities::MeshVertexBufferEntry> &entries
@@ -1299,6 +1301,11 @@ QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRen
 
 void QSSGBufferManager::clear()
 {
+    if (meshBufferUpdates) {
+        meshBufferUpdates->release();
+        meshBufferUpdates = nullptr;
+    }
+
     for (auto iter = meshMap.begin(), end = meshMap.end(); iter != end; ++iter) {
         QSSGRenderMesh *theMesh = iter.value();
         if (theMesh)
@@ -1320,6 +1327,21 @@ void QSSGBufferManager::clear()
     cachedModelPathMap.clear();
     imageRefMap.clear();
     cachedImagePathMap.clear();
+}
+
+QRhiResourceUpdateBatch *QSSGBufferManager::meshBufferUpdateBatch()
+{
+    if (!meshBufferUpdates)
+        meshBufferUpdates = context->rhi()->nextResourceUpdateBatch();
+    return meshBufferUpdates;
+}
+
+void QSSGBufferManager::commitBufferResourceUpdates()
+{
+    if (meshBufferUpdates) {
+        context->commandBuffer()->resourceUpdate(meshBufferUpdates);
+        meshBufferUpdates = nullptr;
+    }
 }
 
 QT_END_NAMESPACE

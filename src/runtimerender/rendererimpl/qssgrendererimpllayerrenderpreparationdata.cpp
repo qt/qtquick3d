@@ -930,23 +930,15 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
                     transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
                 else
                     opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
-
-                // Now is the time to kick off the buffer updates for the mesh.
-                // The buffers are common for all subsets in the mesh, that is
-                // why the update batch is associated with the mesh, not the
-                // individual subsets. This also means that this here is the
-                // last possible place to kick this off because the rest of the
-                // rendering pipeline will only see the individual sub-objects
-                // as "renderable objects".
-                if (rhiCtx->isValid()) {
-                    if (theMesh->bufferResourceUpdates) {
-                        rhiCtx->commandBuffer()->resourceUpdate(theMesh->bufferResourceUpdates);
-                        theMesh->bufferResourceUpdates = nullptr;
-                    }
-                }
             }
         }
     }
+
+    // Now is the time to kick off the vertex/index buffer updates for all the
+    // new meshes (and their submeshes). This here is the last possible place
+    // to kick this off because the rest of the rendering pipeline will only
+    // see the individual sub-objects as "renderable objects".
+    bufferManager->commitBufferResourceUpdates();
 
     return subsetDirty;
 }

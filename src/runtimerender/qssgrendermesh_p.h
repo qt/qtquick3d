@@ -120,7 +120,6 @@ struct QSSGRenderMesh
     QSSGRenderDrawMode drawMode;
     QSSGRenderWinding winding; // counterclockwise
     quint32 meshId; // Id from the file of this mesh.
-    QRhiResourceUpdateBatch *bufferResourceUpdates = nullptr; // not owned
     QSSGMeshBVH *bvh = nullptr;
 
     QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding, quint32 inMeshId)
