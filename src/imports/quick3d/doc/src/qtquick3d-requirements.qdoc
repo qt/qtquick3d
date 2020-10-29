@@ -34,7 +34,7 @@
 
 Qt Quick 3D supports operating with all the graphics APIs and shading languages
 supported by Qt Quick in Qt 6.0. In some cases, with OpenGL and OpenGL ES in
-particular, the version requirement may be higher than Qt Quick.
+particular, the version requirement may be higher for Qt Quick 3D than for Qt Quick.
 
 \list
 \li \l{https://www.khronos.org/opengl/}{OpenGL} 3.0 or higher; OpenGL 3.3 or higher is strongly recommended
@@ -59,7 +59,8 @@ As Qt Quick 3D does not initialize rendering or a window on its own, but rather
 relies on \l QQuickWindow or \l QQuickView or the \l Window QML type, everything
 related to graphics API selection that applies to the
 \l{qtquick-visualcanvas-scenegraph.html}{Qt Quick Scene Graph} applies to Qt
-Quick 3D as well.
+Quick 3D as well. It is possible to control the behavior of the scene graph by
+setting specific environment variables as listed below:
 
 \table 100%
 \header
@@ -89,18 +90,14 @@ Quick 3D as well.
    troubleshooting.
 \endtable
 
-Applications wishing to always run with a single given graphics API, can
-request this via C++ as well. For example, the following call made early in
-main(), before constructing any QQuickWindow, forces the use of Vulkan (and
-will fail otherwise);
+Applications wishing to always run with a single given graphics API can request
+this via the \c QSG_RHI_BACKEND enivronment variable, as well as with C++. For
+example, the following call made early in \c main(), before constructing any
+QQuickWindow, forces the use of Vulkan (and will fail otherwise).
 
 \code
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 \endcode
-
-See QSGRendererInterface::GraphicsApi. The enum values ending in \c Rhi are
-equivalent in effect to running with both \c QSG_RHI and \c QSG_RHI_BACKEND
-set.
 
 \note The \l{qtquick-visualcanvas-adaptations-software.html}{software
 adaptation} of Qt Quick is not supported for 3D content.
