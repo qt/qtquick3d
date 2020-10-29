@@ -405,7 +405,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *principledMaterial = new PropertiesMap;
     principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.FragmentLighting"));
     principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.SourceOver"));
-    principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Opaque"));
+    principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Default"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 0.0f);
     principledMaterial->insert(QStringLiteral("specularAmount"), 0.5f);

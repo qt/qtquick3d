@@ -81,7 +81,7 @@ Rectangle {
             source: "../shared/maps/alphaMode_rgba.png"
         }
 
-        // Row 1: alphaMode == Default
+        // Row 1: alphaMode == Opaque
         // Col 1: Node opacity = default(1.0), Material opacity = 0.7
         Model {
             source: "#Rectangle"
@@ -89,7 +89,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Default
+                    alphaMode: PrincipledMaterial.Opaque
                     opacity: 0.7
                 } ]
         }
@@ -101,7 +101,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Default
+                    alphaMode: PrincipledMaterial.Opaque
                 } ]
         }
         // Col 3: Node opacity = 0.7, Material opacity = 0.7
@@ -112,7 +112,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Default
+                    alphaMode: PrincipledMaterial.Opaque
                     opacity: 0.7
                 } ]
         }
@@ -124,7 +124,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Default
+                    alphaMode: PrincipledMaterial.Opaque
                     opacity: 0.7
                 } ]
         }
@@ -136,7 +136,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Default
+                    alphaMode: PrincipledMaterial.Opaque
                     opacity: 0
                 } ]
         }

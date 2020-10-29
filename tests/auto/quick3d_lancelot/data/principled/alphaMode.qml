@@ -81,7 +81,7 @@ Rectangle {
             source: "../shared/maps/alphaMode_rgba.png"
         }
 
-        // alphaMode == Default
+        // alphaMode == Opaque
         Model {
             source: "#Rectangle"
             scale: Qt.vector3d(3, 3, 1)
@@ -89,7 +89,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColorMap: tex_rgba
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Default
+                    alphaMode: PrincipledMaterial.Opaque
                 } ]
         }
 

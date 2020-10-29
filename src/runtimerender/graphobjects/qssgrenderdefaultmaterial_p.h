@@ -78,7 +78,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     {
         Default = 0,
         Mask,
-        Blend
+        Blend,
+        Opaque
     };
     enum TextureChannelMapping : quint8
     {

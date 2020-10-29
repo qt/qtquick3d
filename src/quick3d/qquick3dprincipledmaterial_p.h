@@ -112,7 +112,8 @@ public:
     enum AlphaMode {
         Default = 0,
         Mask,
-        Blend
+        Blend,
+        Opaque
     };
     Q_ENUM(AlphaMode)
 

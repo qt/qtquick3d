@@ -523,6 +523,9 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
         case QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend:
             ioStr.append(QByteArrayView("Blend"));
             break;
+        case QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque:
+            ioStr.append(QByteArrayView("Opaque"));
+            break;
         }
         ioStr.append(';');
     }
@@ -545,6 +548,8 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask);
             if (val == QByteArrayView("Blend"))
                 setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Blend);
+            if (val == QByteArrayView("Opaque"))
+                setAlphaMode(inKeySet, QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque);
         }
     }
 };

@@ -344,6 +344,11 @@ QT_BEGIN_NAMESPACE
     that alpha blending happens. The object with this material will therefore
     never be treated as opaque by the renderer.
 
+    \value PrincipledMaterial.Opaque The rendered object is fully opaque, if
+    there is no other relevant properties (such as, an opacity less than 1,
+    or the presence of an opacity map.) That is, all the alpha values in the
+    vertex color, base color, and base color map are ignored.
+
     \value PrincipledMaterial.Mask A test based on \l alphaCutoff is applied.
     If the effective alpha value falls below \l alphaCutoff, the fragment is
     changed to fully transparent. Otherwise the alpha is changed to 1, so that

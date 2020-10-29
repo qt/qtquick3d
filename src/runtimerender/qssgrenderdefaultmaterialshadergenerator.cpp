@@ -740,6 +740,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                        << "        qt_diffuseColor = vec4(0.0);\n"
                        << "    else\n"
                        << "        qt_diffuseColor.a = 1.0;\n";
+    } else if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque) {
+        fragmentShader << "    qt_diffuseColor.a = 1.0;\n";
     }
 
     if (hasLighting) {
