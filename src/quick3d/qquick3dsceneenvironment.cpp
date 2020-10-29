@@ -164,8 +164,8 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
     perform any clearing on its own, in which case
     SceneEnvironment.Transparent and SceneEnvironment.Color have no effect.
     Only the Offscreen mode (rendering into a texture) supports all clearing
-    modes. With the Underlay mode, use QQuickWindow::setColor() or
-    \l{QtQuick::Window::color}{Window.color} to control the clear color for
+    modes. With the Underlay mode, use \l{QQuickWindow::setColor()} or
+    \l[QtQuick]{Window::color}{Window.color} to control the clear color for
     the Qt Quick scene. Skybox is handled differently, as it implies drawing
     actual geometry, so that works identically across all render modes.
 
@@ -181,7 +181,7 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
 
     The default value is \c SceneEnvironment.Color
 
-    \sa QQuickWindow::setColor(), QtQuick::Window::color
+    \sa QQuickWindow::setColor(), Window::color
 */
 
 QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes QQuick3DSceneEnvironment::backgroundMode() const
@@ -418,7 +418,7 @@ float QQuick3DSceneEnvironment::temporalAAStrength() const
     opaque objects), in back to front order (sorted based on their center point's
     distance from the camera). This allows correct blending ("see through") for
     3D objects that involve semi-transparent regions on their surface, either
-    due to the \l{Model::opacity}{model opacity} or due to some color or texture
+    due to the \l{Node::opacity}{node opacity} or due to some color or texture
     map in the material.
 
     When this property is set to \c {false}, the Z-buffer is not written and

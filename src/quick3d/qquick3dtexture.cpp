@@ -458,7 +458,7 @@ QQuick3DTextureData *QQuick3DTexture::textureData() const
 
     By default, this property is set to false.
 
-    \note It is necessary to set a \l{QQuick3D::Texture::mipFilter}{mipFilter} mode
+    \note It is necessary to set a \l{QtQuick3D::Texture::mipFilter}{mipFilter} mode
     for the generated mipmaps to be be used.
 
     \sa mipFilter

@@ -86,11 +86,11 @@ QT_BEGIN_NAMESPACE
     \brief Base class for defining custom texture data.
 
     The QQuick3DTextureData class can be used to specify custom texture data for a
-    Texture in a Qt Quick 3D scene.
+    \l {Texture} in a Qt Quick 3D scene.
 
     While not strictly required, the typical usage is to inherit from this class.
     The subclass is then exposed to QML by registering it to the type system. The
-    \l{Texture::textureData}{textureData} property of a \l {QQuick3D::Texture}{Texture}
+    \l{Texture::textureData}{textureData} property of a \l {QtQuick3D::Texture}{Texture}
     can then be set to reference an instance of the registered type.
 
     Example implementation:
@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
     };
     \endcode
 
-    This class can then be registered as a QML type and used with \l {QQuick3D::Texture}{Texture}.
+    This class can then be registered as a QML type and used with \l {QtQuick3D::Texture}{Texture}.
 
     In Qt 5 type registration happened with qmlRegisterType:
     \code
@@ -291,7 +291,7 @@ QSize QQuick3DTextureData::size() const
 }
 
 /*!
-    Sets the size of the texture data in pixels.
+    Sets the \a size of the texture data in pixels.
 */
 void QQuick3DTextureData::setSize(const QSize &size)
 {
@@ -310,7 +310,7 @@ QQuick3DTextureData::Format QQuick3DTextureData::format() const
 }
 
 /*!
-    Sets the format of the texture data.
+    Sets the \a format of the texture data.
 
     The default format is /c RGBA8
 */
@@ -333,8 +333,8 @@ bool QQuick3DTextureData::hasTransparency() const
 }
 
 /*!
-    Sets whether the texture data has an active alpha channel with
-    non-opaque values.
+    Set \a hasTransparency to true if the texture data has an active alpha
+    channel with non-opaque values.
 
     This is used as an optimization by the engine so that for formats that
     do support an alpha channel do not need to have each value checked for

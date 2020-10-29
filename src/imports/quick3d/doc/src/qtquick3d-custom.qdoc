@@ -783,7 +783,7 @@ expectation is to get alpha blending. Such materials will very often change the 
 \l{CustomMaterial::destinationBlend}{destinationBlend} properties to get the desired
 results.
 
-Also keep in mind that the combined alpha value is the \l{Model::opacity}{Model opacity}
+Also keep in mind that the combined alpha value is the \l{Node::opacity}{Node opacity}
 multiplied by the material alpha.
 
 To visualize, let's use a shader that assigns red with alpha \c 0.5 to \c BASE_COLOR:
@@ -1206,14 +1206,14 @@ refraction for glass-like materials.
 depth buffer with all the \c opaque objects in the scene rendered. Similarly, \c
 SCREEN_TEXTURE is a \c sampler2D that allows sampling a texture that has all \c opaque
 objects in the scene rendered to it, without anything else, meaning no skybox, no shadows,
-no effects, and no objects that have any transparency in some form (\l{Model::opacity}
+no effects, and no objects that have any transparency in some form (\l{Node::opacity}
 smaller than 1, textures maps for the material from images with semi-transparent pixels in
 them, etc.)  are present. The texture is cleared to \c{vec4(0.0)} meaning it has an alpha
 value of 0 for fragments that are not covered by objects in the scene. The size of these
 textures matches the size of the View3D in pixels.
 
 Let's have a simple demonstration by visualizing the depth buffer contents via \c
-DEPTH_TEXTURE. The camera's \l{Camera::clipFar}{far clip value} is reduced here from the
+DEPTH_TEXTURE. The camera's \l{PerspectiveCamera::clipFar}{far clip value} is reduced here from the
 default 10000 to 2000, in order to have a smaller range, and so have the visualized depth
 value differences more obvious. The result is a rectangle that happens to visualize the
 depth buffer for the scene over its surface.
@@ -1677,7 +1677,7 @@ fragment shader associated.
 \section2 Chaining multiple effects
 
 Let's look at an example where the effect from the previous example gets complemented by
-another effect similar to the built-in \l DistortialSpiral effect.
+another effect similar to the built-in \l DistortionSpiral effect.
 
 \table
 \header

@@ -333,11 +333,11 @@ QT_BEGIN_NAMESPACE
     automatically imply alpha blending, the object with the material may still
     be treated as opaque, if no other relevant properties (such as, an opacity
     less than 1, or the presence of an opacity map) trigger treating the object
-    as semi-transparent. To ensure alpha blending happens, set Blend instead.
+    as semi-transparent. To ensure alpha blending happens, set \c Blend instead.
 
     \value PrincipledMaterial.Mask A test based on \l alphaCutoff is applied.
     If the effective alpha value falls below \l alphaCutoff, the fragment is
-    changed to fully transparent. This mode implies \l Blend as well.
+    changed to fully transparent. This mode implies \c Blend as well.
 
     \value PrincipledMaterial.Blend No cutoff test is applied, but guarantees
     that alpha blending happens. The object with this material will therefore
