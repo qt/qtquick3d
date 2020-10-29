@@ -18,7 +18,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
-add_qt_gui_executable(quickball
+qt_add_executable(quickball
     main.cpp
 )
 target_link_libraries(quickball PUBLIC
