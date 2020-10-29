@@ -616,6 +616,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (isCubeShadowPass)
         vertexShader.generateShadowWorldPosition();
 
+    if (hasImage && !isDepthPass && !isOrthoShadowPass && !isCubeShadowPass) {
+        fragmentShader.append("    vec3 qt_uTransform;");
+        fragmentShader.append("    vec3 qt_vTransform;");
+    }
+
     // !hasLighting does not mean 'no light source'
     // it should be KHR_materials_unlit
     // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit
@@ -634,11 +639,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         if (hasLightmaps)
             fragmentShader.addInclude("evalLightmaps.glsllib");
-
-        if (hasImage) {
-            fragmentShader.append("    vec3 qt_uTransform;");
-            fragmentShader.append("    vec3 qt_vTransform;");
-        }
 
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
@@ -712,13 +712,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (baseImage) {
         QByteArray texSwizzle;
         QByteArray lookupSwizzle;
-
-        // NoLighting also needs to fetch baseImage (but not if it's a depth or
-        // shadow pass, those won't hit this due to baseImage forced to null then)
-        if (!hasLighting) {
-            fragmentShader.append("    vec3 qt_uTransform;");
-            fragmentShader.append("    vec3 qt_vTransform;");
-        }
 
         const bool hasIdentityMap = identityImages.contains(baseImage);
         if (hasIdentityMap)
