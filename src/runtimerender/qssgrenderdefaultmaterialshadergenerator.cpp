@@ -993,10 +993,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    << ", " << lightVarNames.lightInnerConeAngle << ", " << lightVarNames.spotAngle
                                    << ");\n";
                     if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_spotLightProcessor"))) {
-                        // DIFFUSE, LIGHT_COLOR, LIGHT_ATTENUATION, SPOT_FACTOR, SHADOW_CONTRIB, TO_LIGHT_DIR, NORMAL, BASE_COLOR, in float METALNESS, in float ROUGHNESS";
+                        // DIFFUSE, LIGHT_COLOR, LIGHT_ATTENUATION, SPOT_FACTOR, SHADOW_CONTRIB, TO_LIGHT_DIR, NORMAL, BASE_COLOR, in float METALNESS, in float ROUGHNESS, in vec3 VIEW_VECTOR";
                         fragmentShader << "    qt_spotLightProcessor(global_diffuse_light.rgb, tmp_light_color, qt_lightAttenuation, spotFactor, qt_shadow_map_occl, -"
                                        << lightVarNames.normalizedDirection << ".xyz, qt_world_normal, qt_customBaseColor, "
-                                       << "qt_metalnessAmount, qt_roughnessAmount);\n";
+                                       << "qt_metalnessAmount, qt_roughnessAmount, qt_view_vector);\n";
                     } else {
                         if (materialAdapter->isPrincipled()) {
                             fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * spotFactor * qt_lightAttenuation * qt_shadow_map_occl * "
