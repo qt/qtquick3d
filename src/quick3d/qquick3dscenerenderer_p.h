@@ -124,6 +124,7 @@ private:
 
     bool m_prepared = false;
 
+    QMetaObject::Connection m_renderContextConnection;
     QMetaObject::Connection m_cleanupResourceConnection;
 
     friend class SGFramebufferObjectNode;

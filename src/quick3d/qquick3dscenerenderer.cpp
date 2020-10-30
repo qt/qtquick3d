@@ -155,19 +155,40 @@ void SGFramebufferObjectNode::handleScreenChange()
 }
 
 namespace WindowBindings {
-using Binding = QPair<const QWindow *, QSSGRenderContextInterface *>;
+struct Binding
+{
+    QMetaObject::Connection m_connection;
+    const QWindow *m_window = nullptr;
+    QSSGRenderContextInterface *m_rci = nullptr;
+};
+
 using Bindings = QVarLengthArray<Binding, 32>;
-Q_GLOBAL_STATIC(Bindings, g_windowReg);
+Q_GLOBAL_STATIC(Bindings, g_windowReg)
 
 static QSSGRenderContextInterface *getRci(const QWindow &window)
 {
     const auto begin = g_windowReg->cbegin();
     const auto end = g_windowReg->cend();
     const auto foundIt = std::find_if(begin, end, [&window](const Binding &v) {
-        return (v.first == &window);
+        return (v.m_window == &window);
     });
 
-    return (foundIt != end) ? foundIt->second : nullptr;
+    return (foundIt != end) ? foundIt->m_rci : nullptr;
+}
+
+static void unbindAll(QSSGRenderContextInterface *rci)
+{
+    const auto begin = g_windowReg->begin();
+    const auto end = g_windowReg->end();
+    const auto removed = std::remove_if(begin, end, [rci](const Binding &p) {
+        return (p.m_rci == rci);
+    });
+    auto current = removed;
+    while (current != g_windowReg->end()) {
+        QObject::disconnect(current->m_connection);
+        current++;
+    }
+    g_windowReg->erase(removed);
 }
 
 static void unbind(const QWindow &window)
@@ -175,7 +196,7 @@ static void unbind(const QWindow &window)
     const auto begin = g_windowReg->begin();
     const auto end = g_windowReg->end();
     g_windowReg->erase(std::remove_if(begin, end, [&window](const Binding &p) {
-        return (p.first == &window);
+        return (p.m_window == &window);
     }));
 }
 
@@ -190,11 +211,11 @@ static void bind(const QWindow &window, QSSGRenderContextInterface &rci)
         return;
     }
 
-    QObject::connect(&window, &QWindow::destroyed, [](QObject *o) {
+    auto con = QObject::connect(&window, &QWindow::destroyed, [](QObject *o) {
         if (const auto w = qobject_cast<QWindow *>(o))
             WindowBindings::unbind(*w);
     });
-    g_windowReg->push_back({&window, &rci});
+    g_windowReg->push_back({con, &window, &rci});
 }
 }
 
@@ -234,6 +255,9 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
                     cleanupResources();
                 });
             }
+            m_renderContextConnection = m_sgContext->connectOnDestroyed([](QSSGRenderContextInterface *rci){
+                WindowBindings::unbindAll(rci);
+            });
         }
     }
 
@@ -251,6 +275,10 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
     if (m_cleanupResourceConnection)
         QObject::disconnect(m_cleanupResourceConnection);
+
+    m_sgContext.clear();
+    if (m_renderContextConnection)
+        QObject::disconnect(m_renderContextConnection);
 }
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
