@@ -2,6 +2,5 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>weirdShape.mesh</file>
-        <file>WeirdShape.qml</file>
     </qresource>
 </RCC>

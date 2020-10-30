@@ -37,7 +37,6 @@ target_link_libraries(custommaterial PUBLIC
 
 # Resources:
 set(qml_resource_files
-    "WeirdShape.qml"
     "main.qml"
     "weirdShape.mesh"
 )
@@ -50,11 +49,12 @@ qt6_add_resources(custommaterial "qml"
 )
 set(materials_resource_files
     "maps/OpenfootageNET_lowerAustria01-1024.hdr"
-    "material.frag"
-    "material.vert"
-    "material_builtinspecular.frag"
-    "material_lightprobe.frag"
-    "material_default.frag"
+    "material_customspecular.frag"
+    "material_distortion.vert"
+    "material_customlights.frag"
+    "material_metallic.frag"
+    "material_simple.frag"
+    "material_transparent.frag"
     "screen.frag"
 )
 

@@ -76,7 +76,8 @@ Window {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(0, 100, 700)
+            fieldOfView: 45
+            position: Qt.vector3d(0, 100, 900)
         }
 
         SpotLight {
@@ -92,12 +93,12 @@ Window {
         NumberAnimation on globalRotation {
             from: 0
             to: 360
-            duration: 15000
+            duration: 27000
             loops: Animation.Infinite
         }
 
         property real radius: 400
-        property real separation: 360/6
+        property real separation: 360/5
 
         Model {
             id: floor
@@ -115,26 +116,40 @@ Window {
         // Start with a simple material, using the built-in implementation for everything.
         Node {
             eulerRotation.y: v3d.globalRotation
-            WeirdShape {
+            //! [simple]
+            Model {
+                source: "weirdShape.mesh"
+                scale: Qt.vector3d(100, 100, 100)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 x: v3d.radius
-                customMaterial: CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    fragmentShader: "material_default.frag"
-                    property color uDiffuse: "fuchsia"
-                    property real uSpecular: 1.0
-                }
+
+                materials: [
+                    CustomMaterial {
+                        shadingMode: CustomMaterial.Shaded
+                        fragmentShader: "material_simple.frag"
+                        property color uDiffuse: "fuchsia"
+                        property real uSpecular: 1.0
+                    }
+                ]
             }
+            //! [simple]
         }
 
         // A metallic material using defaults for everything, except ambient light, and no uniforms.
         Node {
             eulerRotation.y: v3d.globalRotation + v3d.separation * 1
-            WeirdShape {
+            Model {
+                source: "weirdShape.mesh"
+                scale: Qt.vector3d(100, 100, 100)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 x: v3d.radius
-                customMaterial: CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    fragmentShader: "material_lightprobe.frag"
-                }
+
+                materials: [
+                    CustomMaterial {
+                        shadingMode: CustomMaterial.Shaded
+                        fragmentShader: "material_metallic.frag"
+                    }
+                ]
             }
         }
 
@@ -142,68 +157,87 @@ Window {
         // the built-in specular function.
         Node {
             eulerRotation.y: v3d.globalRotation + v3d.separation * 2
-            WeirdShape {
+            Model {
+                source: "weirdShape.mesh"
+                scale: Qt.vector3d(100, 100, 100)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 x: v3d.radius
-                customMaterial: CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    fragmentShader: "material_builtinspecular.frag"
-                    property color uDiffuse: "orange"
-                    property real uShininess: 150
-                }
+                //! [custom lights]
+                materials: [
+                    CustomMaterial {
+                        shadingMode: CustomMaterial.Shaded
+                        fragmentShader: "material_customlights.frag"
+                        property color uDiffuse: "orange"
+                        property real uShininess: 150
+                    }
+                ]
+                //! [custom lights]
             }
         }
 
         // Custom handling of everything, including specular.
         Node {
             eulerRotation.y: v3d.globalRotation  + v3d.separation * 3
-            WeirdShape {
-                x: v3d.radius
-                customMaterial: CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    fragmentShader: "material.frag"
-                    property color uDiffuse: "green"
-                    property real uShininess: 150
-                }
-            }
-        }
-
-
-
-        // Same fragment shader, plus custom vertex shader
-        Node {
-            eulerRotation.y: v3d.globalRotation + v3d.separation * 4
-            WeirdShape {
-                x: v3d.radius
-                customMaterial: CustomMaterial {
-                    shadingMode: CustomMaterial.Shaded
-                    vertexShader: "material.vert"
-                    fragmentShader: "material.frag"
-                    property real uTime: 0.0
-                    property real uAmplitude: 0.3
-                    property color uDiffuse: "yellow"
-                    property real uShininess: 50
-                    NumberAnimation on uTime { from: 0.0; to: 31.4; duration: 10000; loops: -1 }
-                }
-            }
-        }
-
-        // Material that processes the scene behind the item, giving a see-through effect.
-        Node {
-            eulerRotation.y: v3d.globalRotation + v3d.separation * 5
             Model {
-                id: screenSphere
-                source: "#Sphere"
-                scale: Qt.vector3d(3, 3, 3)
+                source: "weirdShape.mesh"
+                scale: Qt.vector3d(100, 100, 100)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
                 x: v3d.radius
                 materials: [
                     CustomMaterial {
                         shadingMode: CustomMaterial.Shaded
-                        sourceBlend: uKeepAlpha ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
-                        destinationBlend: uKeepAlpha ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
-                        fragmentShader: "screen.frag"
-                        property bool uKeepAlpha: false
+                        fragmentShader: "material_customspecular.frag"
+                        property color uDiffuse: "green"
+                        property real uShininess: 150
                     }
                 ]
+            }
+        }
+
+        // Custom lights, plus custom vertex shader
+        Node {
+            eulerRotation.y: v3d.globalRotation + v3d.separation * 4
+            Model {
+                source: "weirdShape.mesh"
+                scale: Qt.vector3d(100, 100, 100)
+                rotation: Quaternion.fromEulerAngles(-90, 0, 0)
+                x: v3d.radius
+                //! [custom vertex]
+                materials: [
+                    CustomMaterial {
+                        shadingMode: CustomMaterial.Shaded
+                        vertexShader: "material_distortion.vert"
+                        fragmentShader: "material_customlights.frag"
+                        property real uTime: 0.0
+                        property real uAmplitude: 0.3
+                        property color uDiffuse: "yellow"
+                        property real uShininess: 50
+                        NumberAnimation on uTime { from: 0.0; to: 31.4; duration: 10000; loops: -1 }
+                    }
+                ]
+                //! [custom vertex]
+            }
+        }
+
+        // Transparent material, with a refractive effect
+        //! [transparent]
+        Model {
+            id: screenSphere
+            source: "#Sphere"
+            scale: Qt.vector3d(0.75, 0.75, 0.75)
+            y: 60
+            z: 750;
+            materials: [
+                CustomMaterial {
+                    shadingMode: CustomMaterial.Shaded
+                    fragmentShader: "material_transparent.frag"
+                }
+            ]
+        //! [transparent]
+            SequentialAnimation on x {
+                NumberAnimation { from: 50; to: -50; duration: 20000 }
+                NumberAnimation { from: -50; to: 50; duration: 20000 }
+                loops: Animation.Infinite
             }
         }
     }
