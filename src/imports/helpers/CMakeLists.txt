@@ -15,7 +15,6 @@ qt_internal_add_qml_module(qtquick3dhelpersplugin
     SOURCES
         gridgeometry.cpp gridgeometry_p.h
         plugin.cpp
-        pointerplane.cpp pointerplane.h
     PUBLIC_LIBRARIES
         Qt::Qml
         Qt::Quick

@@ -32,7 +32,6 @@
 #include <QtQml/qqmlengine.h>
 
 #include "gridgeometry_p.h"
-#include "pointerplane.h"
 
 extern void qml_register_types_QtQuick3D_Helpers();
 
