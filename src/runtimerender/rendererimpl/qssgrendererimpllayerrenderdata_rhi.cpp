@@ -980,7 +980,7 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
 
 static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                QSSGLayerRenderData &inData,
-                               QSSGRef<QSSGRenderShadowMap> &shadowMapManager,
+                               QSSGRenderShadowMap *shadowMapManager,
                                const QRectF &viewViewport,
                                const QSSGRenderCamera &camera,
                                const QSSGShaderLightList &globalLights,
@@ -1415,7 +1415,7 @@ void QSSGLayerRenderData::rhiPrepare()
         // Shadows. Generates a 2D or cube shadow map. (opaque objects only)
         if (layerPrepResult->flags.requiresShadowMapPass() && m_progressiveAAPassIndex == 0) {
             if (!shadowMapManager)
-                createShadowMapManager();
+                shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
 
             if (!opaqueObjects.isEmpty() || !globalLights.isEmpty()) {
                 cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));

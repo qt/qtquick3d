@@ -67,7 +67,7 @@ struct QSSGLayerGlobalRenderProperties
     const QSSGRenderLayer &layer;
     QSSGRenderCamera &camera;
     QVector3D cameraDirection;
-    QSSGRef<QSSGRenderShadowMap> shadowMapManager;
+    QSSGRenderShadowMap *shadowMapManager;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiSsaoTexture;
     QRhiTexture *rhiScreenTexture;

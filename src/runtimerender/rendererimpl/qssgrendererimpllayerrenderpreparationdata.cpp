@@ -139,7 +139,10 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
 {
 }
 
-QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData() = default;
+QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData()
+{
+    delete shadowMapManager;
+}
 
 void QSSGLayerRenderPreparationData::setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue)
 {
@@ -176,11 +179,6 @@ size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
     if (!featureSetHash)
         featureSetHash = hashShaderFeatureSet(getShaderFeatureSet());
     return featureSetHash;
-}
-
-void QSSGLayerRenderPreparationData::createShadowMapManager()
-{
-    shadowMapManager = QSSGRenderShadowMap::create(*renderer->contextInterface());
 }
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
@@ -1178,7 +1176,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 shaderLight.direction = shaderLight.light->getScalingCorrectDirection();
                 if (shaderLight.shadows) {
                     if (!shadowMapManager)
-                        createShadowMapManager();
+                        shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
 
                     quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
                     ShadowMapModes mapMode = (shaderLight.light->m_lightType != QSSGRenderLight::Type::Directional)

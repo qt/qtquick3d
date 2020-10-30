@@ -38,7 +38,8 @@ QT_BEGIN_NAMESPACE
 
 QSSGRenderShadowMap::QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext)
     : m_context(inContext)
-{}
+{
+}
 
 QSSGRenderShadowMap::~QSSGRenderShadowMap()
 {
@@ -252,11 +253,6 @@ QSSGShadowMapEntry *QSSGRenderShadowMap::getShadowMapEntry(int index)
     }
 
     return nullptr;
-}
-
-QSSGRef<QSSGRenderShadowMap> QSSGRenderShadowMap::create(const QSSGRenderContextInterface &inContext)
-{
-    return QSSGRef<QSSGRenderShadowMap>(new QSSGRenderShadowMap(inContext));
 }
 
 QSSGShadowMapEntry::QSSGShadowMapEntry()

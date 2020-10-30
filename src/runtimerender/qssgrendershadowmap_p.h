@@ -120,11 +120,10 @@ public:
 
     qint32 getShadowMapEntryCount() { return m_shadowMapList.size(); }
 
-    static QSSGRef<QSSGRenderShadowMap> create(const QSSGRenderContextInterface &inContext);
-
 private:
     TShadowMapEntryList m_shadowMapList;
 };
+
 QT_END_NAMESPACE
 
 #endif

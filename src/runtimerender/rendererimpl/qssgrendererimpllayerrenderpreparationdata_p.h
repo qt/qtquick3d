@@ -220,12 +220,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     size_t featureSetHash;
     bool tooManyLightsError;
 
-    // shadow mapps
-    QSSGRef<QSSGRenderShadowMap> shadowMapManager;
+    QSSGRenderShadowMap *shadowMapManager = nullptr;
 
     QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
     virtual ~QSSGLayerRenderPreparationData();
-    void createShadowMapManager();
 
     QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType,
                                                      const QSSGShaderLightList &lights, bool receivesShadows = true);
