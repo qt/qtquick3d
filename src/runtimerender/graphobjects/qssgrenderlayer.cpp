@@ -31,6 +31,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -73,6 +74,11 @@ QSSGRenderLayer::QSSGRenderLayer()
     flags.setFlag(Flag::LayerRenderToTarget);
     flags.setFlag(Flag::LayerEnableDepthTest);
     flags.setFlag(Flag::LayerEnableDepthPrePass);
+}
+
+QSSGRenderLayer::~QSSGRenderLayer()
+{
+    delete renderData;
 }
 
 void QSSGRenderLayer::setProbeOrientation(const QVector3D &angles)

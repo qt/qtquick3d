@@ -186,6 +186,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QVarLengthArray<QRhiShaderResourceBindings *, 4> item2DSrbs;
 
     QSSGRenderLayer();
+    ~QSSGRenderLayer();
 
     void setProbeOrientation(const QVector3D &angles);
 

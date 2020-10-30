@@ -43,6 +43,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
 
