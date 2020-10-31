@@ -160,6 +160,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/glTF2/glTF2Asset.inl
         ../../../3rdparty/assimp/src/code/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/glTF2/glTF2AssetWriter.inl
         ../../../3rdparty/assimp/src/code/glTF2/glTF2Importer.cpp ../../../3rdparty/assimp/src/code/glTF2/glTF2Importer.h
+        ../../../3rdparty/assimp/src/code/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/STL/STLLoader.h
         ../../../3rdparty/assimp/src/contrib/irrXML/CXMLReaderImpl.h
         ../../../3rdparty/assimp/src/contrib/irrXML/heapsort.h
         ../../../3rdparty/assimp/src/contrib/irrXML/irrArray.h
@@ -293,7 +294,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_SIB_IMPORTER
         ASSIMP_BUILD_NO_SMD_IMPORTER
         ASSIMP_BUILD_NO_STEP_IMPORTER
-        ASSIMP_BUILD_NO_STL_IMPORTER
         ASSIMP_BUILD_NO_TERRAGEN_IMPORTER
         ASSIMP_BUILD_NO_X3D_IMPORTER
         ASSIMP_BUILD_NO_XGL_IMPORTER
@@ -315,6 +315,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/PostProcessing
         ../../../3rdparty/assimp/src/code/glTF
         ../../../3rdparty/assimp/src/code/glTF2
+        ../../../3rdparty/assimp/src/code/STL
         ../../../3rdparty/assimp/src/contrib/irrXML
         ../../../3rdparty/assimp/src/contrib/poly2tri
         ../../../3rdparty/assimp/src/contrib/rapidjson/include

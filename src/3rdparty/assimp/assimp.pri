@@ -23,7 +23,6 @@ DEFINES += \
     ASSIMP_BUILD_NO_SMD_IMPORTER \
     ASSIMP_BUILD_NO_MDC_IMPORTER \
     ASSIMP_BUILD_NO_MD5_IMPORTER \
-    ASSIMP_BUILD_NO_STL_IMPORTER \
     ASSIMP_BUILD_NO_LWO_IMPORTER \
     ASSIMP_BUILD_NO_DXF_IMPORTER \
     ASSIMP_BUILD_NO_NFF_IMPORTER \
@@ -116,6 +115,7 @@ INCLUDEPATH += \
         $$PWD/src/code/Blender \
         $$PWD/src/code/FBX \
         $$PWD/src/code/PostProcessing \
+        $$PWD/src/code/STL \
         $$PWD/src/code/glTF \
         $$PWD/src/code/glTF2 \
         $$PWD/src/code/CApi \
@@ -296,7 +296,8 @@ HEADERS += \
     $$PWD/src/code/glTF2/glTF2Asset.h \
     $$PWD/src/code/glTF2/glTF2Asset.inl \
     $$PWD/src/code/glTF2/glTF2AssetWriter.inl \
-    $$PWD/src/code/glTF2/glTF2Importer.h
+    $$PWD/src/code/glTF2/glTF2Importer.h \
+    $$PWD/src/code/STL/STLLoader.h
 
 SOURCES += \
     $$PWD/src/code/Common/Assimp.cpp \
@@ -385,7 +386,8 @@ SOURCES += \
     $$PWD/src/code/PostProcessing/ScaleProcess.cpp \
     $$PWD/src/code/glTF/glTFImporter.cpp \
     $$PWD/src/code/glTF/glTFCommon.cpp \
-    $$PWD/src/code/glTF2/glTF2Importer.cpp
+    $$PWD/src/code/glTF2/glTF2Importer.cpp \
+    $$PWD/src/code/STL/STLLoader.cpp
 
 # IrrXML (needed for DAE/Collada support)
 HEADERS += \
