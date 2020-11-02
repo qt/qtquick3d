@@ -40,18 +40,40 @@ QT_BEGIN_NAMESPACE
     \qmltype DefaultMaterial
     \inherits Material
     \inqmlmodule QtQuick3D
-    \brief Defines a Material generated depending on which properties are set.
+    \brief Lets you define a material for 3D items using the specular/glossiness workflow.
 
-    Before a Model can be rendered in a scene, it must have at least one
-    material to define how the mesh is shaded. The DefaultMaterial is the
-    easiest way to define such a material. Even if you define a
-    DefaultMaterial with no properties set, a valid mesh will be rendered,
-    because the mesh defines some sensible defaults.
+    Before a Model can be rendered in a scene, it must have at least one material attached
+    to it that describes how the mesh should be shaded. The DefaultMaterial is an easy to
+    use material that lets you describe your material using a specular/glossiness type workflow.
+    The material has sensible default and can be used to shade a model without changing any properties.
 
-    As you change the properties of the DefaultMaterial, behind the scenes
-    new shaders are generated, and the property values are bound. The
-    complexity of a shader depends on a combination of the properties that
-    are set on it, and the context of the scene itself.
+    \section1 Specular/Glossiness workflow
+
+    The Default material provides a way to create materials using a specular/glossiness
+    type workflow. The main properties of the material are controlled through the
+    \l {DefaultMaterial::specularMap} {specular}, \l {DefaultMaterial::roughnessMap} {roughness},
+    and the \l {DefaultMaterial::diffuseMap} {diffuse color} property.
+
+    \section2 Specular
+
+    The \l {DefaultMaterial::specularMap} {specular reflectivity} describes the specular
+    amount and color of an object's surface. For reflective materials the main color
+    contribution, comes from this property.
+
+    \section2 Glossiness (Roughness)
+
+    The glossiness of a surface depends on how smooth or irregular the surface is.
+    A smooth surface will have a more intense light reflection then a rough surface, where
+    the light reflection will be more spread out. In the Default material the material's glossiness
+    is controlled through the \l {DefaultMaterial::roughnessMap} {roughness} property.
+
+    \section2 Diffuse color
+
+    The \l {DefaultMaterial::diffuseMap} {diffuse color} property describes the basic color
+    of the material, and unlike the \l {PrincipledMaterial}'s base color, the diffuse color
+    does not contain any information about the material reflectance. However, for
+    reflective surfaces the diffuse color should be set to a black tint, as that will allow
+    for the specular color to contribute.
 */
 
 /*!
@@ -94,8 +116,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty color DefaultMaterial::diffuseColor
 
-    This property determines the base color for the material. Set to black to
-    create a purely-specular material (e.g. metals or mirrors).
+    This property determines the diffuse color (albedo) for the material. Setting the
+    diffuse color to a black tint will create a purely-specular material (e.g. metals or mirrors).
  */
 
 /*!
