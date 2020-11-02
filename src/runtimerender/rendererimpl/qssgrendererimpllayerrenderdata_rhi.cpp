@@ -923,15 +923,13 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     ps.colorAttachmentCount = orthographic ? 1 : 6;
 
     // construct a key that is unique for this frame (we use a dynamic buffer
-    // so even if the same key gets used in the next frame, just doing
-    // updateDynamicBuffer() on the same QRhiBuffer is ok due to QRhi's
-    // internal double buffering)
+    // so even if the same key gets used in the next frame, just updating the
+    // contents on the same QRhiBuffer is ok due to QRhi's internal double buffering)
     QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ map, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ShadowBlur });
     if (!dcd.ubuf) {
         dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64 + 8);
         dcd.ubuf->create();
     }
-    QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
 
     // the blur also needs Y reversed in order to get correct results (while
     // the second blur step would end up with the correct orientation without
@@ -942,9 +940,11 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     // in NDC so that kind of self-corrects...
     if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
         flipY.data()[5] = -1.0f;
-    rub->updateDynamicBuffer(dcd.ubuf, 0, 64, flipY.constData());
     float cameraProperties[2] = { shadowFilter, shadowMapFar };
-    rub->updateDynamicBuffer(dcd.ubuf, 64, 8, cameraProperties);
+    char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+    memcpy(ubufData, flipY.constData(), 64);
+    memcpy(ubufData + 64, cameraProperties, 8);
+    dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
@@ -958,7 +958,7 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
     QSSGRhiQuadRenderer::Flags quadFlags;
     if (orthographic) // orthoshadowshadowblurx and y have attr_uv as well
         quadFlags |= QSSGRhiQuadRenderer::UvCoords;
-    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
     renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, quadFlags);
 
     // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
@@ -1188,30 +1188,27 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
 
     const int UBUF_SIZE = 72;
     QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &inData.layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::AoTexture }));
-    QRhiBuffer *&ubuf = dcd.ubuf;
-    if (!ubuf) {
-        ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
-        ubuf->create();
-    } else if (ubuf->size() < UBUF_SIZE) {
-        ubuf->setSize(UBUF_SIZE);
-        ubuf->create();
+    if (!dcd.ubuf) {
+        dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, UBUF_SIZE);
+        dcd.ubuf->create();
     }
 
-    QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-    rub->updateDynamicBuffer(ubuf, 0, 16, &aoProps);
-    rub->updateDynamicBuffer(ubuf, 16, 16, &aoProps2);
-    rub->updateDynamicBuffer(ubuf, 32, 16, &aoScreenConst);
-    rub->updateDynamicBuffer(ubuf, 48, 16, &uvToEyeConst);
-    rub->updateDynamicBuffer(ubuf, 64, 8, &cameraProps);
+    char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+    memcpy(ubufData, &aoProps, 16);
+    memcpy(ubufData + 16, &aoProps2, 16);
+    memcpy(ubufData + 32, &aoScreenConst, 16);
+    memcpy(ubufData + 48, &uvToEyeConst, 16);
+    memcpy(ubufData + 64, &cameraProps, 8);
+    dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
     QSSGRhiShaderResourceBindingList bindings;
-    bindings.addUniformBuffer(0, VISIBILITY_ALL, ubuf);
+    bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
     bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, inData.m_rhiDepthTexture.texture, sampler);
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-    inData.renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+    inData.renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
     inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, {});
 }
 
@@ -1457,9 +1454,6 @@ void QSSGLayerRenderData::rhiPrepare()
         if (layer.background == QSSGRenderLayer::Background::SkyBox) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-            QRhi *rhi = rhiCtx->rhi();
-            QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-
             QRhiTexture *texture = layer.lightProbe->m_textureData.m_rhiTexture;
             QSSGRhiShaderResourceBindingList bindings;
 
@@ -1473,10 +1467,10 @@ void QSSGLayerRenderData::rhiPrepare()
 
             QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
 
-            QRhiBuffer *&ubuf = dcd.ubuf;
-            if (!ubuf) {
-                ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                ubuf->create();
+            QRhi *rhi = rhiCtx->rhi();
+            if (!dcd.ubuf) {
+                dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+                dcd.ubuf->create();
             }
 
             const QMatrix4x4 &projection = camera->projection;
@@ -1486,18 +1480,19 @@ void QSSGLayerRenderData::rhiPrepare()
             // orientation
             const QMatrix4x4 &rotationMatrix(layer.probeOrientation);
 
-            constexpr int matrixSize = 4 * 4 * sizeof(float);
-            rub->updateDynamicBuffer(ubuf, 0, matrixSize, viewMatrix.constData());
-            rub->updateDynamicBuffer(ubuf, matrixSize, matrixSize, projection.constData());
-            rub->updateDynamicBuffer(ubuf, 2 * matrixSize, matrixSize, rotationMatrix.constData());
-            rub->updateDynamicBuffer(ubuf, 3 * matrixSize, sizeof(float), &adjustY);
-            rub->updateDynamicBuffer(ubuf, 3 * matrixSize + sizeof(float), sizeof(float), &exposure);
+            char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+            memcpy(ubufData, viewMatrix.constData(), 64);
+            memcpy(ubufData + 64, projection.constData(), 64);
+            memcpy(ubufData + 128, rotationMatrix.constData(), 64);
+            memcpy(ubufData + 192, &adjustY, 4);
+            memcpy(ubufData + 196, &exposure, 4);
+            dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-            bindings.addUniformBuffer(0, VISIBILITY_ALL, ubuf);
+            bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
 
             layer.skyBoxSrb = rhiCtx->srb(bindings);
 
-            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 
             cb->debugMarkEnd();
         }
