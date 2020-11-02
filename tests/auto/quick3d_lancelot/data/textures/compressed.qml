@@ -99,9 +99,7 @@ Rectangle {
         }
 
         DirectionalLight {
-            id: dirLight1
-            brightness: 1.5
-            eulerRotation.y: 60
+            eulerRotation.y: 180
             ambientColor: Qt.rgba(1.0, 1.0, 1.0, 1.0);
         }
 
@@ -127,7 +125,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(-125, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: o1_bc1.source }
+                    diffuseMap: Texture { source: o1_bc1.source; flipV: true }
                 } ]
         }
 
@@ -136,7 +134,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(0, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: t2_bc2.source }
+                    diffuseMap: Texture { source: t2_bc2.source; flipV: true }
                 } ]
         }
 

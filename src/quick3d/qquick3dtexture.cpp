@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 
     Texture objects can source image data from:
     \list
-    \li an image file by using the \l source property,
+    \li an image or texture file by using the \l source property,
     \li a Qt Quick \l Item by using the sourceItem property,
     \li or by setting the \l textureData property to a \l TextureData item
     subclass for defining the custom texture contents.
@@ -130,8 +130,8 @@ QQuick3DTexture::~QQuick3DTexture()
 /*!
     \qmlproperty url QtQuick3D::Texture::source
 
-    This property holds the location of an image file containing the data used
-    by the texture.
+    This property holds the location of an image or texture file containing the data used by the
+    texture.
 
     The property is a URL, with the same rules as other source properties, such
     as \l{Image::source}{Image.source}. With Texture, only the \c qrc and \c
@@ -139,10 +139,15 @@ QQuick3DTexture::~QQuick3DTexture()
     relative path, it is assumed to be relative to the component's (i.e. the
     \c{.qml} file's) location.
 
-    A Texture should use one method to provide image data, and set only one of
-    source, \l sourceItem, or \l textureData.
+    The source file can have any conventional image file format
+    \l{QImageReader::supportedImageFormats()}{supported by Qt}. In addition, Texture supports the
+    same \l [QtQuick]{Compressed Texture Files}{compressed texture file types} as QtQuick::Image.
 
-    \sa sourceItem, textureData
+    \note As Quick has the Y axis pointing downwards, while in Qt Quick 3D it points upwards, the
+    orientation of textures may appear different by default. The \l flipV property may be used to
+    change the orientation.
+
+    \sa sourceItem, textureData, flipV
 */
 QUrl QQuick3DTexture::source() const
 {
