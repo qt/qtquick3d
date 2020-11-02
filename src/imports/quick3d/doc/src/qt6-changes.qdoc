@@ -28,6 +28,8 @@
 /*!
     \page qtquick3d-changes-qt6.html
     \title Porting to Qt 6 - Qt Quick 3D
+    \ingroup porting-guides-5-to-6
+    \brief Migrate Qt Quick 3D to Qt 6.
 
     Qt 6 is a result of the conscious effort to make the framework more
     efficient and easy to use.
