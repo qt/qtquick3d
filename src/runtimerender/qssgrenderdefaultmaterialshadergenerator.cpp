@@ -224,21 +224,28 @@ static void addTranslucencyIrradiance(QSSGStageGeneratorBase &infragmentShader,
                      << lightVarNames.normalizedDirection << ", tmp_light_color, qt_material_properties2.w).rgb;\n";
 }
 
-static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNames(size_t lightIdx)
+static QVarLengthArray<QSSGMaterialShaderGenerator::ShadowVariableNames, 16> q3ds_shadowMapVariableNames;
+
+static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNames(qsizetype lightIdx)
 {
-    QSSGMaterialShaderGenerator::ShadowVariableNames names;
-    names.shadowMapStem = QByteArrayLiteral("qt_shadowmap");
-    names.shadowCubeStem = QByteArrayLiteral("qt_shadowcube");
-    char buf[16];
-    qsnprintf(buf, 16, "%d", int(lightIdx));
-    names.shadowCubeStem.append(buf);
-    names.shadowMapStem.append(buf);
-    names.shadowMatrixStem = names.shadowMapStem;
-    names.shadowMatrixStem.append("_matrix");
-    names.shadowCoordStem = names.shadowMapStem;
-    names.shadowCoordStem.append("_coord");
-    names.shadowControlStem = names.shadowMapStem;
-    names.shadowControlStem.append("_control");
+    if (lightIdx >= q3ds_shadowMapVariableNames.count())
+        q3ds_shadowMapVariableNames.resize(lightIdx + 1);
+
+    QSSGMaterialShaderGenerator::ShadowVariableNames &names(q3ds_shadowMapVariableNames[lightIdx]);
+    if (names.shadowMapStem.isEmpty()) {
+        names.shadowMapStem = QByteArrayLiteral("qt_shadowmap");
+        names.shadowCubeStem = QByteArrayLiteral("qt_shadowcube");
+        char buf[16];
+        qsnprintf(buf, 16, "%d", int(lightIdx));
+        names.shadowCubeStem.append(buf);
+        names.shadowMapStem.append(buf);
+        names.shadowMatrixStem = names.shadowMapStem;
+        names.shadowMatrixStem.append("_matrix");
+        names.shadowCoordStem = names.shadowMapStem;
+        names.shadowCoordStem.append("_coord");
+        names.shadowControlStem = names.shadowMapStem;
+        names.shadowControlStem.append("_control");
+    }
 
     return names;
 }
