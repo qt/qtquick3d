@@ -80,7 +80,7 @@ Window {
     width: 800
     height: 600
     visible: true
-    title: qsTr("Quick3D QuickBall")
+    title: qsTr("Quick3D Quick Ball")
     color: "#000000"
 
     View3D {
@@ -148,7 +148,6 @@ Window {
         }
 
         //! [lights]
-        // Main light, up there
         PointLight {
             x: 400
             y: 1200
@@ -156,6 +155,7 @@ Window {
             shadowMapQuality: Light.ShadowMapQualityHigh
             shadowFactor: 50
             quadraticFade: 2
+            ambientColor: "#202020"
             brightness: gameOn ? 200 : 40
             Behavior on brightness {
                 NumberAnimation {
@@ -164,15 +164,7 @@ Window {
                 }
             }
         }
-
-        // Secondary light, close to the ball starting point
-        PointLight {
-            x: -200
-            y: 50
-            z: 1000
-            brightness: 4
-        }
-        //! [lights]
+       //! [lights]
 
         //! [ball handling]
         MouseArea {
@@ -311,8 +303,8 @@ Window {
                 var hitMargin = ballSize / 2 + targetSize / 2;
                 for (var i = 0; i < targetsNode.targets.length; ++i) {
                     var target = targetsNode.targets[i];
-                    var targetPos = Qt.vector3d(target.x, target.y, target.z);
-                    var hit = ballModel.position.fuzzyEquals(targetPos, hitMargin);
+                    var targetPos = target.scenePosition;
+                    var hit = ballModel.scenePosition.fuzzyEquals(targetPos, hitMargin);
                     if (hit) {
                         target.hit();
                         if (targetsNode.currentTargets <= 0)
@@ -350,6 +342,21 @@ Window {
                     targets.pop().destroy();
                 currentTargets = targets.length;
             }
+            SequentialAnimation on y {
+                running: gameOn
+                loops: Animation.Infinite
+                NumberAnimation {
+                    from: 0
+                    to: 150
+                    duration: 3000
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    to: 0
+                    duration: 1500
+                    easing.type: Easing.InOutQuad
+                }
+            }
         }
         //! [targets node]
 
@@ -370,7 +377,7 @@ Window {
 
                 SequentialAnimation {
                     id: hitAnimation
-                    PropertyAnimation {
+                    NumberAnimation {
                         target: targetNode
                         property: "hide"
                         to: 1
@@ -399,7 +406,7 @@ Window {
                         }
                         bumpAmount: 1.0
                     }
-                    PropertyAnimation on eulerRotation {
+                    Vector3dAnimation on eulerRotation {
                         loops: Animation.Infinite
                         duration: 5000
                         from: Qt.vector3d(0, 0, 0)

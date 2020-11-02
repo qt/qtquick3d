@@ -51,10 +51,10 @@
 
     \snippet quickball/main.qml view functions
 
-    The view also contains two PointLight nodes to light up the scene. The first
-    one is the main light, positioned above the objects and set to cast shadows.
-    Note how brightness is used to darken the playing area when then game has
-    ended. The second light is used to soften the light contrast, as without it
+    The view also contains a PointLight node to light up the scene. It is
+    positioned above the objects and set to cast shadows. Note how brightness is
+    used to darken the playing area when then game has ended. The \l {Light::ambientColor}
+    {ambientColor} property is used to soften the light contrast, as without it the
     bottom parts of the objects would be very dark.
 
     \snippet quickball/main.qml lights
