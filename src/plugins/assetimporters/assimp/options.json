@@ -51,7 +51,7 @@
         "removeRedundantMaterials": {
             "name": "Remove Redundant Materials",
             "description": "Searches for redundant/unreferenced materials and removes them.",
-            "value": true,
+            "value": false,
             "type": "Boolean"
         },
         "fixInfacingNormals": {
