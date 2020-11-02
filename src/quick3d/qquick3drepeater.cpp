@@ -229,6 +229,7 @@ void QQuick3DRepeater::setDelegate(QQmlComponent *delegate)
 
 /*!
     \qmlproperty int QtQuick3D::Repeater3D::count
+    \readonly
 
     This property holds the number of items in the model.
 

@@ -48,6 +48,7 @@ QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
 
 /*!
     \qmlproperty int QtQuick3D::RenderStats::fps
+    \readonly
 
     This property holds the number of frames rendered during the last second.
 */
@@ -58,6 +59,7 @@ int QQuick3DRenderStats::fps() const
 
 /*!
     \qmlproperty float QtQuick3D::RenderStats::frameTime
+    \readonly
 
     This property holds the amount of time elapsed since the last frame, in
     milliseconds.
@@ -69,6 +71,7 @@ float QQuick3DRenderStats::frameTime() const
 
 /*!
     \qmlproperty float QtQuick3D::RenderStats::renderTime
+    \readonly
 
     This property holds the amount of time spent on generating a new frame,
     including both the preparation phase and the recording of draw calls. The
@@ -81,6 +84,7 @@ float QQuick3DRenderStats::renderTime() const
 
 /*!
     \qmlproperty float QtQuick3D::RenderStats::renderPrepareTime
+    \readonly
 
     This property holds the amount of time spent in the preparation phase of
     rendering, in milliseconds. This is a subset of the total render time
@@ -93,6 +97,7 @@ float QQuick3DRenderStats::renderPrepareTime() const
 
 /*!
     \qmlproperty float QtQuick3D::RenderStats::syncTime
+    \readonly
 
     This property holds the amount of time spent inside the sync function, in
     milliseconds. The property values of the objects are updated during the
@@ -105,6 +110,7 @@ float QQuick3DRenderStats::syncTime() const
 
 /*!
     \qmlproperty float QtQuick3D::RenderStats::maxFrameTime
+    \readonly
 
     This property holds the maximum time spent rendering a single frame during
     the last second.

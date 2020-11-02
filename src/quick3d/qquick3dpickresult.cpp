@@ -60,6 +60,7 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
 
 /*!
     \qmlproperty Model PickResult::objectHit
+    \readonly
 
     This property holds the model object hit by the pick.
 */
@@ -70,6 +71,7 @@ QQuick3DModel *QQuick3DPickResult::objectHit() const
 
 /*!
     \qmlproperty float PickResult::distance
+    \readonly
 
     This property holds the distance between the camera and the hit position
     i.e. the length of the ray.
@@ -81,6 +83,7 @@ float QQuick3DPickResult::distance() const
 
 /*!
     \qmlproperty vector2d PickResult::uvPosition
+    \readonly
 
     This property holds the UV position of the hit. The UV position is calculated as
     the normalized local x and y coordinates of the hit point relative to the bounding volume.
@@ -93,6 +96,7 @@ QVector2D QQuick3DPickResult::uvPosition() const
 
 /*!
     \qmlproperty vector3d PickResult::scenePosition
+    \readonly
 
     This property holds the scene position of the hit.
 */

@@ -282,6 +282,7 @@ QQuick3DNode *QQuick3DNode::parentNode() const
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::forward
+    \readonly
 
     This property returns a normalized vector of the nodes forward direction
     in scene space.
@@ -295,6 +296,7 @@ QVector3D QQuick3DNode::forward() const
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::up
+    \readonly
 
     This property returns a normalized vector of the nodes up direction
     in scene space.
@@ -308,6 +310,7 @@ QVector3D QQuick3DNode::up() const
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::right
+    \readonly
 
     This property returns a normalized vector of the nodes right direction
     in scene space.
@@ -320,6 +323,7 @@ QVector3D QQuick3DNode::right() const
 }
 /*!
     \qmlproperty vector3d QtQuick3D::Node::scenePosition
+    \readonly
 
     This property returns the position of the node in scene space.
 
@@ -337,6 +341,7 @@ QVector3D QQuick3DNode::scenePosition() const
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::sceneRotation
+    \readonly
 
     This property returns the rotation of the node in scene space.
 */
@@ -348,6 +353,7 @@ QQuaternion QQuick3DNode::sceneRotation() const
 
 /*!
     \qmlproperty vector3d QtQuick3D::Node::sceneScale
+    \readonly
 
     This property returns the scale of the node in scene space.
 */
@@ -358,6 +364,7 @@ QVector3D QQuick3DNode::sceneScale() const
 
 /*!
     \qmlproperty matrix4x4 QtQuick3D::Node::sceneTransform
+    \readonly
 
     This property returns the global transform matrix for this node.
     \note the return value will be in right-handed coordinates.

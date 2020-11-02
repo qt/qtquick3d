@@ -276,6 +276,7 @@ void QQuick3DLoader::resetSourceComponent()
 
 /*!
     \qmlproperty enumeration QtQuick3D::Loader3D::status
+    \readonly
 
     This property holds the status of QML loading.  It can be one of:
 
@@ -360,6 +361,7 @@ QQuick3DLoader::Status QQuick3DLoader::status() const
 
 /*!
     \qmlproperty real QtQuick3D::Loader3D::progress
+    \readonly
 
     This property holds the progress of loading QML data from the network, from
     0.0 (nothing loaded) to 1.0 (finished).  Most QML files are quite small, so
@@ -443,6 +445,7 @@ void QQuick3DLoader::setAsynchronous(bool a)
 
 /*!
     \qmlproperty object QtQuick3D::Loader3D::item
+    \readonly
     This property holds the top-level object that is currently loaded.
 */
 QObject *QQuick3DLoader::item() const

@@ -200,6 +200,7 @@ QQuick3DSceneEnvironment *QQuick3DViewport::environment() const
 
 /*!
     \qmlproperty QtQuick3D::Node QtQuick3D::View3D::scene
+    \readonly
 
     Holds the root \l Node of the View3D's scene.
 
@@ -267,6 +268,7 @@ QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 
 /*!
     \qmlproperty QtQuick3D::RenderStats QtQuick3D::View3D::renderStats
+    \readonly
 
     This property provides statistics about the rendering of a frame, such as
     \l {RenderStats::fps}{fps}, \l {RenderStats::frameTime}{frameTime},
