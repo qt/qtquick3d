@@ -86,7 +86,7 @@
 
 
     \c AreaLight has been removed for performance reasons. In many cases it can be replaced
-    with \l SpotLight, which was added in Qt Quick 5.15.
+    with \l SpotLight, which was added in Qt Quick 3D 5.15.
 
     \section2 Custom Materials
 
@@ -98,8 +98,9 @@
 
     \l Effect has been enhanced to allow for shader code that is very close to
     what \l CustomMaterial supports, following the same patterns when it comes
-    to structure and built-in keywords. See the \l Effect documentation for
-    details.
+    to structure and built-in keywords. This means that existing effects
+    involving custom shader code will need to be migrated before they can
+    function in Qt 6.0. See the \l Effect documentation for details.
 
     \section2 Principled Material
 
@@ -117,6 +118,21 @@
     \li \image quick3d-principled-qt5.png
     \li \image quick3d-principled-qt6.png
     \endtable
+
+    Some properties change their defaults:
+
+    \list
+    \li \l{PrincipledMaterial::metalness}{metalness} defaults to 0 instead of 1.
+    \li \l{PrincipledMaterial::specularAmount}{specularAmount} defaults to 0.5 instead of 0.
+    \endlist
+
+    \section2 Default Material
+
+    Some properties change their defaults:
+
+    \list
+    \li \l{DefaultMaterial::specularRoughness}{specularRoughness} defaults to 0 instead of 50.
+    \endlist
 
     \section2 Predefined materials
 
