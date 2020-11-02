@@ -301,6 +301,8 @@ MetaInfo {
             version: "1.14"
             requiredImport: "QtQuick3D.Materials"
             QmlSource { source: "./source/custommaterial_template.qml" }
+            ExtraFile { source: "./source/custom_material_default_shader.vert" }
+            ExtraFile { source: "./source/custom_material_default_shader.frag" }
         }
     }
 }

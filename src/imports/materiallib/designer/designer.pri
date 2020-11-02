@@ -34,8 +34,12 @@ AUX_QML_FILES += \
     $$PWD/SteelMilledConcentricMaterialSection.qml \
     $$PWD/SteelMilledConcentricMaterialSpecifics.qml \
     $$PWD/CustomMaterialSection.qml \
-    $$PWD/CustomMaterialSpecifics.qml \
-    $$PWD/source/custommaterial_template.qml
+    $$PWD/CustomMaterialSpecifics.qml
+
+AUX_QML_FILES += \
+    $$PWD/source/custommaterial_template.qml \
+    $$PWD/source/custom_material_default_shader.vert \
+    $$PWD/source/custom_material_default_shader.frag
 
 AUX_QML_FILES += \
     $$PWD/images/custommaterial.png \
