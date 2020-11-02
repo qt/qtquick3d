@@ -234,7 +234,7 @@ struct QSSGModelContext
         if (!model.skeleton)
             model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
         else
-            modelViewProjection = inViewProjection;
+            model.skeleton->calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
     }
 };
 

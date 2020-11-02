@@ -75,10 +75,6 @@ QQuick3DSkeleton::~QQuick3DSkeleton()
 
 QSSGRenderGraphObject *QQuick3DSkeleton::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    auto d = QQuick3DNodePrivate::get(this);
-    d->init();
-    d->m_sceneTransformDirty = false;
-
     if (!node) {
         node = new QSSGRenderSkeleton();
         emit skeletonNodeDirty();

@@ -86,6 +86,7 @@ private:
     QString generateMeshFile(QIODevice &file, const QVector<aiMesh *> &meshes);
     void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
+    void generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx);
     void generateSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
     void processAnimations(QTextStream &output);
     template <typename T>
@@ -109,17 +110,19 @@ private:
 
     QHash<aiNode *, aiCamera *> m_cameras;
     QHash<aiNode *, aiLight *> m_lights;
-    QHash<QString, aiNode *> m_bones;
-    QHash<QString, quint32> m_skeleton;
+
     QVector<QHash<aiNode *, aiNodeAnim *> *> m_animations;
     QHash<aiMaterial *, QString> m_materialIdMap;
     QSet<QString> m_uniqueIds;
     QHash<aiNode *, QString> m_nodeIdMap;
     QHash<aiNode *, QSSGQmlUtilities::PropertyMap::Type> m_nodeTypeMap;
 
-    QHash<QString, qint32> m_boneIndexMap;
+    QHash<QString, aiNode *> m_bones;
+    QHash<aiNode *, quint32> m_skeletonIdxMap;
+    QHash<QString, qint32> m_boneIdxMap;
     QVector<QString> m_skeletonIds;
     QVector<qint32> m_numBonesInSkeleton;
+    QSet<aiNode *> m_generatedBones;
 
     QDir m_savePath;
     QFileInfo m_sourceFile;
