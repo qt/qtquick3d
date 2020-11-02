@@ -94,6 +94,13 @@
     any existing custom materials will have to be substantially rewritten.
     See the \l CustomMaterial documentation for details of the new API.
 
+    \section2 Post-processing Effects
+
+    \l Effect has been enhanced to allow for shader code that is very close to
+    what \l CustomMaterial supports, following the same patterns when it comes
+    to structure and built-in keywords. See the \l Effect documentation for
+    details.
+
     \section2 Principled Material
 
     The \l PrincipledMaterial QML type has been greatly improved in Qt Quick
