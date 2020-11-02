@@ -393,7 +393,7 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("indexOfRefraction"), 0.2f);
     defaultMaterial->insert(QStringLiteral("fresnelPower"), 0.0f);
     defaultMaterial->insert(QStringLiteral("specularAmount"), 1.0f);
-    defaultMaterial->insert(QStringLiteral("specularRoughness"), 50.0f);
+    defaultMaterial->insert(QStringLiteral("specularRoughness"), 0.0f);
     defaultMaterial->insert(QStringLiteral("opacity"), 1.0f);
     defaultMaterial->insert(QStringLiteral("bumpAmount"), 0.0f);
     defaultMaterial->insert(QStringLiteral("translucentFalloff"), 0.0f);
@@ -407,8 +407,8 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.SourceOver"));
     principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Opaque"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
-    principledMaterial->insert(QStringLiteral("metalness"), 1.0f);
-    principledMaterial->insert(QStringLiteral("specularAmount"), 0.0f);
+    principledMaterial->insert(QStringLiteral("metalness"), 0.0f);
+    principledMaterial->insert(QStringLiteral("specularAmount"), 0.5f);
     principledMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::black));
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
     principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
