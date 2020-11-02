@@ -44,12 +44,25 @@
 
     \section1 RHI
 
-    The biggest change is the introduction of the Rendering Hardware Interface, which
-    allows Qt Quick 3D to run on Direct3D, Metal and Vulkan in addition to OpenGL and OpenGL ES.
-    This means that all shader code needs to be updated, and that inline shaders are no longer
-    supported. All shader properties are now URLs referring to binary shader files.
+    From Qt 6.0 onwards, the default adaptation of Qt Quick always renders via a
+    graphics abstraction layer, the Qt Rendering Hardware Interface (RHI),
+    provided by the \l QtGui module. This means that, unlike Qt 5, no direct
+    OpenGL calls are made by the scene graph. Rather, it records resource and
+    draw commands by using the RHI APIs, which then translate the command stream
+    into OpenGL, Vulkan, Metal, or Direct 3D calls. Shader handling is also
+    unified by writing shader code once, compiling to
+    \l{https://www.khronos.org/spir/}{SPIR-V}, and then translating to the
+    language appropriate for the various graphics APIs.
 
-    See the \l {RHI porting guide} for detailed information.
+    For Qt Quick 3D the biggest change in Qt 6.0 is the migration to the common
+    Rendering Hardware Interface, which allows Qt Quick 3D to run on Direct3D,
+    Metal and Vulkan in addition to OpenGL and OpenGL ES.
+
+    Qt Quick and Qt Quick 3D are now fully unified in this regard. Any
+    configuration setting related to the RHI, for example, which graphics API to
+    choose to render with, are applicable to both.
+
+    See \l{Qt Quick 3D Graphics Requirements} for further details.
 
     \section1 Other API changes
 
