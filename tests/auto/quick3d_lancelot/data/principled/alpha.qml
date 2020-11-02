@@ -132,7 +132,7 @@ Rectangle {
             materials: [ PrincipledMaterial {
                     baseColor: "#404080A0"
                     metalness: 0
-                    alphaMode: PrincipledMaterial.Mask // same as the previous (Blend), no cutoff test without a texture map!
+                    alphaMode: PrincipledMaterial.Mask
                 } ]
         }
 
@@ -183,7 +183,7 @@ Rectangle {
                     baseColorMap: tex_rgba
                     metalness: 0
                     alphaMode: PrincipledMaterial.Mask
-                    alphaCutoff: 0 // nothing is cut, effectively should look like Blend
+                    alphaCutoff: 0 // alpha changes to 1 everywhere
                 } ]
         }
 

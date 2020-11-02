@@ -734,6 +734,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 
+    // alpha cutoff
+    if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
+        fragmentShader << "    if (qt_diffuseColor.a < qt_material_properties3.y)\n"
+                       << "        qt_diffuseColor = vec4(0.0);\n"
+                       << "    else\n"
+                       << "        qt_diffuseColor.a = 1.0;\n";
+    }
+
     if (hasLighting) {
         if (specularLightingEnabled) {
             vertexShader.generateViewVector();
@@ -1095,16 +1103,20 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         if (hasImage) {
-            fragmentShader.append("    vec4 qt_texture_color;");
+            bool texColorDeclared = false;
             for (QSSGRenderableImage *image = firstImage; image; image = image->m_nextImage) {
-                // Various maps are handled on a different locations
-                if (image->m_mapType == QSSGRenderableImage::Type::Bump || image->m_mapType == QSSGRenderableImage::Type::Normal
-                        || image->m_mapType == QSSGRenderableImage::Type::SpecularAmountMap
-                        || image->m_mapType == QSSGRenderableImage::Type::Roughness || image->m_mapType == QSSGRenderableImage::Type::Translucency
-                        || image->m_mapType == QSSGRenderableImage::Type::Metalness || image->m_mapType == QSSGRenderableImage::Type::Occlusion
-                        || image->m_mapType == QSSGRenderableImage::Type::LightmapIndirect
-                        || image->m_mapType == QSSGRenderableImage::Type::LightmapRadiosity) {
+                // map types other than these 4 are handled elsewhere
+                if (image->m_mapType != QSSGRenderableImage::Type::LightmapShadow
+                        && image->m_mapType != QSSGRenderableImage::Type::Specular
+                        && image->m_mapType != QSSGRenderableImage::Type::Opacity
+                        && image->m_mapType != QSSGRenderableImage::Type::Emissive)
+                {
                     continue;
+                }
+
+                if (!texColorDeclared) {
+                    fragmentShader.append("    vec4 qt_texture_color;");
+                    texColorDeclared = true;
                 }
 
                 QByteArray texSwizzle;
@@ -1124,20 +1136,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << "    qt_texture_color.rgb = qt_texture_color.a > 0.0 ? qt_texture_color.rgb / qt_texture_color.a : vec3(0.0);\n";
 
                 switch (image->m_mapType) {
-                case QSSGRenderableImage::Type::BaseColor:
-                    // color already taken care of
-                    if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
-                        // Apply the cutoff test. This matches the behavior documented in PrincipledMaterial.alphaMode.
-                        fragmentShader << "    if ((qt_texture_color.a * qt_material_base_color.a) < qt_material_properties3.y) {\n"
-                                          "        fragOutput = vec4(0);\n"
-                                          "        return;\n"
-                                          "    }\n";
-                    }
-                    break;
-                case QSSGRenderableImage::Type::Diffuse: // assume images are premultiplied.
-                    // color already taken care of
-                    fragmentShader.append("    global_diffuse_light.a *= qt_material_base_color.a * qt_texture_color.a;");
-                    break;
                 case QSSGRenderableImage::Type::LightmapShadow:
                     // We use image offsets.z to switch between incoming premultiplied textures or
                     // not premultiplied textures.
@@ -1161,7 +1159,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb) * qt_texture_color.a;");
                     break;
                 default:
-                    Q_ASSERT(false); // fallthrough intentional
+                    Q_ASSERT(false);
+                    break;
                 }
             }
         }

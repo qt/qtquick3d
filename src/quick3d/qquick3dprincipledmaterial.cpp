@@ -323,33 +323,34 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty enumeration PrincipledMaterial::alphaMode
 
-    This property specifies how the alpha channel of a \l{baseColorMap}{base
-    color map} is used. When sampling a base color map, the effective alpha
-    value is the sampled alpha multiplied by the \l baseColor alpha. What
-    happens then is controlled by this property:
+    This property specifies how the alpha color value from \l baseColor and the
+    alpha channel of a \l{baseColorMap}{base color map} are used.
+
+    \note The alpha cutoff test only considers the base color alpha. \l opacity
+    and \l Model::opacity are not taken into account there.
+
+    \note When sampling a base color map, the effective alpha value is the
+    sampled alpha multiplied by the \l baseColor alpha.
 
     \value PrincipledMaterial.Default No test is applied, the effective alpha
-    value is passed on as-is. Note that an alpha less than \c 1.0 does not
-    automatically imply alpha blending, the object with the material may still
-    be treated as opaque, if no other relevant properties (such as, an opacity
-    less than 1, or the presence of an opacity map) trigger treating the object
-    as semi-transparent. To ensure alpha blending happens, set \c Blend instead.
-
-    \value PrincipledMaterial.Mask A test based on \l alphaCutoff is applied.
-    If the effective alpha value falls below \l alphaCutoff, the fragment is
-    changed to fully transparent. This mode implies \c Blend as well.
+    value is passed on as-is. Note that a \l baseColor alpha less than \c 1.0
+    does not automatically imply alpha blending, the object with the material
+    may still be treated as opaque, if no other relevant properties (such as,
+    an opacity less than 1, or the presence of an opacity map) trigger treating
+    the object as semi-transparent. To ensure alpha blending happens, set \c
+    Blend instead.
 
     \value PrincipledMaterial.Blend No cutoff test is applied, but guarantees
     that alpha blending happens. The object with this material will therefore
-    no longer be treated as opaque.
+    never be treated as opaque by the renderer.
 
-    \note The cutoff test only considers the base color alpha. \l opacity is
-    not taken into account there.
-
-    Additionally, the Blend value can be useful also when a base color map is
-    not used, but the alpha in \l baseColor is smaller than 1 since this then
-    ensures that alpha blending happens even when \l blendMode or \l opacity
-    would not imply it.
+    \value PrincipledMaterial.Mask A test based on \l alphaCutoff is applied.
+    If the effective alpha value falls below \l alphaCutoff, the fragment is
+    changed to fully transparent. Otherwise the alpha is changed to 1, so that
+    the fragment will become fully opaque. This mode implies \c Blend, meaning
+    an object with a material having alphaMode set to \c Mask is rendered
+    together with the semi-transparent objects, in back to front order,
+    regardless of the cutoff test's result.
 
     \sa alphaCutoff
 */
