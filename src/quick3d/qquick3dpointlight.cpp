@@ -51,7 +51,95 @@ QT_BEGIN_NAMESPACE
     \l quadraticFade properties. Light attenuation is calculated using the formula:
     \l {constantFade} + \c distance * (\l {linearFade} * 0.01) + \c distance * (\l {quadraticFade} * 0.0001)^2
 
-    For usage examples, see \l{Qt Quick 3D - Lights Example}.
+    \section2 A simple example: shading a sphere in three different ways
+
+    Take a scene containing a sphere in front of a scaled up rectangle in the
+    background. The default base color of the PrincipledMaterial of the
+    rectangle is white.
+
+    Without any lights and disabling light-related shading for the two meshes,
+    we get the following:
+
+    \qml
+    import QtQuick
+    import QtQuick3D
+    View3D {
+        anchors.fill: parent
+
+        PerspectiveCamera { z: 600 }
+
+        Model {
+            source: "#Rectangle"
+            scale: Qt.vector3d(10, 10, 10)
+            z: -100
+            materials: PrincipledMaterial {
+                lighting: PrincipledMaterial.NoLighting
+            }
+        }
+
+        Model {
+            source: "#Sphere"
+            scale: Qt.vector3d(2, 2, 2)
+            materials: PrincipledMaterial {
+                lighting: PrincipledMaterial.NoLighting
+                baseColor: "#40c060"
+                roughness: 0.1
+            }
+        }
+    }
+    \endqml
+
+    \image pointlight-1.png
+
+    Adding a directional light, emitting down the Z axis by default, leads to the following:
+
+    \qml
+    import QtQuick
+    import QtQuick3D
+    View3D {
+        anchors.fill: parent
+
+        PerspectiveCamera { z: 600 }
+
+        DirectionalLight { }
+
+        Model {
+            source: "#Rectangle"
+            scale: Qt.vector3d(10, 10, 10)
+            z: -100
+            materials: PrincipledMaterial { }
+        }
+
+        Model {
+            source: "#Sphere"
+            scale: Qt.vector3d(2, 2, 2)
+            materials: PrincipledMaterial {
+                baseColor: "#40c060"
+                roughness: 0.1
+            }
+        }
+    }
+    \endqml
+
+    \image pointlight-2.png
+
+    What if we now replace DirectionalLight with:
+
+    \qml
+        PointLight {
+            z: 300
+        }
+    \endqml
+
+    The white colored PointLight here is moved on the Z axis so that it is
+    halfway between the camera and the center of the scene. Unlike
+    DirectionalLight, the rotation of the PointLight does not matter, whereas
+    its position is significant. The diminishing intensity is visible here,
+    especially on the rectangle mesh in the background.
+
+    \image pointlight-3.png
+
+    For more usage examples, see \l{Qt Quick 3D - Lights Example}.
 
     \sa DirectionalLight, SpotLight
 */
