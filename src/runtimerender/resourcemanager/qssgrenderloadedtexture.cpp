@@ -33,7 +33,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
-#include <QtGui/QImage>
+#include <QtGui/QImageReader>
 #include <QtMath>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -630,20 +630,15 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
     QString fileName;
     inFactory.getPathForFile(inPath, fileName);
     if (theStream && inPath.size() > 3) {
-        if (inPath.endsWith(QStringLiteral("png"), Qt::CaseInsensitive) || inPath.endsWith(QStringLiteral("jpg"), Qt::CaseInsensitive)
-            || inPath.endsWith(QStringLiteral("peg"), Qt::CaseInsensitive)
-            || inPath.endsWith(QStringLiteral("gif"), Qt::CaseInsensitive)
-            || inPath.endsWith(QStringLiteral("bmp"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadQImage(fileName, inFlipY);
-        } else if (inPath.endsWith(QStringLiteral("dds"), Qt::CaseInsensitive)
-                   || inPath.endsWith(QStringLiteral("ktx"), Qt::CaseInsensitive)
-                   || inPath.endsWith(QStringLiteral("pkm"), Qt::CaseInsensitive)
-                   || inPath.endsWith(QStringLiteral("astc"), Qt::CaseInsensitive)) {
-            theLoadedImage = loadCompressedImage(fileName, inFlipY);
-        } else if (inPath.endsWith(QStringLiteral("hdr"), Qt::CaseInsensitive)) {
+        QByteArray ext = inPath.mid(inPath.lastIndexOf(QLatin1Char('.')) + 1).toLower().toUtf8();
+        if (ext == "hdr") {
             // inFormat is a suggestion that's only relevant for HDR images
             // (tells if we want want RGBA16F or RGBE-on-RGBA8)
             theLoadedImage = loadHdrImage(theStream, inFormat);
+        } else if (QTextureFileReader::supportedFileFormats().contains(ext)) {
+            theLoadedImage = loadCompressedImage(fileName, inFlipY);
+        } else if (QImageReader::supportedImageFormats().contains(ext)) {
+            theLoadedImage = loadQImage(fileName, inFlipY);
         } else {
             qCWarning(INTERNAL_ERROR, "Unrecognized image extension: %s", qPrintable(inPath));
         }
