@@ -52,6 +52,66 @@ QT_BEGIN_NAMESPACE
     \l quadraticFade properties. Light attenuation is calculated using the formula:
     \l {constantFade} + \c distance * (\l {linearFade} * 0.01) + \c distance * (\l {quadraticFade} * 0.0001)^2
 
+    Let's look at a simple example. Here a SpotLight is placed at 300 on the Z
+    axis, so halfway between the camera and the scene center. By default the
+    light is emitting in the direction of the Z axis. The \l brightness is
+    increased to 10 to make it look more like a typical spot light.
+
+    \qml
+    import QtQuick
+    import QtQuick3D
+    View3D {
+        anchors.fill: parent
+
+        PerspectiveCamera { z: 600 }
+
+        SpotLight {
+            z: 300
+            brightness: 10
+            ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        }
+
+        Model {
+            source: "#Rectangle"
+            scale: Qt.vector3d(10, 10, 10)
+            z: -100
+            materials: PrincipledMaterial { }
+        }
+
+        Model {
+            source: "#Sphere"
+            scale: Qt.vector3d(2, 2, 2)
+            materials: PrincipledMaterial {
+                baseColor: "#40c060"
+                roughness: 0.1
+            }
+        }
+    }
+    \endqml
+
+    \image spotlight-1.png
+
+    Rotations happens similarly to \l DirectionalLight. Here we want to light to
+    emit more to the right, so we rotate around the Y axis by -20 degrees. The
+    cone is reduced by setting coneAngle to 30 instead of the default 40.  We
+    also make the intensity start diminish earlier, by changing innerConeAngle
+    to 10.
+
+    \qml
+    SpotLight {
+        z: 300
+        brightness: 10
+        ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
+        eulerRotation.y: -20
+        coneAngle: 30
+        innerConeAngle: 10
+    }
+    \endqml
+
+    \image spotlight-2.png
+
+    For further usage examples, see \l{Qt Quick 3D - Lights Example}.
+
     \sa DirectionalLight, PointLight
 */
 
