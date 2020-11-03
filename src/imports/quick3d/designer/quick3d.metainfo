@@ -14,7 +14,7 @@ MetaInfo {
             name: "Camera Perspective"
             category: "Qt Quick 3D"
             libraryIcon: "images/camera.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             Property { name: "z"; type: "int"; value: 500; }
         }
@@ -34,7 +34,7 @@ MetaInfo {
             name: "Camera Orthographic"
             category: "Qt Quick 3D"
             libraryIcon: "images/camera.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             Property { name: "z"; type: "int"; value: 500; }
         }
@@ -54,7 +54,7 @@ MetaInfo {
             name: "Camera Frustum"
             category: "Qt Quick 3D"
             libraryIcon: "images/camera.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             Property { name: "z"; type: "int"; value: 500; }
         }
@@ -74,27 +74,26 @@ MetaInfo {
             name: "Camera Custom"
             category: "Qt Quick 3D"
             libraryIcon: "images/camera.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             Property { name: "z"; type: "int"; value: 500; }
         }
     }
     Type {
         name: "QtQuick3D.CustomMaterial"
-        icon: "images/material16.png"
+        icon: "images/custommaterial16.png"
 
         Hints {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
-            canBeContainer: false
         }
 
         ItemLibraryEntry {
             name: "Custom Material"
             category: "Qt Quick 3D"
-            libraryIcon: "images/material.png"
-            version: "1.0"
+            libraryIcon: "images/custommaterial.png"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
@@ -106,14 +105,13 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
-            canBeContainer: false
         }
 
         ItemLibraryEntry {
             name: "Default Material"
             category: "Qt Quick 3D"
             libraryIcon: "images/material.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             Property { name: "diffuseColor"; type: "color"; value: "green"; }
         }
@@ -126,14 +124,13 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
-            canBeContainer: false
         }
 
         ItemLibraryEntry {
             name: "Principled Material"
             category: "Qt Quick 3D"
             libraryIcon: "images/material.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             Property { name: "baseColor"; type: "color"; value: "#ff000000"; }
             Property { name: "metalness"; type: "int"; value: "0"; }
@@ -155,7 +152,7 @@ MetaInfo {
             name: "Texture"
             category: "Qt Quick 3D"
             libraryIcon: "images/texture.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
@@ -174,7 +171,7 @@ MetaInfo {
             name: "Light Directional"
             category: "Qt Quick 3D"
             libraryIcon: "images/light.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
@@ -193,7 +190,7 @@ MetaInfo {
             name: "Light Point"
             category: "Qt Quick 3D"
             libraryIcon: "images/light.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
@@ -212,13 +209,13 @@ MetaInfo {
             name: "Light Spot"
             category: "Qt Quick 3D"
             libraryIcon: "images/light.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.Model"
-        icon: "images/cube16.png"
+        icon: "images/model16.png"
 
         Hints {
             visibleInNavigator: true
@@ -232,14 +229,14 @@ MetaInfo {
             name: "Cube"
             category: "Qt Quick 3D"
             libraryIcon: "images/cube.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             QmlSource { source: "./source/cube_model_template.qml" }
         }
     }
     Type {
         name: "QtQuick3D.Model"
-        icon: "images/sphere16.png"
+        icon: "images/model16.png"
 
         Hints {
             visibleInNavigator: true
@@ -253,14 +250,14 @@ MetaInfo {
             name: "Sphere"
             category: "Qt Quick 3D"
             libraryIcon: "images/sphere.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             QmlSource { source: "./source/sphere_model_template.qml" }
         }
     }
     Type {
         name: "QtQuick3D.Model"
-        icon: "images/cylinder16.png"
+        icon: "images/model16.png"
 
         Hints {
             visibleInNavigator: true
@@ -274,14 +271,14 @@ MetaInfo {
             name: "Cylinder"
             category: "Qt Quick 3D"
             libraryIcon: "images/cylinder.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             QmlSource { source: "./source/cylinder_model_template.qml" }
         }
     }
     Type {
         name: "QtQuick3D.Model"
-        icon: "images/plane16.png"
+        icon: "images/model16.png"
 
         Hints {
             visibleInNavigator: true
@@ -295,14 +292,14 @@ MetaInfo {
             name: "Plane"
             category: "Qt Quick 3D"
             libraryIcon: "images/plane.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             QmlSource { source: "./source/plane_model_template.qml" }
         }
     }
     Type {
         name: "QtQuick3D.Model"
-        icon: "images/cone16.png"
+        icon: "images/model16.png"
 
         Hints {
             visibleInNavigator: true
@@ -316,7 +313,7 @@ MetaInfo {
             name: "Cone"
             category: "Qt Quick 3D"
             libraryIcon: "images/cone.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             QmlSource { source: "./source/cone_model_template.qml" }
         }
@@ -336,7 +333,7 @@ MetaInfo {
             name: "Group"
             category: "Qt Quick 3D"
             libraryIcon: "images/group.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
@@ -348,14 +345,13 @@ MetaInfo {
             visibleInNavigator: true
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
-            canBeContainer: false
         }
 
         ItemLibraryEntry {
             name: "Scene Environment"
             category: "Qt Quick 3D"
             libraryIcon: "images/scene.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
@@ -367,9 +363,117 @@ MetaInfo {
             name: "View3D"
             category: "Qt Quick 3D"
             libraryIcon: "images/view3D.png"
-            version: "1.0"
+            version: "6.0"
             requiredImport: "QtQuick3D"
             QmlSource { source: "./source/view3D_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Shader"
+        icon: "images/shaderutil16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Shader"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/shaderutil.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.TextureInput"
+        icon: "images/shaderutil16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Texture Input"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/shaderutil.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.Pass"
+        icon: "images/shaderutil16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Pass"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/shaderutil.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.BufferInput"
+        icon: "images/shadercommand16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Buffer Input"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/shadercommand.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.Buffer"
+        icon: "images/shaderutil16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Buffer"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/shaderutil.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.SetUniformValue"
+        icon: "images/shadercommand16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Set Uniform Value"
+            category: "Qt Quick 3D Custom Shader Utils"
+            libraryIcon: "images/shadercommand.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
         }
     }
 }

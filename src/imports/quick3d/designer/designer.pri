@@ -35,6 +35,20 @@ AUX_QML_FILES += \
     $$PWD/ShadowSection.qml \
     $$PWD/View3DSection.qml \
     $$PWD/View3DSpecifics.qml \
+    $$PWD/BufferSection.qml \
+    $$PWD/BufferSpecifics.qml \
+    $$PWD/BufferInputSection.qml \
+    $$PWD/BufferInputSpecifics.qml \
+    $$PWD/ShaderSection.qml \
+    $$PWD/ShaderSpecifics.qml \
+    $$PWD/PassSection.qml \
+    $$PWD/PassSpecifics.qml \
+    $$PWD/SetUniformValueSection.qml \
+    $$PWD/SetUniformValueSpecifics.qml \
+    $$PWD/TextureInputSection.qml \
+    $$PWD/TextureInputSpecifics.qml \
+
+AUX_QML_FILES += \
     $$PWD/source/view3D_template.qml \
     $$PWD/source/cube_model_template.qml \
     $$PWD/source/sphere_model_template.qml \
@@ -55,6 +69,9 @@ AUX_QML_FILES += \
     $$PWD/images/cube.png \
     $$PWD/images/cube@2x.png \
     $$PWD/images/cube16.png \
+    $$PWD/images/custommaterial.png \
+    $$PWD/images/custommaterial@2x.png \
+    $$PWD/images/custommaterial16.png \
     $$PWD/images/cylinder.png \
     $$PWD/images/cylinder@2x.png \
     $$PWD/images/cylinder16.png \
@@ -67,12 +84,19 @@ AUX_QML_FILES += \
     $$PWD/images/material.png \
     $$PWD/images/material@2x.png \
     $$PWD/images/material16.png \
+    $$PWD/images/model16.png \
     $$PWD/images/plane.png \
     $$PWD/images/plane@2x.png \
     $$PWD/images/plane16.png \
     $$PWD/images/scene.png \
     $$PWD/images/scene@2x.png \
     $$PWD/images/scene16.png \
+    $$PWD/images/shadercommand.png \
+    $$PWD/images/shadercommand@2x.png \
+    $$PWD/images/shadercommand16.png \
+    $$PWD/images/shaderutil.png \
+    $$PWD/images/shaderutil@2x.png \
+    $$PWD/images/shaderutil16.png \
     $$PWD/images/sphere.png \
     $$PWD/images/sphere@2x.png \
     $$PWD/images/sphere16.png \

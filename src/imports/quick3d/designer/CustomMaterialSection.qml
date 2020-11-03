@@ -33,4 +33,95 @@ import QtQuick.Layouts 1.12
 
 Section {
     caption: qsTr("Custom Material")
+
+    width: parent.width
+    SectionLayout {
+        Label {
+            text: qsTr("Shading Mode")
+            tooltip: qsTr("Specifies the type of the material.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "CustomMaterial"
+                model: ["Unshaded", "Shaded"]
+                backendValue: backendValues.shadingMode
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Vertex Shader")
+            tooltip: qsTr("Holds the location of a vertex shader file for this material.")
+        }
+        SecondColumnLayout {
+            UrlChooser {
+                backendValue: backendValues.vertexShader
+                filter: "*.*"
+            }
+        }
+
+        Label {
+            text: qsTr("Fragment Shader")
+            tooltip: qsTr("Holds the location of a fragment shader file for this material.")
+        }
+        SecondColumnLayout {
+            UrlChooser {
+                backendValue: backendValues.fragmentShader
+                filter: "*.*"
+            }
+        }
+
+        Label {
+            text: qsTr("Source Blend")
+            tooltip: qsTr("Specifies the source blend factor.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "CustomMaterial"
+                model: ["NoBlend", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor", "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha", "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor", "ConstantAlpha", "OneMinusConstantAlpha", "SrcAlphaSaturate"]
+                backendValue: backendValues.sourceBlend
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Destination Blend")
+            tooltip: qsTr("Specifies the destination blend factor.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "CustomMaterial"
+                model: ["NoBlend", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor", "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha", "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor", "ConstantAlpha", "OneMinusConstantAlpha", "SrcAlphaSaturate"]
+                backendValue: backendValues.destinationBlend
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Always Dirty")
+            tooltip: qsTr("Always dirty material is refreshed every time it is used by QtQuick3D.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.alwaysDirty.valueToString
+                backendValue: backendValues.alwaysDirty
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Line Width")
+            tooltip: qsTr("Determines the width of the lines when the geometry is using lines or line strips.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 999999
+                minimumValue: 1
+                realDragRange: 10
+                decimals: 2
+                backendValue: backendValues.lineWidth
+                Layout.fillWidth: true
+            }
+        }
+    }
 }
