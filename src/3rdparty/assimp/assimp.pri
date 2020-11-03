@@ -57,6 +57,7 @@ DEFINES += \
     ASSIMP_BUILD_NO_COMPRESSED_IFC \
     ASSIMP_BUILD_NO_EXPORT \
     ASSIMP_BUILD_BOOST_WORKAROUND \
+    ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS \
     NOUNCRYPT
 
 win32: DEFINES += WindowsStore
@@ -271,7 +272,6 @@ HEADERS += \
     $$PWD/src/code/PostProcessing/PretransformVertices.h \
     $$PWD/src/code/PostProcessing/ImproveCacheLocality.h \
     $$PWD/src/code/PostProcessing/JoinVerticesProcess.h \
-    $$PWD/src/code/PostProcessing/LimitBoneWeightsProcess.h \
     $$PWD/src/code/PostProcessing/RemoveRedundantMaterials.h \
     $$PWD/src/code/PostProcessing/RemoveVCProcess.h \
     $$PWD/src/code/PostProcessing/SortByPTypeProcess.h \
@@ -370,7 +370,6 @@ SOURCES += \
     $$PWD/src/code/PostProcessing/PretransformVertices.cpp \
     $$PWD/src/code/PostProcessing/ImproveCacheLocality.cpp \
     $$PWD/src/code/PostProcessing/JoinVerticesProcess.cpp \
-    $$PWD/src/code/PostProcessing/LimitBoneWeightsProcess.cpp \
     $$PWD/src/code/PostProcessing/RemoveRedundantMaterials.cpp \
     $$PWD/src/code/PostProcessing/RemoveVCProcess.cpp \
     $$PWD/src/code/PostProcessing/SortByPTypeProcess.cpp \

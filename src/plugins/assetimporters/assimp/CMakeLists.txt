@@ -139,7 +139,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/PostProcessing/GenVertexNormalsProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/GenVertexNormalsProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ImproveCacheLocality.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ImproveCacheLocality.h
         ../../../3rdparty/assimp/src/code/PostProcessing/JoinVerticesProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/JoinVerticesProcess.h
-        ../../../3rdparty/assimp/src/code/PostProcessing/LimitBoneWeightsProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/LimitBoneWeightsProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/MakeVerboseFormat.cpp ../../../3rdparty/assimp/src/code/PostProcessing/MakeVerboseFormat.h
         ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeGraph.cpp ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeGraph.h
         ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeMeshes.cpp ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeMeshes.h
@@ -298,6 +297,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_X3D_IMPORTER
         ASSIMP_BUILD_NO_XGL_IMPORTER
         ASSIMP_BUILD_NO_X_IMPORTER
+        ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
         NOUNCRYPT
     INCLUDE_DIRECTORIES
         ../../../3rdparty/assimp
