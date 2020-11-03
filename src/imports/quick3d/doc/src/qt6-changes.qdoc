@@ -161,10 +161,31 @@
       \li SteelMilledConcentricMaterial
     \endlist
 
-    \section2 Tesselation and displacement maps
+    \section2 Tessellation and displacement maps
 
     Model tesselation mode is gone due to increased focus on supporting
     embedded hardware. In addition, as a result, displacement map support has
     been removed from materials. Similar effects can be achieved with a
     \l {CustomMaterial}{custom material}.
+
+    \section2 Qt Quick \l{Item}s as children of 3D \l{Node}s
+
+    While syntactically identical, the way 2D child items are handled is quite
+    different internally. In Qt 6.0 there is no implicit render to texture
+    step. Rather, the 2D Qt Quick content is rendered in line, with the
+    appropriate perspective projection, in the same render pass, which provides
+    better performance, lower resource usage, and in some cases potentially
+    improved visual fidelity (with \l Text, for example). See \l{Qt Quick 3D
+    Scenes with 2D Content} for an overview.
+
+    If going through a texture is important for some reason (clipping, opacity),
+    make the 2D \l Item subtree a layer explicitly by setting \c{layer.enabled:
+    true}. This way the behavior is closer to what Qt 5.15 provided.
+
+    The 2D content is no longer centered at the parent Node's origin. Rather, it
+    is the top-level 2D Item's top-left corner that is placed to the 3D Node's
+    origin. Therefore, the top-level 2D Item will often want to specify an
+    anchor, such as, \c{anchors.centerIn: parent}, to get results matching Qt
+    5.15.
+
 */
