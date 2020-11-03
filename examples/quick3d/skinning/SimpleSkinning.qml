@@ -141,12 +141,19 @@ Node {
         //! [skeleton]
         //! [poses]
         inverseBindPoses: [
-            Qt.matrix4x4(1, 0, 0, -0.5, 0, 1, 0, -1, 0, 0, 1, 0, 0, 0, 0, 1),
-            Qt.matrix4x4(1, 0, 0, -0.5, 0, 1, 0, -1, 0, 0, 1, 0, 0, 0, 0, 1)
+            Qt.matrix4x4(1, 0, 0, -0.5,
+                         0, 1, 0, -1,
+                         0, 0, 1, 0,
+                         0, 0, 0, 1),
+            Qt.matrix4x4(1, 0, 0, -0.5,
+                         0, 1, 0, -1,
+                         0, 0, 1, 0,
+                         0, 0, 0, 1)
         ]
         //! [poses]
     }
 
+    //! [animation]
     Timeline {
         id: timeline0
         startFrame: 0
@@ -155,7 +162,7 @@ Node {
         enabled: true
         animations: [
             TimelineAnimation {
-                duration: 1000
+                duration: 5000
                 from: 0
                 to: 1000
                 running: true
@@ -184,4 +191,5 @@ Node {
             }
         }
     }
+    //! [animation]
 }

@@ -55,57 +55,80 @@
 
     \section2  Position data and indexes
 
-    We will draw 8 trianges with 10 vertexes.
-    \image vertexinfo.png "Vertex positions and geomery"
+    We will draw 8 triangles with 10 vertices. The table below shows the QML
+    code and a visualization of the vertices.
 
-    \snippet skinning/SimpleSkinning.qml positions
-    \snippet skinning/SimpleSkinning.qml triangles
+    \table
+    \header
+    \li QML Code
+    \li Visualized
+    \row
+    \li
+        \snippet skinning/SimpleSkinning.qml positions
+        \snippet skinning/SimpleSkinning.qml triangles
+    \li  \image vertexinfo.png "Vertex positions and geomery"
+    \endtable
 
     \section2 Joints and weights data
 
-    Our geometry will have just 2 joint nodes and remaining 2 joint data will be 0.
+    Every vertex needs to specify the indices of the joints that should have an
+    influence on it during the skinning process. For each vertex we store these
+    indices as 4D vectors, limiting the number of joints that may influence a
+    vertex to 4. Our geometry will have just two joint nodes (0 and 1), but
+    since we use 4D vectors we set the remaining two joint indices and their
+    weights to 0.
 
     \snippet skinning/SimpleSkinning.qml joints
 
-    Corresponding 2 weight values are as below.
+    Corresponding weight values are as below.
 
     \snippet skinning/SimpleSkinning.qml weights
 
-    \image jointinfo.png "2 joints in the geometry"
-
     \section2 Skeleton and Joint hierarchy
 
-    These 2 \l {Joint}{Joint}s are connected in a \l Skeleton. We will rotate joint1
-    45 degrees around the z-axis. For skinning, \l Model should have a proper
-    \e skeleton property.
+    For skinning, we add a \e skeleton property to the \l Model:
 
     \snippet skinning/SimpleSkinning.qml skeleton
 
-    \image jointinfo2.png "Initial Skeleton"
+    The two \l {Joint}{Joint}s are connected in a \l Skeleton. We will rotate \c
+    joint1 45 degrees around the z-axis. The images below show how the joints
+    are placed in the geometry and how the initial skeleton is oriented.
 
-    \section2 inverseBindPoses
+    \table
+    \header
+    \li Joints in the geometry
+    \li Initial skeleton
+    \row
+    \li \image jointinfo.png "2 joints in the geometry"
+    \li \image jointinfo2.png "Initial Skeleton"
+    \endtable
 
-    Now the model is placed on the upper right position on the screen.
-
-    \image inverseBindPoses.png "Initial Position"
+    \section2 Placing models using inverseBindPoses
 
     Once a model has a valid \l {Model::skeleton}{skeleton}, it cannot be
     transformed by its global transformation. You need to transform it with
     each \l Joint's transformation. However, it is cumbersome to calculate
-    the Joint's transform when considering the initial positions.
+    the Joint's transform when considering the initial positions. Here,
     \l {Model::inverseBindPoses}{inverseBindPoses} can be used to set the
     initial states of the \l {Joint}{Joint}s. In order to move it to the center,
     we will simply set the same transform, which translates -0.5 along the
     x-axis, and -1.0 along the y-axis.
 
-    \snippet skinning/SimpleSkinning.qml poses
-
-    \image inverseBindPoses2.png "Transformed by InversebindPoses"
+    \table
+    \header
+    \li QML code
+    \li Initial position
+    \li Result
+    \row
+    \li \snippet skinning/SimpleSkinning.qml poses
+    \li \image inverseBindPoses.png "Initial position"
+    \li \image inverseBindPoses2.png "Transformed by InversebindPoses"
+    \endtable
 
     \section1 Animate with Joint nodes
 
-    \image skinning2.png "Final Scene"
+    Now, that we have prepared a skinned object, we can animate it by changing
+    the \l {Joint}{Joint}s' properties, specifically \e eulerRotation.
 
-    Now, we prepared a skinned object and we can animate it with changing
-    \l {Joint}{Joint}s' properties; \e position, \e rotation, \e scale.
+    \snippet skinning/SimpleSkinning.qml animation
 */
