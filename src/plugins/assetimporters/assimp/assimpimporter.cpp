@@ -1436,26 +1436,30 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     // If there is no texture, then there is nothing to generate
     if (texturePath.length == 0)
         return QString();
-    QString texture = QString::fromUtf8(texturePath.C_Str());
+    QString textureName = QString::fromUtf8(texturePath.C_Str());
     // Replace Windows separator to Unix separator
     // so that assets including Windows relative path can be converted on Unix.
-    texture.replace("\\","/");
+    textureName.replace("\\","/");
     QString targetFileName;
-    const QString namedTextureFileName = QStringLiteral("maps/") + getShortFilename(texture.toLatin1().constData())
+    const QString namedTextureFileName = QStringLiteral("maps/") + getShortFilename(textureName.toLatin1().constData())
             + QStringLiteral(".png");
 
     // Is this an embedded texture or a file
-    if (texture.startsWith("*")) {
+    if (textureName.startsWith("*")) {
         // Embedded Texture (already exists)
-        texture.remove(0, 1);
-        targetFileName =  QStringLiteral("maps/") + texture + QStringLiteral(".png");
+        textureName.remove(0, 1);
+        aiTexture *texture = m_scene->mTextures[textureName.toInt()];
+        const char *filename = texture->mFilename.C_Str();
+        if (filename && *filename != '\0' && *filename != '*')
+            textureName = getShortFilename(filename);
+        targetFileName =  QStringLiteral("maps/") + textureName + QStringLiteral(".png");
     } else if (QFileInfo(namedTextureFileName).exists()) {
         // This is an embedded texture, referenced by name in maps/ folder
         targetFileName = namedTextureFileName;
     } else {
         // File Reference (needs to be copied into component)
         // Check that this file exists
-        QString sourcePath(m_sourceFile.absolutePath() + "/" + texture);
+        QString sourcePath(m_sourceFile.absolutePath() + "/" + textureName);
         QFileInfo sourceFile(sourcePath);
         // If it doesn't exist, there is nothing to generate
         if (!sourceFile.exists()) {
