@@ -55,18 +55,10 @@ Rectangle {
     width: 640
     height: 640
 
-    Image {
-        height: 130
-        width: parent.width
-        anchors.fill: parent
-        source: "../shared/maps/checkers1.png"
-        fillMode: Image.Tile
-    }
-
     View3D {
         anchors.fill: parent
         camera: camera
-        renderMode: View3D.Overlay
+        renderMode: View3D.Offscreen
 
         OrthographicCamera {
             id: camera
@@ -74,6 +66,22 @@ Rectangle {
         }
 
         DirectionalLight {
+        }
+
+        Model {
+            source: "#Rectangle"
+            materials: [ DefaultMaterial {
+                    lighting: DefaultMaterial.NoLighting
+                    diffuseMap: Texture {
+                        source: "../shared/maps/checkers1.png"
+                        tilingModeHorizontal: Texture.Repeat
+                        tilingModeVertical: Texture.Repeat
+                        scaleU: 100
+                        scaleV: 100
+                    }
+                } ]
+            z: -500
+            scale: Qt.vector3d(10, 10, 1)
         }
 
         Texture {
