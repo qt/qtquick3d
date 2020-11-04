@@ -243,23 +243,33 @@ QQuick3DNode *QQuick3DViewport::importScene() const
     a performance bottleneck. If this is the case, it might be worth experimenting with other
     modes.
 
+    \value View3D.Offscreen The scene is rendered into an off-screen buffer as an intermediate
+    step. This off-screen buffer is then composited with the rest of the Qt Quick scene.
+
+    \value View3D.Underlay The scene is rendered directly to the window before the rest of
+    the Qt Quick scene is rendered. With this mode, the View3D cannot be placed on top of
+    other Qt Quick items.
+
+    \value View3D.Overlay The scene is rendered directly to the window after Qt Quick is
+    rendered.  With this mode, the View3D will always be on top of other Qt Quick items.
+
+    \value View3D.Inline The View3D's scene graph is embedded into the main scene graph,
+    and the same ordering semantics are applied as to any other Qt Quick \l Item. As this
+    mode can lead to subtle issues, depending on the contents of the scene, due to
+    injecting depth-based 3D content into a 2D scene graph, it is not recommended to be
+    used, unless a specific need arises.
+
+    The default is \c{View3D.Offscreen}.
+
     \note When changing the render mode, it is important to note that \c{View3D.Offscreen} (the
     default) is the only mode which guarantees perfect graphics fidelity. The other modes
     all have limitations that can cause visual glitches, so it is important to check that
     the visual output still looks correct when changing this property.
 
-    \value View3D.Offscreen The scene is rendered into an off-screen buffer as an intermediate
-    step. This off-screen buffer is then composited with the rest of the Qt Quick scene.
-    \value View3D.Underlay The scene is rendered directly to the window before the rest of the
-    Qt Quick scene is rendered. With this mode, the View3D cannot be placed on top of other
-    Qt Quick items.
-    \value View3D.Overlay The scene is rendered directly to the window after Qt Quick is rendered.
-    With this mode, the View3D will always be on top of other Qt Quick items.
-    \value View3D.Inline The View3D's scene graph is embedded into the main scene graph, and the
-    same ordering semantics are applied as to any other Qt Quick \l Item. This may have subtle
-    fidelity issues, depending on how the depth buffer is used in the other parts of the graph.
-
-    The default is \c{View3D.Offscreen}.
+    \note When using the Underlay, Overlay, or Inline modes, it can be useful, and in some
+    cases, required, to disable the Qt Quick scene graph's depth buffer writes via
+    QQuickGraphicsConfiguration::setDepthBufferFor2D() before showing the QQuickWindow or
+    QQuickView hosting the View3D item.
 */
 QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 {
