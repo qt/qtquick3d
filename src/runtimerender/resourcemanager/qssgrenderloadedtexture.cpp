@@ -219,34 +219,25 @@ static inline QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalForm
 QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 flipVertical)
 {
     Q_UNUSED(flipVertical);
-    static constexpr bool systemIsLittleEndian = QSysInfo::ByteOrder == QSysInfo::LittleEndian;
-    QSSGLoadedTexture *retval = nullptr;
+
     QImage image(inPath);
-    switch (image.format()) {
-    case QImage::Format_Mono:
-    case QImage::Format_MonoLSB:
-    case QImage::Format_Indexed8: // Convert palleted images
-        image.convertTo(QImage::Format_RGBA8888_Premultiplied);
-        break;
-    case QImage::Format_RGBA64:
-        image.convertTo(QImage::Format_RGBA8888);
-        break;
-    case QImage::Format_RGBA64_Premultiplied:
-        image.convertTo(QImage::Format_RGBA8888_Premultiplied);
-        break;
-    case QImage::Format_RGBX64:
-        image.convertTo(QImage::Format_RGBX8888);
-        break;
-    default:
-        break;
-    }
-    bool swizzleNeeded = image.pixelFormat().colorModel() == QPixelFormat::RGB
-            && image.pixelFormat().typeInterpretation() == QPixelFormat::UnsignedInteger
-            && systemIsLittleEndian;
-    if (swizzleNeeded)
-        image = std::move(image).rgbSwapped();
-    image = std::move(image).mirrored();
-    retval = new QSSGLoadedTexture;
+    QImage::Format targetFormat = image.format();
+    const QPixelFormat pixFormat = image.pixelFormat();
+    if (image.colorCount()) // a palleted image
+        targetFormat = QImage::Format_RGBA8888;
+    else if (pixFormat.channelCount() == 1)
+        targetFormat = QImage::Format_Grayscale8;
+    else if (pixFormat.alphaUsage() == QPixelFormat::IgnoresAlpha)
+        targetFormat = QImage::Format_RGBX8888;
+    else if (pixFormat.premultiplied() == QPixelFormat::NotPremultiplied)
+        targetFormat = QImage::Format_RGBA8888;
+    else
+        targetFormat = QImage::Format_RGBA8888_Premultiplied;
+
+    image.convertTo(targetFormat); // convert to a format mappable to QRhiTexture::Format
+    image.mirror(); // Flip vertically to the conventional Y-up orientation
+
+    QSSGLoadedTexture *retval = new QSSGLoadedTexture;
     retval->width = image.width();
     retval->height = image.height();
     retval->components = image.pixelFormat().channelCount();
@@ -254,6 +245,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
     retval->data = (void *)retval->image.bits();
     retval->dataSizeInBytes = image.sizeInBytes();
     retval->setFormatFromComponents();
+
     return retval;
 }
 
