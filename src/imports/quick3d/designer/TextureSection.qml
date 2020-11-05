@@ -65,8 +65,8 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 10
-                decimals: 0
+                realDragRange: 2
+                decimals: 2
                 backendValue: backendValues.scaleU
                 Layout.fillWidth: true
             }
@@ -80,8 +80,8 @@ Section {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 10
-                decimals: 0
+                realDragRange: 2
+                decimals: 2
                 backendValue: backendValues.scaleV
                 Layout.fillWidth: true
             }
