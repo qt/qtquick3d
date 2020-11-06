@@ -797,15 +797,23 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             if (Q_UNLIKELY(!property.isValid()))
                 continue;
 
-            if (property.type() == QVariant::UserType) {
+            QVariant::Type propType = property.type();
+            QVariant propValue = property.read(this);
+            if (static_cast<QMetaType::Type>(propType) == QMetaType::QVariant)
+                propType = propValue.type();
+
+            if (propType == QVariant::UserType) {
                 if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
                     textureProperties.push_back(property);
+            } else if (static_cast<QMetaType::Type>(propType) == QMetaType::QObjectStar) {
+                if (qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
+                    textureProperties.push_back(property);
             } else {
-                const auto type = uniformType(property.type());
+                const auto type = uniformType(propType);
                 if (type != QSSGRenderShaderDataType::Unknown) {
-                    uniforms.append({ uniformTypeName(property.type()), property.name() });
-                    effectNode->properties.push_back({ property.name(), uniformTypeName(property.type()),
-                                                       property.read(this), uniformType(property.type()), i});
+                    uniforms.append({ uniformTypeName(propType), property.name() });
+                    effectNode->properties.push_back({ property.name(), uniformTypeName(propType),
+                                                       propValue, uniformType(propType), i});
                     // Track the property changes
                     if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
                         connect(this, property.notifySignal(), this, propertyDirtyMethod);
