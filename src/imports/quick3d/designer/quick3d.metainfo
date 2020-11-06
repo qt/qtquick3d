@@ -95,6 +95,8 @@ MetaInfo {
             libraryIcon: "images/custommaterial.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
+            Property { name: "fragmentShader"; type: "QUrl"; value: "custom_material_default_shader.frag"; }
+            ExtraFile { source: "source/custom_material_default_shader.frag" }
         }
     }
     Type {
@@ -113,7 +115,7 @@ MetaInfo {
             libraryIcon: "images/material.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            Property { name: "diffuseColor"; type: "color"; value: "green"; }
+            Property { name: "diffuseColor"; type: "color"; value: "#4aee45"; }
         }
     }
     Type {
@@ -132,9 +134,7 @@ MetaInfo {
             libraryIcon: "images/material.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            Property { name: "baseColor"; type: "color"; value: "#ff000000"; }
-            Property { name: "metalness"; type: "int"; value: "0"; }
-            Property { name: "roughness"; type: "float"; value: "0.734981"; }
+            Property { name: "baseColor"; type: "color"; value: "#4aee45"; }
         }
     }
     Type {

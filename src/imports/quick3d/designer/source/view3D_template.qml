@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 import QtQuick 2.15
-import QtQuick3D 1.15
+import QtQuick3D 6.0
 
 View3D {
     width: 400
