@@ -245,13 +245,14 @@ void QSSGStageGeneratorBase::buildShaderSourcePass1(QSSGShaderResourceMergeConte
     addShaderOutgoingMap();
     m_mergeContext = nullptr;
 
-    auto iter = m_includes.constBegin();
-    const auto end = m_includes.constEnd();
-    while (iter != end) {
+    // Sort for deterministic shader text when printing/debugging
+    QList<QByteArray> sortedIncludes(m_includes.begin(), m_includes.end());
+    std::sort(sortedIncludes.begin(), sortedIncludes.end());
+
+    for (const auto &include : sortedIncludes) {
         m_finalBuilder.append("#include \"");
-        m_finalBuilder.append(*iter);
+        m_finalBuilder.append(include);
         m_finalBuilder.append("\"\n");
-        ++iter;
     }
 
     appendShaderCode();
