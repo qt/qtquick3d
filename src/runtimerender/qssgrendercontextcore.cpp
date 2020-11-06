@@ -87,14 +87,32 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     init(inApplicationDirectory);
 }
 
+static const QSSGRef<QSSGInputStreamFactory> &q3ds_inputStreamFactory()
+{
+    static QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
+    if (!inputStreamFactory)
+        inputStreamFactory = new QSSGInputStreamFactory;
+    return inputStreamFactory;
+}
+
+// The shader library is a global object, not per-QQuickWindow, hence not owned
+// by the QSSGRenderContextInterface.
+static const QSSGRef<QSSGShaderLibraryManager> &q3ds_shaderLibraryManager()
+{
+    static QSSGRef<QSSGShaderLibraryManager> shaderLibraryManager;
+    if (!shaderLibraryManager)
+        shaderLibraryManager = new QSSGShaderLibraryManager(q3ds_inputStreamFactory());
+    return shaderLibraryManager;
+}
+
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
-    , m_inputStreamFactory(new QSSGInputStreamFactory)
+    , m_inputStreamFactory(q3ds_inputStreamFactory())
     , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
     , m_bufferManager(new QSSGBufferManager(ctx, m_shaderCache, m_inputStreamFactory))
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(new QSSGRenderer)
-    , m_shaderLibraryManager(new QSSGShaderLibraryManager(m_inputStreamFactory))
+    , m_shaderLibraryManager(q3ds_shaderLibraryManager())
     , m_customMaterialSystem(new QSSGCustomMaterialSystem)
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {

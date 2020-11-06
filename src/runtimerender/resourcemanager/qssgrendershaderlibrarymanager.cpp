@@ -71,6 +71,8 @@ static inline char stageKey(QSSGShaderCache::ShaderType type)
 void QSSGShaderLibraryManager::setShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type,
                                                const QByteArray &inSource, const QSSGCustomShaderMetaData &meta)
 {
+    QWriteLocker locker(&m_lock);
+
     const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
     {
         auto it = m_expandedFiles.find(perStageKey);
@@ -122,8 +124,10 @@ void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, co
 
 QByteArray QSSGShaderLibraryManager::getIncludeContents(const QByteArray &inShaderPathKey)
 {
-    auto theInsert = m_expandedFiles.find(inShaderPathKey);
-    const bool found = (theInsert != m_expandedFiles.end());
+    QWriteLocker locker(&m_lock);
+
+    auto theInsert = m_expandedFiles.constFind(inShaderPathKey);
+    const bool found = (theInsert != m_expandedFiles.cend());
 
     QByteArray theReadBuffer;
     if (!found) {
@@ -157,15 +161,20 @@ QByteArray QSSGShaderLibraryManager::getIncludeContents(const QByteArray &inShad
     } else {
         theReadBuffer = theInsert.value();
     }
+
+    locker.unlock();
     resolveIncludeFiles(theReadBuffer, inShaderPathKey);
+
     return theReadBuffer;
 }
 
 QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type)
 {
+    QReadLocker locker(&m_lock);
+
     const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
-    auto it = m_expandedFiles.find(perStageKey);
-    if (it != m_expandedFiles.end())
+    auto it = m_expandedFiles.constFind(perStageKey);
+    if (it != m_expandedFiles.cend())
         return it.value();
 
     qWarning("No shader source stored for key %s", perStageKey.constData());
@@ -174,9 +183,11 @@ QByteArray QSSGShaderLibraryManager::getShaderSource(const QByteArray &inShaderP
 
 QSSGCustomShaderMetaData QSSGShaderLibraryManager::getShaderMetaData(const QByteArray &inShaderPathKey, QSSGShaderCache::ShaderType type)
 {
+    QReadLocker locker(&m_lock);
+
     const QByteArray perStageKey = stageKey(type) + inShaderPathKey;
-    auto it = m_metadata.find(perStageKey);
-    if (it != m_metadata.end())
+    auto it = m_metadata.constFind(perStageKey);
+    if (it != m_metadata.cend())
         return it.value();
 
     qWarning("No shader metadata stored for key %s", perStageKey.constData());

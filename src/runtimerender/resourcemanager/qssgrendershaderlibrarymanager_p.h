@@ -52,7 +52,7 @@
 #include <QtGui/QVector2D>
 
 #include <QtCore/QString>
-#include <QtCore/qmutex.h>
+#include <QtCore/QReadWriteLock>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,8 +91,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     QQsbCollection::EntryMap m_shaderEntries;
 
-    mutable QMutex m_propertyLoadMutex;
     QAtomicInt ref;
+    QReadWriteLock m_lock;
 
     static QString getShaderCodeLibraryDirectory();
 
