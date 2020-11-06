@@ -6,5 +6,5 @@ dependencies:
     ref: 2280779f700ae371aa35544b820d69e70d2da1e3
     required: true
   ../qtshadertools:
-    ref: 0f3e149ec477dc311bc83786da39c8f504e12f55
+    ref: 55e817293d432a999bafff46d333e7153e048ccb
     required: true
