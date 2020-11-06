@@ -952,7 +952,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         else
             material->colorMap = m_baseColorMap->getRenderImage();
 
-        material->color = color::sRGBToLinear(m_baseColor);;
+        material->color = color::sRGBToLinear(m_baseColor);
     }
 
     if (m_dirtyAttributes & EmissiveDirty) {
