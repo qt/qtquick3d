@@ -91,13 +91,18 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty enumeration Material::cullMode
 
-    This property defines whether culling is enabled and which mode is actually enabled.
+    This property defines whether primitive culling is enabled, and, when
+    enabled, which primitives are discarded.
 
-    FrontFace means polygons' winding is clockwise in window coordinates and BackFace means otherwise.
+    The default value is Material.BackFaceCulling.
 
-    \value Material.BackFaceCulling Default; Backface will not be rendered.
-    \value Material.FrontFaceCulling Frontface will not be rendered.
-    \value Material.NoCulling Both faces will be rendered.
+    A triangle is considered front-facing if it has a counter-clockwise
+    winding, meaning its vertices in framebuffer coordinates are in
+    counter-clockwise order.
+
+    \value Material.BackFaceCulling Back-facing triangles are discarded.
+    \value Material.FrontFaceCulling Front-facing triangles are discarded.
+    \value Material.NoCulling No triangles are discarded.
 */
 
 
