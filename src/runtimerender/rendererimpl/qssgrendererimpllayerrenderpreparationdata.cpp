@@ -746,6 +746,13 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inMo
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
 
+    // Up to the BufferManager to employ the appropriate caching mechanisms, so
+    // loadMesh() is expected to be fast if already loaded. Note that preparing
+    // the same QSSGRenderModel in different QQuickWindows (possible when a
+    // scene is shared between View3Ds where the View3Ds belong to different
+    // windows) leads to a different QSSGRenderMesh since the BufferManager is,
+    // very correctly, per window, and so per scenegraph render thread.
+
     QSSGRenderMesh *theMesh = bufferManager->loadMesh(&inModel);
 
     if (theMesh == nullptr)

@@ -67,6 +67,13 @@ namespace QSSGMeshUtilities {
     struct MultiLoadResult;
 }
 
+// There is one QSSGBufferManager per QSSGRenderContextInterface, and so per
+// QQuickWindow, and by extension, per scenegraph render thread. This is
+// essential here because graphics resources (vertex/index buffers, textures)
+// are always specific to one render thread, they cannot be used and shared
+// between different threads (and so windows). This is ensured by design, by
+// having a dedicated BufferManager for each render thread (window).
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 {
 public:

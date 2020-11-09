@@ -210,6 +210,16 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
             if (!rhi)
                 qWarning("No QRhi from QQuickWindow, this cannot happen");
 
+            // The RenderContextInterface, and the objects owned by it (such
+            // as, the BufferManager) are always per-QQuickWindow, and so per
+            // scenegraph render thread. Hence the association with window.
+            // Multiple View3Ds in the same window can use the same rendering
+            // infrastructure (so e.g. the same QSSGBufferManager), but two
+            // View3D objects in different windows must not, except for certain
+            // components that do not work with and own native graphics
+            // resources (most notably, QSSGShaderLibraryManager - but this
+            // distinction is handled internally by QSSGRenderContextInterface).
+
             if (auto v = WindowBindings::getRci(*window)) {
                 m_sgContext = QSSGRef<QSSGRenderContextInterface>(v);
             } else {
