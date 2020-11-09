@@ -138,6 +138,7 @@ struct QSSGMaterialVertexPipeline
                 addInterpolationParameter("qt_varTexCoord0", "vec2");
                 vertex() << "    qt_varTexCoord0 = qt_vertUV0;\n";
             } else {
+                vertex() << "    vec2 qt_varTexCoord0 = vec2(0.0);\n";
                 fragment() << "    vec2 qt_varTexCoord0 = vec2(0.0);\n";
             }
         } else if (inUVSet == 1) {
@@ -145,6 +146,7 @@ struct QSSGMaterialVertexPipeline
                 addInterpolationParameter("qt_varTexCoord1", "vec2");
                 vertex() << "    qt_varTexCoord1 = qt_vertUV1;\n";
             } else {
+                vertex() << "    vec2 qt_varTexCoord1 = vec2(0.0);\n";
                 fragment() << "    vec2 qt_varTexCoord1 = vec2(0.0);\n";
             }
         }
