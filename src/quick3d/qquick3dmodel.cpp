@@ -575,13 +575,13 @@ void QQuick3DModel::qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, 
     connect(material, &QQuick3DMaterial::destroyed, self, &QQuick3DModel::onMaterialDestroyed);
 }
 
-QQuick3DMaterial *QQuick3DModel::qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, int index)
+QQuick3DMaterial *QQuick3DModel::qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, qsizetype index)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
     return self->m_materials.at(index).material;
 }
 
-int QQuick3DModel::qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list)
+qsizetype QQuick3DModel::qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
     return self->m_materials.count();

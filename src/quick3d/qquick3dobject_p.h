@@ -115,20 +115,20 @@ public:
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
-    static int data_count(QQmlListProperty<QObject> *);
-    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static qsizetype data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
 
     // resources property
-    static QObject *resources_at(QQmlListProperty<QObject> *, int);
+    static QObject *resources_at(QQmlListProperty<QObject> *, qsizetype);
     static void resources_append(QQmlListProperty<QObject> *, QObject *);
-    static int resources_count(QQmlListProperty<QObject> *);
+    static qsizetype resources_count(QQmlListProperty<QObject> *);
     static void resources_clear(QQmlListProperty<QObject> *);
 
     // children property
     static void children_append(QQmlListProperty<QQuick3DObject> *, QQuick3DObject *);
-    static int children_count(QQmlListProperty<QQuick3DObject> *);
-    static QQuick3DObject *children_at(QQmlListProperty<QQuick3DObject> *, int);
+    static qsizetype children_count(QQmlListProperty<QQuick3DObject> *);
+    static QQuick3DObject *children_at(QQmlListProperty<QQuick3DObject> *, qsizetype);
     static void children_clear(QQmlListProperty<QQuick3DObject> *);
 
     void _q_resourceObjectDeleted(QObject *);

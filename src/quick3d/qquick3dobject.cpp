@@ -590,7 +590,7 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
     resources_append(prop, o);
 }
 
-int QQuick3DObjectPrivate::data_count(QQmlListProperty<QObject> *property)
+qsizetype QQuick3DObjectPrivate::data_count(QQmlListProperty<QObject> *property)
 {
     QQuick3DObject *item = static_cast<QQuick3DObject *>(property->object);
     QQuick3DObjectPrivate *privateItem = QQuick3DObjectPrivate::get(item);
@@ -600,7 +600,7 @@ int QQuick3DObjectPrivate::data_count(QQmlListProperty<QObject> *property)
     return resources_count(&resourcesProperty) + children_count(&childrenProperty);
 }
 
-QObject *QQuick3DObjectPrivate::data_at(QQmlListProperty<QObject> *property, int i)
+QObject *QQuick3DObjectPrivate::data_at(QQmlListProperty<QObject> *property, qsizetype i)
 {
     QQuick3DObject *item = static_cast<QQuick3DObject *>(property->object);
     QQuick3DObjectPrivate *privateItem = QQuick3DObjectPrivate::get(item);
@@ -627,7 +627,7 @@ void QQuick3DObjectPrivate::data_clear(QQmlListProperty<QObject> *property)
     children_clear(&childrenProperty);
 }
 
-QObject *QQuick3DObjectPrivate::resources_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QQuick3DObjectPrivate::resources_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQuick3DObjectPrivate *quickItemPrivate = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
     return quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.value(index) : 0;
@@ -646,7 +646,7 @@ void QQuick3DObjectPrivate::resources_append(QQmlListProperty<QObject> *prop, QO
     }
 }
 
-int QQuick3DObjectPrivate::resources_count(QQmlListProperty<QObject> *prop)
+qsizetype QQuick3DObjectPrivate::resources_count(QQmlListProperty<QObject> *prop)
 {
     QQuick3DObjectPrivate *quickItemPrivate = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
     return quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.count() : 0;
@@ -679,13 +679,13 @@ void QQuick3DObjectPrivate::children_append(QQmlListProperty<QQuick3DObject> *pr
     o->setParentItem(that);
 }
 
-int QQuick3DObjectPrivate::children_count(QQmlListProperty<QQuick3DObject> *prop)
+qsizetype QQuick3DObjectPrivate::children_count(QQmlListProperty<QQuick3DObject> *prop)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
     return p->childItems.count();
 }
 
-QQuick3DObject *QQuick3DObjectPrivate::children_at(QQmlListProperty<QQuick3DObject> *prop, int index)
+QQuick3DObject *QQuick3DObjectPrivate::children_at(QQmlListProperty<QQuick3DObject> *prop, qsizetype index)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
     if (index >= p->childItems.count() || index < 0)

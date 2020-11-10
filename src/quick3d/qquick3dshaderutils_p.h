@@ -248,13 +248,13 @@ public:
     ~QQuick3DShaderUtilsRenderPass() override = default;
 
     static void qmlAppendCommand(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, QQuick3DShaderUtilsRenderCommand *command);
-    static QQuick3DShaderUtilsRenderCommand *qmlCommandAt(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, int index);
-    static int qmlCommandCount(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list);
+    static QQuick3DShaderUtilsRenderCommand *qmlCommandAt(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list, qsizetype index);
+    static qsizetype qmlCommandCount(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list);
     static void qmlCommandClear(QQmlListProperty<QQuick3DShaderUtilsRenderCommand> *list);
 
     static void qmlAppendShader(QQmlListProperty<QQuick3DShaderUtilsShader> *list, QQuick3DShaderUtilsShader *shader);
-    static QQuick3DShaderUtilsShader *qmlShaderAt(QQmlListProperty<QQuick3DShaderUtilsShader> *list, int index);
-    static int qmlShaderCount(QQmlListProperty<QQuick3DShaderUtilsShader> *list);
+    static QQuick3DShaderUtilsShader *qmlShaderAt(QQmlListProperty<QQuick3DShaderUtilsShader> *list, qsizetype index);
+    static qsizetype qmlShaderCount(QQmlListProperty<QQuick3DShaderUtilsShader> *list);
     static void qmlShaderClear(QQmlListProperty<QQuick3DShaderUtilsShader> *list);
 
     QQmlListProperty<QQuick3DShaderUtilsRenderCommand> commands();

@@ -1076,13 +1076,13 @@ void QQuick3DEffect::qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPas
     that->m_passes.push_back(pass);
 }
 
-QQuick3DShaderUtilsRenderPass *QQuick3DEffect::qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, int index)
+QQuick3DShaderUtilsRenderPass *QQuick3DEffect::qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, qsizetype index)
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
     return that->m_passes.at(index);
 }
 
-int QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
+qsizetype QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
     return that->m_passes.count();

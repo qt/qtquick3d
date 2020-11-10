@@ -139,7 +139,7 @@ static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
     }
 }
 
-static int ssgn_count(QQmlListProperty<QObject> *property)
+static qsizetype ssgn_count(QQmlListProperty<QObject> *property)
 {
     QQuick3DViewport *view3d = static_cast<QQuick3DViewport *>(property->object);
     if (!view3d || !view3d->scene() || !QQuick3DObjectPrivate::get(view3d->scene())->data().count)
@@ -148,7 +148,7 @@ static int ssgn_count(QQmlListProperty<QObject> *property)
     return itemProperty.count(&itemProperty);
 }
 
-static QObject *ssgn_at(QQmlListProperty<QObject> *property, int i)
+static QObject *ssgn_at(QQmlListProperty<QObject> *property, qsizetype i)
 {
     QQuick3DViewport *view3d = static_cast<QQuick3DViewport *>(property->object);
     QQmlListProperty<QObject> itemProperty = QQuick3DObjectPrivate::get(view3d->scene())->data();

@@ -214,8 +214,8 @@ private:
     QVector<QQuick3DEffect *> m_effects;
 
     static void qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect);
-    static QQuick3DEffect *qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index);
-    static int qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
+    static QQuick3DEffect *qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, qsizetype index);
+    static qsizetype qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list);
     static void qmlClearEffects(QQmlListProperty<QQuick3DEffect> *list);
 
     void updateSceneManager(QQuick3DSceneManager *manager);

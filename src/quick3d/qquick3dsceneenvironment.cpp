@@ -755,13 +755,13 @@ void QQuick3DSceneEnvironment::qmlAppendEffect(QQmlListProperty<QQuick3DEffect> 
     self->update();
 }
 
-QQuick3DEffect *QQuick3DSceneEnvironment::qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, int index)
+QQuick3DEffect *QQuick3DSceneEnvironment::qmlEffectAt(QQmlListProperty<QQuick3DEffect> *list, qsizetype index)
 {
     QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
     return self->m_effects.at(index);
 }
 
-int QQuick3DSceneEnvironment::qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list)
+qsizetype QQuick3DSceneEnvironment::qmlEffectsCount(QQmlListProperty<QQuick3DEffect> *list)
 {
     QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
     return self->m_effects.count();

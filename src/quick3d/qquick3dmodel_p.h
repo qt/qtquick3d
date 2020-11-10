@@ -168,8 +168,8 @@ private:
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
 
     static void qmlAppendMaterial(QQmlListProperty<QQuick3DMaterial> *list, QQuick3DMaterial *material);
-    static QQuick3DMaterial *qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, int index);
-    static int qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list);
+    static QQuick3DMaterial *qmlMaterialAt(QQmlListProperty<QQuick3DMaterial> *list, qsizetype index);
+    static qsizetype qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list);
     static void qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list);
 
     struct Material {
