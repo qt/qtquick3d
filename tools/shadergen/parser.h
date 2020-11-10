@@ -63,28 +63,27 @@ enum QmlType
     Unknown
 };
 
-enum BuiltinType
-{
-    Var = QVariant::UserType,
-    Int = QVariant::Int,
-    Bool = QVariant::Bool,
-    Real = QVariant::Double,
-    String = QVariant::String,
-    Url = QVariant::Url,
-    Color = QVariant::Color,
-    Font = QVariant::Font,
-    Time = QVariant::Time,
-    Date = QVariant::Date,
-    DateTime = QVariant::DateTime,
-    Rect = QVariant::RectF,
-    Point = QVariant::PointF,
-    Size = QVariant::SizeF,
-    Vector2D = QVariant::Vector2D,
-    Vector3D = QVariant::Vector3D,
-    Vector4D= QVariant::Vector4D,
-    Matrix4x4 = QVariant::Matrix4x4,
-    Quaternion = QVariant::Quaternion,
-    InvalidBuiltin = QVariant::Invalid
+enum BuiltinType {
+    Var = QMetaType::User,
+    Int = QMetaType::Int,
+    Bool = QMetaType::Bool,
+    Real = QMetaType::Double,
+    String = QMetaType::QString,
+    Url = QMetaType::QUrl,
+    Color = QMetaType::QColor,
+    Font = QMetaType::QFont,
+    Time = QMetaType::QTime,
+    Date = QMetaType::QDate,
+    DateTime = QMetaType::QDateTime,
+    Rect = QMetaType::QRectF,
+    Point = QMetaType::QPointF,
+    Size = QMetaType::QSizeF,
+    Vector2D = QMetaType::QVector2D,
+    Vector3D = QMetaType::QVector3D,
+    Vector4D = QMetaType::QVector4D,
+    Matrix4x4 = QMetaType::QMatrix4x4,
+    Quaternion = QMetaType::QQuaternion,
+    InvalidBuiltin = QMetaType::UnknownType
 };
 }
 

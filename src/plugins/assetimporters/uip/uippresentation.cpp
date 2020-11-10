@@ -309,19 +309,19 @@ int animatablePropertyTypeToMetaType(Q3DS::PropertyType type)
     case Float:
         return QMetaType::Float;
     case Long:
-        return QVariant::Int;
+        return QMetaType::Int;
     case Float2:
-        return QVariant::Vector2D;
+        return QMetaType::QVector2D;
     case Matrix4x4:
-        return QVariant::Matrix4x4;
+        return QMetaType::QMatrix4x4;
     case Vector:
     case Scale:
     case Rotation:
-        return QVariant::Vector3D;
+        return QMetaType::QVector3D;
     case Color:
-        return QVariant::Color;
+        return QMetaType::QColor;
     default:
-        return QVariant::Invalid;
+        return QMetaType::UnknownType;
     }
 }
 
@@ -405,30 +405,26 @@ QVariant convertToVariant(const QString &value, Q3DS::PropertyType type)
 
 QString convertFromVariant(const QVariant &value)
 {
-    switch (value.type()) {
-    case QVariant::Vector2D:
-    {
+    switch (value.typeId()) {
+    case QMetaType::QVector2D: {
         const QVector2D v = value.value<QVector2D>();
         return QString(QLatin1String("%1 %2"))
                 .arg(QString::number(v.x())).arg(QString::number(v.y()));
     }
-    case QVariant::Vector3D:
-    {
+    case QMetaType::QVector3D: {
         const QVector3D v = value.value<QVector3D>();
         return QString(QLatin1String("%1 %2 %3"))
                 .arg(QString::number(v.x())).arg(QString::number(v.y())).arg(QString::number(v.z()));
     }
-    case QVariant::Color:
-    {
+    case QMetaType::QColor: {
         const QColor c = value.value<QColor>();
         const QVector4D v = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF());
         return QString(QLatin1String("%1 %2 %3 %4"))
                 .arg(QString::number(v.x())).arg(QString::number(v.y())).arg(QString::number(v.z())).arg(QString::number(v.w()));
     }
-    case QVariant::Bool:
+    case QMetaType::Bool:
         return value.toBool() ? QLatin1String("true") : QLatin1String("false");
-    case QVariant::Matrix4x4:
-    {
+    case QMetaType::QMatrix4x4: {
         const QMatrix4x4 v = value.value<QMatrix4x4>();
         const float *data = v.constData();
         return QString(QLatin1String("%1 %2 %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16"))

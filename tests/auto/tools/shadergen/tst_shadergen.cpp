@@ -109,32 +109,32 @@ void Shadergen::tst_customMaterialComponent()
 
 void Shadergen::tst_customMaterialUniforms_data()
 {
-    QTest::addColumn<QVariant::Type>("type");
+    QTest::addColumn<QMetaType>("type");
     QTest::addColumn<QString>("name");
     QTest::addColumn<QVariant>("value");
 
-    QTest::newRow("bool0") << QVariant::Bool << "uBoolFalse" << QVariant::fromValue(false);
-    QTest::newRow("bool1") << QVariant::Bool << "uBoolTrue" << QVariant::fromValue(true);
-    QTest::newRow("int") << QVariant::Double /*Not a typo*/ << "uInt" <<  QVariant::fromValue(int(33));
-    QTest::newRow("real") << QVariant::Double << "uReal" <<  QVariant::fromValue(qreal(3.3));
-    QTest::newRow("pointS") << QVariant::PointF << "uPointS" << QVariant::fromValue(QPointF(0, 1));
-    QTest::newRow("pointF") << QVariant::PointF << "uPointF" << QVariant::fromValue(QPointF(1, 0));
-    QTest::newRow("sizeS") << QVariant::SizeF << "uSizeS" << QVariant::fromValue(QSizeF(1, 1));
-    QTest::newRow("sizeF") << QVariant::SizeF << "uSizeF" << QVariant::fromValue(QSizeF(2, 2));
-    QTest::newRow("rectS") << QVariant::RectF << "uRectS" << QVariant::fromValue(QRectF(0, 1, 100, 101));
-    QTest::newRow("rectF") << QVariant::RectF << "uRectF" << QVariant::fromValue(QRectF(1, 0, 101, 100));
-    QTest::newRow("vec2") << QVariant::Vector2D << "uVec2" << QVariant::fromValue(QVector2D(1, 2));
-    QTest::newRow("vec3") << QVariant::Vector3D << "uVec3" << QVariant::fromValue(QVector3D(1, 2, 3));
-    QTest::newRow("vec4") << QVariant::Vector4D << "uVec4" << QVariant::fromValue(QVector4D(1, 2, 3, 4));
-    QTest::newRow("quat") << QVariant::Quaternion << "uQuat" << QVariant::fromValue(QQuaternion(1, 2, 3, 4));
-    QTest::newRow("m44") << QVariant::Matrix4x4 << "uM44" << QVariant::fromValue(QMatrix4x4(1, 2, 3, 4,
-                                                                                            5, 6, 7, 8,
-                                                                                            9, 10, 11, 12,
-                                                                                            13, 14, 15, 16));
-    QTest::newRow("Color1") << QVariant::Color << "uColor1" << QVariant::fromValue(QColor("green"));
-    QTest::newRow("Color2") << QVariant::Color << "uColor2" << QVariant::fromValue(QColor("#ff0000"));
-    QTest::newRow("Texture") << QVariant::UserType << "uTex" << QVariant::fromValue((QQuick3DTexture *)nullptr);
-    QTest::newRow("TextureInput") << QVariant::UserType << "uTexInput" << QVariant::fromValue((QQuick3DShaderUtilsTextureInput *)nullptr);
+    QTest::newRow("bool0") << QMetaType(QMetaType::Bool) << "uBoolFalse" << QVariant::fromValue(false);
+    QTest::newRow("bool1") << QMetaType(QMetaType::Bool) << "uBoolTrue" << QVariant::fromValue(true);
+    QTest::newRow("int") << QMetaType(QMetaType::Double) /*Not a typo*/ << "uInt" << QVariant::fromValue(int(33));
+    QTest::newRow("real") << QMetaType(QMetaType::Double) << "uReal" << QVariant::fromValue(qreal(3.3));
+    QTest::newRow("pointS") << QMetaType(QMetaType::QPointF) << "uPointS" << QVariant::fromValue(QPointF(0, 1));
+    QTest::newRow("pointF") << QMetaType(QMetaType::QPointF) << "uPointF" << QVariant::fromValue(QPointF(1, 0));
+    QTest::newRow("sizeS") << QMetaType(QMetaType::QSizeF) << "uSizeS" << QVariant::fromValue(QSizeF(1, 1));
+    QTest::newRow("sizeF") << QMetaType(QMetaType::QSizeF) << "uSizeF" << QVariant::fromValue(QSizeF(2, 2));
+    QTest::newRow("rectS") << QMetaType(QMetaType::QRectF) << "uRectS" << QVariant::fromValue(QRectF(0, 1, 100, 101));
+    QTest::newRow("rectF") << QMetaType(QMetaType::QRectF) << "uRectF" << QVariant::fromValue(QRectF(1, 0, 101, 100));
+    QTest::newRow("vec2") << QMetaType(QMetaType::QVector2D) << "uVec2" << QVariant::fromValue(QVector2D(1, 2));
+    QTest::newRow("vec3") << QMetaType(QMetaType::QVector3D) << "uVec3" << QVariant::fromValue(QVector3D(1, 2, 3));
+    QTest::newRow("vec4") << QMetaType(QMetaType::QVector4D) << "uVec4" << QVariant::fromValue(QVector4D(1, 2, 3, 4));
+    QTest::newRow("quat") << QMetaType(QMetaType::QQuaternion) << "uQuat" << QVariant::fromValue(QQuaternion(1, 2, 3, 4));
+    QTest::newRow("m44") << QMetaType(QMetaType::QMatrix4x4) << "uM44"
+                         << QVariant::fromValue(QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+    QTest::newRow("Color1") << QMetaType(QMetaType::QColor) << "uColor1" << QVariant::fromValue(QColor("green"));
+    QTest::newRow("Color2") << QMetaType(QMetaType::QColor) << "uColor2" << QVariant::fromValue(QColor("#ff0000"));
+    QTest::newRow("Texture") << QMetaType(qMetaTypeId<QQuick3DTexture *>()) << "uTex"
+                             << QVariant::fromValue((QQuick3DTexture *)nullptr);
+    QTest::newRow("TextureInput") << QMetaType(qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) << "uTexInput"
+                                  << QVariant::fromValue((QQuick3DShaderUtilsTextureInput *)nullptr);
 }
 
 void Shadergen::tst_customMaterialUniforms()
@@ -145,16 +145,16 @@ void Shadergen::tst_customMaterialUniforms()
     QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(sceneData.materials.at(0).ptr);
     QCOMPARE(mat->shadingMode(), QQuick3DCustomMaterial::ShadingMode::Unshaded);
 
-    QFETCH(QVariant::Type, type);
+    QFETCH(QMetaType, type);
     QFETCH(QString, name);
     QFETCH(QVariant, value);
 
     const auto prop = mat->property(name.toLatin1().constData());
     QVERIFY(prop.isValid());
-    QCOMPARE(prop.type(), type);
-    if (type == QVariant::Double) {
+    QCOMPARE(prop.metaType(), type);
+    if (type == QMetaType(QMetaType::Double)) {
         QVERIFY(qFuzzyCompare(prop.toDouble(), value.toDouble()));
-    } else if (type == QVariant::UserType) {
+    } else if (type.id() >= QMetaType::User) {
         const bool ok = (prop.metaType().id() == qMetaTypeId<QQuick3DTexture *>()) ||
                 (prop.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>());
         if (!ok) {
@@ -166,8 +166,6 @@ void Shadergen::tst_customMaterialUniforms()
     } else {
         QCOMPARE(prop, value);
     }
-
-
 }
 
 QTEST_APPLESS_MAIN(Shadergen)

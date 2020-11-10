@@ -482,7 +482,7 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
             Q_ASSERT(!p.name.isEmpty());
             const int idx = p.target->metaObject()->indexOfProperty(p.name.toLatin1().constData());
             const auto property = p.target->metaObject()->property(idx);
-            if (property.type() == QVariant::UserType) {
+            if (property.metaType().id() >= QMetaType::User) {
                 const QMetaType metaType = property.metaType();
                 switch (p.targetType) {
                 case TypeInfo::DefaultMaterial:
@@ -538,7 +538,7 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
                     break;
                 }
             } else { // Qt type
-                return toBuiltinType(property.type(), ref, ctx.workingDir);
+                return toBuiltinType(property.metaType().id(), ref, ctx.workingDir);
             }
         }
 

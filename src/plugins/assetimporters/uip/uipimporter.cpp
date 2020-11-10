@@ -463,7 +463,7 @@ void generateTimelineAnimation(Slide *slide, int startFrame, int endFrame, int d
                 slideName = slide->previousSibling()->m_name;
         } else {
             // value
-            if (slide->m_playThroughValue.type() == QVariant::String) {
+            if (slide->m_playThroughValue.metaType() == QMetaType(QMetaType::QString)) {
                 slideName = slide->m_playThroughValue.toString();
             } else {
                 int slideIndex = slide->m_playThroughValue.toInt();

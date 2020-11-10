@@ -68,25 +68,25 @@ QString colorToQml(const QColor &color) {
 }
 
 QString variantToQml(const QVariant &variant) {
-    auto valueType = static_cast<QMetaType::Type>(variant.type());
-    if (valueType == QMetaType::Float) {
+    switch (variant.typeId()) {
+    case QMetaType::Float: {
         auto value = variant.toDouble();
         return QString::number(value);
     }
-    if (valueType == QMetaType::QVector2D) {
+    case QMetaType::QVector2D: {
         auto value = variant.value<QVector2D>();
         return QString(QStringLiteral("Qt.vector2d(") + QString::number(double(value.x())) +
                        QStringLiteral(", ") + QString::number(double(value.y())) +
                        QStringLiteral(")"));
     }
-    if (valueType == QMetaType::QVector3D) {
+    case QMetaType::QVector3D: {
         auto value = variant.value<QVector3D>();
         return QString(QStringLiteral("Qt.vector3d(") + QString::number(double(value.x())) +
                        QStringLiteral(", ") + QString::number(double(value.y())) +
                        QStringLiteral(", ") + QString::number(double(value.z())) +
                        QStringLiteral(")"));
     }
-    if (valueType == QMetaType::QVector4D) {
+    case QMetaType::QVector4D: {
         auto value = variant.value<QVector4D>();
         return QString(QStringLiteral("Qt.vector4d(") + QString::number(double(value.x())) +
                        QStringLiteral(", ") + QString::number(double(value.y())) +
@@ -94,12 +94,11 @@ QString variantToQml(const QVariant &variant) {
                        QStringLiteral(", ") + QString::number(double(value.w())) +
                        QStringLiteral(")"));
     }
-    if (valueType == QMetaType::QColor) {
+    case QMetaType::QColor: {
         auto value = variant.value<QColor>();
         return colorToQml(value);
     }
-
-    if (valueType == QMetaType::QQuaternion) {
+    case QMetaType::QQuaternion: {
         auto value = variant.value<QQuaternion>();
         return QString(QStringLiteral("Qt.quaternion(") + QString::number(double(value.scalar())) +
                        QStringLiteral(", ") + QString::number(double(value.x())) +
@@ -107,8 +106,9 @@ QString variantToQml(const QVariant &variant) {
                        QStringLiteral(", ") + QString::number(double(value.z())) +
                        QStringLiteral(")"));
     }
-
-    return variant.toString();
+    default:
+        return variant.toString();
+    }
 }
 
 QString sanitizeQmlId(const QString &id)

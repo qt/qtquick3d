@@ -1107,111 +1107,111 @@ static inline QRhiGraphicsPipeline::BlendFactor toRhiBlendFactor(QQuick3DCustomM
     }
 }
 
-template <QVariant::Type>
+template<QMetaType::Type>
 struct ShaderType
 {
 };
 
 template<>
-struct ShaderType<QVariant::Double>
+struct ShaderType<QMetaType::Double>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Float; }
     static QByteArray name() { return QByteArrayLiteral("float"); }
 };
 
 template<>
-struct ShaderType<QVariant::Bool>
+struct ShaderType<QMetaType::Bool>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Boolean; }
     static QByteArray name() { return QByteArrayLiteral("bool"); }
 };
 
 template<>
-struct ShaderType<QVariant::Int>
+struct ShaderType<QMetaType::Int>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Integer; }
     static QByteArray name() { return QByteArrayLiteral("int"); }
 };
 
 template<>
-struct ShaderType<QVariant::Vector2D>
+struct ShaderType<QMetaType::QVector2D>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec2; }
     static QByteArray name() { return QByteArrayLiteral("vec2"); }
 };
 
 template<>
-struct ShaderType<QVariant::Vector3D>
+struct ShaderType<QMetaType::QVector3D>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec3; }
     static QByteArray name() { return QByteArrayLiteral("vec3"); }
 };
 
 template<>
-struct ShaderType<QVariant::Vector4D>
+struct ShaderType<QMetaType::QVector4D>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec4; }
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
 template<>
-struct ShaderType<QVariant::Color>
+struct ShaderType<QMetaType::QColor>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rgba; }
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
 template<>
-struct ShaderType<QVariant::Size>
+struct ShaderType<QMetaType::QSize>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Size; }
     static QByteArray name() { return QByteArrayLiteral("vec2"); }
 };
 
 template<>
-struct ShaderType<QVariant::SizeF>
+struct ShaderType<QMetaType::QSizeF>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::SizeF; }
     static QByteArray name() { return QByteArrayLiteral("vec2"); }
 };
 
 template<>
-struct ShaderType<QVariant::Point>
+struct ShaderType<QMetaType::QPoint>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Point; }
     static QByteArray name() { return QByteArrayLiteral("vec2"); }
 };
 
 template<>
-struct ShaderType<QVariant::PointF>
+struct ShaderType<QMetaType::QPointF>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::PointF; }
     static QByteArray name() { return QByteArrayLiteral("vec2"); }
 };
 
 template<>
-struct ShaderType<QVariant::Rect>
+struct ShaderType<QMetaType::QRect>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rect; }
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
 template<>
-struct ShaderType<QVariant::RectF>
+struct ShaderType<QMetaType::QRectF>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::RectF; }
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
 template<>
-struct ShaderType<QVariant::Quaternion>
+struct ShaderType<QMetaType::QQuaternion>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Quaternion; }
     static QByteArray name() { return QByteArrayLiteral("vec4"); }
 };
 
 template<>
-struct ShaderType<QVariant::Matrix4x4>
+struct ShaderType<QMetaType::QMatrix4x4>
 {
     static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Matrix4x4; }
     static QByteArray name() { return QByteArrayLiteral("mat4"); }
@@ -1406,77 +1406,78 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     connect(this, property.notifySignal(), this, propertyDirtyMethod);
             } // else already connected
 
-            QVariant::Type propType = property.type();
+            QMetaType propType = property.metaType();
             QVariant propValue = property.read(this);
-            if (static_cast<QMetaType::Type>(propType) == QMetaType::QVariant)
-                propType = propValue.type();
+            if (propType == QMetaType(QMetaType::QVariant))
+                propType = propValue.metaType();
 
-            switch (propType) {
-            case QVariant::Double:
-                uniforms.append({ ShaderType<QVariant::Double>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Double>::type(), i});
+            switch (propType.id()) {
+            case QMetaType::Double:
+                uniforms.append({ ShaderType<QMetaType::Double>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::Double>::type(), i });
                 break;
-            case QVariant::Bool:
-                uniforms.append({ ShaderType<QVariant::Bool>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Bool>::type(), i});
+            case QMetaType::Bool:
+                uniforms.append({ ShaderType<QMetaType::Bool>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::Bool>::type(), i });
                 break;
-            case QVariant::Vector2D:
-                uniforms.append({ ShaderType<QVariant::Vector2D>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Vector2D>::type(), i});
+            case QMetaType::QVector2D:
+                uniforms.append({ ShaderType<QMetaType::QVector2D>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QVector2D>::type(), i });
                 break;
-            case QVariant::Vector3D:
-                uniforms.append({ ShaderType<QVariant::Vector3D>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Vector3D>::type(), i});
+            case QMetaType::QVector3D:
+                uniforms.append({ ShaderType<QMetaType::QVector3D>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QVector3D>::type(), i });
                 break;
-            case QVariant::Vector4D:
-                uniforms.append({ ShaderType<QVariant::Vector4D>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Vector4D>::type(), i});
+            case QMetaType::QVector4D:
+                uniforms.append({ ShaderType<QMetaType::QVector4D>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QVector4D>::type(), i });
                 break;
-            case QVariant::Int:
-                uniforms.append({ ShaderType<QVariant::Int>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Int>::type(), i});
+            case QMetaType::Int:
+                uniforms.append({ ShaderType<QMetaType::Int>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::Int>::type(), i });
                 break;
-            case QVariant::Color:
-                uniforms.append({ ShaderType<QVariant::Color>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Color>::type(), i});
+            case QMetaType::QColor:
+                uniforms.append({ ShaderType<QMetaType::QColor>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QColor>::type(), i });
                 break;
-            case QVariant::Size:
-                uniforms.append({ ShaderType<QVariant::Size>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Size>::type(), i});
+            case QMetaType::QSize:
+                uniforms.append({ ShaderType<QMetaType::QSize>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QSize>::type(), i });
                 break;
-            case QVariant::SizeF:
-                uniforms.append({ ShaderType<QVariant::SizeF>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::SizeF>::type(), i});
+            case QMetaType::QSizeF:
+                uniforms.append({ ShaderType<QMetaType::QSizeF>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QSizeF>::type(), i });
                 break;
-            case QVariant::Point:
-                uniforms.append({ ShaderType<QVariant::Point>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Point>::type(), i});
+            case QMetaType::QPoint:
+                uniforms.append({ ShaderType<QMetaType::QPoint>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QPoint>::type(), i });
                 break;
-            case QVariant::PointF:
-                uniforms.append({ ShaderType<QVariant::PointF>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::PointF>::type(), i});
+            case QMetaType::QPointF:
+                uniforms.append({ ShaderType<QMetaType::QPointF>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QPointF>::type(), i });
                 break;
-            case QVariant::Rect:
-                uniforms.append({ ShaderType<QVariant::Rect>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Rect>::type(), i});
+            case QMetaType::QRect:
+                uniforms.append({ ShaderType<QMetaType::QRect>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QRect>::type(), i });
                 break;
-            case QVariant::RectF:
-                uniforms.append({ ShaderType<QVariant::RectF>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::RectF>::type(), i});
+            case QMetaType::QRectF:
+                uniforms.append({ ShaderType<QMetaType::QRectF>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QRectF>::type(), i });
                 break;
-            case QVariant::Quaternion:
-                uniforms.append({ ShaderType<QVariant::Quaternion>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Quaternion>::type(), i});
+            case QMetaType::QQuaternion:
+                uniforms.append({ ShaderType<QMetaType::QQuaternion>::name(), property.name() });
+                customMaterial->m_properties.push_back(
+                        { property.name(), propValue, ShaderType<QMetaType::QQuaternion>::type(), i });
                 break;
-            case QVariant::Matrix4x4:
-                uniforms.append({ ShaderType<QVariant::Matrix4x4>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QVariant::Matrix4x4>::type(), i});
+            case QMetaType::QMatrix4x4:
+                uniforms.append({ ShaderType<QMetaType::QMatrix4x4>::name(), property.name() });
+                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QMatrix4x4>::type(), i });
                 break;
-            case QVariant::UserType:
-                if (property.userType() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
+            case QMetaType::User:
+                if (property.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
                     textureProperties.push_back(property);
                 break;
-            case static_cast<QVariant::Type>(QMetaType::QObjectStar):
+            case QMetaType::QObjectStar:
                 if (qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
                     textureProperties.push_back(property);
                 break;
