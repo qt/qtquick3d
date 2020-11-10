@@ -1,5 +1,7 @@
+# Generated from quickball.pro.
+
 cmake_minimum_required(VERSION 3.14)
-project(lights LANGUAGES CXX)
+project(quickball LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -21,6 +23,10 @@ find_package(Qt6 COMPONENTS Quick3D)
 qt_add_executable(quickball
     main.cpp
 )
+set_target_properties(quickball PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(quickball PUBLIC
     Qt::Core
     Qt::Gui
@@ -31,16 +37,16 @@ target_link_libraries(quickball PUBLIC
 
 # Resources:
 set(qml_resource_files
-    "main.qml"
     "images/ball.jpg"
-    "images/ball_n.jpg"
     "images/ball_icon.png"
+    "images/ball_n.jpg"
     "images/grass.jpg"
     "images/grass_n.jpg"
     "images/qt_logo.jpg"
     "images/qt_logo_n.jpg"
-    "images/sky.jpg"
     "images/quickball.png"
+    "images/sky.jpg"
+    "main.qml"
 )
 
 qt6_add_resources(quickball "qml"

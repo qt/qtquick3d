@@ -47,8 +47,6 @@ qt_internal_add_module(Quick3D
         qquick3dutils_p.h
         qquick3dviewport.cpp qquick3dviewport_p.h
         qtquick3dglobal.h qtquick3dglobal_p.h
-        qquick3dskeleton.cpp qquick3dskeleton_p.h
-        qquick3djoint.cpp qquick3djoint_p.h
     DEFINES
         QT_BUILD_QUICK3D_LIB
     LIBRARIES

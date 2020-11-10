@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3dperspectivecamera
 
 #### Keys ignored in scope 1:.:.:qquick3dperspectivecamera.pro:<TRUE>:
 # TEMPLATE = "app"
-

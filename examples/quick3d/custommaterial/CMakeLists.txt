@@ -49,9 +49,9 @@ qt6_add_resources(custommaterial "qml"
 )
 set(materials_resource_files
     "maps/OpenfootageNET_lowerAustria01-1024.hdr"
+    "material_customlights.frag"
     "material_customspecular.frag"
     "material_distortion.vert"
-    "material_customlights.frag"
     "material_metallic.frag"
     "material_simple.frag"
     "material_transparent.frag"

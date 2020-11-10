@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3dnode
 
 #### Keys ignored in scope 1:.:.:qquick3dnode.pro:<TRUE>:
 # TEMPLATE = "app"
-

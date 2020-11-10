@@ -152,6 +152,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/PostProcessing/TextureTransform.cpp ../../../3rdparty/assimp/src/code/PostProcessing/TextureTransform.h
         ../../../3rdparty/assimp/src/code/PostProcessing/TriangulateProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/TriangulateProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ValidateDataStructure.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ValidateDataStructure.h
+        ../../../3rdparty/assimp/src/code/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/STL/STLLoader.h
         ../../../3rdparty/assimp/src/code/glTF/glTFAsset.h ../../../3rdparty/assimp/src/code/glTF/glTFAsset.inl
         ../../../3rdparty/assimp/src/code/glTF/glTFAssetWriter.h ../../../3rdparty/assimp/src/code/glTF/glTFAssetWriter.inl
         ../../../3rdparty/assimp/src/code/glTF/glTFCommon.cpp ../../../3rdparty/assimp/src/code/glTF/glTFCommon.h
@@ -159,7 +160,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/glTF2/glTF2Asset.inl
         ../../../3rdparty/assimp/src/code/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/glTF2/glTF2AssetWriter.inl
         ../../../3rdparty/assimp/src/code/glTF2/glTF2Importer.cpp ../../../3rdparty/assimp/src/code/glTF2/glTF2Importer.h
-        ../../../3rdparty/assimp/src/code/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/STL/STLLoader.h
         ../../../3rdparty/assimp/src/contrib/irrXML/CXMLReaderImpl.h
         ../../../3rdparty/assimp/src/contrib/irrXML/heapsort.h
         ../../../3rdparty/assimp/src/contrib/irrXML/irrArray.h
@@ -271,6 +271,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_IFC_IMPORTER
         ASSIMP_BUILD_NO_IRRMESH_IMPORTER
         ASSIMP_BUILD_NO_IRR_IMPORTER
+        ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
         ASSIMP_BUILD_NO_LWO_IMPORTER
         ASSIMP_BUILD_NO_LWS_IMPORTER
         ASSIMP_BUILD_NO_MD2_IMPORTER
@@ -297,7 +298,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_X3D_IMPORTER
         ASSIMP_BUILD_NO_XGL_IMPORTER
         ASSIMP_BUILD_NO_X_IMPORTER
-        ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
         NOUNCRYPT
     INCLUDE_DIRECTORIES
         ../../../3rdparty/assimp
@@ -313,9 +313,9 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/Material
         ../../../3rdparty/assimp/src/code/Obj
         ../../../3rdparty/assimp/src/code/PostProcessing
+        ../../../3rdparty/assimp/src/code/STL
         ../../../3rdparty/assimp/src/code/glTF
         ../../../3rdparty/assimp/src/code/glTF2
-        ../../../3rdparty/assimp/src/code/STL
         ../../../3rdparty/assimp/src/contrib/irrXML
         ../../../3rdparty/assimp/src/contrib/poly2tri
         ../../../3rdparty/assimp/src/contrib/rapidjson/include

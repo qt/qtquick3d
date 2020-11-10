@@ -12,6 +12,7 @@ qt_internal_add_qml_module(qtquick3dhelpersplugin
     DEPENDENCIES
         QtQuick3D/1.0
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         gridgeometry.cpp gridgeometry_p.h
         plugin.cpp

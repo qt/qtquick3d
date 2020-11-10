@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3ddirectionallight
 
 #### Keys ignored in scope 1:.:.:qquick3ddirectionallight.pro:<TRUE>:
 # TEMPLATE = "app"
-

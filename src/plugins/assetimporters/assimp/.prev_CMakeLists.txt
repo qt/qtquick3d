@@ -130,7 +130,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/PostProcessing/GenVertexNormalsProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/GenVertexNormalsProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ImproveCacheLocality.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ImproveCacheLocality.h
         ../../../3rdparty/assimp/src/code/PostProcessing/JoinVerticesProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/JoinVerticesProcess.h
-        ../../../3rdparty/assimp/src/code/PostProcessing/LimitBoneWeightsProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/LimitBoneWeightsProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/MakeVerboseFormat.cpp ../../../3rdparty/assimp/src/code/PostProcessing/MakeVerboseFormat.h
         ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeGraph.cpp ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeGraph.h
         ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeMeshes.cpp ../../../3rdparty/assimp/src/code/PostProcessing/OptimizeMeshes.h
@@ -144,6 +143,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/PostProcessing/TextureTransform.cpp ../../../3rdparty/assimp/src/code/PostProcessing/TextureTransform.h
         ../../../3rdparty/assimp/src/code/PostProcessing/TriangulateProcess.cpp ../../../3rdparty/assimp/src/code/PostProcessing/TriangulateProcess.h
         ../../../3rdparty/assimp/src/code/PostProcessing/ValidateDataStructure.cpp ../../../3rdparty/assimp/src/code/PostProcessing/ValidateDataStructure.h
+        ../../../3rdparty/assimp/src/code/STL/STLLoader.cpp ../../../3rdparty/assimp/src/code/STL/STLLoader.h
         ../../../3rdparty/assimp/src/code/glTF/glTFAsset.h ../../../3rdparty/assimp/src/code/glTF/glTFAsset.inl
         ../../../3rdparty/assimp/src/code/glTF/glTFAssetWriter.h ../../../3rdparty/assimp/src/code/glTF/glTFAssetWriter.inl
         ../../../3rdparty/assimp/src/code/glTF/glTFCommon.cpp ../../../3rdparty/assimp/src/code/glTF/glTFCommon.h
@@ -262,6 +262,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_IFC_IMPORTER
         ASSIMP_BUILD_NO_IRRMESH_IMPORTER
         ASSIMP_BUILD_NO_IRR_IMPORTER
+        ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS
         ASSIMP_BUILD_NO_LWO_IMPORTER
         ASSIMP_BUILD_NO_LWS_IMPORTER
         ASSIMP_BUILD_NO_MD2_IMPORTER
@@ -284,7 +285,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_SIB_IMPORTER
         ASSIMP_BUILD_NO_SMD_IMPORTER
         ASSIMP_BUILD_NO_STEP_IMPORTER
-        ASSIMP_BUILD_NO_STL_IMPORTER
         ASSIMP_BUILD_NO_TERRAGEN_IMPORTER
         ASSIMP_BUILD_NO_X3D_IMPORTER
         ASSIMP_BUILD_NO_XGL_IMPORTER
@@ -304,6 +304,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/Material
         ../../../3rdparty/assimp/src/code/Obj
         ../../../3rdparty/assimp/src/code/PostProcessing
+        ../../../3rdparty/assimp/src/code/STL
         ../../../3rdparty/assimp/src/code/glTF
         ../../../3rdparty/assimp/src/code/glTF2
         ../../../3rdparty/assimp/src/contrib/irrXML

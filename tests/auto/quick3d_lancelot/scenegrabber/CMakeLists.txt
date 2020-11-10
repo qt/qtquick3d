@@ -8,12 +8,12 @@ qt_internal_add_executable(qmlscenegrabber
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
         dynamicgeometry.cpp dynamicgeometry.h
-        skingeometry.cpp skingeometry.h
         dynamictexturedata.cpp dynamictexturedata.h
         indextrianglestopology.cpp indextrianglestopology.h
         main.cpp
         nonindextrianglestopology.cpp nonindextrianglestopology.h
         pointstopology.cpp pointstopology.h
+        skingeometry.cpp skingeometry.h
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick

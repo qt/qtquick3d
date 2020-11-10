@@ -13,6 +13,7 @@ qt_internal_add_qml_module(qtquick3deffectplugin
         QtQuick3D/1.15
         QtQuick.Window/2.1
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES

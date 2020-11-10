@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3dtexturedata
 
 #### Keys ignored in scope 1:.:.:qquick3dtexturedata.pro:<TRUE>:
 # TEMPLATE = "app"
-

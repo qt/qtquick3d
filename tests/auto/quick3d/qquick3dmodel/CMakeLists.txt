@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3dmodel
 
 #### Keys ignored in scope 1:.:.:qquick3dmodel.pro:<TRUE>:
 # TEMPLATE = "app"
-

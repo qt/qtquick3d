@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3dspotlight
 
 #### Keys ignored in scope 1:.:.:qquick3dspotlight.pro:<TRUE>:
 # TEMPLATE = "app"
-

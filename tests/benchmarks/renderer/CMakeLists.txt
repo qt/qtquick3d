@@ -11,3 +11,6 @@ qt_add_test(renderer
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
 )
+
+#### Keys ignored in scope 1:.:.:renderer.pro:<TRUE>:
+# TEMPLATE = "app"

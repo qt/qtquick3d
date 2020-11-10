@@ -14,4 +14,3 @@ qt_internal_add_test(qquick3dpointlight
 
 #### Keys ignored in scope 1:.:.:qquick3dpointlight.pro:<TRUE>:
 # TEMPLATE = "app"
-
