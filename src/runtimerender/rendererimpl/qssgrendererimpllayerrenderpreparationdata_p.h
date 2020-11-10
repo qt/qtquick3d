@@ -251,7 +251,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     // Updates lights with model receivesShadows. Do not pass globalLights.
-    bool prepareModelForRender(QSSGRenderModel &inModel,
+    bool prepareModelForRender(const QSSGRenderModel &inModel,
                                const QMatrix4x4 &inViewProjection,
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGShaderLightList &lights,

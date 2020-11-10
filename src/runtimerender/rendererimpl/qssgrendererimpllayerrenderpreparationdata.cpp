@@ -737,7 +737,11 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
     return retval;
 }
 
-bool QSSGLayerRenderPreparationData::prepareModelForRender(QSSGRenderModel &inModel,
+// inModel is const to emphasize the fact that its members cannot be written
+// here: in case there is a scene shared between multiple View3Ds in different
+// QQuickWindows, each window may run this in their own render thread, while
+// inModel is the same.
+bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel &inModel,
                                                            const QMatrix4x4 &inViewProjection,
                                                            const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                            QSSGShaderLightList &lights,
