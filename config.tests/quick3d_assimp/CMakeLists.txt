@@ -1,7 +1,7 @@
-# Generated from assimp.pro.
+# Generated from quick3d_assimp.pro.
 
 cmake_minimum_required(VERSION 3.14.0)
-project(config_test_assimp LANGUAGES C CXX)
+project(config_test_quick3d_assimp LANGUAGES C CXX)
 
 foreach(p ${QT_CONFIG_COMPILE_TEST_PACKAGES})
     find_package(${p})

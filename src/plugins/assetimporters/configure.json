@@ -9,9 +9,9 @@
     },
 
     "libraries": {
-        "quick3d-assimp": {
+        "quick3d_assimp": {
             "label": "Assimp",
-            "test": "assimp",
+            "test": "quick3d_assimp",
             "sources": [
                 { "type": "pkgConfig", "args": "assimp >= 5.0.0" },
                 "-lassimp"
@@ -28,7 +28,7 @@
             "label": "System Assimp",
             "enable": "input.quick3d-assimp == 'system'",
             "disable": "input.quick3d-assimp == 'qt'",
-            "condition": "features.quick3d-assimp && libs.quick3d-assimp",
+            "condition": "features.quick3d-assimp && libs.quick3d_assimp",
             "output": [ "privateFeature" ]
         }
     },

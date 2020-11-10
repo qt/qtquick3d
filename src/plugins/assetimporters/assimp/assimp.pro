@@ -10,7 +10,7 @@ QT_FOR_CONFIG += assetimporters-private
 include($$OUT_PWD/../qtassetimporters-config.pri)
 
 qtConfig(system-assimp):!if(cross_compile:host_build) {
-    QMAKE_USE_PRIVATE += assimp
+    QMAKE_USE_PRIVATE += quick3d_assimp
 } else {
     include(../../../3rdparty/assimp/assimp.pri)
 }

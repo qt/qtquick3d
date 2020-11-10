@@ -1,14 +1,13 @@
-if(TARGET WrapAssimp::WrapAssimp)
-  set(WrapAssimp_FOUND TRUE)
+if(TARGET WrapQuick3DAssimp::WrapQuick3DAssimp)
+  set(WrapQuick3DAssimp_FOUND TRUE)
   return()
 endif()
+set(WrapQuick3DAssimp_FOUND FALSE)
 
-set(WrapAssimp_FOUND FALSE)
-
-find_package(assimp ${WrapAssimp_FIND_VERSION} CONFIG QUIET)
+find_package(assimp ${WrapQuick3DAssimp_FIND_VERSION} CONFIG QUIET)
 if (assimp_FOUND AND TARGET assimp::assimp)
-  add_library(WrapAssimp::WrapAssimp INTERFACE IMPORTED)
-  target_link_libraries(WrapAssimp::WrapAssimp INTERFACE assimp::assimp)
+  add_library(WrapQuick3DAssimp::WrapQuick3DAssimp INTERFACE IMPORTED)
+  target_link_libraries(WrapQuick3DAssimp::WrapQuick3DAssimp INTERFACE assimp::assimp)
 
   # The Assimp configuration file is broken, and sets only the Release location, without advertising
   # that it's available via IMPORTED_CONFIGURATIONS. Thus when configuring with a different
@@ -23,13 +22,13 @@ if (assimp_FOUND AND TARGET assimp::assimp)
       endif()
   endif()
 
-  set(WrapAssimp_FOUND TRUE)
+  set(WrapQuick3DAssimp_FOUND TRUE)
 elseif(assimp_FOUND AND assimp_LIBRARIES AND assimp_INCLUDE_DIRS)
-  add_library(WrapAssimp::WrapAssimp INTERFACE IMPORTED)
-  target_link_libraries(WrapAssimp::WrapAssimp INTERFACE ${assimp_LIBRARIES})
-  target_include_directories(WrapAssimp::WrapAssimp INTERFACE ${assimp_INCLUDE_DIRS})
-  set(WrapAssimp_FOUND TRUE)
+  add_library(WrapQuick3DAssimp::WrapQuick3DAssimp INTERFACE IMPORTED)
+  target_link_libraries(WrapQuick3DAssimp::WrapQuick3DAssimp INTERFACE ${assimp_LIBRARIES})
+  target_include_directories(WrapQuick3DAssimp::WrapQuick3DAssimp INTERFACE ${assimp_INCLUDE_DIRS})
+  set(WrapQuick3DAssimp_FOUND TRUE)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(WrapAssimp DEFAULT_MSG WrapAssimp_FOUND)
+find_package_handle_standard_args(WrapQuick3DAssimp DEFAULT_MSG WrapQuick3DAssimp_FOUND)

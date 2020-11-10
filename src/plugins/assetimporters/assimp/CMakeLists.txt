@@ -48,7 +48,7 @@ qt_internal_add_resource(AssimpImporterPlugin "assimp"
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     LIBRARIES
-        WrapAssimp::WrapAssimp
+        WrapQuick3DAssimp::WrapQuick3DAssimp
 )
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_assimp OR (CMAKE_CROSSCOMPILING AND host_build)
