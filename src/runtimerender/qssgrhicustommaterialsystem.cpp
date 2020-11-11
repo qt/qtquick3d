@@ -324,9 +324,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 bindings.addTexture(binding,
                                     QRhiShaderResourceBinding::FragmentStage,
                                     shaderPipeline->lightProbeTexture(), sampler);
-            } else {
-                qWarning("Could not find sampler for light probe");
-            }
+            } // else ignore, not an error (for example, an unshaded material's fragment shader will not have this sampler)
         }
 
         if (shaderPipeline->screenTexture()) {
