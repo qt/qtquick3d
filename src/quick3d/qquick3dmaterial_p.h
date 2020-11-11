@@ -107,6 +107,8 @@ protected:
     explicit QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(ItemChange, const ItemChangeData &) override;
+
+    QHash<QByteArray, QMetaObject::Connection> m_connections;
 public:
     void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
 private:
@@ -118,7 +120,6 @@ private:
 
     CullMode m_cullMode = CullMode::BackFaceCulling;
 
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
     QVector<QQuick3DTexture *> m_dynamicTextureMaps;
 };
 

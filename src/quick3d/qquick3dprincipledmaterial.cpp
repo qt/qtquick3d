@@ -452,8 +452,6 @@ QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
 
 QQuick3DPrincipledMaterial::~QQuick3DPrincipledMaterial()
 {
-    for (auto cit = m_connections.cbegin(), end = m_connections.cend(); cit != end; ++cit)
-        disconnect(*cit);
 }
 
 QQuick3DPrincipledMaterial::Lighting QQuick3DPrincipledMaterial::lighting() const

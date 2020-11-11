@@ -399,8 +399,6 @@ QQuick3DDefaultMaterial::QQuick3DDefaultMaterial(QQuick3DObject *parent)
 
 QQuick3DDefaultMaterial::~QQuick3DDefaultMaterial()
 {
-    for (const auto &connection : m_connections.values())
-        disconnect(connection);
 }
 
 QQuick3DDefaultMaterial::Lighting QQuick3DDefaultMaterial::lighting() const

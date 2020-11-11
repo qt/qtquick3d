@@ -270,8 +270,6 @@ private:
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
-
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
 };
 
 QT_END_NAMESPACE
