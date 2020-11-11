@@ -28,7 +28,7 @@ qt_internal_add_qml_module(qquick3dplugin
 ## Scopes:
 #####################################################################
 
-if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
+if(QT_FEATURE_quick_designer AND NOT static)
     get_target_property(__aux_qml_files_install_base qquick3dplugin QT_QML_MODULE_INSTALL_DIR)
 
     qt_path_join(__aux_qml_files_install_dir "${__aux_qml_files_install_base}" "designer")
