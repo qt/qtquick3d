@@ -109,8 +109,7 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;
-public:
-    void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
+
 private:
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
     QQuick3DTexture *m_lightmapIndirect = nullptr;
@@ -119,8 +118,6 @@ private:
     QQuick3DTexture *m_iblProbe = nullptr;
 
     CullMode m_cullMode = CullMode::BackFaceCulling;
-
-    QVector<QQuick3DTexture *> m_dynamicTextureMaps;
 };
 
 QT_END_NAMESPACE

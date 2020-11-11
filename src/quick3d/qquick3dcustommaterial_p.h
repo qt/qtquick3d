@@ -124,6 +124,7 @@ Q_SIGNALS:
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void itemChange(ItemChange, const ItemChangeData &) override;
     void markAllDirty() override;
 
 private Q_SLOTS:
@@ -131,6 +132,7 @@ private Q_SLOTS:
     void onTextureDirty();
 
 private:
+    friend class QQuick3DShaderUtilsTextureInput;
     enum Dirty {
         TextureDirty = 0x1,
         PropertyDirty = 0x2,
@@ -144,7 +146,9 @@ private:
             update();
         }
     }
+    void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
 
+    QVector<QQuick3DTexture *> m_dynamicTextureMaps;
     quint32 m_dirtyAttributes = 0xffffffff;
     BlendMode m_srcBlend = BlendMode::NoBlend;
     BlendMode m_dstBlend = BlendMode::NoBlend;

@@ -272,29 +272,6 @@ void QQuick3DMaterial::itemChange(QQuick3DObject::ItemChange change, const QQuic
         updateSceneManager(value.sceneManager);
 }
 
-void QQuick3DMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name)
-{
-    if (!textureMap)
-        return;
-
-    auto it = m_dynamicTextureMaps.begin();
-    const auto end = m_dynamicTextureMaps.end();
-    for (; it != end; ++it) {
-        if (*it == textureMap)
-            break;
-    }
-
-    if (it != end)
-        return;
-
-    QQuick3DObjectPrivate::updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
-        setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n), name);
-    });
-
-    m_dynamicTextureMaps.push_back(textureMap);
-    update();
-}
-
 void QQuick3DMaterial::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     if (sceneManager) {
@@ -302,15 +279,11 @@ void QQuick3DMaterial::updateSceneManager(QQuick3DSceneManager *sceneManager)
         QQuick3DObjectPrivate::refSceneManager(m_lightmapRadiosity, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_lightmapShadow, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_iblProbe, *sceneManager);
-        for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::refSceneManager(it, *sceneManager);
     } else {
        QQuick3DObjectPrivate::derefSceneManager(m_lightmapIndirect);
        QQuick3DObjectPrivate::derefSceneManager(m_lightmapRadiosity);
        QQuick3DObjectPrivate::derefSceneManager(m_lightmapShadow);
        QQuick3DObjectPrivate::derefSceneManager(m_iblProbe);
-        for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::derefSceneManager(it);
     }
 }
 

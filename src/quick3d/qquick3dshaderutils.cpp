@@ -33,7 +33,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlfile.h>
 
-#include <QtQuick3D/private/qquick3dmaterial_p.h>
+#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3deffect_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -414,7 +414,7 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
 
     QObject *p = parent();
     while (p != nullptr) {
-        if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(p)) {
+        if (QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(p)) {
             mat->setDynamicTextureMap(texture, name);
             break;
         } else if (QQuick3DEffect *efx = qobject_cast<QQuick3DEffect *>(p)) {

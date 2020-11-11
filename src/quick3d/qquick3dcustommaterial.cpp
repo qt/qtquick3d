@@ -1617,6 +1617,20 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
     return customMaterial;
 }
 
+void QQuick3DCustomMaterial::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
+{
+    QQuick3DMaterial::itemChange(change, value);
+    if (change == QQuick3DObject::ItemSceneChange) {
+        if (auto sceneManager = value.sceneManager) {
+            for (auto it : m_dynamicTextureMaps)
+                QQuick3DObjectPrivate::refSceneManager(it, *sceneManager);
+        } else {
+            for (auto it : m_dynamicTextureMaps)
+                QQuick3DObjectPrivate::derefSceneManager(it);
+        }
+    }
+}
+
 void QQuick3DCustomMaterial::onPropertyDirty()
 {
     markDirty(Dirty::PropertyDirty);
@@ -1626,6 +1640,29 @@ void QQuick3DCustomMaterial::onPropertyDirty()
 void QQuick3DCustomMaterial::onTextureDirty()
 {
     markDirty(Dirty::TextureDirty);
+    update();
+}
+
+void QQuick3DCustomMaterial::setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name)
+{
+    if (!textureMap)
+        return;
+
+    auto it = m_dynamicTextureMaps.begin();
+    const auto end = m_dynamicTextureMaps.end();
+    for (; it != end; ++it) {
+        if (*it == textureMap)
+            break;
+    }
+
+    if (it != end)
+        return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
+        setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n), name);
+    });
+
+    m_dynamicTextureMaps.push_back(textureMap);
     update();
 }
 
