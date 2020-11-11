@@ -1473,15 +1473,13 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 uniforms.append({ ShaderType<QMetaType::QMatrix4x4>::name(), property.name() });
                 customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QMatrix4x4>::type(), i });
                 break;
-            case QMetaType::User:
-                if (property.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
-                    textureProperties.push_back(property);
-                break;
             case QMetaType::QObjectStar:
                 if (qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
                     textureProperties.push_back(property);
                 break;
             default:
+                if (property.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
+                    textureProperties.push_back(property);
                 // ### figure out how _not_ to warn when there are no dynamic
                 // properties defined (because warnings like Skipping vertexShader etc. are not helpful)
                 //qWarning("No known uniform conversion found for custom material property %s. Skipping", property.name());
