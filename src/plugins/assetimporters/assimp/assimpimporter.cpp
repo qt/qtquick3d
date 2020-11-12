@@ -1609,31 +1609,56 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     aiUVTransform transforms;
     result = material->Get(AI_MATKEY_UVTRANSFORM(textureType, index), transforms);
     if (result == aiReturn_SUCCESS) {
+        // UV origins -
+        //      glTF: 0, 1 (top left of texture)
+        //      Assimp, Collada?, FBX?: 0.5, 0.5
+        //      Quick3D: 0, 0 (bottom left of texture)
+        // Assimp already tries to fix it but it's not correct.
+        // So, we restore original values and then use pivot
+        float rotation = -transforms.mRotation;
+        float rotationUV = qRadiansToDegrees(rotation);
+        float posU = transforms.mTranslation.x;
+        float posV = transforms.mTranslation.y;
+        if (m_gltfUsed) {
+            float rcos = std::cos(rotation);
+            float rsin = std::sin(rotation);
+            posU -= 0.5 * transforms.mScaling.x * (-rcos + rsin + 1);
+            posV -= (0.5 * transforms.mScaling.y * (rcos + rsin - 1) + 1 - transforms.mScaling.y);
+
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+                   << QStringLiteral("pivotV: 1\n");
+        } else {
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+                   << QStringLiteral("pivotU: 0.5\n");
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+                   << QStringLiteral("pivotV: 0.5\n");
+        }
+
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("rotationUV"),
-                                                   transforms.mRotation);
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("positionU"),
+                                                 posU);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("positionU"),
-                                                   transforms.mTranslation.x);
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("positionV"),
+                                                 posV);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("positionV"),
-                                                   transforms.mTranslation.y);
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("rotationUV"),
+                                                 rotationUV);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("scaleU"),
-                                                   transforms.mScaling.x);
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("scaleU"),
+                                                 transforms.mScaling.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                   tabLevel + 1,
-                                                   QSSGQmlUtilities::PropertyMap::Texture,
-                                                   QStringLiteral("scaleV"),
-                                                   transforms.mScaling.y);
+                                                 tabLevel + 1,
+                                                 QSSGQmlUtilities::PropertyMap::Texture,
+                                                 QStringLiteral("scaleV"),
+                                                 transforms.mScaling.y);
     }
     // We don't make use of the data here, but there are additional flags
     // available for example the usage of the alpha channel
