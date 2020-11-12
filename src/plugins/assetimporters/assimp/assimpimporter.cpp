@@ -1480,7 +1480,7 @@ QString aiTilingMode(int tilingMode) {
     if (tilingMode == aiTextureMapMode_Wrap)
         return QStringLiteral("Texture.Repeat");
     if (tilingMode == aiTextureMapMode_Mirror)
-        return QStringLiteral("Texture.Mirror");
+        return QStringLiteral("Texture.MirroredRepeat");
     if (tilingMode == aiTextureMapMode_Clamp)
         return QStringLiteral("Texture.ClampToEdge");
 
