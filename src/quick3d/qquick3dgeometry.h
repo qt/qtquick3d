@@ -80,8 +80,8 @@ public:
         ComponentType componentType = F32Type;
     };
 
-    QByteArray vertexBuffer() const;
-    QByteArray indexBuffer() const;
+    QByteArray vertexData() const;
+    QByteArray indexData() const;
     int attributeCount() const;
     Attribute attribute(int index) const;
     PrimitiveType primitiveType() const;

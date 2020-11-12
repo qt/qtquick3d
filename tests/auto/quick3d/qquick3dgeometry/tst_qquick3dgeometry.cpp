@@ -155,15 +155,15 @@ void tst_QQuick3DGeometry::testGeometry2()
     vertexData.resize(100);
     vertexData.fill(0);
     geom.setVertexData(vertexData);
-    QCOMPARE(vertexData.size(), geom.vertexBuffer().size());
-    QVERIFY(geom.vertexBuffer().compare(vertexData) == 0);
+    QCOMPARE(vertexData.size(), geom.vertexData().size());
+    QVERIFY(geom.vertexData().compare(vertexData) == 0);
 
     QByteArray indexData;
     indexData.resize(100);
     indexData.fill(0);
     geom.setIndexData(indexData);
-    QCOMPARE(indexData.size(), geom.indexBuffer().size());
-    QVERIFY(geom.indexBuffer().compare(indexData) == 0);
+    QCOMPARE(indexData.size(), geom.indexData().size());
+    QVERIFY(geom.indexData().compare(indexData) == 0);
 
     const int stride = 20;
     geom.setStride(stride);
@@ -176,8 +176,8 @@ void tst_QQuick3DGeometry::testGeometry2()
     QVERIFY(qFuzzyCompare(maximum, geom.boundsMax()));
 
     geom.clear();
-    QCOMPARE(geom.vertexBuffer().size(), 0);
-    QCOMPARE(geom.indexBuffer().size(), 0);
+    QCOMPARE(geom.vertexData().size(), 0);
+    QCOMPARE(geom.indexData().size(), 0);
     QCOMPARE(geom.attributeCount(), 0);
 
     const QQuick3DGeometry::PrimitiveType primitiveTypes[] = {
@@ -235,46 +235,46 @@ void tst_QQuick3DGeometry::testPartialUpdate()
 
     QByteArray vertexData(100, 'a');
     geom.setVertexData(vertexData);
-    QCOMPARE(vertexData.size(), geom.vertexBuffer().size());
-    QCOMPARE(geom.vertexBuffer(), vertexData);
+    QCOMPARE(vertexData.size(), geom.vertexData().size());
+    QCOMPARE(geom.vertexData(), vertexData);
 
     QByteArray indexData(100, 'a');
     geom.setIndexData(indexData);
-    QCOMPARE(indexData.size(), geom.indexBuffer().size());
-    QCOMPARE(geom.indexBuffer(), indexData);
+    QCOMPARE(indexData.size(), geom.indexData().size());
+    QCOMPARE(geom.indexData(), indexData);
 
     QByteArray smallData(10, 'b');
     geom.setVertexData(30, smallData);
-    QCOMPARE(geom.vertexBuffer().size(), 100);
-    QCOMPARE(geom.vertexBuffer().left(30), QByteArray(30, 'a'));
-    QCOMPARE(geom.vertexBuffer().mid(30, 10), smallData);
-    QCOMPARE(geom.vertexBuffer().mid(40), QByteArray(60, 'a'));
+    QCOMPARE(geom.vertexData().size(), 100);
+    QCOMPARE(geom.vertexData().left(30), QByteArray(30, 'a'));
+    QCOMPARE(geom.vertexData().mid(30, 10), smallData);
+    QCOMPARE(geom.vertexData().mid(40), QByteArray(60, 'a'));
 
     geom.setIndexData(40, smallData);
-    QCOMPARE(geom.indexBuffer().size(), 100);
-    QCOMPARE(geom.indexBuffer().left(40), QByteArray(40, 'a'));
-    QCOMPARE(geom.indexBuffer().mid(40, 10), smallData);
-    QCOMPARE(geom.indexBuffer().mid(50), QByteArray(50, 'a'));
+    QCOMPARE(geom.indexData().size(), 100);
+    QCOMPARE(geom.indexData().left(40), QByteArray(40, 'a'));
+    QCOMPARE(geom.indexData().mid(40, 10), smallData);
+    QCOMPARE(geom.indexData().mid(50), QByteArray(50, 'a'));
 
     geom.setVertexData(100, smallData);
-    QCOMPARE(geom.vertexBuffer().size(), 100);
+    QCOMPARE(geom.vertexData().size(), 100);
     geom.setVertexData(101, smallData);
-    QCOMPARE(geom.vertexBuffer().size(), 100);
+    QCOMPARE(geom.vertexData().size(), 100);
 
     geom.setIndexData(100, smallData);
-    QCOMPARE(geom.indexBuffer().size(), 100);
+    QCOMPARE(geom.indexData().size(), 100);
     geom.setIndexData(101, smallData);
-    QCOMPARE(geom.indexBuffer().size(), 100);
+    QCOMPARE(geom.indexData().size(), 100);
 
     geom.setVertexData(95, smallData);
-    QCOMPARE(geom.vertexBuffer().size(), 100);
-    QCOMPARE(geom.vertexBuffer().mid(45, 50), QByteArray(50, 'a'));
-    QCOMPARE(geom.vertexBuffer().mid(95), smallData.left(5));
+    QCOMPARE(geom.vertexData().size(), 100);
+    QCOMPARE(geom.vertexData().mid(45, 50), QByteArray(50, 'a'));
+    QCOMPARE(geom.vertexData().mid(95), smallData.left(5));
 
     geom.setIndexData(95, smallData);
-    QCOMPARE(geom.indexBuffer().size(), 100);
-    QCOMPARE(geom.indexBuffer().mid(55, 40), QByteArray(40, 'a'));
-    QCOMPARE(geom.indexBuffer().mid(95), smallData.left(5));
+    QCOMPARE(geom.indexData().size(), 100);
+    QCOMPARE(geom.indexData().mid(55, 40), QByteArray(40, 'a'));
+    QCOMPARE(geom.indexData().mid(95), smallData.left(5));
 }
 
 

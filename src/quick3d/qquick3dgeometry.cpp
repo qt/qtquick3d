@@ -185,7 +185,7 @@
 
     These are sufficient to render the mesh. For indexed drawing, the index
     buffer data and an attribute with IndexSemantic needs to be specified as
-    well. To support picking (input), the bounds have to be provided as well.
+    well. In order to support picking (input), the class must specify the bounding volume using setBounds().
     For proper lighting, an attribute with NormalSemantic is needed. When the
     material uses texturing, at least one set of UV coordinates must be
     provided and described in an TexCoordSemantic attribute. Some materials may
@@ -267,9 +267,9 @@ QQuick3DGeometry::~QQuick3DGeometry()
 }
 
 /*!
-    Returns the vertex buffer data.
+    Returns the vertex buffer data set by setVertexData.
 */
-QByteArray QQuick3DGeometry::vertexBuffer() const
+QByteArray QQuick3DGeometry::vertexData() const
 {
     const Q_D(QQuick3DGeometry);
     return d->m_vertexBuffer;
@@ -278,14 +278,16 @@ QByteArray QQuick3DGeometry::vertexBuffer() const
 /*!
     Returns the index buffer data.
 */
-QByteArray QQuick3DGeometry::indexBuffer() const
+QByteArray QQuick3DGeometry::indexData() const
 {
     const Q_D(QQuick3DGeometry);
     return d->m_indexBuffer;
 }
 
 /*!
-    Returns the attribute count.
+    Returns the number of attributes defined for this geometry.
+
+    \sa attribute
 */
 int QQuick3DGeometry::attributeCount() const
 {
@@ -294,7 +296,9 @@ int QQuick3DGeometry::attributeCount() const
 }
 
 /*!
-    Returns an attribute at \a index
+    Returns attribute definition number \a index
+
+    The attribute definitions are numbered from 0 to \c {attributeCount() - 1}
 */
 QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
 {
@@ -303,23 +307,9 @@ QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const
 }
 
 /*!
-    Returns the primitive type. The default is \c Triangles.
+    Returns the primitive type used when rendering. The default is \c Triangles.
 
-    \value Points The primitives are points.
-    \value LineStrip The primitives are lines in a strip.
-    \value Lines The primitives are lines in a list.
-    \value TriangleStrip The primitives are triangles in a strip.
-    \value TriangleFan The primitives are triangles in a fan.
-    \value Triangles The primitives are triangles in a list.
-
-    \note Be aware that triangle fans (TriangleFan) may not be supported at run
-    time, depending on the underlying graphics API. For example, with Direct 3D
-    this topology will not be functional at all.
-
-    \note The point size for Points and the line width for Lines and LineStrip
-    are controlled by the \l{PrincipledMaterial::pointSize}{material}. Be aware
-    however that sizes other than 1 may not be supported at run time, depending
-    on the underlying graphics API.
+    \sa setPrimitiveType
 */
 QQuick3DGeometry::PrimitiveType QQuick3DGeometry::primitiveType() const
 {
@@ -328,7 +318,9 @@ QQuick3DGeometry::PrimitiveType QQuick3DGeometry::primitiveType() const
 }
 
 /*!
-    Returns the minimum bound coordinate.
+    Returns the minimum coordinate of the bounding volume.
+
+    \sa setBounds
 */
 QVector3D QQuick3DGeometry::boundsMin() const
 {
@@ -337,7 +329,9 @@ QVector3D QQuick3DGeometry::boundsMin() const
 }
 
 /*!
-    Returns the maximum bound coordinate.
+    Returns the maximum coordinate of the bounding volume.
+
+    \sa setBounds
 */
 QVector3D QQuick3DGeometry::boundsMax() const
 {
@@ -347,6 +341,8 @@ QVector3D QQuick3DGeometry::boundsMax() const
 
 /*!
     Returns the byte stride of the vertex buffer.
+
+    \sa setStride
 */
 int QQuick3DGeometry::stride() const
 {
@@ -361,7 +357,11 @@ void QQuick3DGeometry::markAllDirty()
 
 /*!
     Sets the vertex buffer \a data. The buffer should hold all the vertex data
-    packed in the array described by the attributes.
+    packed in the array, as described by the attribute definitions. Note that
+    this does not include attributes with \c IndexSemantic, which belong in the
+    index buffer.
+
+    \sa addAttribute, setStride, setIndexData
 */
 void QQuick3DGeometry::setVertexData(const QByteArray &data)
 {
@@ -371,17 +371,13 @@ void QQuick3DGeometry::setVertexData(const QByteArray &data)
 }
 
 /*!
+    \overload
     Updates a subset of the vertex buffer. \a offset specifies the offset in
     bytes, \a data specifies the size and the data.
 
-    The update attempt will be ignored if \a offset is greater or equal to the
-    size of current size of the buffer data set by a previous call to
-    setVertexData(). The exception is an \a offset of 0, in which case calling
-    this function is equivalent to calling setVertexData() without an offset.
-
-    If \a offset plus the size of \a data exceeds the current size of the
-    buffer data set by a previous call to setVertexData(), only the range
-    within the current size is updated, the rest of \a data is ignored.
+    This function will not resize the buffer. If \c {offset + data.size()} is
+    greater than the current size of the buffer, the overshooting data will
+    be ignored.
 
     \note The partial update functions for vertex and index data do not offer
     any guarantee on how such changes are implemented internally. Depending on
@@ -391,16 +387,8 @@ void QQuick3DGeometry::setVertexData(const QByteArray &data)
 void QQuick3DGeometry::setVertexData(int offset, const QByteArray &data)
 {
     Q_D(QQuick3DGeometry);
-    if (offset > d->m_vertexBuffer.size())
+    if (offset >= d->m_vertexBuffer.size())
         return;
-
-    if (offset == d->m_vertexBuffer.size()) {
-        if (offset == 0) {
-            d->m_vertexBuffer = data;
-            d->m_geometryChanged = true;
-        }
-        return;
-    }
 
     const size_t len = qMin(d->m_vertexBuffer.size() - offset, data.size());
     memcpy(d->m_vertexBuffer.data() + offset, data.data(), len);
@@ -409,8 +397,9 @@ void QQuick3DGeometry::setVertexData(int offset, const QByteArray &data)
 }
 
 /*!
-    Sets the index buffer \a data. If the index buffer is not set, the vertex buffer
-    is used as is for the vertices.
+    Sets the index buffer to \a data. To use indexed drawing, add an attribute with \c IndexSemantic
+
+    \sa addAttribute
 */
 void QQuick3DGeometry::setIndexData(const QByteArray &data)
 {
@@ -420,31 +409,24 @@ void QQuick3DGeometry::setIndexData(const QByteArray &data)
 }
 
 /*!
+    \overload
     Updates a subset of the index buffer. \a offset specifies the offset in
     bytes, \a data specifies the size and the data.
 
-    The update attempt will be ignored if \a offset is greater or equal to the
-    size of current size of the buffer data set by a previous call to
-    setIndexData(). The exception is an \a offset of 0, in which case calling
-    this function is equivalent to calling setIndexData() without an offset.
+    This function will not resize the buffer. If \c {offset + data.size()} is
+    greater than the current size of the buffer, the overshooting data will
+    be ignored.
 
-    If \a offset plus the size of \a data exceeds the current size of the
-    buffer data set by a previous call to setIndexData(), only the range
-    within the current size is updated, the rest of \a data is ignored.
+    \note The partial update functions for vertex and index data do not offer
+    any guarantee on how such changes are implemented internally. Depending on
+    the underlying implementation, even partial changes may lead to updating
+    the entire graphics resource.
 */
 void QQuick3DGeometry::setIndexData(int offset, const QByteArray &data)
 {
     Q_D(QQuick3DGeometry);
-    if (offset > d->m_indexBuffer.size())
+    if (offset >= d->m_indexBuffer.size())
         return;
-
-    if (offset == d->m_indexBuffer.size()) {
-        if (offset == 0) {
-            d->m_indexBuffer = data;
-            d->m_geometryChanged = true;
-        }
-        return;
-    }
 
     const size_t len = qMin(d->m_indexBuffer.size() - offset, data.size());
     memcpy(d->m_indexBuffer.data() + offset, data.data(), len);
@@ -453,7 +435,15 @@ void QQuick3DGeometry::setIndexData(int offset, const QByteArray &data)
 }
 
 /*!
-    Sets the byte \a stride of the vertex.
+    Sets the stride of the vertex buffer to \a stride, measured in bytes.
+    This is the distance between two consecutive vertices in the buffer.
+
+    For example, a tightly packed vertex buffer for a geometry using
+    \c PositionSemantic, \c IndexSemantic, and \c ColorSemantic will have stride
+    \c 28 (Seven floats in total: Three for position, four for color, and none for indexes,
+    which do not go in the vertex buffer.)
+
+    \sa addAttribute
 */
 void QQuick3DGeometry::setStride(int stride)
 {
@@ -465,7 +455,8 @@ void QQuick3DGeometry::setStride(int stride)
 }
 
 /*!
-    Sets the bounds of the geometry with \a min and \a max point.
+    Sets the bounding volume of the geometry to the cube defined by the points \a min and \a max.
+    This is used for \l {View3D::pick}{picking}.
 */
 void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
 {
@@ -476,7 +467,7 @@ void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
 }
 
 /*!
-    Sets the primitive \a type.
+    Sets the primitive type used for rendering to \a type.
 
     \value Points The primitives are points.
     \value LineStrip The primitives are lines in a strip.
@@ -486,6 +477,18 @@ void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)
     triangle fans may not be supported at run time, depending on the underlying
     graphics API.
     \value Triangles The primitives are triangles in a list.
+
+    The initial value is \c Triangles.
+
+    \note Be aware that triangle fans (TriangleFan) may not be supported at run
+    time, depending on the underlying graphics API. For example, with Direct 3D
+    this topology will not be functional at all.
+
+    \note The point size for Points and the line width for Lines and LineStrip
+    are controlled by the \l{PrincipledMaterial::pointSize}{material}. Be aware
+    however that sizes other than 1 may not be supported at run time, depending
+    on the underlying graphics API.
+
 */
 void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 {
@@ -504,16 +507,18 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 
     The semantic can be one of the following:
 
-    \value IndexSemantic The attribute is not a real vertex input, but rather
-    describes the index data in the index buffer.
-    \value PositionSemantic The attribute is a position.
-    \value NormalSemantic The attribute is a normal vector.
-    \value TexCoordSemantic The attribute is a texture coordinate.
-    \value TangentSemantic The attribute is a tangent vector.
-    \value BinormalSemantic The attribute is a binormal vector.
-    \value JointSemantic The attribute is a joint index vector for skinning.
-    \value WeightSemantic The attribute is a weight vector for skinning.
-    \value ColorSemantic The attribute is a vertex color vector.
+    \value PositionSemantic The attribute is a position. 3 components: \e x, \e y, and \e z
+    \value NormalSemantic The attribute is a normal vector. 3 components: \e x, \e y, and \e z
+    \value TexCoordSemantic The attribute is a texture coordinate. 2 components: \e u and \e v
+    \value TangentSemantic The attribute is a tangent vector. 3 components: \e x, \e y, and \e z
+    \value BinormalSemantic The attribute is a binormal vector. 3 components: \e x, \e y, and \e z
+    \value JointSemantic The attribute is a joint index vector for skinning. 4 components: \e x, \e y, \e z, and \e w
+    \value WeightSemantic The attribute is a weight vector for skinning. 4 components: \e x, \e y, \e z, and \e w
+    \value ColorSemantic The attribute is a vertex color vector. 4 components: \e r, \e g, \e b, and \e a
+
+    In addition, \a semantic can be \c IndexSemantic. In this case the attribute does not represent an entry in the vertex
+    buffer, but rather describes the index data in the index buffer. Since there is always just one index per vertex, \a offset
+    makes no sense for the index buffer, and should be left at zero.
 
     The component type can be one of the following:
 
@@ -522,7 +527,7 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value I32Type The attribute is a signed 32-bit integer.
     \value F32Type The attribute is a single-precision float.
 
-    \note The joint index data is I32Type typically. F32Type is also supported
+    \note The joint index data is typically \c I32Type. \c F32Type is also supported
     in order to enable functioning with APIs, such as OpenGL ES 2.0, that do not
     support integer vertex input attributes.
 
@@ -541,6 +546,8 @@ void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
 }
 
 /*!
+    \overload
+
     Adds vertex attribute description. Each attribute has a semantic, which specifies
     the usage of the attribute and the number of components it has, an offset from the
     beginning to the vertex to the attribute location inside a vertex and a componentType
@@ -556,7 +563,7 @@ void QQuick3DGeometry::addAttribute(const Attribute &attribute)
 }
 
 /*!
-    Clears previously set vertex- and index data as well as attributes.
+    Resets the geometry to its initial state, clearing previously set vertex and index data as well as attributes.
 */
 void QQuick3DGeometry::clear()
 {
@@ -566,6 +573,8 @@ void QQuick3DGeometry::clear()
     d->m_attributeCount = 0;
     d->m_primitiveType = PrimitiveType::Triangles;
     d->m_geometryChanged = true;
+    d->m_min = {};
+    d->m_max = {};
 }
 
 static QSSGRenderGeometry::PrimitiveType mapPrimitiveType(QQuick3DGeometry::PrimitiveType t)
