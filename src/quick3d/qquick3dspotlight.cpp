@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
     Let's look at a simple example. Here a SpotLight is placed at 300 on the Z
     axis, so halfway between the camera and the scene center. By default the
-    light is emitting in the direction of the Z axis. The \l brightness is
+    light is emitting in the direction of the Z axis. The \l {Light::}{brightness} is
     increased to 10 to make it look more like a typical spot light.
 
     \qml
