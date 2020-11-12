@@ -90,6 +90,7 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
         FILES
             designer/source/cone_model_template.qml
             designer/source/cube_model_template.qml
+            designer/source/custom_material_default_shader.frag
             designer/source/cylinder_model_template.qml
             designer/source/plane_model_template.qml
             designer/source/sphere_model_template.qml
