@@ -116,10 +116,8 @@ QQuick3DObject::~QQuick3DObject()
     if (d->parentItem)
         setParentItem(nullptr);
 
-    if (d->sceneRefCount > 1) {
-        qWarning("Unexpected ref. count %d\n", d->sceneRefCount);
+    if (d->sceneRefCount > 1)
         d->sceneRefCount = 1; // Make sure the scene is set to null in next call to derefSceneManager().
-    }
 
     if (!d->parentItem && d->sceneManager)
         QQuick3DObjectPrivate::derefSceneManager(this);
