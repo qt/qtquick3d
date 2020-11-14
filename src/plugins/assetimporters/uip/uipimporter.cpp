@@ -356,7 +356,7 @@ void UipImporter::generateMaterialComponent(GraphObject *object)
     }
 
     if (!materialComponentFile.open(QIODevice::WriteOnly)) {
-        qWarning() << "Could not write to file : " << materialComponentFile;
+        qWarning() << "Could not write to file : " << materialComponentFile.fileName();
         return;
     }
 
@@ -384,7 +384,7 @@ void UipImporter::generateAliasComponent(GraphObject *reference)
         return;
 
     if (!aliasComponentFile.open(QIODevice::WriteOnly)) {
-        qWarning() << "Could not write to file: " << aliasComponentFile;
+        qWarning() << "Could not write to file: " << aliasComponentFile.fileName();
         return;
     }
 
@@ -674,7 +674,7 @@ void UipImporter::generateComponent(GraphObject *component)
     QString targetFileName = componentPath.absolutePath() + QDir::separator() + componentName + QStringLiteral(".qml");
     QFile componentFile(targetFileName);
     if (!componentFile.open(QIODevice::WriteOnly)) {
-        qWarning() << "Could not write to file: " << componentFile;
+        qWarning() << "Could not write to file: " << componentFile.fileName();
         return;
     }
 
@@ -766,7 +766,7 @@ void UipImporter::generateQmlComponent(const QString componentName, const QStrin
     QString targetFileName = componentPath.absolutePath() + QDir::separator() + qmlComponentName + QStringLiteral(".qml");
     QFile componentFile(targetFileName);
     if (!componentFile.open(QIODevice::WriteOnly)) {
-        qWarning() << "Could not write to file: " << componentFile;
+        qWarning() << "Could not write to file: " << componentFile.fileName();
         return;
     }
 
