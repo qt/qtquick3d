@@ -78,7 +78,7 @@ TestModel {
   \li Wavefront (.obj)
   \li COLLADA (.dae)
   \li FBX (.fbx)
-  \li Blender (.blend)
+  \li STL (.stl)
   \li GLTF2 (.gltf, .glb)
 \endlist
 

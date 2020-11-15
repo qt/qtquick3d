@@ -80,9 +80,9 @@ void tst_assetimport::importFile_data()
     QTest::newRow("fbx") << QString("fbx") << true;
     QTest::newRow("dae") << QString("dae") << true;
     QTest::newRow("obj") << QString("obj") << true;
-    QTest::newRow("blend") << QString("blend") << true;
     QTest::newRow("gltf") << QString("gltf") << true;
     QTest::newRow("glb") << QString("glb") << true;
+    QTest::newRow("stl") << QString("stl") << true;
 }
 
 void tst_assetimport::importFile()

@@ -55,15 +55,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
     SOURCES
         ../../../3rdparty/assimp/config.h
         ../../../3rdparty/assimp/revision.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderBMesh.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderBMesh.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderCustomData.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderCustomData.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderDNA.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderDNA.h ../../../3rdparty/assimp/src/code/Blender/BlenderDNA.inl
-        ../../../3rdparty/assimp/src/code/Blender/BlenderIntermediate.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderLoader.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderLoader.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderModifier.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderModifier.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderScene.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderScene.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderSceneGen.h
-        ../../../3rdparty/assimp/src/code/Blender/BlenderTessellator.cpp ../../../3rdparty/assimp/src/code/Blender/BlenderTessellator.h
         ../../../3rdparty/assimp/src/code/CApi/CInterfaceIOWrapper.cpp ../../../3rdparty/assimp/src/code/CApi/CInterfaceIOWrapper.h
         ../../../3rdparty/assimp/src/code/Collada/ColladaHelper.h
         ../../../3rdparty/assimp/src/code/Collada/ColladaLoader.cpp ../../../3rdparty/assimp/src/code/Collada/ColladaLoader.h
@@ -298,6 +289,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ASSIMP_BUILD_NO_X3D_IMPORTER
         ASSIMP_BUILD_NO_XGL_IMPORTER
         ASSIMP_BUILD_NO_X_IMPORTER
+        ASSIMP_BUILD_NO_BLEND_IMPORTER
         NOUNCRYPT
     INCLUDE_DIRECTORIES
         ../../../3rdparty/assimp
@@ -305,7 +297,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/contrib/unzip
         ../../../3rdparty/assimp/src
         ../../../3rdparty/assimp/src/code
-        ../../../3rdparty/assimp/src/code/Blender
         ../../../3rdparty/assimp/src/code/CApi
         ../../../3rdparty/assimp/src/code/Collada
         ../../../3rdparty/assimp/src/code/Common

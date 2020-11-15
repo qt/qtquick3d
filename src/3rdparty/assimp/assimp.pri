@@ -53,6 +53,7 @@ DEFINES += \
     ASSIMP_BUILD_NO_X3D_IMPORTER \
     ASSIMP_BUILD_NO_MMD_IMPORTER \
     ASSIMP_BUILD_NO_STEP_IMPORTER \
+    ASSIMP_BUILD_NO_BLEND_IMPORTER \
     ASSIMP_BUILD_NO_OWN_ZLIB \
     ASSIMP_BUILD_NO_COMPRESSED_IFC \
     ASSIMP_BUILD_NO_EXPORT \
@@ -113,7 +114,6 @@ INCLUDEPATH += \
         $$PWD/src/code/Collada \
         $$PWD/src/code/Material \
         $$PWD/src/code/Obj \
-        $$PWD/src/code/Blender \
         $$PWD/src/code/FBX \
         $$PWD/src/code/PostProcessing \
         $$PWD/src/code/STL \
@@ -236,16 +236,6 @@ HEADERS += \
     $$PWD/src/code/Obj/ObjFileMtlImporter.h \
     $$PWD/src/code/Obj/ObjFileParser.h \
     $$PWD/src/code/Obj/ObjTools.h \
-    $$PWD/src/code/Blender/BlenderLoader.h \
-    $$PWD/src/code/Blender/BlenderDNA.h \
-    $$PWD/src/code/Blender/BlenderDNA.inl \
-    $$PWD/src/code/Blender/BlenderScene.h \
-    $$PWD/src/code/Blender/BlenderSceneGen.h \
-    $$PWD/src/code/Blender/BlenderIntermediate.h \
-    $$PWD/src/code/Blender/BlenderModifier.h \
-    $$PWD/src/code/Blender/BlenderBMesh.h \
-    $$PWD/src/code/Blender/BlenderTessellator.h \
-    $$PWD/src/code/Blender/BlenderCustomData.h \
     $$PWD/src/code/FBX/FBXCompileConfig.h \
     $$PWD/src/code/FBX/FBXImporter.h \
     $$PWD/src/code/FBX/FBXParser.h \
@@ -333,13 +323,6 @@ SOURCES += \
     $$PWD/src/code/Obj/ObjFileImporter.cpp \
     $$PWD/src/code/Obj/ObjFileMtlImporter.cpp \
     $$PWD/src/code/Obj/ObjFileParser.cpp \
-    $$PWD/src/code/Blender/BlenderLoader.cpp \
-    $$PWD/src/code/Blender/BlenderDNA.cpp \
-    $$PWD/src/code/Blender/BlenderScene.cpp \
-    $$PWD/src/code/Blender/BlenderModifier.cpp \
-    $$PWD/src/code/Blender/BlenderBMesh.cpp \
-    $$PWD/src/code/Blender/BlenderTessellator.cpp \
-    $$PWD/src/code/Blender/BlenderCustomData.cpp \
     $$PWD/src/code/FBX/FBXImporter.cpp \
     $$PWD/src/code/FBX/FBXParser.cpp \
     $$PWD/src/code/FBX/FBXTokenizer.cpp \

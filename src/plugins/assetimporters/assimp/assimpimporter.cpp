@@ -119,7 +119,6 @@ const QStringList AssimpImporter::inputExtensions() const
     extensions.append(QStringLiteral("fbx"));
     extensions.append(QStringLiteral("dae"));
     extensions.append(QStringLiteral("obj"));
-    extensions.append(QStringLiteral("blend"));
     extensions.append(QStringLiteral("gltf"));
     extensions.append(QStringLiteral("glb"));
     extensions.append(QStringLiteral("stl"));
