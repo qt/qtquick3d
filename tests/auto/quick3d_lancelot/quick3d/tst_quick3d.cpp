@@ -196,6 +196,12 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
     grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
     QStringList args = extraArgs;
+#if defined(Q_OS_WIN)
+    args << "-platform" << "windows:fontengine=freetype";
+#elif defined(Q_OS_DARWIN)
+    args << "-platform" << "cocoa:fontengine=freetype";
+#endif
+
     QString tmpfile = usePipe ? QString("-") : QString("%1/qmlscenegrabber-%2-out.ppm")
                                 .arg(QDir::tempPath()).arg(QCoreApplication::applicationPid());
     args << qmlFile << "-o" << tmpfile;

@@ -32,6 +32,7 @@
 #include <QtCore/QHashFunctions>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
+#include <QtGui/QFontDatabase>
 
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
@@ -157,6 +158,10 @@ int main(int argc, char *argv[])
     qSetGlobalQHashSeed(0);
 
     QGuiApplication a(argc, argv);
+    QFontDatabase::addApplicationFont(":/trim.ttf");
+    QFont commonFont("Trim");
+    commonFont.setHintingPreference(QFont::PreferNoHinting);
+    a.setFont(commonFont);
 
     QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
 
@@ -202,6 +207,8 @@ int main(int argc, char *argv[])
     // End parsing
 
     GrabbingView v(ofile);
+    v.setTextRenderType(QQuickWindow::QtTextRendering);
+
     v.setSource(QUrl::fromLocalFile(ifile));
 
     if (noText) {

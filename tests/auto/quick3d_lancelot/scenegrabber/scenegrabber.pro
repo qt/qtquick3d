@@ -24,3 +24,5 @@ HEADERS += \
     indextrianglestopology.h \
     nonindextrianglestopology.h \
     pointstopology.h
+
+RESOURCES += scenegrabber.qrc
