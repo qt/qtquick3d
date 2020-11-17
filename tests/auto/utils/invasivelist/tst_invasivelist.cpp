@@ -66,6 +66,8 @@ private slots:
     void test_copy_lList();
     void test_iteratorSll();
     void test_iteratorLl();
+    void test_sublistSll();
+    void test_insertBadNodeLl();
 };
 
 void invasivelist::test_empty()
@@ -521,6 +523,145 @@ void invasivelist::test_iteratorLl()
             lastValue = rit->value;
         }
         QCOMPARE(lastValue, 0);
+    }
+}
+
+void invasivelist::test_sublistSll()
+{
+    const int itemCount = 6;
+    NodeItem items[itemCount];
+
+    SingleLinkedList l1;
+    for (int i = 0; i != itemCount; ++i) {
+        items[i].value = i;
+        l1.push_back(items[i]);
+    }
+
+    int lastValue = -1;
+    int count = 0;
+    for (const auto &item : qAsConst(l1)) {
+        QVERIFY(item.value > lastValue);
+        lastValue = item.value;
+        ++count;
+    }
+
+    QCOMPARE(lastValue, itemCount - 1);
+    QCOMPARE(count, itemCount);
+
+    {
+        const int badNodeLastValue = 123;
+        { // push_back
+            NodeItem badNode;
+            badNode.value = badNodeLastValue;
+            badNode.next = &items[0];
+            badNode.prev = &items[0];
+            l1.push_back(badNode);
+
+            lastValue = -1;
+            count = 0;
+            for (const auto &item : qAsConst(l1)) {
+                lastValue = item.value;
+                ++count;
+            }
+
+            QCOMPARE(lastValue, badNodeLastValue);
+            QCOMPARE(count, itemCount + 1);
+        }
+    }
+}
+
+void invasivelist::test_insertBadNodeLl()
+{
+    const int itemCount = 6;
+    NodeItem items[itemCount];
+
+    LinkedList l1;
+    for (int i = 0; i != itemCount; ++i) {
+        items[i].value = i;
+        l1.push_back(items[i]);
+    }
+
+    int lastValue = -1;
+    int count = 0;
+    for (const auto &item : qAsConst(l1)) {
+        QVERIFY(item.value > lastValue);
+        lastValue = item.value;
+        ++count;
+    }
+
+    QCOMPARE(lastValue, itemCount - 1);
+    QCOMPARE(count, itemCount);
+
+    {
+        const int badNodeLastValue = 123;
+        { // push_back
+            NodeItem badNode;
+            badNode.value = badNodeLastValue;
+            badNode.next = &items[0];
+            badNode.prev = &items[0];
+            l1.push_back(badNode);
+
+            // Forwarnd
+            lastValue = -1;
+            count = 0;
+            for (const auto &item : qAsConst(l1)) {
+                lastValue = item.value;
+                ++count;
+            }
+
+            QCOMPARE(lastValue, badNodeLastValue);
+            QCOMPARE(count, itemCount + 1);
+
+            // Reverse
+            lastValue = -1;
+            count = 0;
+            for (auto rit = l1.rbegin(), rend = l1.rend(); rit != rend; ++rit) {
+                lastValue = (*rit).value;
+                ++count;
+            }
+
+            QCOMPARE(lastValue,  items[0].value);
+            QCOMPARE(count, itemCount + 1);
+
+            l1.remove(badNode);
+            QCOMPARE(badNode.next, nullptr);
+            QCOMPARE(badNode.prev, nullptr);
+        }
+
+        { // push_front
+            NodeItem badNode;
+            badNode.value = badNodeLastValue;
+            badNode.next = &items[0];
+            badNode.prev = &items[0];
+            l1.push_front(badNode);
+
+            // Forwarnd
+            lastValue = -1;
+            count = 0;
+            for (const auto &item : qAsConst(l1)) {
+                lastValue = item.value;
+                ++count;
+            }
+
+            QCOMPARE(lastValue, items[itemCount - 1].value);
+            QCOMPARE(count, itemCount + 1);
+
+            // Reverse
+            lastValue = -1;
+            count = 0;
+            for (auto rit = l1.rbegin(), rend = l1.rend(); rit != rend; ++rit) {
+                lastValue = (*rit).value;
+                ++count;
+            }
+
+            QCOMPARE(lastValue,  badNodeLastValue);
+            QCOMPARE(count, itemCount + 1);
+
+            l1.remove(badNode);
+            QCOMPARE(badNode.next, nullptr);
+            QCOMPARE(badNode.prev, nullptr);
+        }
+
     }
 }
 

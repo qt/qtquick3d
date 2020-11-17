@@ -46,6 +46,12 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_DEBUG
+#define QSSG_VERIFY_NODE(X) if (!(X)) qCritical("Node links are not null!");
+#else
+#define QSSG_VERIFY_NODE(X) Q_UNUSED((X));
+#endif
+
 // Used for singly linked list where
 // items have either no head or tail ptr.
 template<typename T>
@@ -68,7 +74,7 @@ struct QSSGListAccessorPrevious
 {
     static inline T *get(T &o) { return o.*p; }
     static inline const T *get(const T &o) { return o.*p; }
-    static inline void set(T &o, T *next) { o.*p = next; }
+    static inline void set(T &o, T *prev) { o.*p = prev; }
 };
 
 // Base linked list without an included head or tail member.
@@ -178,9 +184,15 @@ struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNul
 
     void push_back(T &inObj)
     {
-        if (m_head == nullptr)
+        // The next pointer of the tail must be null.
+        // We assert because if the inObj actually points somewhere then it's
+        // likely that we: Crash at some later point, we loop, or we broke the links
+        // in another list.
+        QSSG_VERIFY_NODE(TailOp::get(inObj) == nullptr);
+
+        if (m_head == nullptr) {
             m_head = &inObj;
-        else {
+        } else {
             T *lastObj = nullptr;
             for (iterator iter = begin(), endIter = end(); iter != endIter; ++iter)
                 lastObj = &(*iter);
@@ -189,6 +201,7 @@ struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNul
             if (lastObj)
                 TailOp::set(*lastObj, &inObj);
         }
+        TailOp::set(inObj, nullptr);
     }
 
     void remove(T &inObj)
@@ -246,8 +259,16 @@ struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<T, QSSGListAcces
 
     void push_front(T &inObj)
     {
+        // The prev pointer of the head must be null.
+        // If the inObj actually points somewhere then it's likely that we're going to:
+        // Crash at some later point, loop, or that the we just broke the another list.
+        QSSG_VERIFY_NODE(HeadOp::get(inObj) == nullptr);
+
         if (m_head != nullptr)
             BaseList::insert_before(*m_head, inObj);
+        else
+            HeadOp::set(inObj, nullptr);
+
         m_head = &inObj;
 
         if (m_tail == nullptr)
@@ -256,8 +277,17 @@ struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<T, QSSGListAcces
 
     void push_back(T &inObj)
     {
+        // The next pointer of the tail must be null.
+        // We assert because if the inObj actually points somewhere then it's
+        // likely that we: Crash at some later point, we loop, or we broke the links
+        // in another list.
+        QSSG_VERIFY_NODE(TailOp::get(inObj) == nullptr);
+
         if (m_tail != nullptr)
             BaseList::insert_after(*m_tail, inObj);
+        else
+            TailOp::set(inObj, nullptr);
+
         m_tail = &inObj;
 
         if (m_head == nullptr)
