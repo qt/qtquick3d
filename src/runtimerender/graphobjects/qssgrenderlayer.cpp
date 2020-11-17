@@ -116,7 +116,10 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
     }
 
     // The imported scene root node is now a child of the dummy node
-    importSceneNode->children.push_back(rootNode);
+    auto &chldren = importSceneNode->children;
+    Q_ASSERT(children.isEmpty());
+    // We don't want the list to modify our node, so we set the tail and head manually.
+    chldren.m_head = children.m_tail = &rootNode;
 }
 
 void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
