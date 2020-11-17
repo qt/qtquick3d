@@ -118,7 +118,10 @@ QQuick3DViewport::~QQuick3DViewport()
     delete m_sceneRoot;
     m_sceneRoot = nullptr;
 
-    delete sceneManager;
+    // We need to defere the deletion of the scene manager or items might
+    // try to deref using the now destroyed scene manaager.
+    sceneManager->deleteLater();
+    sceneManager = nullptr;
 
     // m_directRenderer must be destroyed on the render thread at the proper time, not here.
     // That's handled in releaseResources() + upon sceneGraphInvalidated
