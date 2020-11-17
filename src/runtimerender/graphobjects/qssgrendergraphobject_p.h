@@ -75,7 +75,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Geometry,
         Item2D,
         TextureData,
-        LastKnownGraphObjectType,
+        ImportScene,
+        LastKnownGraphObjectType
     };
 
     QAtomicInt ref;
@@ -105,7 +106,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
                 type == Type::Layer ||
                 type == Type::Light ||
                 type == Type::Camera ||
-                type == Type::Model);
+                type == Type::Model ||
+                type == Type::ImportScene);
     }
 
     inline bool isRenderableType() const Q_DECL_NOTHROW

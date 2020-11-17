@@ -657,7 +657,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     }
     if (importRootNode != m_importRootNode) {
         if (m_importRootNode)
-            removeNodeFromLayer(m_importRootNode);
+            m_layer->removeImportScene(*m_importRootNode);
 
         if (importRootNode) {
             // if importScene has the rendered viewport as ancestor, it probably means
@@ -673,7 +673,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
                 sceneParent = sceneParent->parent();
             }
             if (!isEmbedded)
-                m_layer->addChildrenToLayer(importRootNode->children);
+                m_layer->setImportScene(*importRootNode);
         }
 
         m_importRootNode = importRootNode;

@@ -78,6 +78,12 @@ QSSGRenderLayer::QSSGRenderLayer()
 
 QSSGRenderLayer::~QSSGRenderLayer()
 {
+    if (importSceneNode) {
+        // Remove the dummy from the list or it's siblings will still link to it.
+        children.remove(*importSceneNode);
+        delete importSceneNode;
+        importSceneNode = nullptr;
+    }
     delete renderData;
 }
 
@@ -97,15 +103,27 @@ void QSSGRenderLayer::addEffect(QSSGRenderEffect &inEffect)
     inEffect.m_layer = this;
 }
 
-void QSSGRenderLayer::addChildrenToLayer(QSSGRenderNode::ChildList &adoptList)
+void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
 {
-    if (children.empty()) {
-        children = adoptList;
-    } else if (!adoptList.empty()) {
-        // TODO: This is not the ideal solution, but it makes more sense to add this
-        // feature to the list then doing a one off solution here (append/insert list).
-        for (auto it = adoptList.begin(), end = adoptList.end(); it != end;)
-            children.push_back(*it++);
+    // We create a dummy node to represent the imported scene tree, as we
+    // do absolutely not want to change the node links in that tree!
+    if (importSceneNode == nullptr) {
+        importSceneNode = new QSSGRenderNode(QSSGRenderGraphObject::Type::ImportScene);
+        // Now we can add the dummy node to the layers child list
+        children.push_back(*importSceneNode);
+    } else {
+        importSceneNode->children = QSSGRenderNode::ChildList(); // Clear the list (or the list will modify the rootNode)
+    }
+
+    // The imported scene root node is now a child of the dummy node
+    importSceneNode->children.push_back(rootNode);
+}
+
+void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
+{
+    if (importSceneNode && !importSceneNode->children.empty()) {
+        if (&importSceneNode->children.back() == &rootNode)
+            importSceneNode->children = QSSGRenderNode::ChildList();
     }
 }
 
