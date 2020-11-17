@@ -476,4 +476,24 @@ MetaInfo {
             requiredImport: "QtQuick3D"
         }
     }
+    Type {
+        name: "QtQuick3D.Effect"
+        icon: "images/effect16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Effect"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/effect.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+            QmlSource { source: "./source/effect_template.qml" }
+            ExtraFile { source: "./source/effect_default_shader.frag" }
+        }
+    }
 }

@@ -47,6 +47,8 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
             designer/DefaultMaterialSpecifics.qml
             designer/DirectionalLightSection.qml
             designer/DirectionalLightSpecifics.qml
+            designer/EffectSection.qml
+            designer/EffectSpecifics.qml
             designer/FrustumCameraSection.qml
             designer/FrustumCameraSpecifics.qml
             designer/IdComboBox.qml
@@ -92,6 +94,8 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
             designer/source/cube_model_template.qml
             designer/source/custom_material_default_shader.frag
             designer/source/cylinder_model_template.qml
+            designer/source/effect_default_shader.frag
+            designer/source/effect_template.qml
             designer/source/plane_model_template.qml
             designer/source/sphere_model_template.qml
             designer/source/view3D_template.qml
@@ -119,6 +123,9 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
             designer/images/dummy.png
             designer/images/dummy16.png
             designer/images/dummy@2x.png
+            designer/images/effect.png
+            designer/images/effect16.png
+            designer/images/effect@2x.png
             designer/images/group.png
             designer/images/group16.png
             designer/images/group@2x.png

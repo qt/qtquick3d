@@ -29,7 +29,6 @@
 
 import QtQuick 2.15
 import QtQuick3D 6.0
-import QtQuick3D.Effects 1.15
 
 Effect {
     passes: renderPass

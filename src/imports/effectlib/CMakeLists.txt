@@ -119,8 +119,6 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
             designer/DistortionSpiralSpecifics.qml
             designer/EdgeDetectSection.qml
             designer/EdgeDetectSpecifics.qml
-            designer/EffectSection.qml
-            designer/EffectSpecifics.qml
             designer/EmbossSection.qml
             designer/EmbossSpecifics.qml
             designer/FlipSection.qml
@@ -143,14 +141,6 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
             designer/VignetteSection.qml
             designer/VignetteSpecifics.qml
             designer/effectlib.metainfo
-        DESTINATION "${__aux_qml_files_install_dir}")
-
-    qt_path_join(__aux_qml_files_install_dir "${__aux_qml_files_install_base}" "designer/source")
-
-    qt_copy_or_install(
-        FILES
-            designer/source/effect_default_shader.frag
-            designer/source/effect_template.qml
         DESTINATION "${__aux_qml_files_install_dir}")
 
     qt_path_join(__aux_qml_files_install_dir "${__aux_qml_files_install_base}" "designer/images")

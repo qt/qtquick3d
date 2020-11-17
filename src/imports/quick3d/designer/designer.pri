@@ -47,6 +47,8 @@ AUX_QML_FILES += \
     $$PWD/SetUniformValueSpecifics.qml \
     $$PWD/TextureInputSection.qml \
     $$PWD/TextureInputSpecifics.qml \
+    $$PWD/EffectSection.qml \
+    $$PWD/EffectSpecifics.qml
 
 AUX_QML_FILES += \
     $$PWD/source/view3D_template.qml \
@@ -54,7 +56,9 @@ AUX_QML_FILES += \
     $$PWD/source/sphere_model_template.qml \
     $$PWD/source/cone_model_template.qml \
     $$PWD/source/cylinder_model_template.qml \
-    $$PWD/source/plane_model_template.qml
+    $$PWD/source/plane_model_template.qml \
+    $$PWD/source/effect_template.qml \
+    $$PWD/source/effect_default_shader.frag
 
 AUX_QML_FILES += \
     $$PWD/images/dummy.png \
@@ -75,6 +79,9 @@ AUX_QML_FILES += \
     $$PWD/images/cylinder.png \
     $$PWD/images/cylinder@2x.png \
     $$PWD/images/cylinder16.png \
+    $$PWD/images/effect.png \
+    $$PWD/images/effect@2x.png \
+    $$PWD/images/effect16.png \
     $$PWD/images/group.png \
     $$PWD/images/group@2x.png \
     $$PWD/images/group16.png \
@@ -105,4 +112,4 @@ AUX_QML_FILES += \
     $$PWD/images/texture16.png \
     $$PWD/images/view3D.png \
     $$PWD/images/view3D@2x.png \
-    $$PWD/images/view3D16.png \
+    $$PWD/images/view3D16.png

@@ -44,13 +44,7 @@ AUX_QML_FILES += \
     $$PWD/TiltShiftSection.qml \
     $$PWD/TiltShiftSpecifics.qml \
     $$PWD/VignetteSection.qml \
-    $$PWD/VignetteSpecifics.qml \
-    $$PWD/EffectSection.qml \
-    $$PWD/EffectSpecifics.qml
-
-AUX_QML_FILES += \
-    $$PWD/source/effect_template.qml \
-    $$PWD/source/effect_default_shader.frag
+    $$PWD/VignetteSpecifics.qml
 
 AUX_QML_FILES += \
     $$PWD/images/effect.png \

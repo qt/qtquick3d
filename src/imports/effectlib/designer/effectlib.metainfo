@@ -14,7 +14,7 @@ MetaInfo {
             name: "Additive Color Gradient"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -33,7 +33,7 @@ MetaInfo {
             name: "Blur"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -52,7 +52,7 @@ MetaInfo {
             name: "Brush Strokes"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -71,7 +71,7 @@ MetaInfo {
             name: "Chromatic Aberration"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -90,7 +90,7 @@ MetaInfo {
             name: "Color Master"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -109,7 +109,7 @@ MetaInfo {
             name: "Depth of Field HQ Blur"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -128,7 +128,7 @@ MetaInfo {
             name: "Desaturate"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -147,7 +147,7 @@ MetaInfo {
             name: "Distortion Ripple"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -166,7 +166,7 @@ MetaInfo {
             name: "Distortion Sphere"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -185,7 +185,7 @@ MetaInfo {
             name: "Distortion Spiral"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -204,7 +204,7 @@ MetaInfo {
             name: "Edge Detect"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -223,7 +223,7 @@ MetaInfo {
             name: "Emboss"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -242,7 +242,7 @@ MetaInfo {
             name: "Flip"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -261,7 +261,7 @@ MetaInfo {
             name: "Fxaa"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -280,7 +280,7 @@ MetaInfo {
             name: "Gaussian Blur"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -299,7 +299,7 @@ MetaInfo {
             name: "HDR Bloom Tonemap"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -318,7 +318,7 @@ MetaInfo {
             name: "Motion Blur"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -337,7 +337,7 @@ MetaInfo {
             name: "Scatter"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -356,7 +356,7 @@ MetaInfo {
             name: "SCurve Tonemap"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -375,7 +375,7 @@ MetaInfo {
             name: "Tilt Shift"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
         }
     }
@@ -394,28 +394,8 @@ MetaInfo {
             name: "Vignette"
             category: "Qt Quick 3D Effects"
             libraryIcon: "images/effect.png"
-            version: "1.15"
+            version: "1.0"
             requiredImport: "QtQuick3D.Effects"
-        }
-    }
-    Type {
-        name: "QtQuick3D.Effects.Effect"
-        icon: "images/effect16.png"
-
-        Hints {
-            visibleInNavigator: true
-            canBeDroppedInNavigator: true
-            canBeDroppedInFormEditor: false
-        }
-
-        ItemLibraryEntry {
-            name: "Effect"
-            category: "Qt Quick 3D"
-            libraryIcon: "images/effect.png"
-            version: "1.15"
-            requiredImport: "QtQuick3D.Effects"
-            QmlSource { source: "./source/effect_template.qml" }
-            ExtraFile { source: "./source/effect_default_shader.frag" }
         }
     }
 }
