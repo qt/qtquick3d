@@ -31,8 +31,6 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 
-#include <QtQuick3D/private/qquick3deffect_p.h>
-
 QT_BEGIN_NAMESPACE
 
 class QtQuick3DEffectPlugin : public QQmlExtensionPlugin
@@ -45,8 +43,6 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick3D.Effects"));
-
-        qmlRegisterType<QQuick3DEffect>(uri, 1, 15, "Effect");
 
         qmlRegisterModule(uri, QT_VERSION_MAJOR, QT_VERSION_MINOR);
     }
