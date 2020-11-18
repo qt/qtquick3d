@@ -120,7 +120,7 @@ QQuick3DViewport::~QQuick3DViewport()
 
     // We need to defere the deletion of the scene manager or items might
     // try to deref using the now destroyed scene manaager.
-    sceneManager->deleteLater();
+    connect(this, &QObject::destroyed, [sceneManager](QObject *) { delete sceneManager; });
     sceneManager = nullptr;
 
     // m_directRenderer must be destroyed on the render thread at the proper time, not here.
