@@ -96,6 +96,7 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D Scenes with 2D Content}
     \li \l{Programmable Materials, Effects, Geometry, and Texture data}
     \li \l{Shadergen Tool}{Build-time materials}
+    \li \l{Vertex Skinning}{Skeletal Animation}
 \endlist
 
 \section1 Reference

@@ -32,8 +32,8 @@
     \brief Demonstrates how to render a simple skinning animation in Qt Quick 3D.
     \image skinning.png
 
-    Generally most skin animations will be designed by modeling tools and Quick3D
-    also supports glTF formats by \l {Balsam Asset Import Tool}{Balsam importer}
+    Generally most \l{Vertex Skinning}{skin animations} will be designed by modeling tools, and Quick3D
+    also supports glTF formats through the \l {Balsam Asset Import Tool}{Balsam importer}
     and \l {https://doc.qt.io/qtdesignstudio/studio-3d-design-mode.html}{Qt Design Studio}.
     This example shows how each property is used for the skin animation in Quick3D.
 
@@ -48,15 +48,15 @@
 
     \snippet skinning/skingeometry.h geometry
 
-    Each position is a vertex position and each vertex has 4 joint's indexes and
+    Each position is a vertex position and each vertex has 4 joints' indexes and
     corresponding weights.
 
     \section1 Set up skinned data in QML
 
     \section2  Position data and indexes
 
-    We will draw 8 triangles with 10 vertices. The table below shows the QML
-    code and a visualization of the vertices.
+    We will draw 8 triangles with 10 vertexes. The table below shows the QML
+    code and a visualization of the vertexes.
 
     \table
     \header
@@ -71,11 +71,11 @@
 
     \section2 Joints and weights data
 
-    Every vertex needs to specify the indices of the joints that should have an
+    Every vertex needs to specify the indexes of the joints that should have an
     influence on it during the skinning process. For each vertex we store these
-    indices as 4D vectors, limiting the number of joints that may influence a
-    vertex to 4. Our geometry will have just two joint nodes (0 and 1), but
-    since we use 4D vectors we set the remaining two joint indices and their
+    indexes as 4D vectors (Qt limits the number of joints that may influence a
+    vertex to 4). Our geometry will have just two joint nodes (0 and 1), but
+    since we use 4D vectors we set the remaining two joint indexes and their
     weights to 0.
 
     \snippet skinning/SimpleSkinning.qml joints
@@ -105,14 +105,16 @@
 
     \section2 Placing models using inverseBindPoses
 
-    Once a model has a valid \l {Model::skeleton}{skeleton}, it cannot be
-    transformed by its global transformation. You need to transform it with
-    each \l Joint's transformation. However, it is cumbersome to calculate
-    the Joint's transform when considering the initial positions. Here,
-    \l {Model::inverseBindPoses}{inverseBindPoses} can be used to set the
-    initial states of the \l {Joint}{Joint}s. In order to move it to the center,
-    we will simply set the same transform, which translates -0.5 along the
-    x-axis, and -1.0 along the y-axis.
+    Once a model has a valid \l {Model::skeleton}{skeleton}, it is necessary
+    to define the \e {initial pose} of the skeleton. This defines the
+    baseline for the skeletal animation: moving a joint from its initial
+    position causes the model's vertexes to move according to the \c joints
+    and \c weights tables. The geometry of each node is specified in a
+    peculiar way: \l {Model::inverseBindPoses}{Model.inverseBindPoses} is set
+    to the \e inverse of the matrix that would transform the joint to its
+    initial position.  In order to move it to the center, we will simply set
+    the same transform for both joints: a matrix that translates -0.5 along
+    the x-axis and -1.0 along the y-axis.
 
     \table
     \header
@@ -127,7 +129,7 @@
 
     \section1 Animate with Joint nodes
 
-    Now, that we have prepared a skinned object, we can animate it by changing
+    Now that we have prepared a skinned object, we can animate it by changing
     the \l {Joint}{Joint}s' properties, specifically \e eulerRotation.
 
     \snippet skinning/SimpleSkinning.qml animation

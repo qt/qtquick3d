@@ -234,7 +234,7 @@ QQuick3DGeometry *QQuick3DModel::geometry() const
     \qmlproperty Skeleton Model::skeleton
 
     Contains the skeleton for the model. The Skeleton is used together with \l {inverseBindPoses}
-    for skinning.
+    for \l {Vertex Skinning}{skinning}.
 
     \note Meshes of the model must have both joints and weights attributes.
     \note If this property is set, skinning animation is enabled. It means

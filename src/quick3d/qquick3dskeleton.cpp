@@ -39,23 +39,23 @@ QT_BEGIN_NAMESPACE
     \qmltype Skeleton
     \inherits Node
     \inqmlmodule QtQuick3D
-    \brief Contain model's skeleton information.
+    \brief Defines a skeletal animation hierarchy.
 
-    It's a simple container type including \l {Joint} hierarchy. Only the id
-    attribute and internal \l {Joint} are meaningful.
-    Each joint can be transformed for a skinning animation.
+    A skeleton defines how a model can be animated using \l {Vertex Skinning}
+    {skeletal animation}. It contains a hierarchy of \l {Joint} nodes. Each joint can be
+    transformed for a skinning animation.
 
     \qml
     Skeleton {
         id: qmlskeleton
         Joint {
-            id: joint_0
+            id: joint0
             index: 0
-            skeletonRoot: qmlskelgon
+            skeletonRoot: qmlskeleton
             Joint {
-                id: joint_1
+                id: joint1
                 index: 1
-                skeletonRoot: qmlskelgon
+                skeletonRoot: qmlskeleton
             }
         }
     }

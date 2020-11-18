@@ -43,22 +43,26 @@ QT_BEGIN_NAMESPACE
     \qmltype Joint
     \inherits Node
     \inqmlmodule QtQuick3D
-    \brief Define model's joint hierarchy.
+    \brief Defines a node in a skeletal animation hierarchy.
 
-    All the joints must be described below \l { Skeleton } and they are used
-    for skeletal animation.
+    A joint is a transformable node inside a \l {Skeleton}, used for \l {Vertex Skinning}
+    {skeletal animation}. It is called a "joint" because it can be seen as a joint between the bones
+    of a skeleton.
+
+    All the joints must be contained inside a Skeleton, and each joint must have a \l skeletonRoot
+    pointing back to that skeleton.
 
     \qml
     Skeleton {
         id: qmlskeleton
         Joint {
-            id: joint_0
+            id: joint0
             index: 0
-            skeletonRoot: qmlskelgon
+            skeletonRoot: qmlskeleton
             Joint {
-                id: joint_1
+                id: joint1
                 index: 1
-                skeletonRoot: qmlskelgon
+                skeletonRoot: qmlskeleton
             }
         }
     }
@@ -78,13 +82,12 @@ QQuick3DJoint::~QQuick3DJoint()
 /*!
     \qmlproperty int Joint::index
 
-    Specifies the joint index.
+    Specifies the index of this joint. This index value is used in the \c JointSemantic
+    \l {QQuick3DGeometry::addAttribute}{custom geometry attribute}.
 
-    \note It must be a unique value in the same \l {Skeleton}.
-    \note A \l {Model} using the \l {Skeleton} containing this \l {Joint} must
-    have proper joint indexes as an input attribute.
+    \note Index values must be unique within the same \l {Skeleton}.
 
-    \sa {Model::inverseBindPoses}, {Qt Quick 3D - Simple Skinning Example}
+    \sa {QQuick3DGeometry::addAttribute}, {Qt Quick 3D - Simple Skinning Example}
 */
 
 qint32 QQuick3DJoint::index() const
@@ -95,9 +98,9 @@ qint32 QQuick3DJoint::index() const
 /*!
     \qmlproperty Skeleton Joint::skeletonRoot
 
-    Specifies \l {Skeleton} which contains this joint.
+    Specifies the \l {Skeleton} that contains this joint.
 
-    \note All the \l {Joint}s in the \l {Skeleton} should have the same skeletonRoot.
+    \note All the \l {Joint}s in the \l {Skeleton} must have the same skeletonRoot.
     If not, the animation will be broken.
 
     \sa {Skeleton}

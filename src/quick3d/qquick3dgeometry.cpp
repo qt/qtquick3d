@@ -512,8 +512,8 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value TexCoordSemantic The attribute is a texture coordinate. 2 components: \e u and \e v
     \value TangentSemantic The attribute is a tangent vector. 3 components: \e x, \e y, and \e z
     \value BinormalSemantic The attribute is a binormal vector. 3 components: \e x, \e y, and \e z
-    \value JointSemantic The attribute is a joint index vector for skinning. 4 components: \e x, \e y, \e z, and \e w
-    \value WeightSemantic The attribute is a weight vector for skinning. 4 components: \e x, \e y, \e z, and \e w
+    \value JointSemantic The attribute is a joint index vector for  \l {Vertex Skinning}{skinning}. 4 components: joint index 1-4
+    \value WeightSemantic The attribute is a weight vector for  \l {Vertex Skinning}{skinning}. 4 components: joint weight 1-4
     \value ColorSemantic The attribute is a vertex color vector. 4 components: \e r, \e g, \e b, and \e a
 
     In addition, \a semantic can be \c IndexSemantic. In this case the attribute does not represent an entry in the vertex
