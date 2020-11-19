@@ -91,6 +91,7 @@ under the following permissive licenses:
     \li \l{Balsam Asset Import Tool}
     \li \l{Optimizing 2D Assets}
     \li \l{Optimizing 3D Assets}
+    \li \l{quick3d-pbr}{Physically-Based Rendering}
     \li \l{Using Image-Based Lighting}
     \li \l{Anti-Aliasing Best Practices}
     \li \l{Qt Quick 3D Scenes with 2D Content}

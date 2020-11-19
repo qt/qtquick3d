@@ -1,0 +1,85 @@
+/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+
+\title Physically-Based Rendering
+\page quick3d-pbr howto
+
+\section1 Introduction
+
+This page describes how we do Physically based rendering (PBR) in Qt Quick 3D,
+with a focus on how to use it in your application. PBR is a way of rendering
+objects with more realistic looking materials by approximating the properties of
+the physical world. The focus of PBR is on mimicing how physical light interacts
+with different surfaces and materials. Aside from looking better, it also
+simplifies the workflow of artist since materials are based on physical
+parameters, which are more intuitive to use and tweak. Another benefit is that
+using PBR materials makes the look of imported assets more consistent with how
+they were designed. If you are interested in the theory behind PBR, see
+\l{https://learnopengl.com/PBR/Theory} and
+\l{https://academy.substance3d.com/courses/the-pbr-guide-part-1} for an in-depth
+explanation.
+
+\section1 Materials
+
+For a Model to be rendered in a scene, it must have a material attached to it.
+There are three types of material in Qt Quick 3D, namely CustomMaterial,
+DefaultMaterial and PrincipledMaterial. DefaultMaterial is a specular/glossiness
+material model, PrincipledMaterial is a metallic/roughness material model and
+CustomMaterial is a material customizable with user-provided shaders. The table
+below shows how DefaultMaterial and PrincipledMaterial can look and what
+high-level properties are used to describe them:
+
+\table
+\header
+\li PrincipledMaterial (Metallic-Roughness)
+\li DefaultMaterial (Specular-Glossiness)
+\row
+\li
+\image pbr_principled.png "PrincipledMaterial"
+\li
+\image pbr_default.png "DefaultMaterial"
+\row
+\li
+    \list
+    \li Base color
+    \li Metalness
+    \li Roughness
+    \endlist
+\li
+    \list
+    \li Diffuse color
+    \li Specular color
+    \li Glossiness (inverted roughness)
+    \endlist
+\endtable
+
+For more examples, see \l{Qt Quick 3D - Principled Material Example} and \l{Qt
+Quick 3D - Custom Materials Example}.
+
+*/
