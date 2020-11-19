@@ -198,7 +198,7 @@ struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNul
         BaseList::remove(inObj);
     }
 
-    inline bool empty() const { return m_head == nullptr; }
+    inline bool isEmpty() const { return m_head == nullptr; }
 
     inline iterator begin() { return iterator(m_head); }
     inline iterator end() { return iterator(nullptr); }
@@ -274,7 +274,7 @@ struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<T, QSSGListAcces
         BaseList::remove(inObj);
     }
 
-    inline bool empty() const { return m_head == nullptr; }
+    inline bool isEmpty() const { return m_head == nullptr; }
 
     inline iterator begin() { return iterator(m_head); }
     inline iterator end() { return iterator(nullptr); }

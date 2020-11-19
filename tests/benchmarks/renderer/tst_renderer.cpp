@@ -136,7 +136,7 @@ void tst_renderer::initTestCase()
 
 void tst_renderer::bench_prep()
 {
-    QVERIFY(!layer.children.empty());
+    QVERIFY(!layer.children.isEmpty());
     QBENCHMARK {
         renderContext->beginFrame();
         renderContext->prepareLayerForRender(layer);
