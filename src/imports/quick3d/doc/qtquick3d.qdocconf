@@ -31,7 +31,7 @@ qhp.QtQuick3D.subprojects.classes.indexTitle = Qt Quick 3D C++ Classes
 qhp.QtQuick3D.subprojects.classes.selectors  = class doc:headerfile
 qhp.QtQuick3D.subprojects.classes.sortPages  = true
 
-depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickcontrols qtshadertools
+depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickcontrols qtshadertools qtquicktimeline
 
 headerdirs  += .. \
                ../../../quick3d/
