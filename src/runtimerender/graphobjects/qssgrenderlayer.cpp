@@ -121,7 +121,7 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
 
 void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
 {
-    if (importSceneNode && !importSceneNode->children.empty()) {
+    if (importSceneNode && !importSceneNode->children.isEmpty()) {
         if (&importSceneNode->children.back() == &rootNode)
             importSceneNode->children = QSSGRenderNode::ChildList();
     }

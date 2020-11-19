@@ -71,26 +71,26 @@ private slots:
 void invasivelist::test_empty()
 {
     SingleLinkedList sll;
-    QVERIFY(sll.empty());
+    QVERIFY(sll.isEmpty());
     LinkedList ll;
-    QVERIFY(ll.empty());
+    QVERIFY(ll.isEmpty());
     NodeItem node;
     QCOMPARE(node.next, nullptr);
     QCOMPARE(node.prev, nullptr);
 
     sll.push_back(node);
-    QVERIFY(!sll.empty());
+    QVERIFY(!sll.isEmpty());
     sll.remove(node);
     // list should be empty and the node "links" reset
-    QVERIFY(sll.empty());
+    QVERIFY(sll.isEmpty());
     QCOMPARE(node.next, nullptr);
     QCOMPARE(node.prev, nullptr);
 
     ll.push_back(node);
-    QVERIFY(!ll.empty());
+    QVERIFY(!ll.isEmpty());
     ll.remove(node);
     // list should be empty and the node "links" reset
-    QVERIFY(ll.empty());
+    QVERIFY(ll.isEmpty());
     QCOMPARE(node.next, nullptr);
     QCOMPARE(node.prev, nullptr);
 }
@@ -212,7 +212,7 @@ void invasivelist::test_removeSll()
     for (int i = 0; i != itemCount; ++i)
         list.remove(items[i]);
 
-    QVERIFY(list.empty());
+    QVERIFY(list.isEmpty());
 
     for (int i = 0; i != itemCount; ++i) {
         QCOMPARE(items[i].next, nullptr);
@@ -261,7 +261,7 @@ void invasivelist::test_removeLl()
     for (int i = 0; i != itemCount; ++i)
         list.remove(items[i]);
 
-    QVERIFY(list.empty());
+    QVERIFY(list.isEmpty());
 
     for (int i = 0; i != itemCount; ++i) {
         QCOMPARE(items[i].next, nullptr);
@@ -432,15 +432,15 @@ void invasivelist::test_copy_slList()
                                 NodeItem { 1, nullptr, nullptr } };
 
     SingleLinkedList l1, l2;
-    QVERIFY(l1.empty());
-    QVERIFY(l2.empty());
+    QVERIFY(l1.isEmpty());
+    QVERIFY(l2.isEmpty());
     l1.push_back(items[0]);
     l1.push_back(items[1]);
-    QVERIFY(!l1.empty());
-    QVERIFY(l2.empty());
+    QVERIFY(!l1.isEmpty());
+    QVERIFY(l2.isEmpty());
     l2 = l1;
-    QVERIFY(!l1.empty());
-    QVERIFY(!l2.empty());
+    QVERIFY(!l1.isEmpty());
+    QVERIFY(!l2.isEmpty());
 
     for (auto it1 = l1.begin(), it2 = l2.begin(); it1 != l1.end(); ++it1, ++it2)
         QCOMPARE(it2, it1);
@@ -453,15 +453,15 @@ void invasivelist::test_copy_lList()
                                 NodeItem { 1, nullptr, nullptr } };
 
     LinkedList l1, l2;
-    QVERIFY(l1.empty());
-    QVERIFY(l2.empty());
+    QVERIFY(l1.isEmpty());
+    QVERIFY(l2.isEmpty());
     l1.push_back(items[0]);
     l1.push_back(items[1]);
-    QVERIFY(!l1.empty());
-    QVERIFY(l2.empty());
+    QVERIFY(!l1.isEmpty());
+    QVERIFY(l2.isEmpty());
     l2 = l1;
-    QVERIFY(!l1.empty());
-    QVERIFY(!l2.empty());
+    QVERIFY(!l1.isEmpty());
+    QVERIFY(!l2.isEmpty());
 
     for (auto it1 = l1.begin(), it2 = l2.begin(); it1 != l1.end(); ++it1, ++it2)
         QCOMPARE(it2, it1);
