@@ -68,6 +68,10 @@ private slots:
     void test_iteratorLl();
     void test_sublistSll();
     void test_insertBadNodeLl();
+    void test_clearSll();
+    void test_removeAllSll();
+    void test_clearLl();
+    void test_removeAllLl();
 };
 
 void invasivelist::test_empty()
@@ -662,6 +666,93 @@ void invasivelist::test_insertBadNodeLl()
             QCOMPARE(badNode.prev, nullptr);
         }
 
+    }
+}
+
+void invasivelist::test_clearSll()
+{
+    const int itemCount = 3;
+    NodeItem items[itemCount];
+
+    SingleLinkedList list;
+    for (int i = 0; i != itemCount; ++i) {
+        items[i].value = i;
+        list.push_back(items[i]);
+    }
+
+    QVERIFY(!list.isEmpty());
+    QCOMPARE(items[1].next, &items[2]);
+    list.clear();
+
+    // The only change should that the list is empty.
+    QVERIFY(list.isEmpty());
+    QCOMPARE(items[1].next, &items[2]);
+}
+
+void invasivelist::test_removeAllSll()
+{
+    const int itemCount = 10;
+    NodeItem items[itemCount];
+
+    SingleLinkedList list;
+    for (int i = 0; i != itemCount; ++i) {
+        items[i].value = i;
+        list.push_back(items[i]);
+    }
+
+    QVERIFY(!list.isEmpty());
+    QCOMPARE(items[1].next, &items[2]);
+    list.removeAll();
+
+    // The list should be empty and all the nodes should have their links updated to null.
+    QVERIFY(list.isEmpty());
+    for (int i = 0; i != itemCount; ++i)
+        QCOMPARE(items[i].next, nullptr);
+}
+
+void invasivelist::test_clearLl()
+{
+    const int itemCount = 3;
+    NodeItem items[itemCount];
+
+    LinkedList list;
+    for (int i = 0; i != itemCount; ++i) {
+        items[i].value = i;
+        list.push_back(items[i]);
+    }
+
+    QVERIFY(!list.isEmpty());
+    QCOMPARE(items[1].prev, &items[0]);
+    QCOMPARE(items[1].next, &items[2]);
+    list.clear();
+
+    // The only change should that the list is empty.
+    QVERIFY(list.isEmpty());
+    QCOMPARE(items[1].prev, &items[0]);
+    QCOMPARE(items[1].next, &items[2]);
+}
+
+void invasivelist::test_removeAllLl()
+{
+    const int itemCount = 10;
+    NodeItem items[itemCount];
+
+    LinkedList list;
+    for (int i = 0; i != itemCount; ++i) {
+        items[i].value = i;
+        list.push_back(items[i]);
+    }
+
+    QVERIFY(!list.isEmpty());
+    QCOMPARE(items[1].prev, &items[0]);
+    QCOMPARE(items[1].next, &items[2]);
+    list.removeAll();
+
+    // The list should be empty and all the nodes should have their links updated to null.
+    QVERIFY(list.isEmpty());
+    for (int i = 0; i != itemCount; ++i) {
+        QCOMPARE(items[i].prev, nullptr);
+        QCOMPARE(items[i].next, nullptr);
     }
 }
 

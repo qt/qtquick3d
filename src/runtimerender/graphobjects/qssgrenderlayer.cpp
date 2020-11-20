@@ -81,6 +81,7 @@ QSSGRenderLayer::~QSSGRenderLayer()
     if (importSceneNode) {
         // Remove the dummy from the list or it's siblings will still link to it.
         children.remove(*importSceneNode);
+        importSceneNode->children.clear();
         delete importSceneNode;
         importSceneNode = nullptr;
     }
@@ -112,7 +113,7 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
         // Now we can add the dummy node to the layers child list
         children.push_back(*importSceneNode);
     } else {
-        importSceneNode->children = QSSGRenderNode::ChildList(); // Clear the list (or the list will modify the rootNode)
+        importSceneNode->children.clear(); // Clear the list (or the list will modify the rootNode)
     }
 
     // The imported scene root node is now a child of the dummy node
@@ -126,7 +127,7 @@ void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
 {
     if (importSceneNode && !importSceneNode->children.isEmpty()) {
         if (&importSceneNode->children.back() == &rootNode)
-            importSceneNode->children = QSSGRenderNode::ChildList();
+            importSceneNode->children.clear();
     }
 }
 
