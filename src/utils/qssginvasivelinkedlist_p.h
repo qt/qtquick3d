@@ -211,6 +211,24 @@ struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNul
         BaseList::remove(inObj);
     }
 
+    /*!
+     * \brief removeAll removes all nodes and re-sets their tail to null.
+     */
+    void removeAll()
+    {
+        for (auto it = begin(), e = end(); it != e;)
+            remove(*(it++));
+    }
+
+    /*!
+     * \brief clear will set the head of the list to null.
+     *  Note that the nodes are not updated in this case!
+     */
+    void clear()
+    {
+        m_head = nullptr;
+    }
+
     inline bool isEmpty() const { return m_head == nullptr; }
 
     inline iterator begin() { return iterator(m_head); }
@@ -302,6 +320,24 @@ struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<T, QSSGListAcces
             m_tail = HeadOp::get(inObj);
 
         BaseList::remove(inObj);
+    }
+
+    /*!
+     * \brief removeAll removes all nodes and re-sets their head and tail to null.
+     */
+    void removeAll()
+    {
+        for (auto it = begin(), e = end(); it != e;)
+            remove(*(it++));
+    }
+
+    /*!
+     * \brief clear will set the head and tail of the list to null.
+     *  Note that the nodes are not updated in this case!
+     */
+    void clear()
+    {
+        m_head = m_tail = nullptr;
     }
 
     inline bool isEmpty() const { return m_head == nullptr; }
