@@ -128,8 +128,6 @@ sub-meshes.
 \row \li \c {--preTransformVertices} \li Removes the node graph and
 pre-transforms all vertices with the local transformation matrices of
 their nodes.
-\row \li \c {--limitBoneWeights} \li Limits the number of bones simultaneously
-affecting a single vertex to a maximum value (4).
 \row \li \c {--improveCacheLocality} \li Reorders triangles for better vertex
 cache locality.
 \row \li \c {--removeRedundantMaterials} \li Searches for

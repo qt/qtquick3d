@@ -36,12 +36,6 @@
             "value": false,
             "type": "Boolean"
         },
-        "limitBoneWeights": {
-            "name": "Limit Bone Weights",
-            "description": "Limits the number of bones simultaneously affecting a single vertex to a maximum value (4).",
-            "value": true,
-            "type": "Boolean"
-        },
         "improveCacheLocality": {
             "name": "Improve Cache Locality",
             "description": "Reorders triangles for better vertex cache locality.",

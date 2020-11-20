@@ -2010,9 +2010,6 @@ void AssimpImporter::processOptions(const QVariantMap &options)
     if (checkBooleanOption(QStringLiteral("preTransformVertices"), optionsObject))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_PreTransformVertices);
 
-    if (checkBooleanOption(QStringLiteral("limitBoneWeights"), optionsObject))
-        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_LimitBoneWeights);
-
     if (checkBooleanOption(QStringLiteral("improveCacheLocality"), optionsObject))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_ImproveCacheLocality);
 
