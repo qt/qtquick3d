@@ -77,11 +77,14 @@ struct QSSGRenderPickResult
     QVector2D m_localUVCoords;
     // The position in world coordinates
     QVector3D m_scenePosition;
+    // The subset index
+    int m_subset = 0;
 
     QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
                          float inCameraDistance,
                          const QVector2D &inLocalUVCoords,
-                         const QVector3D &inScenePosition);
+                         const QVector3D &inScenePosition,
+                         int subset = 0);
     QSSGRenderPickResult() = default;
 };
 
@@ -177,6 +180,17 @@ public:
                                   const QSSGRef<QSSGBufferManager> &bufferManager,
                                   const QVector2D &inViewportDimensions,
                                   const QVector2D &inMouseCoords);
+    QSSGRenderPickResult syncPickOne(const QSSGRenderLayer &layer,
+                                     const QSSGRef<QSSGBufferManager> &bufferManager,
+                                     const QVector2D &inViewportDimensions,
+                                     const QVector2D &inMouseCoords,
+                                     QSSGRenderNode *target);
+
+    PickResultList syncPickAll(const QSSGRenderLayer &layer,
+                               const QSSGRef<QSSGBufferManager> &bufferManager,
+                               const QVector2D &inViewportDimensions,
+                               const QVector2D &inMouseCoords);
+
 
     // Return the relative hit position, in UV space, of a mouse pick against this object.
     // We need the node in order to figure out which layer rendered this object.
@@ -254,6 +268,9 @@ protected:
     static void intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
                                           QSSGRenderableObject &inRenderableObject,
                                           TPickResultArray &outIntersectionResultList);
+    static void intersectRayWithItem2D(const QSSGRenderRay &inRay,
+                                       const QSSGRenderItem2D &item2D,
+                                       PickResultList &outIntersectionResultList);
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
 public:

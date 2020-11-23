@@ -556,6 +556,7 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
         QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
         sourcePrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
         connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+        sourcePrivate->ensureSubsceneDeliveryAgent();
     }
 
     if (m_layer) {

@@ -1233,6 +1233,11 @@ float QQuick3DCustomMaterial::lineWidth() const
     return m_lineWidth;
 }
 
+QVector<QQuick3DTexture *> QQuick3DCustomMaterial::dynamicTextureMaps() const
+{
+    return m_dynamicTextureMaps;
+}
+
 void QQuick3DCustomMaterial::setLineWidth(float width)
 {
     if (qFuzzyCompare(m_lineWidth, width))

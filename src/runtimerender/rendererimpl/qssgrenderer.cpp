@@ -48,6 +48,7 @@
 
 #include <cstdlib>
 #include <algorithm>
+#include <limits>
 
 #ifdef Q_CC_MSVC
 #pragma warning(disable : 4355)
@@ -306,9 +307,9 @@ QSSGRenderPickResult QSSGRenderer::pick(QSSGRenderLayer &inLayer,
 }
 
 QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
-                                                const QSSGRef<QSSGBufferManager> &bufferManager,
-                                                const QVector2D &inViewportDimensions,
-                                                const QVector2D &inMouseCoords)
+                                            const QSSGRef<QSSGBufferManager> &bufferManager,
+                                            const QVector2D &inViewportDimensions,
+                                            const QVector2D &inMouseCoords)
 {
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
     static const auto processResults = [](PickResultList &pickResults) {
@@ -330,6 +331,39 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
     }
 
     return QSSGPickResultProcessResult();
+}
+
+QSSGRenderPickResult QSSGRenderer::syncPickOne(const QSSGRenderLayer &layer, const QSSGRef<QSSGBufferManager> &bufferManager, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, QSSGRenderNode *target)
+{
+    // This function assumes the layer was rendered to the scene itself. There is another
+    // function for completely offscreen layers that don't get rendered to the scene.
+    const bool wasRenderToTarget(layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
+    PickResultList pickResults;
+    if (wasRenderToTarget && layer.renderedCamera != nullptr) {
+        const auto camera = layer.renderedCamera;
+        const auto viewport = QRectF(QPointF(), QSizeF(qreal(inViewportDimensions.x()), qreal(inViewportDimensions.y())));
+        const QSSGOption<QSSGRenderRay> hitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inMouseCoords, inViewportDimensions, false);
+        if (hitRay.hasValue())
+            intersectRayWithSubsetRenderable(bufferManager, *hitRay, *target, pickResults);
+    }
+    // There can only be 0 or 1 results in this case
+    if (pickResults.isEmpty())
+        return QSSGRenderPickResult();
+    else
+        return pickResults.at(0);
+}
+
+
+QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer, const QSSGRef<QSSGBufferManager> &bufferManager, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords)
+{
+    PickResultList pickResults;
+    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+        getLayerHitObjectList(layer, bufferManager, inViewportDimensions, inMouseCoords, false, pickResults);
+        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+            return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
+        });
+    }
+    return pickResults;
 }
 
 QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
@@ -452,6 +486,13 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
                                                         const QSSGRenderNode &node,
                                                         QSSGRenderer::PickResultList &outIntersectionResultList)
 {
+    // Item2D's requires special handling
+    if (node.type == QSSGRenderGraphObject::Type::Item2D) {
+        const QSSGRenderItem2D &item2D = static_cast<const QSSGRenderItem2D &>(node);
+        intersectRayWithItem2D(inRay, item2D, outIntersectionResultList);
+        return;
+    }
+
     if (node.type != QSSGRenderGraphObject::Type::Model)
         return;
 
@@ -491,6 +532,8 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     QSSGRenderRay::IntersectionResult intersectionResult;
     QVector<QSSGRenderRay::IntersectionResult> results;
 
+    int subset = 0;
+    int resultSubset = 0;
     for (const auto &subMesh : subMeshes) {
         QSSGRenderRay::IntersectionResult result;
         if (subMesh.bvhRoot) {
@@ -514,7 +557,9 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
         if (result.intersects && result.rayLengthSquared < minRayLength) {
             intersectionResult = result;
             minRayLength = intersectionResult.rayLengthSquared;
+            resultSubset = subset;
         }
+        subset++;
     }
 
     if (!intersectionResult.intersects)
@@ -524,7 +569,8 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
                                 QSSGRenderPickResult(model,
                                                      intersectionResult.rayLengthSquared,
                                                      intersectionResult.relXY,
-                                                     intersectionResult.scenePosition));
+                                                     intersectionResult.scenePosition,
+                                                     resultSubset));
 }
 
 void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
@@ -545,6 +591,31 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
                                                          intersectionResult.rayLengthSquared,
                                                          intersectionResult.relXY,
                                                          intersectionResult.scenePosition));
+    }
+}
+
+void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, QSSGRenderer::PickResultList &outIntersectionResultList)
+{
+    // Get the plane (and normal) that the item 2D is on
+    const QVector3D p0 = item2D.getGlobalPos();
+    const QVector3D normal  = -item2D.getDirection();
+
+    const float d = QVector3D::dotProduct(inRay.direction, normal);
+    float intersectionTime = 0;
+    if (d > 1e-6f) {
+        const QVector3D p0l0 = p0 - inRay.origin;
+        intersectionTime = QVector3D::dotProduct(p0l0, normal) / d;
+        if (intersectionTime >= 0) {
+            // Intersection
+            const QVector3D intersectionPoint = inRay.origin + inRay.direction * intersectionTime;
+            const QMatrix4x4 inverseGlobalTransform = item2D.globalTransform.inverted();
+            const QVector3D localIntersectionPoint = mat44::transform(inverseGlobalTransform, intersectionPoint);
+            const QVector2D qmlCoordinate(localIntersectionPoint.x(), -localIntersectionPoint.y());
+            outIntersectionResultList.push_back(QSSGRenderPickResult(item2D,
+                                                                     intersectionTime,
+                                                                     qmlCoordinate,
+                                                                     intersectionPoint));
+        }
     }
 }
 
@@ -629,11 +700,13 @@ const QSSGRef<QSSGProgramGenerator> &QSSGRenderer::getProgramGenerator()
 QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
                                            float inCameraDistance,
                                            const QVector2D &inLocalUVCoords,
-                                           const QVector3D &scenePosition)
+                                           const QVector3D &scenePosition,
+                                           int subset)
     : m_hitObject(&inHitObject)
     , m_cameraDistanceSq(inCameraDistance)
     , m_localUVCoords(inLocalUVCoords)
     , m_scenePosition(scenePosition)
+    , m_subset(subset)
 {
 }
 
