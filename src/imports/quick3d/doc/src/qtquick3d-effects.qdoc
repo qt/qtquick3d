@@ -31,12 +31,14 @@
     \brief Provides QML types for the effects included in the Qt Quick 3D
            effect library.
 
-    This module includes a library of pregenerated post-processing effects. To create your
+    The Qt Quick 3D Effects module includes a library of pregenerated post-processing effects. To create your
     own post-processing effects, use the \l Effect type. This module contains a number of
     useful effects built on top of the \l Effect type. They can be taken into use right
     away, without writing shader code manually.
 
     The \l{Qt Quick 3D - Effects Example}{effects example} shows all the built-in effects.
+
+    The \l{Qt Quick 3D} module page has more information.
  */
 
 /*!
