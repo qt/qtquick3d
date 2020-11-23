@@ -31,7 +31,7 @@
     \brief Module containing helpers for creating applications using Qt Quick 3D.
 
     This module provides helper types that make it easier to develop applications
-    using Qt Quick 3D.
+    using \l{Qt Quick 3D}.
 */
 
 /*!
