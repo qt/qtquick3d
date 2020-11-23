@@ -234,6 +234,11 @@ void QSSGRenderer::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
+}
+
+void QSSGRenderer::endFrame()
+{
+    // We need to do this endFrame(), as the material nodes might not exist after this!
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
@@ -241,10 +246,6 @@ void QSSGRenderer::beginFrame()
             static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
     }
     m_materialClearDirty.clear();
-}
-
-void QSSGRenderer::endFrame()
-{
 }
 
 inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
