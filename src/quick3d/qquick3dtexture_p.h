@@ -220,6 +220,7 @@ private:
                               | DirtyFlags(DirtyFlag::TextureDataDirty);
     QMetaObject::Connection m_textureProviderConnection;
     QMetaObject::Connection m_textureUpdateConnection;
+    QMetaObject::Connection m_layerUpdateConnection;
     QQuick3DSceneManager *m_sceneManagerForLayer = nullptr;
     QMetaObject::Connection m_sceneManagerWindowChangeConnection;
     QQuickItem *m_initializedSourceItem = nullptr;

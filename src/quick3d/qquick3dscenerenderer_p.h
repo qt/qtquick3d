@@ -63,6 +63,7 @@ struct QSSGRenderLayer;
 
 class QQuick3DSceneRenderer
 {
+    using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>;
 public:
     QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInterface> &rci);
     ~QQuick3DSceneRenderer();
@@ -77,6 +78,8 @@ protected:
     QSize surfaceSize() const { return m_surfaceSize; }
     QSSGRenderPickResult pick(const QPointF &pos);
     QSSGRenderPickResult syncPick(const QPointF &pos);
+    QSSGRenderPickResult syncPickOne(const QPointF &pos, QSSGRenderNode *node);
+    PickResultList syncPickAll(const QPointF &pos);
     QQuick3DRenderStats *renderStats();
 
 private:
@@ -124,6 +127,7 @@ private:
     friend class QQuick3DSGRenderNode;
     friend class QQuick3DSGDirectRenderer;
     friend class QQuick3DViewport;
+    friend struct ViewportTransformHelper;
 };
 
 namespace QQuick3DRenderLayerHelpers {

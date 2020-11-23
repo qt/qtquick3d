@@ -104,6 +104,8 @@ public:
     bool alwaysDirty() const;
     float lineWidth() const;
 
+    QVector<QQuick3DTexture *> dynamicTextureMaps() const;
+
 public Q_SLOTS:
     void setShadingMode(QQuick3DCustomMaterial::ShadingMode mode);
     void setVertexShader(const QUrl &url);

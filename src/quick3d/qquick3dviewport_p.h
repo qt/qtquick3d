@@ -116,6 +116,9 @@ protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value) override;
 
+    bool event(QEvent *) override;
+//    bool childMouseEventFilter(QQuickItem *, QEvent *event) override;
+
 public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);
     void setEnvironment(QQuick3DSceneEnvironment * environment);
@@ -140,6 +143,7 @@ private:
     void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     bool checkIsVisible() const;
+    bool internalPick(QPointerEvent *event) const;
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;

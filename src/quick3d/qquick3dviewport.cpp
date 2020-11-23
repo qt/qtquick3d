@@ -37,6 +37,10 @@
 #include "qquick3dcamera_p.h"
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
+#include "qquick3ditem2d_p.h"
+#include "qquick3ddefaultmaterial_p.h"
+#include "qquick3dprincipledmaterial_p.h"
+#include "qquick3dcustommaterial_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 
 #include <qsgtextureprovider.h>
@@ -49,6 +53,52 @@
 #include <QtQml>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
+Q_LOGGING_CATEGORY(lcPick, "qt.quick3d.pick")
+
+struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
+{
+    static void removeAll() {
+        for (auto o : owners) {
+            if (!o.isNull())
+                o->setSceneTransform(nullptr);
+        }
+        owners.clear();
+    }
+
+    void setOnDeliveryAgent(QQuickDeliveryAgent *da) {
+        da->setSceneTransform(this);
+        owners.append(da);
+    }
+
+    /*!
+        Transforms viewport coordinates to 2D scene coordinates.
+        Returns the point in targetItem corresponding to \a viewportPoint,
+        assuming that targetItem is mapped onto sceneParentNode.
+    */
+    QPointF map(const QPointF &viewportPoint) override {
+        auto pickResult = renderer->syncPickOne(viewportPoint * dpr, sceneParentNode);
+        auto ret = pickResult.m_localUVCoords.toPointF();
+        if (!uvCoordsArePixels)
+            ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
+                          targetItem->y() - ret.y() * targetItem->height() + targetItem->height());
+
+        qCDebug(lcEv) << viewportPoint << "->" << ret << "@" << pickResult.m_scenePosition
+                      << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_cameraDistanceSq);
+        return ret;
+    }
+
+    QQuick3DSceneRenderer *renderer = nullptr;
+    QSSGRenderNode *sceneParentNode = nullptr;
+    QQuickItem* targetItem = nullptr;
+    qreal dpr = 1;
+    bool uvCoordsArePixels = false; // if false, they are in the range 0..1
+
+    static QList<QPointer<QQuickDeliveryAgent>> owners;
+};
+
+QList<QPointer<QQuickDeliveryAgent>> ViewportTransformHelper::owners;
 
 /*!
     \qmltype View3D
@@ -108,12 +158,17 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     m_camera = nullptr;
     m_sceneRoot = new QQuick3DSceneRootNode(this);
     m_environment = new QQuick3DSceneEnvironment(m_sceneRoot);
-    m_renderStats = new QQuick3DRenderStats(m_sceneRoot);
+    m_renderStats = new QQuick3DRenderStats();
     QQuick3DSceneManager *sceneManager = new QQuick3DSceneManager(m_sceneRoot);
     QQuick3DObjectPrivate::get(m_sceneRoot)->refSceneManager(*sceneManager);
     Q_ASSERT(sceneManager == QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager);
     connect(sceneManager, &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);
+    setAcceptedMouseButtons(Qt::AllButtons);
+    setAcceptTouchEvents(true);
+    forceActiveFocus();
+    setAcceptHoverEvents(true);
+//    setFiltersChildMouseEvents(true);
 }
 
 QQuick3DViewport::~QQuick3DViewport()
@@ -128,6 +183,10 @@ QQuick3DViewport::~QQuick3DViewport()
     m_sceneRoot = nullptr;
 
     delete sceneManager;
+
+    // m_renderStats is tightly coupled with the render thread, so can't delete while we
+    // might still be rendering.
+    m_renderStats->deleteLater();
 
     // m_directRenderer must be destroyed on the render thread at the proper time, not here.
     // That's handled in releaseResources() + upon sceneGraphInvalidated
@@ -511,6 +570,28 @@ void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickIte
     }
 }
 
+bool QQuick3DViewport::event(QEvent *event)
+{
+    if (event->isPointerEvent())
+        return internalPick(static_cast<QPointerEvent *>(event));
+    else
+        return QQuickItem::event(event);
+}
+
+//bool QQuick3DViewport::childMouseEventFilter(QQuickItem *item, QEvent *event)
+//{
+//    qCDebug(lcEv) << item << event;
+//    // Only Items that are direct children of this View3D should be sent events
+//    // Other items are 2D in 3D content which have to go through our picking
+//    // first so we will propagate those events manually.
+//    // Top Level Items are just regular 2D items so the default logic is fine
+//    const auto &children = childItems();
+//    for (const auto childItem : children)
+//        if (childItem == item)
+//            return false;
+//    return true;
+//}
+
 void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
 {
     if (m_camera == camera)
@@ -678,7 +759,8 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
 */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
-    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(), qreal(y) * window()->effectiveDevicePixelRatio());
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
+                           qreal(y) * window()->effectiveDevicePixelRatio());
     // Some non-thread safe stuff to do input
     // First need to get a handle to the renderer
 
@@ -797,6 +879,180 @@ bool QQuick3DViewport::checkIsVisible() const
     return (childPrivate->explicitVisible ||
             (childPrivate->extra.isAllocated() && childPrivate->extra->effectRefCount));
 
+}
+
+bool QQuick3DViewport::internalPick(QPointerEvent *event) const
+{
+    // Some non-thread-safe stuff to do input
+    // First need to get a handle to the renderer
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return false;
+
+    qCDebug(lcEv) << event;
+    struct SubsceneInfo {
+        QQuick3DObject* obj = nullptr;
+        QVarLengthArray<QPointF, 16> eventPointScenePositions;
+    };
+    QFlatMap<QQuickItem*, SubsceneInfo> visitedSubscenes;
+
+    for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
+        auto eventPoint = QMutableEventPoint::from(event->point(pointIndex));
+        const QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
+        QQuick3DSceneRenderer::PickResultList pickResults = renderer->syncPickAll(realPosition);
+        qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
+        if (pickResults.isEmpty())
+            continue; // next eventPoint
+
+        const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+
+        for (const auto &pickResult : pickResults) {
+            auto backendObject = pickResult.m_hitObject;
+            if (!backendObject)
+                continue;
+
+            QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
+            if (!frontendObject && m_importScene) {
+                const auto importSceneManager = QQuick3DObjectPrivate::get(m_importScene)->sceneManager;
+                frontendObject = importSceneManager->lookUpNode(backendObject);
+            }
+
+            if (!frontendObject)
+                continue;
+
+            QQuickItem *subsceneRootItem = nullptr;
+            QPointF subscenePosition;
+            auto frontendObjectPrivate = QQuick3DObjectPrivate::get(frontendObject);
+            if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Item2D) {
+                // Item2D
+                auto item2D = qobject_cast<QQuick3DItem2D *>(frontendObject);
+                subsceneRootItem = item2D->contentItem();
+                // In this case the "UV" coordinates are in pixels in the subscene root item, so we can just use them.
+                subscenePosition = pickResult.m_localUVCoords.toPointF();
+            } else if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Model) {
+                // Model
+                int materialSubset = pickResult.m_subset;
+                const auto backendModel = static_cast<const QSSGRenderModel *>(backendObject);
+                // Get material
+                if (backendModel->materials.count() < (pickResult.m_subset + 1))
+                    materialSubset = backendModel->materials.count() - 1;
+                const auto backendMaterial = backendModel->materials.at(materialSubset);
+                const auto frontendMaterial = sceneManager->lookUpNode(backendMaterial);
+                const auto frontendMaterialPrivate = QQuick3DObjectPrivate::get(frontendMaterial);
+
+                if (frontendMaterialPrivate->type == QQuick3DObjectPrivate::Type::DefaultMaterial) {
+                    // Default Material
+                    const auto defaultMaterial = qobject_cast<QQuick3DDefaultMaterial *>(frontendMaterial);
+                    if (defaultMaterial) {
+                        // Just check for a diffuseMap for now
+                        if (defaultMaterial->diffuseMap() && defaultMaterial->diffuseMap()->sourceItem())
+                            subsceneRootItem = defaultMaterial->diffuseMap()->sourceItem();
+                    }
+
+                } else if (frontendMaterialPrivate->type == QQuick3DObjectPrivate::Type::PrincipledMaterial) {
+                    // Principled Material
+                    const auto principledMaterial = qobject_cast<QQuick3DPrincipledMaterial *>(frontendMaterial);
+                    if (principledMaterial) {
+                        // Just check for a baseColorMap for now
+                        if (principledMaterial->baseColorMap() && principledMaterial->baseColorMap()->sourceItem())
+                            subsceneRootItem = principledMaterial->baseColorMap()->sourceItem();
+                    }
+                } else if (frontendMaterialPrivate->type == QQuick3DObjectPrivate::Type::CustomMaterial) {
+                    // Custom Material
+                    const auto customMaterial = qobject_cast<QQuick3DCustomMaterial *>(frontendMaterial);
+                    if (customMaterial) {
+                        // This case is a bit harder because we can not know how the textures will be used
+                        for (const auto texture : customMaterial->dynamicTextureMaps()) {
+                            if (texture->sourceItem()) {
+                                subsceneRootItem = texture->sourceItem();
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (subsceneRootItem) {
+                    // In this case the pick result really is using UV coordinates.
+                    subscenePosition = QPointF(subsceneRootItem->x() +
+                                               pickResult.m_localUVCoords.x() * subsceneRootItem->width(),
+                                               subsceneRootItem->y() -
+                                               pickResult.m_localUVCoords.y() * subsceneRootItem->height() +
+                                               subsceneRootItem->height());
+                }
+            }
+
+            if (subsceneRootItem) {
+                SubsceneInfo &subscene = visitedSubscenes[subsceneRootItem]; // create if not found
+                subscene.obj = frontendObject;
+                if (subscene.eventPointScenePositions.size() != event->pointCount()) {
+                    // ensure capacity, and use an out-of-scene position rather than 0,0 by default
+                    // (if only QVarLengthArray.resize() would take an optional prototype argument...)
+                    subscene.eventPointScenePositions.resize(event->pointCount());
+                    for (auto &pt : subscene.eventPointScenePositions)
+                        pt = QPointF(-qInf(), -qInf());
+                }
+                subscene.eventPointScenePositions[pointIndex] = subscenePosition;
+            }
+            qCDebug(lcPick) << "pick result:" << frontendObject << "@" << pickResult.m_scenePosition
+                            << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_cameraDistanceSq)
+                            << "scene" << subscenePosition << subsceneRootItem;
+        } // for pick results from each QEventPoint
+    } // for each QEventPoint
+
+    // Now deliver the entire event (all points) to each relevant subscene.
+    // Maybe only some points fall inside, but QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem()
+    // makes reduced-subset touch events that contain only the relevant points, when necessary.
+    bool ret = false;
+    auto mainDA = QQuickItemPrivate::get(window()->contentItem())->deliveryAgent();
+
+//    ViewportTransformHelper::removeAll();
+    for (auto subscene : visitedSubscenes) {
+        QQuickItem *subsceneRoot = subscene.first;
+        auto &subsceneInfo = subscene.second;
+        Q_ASSERT(subsceneInfo.eventPointScenePositions.count() == event->pointCount());
+        auto da = QQuickItemPrivate::get(subsceneRoot)->deliveryAgent();
+        qCDebug(lcPick) << "delivering to" << subsceneRoot << "via" << da << event;
+
+        for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
+            const auto &pt = subsceneInfo.eventPointScenePositions.at(pointIndex);
+            // By tradition, QGuiApplicationPrivate::processTouchEvent() has set the local position to the scene position,
+            // and Qt Quick expects it to arrive that way: then QQuickDeliveryAgentPrivate::translateTouchEvent()
+            // copies it into the scene position before localizing.
+            // That might be silly, we might change it eventually, but gotta stay consistent for now.
+            QMutableEventPoint &mut = QMutableEventPoint::from(event->point(pointIndex));
+            mut.setPosition(pt);
+            mut.setScenePosition(pt);
+        }
+
+        if (event->isBeginEvent())
+            da->setSceneTransform(nullptr);
+        if (da->event(event)) {
+            ret = true;
+            if (QQuickDeliveryAgentPrivate::anyPointGrabbed(event)) {
+                // In case any QEventPoint was grabbed, the relevant QQuickDeliveryAgent needs to know
+                // how to repeat the picking/coordinate transformation for each update,
+                // because delivery will bypass internalPick() due to the grab, and it's
+                // more efficient to avoid whole-scene picking each time anyway.
+                auto frontendObjectPrivate = QQuick3DObjectPrivate::get(subsceneInfo.obj);
+                const bool item2Dcase = (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Item2D);
+                ViewportTransformHelper *transform = new ViewportTransformHelper;
+                transform->renderer = renderer;
+                transform->sceneParentNode = static_cast<QSSGRenderNode*>(frontendObjectPrivate->spatialNode);
+                transform->targetItem = subsceneRoot;
+                transform->dpr = window()->effectiveDevicePixelRatio();
+                transform->uvCoordsArePixels = item2Dcase;
+                auto targetDA = (da->rootItem()->parentItem() ? mainDA : da);
+//                if (QQuickDeliveryAgentPrivate::isTouchEvent(event) && !item2Dcase)
+//                    targetDA = mainDA; // possible correction, but then TransformHelper has to map to different space?
+                transform->setOnDeliveryAgent(targetDA);
+                qCDebug(lcPick) << event->type() << "created ViewportTransformHelper on" << targetDA;
+            }
+        } else if (event->type() != QEvent::HoverMove) {
+            qCWarning(lcPick) << subsceneRoot << "didn't want" << event;
+        }
+        event->setAccepted(false); // reject implicit grab and let it keep propagating
+    }
+
+    return ret;
 }
 
 QT_END_NAMESPACE

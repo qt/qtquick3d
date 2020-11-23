@@ -53,7 +53,8 @@ QT_BEGIN_NAMESPACE
 class QSGLayer;
 class QSGRenderer;
 class QSGRootNode;
-class QQuick3DItem2D : public QQuick3DNode, public QQuickItemChangeListener
+class QQuickRootItem;
+class Q_AUTOTEST_EXPORT QQuick3DItem2D : public QQuick3DNode, public QQuickItemChangeListener
 {
     Q_OBJECT
 public:
@@ -62,6 +63,7 @@ public:
 
     void addChildItem(QQuickItem *item);
     void removeChildItem(QQuickItem *item);
+    QQuickItem *contentItem() const;
 
 private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);

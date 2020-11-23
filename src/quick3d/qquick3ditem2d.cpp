@@ -47,6 +47,9 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item, QQuick3DNode *parent)
     : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Item2D)), parent)
 {
     m_contentItem = new QQuickItem();
+    m_contentItem->setObjectName(QLatin1String("parent of ") + item->objectName()); // for debugging
+    m_contentItem->setSize(item->size());
+    QQuickItemPrivate::get(m_contentItem)->ensureSubsceneDeliveryAgent();
     QQmlEngine::setObjectOwnership(m_contentItem, QQmlEngine::CppOwnership);
 
     connect(m_contentItem, &QQuickItem::childrenChanged, this, &QQuick3DObject::update);
@@ -91,6 +94,11 @@ void QQuick3DItem2D::removeChildItem(QQuickItem *item)
         emit allChildrenRemoved();
     else
         update();
+}
+
+QQuickItem *QQuick3DItem2D::contentItem() const
+{
+    return m_contentItem;
 }
 
 void QQuick3DItem2D::sourceItemDestroyed(QObject *item)
@@ -138,6 +146,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     if (!m_renderer) {
         m_renderer = rc->createRenderer(QSGRendererInterface::RenderMode3D);
         connect(window, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidated()), Qt::DirectConnection);
+        connect(m_renderer, &QSGAbstractRenderer::sceneGraphChanged, this, &QQuick3DObject::update, Qt::QueuedConnection);
     }
     m_renderer->setRootNode(m_rootNode);
     m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
