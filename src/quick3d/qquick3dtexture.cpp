@@ -838,7 +838,12 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty, false);
         if (m_sourceItem) {
             QQuickWindow *window = m_sourceItem->window();
-            if (!window) {
+            // If it was an inline declared item (very common, e.g. Texture {
+            // sourceItem: Rectangle { ... } } then it is likely it won't be
+            // associated with a window (Qt Quick scene) unless we help it to
+            // one via refWindow. However, this here is only the last resort,
+            // ideally there is a refWindow upon ItemSceneChange already.
+             if (!window) {
                 window = QQuick3DObjectPrivate::get(this)->sceneManager->window();
                 if (window)
                     QQuickItemPrivate::get(m_sourceItem)->refWindow(window);
@@ -1029,6 +1034,8 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
     if (change == QQuick3DObject::ItemChange::ItemSceneChange) {
         // Source item
         if (m_sourceItem) {
+            disconnect(m_sceneManagerWindowChangeConnection);
+
             if (m_sceneManagerForLayer) {
                 m_sceneManagerForLayer->qsgDynamicTextures.removeOne(m_layer);
                 m_sceneManagerForLayer = nullptr;
@@ -1040,6 +1047,30 @@ void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick
                 if (sceneManager)
                     sceneManager->qsgDynamicTextures << m_layer;
                 m_sceneManagerForLayer = sceneManager;
+            }
+
+            // If m_sourceItem was an inline declared item (very common, e.g.
+            // Texture { sourceItem: Rectangle { ... } } then it is highly
+            // likely it won't be associated with a window (Qt Quick scene)
+            // yet. Associate with one as soon as possible, do not leave it to
+            // updateSpatialNode, because that, while safe, would defer
+            // rendering into the texture to a future frame (adding a 2 frame
+            // lag for the first rendering of the mesh textured with the 2D
+            // item content), since a refWindow needs to be followed by a
+            // scenegraph sync round to get QSGNodes created (updatePaintNode),
+            // whereas updateSpatialNode is in the middle of a sync round, so
+            // would need to wait for another one, etc.
+            if (sceneManager && m_sourceItem && !m_sourceItem->window()) {
+                if (sceneManager->window()) {
+                    QQuickItemPrivate::get(m_sourceItem)->refWindow(sceneManager->window());
+                } else {
+                    m_sceneManagerWindowChangeConnection = connect(sceneManager, &QQuick3DSceneManager::windowChanged, this,
+                                                                   [this, sceneManager]
+                    {
+                        if (m_sourceItem && !m_sourceItem->window() && sceneManager->window())
+                            QQuickItemPrivate::get(m_sourceItem)->refWindow(sceneManager->window());
+                    });
+                }
             }
         }
         // TextureData

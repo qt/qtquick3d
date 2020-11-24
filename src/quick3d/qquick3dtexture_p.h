@@ -220,6 +220,7 @@ private:
     QMetaObject::Connection m_textureProviderConnection;
     QMetaObject::Connection m_textureUpdateConnection;
     QQuick3DSceneManager *m_sceneManagerForLayer = nullptr;
+    QMetaObject::Connection m_sceneManagerWindowChangeConnection;
     QQuickItem *m_initializedSourceItem = nullptr;
     void trySetSourceParent();
     QHash<QByteArray, QMetaObject::Connection> m_connections;
