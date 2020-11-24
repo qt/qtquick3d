@@ -8,6 +8,28 @@ Window {
     width: 1280
     height: 720
     visible: true
+
+    Rectangle {
+        // the offscreen rendered content
+        id: srcItem
+        visible: false
+        width: 256
+        height: 256
+        color: "lightgreen"
+        Rectangle {
+            anchors.centerIn: parent
+            width: 140
+            height: 140
+            color: "yellow"
+            NumberAnimation on rotation {
+                running: animationCheckbox.checked
+                from: 0
+                to: 90
+                loops: Animation.Infinite
+            }
+        }
+    }
+
     View3D {
         id: sceneView
         anchors.fill: parent
@@ -33,24 +55,7 @@ Window {
                     lighting: DefaultMaterial.NoLighting
                     diffuseMap: Texture {
                         id: texture
-
-                        sourceItem: Rectangle {
-                            width: 256
-                            height: 256
-                            color: "lightgreen"
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: 140
-                                height: 140
-                                color: "yellow"
-                                NumberAnimation on rotation {
-                                    running: animationCheckbox.checked
-                                    from: 0
-                                    to: 90
-                                    loops: Animation.Infinite
-                                }
-                            }
-                        }
+                        sourceItem: srcItem
                     }
                 }
             ]
@@ -99,6 +104,44 @@ Window {
                     diffuseMap: Texture {
                         sourceItem: texture.sourceItem
                         onSourceItemChanged: console.log("source item for cube is now " + sourceItem)
+                    }
+                }
+            ]
+        }
+
+        // Uses an inline item tree in sourceItem, not affected by the buttons
+        Model {
+            visible: coneCheckbox.checked
+            position: Qt.vector3d(0, 70, -300)
+            source: "#Cone"
+            NumberAnimation on eulerRotation.y {
+                running: animation3DCheckbox.checked
+                duration: 1000
+                from: 0
+                to: 90
+                loops: Animation.Infinite
+            }
+            materials: [
+                DefaultMaterial {
+                    lighting: DefaultMaterial.NoLighting
+                    diffuseMap: Texture {
+                        sourceItem: Rectangle {
+                            width: 256
+                            height: 256
+                            color: "lightgreen"
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 140
+                                height: 140
+                                color: "yellow"
+                                NumberAnimation on rotation {
+                                    running: animationCheckbox.checked
+                                    from: 0
+                                    to: 90
+                                    loops: Animation.Infinite
+                                }
+                            }
+                        }
                     }
                 }
             ]
@@ -245,6 +288,11 @@ Window {
         CheckBox {
             id: animation3DCheckbox
             text: "Animate 3D objects"
+        }
+        CheckBox {
+            id: coneCheckbox
+            text: "Show Cone with inline Item\ntree in sourceItem"
+            checked: true
         }
     }
     Item {

@@ -182,8 +182,6 @@ private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
 
 private:
-    void createLayerTexture();
-
     enum class DirtyFlag {
         TransformDirty = (1 << 0),
         SourceDirty = (1 << 1),
