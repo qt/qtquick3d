@@ -869,7 +869,23 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                 auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
                 if (sourcePrivate->window) {
                     QQuickItem *sourceItem = m_sourceItem; // for capturing, recognizing in the lambda that m_sourceItem has changed is essential
-                    m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, this, [this, imageNode, sourceItem]() {
+
+                    // Why after, not beforeSynchronizing? Consider the case of an Item layer:
+                    // if the View3D gets to sync (updatePaintNode) first, doing an
+                    // updateTexture() is futile, the QSGLayer is not yet initialized (not
+                    // associated with an Item, has no size, etc.). That happens only once the
+                    // underlying QQuickShaderEffectSource hits its updatePaintNode. And that
+                    // may well happen happen only after the View3D has finished with its sync
+                    // step. By connecting to afterSynchronizing, we still get a chance to
+                    // trigger a layer texture update and so have a QSGTexture with real
+                    // content ready by the time the View3D prepares/renders the 3D scene upon
+                    // the scenegraph's preprocess step (Offscreen) or before/after the
+                    // scenegraph rendering (if Underlay/Overlay).
+                    //
+                    // This eliminates, or in the worst case reduces, the ugly effects of not
+                    // having a texture ready when rendering the 3D scene.
+
+                    m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::afterSynchronizing, this, [this, imageNode, sourceItem]() {
                         // Called on the render thread with gui blocked (if there is a render thread, that is).
                         if (m_sourceItem != sourceItem) {
                             disconnect(m_textureProviderConnection);
