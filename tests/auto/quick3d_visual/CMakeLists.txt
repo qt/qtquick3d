@@ -2,3 +2,4 @@
 
 add_subdirectory(smoketest)
 add_subdirectory(simplescene)
+add_subdirectory(rendercontrol)

@@ -33,6 +33,10 @@
 
 #include <QtQuick3D/qquick3d.h>
 
+#if QT_CONFIG(vulkan)
+#include <QVulkanInstance>
+#endif
+
 QQuick3DDataTest *QQuick3DDataTest::m_instance = 0;
 
 QQuick3DDataTest::QQuick3DDataTest() :
@@ -122,6 +126,17 @@ QQuickView *QQuick3DDataTest::createView(const QString &filename, const QSize &w
     return view;
 }
 
+static inline void saveImageIfEnabled(const QImage &image)
+{
+    if (qEnvironmentVariableIntValue("QT_QUICK3D_TEST_DEBUG")) {
+        static int cnt = 1;
+        const QString fn = QString::asprintf("quick3d_test_%d.png", cnt);
+        ++cnt;
+        image.save(fn);
+        qDebug("grab result saved to %s", qPrintable(fn));
+    }
+}
+
 QImage QQuick3DDataTest::grab(QQuickWindow *window)
 {
     const qreal dpr = window->devicePixelRatio();
@@ -136,22 +151,16 @@ QImage QQuick3DDataTest::grab(QQuickWindow *window)
         [](){ QFAIL("Unexpected QImage size from grabWindow"); }();
         return QImage();
     }
-    if (qEnvironmentVariableIntValue("QT_QUICK3D_TEST_DEBUG")) {
-        static int cnt = 1;
-        const QString fn = QString::asprintf("quick3d_test_%d.png", cnt);
-        ++cnt;
-        content.save(fn);
-        qDebug("grab result saved to %s", qPrintable(fn));
-    }
+    saveImageIfEnabled(content);
     return content;
 }
 
-static inline bool compareColor(int a, int b, int fuzz, int debugX, int debugY, const char *debugChannelName)
+static inline bool compareColor(int value, int expected, int fuzz, int debugX, int debugY, const char *debugChannelName)
 {
-    const int diff = qAbs(a - b);
+    const int diff = qAbs(value - expected);
     if (diff > fuzz) {
         qDebug("%s channel mismatch at position (%d, %d). Expected %d with maximum difference %d, got %d.",
-               debugChannelName, debugX, debugY, a, fuzz, b);
+               debugChannelName, debugX, debugY, expected, fuzz, value);
         return false;
     }
     return true;
@@ -185,6 +194,138 @@ bool QQuick3DDataTest::comparePixelNormPos(const QImage &image, qreal normalized
     const int physicalX = qCeil(physicalWidth * normalizedX);
     const int physicalY = qCeil(physicalHeight * normalizedY);
     return compareColorAt(image, physicalX, physicalY, expected, fuzz);
+}
+
+bool QQuick3DTestOffscreenRenderer::init(const QUrl &fileUrl, void *vulkanInstance)
+{
+    renderControl.reset(new QQuickRenderControl);
+    quickWindow.reset(new QQuickWindow(renderControl.data()));
+#if QT_CONFIG(vulkan)
+    // We don't know if Vulkan is used on a given platform since in this test we just go
+    // with whatever platform defaults Qt Quick chooses, but be prepared and have the
+    // instance available if needed.
+    QVulkanInstance *inst = static_cast<QVulkanInstance *>(vulkanInstance);
+    if (inst->isValid())
+        quickWindow->setVulkanInstance(inst);
+#else
+    Q_UNUSED(vulkanInstance);
+#endif
+
+    qmlEngine.reset(new QQmlEngine);
+    qmlComponent.reset(new QQmlComponent(qmlEngine.data(), fileUrl));
+    if (qmlComponent->isLoading()) {
+        qWarning("Component's isLoading() is unexpectedly true");
+        return false;
+    }
+
+    if (qmlComponent->isError()) {
+        for (const QQmlError &error : qmlComponent->errors())
+            qWarning() << error.url() << error.line() << error;
+        return false;
+    }
+
+    QObject *rootObject = qmlComponent->create();
+    if (qmlComponent->isError()) {
+        for (const QQmlError &error : qmlComponent->errors())
+            qWarning() << error.url() << error.line() << error;
+        return false;
+    }
+
+    rootItem = qobject_cast<QQuickItem *>(rootObject);
+    if (!rootItem) {
+        qWarning("No root item");
+        return false;
+    }
+
+    quickWindow->contentItem()->setSize(rootItem->size());
+    quickWindow->setGeometry(0, 0, rootItem->width(), rootItem->height());
+    rootItem->setParentItem(quickWindow->contentItem());
+
+    if (!renderControl->initialize()) {
+        qWarning("RenderControl failed to initialized");
+        return false;
+    }
+
+    QQuickRenderControlPrivate *rd = QQuickRenderControlPrivate::get(renderControl.data());
+    rhi = rd->rhi;
+    if (!rhi) {
+        qWarning("RenderControl created no QRhi");
+        return false;
+    }
+
+    const QSize size = rootItem->size().toSize();
+    tex.reset(rhi->newTexture(QRhiTexture::RGBA8, size, 1,
+                              QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!tex->create()) {
+        qWarning("Failed to create QRhiTexture");
+        return false;
+    }
+
+    ds.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, 1));
+    if (!ds->create()) {
+        qWarning("Failed to create depth-stencil buffer");
+        return false;
+    }
+
+    QRhiTextureRenderTargetDescription rtDesc(QRhiColorAttachment(tex.data()));
+    rtDesc.setDepthStencilBuffer(ds.data());
+    texRt.reset(rhi->newTextureRenderTarget(rtDesc));
+    rp.reset(texRt->newCompatibleRenderPassDescriptor());
+    texRt->setRenderPassDescriptor(rp.data());
+    if (!texRt->create()) {
+        qWarning("Failed to create rendertarget");
+        return false;
+    }
+
+    quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+
+    return true;
+}
+
+void QQuick3DTestOffscreenRenderer::enqueueReadback(bool *readCompleted, QRhiReadbackResult *readResult, QImage *result)
+{
+    *readCompleted = false;
+    readResult->completed = [this, readCompleted, readResult, result] {
+        *readCompleted = true;
+        QImage wrapperImage(reinterpret_cast<const uchar *>(readResult->data.constData()),
+            readResult->pixelSize.width(), readResult->pixelSize.height(),
+            QImage::Format_RGBA8888_Premultiplied);
+        if (rhi->isYUpInFramebuffer())
+            *result = wrapperImage.mirrored();
+        else
+            *result = wrapperImage.copy();
+        saveImageIfEnabled(*result);
+    };
+    QRhiResourceUpdateBatch *readbackBatch = rhi->nextResourceUpdateBatch();
+    readbackBatch->readBackTexture(tex.data(), readResult);
+    activeCommandBuffer()->resourceUpdate(readbackBatch);
+}
+
+bool QQuick3DTestOffscreenRenderer::resize(const QSize &newSize)
+{
+    tex->setPixelSize(newSize);
+    if (!tex->create()) {
+        qWarning("Failed to recreate QRhiTexture");
+        return false;
+    }
+    ds->setPixelSize(newSize);
+    if (!ds->create()) {
+        qWarning("Failed to recreate depth-stencil buffer");
+        return false;
+    }
+    if (!texRt->create()) {
+        qWarning("Failed to recreate rendertarget");
+        return false;
+    }
+
+    // setRenderTarget is mandatory upon changing something, even if the texRt pointer itself is the same
+    quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+
+    rootItem->setSize(newSize);
+    quickWindow->contentItem()->setSize(newSize);
+    quickWindow->setGeometry(0, 0, newSize.width(), newSize.height());
+
+    return true;
 }
 
 Q_GLOBAL_STATIC(QMutex, qQmlTestMessageHandlerMutex)

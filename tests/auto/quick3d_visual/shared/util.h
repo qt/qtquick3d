@@ -31,11 +31,20 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
-#include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtGui/QImage>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlComponent>
 #include <QtQuick/QQuickView>
+#include <QtQuick/QQuickWindow>
+#include <QtQuick/QQuickRenderControl>
+#include <QtQuick/QQuickRenderTarget>
+#include <QtQuick/QQuickGraphicsDevice>
+#include <QtQuick/QQuickItem>
 #include <QtTest/QTest>
+
+#include <QtGui/private/qrhi_p.h>
+#include <QtQuick/private/qquickrendercontrol_p.h>
 
 /* Base class for tests with data that are located in a "data" subfolder. */
 
@@ -89,6 +98,29 @@ private:
     QString m_dataDirectory;
     QUrl m_dataDirectoryUrl;
     QString m_directory;
+};
+
+struct QQuick3DTestOffscreenRenderer
+{
+public:
+    bool init(const QUrl &fileUrl, void *vulkanInstance);
+    QRhiCommandBuffer *activeCommandBuffer() {
+        QQuickRenderControlPrivate *rd = QQuickRenderControlPrivate::get(renderControl.data());
+        return rd->cb;
+    }
+    void enqueueReadback(bool *readCompleted, QRhiReadbackResult *readResult, QImage *result);
+    bool resize(const QSize &newSize);
+
+    QScopedPointer<QQuickRenderControl> renderControl;
+    QScopedPointer<QQuickWindow> quickWindow;
+    QScopedPointer<QQmlEngine> qmlEngine;
+    QScopedPointer<QQmlComponent> qmlComponent;
+    QScopedPointer<QRhiTexture> tex;
+    QScopedPointer<QRhiRenderBuffer> ds;
+    QScopedPointer<QRhiTextureRenderTarget> texRt;
+    QScopedPointer<QRhiRenderPassDescriptor> rp;
+    QRhi *rhi = nullptr;
+    QQuickItem *rootItem = nullptr;
 };
 
 class QQuick3DTestMessageHandler

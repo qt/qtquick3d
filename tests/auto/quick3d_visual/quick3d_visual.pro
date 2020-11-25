@@ -2,4 +2,5 @@ TEMPLATE=subdirs
 
 SUBDIRS += \
     smoketest \
-    simplescene
+    simplescene \
+    rendercontrol
