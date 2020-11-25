@@ -1863,6 +1863,13 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
                     + propertyName + QStringLiteral(".qad");
             m_savePath.mkdir(QStringLiteral("./animations"));
             QString animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
+            int index = 0;
+            while (m_generatedFiles.contains(animationFilePath)) {
+                outputAnimationFile = QStringLiteral("animations/") + id
+                    + QStringLiteral("_") + propertyName + QStringLiteral("_")
+                    + QString::number(index++) + QStringLiteral(".qad");
+                animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
+            }
             QFile animationFile(animationFilePath);
             // Write the binary content
             if (generateAnimationFile(animationFile, keyframes))
