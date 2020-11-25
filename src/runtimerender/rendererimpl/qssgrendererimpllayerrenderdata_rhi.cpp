@@ -261,8 +261,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 renderableImage = renderableImage->m_nextImage;
             }
 
-            // Shadow map textures
             if (shaderPipeline->isLightingEnabled()) {
+                // Shadow map textures
                 const int shadowMapCount = shaderPipeline->shadowMapCount();
                 for (int i = 0; i < shadowMapCount; ++i) {
                     QSSGRhiShadowMapProperties &shadowMapProperties(shaderPipeline->shadowMapAt(i));
@@ -280,19 +280,19 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     bindings.addTexture(shadowMapProperties.cachedBinding, QRhiShaderResourceBinding::FragmentStage,
                                                texture, sampler);
                 }
-            }
 
-            // Light probe texture
-            if (shaderPipeline->lightProbeTexture()) {
-                int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
-                if (binding >= 0) {
-                    auto tiling = shaderPipeline->lightProbeTiling();
-                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
-                                                             toRhi(tiling.first), toRhi(tiling.second) });
-                    bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
-                                               shaderPipeline->lightProbeTexture(), sampler);
-                } else {
-                    qWarning("Could not find sampler for lightprobe");
+                // Light probe texture
+                if (shaderPipeline->lightProbeTexture()) {
+                    int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
+                    if (binding >= 0) {
+                        auto tiling = shaderPipeline->lightProbeTiling();
+                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, // enables mipmapping
+                                                                 toRhi(tiling.first), toRhi(tiling.second) });
+                        bindings.addTexture(binding, QRhiShaderResourceBinding::FragmentStage,
+                                                   shaderPipeline->lightProbeTexture(), sampler);
+                    } else {
+                        qWarning("Could not find sampler for lightprobe");
+                    }
                 }
             }
 
