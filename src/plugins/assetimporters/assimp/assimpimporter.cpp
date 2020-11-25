@@ -1841,12 +1841,13 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("property: \"") << propertyName << QStringLiteral("\"\n");
 
     QList<T> keyframes;
-    for (uint i = 0; i < numKeys; ++i) {
-        if (i > 0 && i < numKeys - 1
-           && fuzzyCompare(keys[i].mValue, keys[i-1].mValue)
-           && fuzzyCompare(keys[i].mValue, keys[i+1].mValue))
-            continue;
-
+    keyframes.push_back(keys[0]);
+    for (uint i = 1; i < numKeys; ++i) {
+        if (fuzzyCompare(keyframes.back().mValue, keys[i].mValue)) {
+            if ((i < numKeys - 1 && fuzzyCompare(keys[i].mValue, keys[i+1].mValue))
+                        || (i == numKeys - 1))
+                continue;
+        }
         keyframes.push_back(keys[i]);
     }
 
@@ -1855,7 +1856,8 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
 
 
     if (!keyframes.isEmpty()) {
-        if (m_binaryKeyframes) {
+        // If keyframe values are fixed, it will not be generated into binary
+        if (m_binaryKeyframes && keyframes.size() != 1) {
             // Generate animations file
             QString outputAnimationFile = QStringLiteral("animations/") + id + QStringLiteral("_")
                     + propertyName + QStringLiteral(".qad");
