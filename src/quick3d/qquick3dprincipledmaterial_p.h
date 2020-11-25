@@ -255,7 +255,6 @@ private:
     QQuick3DTexture *m_normalMap = nullptr;
     QQuick3DTexture *m_metalnessMap = nullptr;
     QQuick3DTexture* m_occlusionMap = nullptr;
-    float m_emissivePower = 0.0f;
     float m_specularTint = 0.0f;
     float m_specularAmount = 0.5f;
     float m_roughness = 0.0f;

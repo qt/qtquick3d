@@ -972,13 +972,14 @@ QString AssimpImporter::generateMeshFile(QIODevice &file, const QVector<aiMesh *
         // ### Bones + Weights
         QVector<qint32> boneIndexes;
         QVector<float> fBoneIndexes;
-        QVector<float> weights(mesh->mNumVertices * 4, 0.0f);
-        if (m_useFloatJointIndices)
-            fBoneIndexes.resize(mesh->mNumVertices * 4, 0);
-        else
-            boneIndexes.resize(mesh->mNumVertices * 4, 0);
-
+        QVector<float> weights;
         if (mesh->HasBones()) {
+            weights.resize(mesh->mNumVertices * 4, 0.0f);
+            if (m_useFloatJointIndices)
+                fBoneIndexes.resize(mesh->mNumVertices * 4, 0);
+            else
+                boneIndexes.resize(mesh->mNumVertices * 4, 0);
+
             for (uint i = 0; i < mesh->mNumBones; ++i) {
                 QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
                 if (!m_boneIdxMap.contains(boneName)) {
@@ -1574,7 +1575,7 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
                                                    tabLevel + 1,
                                                    QSSGQmlUtilities::PropertyMap::Texture,
                                                    QStringLiteral("mappingMode"),
-                                                   QStringLiteral("Texture.Normal"));
+                                                   QStringLiteral("Texture.UV"));
         // It would be possible to use another channel than UV0 to map texture data
         // but for now we force everything to use UV0
         //int uvSource;
@@ -2071,9 +2072,6 @@ void AssimpImporter::processOptions(const QVariantMap &options)
     if (checkBooleanOption(QStringLiteral("removeComponentTextures"), optionsObject))
         removeComponents = aiComponent(removeComponents | aiComponent_TEXTURES);
 
-    // FIXME test with designstudio
-    m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), optionsObject);
-
     if (removeComponents != aiComponent(0)) {
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveComponent);
         m_importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeComponents);
@@ -2082,11 +2080,9 @@ void AssimpImporter::processOptions(const QVariantMap &options)
     bool preservePivots = checkBooleanOption(QStringLiteral("fbxPreservePivots"), optionsObject);
     m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, preservePivots);
 
-    if (checkBooleanOption(QStringLiteral("generateMipMaps"), optionsObject))
-        m_forceMipMapGeneration = true;
-
-    if (checkBooleanOption(QStringLiteral("useBinaryKeyframes"), optionsObject))
-        m_binaryKeyframes = true;
+    m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), optionsObject);
+    m_forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), optionsObject);
+    m_binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), optionsObject);
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)

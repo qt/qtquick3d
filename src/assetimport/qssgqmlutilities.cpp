@@ -327,6 +327,8 @@ PropertyMap::PropertyMap()
     PropertiesMap *orthographicCamera = new PropertiesMap;
     orthographicCamera->insert(QStringLiteral("clipNear"), 10.0f);
     orthographicCamera->insert(QStringLiteral("clipFar"), 10000.0f);
+    orthographicCamera->insert(QStringLiteral("horizontalMagnification"), 1.0f);
+    orthographicCamera->insert(QStringLiteral("verticalMagnification"), 1.0f);
     m_properties.insert(Type::OrthographicCamera, orthographicCamera);
 
     // Directional Light
@@ -339,10 +341,8 @@ PropertyMap::PropertyMap()
     directionalLight->insert(QStringLiteral("shadowFactor"), 5.0f);
     directionalLight->insert(QStringLiteral("shadowMapResolution"), 9);
     directionalLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    directionalLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
-    directionalLight->insert(QStringLiteral("shadowFilter"), 35.0f);
+    directionalLight->insert(QStringLiteral("shadowFilter"), 5.0f);
     m_properties.insert(Type::DirectionalLight, directionalLight);
-
 
     // Point Light
     PropertiesMap *pointLight = new PropertiesMap;
@@ -354,11 +354,10 @@ PropertyMap::PropertyMap()
     pointLight->insert(QStringLiteral("shadowFactor"), 5.0f);
     pointLight->insert(QStringLiteral("shadowMapResolution"), 9);
     pointLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    pointLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
-    pointLight->insert(QStringLiteral("shadowFilter"), 35.0f);
-    pointLight->insert(QStringLiteral("constantFade"), 0.0f);
+    pointLight->insert(QStringLiteral("shadowFilter"), 5.0f);
+    pointLight->insert(QStringLiteral("constantFade"), 1.0f);
     pointLight->insert(QStringLiteral("linearFade"), 0.0f);
-    pointLight->insert(QStringLiteral("quadraticFade"), 0.0f);
+    pointLight->insert(QStringLiteral("quadraticFade"), 1.0f);
     m_properties.insert(Type::PointLight, pointLight);
 
     // Spot Light
@@ -371,15 +370,13 @@ PropertyMap::PropertyMap()
     spotLight->insert(QStringLiteral("shadowFactor"), 5.0f);
     spotLight->insert(QStringLiteral("shadowMapResolution"), 9);
     spotLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    spotLight->insert(QStringLiteral("shadowMapFieldOfView"), 90.0f);
-    spotLight->insert(QStringLiteral("shadowFilter"), 35.0f);
-    spotLight->insert(QStringLiteral("constantFade"), 0.0f);
+    spotLight->insert(QStringLiteral("shadowFilter"), 5.0f);
+    spotLight->insert(QStringLiteral("constantFade"), 1.0f);
     spotLight->insert(QStringLiteral("linearFade"), 0.0f);
-    spotLight->insert(QStringLiteral("quadraticFade"), 0.0f);
-    spotLight->insert(QStringLiteral("coneAngle"), 0.0f);
-    spotLight->insert(QStringLiteral("innerConeAngle"), 0.0f);
+    spotLight->insert(QStringLiteral("quadraticFade"), 1.0f);
+    spotLight->insert(QStringLiteral("coneAngle"), 40.0f);
+    spotLight->insert(QStringLiteral("innerConeAngle"), 30.0f);
     m_properties.insert(Type::SpotLight, spotLight);
-
 
     // DefaultMaterial
     PropertiesMap *defaultMaterial = new PropertiesMap;
@@ -390,9 +387,9 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::white));
     defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
     defaultMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("indexOfRefraction"), 0.2f);
+    defaultMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
     defaultMaterial->insert(QStringLiteral("fresnelPower"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("specularAmount"), 1.0f);
+    defaultMaterial->insert(QStringLiteral("specularAmount"), 0.0f);
     defaultMaterial->insert(QStringLiteral("specularRoughness"), 0.0f);
     defaultMaterial->insert(QStringLiteral("opacity"), 1.0f);
     defaultMaterial->insert(QStringLiteral("bumpAmount"), 0.0f);
@@ -409,10 +406,9 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 0.0f);
     principledMaterial->insert(QStringLiteral("specularAmount"), 0.5f);
-    principledMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::black));
+    principledMaterial->insert(QStringLiteral("specularTint"), 0.0f);
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
     principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
-    principledMaterial->insert(QStringLiteral("emissiveFactor"), 0.0f);
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
     principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
@@ -423,7 +419,7 @@ PropertyMap::PropertyMap()
     PropertiesMap *texture = new PropertiesMap;
     texture->insert(QStringLiteral("scaleU"), 1.0f);
     texture->insert(QStringLiteral("scaleV"), 1.0f);
-    texture->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.Normal"));
+    texture->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.UV"));
     texture->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.Repeat"));
     texture->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.Repeat"));
     texture->insert(QStringLiteral("rotationUV"), 0.0f);
