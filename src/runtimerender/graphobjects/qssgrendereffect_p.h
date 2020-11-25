@@ -107,6 +107,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     const char *className = nullptr;
     bool requiresDepthTexture = false;
     bool requiresCompilation = true;
+    bool incompleteBuildTimeObject = false; // Used by the shadergen tool
     QSSGRenderTextureFormat::Format outputFormat = QSSGRenderTextureFormat::Unknown;
 };
 

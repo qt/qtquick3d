@@ -84,7 +84,10 @@ constexpr const char *typeStringTable[] {
     "SpotLight",
     "Texture",
     "TextureInput",
-    "Model"
+    "Model",
+    "Effect",
+    "Pass",
+    "Shader"
 };
 
 template<typename T> constexpr QmlType getTypeId() { return QmlType::Unknown; }
@@ -99,9 +102,11 @@ template<> constexpr QmlType getTypeId<QQuick3DSpotLight>() { return QmlType::Sp
 template<> constexpr QmlType getTypeId<QQuick3DTexture>() { return QmlType::Texture; }
 template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsTextureInput>() { return QmlType::TextureInput; }
 template<> constexpr QmlType getTypeId<QQuick3DModel>() { return QmlType::Model; }
+template<> constexpr QmlType getTypeId<QQuick3DEffect>() { return QmlType::Effect; }
+template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsRenderPass>() { return QmlType::RenderPass; }
+template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsShader>() { return QmlType::RenderShader; }
 
 }
-
 using QmlTypeNames = QHash<QString, TypeInfo::QmlType>;
 
 QmlTypeNames baseTypeMap()
@@ -116,8 +121,11 @@ QmlTypeNames baseTypeMap()
         {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
         {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
         {TypeInfo::typeStringTable[TypeInfo::TextureInput], TypeInfo::TextureInput},
-        {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model}
-       };
+        {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model},
+        {TypeInfo::typeStringTable[TypeInfo::Effect], TypeInfo::Effect},
+        {TypeInfo::typeStringTable[TypeInfo::RenderPass], TypeInfo::RenderPass},
+        {TypeInfo::typeStringTable[TypeInfo::RenderShader], TypeInfo::RenderShader}
+    };
 }
 
 Q_GLOBAL_STATIC(QmlTypeNames, s_typeMap)
@@ -558,6 +566,9 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
                     if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>())
                         return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>(ref, property);
                     Q_FALLTHROUGH();
+                case TypeInfo::RenderShader:
+                    if (metaType.id() == qMetaTypeId<QQuick3DShaderUtilsShader::Stage>())
+                        return fromStringEnumHelper<QQuick3DShaderUtilsShader::Stage>(ref, property);
                 default:
                     break;
                 }
@@ -783,6 +794,17 @@ struct Visitors
                             freeMaterials.removeAt(idx);
                         if (ctx.dbgprint)
                             printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                } else if (ctx.property.targetType == TypeInfo::SceneEnvironment) {
+                    if (QQuick3DEffect *effect = qobject_cast<QQuick3DEffect *>(*foundIt)) {
+                        auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
+                        effects.append(&effects, effect);
+                        // Remove the effect from the "free" list (effects that aren't used anywhere).
+                        auto &freeEffecs = ctx.sceneData.effects;
+                        if (const auto idx = freeEffecs.indexOf(effect))
+                            freeEffecs.removeAt(idx);
+                        if (ctx.dbgprint)
+                            printf("Appending effect to \'%s\'\n", ctx.property.name.toLatin1().constData());
                     }
                 }
             } else {
@@ -1042,6 +1064,45 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
                 ctx.sceneData.textures.append(texInput->texture());
             }
             handled = true;
+            break;
+        }
+        case TypeInfo::Effect:
+        {
+            if (ctx.property.targetType== TypeInfo::SceneEnvironment) {
+                if (auto effect = createType<QQuick3DEffect>(ctx, objectBinding, typeName, ret)) {
+                    auto sceneEnvironment = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target);
+                    Q_ASSERT(sceneEnvironment);
+                    auto effects = sceneEnvironment->effects();
+                    effects.append(&effects, effect);
+                    handled = true;
+                }
+            }
+        }
+            break;
+        case TypeInfo::RenderPass:
+        {
+            if (ctx.property.targetType == TypeInfo::Effect) {
+                if (auto pass = createType<QQuick3DShaderUtilsRenderPass>(ctx, objectBinding, typeName, ret)) {
+                    auto effect = qobject_cast<QQuick3DEffect *>(ctx.property.target);
+                    Q_ASSERT(effect);
+                    auto passes = effect->passes();
+                    passes.append(&passes, pass);
+                    handled = true;
+                }
+            }
+        }
+            break;
+        case TypeInfo::RenderShader:
+        {
+            if (ctx.property.targetType == TypeInfo::RenderPass) {
+                if (auto shader = createType<QQuick3DShaderUtilsShader>(ctx, objectBinding, typeName, ret)) {
+                    auto pass = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target);
+                    Q_ASSERT(pass);
+                    auto shaders = pass->shaders();
+                    shaders.append(&shaders, shader);
+                    handled = true;
+                }
+            }
         }
             break;
         default:
@@ -1197,6 +1258,35 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             }
             break;
         }
+        case TypeInfo::Effect:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const QQuick3DEffect *base = (compIt != components.cend()) ? qobject_cast<QQuick3DEffect *>(compIt->ptr) : nullptr;
+            if (QQuick3DEffect *effect = buildType(def, ctx, ret, base)) {
+                // If this is a component we'll store it for lookups later.
+                if (!base) {
+                    const auto &fileName = ctx.currentFileInfo.fileName();
+                    const auto componentName = fileName.left(fileName.length() - 4);
+                    components.insert(componentName, { effect, type });
+                }
+
+                bool handled = false;
+                if (ctx.property.target) {
+                    if (ctx.property.targetType == TypeInfo::SceneEnvironment) {
+                        auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
+                        effects.append(&effects, effect);
+                        handled = true;
+                        if (ctx.dbgprint)
+                            printf("Appending effect to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+
+                if (!handled)
+                    ctx.sceneData.effects.push_back(effect);
+            }
+            break;
+        }
         case TypeInfo::DirectionalLight:
             Q_FALLTHROUGH();
         case TypeInfo::PointLight:
@@ -1251,6 +1341,34 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             }
             break;
         }
+        case TypeInfo::RenderShader:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsShader *>(compIt->ptr) : nullptr;
+            if (auto *shader = buildType(def, ctx, ret, base)) {
+                // If this is a component we'll store it for lookups later.
+                if (!base) {
+                    const auto &fileName = ctx.currentFileInfo.fileName();
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
+                    components.insert(componentName.toString(), { shader, type });
+                }
+                bool handled = false;
+                if (ctx.property.target) {
+                    if (ctx.property.targetType == TypeInfo::RenderPass) {
+                        auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
+                        shaders.append(&shaders, shader);
+                        handled = true;
+                        if (ctx.dbgprint)
+                            printf("Appending shader to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+
+                if (!handled)
+                    ctx.sceneData.shaders.push_back(shader);
+            }
+            break;
+        }
         default:
             Q_UNREACHABLE();
             break;
@@ -1270,11 +1388,10 @@ static bool interceptPublicMember(const QQmlJS::AST::UiPublicMember &member, Con
         printf("Intercepted public member!\n");
 
     if (member.statement && member.statement->kind == Node::Kind_ExpressionStatement) {
-        if (ctx.property.targetType == TypeInfo::CustomMaterial && member.memberType) {
+        if ((ctx.property.targetType == TypeInfo::CustomMaterial || ctx.property.targetType == TypeInfo::Effect) && member.memberType) {
             // For custom materials we have properties that are user provided, so we'll
             // need to add these to the objects properties (we add these here to be able
-            // to piggyback on the existing type matching code) - TODO: This needs some
-            // better solution later.
+            // to piggyback on the existing type matching code)
             if (member.memberType->name == u"real") {
                 ctx.property.builtinType = TypeInfo::Real;
             } else if (member.memberType->name == u"bool") {

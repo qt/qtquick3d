@@ -43,6 +43,8 @@ class QQuick3DMaterial;
 class QQuick3DViewport;
 class QQuick3DTexture;
 class QQuick3DModel;
+class QQuick3DEffect;
+class QQuick3DShaderUtilsShader;
 class QDir;
 
 namespace TypeInfo {
@@ -59,6 +61,11 @@ enum QmlType
     Texture,
     TextureInput,
     Model,
+    Effect,
+    // Types used for custom effects
+    RenderPass,
+    RenderShader,
+    // End effect types
     Builtin,
     Unknown
 };
@@ -110,7 +117,9 @@ struct SceneData
     QVector<Material> materials;
     QVector<QQuick3DTexture *> textures;
     QVector<QQuick3DModel *> models;
-    bool hasData() { return viewport && (models.size() != 0 || materials.size() != 0); }
+    QVector<QQuick3DEffect *> effects;
+    QVector<QQuick3DShaderUtilsShader *> shaders;
+    bool hasData() { return viewport && (models.size() != 0 || materials.size() != 0 || effects.size() != 0); }
 };
 
 int parseQmlData(const QByteArray &code, const QString &fileName, SceneData &sceneData);

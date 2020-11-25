@@ -771,9 +771,10 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     }
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
-    if (!effectNode) {
+    if (!effectNode || effectNode->incompleteBuildTimeObject) {
         markAllDirty();
-        effectNode = new QSSGRenderEffect;
+        if (!effectNode)
+            effectNode = new QSSGRenderEffect;
         effectNode->setActive(true);
 
         QMetaMethod propertyDirtyMethod;
@@ -793,28 +794,33 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             superClass = superClass->superClass();
         }
 
-        QVector<QMetaProperty> textureProperties; // We'll deal with these later
+        using TextureInputProperty = QPair<QQuick3DShaderUtilsTextureInput *, const char *>;
+
+        QVector<TextureInputProperty> textureProperties; // We'll deal with these later
         for (int i = propOffset; i != propCount; ++i) {
             const QMetaProperty property = metaObject()->property(i);
             if (Q_UNLIKELY(!property.isValid()))
                 continue;
 
+            const auto name = property.name();
             QMetaType propType = property.metaType();
             QVariant propValue = property.read(this);
             if (propType == QMetaType(QMetaType::QVariant))
                 propType = propValue.metaType();
 
             if (propType.id() >= QMetaType::User) {
-                if (property.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
-                    textureProperties.push_back(property);
+                if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) {
+                    if (QQuick3DShaderUtilsTextureInput *texture = property.read(this).value<QQuick3DShaderUtilsTextureInput *>())
+                        textureProperties.push_back({texture, name});
+                }
             } else if (propType == QMetaType(QMetaType::QObjectStar)) {
-                if (qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
-                    textureProperties.push_back(property);
+                if (QQuick3DShaderUtilsTextureInput *texture = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
+                    textureProperties.push_back({texture, name});
             } else {
                 const auto type = uniformType(propType);
                 if (type != QSSGRenderShaderDataType::Unknown) {
-                    uniforms.append({ uniformTypeName(propType), property.name() });
-                    effectNode->properties.push_back({ property.name(), uniformTypeName(propType),
+                    uniforms.append({ uniformTypeName(propType), name });
+                    effectNode->properties.push_back({ name, uniformTypeName(propType),
                                                        propValue, uniformType(propType), i});
                     // Track the property changes
                     if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
@@ -827,19 +833,13 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             }
         }
 
-        // Textures
-        QByteArray textureData;
-        for (const auto &property : qAsConst(textureProperties)) {
+        const auto processTextureProperty = [&](QQuick3DShaderUtilsTextureInput &texture, const QByteArray &name) {
             QSSGRenderEffect::TextureProperty texProp;
-            QQuick3DShaderUtilsTextureInput *texture = property.read(this).value<QQuick3DShaderUtilsTextureInput *>();
-            const QByteArray &name = property.name();
-            if (name.isEmpty())
-                continue;
-            QQuick3DTexture *tex = texture->texture();
-            connect(texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DEffect::onTextureDirty);
-            connect(texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DEffect::onTextureDirty);
+            QQuick3DTexture *tex = texture.texture();
+            connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DEffect::onTextureDirty);
+            connect(&texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DEffect::onTextureDirty);
             texProp.name = name;
-            if (texture->enabled)
+            if (texture.enabled)
                 texProp.texImage = tex->getRenderImage();
 
             texProp.shaderDataType = QSSGRenderShaderDataType::Texture2D;
@@ -855,8 +855,49 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                                                                                    : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                               : QSSGRenderTextureCoordOp::MirroredRepeat);
 
-            uniforms.append({ QByteArrayLiteral("sampler2D"), texProp.name });
+            uniforms.append({ QByteArrayLiteral("sampler2D"), name });
             effectNode->textureProperties.push_back(texProp);
+        };
+
+        // Textures
+        QByteArray textureData;
+        for (const auto &property : qAsConst(textureProperties))
+            processTextureProperty(*property.first, property.second);
+
+        if (effectNode->incompleteBuildTimeObject) { // This object came from the shadergen tool
+            const auto names = dynamicPropertyNames();
+            QVector<QByteArray> textureNames;
+            for (const auto &name : names) {
+                QVariant propValue = property(name.constData());
+                QMetaType propType = propValue.metaType();
+                if (propType == QMetaType(QMetaType::QVariant))
+                    propType = propValue.metaType();
+
+                if (propType.id() >= QMetaType::User) {
+                    if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) {
+                        if (QQuick3DShaderUtilsTextureInput *texture = propValue.value<QQuick3DShaderUtilsTextureInput *>())
+                            textureProperties.push_back({texture, name});
+                    }
+                } else if (propType.id() == QMetaType::QObjectStar) {
+                    if (QQuick3DShaderUtilsTextureInput *texture = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
+                        textureProperties.push_back({texture, name});
+                } else {
+                    const auto type = uniformType(propType);
+                    if (type != QSSGRenderShaderDataType::Unknown) {
+                        uniforms.append({ uniformTypeName(propType), name });
+                        effectNode->properties.push_back({ name, uniformTypeName(propType),
+                                                           propValue, uniformType(propType), -1 /* aka. dynamic property */});
+                        // We don't need to track property changes
+                    } else {
+                        // ### figure out how _not_ to warn when there are no dynamic
+                        // properties defined (because warnings like Blah blah objectName etc. are not helpful)
+                        qWarning("No known uniform conversion found for effect property %s. Skipping", name.constData());
+                    }
+                }
+            }
+
+            for (const auto &property : qAsConst(textureProperties))
+                processTextureProperty(*property.first, property.second);
         }
 
         // built-ins

@@ -51,6 +51,11 @@ QT_BEGIN_NAMESPACE
 struct QSSGRhiEffectTexture;
 class QSSGRenderer;
 
+struct QSSGProgramGenerator;
+struct QSSGShaderLibraryManager;
+class QSSGShaderCache;
+
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
 public:
@@ -66,6 +71,12 @@ public:
                          QVector2D cameraClipRange);
 
     static QSSGRenderTextureFormat::Format overriddenOutputFormat(const QSSGRenderEffect *inEffect);
+
+    static QSSGRef<QSSGRhiShaderPipeline> buildShaderForEffect(const QSSGBindShader &inCmd,
+                                                               const QSSGRef<QSSGProgramGenerator> &generator,
+                                                               const QSSGRef<QSSGShaderLibraryManager> &shaderLib,
+                                                               const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                               bool isYUpInFramebuffer);
 
 private:
     void releaseResources();

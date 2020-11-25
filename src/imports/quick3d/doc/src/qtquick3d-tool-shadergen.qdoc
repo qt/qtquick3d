@@ -55,7 +55,6 @@ shader successfully.
 Known limitations are:
 \list
   \li Scenes with more then one \l{View3D}.
-  \li The \l{Effect} type is not supported.
   \li Dynamically adding or removing lights are not supported when using generating materials.
   \li The generated shaders are strictly tied to the Qt version used due to its dependency on
       the internals of the renderer. Compatibility of the generated shaders can therefore

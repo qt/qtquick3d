@@ -400,10 +400,44 @@ static const char *effect_builtin_textureMapUVFlipped =
         "    return vec2(uv.x, 1.0 - uv.y);\n"
         "}\n";
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBindShader &inCmd,
+                                                                         const QSSGRef<QSSGProgramGenerator> &generator,
+                                                                         const QSSGRef<QSSGShaderLibraryManager> &shaderLib,
+                                                                         const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                                         bool isYUpInFramebuffer)
+{
+    const auto &key = inCmd.m_shaderPathKey;
+    qCDebug(lcEffectSystem) << "    generating new shader pipeline for: " << key;
+
+    generator->beginProgram();
+
+    {
+        const QByteArray src = shaderLib->getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Vertex);
+        QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
+        vStage->append(isYUpInFramebuffer ? effect_builtin_textureMapUV : effect_builtin_textureMapUVFlipped);
+        vStage->append(src);
+    }
+    {
+        const QByteArray src = shaderLib->getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment);
+        QSSGStageGeneratorBase *fStage = generator->getStage(QSSGShaderGeneratorStage::Fragment);
+        fStage->append(src);
+    }
+
+    return generator->compileGeneratedRhiShader(key,
+                                                ShaderFeatureSetList(),
+                                                shaderLib,
+                                                shaderCache,
+                                                QSSGRhiShaderPipeline::UsedWithoutIa);
+}
+
 void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
 {
     m_currentTextures.clear();
     m_pendingClears.clear();
+
+    QRhi *rhi = m_renderer->contextInterface()->rhiContext()->rhi();
+    const auto &shaderLib = m_renderer->contextInterface()->shaderLibraryManager();
+    const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
 
     const QByteArray &key = inCmd->m_shaderPathKey;
     const auto &hkey = inCmd->m_hkey;
@@ -411,48 +445,30 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     // now we need a proper "unique" key (unique in the scene), the filenames are not sufficient
     const auto rkey = hkey ^ quintptr(inCmd) ^ m_currentUbufIndex;
 
-    auto it = m_shaderPipelines.find(rkey);
-    if (it != m_shaderPipelines.end()) {
-        m_currentShaderPipeline = it.value().data();
+    // look for a runtime pipeline
+    const auto it = m_shaderPipelines.constFind(rkey);
+    if (it != m_shaderPipelines.cend())
+        m_currentShaderPipeline = (*it).data();
 
-        const void *cacheKey1 = reinterpret_cast<const void *>(this);
-        const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-        QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
-        m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
-        m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-
-        return;
+    // Check if there's a build-time genereated entry for this effect
+    if (!m_currentShaderPipeline) {
+        const auto &shaderEntries = shaderLib->m_shaderEntries;
+        const auto foundIt = shaderEntries.constFind(QQsbCollection::Entry{hkey});
+        if (foundIt != shaderEntries.cend()) {
+            const auto &shader = shaderCache->loadGeneratedShader(key, *foundIt);
+            m_shaderPipelines.insert(rkey, shader);
+            m_currentShaderPipeline = shader.data();
+        }
     }
 
-    qCDebug(lcEffectSystem) << "    generating new shader pipeline for lookup key" << key;
-
+    // Final option, generate the shader pipeline
     const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
-    generator->beginProgram();
-
-    const auto &shaderLib = m_renderer->contextInterface()->shaderLibraryManager();
-    {
-        const QByteArray src = shaderLib->getShaderSource(inCmd->m_shaderPathKey, QSSGShaderCache::ShaderType::Vertex);
-        QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
-        QRhi *rhi = m_renderer->contextInterface()->rhiContext()->rhi();
-        if (rhi->isYUpInFramebuffer())
-            vStage->append(effect_builtin_textureMapUV);
-        else
-            vStage->append(effect_builtin_textureMapUVFlipped);
-        vStage->append(src);
-    }
-    {
-        const QByteArray src = shaderLib->getShaderSource(inCmd->m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment);
-        QSSGStageGeneratorBase *fStage = generator->getStage(QSSGShaderGeneratorStage::Fragment);
-        fStage->append(src);
-    }
-
-    const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
-    QSSGRef<QSSGRhiShaderPipeline> stages = generator->compileGeneratedRhiShader(key, ShaderFeatureSetList(), shaderLib, shaderCache,
-                                                                                 QSSGRhiShaderPipeline::UsedWithoutIa);
-    if (stages) {
+    if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
         m_shaderPipelines.insert(rkey, stages);
         m_currentShaderPipeline = stages.data();
+    }
 
+    if (m_currentShaderPipeline) {
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
         const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
         QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });

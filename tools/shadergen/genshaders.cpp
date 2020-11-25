@@ -33,6 +33,8 @@
 
 #include <QtGui/private/qrhinull_p_p.h>
 
+#include <QtQml/qqmllist.h>
+
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
@@ -49,6 +51,8 @@
 
 #include <private/qssgrenderer_p.h>
 #include <private/qssgrendererimpllayerrenderdata_p.h>
+
+#include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 
 #include <QtShaderTools/private/qshaderbaker_p.h>
 
@@ -287,6 +291,56 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         generateShaderForModel(model);
     }
 
+    // Now generate the shaders for the effects
+    const auto generateEffectShader = [&](QQuick3DEffect &effect) {
+        auto obj = QQuick3DObjectPrivate::get(&effect);
+        obj->sceneManager = sceneManager;
+        QSSGRenderEffect *renderEffect = new QSSGRenderEffect;
+        renderEffect->incompleteBuildTimeObject = true;
+        if (auto ret = QQuick3DObjectPrivate::updateSpatialNode(&effect, renderEffect))
+            Q_ASSERT(ret == renderEffect);
+        renderEffect->incompleteBuildTimeObject = false;
+        obj->spatialNode = renderEffect;
+        nodes.append(renderEffect);
+
+        const auto &commands = renderEffect->commands;
+        for (const auto &command : commands) {
+            if (command->m_type == CommandType::BindShader) {
+                auto bindShaderCommand = static_cast<const QSSGBindShader &>(*command);
+                for (const auto isYUpInFramebuffer : { true, false }) { // Generate effects for both up-directions.
+                    const auto shaderPipeline = QSSGRhiEffectSystem::buildShaderForEffect(bindShaderCommand,
+                                                                                          shaderProgramGenerator,
+                                                                                          shaderLibraryManager,
+                                                                                          shaderCache,
+                                                                                          isYUpInFramebuffer);
+                    if (shaderPipeline) {
+                        const auto &key = bindShaderCommand.m_shaderPathKey;
+                        const size_t hkey = bindShaderCommand.m_hkey;
+                        Q_ASSERT(hkey != 0);
+                        const auto vertexStage = shaderPipeline->vertexStage();
+                        const auto fragmentStage = shaderPipeline->fragmentStage();
+                        if (vertexStage && fragmentStage)
+                            qsbc.addQsbEntry(key, toQsbShaderFeatureSet(ShaderFeatureSetList()), vertexStage->shader(), fragmentStage->shader(), hkey);
+                    }
+                }
+            }
+        }
+    };
+
+    // Effects
+    if (sceneData.viewport && sceneData.viewport->environment()) {
+        auto &env = *sceneData.viewport->environment();
+        auto effects = env.effects();
+        const auto effectCount = effects.count(&effects);
+        for (int i = 0; i < effectCount; ++i) {
+            auto effect = effects.at(&effects, i);
+            generateEffectShader(*effect);
+        }
+    }
+
+    // Free Effects
+    for (const auto &effect : qAsConst(sceneData.effects))
+        generateEffectShader(*effect);
 
     const bool ret = !qsbc.getEntries().isEmpty();
     if (ret)

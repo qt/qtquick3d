@@ -35,6 +35,7 @@
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
+#include <QtQuick3D/private/qquick3deffect_p.h>
 
 #include <parser.h>
 
@@ -52,9 +53,12 @@ private Q_SLOTS:
     void tst_customMaterialComponent();
     void tst_customMaterialUniforms_data();
     void tst_customMaterialUniforms();
+    void tst_effectComponent();
+    void tst_effectUniforms_data();
+    void tst_effectUniforms();
 
 private:
-    MaterialParser::SceneData customMaterialSceneData;
+    MaterialParser::SceneData lastSceneData;
 };
 
 void Shadergen::initTestCase()
@@ -99,7 +103,7 @@ void Shadergen::tst_customMaterialComponent()
     QVERIFY(file.open(QIODevice::ReadOnly));
     QByteArray data = file.readAll();
 
-    auto &sceneData = customMaterialSceneData;
+    auto &sceneData = lastSceneData;
     MaterialParser::parseQmlData(data, file.fileName(), sceneData);
 
     QCOMPARE(sceneData.materials.size(), 1);
@@ -140,7 +144,7 @@ void Shadergen::tst_customMaterialUniforms_data()
 void Shadergen::tst_customMaterialUniforms()
 {
     // Test that public QML members are added to the object
-    const auto &sceneData = customMaterialSceneData;
+    const auto &sceneData = lastSceneData;
     QCOMPARE(sceneData.materials.size(), 1);
     QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(sceneData.materials.at(0).ptr);
     QCOMPARE(mat->shadingMode(), QQuick3DCustomMaterial::ShadingMode::Unshaded);
@@ -159,6 +163,97 @@ void Shadergen::tst_customMaterialUniforms()
                 (prop.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>());
         if (!ok) {
             qDebug() << "Texture: " << qMetaTypeId<QQuick3DTexture *>();
+            qDebug() << "TextureInput: " << qMetaTypeId<QQuick3DShaderUtilsTextureInput *>();
+            qDebug() << prop.metaType().id();
+        }
+        QVERIFY(ok);
+    } else {
+        QCOMPARE(prop, value);
+    }
+}
+
+void Shadergen::tst_effectComponent()
+{
+    QFile file(QLatin1String(":/qml/EffectA.qml"));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QByteArray data = file.readAll();
+
+    MaterialParser::SceneData sceneData;
+    MaterialParser::parseQmlData(data, file.fileName(), sceneData);
+
+    QCOMPARE(sceneData.effects.size(), 1);
+    QQuick3DEffect *effect = sceneData.effects.at(0);
+    auto passes = effect->passes();
+    QCOMPARE(passes.count(&passes), 1);
+    auto pass = passes.at(&passes, 0);
+    QVERIFY(pass);
+    auto shaders = pass->shaders();
+    {
+        const auto count = shaders.count(&shaders);
+        QCOMPARE(count, 2);
+        // Vertex shader
+        auto shader = shaders.at(&shaders, 0);
+        // Shader url
+        QVERIFY(!shader->shader.isEmpty());
+        QCOMPARE(shader->stage, QQuick3DShaderUtilsShader::Stage::Vertex);
+
+        // Fragment shader
+        shader = shaders.at(&shaders, 1);
+        // Shader url
+        QVERIFY(!shader->shader.isEmpty());
+        QCOMPARE(shader->stage, QQuick3DShaderUtilsShader::Stage::Fragment);
+    }
+
+    lastSceneData = std::move(sceneData);
+}
+
+void Shadergen::tst_effectUniforms_data()
+{
+    QTest::addColumn<QMetaType>("type");
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<QVariant>("value");
+
+    QTest::newRow("bool0") << QMetaType(QMetaType::Bool) << "uBoolFalse" << QVariant::fromValue(false);
+    QTest::newRow("bool1") << QMetaType(QMetaType::Bool) << "uBoolTrue" << QVariant::fromValue(true);
+    QTest::newRow("int") << QMetaType(QMetaType::Double) /*Not a typo*/ << "uInt" << QVariant::fromValue(int(33));
+    QTest::newRow("real") << QMetaType(QMetaType::Double) << "uReal" << QVariant::fromValue(qreal(3.3));
+    QTest::newRow("pointS") << QMetaType(QMetaType::QPointF) << "uPointS" << QVariant::fromValue(QPointF(0, 1));
+    QTest::newRow("pointF") << QMetaType(QMetaType::QPointF) << "uPointF" << QVariant::fromValue(QPointF(1, 0));
+    QTest::newRow("sizeS") << QMetaType(QMetaType::QSizeF) << "uSizeS" << QVariant::fromValue(QSizeF(1, 1));
+    QTest::newRow("sizeF") << QMetaType(QMetaType::QSizeF) << "uSizeF" << QVariant::fromValue(QSizeF(2, 2));
+    QTest::newRow("rectS") << QMetaType(QMetaType::QRectF) << "uRectS" << QVariant::fromValue(QRectF(0, 1, 100, 101));
+    QTest::newRow("rectF") << QMetaType(QMetaType::QRectF) << "uRectF" << QVariant::fromValue(QRectF(1, 0, 101, 100));
+    QTest::newRow("vec2") << QMetaType(QMetaType::QVector2D) << "uVec2" << QVariant::fromValue(QVector2D(1, 2));
+    QTest::newRow("vec3") << QMetaType(QMetaType::QVector3D) << "uVec3" << QVariant::fromValue(QVector3D(1, 2, 3));
+    QTest::newRow("vec4") << QMetaType(QMetaType::QVector4D) << "uVec4" << QVariant::fromValue(QVector4D(1, 2, 3, 4));
+    QTest::newRow("quat") << QMetaType(QMetaType::QQuaternion) << "uQuat" << QVariant::fromValue(QQuaternion(1, 2, 3, 4));
+    QTest::newRow("m44") << QMetaType(QMetaType::QMatrix4x4) << "uM44"
+                         << QVariant::fromValue(QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+    QTest::newRow("Color1") << QMetaType(QMetaType::QColor) << "uColor1" << QVariant::fromValue(QColor("green"));
+    QTest::newRow("Color2") << QMetaType(QMetaType::QColor) << "uColor2" << QVariant::fromValue(QColor("#ff0000"));
+    QTest::newRow("TextureInput") << QMetaType(qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) << "uTexInput"
+                                  << QVariant::fromValue((QQuick3DShaderUtilsTextureInput *)nullptr);
+}
+
+void Shadergen::tst_effectUniforms()
+{
+    // Test that public QML members are added to the object
+    const auto &sceneData = lastSceneData;
+    QCOMPARE(sceneData.effects.size(), 1);
+    QQuick3DEffect *effect = qobject_cast<QQuick3DEffect *>(sceneData.effects.at(0));
+
+    QFETCH(QMetaType, type);
+    QFETCH(QString, name);
+    QFETCH(QVariant, value);
+
+    const auto prop = effect->property(name.toLatin1().constData());
+    QVERIFY(prop.isValid());
+    QCOMPARE(prop.metaType(), type);
+    if (type == QMetaType(QMetaType::Double)) {
+        QVERIFY(qFuzzyCompare(prop.toDouble(), value.toDouble()));
+    } else if (type.id() >= QMetaType::User) {
+        const bool ok = (prop.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>());
+        if (!ok) {
             qDebug() << "TextureInput: " << qMetaTypeId<QQuick3DShaderUtilsTextureInput *>();
             qDebug() << prop.metaType().id();
         }
