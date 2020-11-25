@@ -64,7 +64,7 @@ This would generate the following files:
 \endlist
 
 Which can then be used in a Qt Quick 3D project by using that QML Component:
-\code \QtMinorVersion
+\code
 import QtQuick3D
 
 TestModel {
