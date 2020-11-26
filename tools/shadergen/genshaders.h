@@ -57,8 +57,6 @@ struct GenShaders
     QSSGRef<QSSGRenderContextInterface> renderContext;
 
     QQuick3DSceneManager *sceneManager = nullptr;
-
-    static void processFoo(const QSSGRef<QSSGRenderContextInterface> &renderContext, const MaterialParser::SceneData &sceneData);
 };
 
 #endif
