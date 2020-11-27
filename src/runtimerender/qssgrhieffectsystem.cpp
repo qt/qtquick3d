@@ -41,9 +41,9 @@ Q_LOGGING_CATEGORY(lcEffectSystem, "qt.quick3d.effects");
 
 struct QSSGRhiEffectTexture
 {
-    QRhiTexture *texture;
-    QRhiRenderPassDescriptor *renderPassDescriptor;
-    QRhiTextureRenderTarget *renderTarget;
+    QRhiTexture *texture = nullptr;
+    QRhiRenderPassDescriptor *renderPassDescriptor = nullptr;
+    QRhiTextureRenderTarget *renderTarget = nullptr;
     QByteArray name;
 
     QSSGRhiSamplerDescription desc;
@@ -193,7 +193,7 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
     }
 
     releaseTextures();
-    return latestOutput->texture;
+    return latestOutput ? latestOutput->texture : nullptr;
 }
 
 void QSSGRhiEffectSystem::releaseResources()
