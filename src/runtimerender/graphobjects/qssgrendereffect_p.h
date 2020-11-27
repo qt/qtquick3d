@@ -87,8 +87,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     QVector<Property> properties;
 
-    QSSGRenderLayer *m_layer;
-    QSSGRenderEffect *m_nextEffect;
+    QSSGRenderLayer *m_layer = nullptr;
+    QSSGRenderEffect *m_nextEffect = nullptr;
 
     void initialize();
 
