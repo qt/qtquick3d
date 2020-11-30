@@ -57,9 +57,10 @@ public:
     QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext);
     ~QSSGRhiEffectSystem();
 
-    void setup(QRhi *rhi, QSize outputSize, QSSGRenderEffect *firstEffect);
+    void setup(QSize outputSize);
     QRhiTexture *process(const QSSGRef<QSSGRhiContext> &rhiCtx,
                          const QSSGRef<QSSGRenderer> &renderer,
+                         const QSSGRenderEffect &firstEffect,
                          QRhiTexture *inTexture,
                          QRhiTexture *inDepthTexture,
                          QVector2D cameraClipRange);
@@ -87,7 +88,6 @@ private:
     void releaseTextures();
 
     QSize m_outSize;
-    const QSSGRenderEffect *m_firstEffect = nullptr;
     QSSGRenderContextInterface *m_sgContext = nullptr;
     QVector<QSSGRhiEffectTexture *> m_textures;
     QRhiTexture *m_depthTexture = nullptr;

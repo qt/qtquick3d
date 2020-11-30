@@ -403,7 +403,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         currentTexture = superSamplingAA ? m_ssaaTexture : m_texture;
 
         // Do effects before antialiasing
-        if (m_effectSystem /* && m_effectSystem->isActive() */) {
+        if (m_effectSystem && m_layer->firstEffect) {
             const auto &renderer = m_sgContext->renderer();
             QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
             Q_ASSERT(theRenderData);
@@ -412,6 +412,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
 
             currentTexture = m_effectSystem->process(m_sgContext->rhiContext(),
                                                      m_sgContext->renderer(),
+                                                     *m_layer->firstEffect,
                                                      currentTexture,
                                                      theDepthTexture,
                                                      cameraClipRange);
@@ -844,7 +845,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             if (m_layer->firstEffect) {
                 if (!m_effectSystem)
                     m_effectSystem = new QSSGRhiEffectSystem(m_sgContext);
-                m_effectSystem->setup(rhi, renderSize, m_layer->firstEffect);
+                m_effectSystem->setup(renderSize);
             } else if (m_effectSystem) {
                 delete m_effectSystem;
                 m_effectSystem = nullptr;
