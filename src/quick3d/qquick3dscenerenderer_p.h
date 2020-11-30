@@ -90,7 +90,7 @@ private:
     QQuick3DSceneManager *m_importSceneManager = nullptr;
     QSSGRenderLayer *m_layer = nullptr;
     QSize m_surfaceSize;
-    void *data = nullptr;
+    SGFramebufferObjectNode *fboNode = nullptr;
     bool m_aaIsDirty = true;
     QWindow *m_window = nullptr;
 

@@ -866,14 +866,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
 void QQuick3DSceneRenderer::update()
 {
-    if (data)
-        static_cast<SGFramebufferObjectNode *>(data)->scheduleRender();
+    if (fboNode)
+        fboNode->scheduleRender();
 }
 
 void QQuick3DSceneRenderer::invalidateFramebufferObject()
 {
-    if (data)
-        static_cast<SGFramebufferObjectNode *>(data)->invalidatePending = true;
+    if (fboNode)
+        fboNode->invalidatePending = true;
 }
 
 QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
@@ -998,10 +998,8 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
         // Also, we need to do an extra render when animation stops
         extraFramesToRender = (m_aaIsDirty || temporalIsDirty) ? QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS : 1;
     }
-    if (data && extraFramesToRender) {
-        static_cast<SGFramebufferObjectNode *>(data)->requestedFramesCount
-            = extraFramesToRender;
-    }
+    if (fboNode && extraFramesToRender)
+        fboNode->requestedFramesCount = extraFramesToRender;
 
     // Effects need to be rendered in reverse order as described in the file.
     layerNode->firstEffect = nullptr; // We reset the linked list
