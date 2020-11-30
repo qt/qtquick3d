@@ -168,9 +168,10 @@ namespace BuiltinHelpers {
 
 using ArgumentListView = InvasiveListView<QQmlJS::AST::ArgumentList>;
 
-static constexpr quint8 componentCount(const QVector2D &) { return 2; }
-static constexpr quint8 componentCount(const QVector3D &) { return 3; }
-static constexpr quint8 componentCount(const QVector4D &) { return 4; }
+template <typename T> Q_REQUIRED_RESULT constexpr quint8 componentCount() { Q_STATIC_ASSERT(true); return 0; }
+template <> Q_REQUIRED_RESULT constexpr quint8 componentCount<QVector2D>() { return 2; }
+template <> Q_REQUIRED_RESULT constexpr quint8 componentCount<QVector3D>() { return 3; }
+template <> Q_REQUIRED_RESULT constexpr quint8 componentCount<QVector4D>() { return 4; }
 
 static double expressionValue(const QQmlJS::AST::ExpressionNode &expr) {
     using namespace QQmlJS::AST;
@@ -185,6 +186,8 @@ static double expressionValue(const QQmlJS::AST::ExpressionNode &expr) {
         const auto &plusExpr = static_cast<const UnaryPlusExpression &>(expr);
         if (plusExpr.expression && plusExpr.expression->kind == Node::Kind_NumericLiteral)
             return static_cast<const NumericLiteral &>(*plusExpr.expression).value;
+    } else {
+        printf("Expression type \'%d\' unhandled!\n", expr.kind);
     }
 
     return 0.0;
@@ -201,14 +204,16 @@ static Vec toVec(const ArgumentListView &list, bool *ok = nullptr)
 {
     using namespace QQmlJS::AST;
     int i = 0;
+    const int e = componentCount<Vec>();
     Vec vec;
     for (const auto &listItem : list) {
-        if (listItem.expression)
-            vec[i++] = expressionValue(*listItem.expression);
+        if (listItem.expression && i != e)
+            vec[i] = expressionValue(*listItem.expression);
+        ++i;
     }
 
     if (ok)
-        *ok = (i == componentCount(vec));
+        *ok = (i == e);
 
     return vec;
 }
@@ -217,14 +222,16 @@ static QPointF toPoint(const ArgumentListView &list, bool *ok = nullptr)
 {
     using namespace QQmlJS::AST;
     int i = 0;
-    qreal args[2];
+    const int e = 2;
+    qreal args[e];
     for (const auto &listItem : list) {
-        if (listItem.expression)
-            args[i++] = expressionValue(*listItem.expression);
+        if (listItem.expression && i != e)
+            args[i] = expressionValue(*listItem.expression);
+        ++i;
     }
 
     if (ok)
-        *ok = (i == 2);
+        *ok = (i == e);
 
     return QPointF(args[0], args[1]);
 }
@@ -233,14 +240,16 @@ static QSizeF toSize(const ArgumentListView &list, bool *ok = nullptr)
 {
     using namespace QQmlJS::AST;
     int i = 0;
-    qreal args[2];
+    const int e = 2;
+    qreal args[e];
     for (const auto &listItem : list) {
-        if (listItem.expression && listItem.expression->kind == Node::Kind_NumericLiteral)
-            args[i++] = expressionValue(*listItem.expression);
+        if (listItem.expression && listItem.expression->kind == Node::Kind_NumericLiteral && i != e)
+            args[i] = expressionValue(*listItem.expression);
+        ++i;
     }
 
     if (ok)
-        *ok = (i == 2);
+        *ok = (i == e);
 
     return QSizeF(args[0], args[1]);
 }
@@ -249,14 +258,16 @@ static QRectF toRect(const ArgumentListView &list, bool *ok = nullptr)
 {
     using namespace QQmlJS::AST;
     int i = 0;
-    qreal args[4];
+    const int e = 4;
+    qreal args[e];
     for (const auto &listItem : list) {
-        if (listItem.expression)
-            args[i++] = expressionValue(*listItem.expression);
+        if (listItem.expression && i != e)
+            args[i] = expressionValue(*listItem.expression);
+        ++i;
     }
 
     if (ok)
-        *ok = (i == 4);
+        *ok = (i == e);
 
     return QRectF(args[0], args[1], args[2], args[3]);
 }
@@ -265,14 +276,16 @@ static QMatrix4x4 toMat44(const ArgumentListView &list, bool *ok = nullptr)
 {
     using namespace QQmlJS::AST;
     int i = 0;
-    float args[16];
+    const int e = 16;
+    float args[e];
     for (const auto &listItem : list) {
-        if (listItem.expression)
-            args[i++] = expressionValue(*listItem.expression);
+        if (listItem.expression && i != e)
+            args[i] = expressionValue(*listItem.expression);
+        ++i;
     }
 
     if (ok)
-        *ok = (i == 16);
+        *ok = (i == e);
 
     return QMatrix4x4(args);
 }
@@ -281,14 +294,16 @@ static QQuaternion toQuaternion(const ArgumentListView &list, bool *ok = nullptr
 {
     using namespace QQmlJS::AST;
     int i = 0;
-    float args[4];
+    const int e = 4;
+    float args[e];
     for (const auto &listItem : list) {
-        if (listItem.expression && listItem.expression->kind == Node::Kind_NumericLiteral)
-            args[i++] = expressionValue(*listItem.expression);
+        if (listItem.expression && listItem.expression->kind == Node::Kind_NumericLiteral && i != e)
+            args[i] = expressionValue(*listItem.expression);
+        ++i;
     }
 
     if (ok)
-        *ok = (i == 4);
+        *ok = (i == e);
 
     return QQuaternion(args[0], args[1], args[2], args[3]);
 }
@@ -301,11 +316,10 @@ static Vec toVec(const QStringView &ref)
 {
     const auto args = ref.split(u',');
     Vec vec;
-    int i = 0;
     bool ok = false;
-    if (args.size() == componentCount(vec)) {
-        for (const auto &arg : args) {
-            vec[++i] = arg.toDouble(&ok);
+    if (args.size() == componentCount<Vec>()) {
+        for (int i = 0; i != componentCount<Vec>(); ++i) {
+            vec[i] = args.at(i).toDouble(&ok);
             Q_ASSERT(ok);
         }
     }
