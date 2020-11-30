@@ -221,6 +221,7 @@ private:
     QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
     QMetaObject::Connection m_sceneManagerWindowChangeConnection;
     QQuickItem *m_initializedSourceItem = nullptr;
+    QSizeF m_initializedSourceItemSize;
     void trySetSourceParent();
 };
 

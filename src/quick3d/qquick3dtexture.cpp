@@ -382,6 +382,7 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
         // cannot touch m_layer here
     }
     m_initializedSourceItem = nullptr;
+    m_initializedSourceItemSize = QSize();
 
     m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
     m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
@@ -629,7 +630,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
             } else {
                 // Not a texture provider, so not an Image or an Item with
                 // layer.enabled: true, create our own QSGLayer.
-                if (m_initializedSourceItem != m_sourceItem) {
+                if (m_initializedSourceItem != m_sourceItem || m_initializedSourceItemSize != m_sourceItem->size()) {
                     // If there was a previous sourceItem and m_layer is valid
                     // then set its content to null until we get to
                     // afterSynchronizing, otherwise things can blow up.
@@ -637,6 +638,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                         m_layer->setItem(nullptr);
 
                     m_initializedSourceItem = m_sourceItem;
+                    m_initializedSourceItemSize = m_sourceItem->size();
 
                     // The earliest next point where we can do anything is
                     // after the scenegraph's QQuickItem sync round has completed.
@@ -800,6 +802,7 @@ void QQuick3DTexture::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange
         auto renderImage = getRenderImage();
         if (renderImage)
             renderImage->m_flags.setFlag(QSSGRenderImage::Flag::ItemSizeDirty);
+        m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
         update();
     }
 }
