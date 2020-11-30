@@ -575,13 +575,11 @@ void QQuick3DSceneRenderer::cleanupResources()
         m_sgContext->cleanupResources(m_importSceneManager->resourceCleanupQueue);
 }
 
-void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &size, float dpr, bool useFBO)
+void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO)
 {
-    if (!item)
-        return;
-
+    Q_ASSERT(view3D != nullptr); // This is not an option!
     if (!m_renderStats)
-        m_renderStats = item->renderStats();
+        m_renderStats = view3D->renderStats();
 
     if (m_renderStats)
         m_renderStats->startSync();
@@ -590,7 +588,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
-    auto view3D = static_cast<QQuick3DViewport*>(item);
     m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
     m_sceneManager->rci = m_sgContext.data();
     m_sceneManager->updateDirtyNodes();
@@ -666,7 +663,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *item, const QSize &siz
             QObject *sceneParent = importScene->parent();
             bool isEmbedded = false;
             while (sceneParent) {
-                if (sceneParent == item) {
+                if (sceneParent == view3D) {
                     isEmbedded = true;
                     break;
                 }
