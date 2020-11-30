@@ -68,14 +68,13 @@ QSSGRhiEffectSystem::~QSSGRhiEffectSystem()
     releaseResources();
 }
 
-void QSSGRhiEffectSystem::setup(QRhi *, QSize outputSize, QSSGRenderEffect *firstEffect)
+void QSSGRhiEffectSystem::setup(QSize outputSize)
 {
-    if (!firstEffect || outputSize.isEmpty()) {
+    if (outputSize.isEmpty()) {
         releaseResources();
         return;
     }
     m_outSize = outputSize;
-    m_firstEffect = firstEffect;
 }
 
 QSSGRhiEffectTexture *QSSGRhiEffectSystem::findTexture(const QByteArray &bufferName)
@@ -169,6 +168,7 @@ void QSSGRhiEffectSystem::releaseTextures()
 
 QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
                                           const QSSGRef<QSSGRenderer> &renderer,
+                                          const QSSGRenderEffect &firstEffect,
                                           QRhiTexture *inTexture,
                                           QRhiTexture *inDepthTexture,
                                           QVector2D cameraClipRange)
@@ -179,10 +179,9 @@ QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
         return inTexture;
     m_depthTexture = inDepthTexture;
     m_cameraClipRange = cameraClipRange;
-    Q_ASSERT(m_firstEffect);
 
     m_currentUbufIndex = 0;
-    auto *currentEffect = m_firstEffect;
+    auto *currentEffect = &firstEffect;
     QSSGRhiEffectTexture firstTex{ inTexture, nullptr, nullptr, {}, {}, {} };
     auto *latestOutput = doRenderEffect(currentEffect, &firstTex);
     firstTex.texture = nullptr; // make sure we don't delete inTexture when we go out of scope
