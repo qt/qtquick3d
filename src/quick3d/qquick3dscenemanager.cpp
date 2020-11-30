@@ -55,6 +55,7 @@ void QQuick3DSceneManager::setWindow(QQuickWindow *window)
         return;
 
     m_window = window;
+    emit windowChanged();
 }
 
 QQuickWindow *QQuick3DSceneManager::window()

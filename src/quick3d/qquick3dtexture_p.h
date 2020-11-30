@@ -193,6 +193,7 @@ private:
     enum class DirtyFlag {
         TransformDirty = (1 << 0),
         SourceDirty = (1 << 1),
+        SourceItemDirty = (1 << 2)
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
@@ -216,8 +217,10 @@ private:
     DirtyFlags m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty)
                               | DirtyFlags(DirtyFlag::SourceDirty);
     QMetaObject::Connection m_textureProviderConnection;
+    QMetaObject::Connection m_textureUpdateConnection;
     QSharedPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
-    bool m_initialized = false;
+    QMetaObject::Connection m_sceneManagerWindowChangeConnection;
+    QQuickItem *m_initializedSourceItem = nullptr;
     void trySetSourceParent();
 };
 

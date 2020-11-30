@@ -35,6 +35,7 @@
 #include <QtQuick3DAssetImport/private/qssgmeshbvhbuilder_p.h>
 
 #include <QtQuick/QSGTexture>
+#include <QtQuick/private/qsgplaintexture_p.h>
 
 #include <QtCore/QDir>
 #include <QtCore/QMutex>
@@ -328,15 +329,19 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
     if (Q_UNLIKELY(!qsgTexture))
         return QSSGRenderImageTextureData();
 
+    if (qsgTexture->isAtlasTexture())
+        qsgTexture = qsgTexture->removedFromAtlas();
+
+    // execute pending GL operations, if any
+    if (qobject_cast<QSGPlainTexture *>(qsgTexture)) // silly but got to skip this for QSGLayer somehow
+        qsgTexture->bind();
+
     auto theImage = qsgImageMap.find(qsgTexture);
 
     if (theImage == qsgImageMap.end()) {
         theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
         QSSGRef<QSSGRenderTexture2D> theTexture = new QSSGRenderTexture2D(context, qsgTexture);
         theImage.value().m_texture = theTexture;
-        QObject::connect(qsgTexture, &QObject::destroyed, [this, qsgTexture]() {
-            qsgImageMap.remove(qsgTexture);
-        });
     } else {
         //TODO: make QSSGRenderTexture2D support updating handles instead of this hack
         auto textureId = reinterpret_cast<QSSGRenderBackend::QSSGRenderBackendTextureObject>(quintptr(qsgTexture->textureId()));

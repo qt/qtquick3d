@@ -307,6 +307,7 @@ void QQuick3DTexture::setSource(const QUrl &source)
 
     m_source = source;
     m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
     emit sourceChanged();
     update();
 }
@@ -347,7 +348,8 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
     if (m_sourceItem == sourceItem)
         return;
 
-    //TODO: Also clear the source property?
+    disconnect(m_textureProviderConnection);
+    disconnect(m_textureUpdateConnection);
 
     if (m_sourceItem) {
         QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
@@ -358,8 +360,6 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
 
         sourcePrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
         disconnect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
-        if (m_sourceItem->window())
-            sourcePrivate->derefWindow();
         if (m_sourceItemReparented) {
             m_sourceItem->setParentItem(nullptr);
             m_sourceItemReparented = false;
@@ -375,6 +375,16 @@ void QQuick3DTexture::setSourceItem(QQuickItem *sourceItem)
         connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
     }
 
+    if (m_layer) {
+        const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+        manager->qsgDynamicTextures.removeAll(m_layer);
+        m_sceneManagerForLayer = nullptr;
+        // cannot touch m_layer here
+    }
+    m_initializedSourceItem = nullptr;
+
+    m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
     emit sourceItemChanged();
     update();
 }
@@ -516,14 +526,9 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
     auto imageNode = static_cast<QSSGRenderImage *>(node);
 
-    // When texture is QQuickItem, flip it automatically
-    bool flipTexture = m_flipV;
-    if (m_sourceItem)
-        flipTexture = !flipTexture;
-
     if (m_dirtyFlags.testFlag(DirtyFlag::TransformDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::TransformDirty, false);
-        imageNode->m_flipV = flipTexture;
+        imageNode->m_flipV = m_sourceItem ? !m_flipV : m_flipV;
         imageNode->m_scale = QVector2D(m_scaleU, m_scaleV);
         imageNode->m_pivot = QVector2D(m_pivotU, m_pivotV);
         imageNode->m_rotation = m_rotationUV;
@@ -548,88 +553,192 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
     QSSGRenderTextureFormat format{QSSGRenderTextureFormat::Format(m_format)};
     nodeChanged |= qUpdateIfNeeded(imageNode->m_format, format);
 
-    if (m_sourceItem) { // TODO: handle width == 0 || height == 0
-        QQuickWindow *window = m_sourceItem->window();
-        if (!window) {
-            // Do a hack to set the window
-            const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
-            window = manager->window();
-            if (!window) {
-                qWarning() << "Unable to get window, this will probably not work";
-            } else {
-                auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-                sourcePrivate->refWindow(window); // TODO: deref window as well
+    if (m_dirtyFlags.testFlag(DirtyFlag::SourceItemDirty)) {
+        m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty, false);
+        if (m_sourceItem) {
+            QQuickWindow *window = m_sourceItem->window();
+            // If it was an inline declared item (very common, e.g. Texture {
+            // sourceItem: Rectangle { ... } } then it is likely it won't be
+            // associated with a window (Qt Quick scene) unless we help it to
+            // one via refWindow. However, this here is only the last resort,
+            // ideally there is a refWindow upon ItemSceneChange already.
+             if (!window) {
+                window = QQuick3DObjectPrivate::get(this)->sceneManager->window();
+                if (window)
+                    QQuickItemPrivate::get(m_sourceItem)->refWindow(window);
+                else
+                    qWarning("Unable to get window, this will probably not work");
             }
-        }
 
-        // Quick Items are considered to always have transparency
-        imageNode->m_textureData.m_textureFlags.setHasTransparency(true);
+            // Quick Items are considered to always have transparency
+            imageNode->m_textureData.m_textureFlags.setHasTransparency(true);
 
-        if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
-            imageNode->m_qsgTexture = provider->texture();
-            disconnect(m_textureProviderConnection);
-            auto connection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
+            // This assumes that the QSGTextureProvider returned never changes,
+            // which is hopefully the case for both Image and Item layers.
+            if (QSGTextureProvider *provider = m_sourceItem->textureProvider()) {
                 imageNode->m_qsgTexture = provider->texture();
-                imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
-            }, Qt::DirectConnection);
-            m_textureProviderConnection = connection;
+
+                disconnect(m_textureProviderConnection);
+                m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
+                    // called on the render thread, if there is one; while not
+                    // obvious, the gui thread is blocked too because one can
+                    // get here only from either the textureProvider() call
+                    // above, or from QQuickImage::updatePaintNode()
+                    imageNode->m_qsgTexture = provider->texture();
+                    // the QSGTexture may be different now, go through loadRenderImage() again
+                    imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
+                }, Qt::DirectConnection);
+
+                disconnect(m_textureUpdateConnection);
+                auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+                if (sourcePrivate->window) {
+                    QQuickItem *sourceItem = m_sourceItem; // for capturing, recognizing in the lambda that m_sourceItem has changed is essential
+
+                    // Why after, not beforeSynchronizing? Consider the case of an Item layer:
+                    // if the View3D gets to sync (updatePaintNode) first, doing an
+                    // updateTexture() is futile, the QSGLayer is not yet initialized (not
+                    // associated with an Item, has no size, etc.). That happens only once the
+                    // underlying QQuickShaderEffectSource hits its updatePaintNode. And that
+                    // may well happen happen only after the View3D has finished with its sync
+                    // step. By connecting to afterSynchronizing, we still get a chance to
+                    // trigger a layer texture update and so have a QSGTexture with real
+                    // content ready by the time the View3D prepares/renders the 3D scene upon
+                    // the scenegraph's preprocess step (Offscreen) or before/after the
+                    // scenegraph rendering (if Underlay/Overlay).
+                    //
+                    // This eliminates, or in the worst case reduces, the ugly effects of not
+                    // having a texture ready when rendering the 3D scene.
+
+                    m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::afterSynchronizing, this, [this, imageNode, sourceItem]() {
+                        // Called on the render thread with gui blocked (if there is a render thread, that is).
+                        if (m_sourceItem != sourceItem) {
+                            disconnect(m_textureProviderConnection);
+                            disconnect(m_textureUpdateConnection);
+                            return;
+                        }
+                        if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture)) {
+                            if (t->updateTexture())
+                                update(); // safe because the gui thread is blocked
+                        }
+                    }, Qt::DirectConnection);
+                } else {
+                    qWarning("No window for item, texture updates are doomed");
+                }
+
+                if (m_layer) {
+                    delete m_layer;
+                    m_layer = nullptr;
+                }
+            } else {
+                // Not a texture provider, so not an Image or an Item with
+                // layer.enabled: true, create our own QSGLayer.
+                if (m_initializedSourceItem != m_sourceItem) {
+                    // If there was a previous sourceItem and m_layer is valid
+                    // then set its content to null until we get to
+                    // afterSynchronizing, otherwise things can blow up.
+                    if (m_layer)
+                        m_layer->setItem(nullptr);
+
+                    m_initializedSourceItem = m_sourceItem;
+
+                    // The earliest next point where we can do anything is
+                    // after the scenegraph's QQuickItem sync round has completed.
+                    connect(window, &QQuickWindow::afterSynchronizing, this, [this, imageNode, window]() {
+                        // Called on the render thread with gui blocked (if there is a render thread, that is).
+                        disconnect(window, &QQuickWindow::afterSynchronizing, this, nullptr);
+                        if (m_layer) {
+                            const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+                            manager->qsgDynamicTextures.removeAll(m_layer);
+                            delete m_layer;
+                            m_layer = nullptr;
+                        }
+
+                        QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
+                        QSGRenderContext *rc = sourcePrivate->sceneGraphRenderContext();
+                        Q_ASSERT(QThread::currentThread() == rc->thread()); // must be on the render thread
+                        QSGLayer *layer = rc->sceneGraphContext()->createLayer(rc);
+                        connect(sourcePrivate->window, SIGNAL(sceneGraphInvalidated()), layer, SLOT(invalidated()), Qt::DirectConnection);
+
+                        auto manager = QQuick3DObjectPrivate::get(this)->sceneManager;
+                        manager->qsgDynamicTextures << layer;
+                        m_sceneManagerForLayer = manager;
+
+                        connect(layer, &QObject::destroyed, manager.data(), [manager, layer]()
+                        {
+                            // this is on the render thread so all borked threading-wise (all data here is gui thread stuff...) but will survive
+                            manager->qsgDynamicTextures.removeAll(layer);
+                        }, Qt::DirectConnection);
+
+                        QQuickItem *sourceItem = m_sourceItem; // for capturing, recognizing in the lambda that m_sourceItem has changed is essential
+                        connect(layer, &QObject::destroyed, this, [this, sourceItem]()
+                        {
+                            // just as dubious as the previous connection
+                            if (m_initializedSourceItem == sourceItem) {
+                                m_sceneManagerForLayer = nullptr;
+                                m_initializedSourceItem = nullptr;
+                            }
+                        }, Qt::DirectConnection);
+
+                        // With every frame (even when QQuickWindow isn't dirty so doesn't render),
+                        // try to update the texture. If updateTexture() returns false, content hasn't changed.
+                        // This complements qsgDynamicTextures and QQuick3DViewport::updateDynamicTextures().
+                        m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing,
+                                                            this, [this, sourceItem]()
+                        {
+                            // Called on the render thread with gui blocked (if there is a render thread, that is).
+                            if (!m_layer)
+                                return;
+                            if (m_sourceItem != sourceItem) {
+                                disconnect(m_textureUpdateConnection);
+                                return;
+                            }
+                            if (m_layer->updateTexture())
+                                update();
+                        }, Qt::DirectConnection);
+
+                        m_layer = layer;
+                        m_layer->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
+
+                        QRectF sourceRect = QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height());
+                        if (qFuzzyIsNull(sourceRect.width()))
+                            sourceRect.setWidth(256);
+                        if (qFuzzyIsNull(sourceRect.height()))
+                            sourceRect.setHeight(256);
+                        m_layer->setRect(sourceRect);
+
+                        QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
+                        const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
+                        while (textureSize.width() < minTextureSize.width())
+                            textureSize.rwidth() *= 2;
+                        while (textureSize.height() < minTextureSize.height())
+                            textureSize.rheight() *= 2;
+                        m_layer->setSize(textureSize);
+
+                        // now that the layer has an item and a size, it can render into the texture
+                        m_layer->updateTexture();
+
+                        imageNode->m_qsgTexture = m_layer;
+                        imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
+                    }, Qt::DirectConnection);
+                }
+            }
+            if (imageNode->m_flipV != !m_flipV) {
+                imageNode->m_flipV = !m_flipV;
+                imageNode->m_flags.setFlag(QSSGRenderImage::Flag::TransformDirty);
+            }
+        } else {
             if (m_layer) {
+                m_layer->setItem(nullptr);
                 delete m_layer;
                 m_layer = nullptr;
             }
-
-            // TODO: handle dynamic textures
-            // TODO: handle textureProvider property changed
-        } else {
-            if (!m_initialized) {
-                m_initialized = true;
-                // When scene has been rendered for the first time, create layer texture.
-                connect(window, &QQuickWindow::afterRendering, this, [this, window]() {
-                    disconnect(window, &QQuickWindow::afterRendering, this, nullptr);
-                    createLayerTexture();
-                });
+            imageNode->m_qsgTexture = nullptr;
+            if (imageNode->m_flipV != m_flipV) {
+                imageNode->m_flipV = m_flipV;
+                imageNode->m_flags.setFlag(QSSGRenderImage::Flag::TransformDirty);
             }
-
-            if (!m_layer)
-                return node;
-
-            m_layer->setItem(QQuickItemPrivate::get(m_sourceItem)->itemNode());
-            QRectF sourceRect = QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height());
-
-            // check if the size is null
-            if (sourceRect.width() == 0.0)
-                sourceRect.setWidth(256.0);
-            if (sourceRect.height() == 0.0)
-                sourceRect.setHeight(256.0);
-            m_layer->setRect(sourceRect);
-
-            QSize textureSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
-
-            // TODO: create larger textures on high-dpi displays?
-
-            auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-            const QSize minTextureSize = sourcePrivate->sceneGraphContext()->minimumFBOSize();
-            // Keep power-of-two by doubling the size.
-            while (textureSize.width() < minTextureSize.width())
-                textureSize.rwidth() *= 2;
-            while (textureSize.height() < minTextureSize.height())
-                textureSize.rheight() *= 2;
-
-            m_layer->setSize(textureSize);
-
-            // TODO: set mipmapFiltering, filtering, hWrap, vWrap?
-
-            imageNode->m_qsgTexture = m_layer;
         }
-        // TODO: Move inside block above?
-        nodeChanged = true; // @todo: make more granular
-    } else {
-        if (m_layer) {
-            m_layer->setItem(nullptr);
-            delete m_layer;
-            m_layer = nullptr;
-        }
-        nodeChanged |= qUpdateIfNeeded(imageNode->m_qsgTexture, static_cast<QSGTexture *>(nullptr));
+        nodeChanged = true;
     }
 
     if (nodeChanged)
@@ -641,18 +750,46 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 void QQuick3DTexture::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
 {
     QQuick3DObject::itemChange(change, value);
-    if (change == QQuick3DObject::ItemChange::ItemSceneChange && m_sourceItem) {
-        if (m_sceneManagerForLayer) {
-            m_sceneManagerForLayer->qsgDynamicTextures.removeOne(m_layer);
-            m_sceneManagerForLayer = nullptr;
-        }
-        trySetSourceParent();
-        const auto &sceneManager = value.sceneManager;
-        Q_ASSERT(QQuick3DObjectPrivate::get(this)->sceneManager == sceneManager);
-        if (m_layer) {
-            if (sceneManager)
-                sceneManager->qsgDynamicTextures << m_layer;
-            m_sceneManagerForLayer = sceneManager;
+    if (change == QQuick3DObject::ItemChange::ItemSceneChange) {
+        if (m_sourceItem) {
+            disconnect(m_sceneManagerWindowChangeConnection);
+
+            if (m_sceneManagerForLayer) {
+                m_sceneManagerForLayer->qsgDynamicTextures.removeOne(m_layer);
+                m_sceneManagerForLayer = nullptr;
+            }
+            trySetSourceParent();
+            const auto &sceneManager = value.sceneManager;
+            Q_ASSERT(QQuick3DObjectPrivate::get(this)->sceneManager == sceneManager);
+            if (m_layer) {
+                if (sceneManager)
+                    sceneManager->qsgDynamicTextures << m_layer;
+                m_sceneManagerForLayer = sceneManager;
+            }
+
+            // If m_sourceItem was an inline declared item (very common, e.g.
+            // Texture { sourceItem: Rectangle { ... } } then it is highly
+            // likely it won't be associated with a window (Qt Quick scene)
+            // yet. Associate with one as soon as possible, do not leave it to
+            // updateSpatialNode, because that, while safe, would defer
+            // rendering into the texture to a future frame (adding a 2 frame
+            // lag for the first rendering of the mesh textured with the 2D
+            // item content), since a refWindow needs to be followed by a
+            // scenegraph sync round to get QSGNodes created (updatePaintNode),
+            // whereas updateSpatialNode is in the middle of a sync round, so
+            // would need to wait for another one, etc.
+            if (sceneManager && m_sourceItem && !m_sourceItem->window()) {
+                if (sceneManager->window()) {
+                    QQuickItemPrivate::get(m_sourceItem)->refWindow(sceneManager->window());
+                } else {
+                    m_sceneManagerWindowChangeConnection = connect(sceneManager.data(), &QQuick3DSceneManager::windowChanged, this,
+                                                                   [this, sceneManager]
+                    {
+                        if (m_sourceItem && !m_sourceItem->window() && sceneManager->window())
+                            QQuickItemPrivate::get(m_sourceItem)->refWindow(sceneManager->window());
+                    });
+                }
+            }
         }
     }
 }
@@ -673,51 +810,13 @@ void QQuick3DTexture::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange
 void QQuick3DTexture::sourceItemDestroyed(QObject *item)
 {
     Q_ASSERT(item == m_sourceItem);
-    Q_UNUSED(item)
+    Q_UNUSED(item);
+
     m_sourceItem = nullptr;
+
+    m_dirtyFlags.setFlag(DirtyFlag::SourceDirty);
+    m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
     emit sourceItemChanged();
-    update();
-}
-
-// Create layer and update once valid layer texture exists
-void QQuick3DTexture::createLayerTexture()
-{
-    auto *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
-//    Q_ASSERT_X(sourcePrivate->window && sourcePrivate->sceneGraphRenderContext()
-//               && QThread::currentThread() == sourcePrivate->sceneGraphRenderContext()->thread(),
-//               Q_FUNC_INFO, "Cannot be used outside the rendering thread");
-
-    QSGRenderContext *rc = sourcePrivate->sceneGraphRenderContext();
-    auto *layer = rc->sceneGraphContext()->createLayer(rc);
-    connect(sourcePrivate->window, SIGNAL(sceneGraphInvalidated()), layer, SLOT(invalidated()), Qt::DirectConnection);
-
-    const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
-    manager->qsgDynamicTextures << layer;
-    m_sceneManagerForLayer = manager;
-    connect(layer, &QObject::destroyed, manager.data(), [this, manager, layer]() {
-        manager->qsgDynamicTextures.removeAll(layer);
-        m_sceneManagerForLayer = nullptr;
-        m_initialized = false;
-    }, Qt::DirectConnection);
-
-    // When layer has been updated, take it into use.
-    connect(layer, &QSGLayer::scheduledUpdateCompleted, this, [this, layer]() {
-        m_layer = layer;
-        update();
-    });
-
-    // With every frame (even when QQuickWindow isn't dirty so doesn't render),
-    // try to update the texture. If updateTexture() returns false, content hasn't changed.
-    connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing, [this]() {
-        if (m_layer) {
-            bool textureUpdated = m_layer->updateTexture();
-            if (textureUpdated)
-                update();
-        }
-    });
-
-    layer->markDirtyTexture();
-    layer->scheduleUpdate();
     update();
 }
 
@@ -729,7 +828,7 @@ QSSGRenderImage *QQuick3DTexture::getRenderImage()
 
 void QQuick3DTexture::markAllDirty()
 {
-    m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) | DirtyFlags(DirtyFlag::SourceDirty);
+    m_dirtyFlags = DirtyFlags(DirtyFlag::TransformDirty) | DirtyFlags(DirtyFlag::SourceDirty) | DirtyFlags(DirtyFlag::SourceItemDirty);
     QQuick3DObject::markAllDirty();
 }
 

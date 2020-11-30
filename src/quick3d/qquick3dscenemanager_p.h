@@ -96,6 +96,7 @@ public:
 
 Q_SIGNALS:
     void needsUpdate();
+    void windowChanged();
 };
 
 QT_END_NAMESPACE
