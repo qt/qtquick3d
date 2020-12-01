@@ -1473,7 +1473,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 dcd.ubuf->create();
             }
 
-            const QMatrix4x4 &projection = camera->projection;
+            const QMatrix4x4 &inverseProjection = camera->projection.inverted();
             const QMatrix4x4 &viewMatrix = camera->globalTransform;
             float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
             const float exposure = layer.probeExposure;
@@ -1482,7 +1482,7 @@ void QSSGLayerRenderData::rhiPrepare()
 
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             memcpy(ubufData, viewMatrix.constData(), 64);
-            memcpy(ubufData + 64, projection.constData(), 64);
+            memcpy(ubufData + 64, inverseProjection.constData(), 64);
             memcpy(ubufData + 128, rotationMatrix.constData(), 64);
             memcpy(ubufData + 192, &adjustY, 4);
             memcpy(ubufData + 196, &exposure, 4);
