@@ -197,13 +197,13 @@ struct QSSGSkyBoxShader
     QAtomicInt ref;
     QSSGRef<QSSGRenderShaderProgram> shader;
     QSSGRenderCachedShaderProperty<QMatrix4x4> viewMatrix;
-    QSSGRenderCachedShaderProperty<QMatrix4x4> projection;
+    QSSGRenderCachedShaderProperty<QMatrix4x4> inverseProjection;
     QSSGRenderCachedShaderProperty<QSSGRenderTexture2D *> skyboxTexture;
 
     QSSGSkyBoxShader(const QSSGRef<QSSGRenderShaderProgram> &inShader, const QSSGRef<QSSGRenderContext> &inContext)
         : shader(inShader)
         , viewMatrix("viewMatrix", inShader)
-        , projection("projection", inShader)
+        , inverseProjection("inverseProjection", inShader)
         , skyboxTexture("skybox_image", inShader)
     {
         Q_UNUSED(inContext)

@@ -1585,11 +1585,10 @@ QSSGRef<QSSGSkyBoxShader> QSSGRendererImpl::getSkyBoxShader()
             vertexGenerator.addOutgoing("eye_direction", "vec3");
 
             vertexGenerator.addUniform("viewMatrix", "mat4");
-            vertexGenerator.addUniform("projection", "mat4");
+            vertexGenerator.addUniform("inverseProjection", "mat4");
 
             vertexGenerator.append("void main() {");
             vertexGenerator.append("    gl_Position = vec4(attr_pos, 1.0);");
-            vertexGenerator.append("    mat4 inverseProjection = inverse(projection);");
             vertexGenerator.append("    vec3 unprojected = (inverseProjection * gl_Position).xyz;");
             vertexGenerator.append("    eye_direction = normalize(mat3(viewMatrix) * unprojected);");
             vertexGenerator.append("}");

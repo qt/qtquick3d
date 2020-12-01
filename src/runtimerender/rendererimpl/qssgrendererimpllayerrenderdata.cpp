@@ -205,7 +205,7 @@ void QSSGLayerRenderData::renderClearPass()
             QSSGRef<QSSGSkyBoxShader> shader = renderer->getSkyBoxShader();
             theContext->setActiveShader(shader->shader);
             // Setup constants
-            shader->projection.set(camera->projection);
+            shader->inverseProjection.set(camera->projection.inverted());
             shader->viewMatrix.set(camera->globalTransform);
             shader->skyboxTexture.set(layer.lightProbe->m_textureData.m_texture.data());
             renderer->renderQuad();
