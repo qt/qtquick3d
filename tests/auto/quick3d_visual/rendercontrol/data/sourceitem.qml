@@ -9,6 +9,23 @@ Item {
         thirdTexture.sourceItem = standaloneSourceItem;
     }
 
+    function makeThirdReferToExplicitLayerBasedSourceItem() {
+        thirdTexture.sourceItem = explicitLayerBasedSourceItem;
+    }
+
+    function makeThirdReferToImageSourceItem() {
+        thirdTexture.sourceItem = imageSourceItem;
+    }
+
+    function makeThirdReferToSemiTransparentSourceItem() {
+        thirdTexture.sourceItem = semiTransparentSourceItem;
+    }
+
+    function makeSemiTransparentSourceItemSmaller() {
+        semiTransparentSourceItem.width /= 2;
+        semiTransparentSourceItem.height /= 2;
+    }
+
     Item {
         id: standaloneSourceItem
         visible: false
@@ -16,6 +33,35 @@ Item {
         Rectangle {
             anchors.fill: parent
             color: "red"
+        }
+    }
+
+    Rectangle {
+        id: explicitLayerBasedSourceItem
+        layer.enabled: true
+        visible: false
+        width: 100; height: 100
+        color: "gray"
+    }
+
+    Image {
+        id: imageSourceItem
+        visible: false
+        source: "qt_logo_rect.png"
+    }
+
+    Item {
+        id: semiTransparentSourceItem
+        visible: false
+        width: 100; height: 100
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            Rectangle {
+                width: 25; height: 25
+                anchors.centerIn: parent
+                color: "blue"
+            }
         }
     }
 
@@ -51,9 +97,9 @@ Item {
         Model {
             source: "#Sphere"
             x: 200
-            materials: PrincipledMaterial {
+            materials: DefaultMaterial {
                 lighting: PrincipledMaterial.NoLighting
-                baseColorMap: Texture {
+                diffuseMap: Texture {
                     id: thirdTexture
                     sourceItem: Rectangle {
                         width: 100; height: 100

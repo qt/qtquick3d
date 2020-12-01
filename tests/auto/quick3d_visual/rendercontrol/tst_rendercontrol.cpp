@@ -181,6 +181,93 @@ void tst_RenderControl::textureSourceItem()
     QVERIFY(comparePixelNormPos(result, 0.275, 0.5, QColor::fromRgb(255, 0, 0), FUZZ));
     QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 128, 0), FUZZ));
     QVERIFY(comparePixelNormPos(result, 0.725, 0.5, QColor::fromRgb(255, 0, 0), FUZZ));
+
+    result = QImage();
+
+    // switch the third sphere to a different sourceItem, now an Item
+    // tree that has an explicit layer.enabled: true on it (meaning no
+    // implicit QSGLayer gets created internally on Quick3D side)
+    QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToExplicitLayerBasedSourceItem");
+
+    // Frame 4
+    renderer.renderControl->polishItems();
+    renderer.renderControl->beginFrame();
+    renderer.renderControl->sync();
+    renderer.renderControl->render();
+    renderer.enqueueReadback(&readCompleted, &readResult, &result);
+    renderer.renderControl->endFrame();
+    QVERIFY(readCompleted);
+    QCOMPARE(result.size(), QSize(1280, 960));
+
+    // from left to right: red, green, gray
+    QVERIFY(comparePixelNormPos(result, 0.275, 0.5, QColor::fromRgb(255, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 128, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.5, QColor::fromRgb(128, 128, 128), FUZZ));
+
+    result = QImage();
+
+    // switch the third sphere to with an Image (which itself is a
+    // textureProvider) as the sourceItem
+    QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToImageSourceItem");
+
+    // Frame 5
+    renderer.renderControl->polishItems();
+    renderer.renderControl->beginFrame();
+    renderer.renderControl->sync();
+    renderer.renderControl->render();
+    renderer.enqueueReadback(&readCompleted, &readResult, &result);
+    renderer.renderControl->endFrame();
+    QVERIFY(readCompleted);
+    QCOMPARE(result.size(), QSize(1280, 960));
+
+    QVERIFY(comparePixelNormPos(result, 0.275, 0.5, QColor::fromRgb(255, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 128, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.7, 0.5, QColor::fromRgb(64, 205, 82), FUZZ)); // green from Qt logo image
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.5, QColor::fromRgb(255, 255, 255), FUZZ)); // white from Qt logo image
+
+    result = QImage();
+
+    // switch the third sphere to use a sourceItem that has non-opaque content
+    QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToSemiTransparentSourceItem");
+
+    // Frame 6
+    renderer.renderControl->polishItems();
+    renderer.renderControl->beginFrame();
+    renderer.renderControl->sync();
+    renderer.renderControl->render();
+    renderer.enqueueReadback(&readCompleted, &readResult, &result);
+    renderer.renderControl->endFrame();
+    QVERIFY(readCompleted);
+    QCOMPARE(result.size(), QSize(1280, 960));
+
+    // from left to right: red, green, transparent/blue
+    QVERIFY(comparePixelNormPos(result, 0.275, 0.5, QColor::fromRgb(255, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 128, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.44, QColor::fromRgb(0, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.46, QColor::fromRgb(0, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.5, QColor::fromRgb(0, 0, 255), FUZZ));
+
+    result = QImage();
+
+    // make the sourceItem's size half - this leads to the blue
+    // rectangle occupy a larger area on the sphere's surface
+    QMetaObject::invokeMethod(renderer.rootItem, "makeSemiTransparentSourceItemSmaller");
+
+    // Frame 7
+    renderer.renderControl->polishItems();
+    renderer.renderControl->beginFrame();
+    renderer.renderControl->sync();
+    renderer.renderControl->render();
+    renderer.enqueueReadback(&readCompleted, &readResult, &result);
+    renderer.renderControl->endFrame();
+    QVERIFY(readCompleted);
+    QCOMPARE(result.size(), QSize(1280, 960));
+
+    QVERIFY(comparePixelNormPos(result, 0.275, 0.5, QColor::fromRgb(255, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 128, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.44, QColor::fromRgb(0, 0, 0), FUZZ));
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.46, QColor::fromRgb(0, 0, 255), FUZZ)); // different from previous frame
+    QVERIFY(comparePixelNormPos(result, 0.725, 0.5, QColor::fromRgb(0, 0, 255), FUZZ));
 }
 
 QTEST_MAIN(tst_RenderControl)
