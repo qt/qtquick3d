@@ -128,17 +128,23 @@ Window {
                         sourceItem: Rectangle {
                             width: 256
                             height: 256
-                            color: "lightgreen"
+                            color: "transparent"
                             Rectangle {
+                                color: "lightgreen"
+                                width: 192
+                                height: 192
                                 anchors.centerIn: parent
-                                width: 140
-                                height: 140
-                                color: "yellow"
-                                NumberAnimation on rotation {
-                                    running: animationCheckbox.checked
-                                    from: 0
-                                    to: 90
-                                    loops: Animation.Infinite
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 128
+                                    height: 128
+                                    color: "yellow"
+                                    NumberAnimation on rotation {
+                                        running: animationCheckbox.checked
+                                        from: 0
+                                        to: 90
+                                        loops: Animation.Infinite
+                                    }
                                 }
                             }
                         }
@@ -291,7 +297,7 @@ Window {
         }
         CheckBox {
             id: coneCheckbox
-            text: "Show Cone with inline Item\ntree in sourceItem"
+            text: "Show Cone with inline,\nsemi-transparent sourceItem"
             checked: true
         }
     }

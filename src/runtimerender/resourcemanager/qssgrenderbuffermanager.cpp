@@ -351,6 +351,8 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTex
         }
     }
 
+    theImage.value().m_textureFlags.setHasTransparency(qsgTexture->hasAlphaChannel());
+
     return theImage.value();
 }
 
