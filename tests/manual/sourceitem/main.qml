@@ -126,19 +126,25 @@ Window {
                     lighting: DefaultMaterial.NoLighting
                     diffuseMap: Texture {
                         sourceItem: Rectangle {
-                            width: 256
-                            height: 256
-                            color: "lightgreen"
+                            width: Math.round(coneTexSizeSlider.value)
+                            height: Math.round(coneTexSizeSlider.value)
+                            color: "transparent"
                             Rectangle {
+                                color: "lightgreen"
+                                width: 192
+                                height: 192
                                 anchors.centerIn: parent
-                                width: 140
-                                height: 140
-                                color: "yellow"
-                                NumberAnimation on rotation {
-                                    running: animationCheckbox.checked
-                                    from: 0
-                                    to: 90
-                                    loops: Animation.Infinite
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 128
+                                    height: 128
+                                    color: "yellow"
+                                    NumberAnimation on rotation {
+                                        running: animationCheckbox.checked
+                                        from: 0
+                                        to: 90
+                                        loops: Animation.Infinite
+                                    }
                                 }
                             }
                         }
@@ -166,20 +172,6 @@ Window {
                     running: animationCheckbox.checked
                     from: 0
                     to: 90
-                    loops: Animation.Infinite
-                }
-                NumberAnimation on width {
-                    running: sizeAnimationCheckbox.checked
-                    duration: 3000
-                    from: 250
-                    to: 500
-                    loops: Animation.Infinite
-                }
-                NumberAnimation on height {
-                    running: sizeAnimationCheckbox.checked
-                    duration: 3000
-                    from: 250
-                    to: 500
                     loops: Animation.Infinite
                 }
             }
@@ -216,20 +208,6 @@ Window {
                     running: animationCheckbox.checked
                     from: 0
                     to: 90
-                    loops: Animation.Infinite
-                }
-                NumberAnimation on width {
-                    running: sizeAnimationCheckbox.checked
-                    duration: 3000
-                    from: 250
-                    to: 500
-                    loops: Animation.Infinite
-                }
-                NumberAnimation on height {
-                    running: sizeAnimationCheckbox.checked
-                    duration: 3000
-                    from: 250
-                    to: 500
                     loops: Animation.Infinite
                 }
             }
@@ -282,17 +260,24 @@ Window {
             text: "Animate quick content (layer only)"
         }
         CheckBox {
-            id: sizeAnimationCheckbox
-            text: "Animate texture size (layer only)"
-        }
-        CheckBox {
             id: animation3DCheckbox
             text: "Animate 3D objects"
         }
         CheckBox {
             id: coneCheckbox
-            text: "Show Cone with inline Item\ntree in sourceItem"
+            text: "Show Cone with inline,\nsemi-transparent sourceItem"
             checked: true
+        }
+        Column {
+            Label {
+                text: "Cone sourceItem size: " + Math.round(coneTexSizeSlider.value) + "x" + Math.round(coneTexSizeSlider.value)
+            }
+            Slider {
+                id: coneTexSizeSlider
+                value: 256
+                from: 32
+                to: 1024
+            }
         }
     }
     Item {
