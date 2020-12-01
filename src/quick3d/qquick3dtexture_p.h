@@ -192,6 +192,7 @@ private:
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
     void markDirty(DirtyFlag type);
+    void trySetSourceParent();
 
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
@@ -222,7 +223,7 @@ private:
     QQuick3DSceneManager *m_sceneManagerForLayer = nullptr;
     QMetaObject::Connection m_sceneManagerWindowChangeConnection;
     QQuickItem *m_initializedSourceItem = nullptr;
-    void trySetSourceParent();
+    QSizeF m_initializedSourceItemSize;
     QHash<QByteArray, QMetaObject::Connection> m_connections;
     QMetaObject::Connection m_textureDataConnection;
     QQuick3DTextureData *m_textureData = nullptr;
