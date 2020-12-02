@@ -83,20 +83,29 @@ bool tst_RenderControl::initRenderer(QQuick3DTestOffscreenRenderer *renderer, co
 
 const int FUZZ = 5;
 
+static inline void renderNextFrame(QQuick3DTestOffscreenRenderer *renderer,
+                                   bool *readCompleted,
+                                   QRhiReadbackResult *readResult,
+                                   QImage *result)
+{
+    renderer->renderControl->polishItems();
+    renderer->renderControl->beginFrame();
+    renderer->renderControl->sync();
+    renderer->renderControl->render();
+    renderer->enqueueReadback(readCompleted, readResult, result);
+    renderer->renderControl->endFrame();
+}
+
 void tst_RenderControl::cube()
 {
     QQuick3DTestOffscreenRenderer renderer;
     QVERIFY(initRenderer(&renderer, "cube_with_size.qml"));
 
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
     bool readCompleted = false;
     QRhiReadbackResult readResult;
     QImage result;
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
 
     QVERIFY(readCompleted);
     QVERIFY(!result.isNull());
@@ -122,16 +131,12 @@ void tst_RenderControl::textureSourceItem()
     // this in a robust manner here because we are in full control of
     // when exactly a new frame is generated.
 
-    // Frame 1
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
     bool readCompleted = false;
     QRhiReadbackResult readResult;
     QImage result;
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+
+    // Frame 1
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(640, 480));
 
@@ -146,12 +151,7 @@ void tst_RenderControl::textureSourceItem()
     QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToStandaloneSourceItem");
 
     // Frame 2
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(640, 480));
 
@@ -166,12 +166,7 @@ void tst_RenderControl::textureSourceItem()
     QVERIFY(renderer.resize(QSize(1280, 960)));
 
     // Frame 3
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(1280, 960));
 
@@ -190,12 +185,7 @@ void tst_RenderControl::textureSourceItem()
     QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToExplicitLayerBasedSourceItem");
 
     // Frame 4
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(1280, 960));
 
@@ -211,12 +201,7 @@ void tst_RenderControl::textureSourceItem()
     QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToImageSourceItem");
 
     // Frame 5
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(1280, 960));
 
@@ -231,12 +216,7 @@ void tst_RenderControl::textureSourceItem()
     QMetaObject::invokeMethod(renderer.rootItem, "makeThirdReferToSemiTransparentSourceItem");
 
     // Frame 6
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(1280, 960));
 
@@ -254,12 +234,7 @@ void tst_RenderControl::textureSourceItem()
     QMetaObject::invokeMethod(renderer.rootItem, "makeSemiTransparentSourceItemSmaller");
 
     // Frame 7
-    renderer.renderControl->polishItems();
-    renderer.renderControl->beginFrame();
-    renderer.renderControl->sync();
-    renderer.renderControl->render();
-    renderer.enqueueReadback(&readCompleted, &readResult, &result);
-    renderer.renderControl->endFrame();
+    renderNextFrame(&renderer, &readCompleted, &readResult, &result);
     QVERIFY(readCompleted);
     QCOMPARE(result.size(), QSize(1280, 960));
 
