@@ -204,7 +204,7 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
         generateApplicationComponent(QSSGQmlUtilities::qmlComponentName(uiaComponentName), uiaComponentSize);
 
     if (generatedFiles)
-        generatedFiles = &m_generatedFiles;
+        *generatedFiles += m_generatedFiles;
 
     return errorString;
 }
