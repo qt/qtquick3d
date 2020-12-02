@@ -66,13 +66,13 @@ struct QSSGShadowMapEntry
 {
     QSSGShadowMapEntry();
 
-    static QSSGShadowMapEntry withRhiDepthMap(quint32 index,
+    static QSSGShadowMapEntry withRhiDepthMap(quint32 lightIdx,
                                               ShadowMapModes mode,
                                               QRhiTexture *depthMap,
                                               QRhiTexture *depthCopy,
                                               QRhiRenderBuffer *depthStencil);
 
-    static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 index,
+    static QSSGShadowMapEntry withRhiDepthCubeMap(quint32 lightIdx,
                                                   ShadowMapModes mode,
                                                   QRhiTexture *depthCube,
                                                   QRhiTexture *cubeCopy,
@@ -111,14 +111,14 @@ public:
     QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext);
     ~QSSGRenderShadowMap();
 
-    void addShadowMapEntry(qint32 index,
+    void addShadowMapEntry(qint32 lightIdx,
                            qint32 width,
                            qint32 height,
                            ShadowMapModes mode);
 
-    QSSGShadowMapEntry *getShadowMapEntry(int index);
+    QSSGShadowMapEntry *shadowMapEntry(int lightIdx);
 
-    qint32 getShadowMapEntryCount() { return m_shadowMapList.size(); }
+    qint32 shadowMapEntryCount() { return m_shadowMapList.size(); }
 
 private:
     TShadowMapEntryList m_shadowMapList;
