@@ -49,6 +49,7 @@ private slots:
     void initTestCase() override;
     void cube();
     void textureSourceItem();
+    void dynamicLights();
 
 private:
     bool initRenderer(QQuick3DTestOffscreenRenderer *renderer, const char *filename);
@@ -243,6 +244,308 @@ void tst_RenderControl::textureSourceItem()
     QVERIFY(comparePixelNormPos(result, 0.725, 0.44, QColor::fromRgb(0, 0, 0), FUZZ));
     QVERIFY(comparePixelNormPos(result, 0.725, 0.46, QColor::fromRgb(0, 0, 255), FUZZ)); // different from previous frame
     QVERIFY(comparePixelNormPos(result, 0.725, 0.5, QColor::fromRgb(0, 0, 255), FUZZ));
+}
+
+static inline QObject *invokeAndGetObject(QObject *target, const char *func)
+{
+    QVariant result;
+    QMetaObject::invokeMethod(target, func, Q_RETURN_ARG(QVariant, result));
+    return result.value<QObject *>();
+}
+
+void tst_RenderControl::dynamicLights()
+{
+    QQuick3DTestOffscreenRenderer renderer;
+    QVERIFY(initRenderer(&renderer, "dynamic_lights.qml"));
+
+    if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
+#ifdef Q_OS_MACOS
+        QSKIP("Skipping test due to sofware OpenGL renderer problems on macOS");
+#endif
+    }
+
+    bool readCompleted = false;
+    QRhiReadbackResult readResult;
+    QImage result;
+    QObject *directionalLight = nullptr;
+    QObject *pointLight = nullptr;
+    QObject *spotLight = nullptr;
+
+    // Case: scene without lights
+    {
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 0, 0), FUZZ));
+    }
+
+    // Case: add a DirectionalLight with default property values
+    {
+        result = QImage();
+        directionalLight = invokeAndGetObject(renderer.rootItem, "addDirectionalLight");
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        // front face of the cube is lighter gray-ish
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 239, 239), FUZZ));
+        // the top is darker
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.375, QColor::fromRgb(181, 181, 181), FUZZ));
+        // the "floor" is even darker
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(153, 153, 153), FUZZ));
+    }
+
+    // Case: destroy the DirectionalLight
+    {
+        result = QImage();
+        delete directionalLight;
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 0, 0), FUZZ));
+    }
+
+    // Case: add a shadow casting DirectionalLight emitting downwards
+    {
+        result = QImage();
+        directionalLight = invokeAndGetObject(renderer.rootItem, "addShadowCastingDirectionalLight");
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        // front face of the cube is black
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 0, 0), FUZZ));
+        // the top is bright
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.375, QColor::fromRgb(234, 234, 234), FUZZ));
+        // the "floor" is even brighter
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(248, 248, 248), FUZZ));
+        // except where it's in shadow
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(120, 120, 120), 20)); // allow for shadow color variation
+    }
+
+    // Case: toggle 'visible'
+    {
+        result = QImage();
+        directionalLight->setProperty("visible", false);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 0, 0), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.375, QColor::fromRgb(0, 0, 0), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(0, 0, 0), FUZZ));
+    }
+
+    // Case: move the camera up and look downwards a bit, add a (non-shadow casting) full-green PointLight
+    {
+        result = QImage();
+        QMetaObject::invokeMethod(renderer.rootItem, "moveCamera");
+        pointLight = invokeAndGetObject(renderer.rootItem, "addPointLight");
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        // top of the cube is very green
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 0), FUZZ));
+        // the front of the cube is now black
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.666, QColor::fromRgb(0, 0, 0), FUZZ));
+        // floor is darker green
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(0, 140, 0), FUZZ));
+    }
+
+    // Case: make the PointLight cast shadows
+    {
+        result = QImage();
+        pointLight->setProperty("castsShadow", true);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 0), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.666, QColor::fromRgb(0, 0, 0), FUZZ));
+        // floor is darker due to the shadow
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(0, 99, 0), FUZZ));
+    }
+
+    // Case: make the DirectionalLight visible and cast shadows
+    {
+        result = QImage();
+        directionalLight->setProperty("visible", true);
+        directionalLight->setProperty("castsShadow", true);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 255, 239), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(248, 255, 248), FUZZ));
+        // floor in shadow, now with some green added
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(120, 160, 120), 20)); // allow for shadow color variation
+    }
+
+    // Case: make the DirectionalLight not cast shadows and reduce brightness
+    {
+        result = QImage();
+        directionalLight->setProperty("castsShadow", false);
+        directionalLight->setProperty("brightness", 0.2);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(115, 255, 115), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(120, 160, 120), 20)); // allow for shadow color variation
+    }
+
+    // Case: destroy the DirectionalLight
+    {
+        result = QImage();
+        delete directionalLight;
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 0), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.666, QColor::fromRgb(0, 0, 0), FUZZ));
+        // floor is darker due to the shadow
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(0, 99, 0), FUZZ));
+    }
+
+    // Case: re-add a shadow casting DirectionalLight emitting downwards
+    {
+        result = QImage();
+        directionalLight = invokeAndGetObject(renderer.rootItem, "addShadowCastingDirectionalLight");
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 255, 239), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.9, QColor::fromRgb(248, 255, 248), FUZZ));
+        // floor in shadow, now with some green added
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(120, 160, 120), 20)); // allow for shadow color variation
+    }
+
+    // Case: destroy the PointLight
+    {
+        result = QImage();
+        delete pointLight;
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(239, 239, 239), FUZZ));
+        // floor in shadow
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(120, 120, 120), 20)); // allow for shadow color variation
+    }
+
+    // Case: destroy the DirectionalLight
+    {
+        result = QImage();
+        delete directionalLight;
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 0, 0), FUZZ));
+    }
+
+    // Case: add 10 shadow casting DirectionalLights (note that only 8 of these
+    // cast shadows, as per QSSG_MAX_NUM_SHADOW_MAPS, the rest is expected to be
+    // silently ignored as if castsShadow was false for those)
+    QVarLengthArray<QObject *, 10> directionalLights;
+    {
+        result = QImage();
+        for (int i = 0; i < 10; ++i)
+            directionalLights.append(invokeAndGetObject(renderer.rootItem, "addShadowCastingDirectionalLight"));
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(255, 255, 255), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(255, 255, 255), FUZZ));
+    }
+
+    // Case: make some invisible and destroy some
+    {
+        result = QImage();
+        delete directionalLights[2];
+        directionalLights.remove(2);
+        delete directionalLights[3];
+        directionalLights.remove(3);
+        directionalLights[0]->setProperty("visible", false);
+        directionalLights[2]->setProperty("visible", false);
+        directionalLights[4]->setProperty("visible", false);
+        directionalLights[6]->setProperty("visible", false);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(225, 225, 225), FUZZ));
+    }
+
+    // Case: destroy one more DirectionalLight and add a shadow casting PointLight
+    {
+        result = QImage();
+        QVERIFY(directionalLights.last()->property("visible").toBool());
+        delete directionalLights.last();
+        directionalLights.removeLast();
+        pointLight = invokeAndGetObject(renderer.rootItem, "addPointLight");
+        pointLight->setProperty("castsShadow", true);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(255, 255, 255), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(200, 224, 200), 20));
+    }
+
+    // Case: delete all but one DirectionalLight, reduce its color and brightness, and add a red SpotLight
+    {
+        result = QImage();
+        for (int i = 1; i < directionalLights.size(); i++)
+            delete directionalLights[i];
+        directionalLights[0]->setProperty("visible", true);
+        directionalLights[0]->setProperty("brightness", 0.1);
+        directionalLights[0]->setProperty("color", QColor(Qt::blue));
+        spotLight = invokeAndGetObject(renderer.rootItem, "addSpotLight");
+        spotLight->setProperty("castsShadow", true);
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(101, 255, 83), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(56, 113, 38), 20));
+    }
+
+    // Case: add a lot of lights, to exceed the limit of 15. Should survive
+    // gracefully, ignoring the extra lights.
+    {
+        result = QImage();
+        for (int i = 0; i < 30; ++i)
+            invokeAndGetObject(renderer.rootItem, "addPointLight");
+
+        renderNextFrame(&renderer, &readCompleted, &readResult, &result);
+        QVERIFY(readCompleted);
+        QCOMPARE(result.size(), QSize(640, 480));
+
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 0), FUZZ));
+    }
 }
 
 QTEST_MAIN(tst_RenderControl)
