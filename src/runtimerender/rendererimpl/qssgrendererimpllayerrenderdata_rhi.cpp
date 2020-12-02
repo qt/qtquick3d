@@ -1027,7 +1027,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         if (!globalLights[i].shadows)
             continue;
 
-        QSSGShadowMapEntry *pEntry = shadowMapManager->getShadowMapEntry(i);
+        QSSGShadowMapEntry *pEntry = shadowMapManager->shadowMapEntry(i);
         if (!pEntry)
             continue;
 

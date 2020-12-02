@@ -67,7 +67,7 @@ static inline void setupForRhiDepth(const QSSGRef<QSSGResourceManager> &resMgr,
     entry->m_rhiDepthStencil = resMgr->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
 }
 
-void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
+void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                                             qint32 width,
                                             qint32 height,
                                             ShadowMapModes mode)
@@ -86,10 +86,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
     // as possible: if the shadow mode, dimensions, etc. are all the same as in
     // the previous prepare round, then reuse the existing resources.
 
-    QSSGShadowMapEntry *pEntry = nullptr;
-    if (index < m_shadowMapList.size())
-        pEntry = &m_shadowMapList[index];
-
+    QSSGShadowMapEntry *pEntry = shadowMapEntry(lightIdx);
     if (pEntry) {
         if (pEntry->m_rhiDepthMap && mode == ShadowMapModes::CUBE) {
             // previously VSM now CUBE
@@ -117,7 +114,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
         QRhiTexture *depthMap = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
         QRhiTexture *depthCopy = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
         QRhiRenderBuffer *depthStencil = theManager->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
-        m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthCubeMap(index, mode, depthMap, depthCopy, depthStencil));
+        m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthCubeMap(lightIdx, mode, depthMap, depthCopy, depthStencil));
 
         pEntry = &m_shadowMapList.back();
     } else { // VSM
@@ -125,7 +122,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
         QRhiTexture *depthMap = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget);
         QRhiTexture *depthCopy = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget);
         QRhiRenderBuffer *depthStencil = theManager->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
-        m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthMap(index, mode, depthMap, depthCopy, depthStencil));
+        m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthMap(lightIdx, mode, depthMap, depthCopy, depthStencil));
 
         pEntry = &m_shadowMapList.back();
     }
@@ -234,21 +231,17 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 index,
             }
         }
 
-        pEntry->m_lightIndex = index;
+        pEntry->m_lightIndex = lightIdx;
     }
 }
 
-QSSGShadowMapEntry *QSSGRenderShadowMap::getShadowMapEntry(int index)
+QSSGShadowMapEntry *QSSGRenderShadowMap::shadowMapEntry(int lightIdx)
 {
-    if (index < 0) {
-        Q_UNREACHABLE();
-        return nullptr;
-    }
-    QSSGShadowMapEntry *pEntry = nullptr;
+    Q_ASSERT(lightIdx >= 0);
 
     for (int i = 0; i < m_shadowMapList.size(); i++) {
-        pEntry = &m_shadowMapList[i];
-        if (pEntry->m_lightIndex == quint32(index))
+        QSSGShadowMapEntry *pEntry = &m_shadowMapList[i];
+        if (pEntry->m_lightIndex == quint32(lightIdx))
             return pEntry;
     }
 
@@ -261,14 +254,14 @@ QSSGShadowMapEntry::QSSGShadowMapEntry()
 {
 }
 
-QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 index,
+QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 lightIdx,
                                                        ShadowMapModes mode,
                                                        QRhiTexture *depthMap,
                                                        QRhiTexture *depthCopy,
                                                        QRhiRenderBuffer *depthStencil)
 {
     QSSGShadowMapEntry e;
-    e.m_lightIndex = index;
+    e.m_lightIndex = lightIdx;
     e.m_shadowMapMode = mode;
     e.m_rhiDepthMap = depthMap;
     e.m_rhiDepthCopy = depthCopy;
@@ -276,14 +269,14 @@ QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthMap(quint32 index,
     return e;
 }
 
-QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthCubeMap(quint32 index,
+QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthCubeMap(quint32 lightIdx,
                                                            ShadowMapModes mode,
                                                            QRhiTexture *depthCube,
                                                            QRhiTexture *cubeCopy,
                                                            QRhiRenderBuffer *depthStencil)
 {
     QSSGShadowMapEntry e;
-    e.m_lightIndex = index;
+    e.m_lightIndex = lightIdx;
     e.m_shadowMapMode = mode;
     e.m_rhiDepthCube = depthCube;
     e.m_rhiCubeCopy = cubeCopy;

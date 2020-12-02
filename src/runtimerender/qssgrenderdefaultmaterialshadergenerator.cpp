@@ -1362,7 +1362,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     QSSGShaderLightsUniformData &lightsUniformData(shaders->lightsUniformData());
     lightsUniformData.count = 0;
 
-    for (quint32 lightIdx = 0, shadowMapIdx = 0, lightEnd = inLights.size();
+    for (quint32 lightIdx = 0, shadowMapCount = 0, lightEnd = inLights.size();
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
@@ -1395,11 +1395,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (lightEnabled && theLight->m_castShadow && shadowMapIdx < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
+        if (lightEnabled && theLight->m_castShadow && shadowMapCount < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
-            ++shadowMapIdx;
+            ++shadowMapCount;
 
-            QSSGShadowMapEntry *pEntry = inRenderProperties.shadowMapManager->getShadowMapEntry(lightIdx);
+            QSSGShadowMapEntry *pEntry = inRenderProperties.shadowMapManager->shadowMapEntry(lightIdx);
             Q_ASSERT(pEntry);
 
             const auto names = setupShadowMapVariableNames(lightIdx);
