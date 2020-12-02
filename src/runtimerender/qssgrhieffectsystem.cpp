@@ -431,7 +431,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
     generator->beginProgram();
 
-    QSSGShaderLibraryManager *shaderLib = m_renderer->contextInterface()->shaderLibraryManager().data();
+    const auto &shaderLib = m_renderer->contextInterface()->shaderLibraryManager();
     {
         const QByteArray src = shaderLib->getShaderSource(inCmd->m_shaderPathKey, QSSGShaderCache::ShaderType::Vertex);
         QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
