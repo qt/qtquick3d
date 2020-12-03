@@ -218,7 +218,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     ShaderFeatureSetList features;
     bool featuresDirty;
     size_t featureSetHash;
-    bool tooManyLightsError;
+    bool tooManyLightsWarningShown = false;
 
     QSSGRenderShadowMap *shadowMapManager = nullptr;
 

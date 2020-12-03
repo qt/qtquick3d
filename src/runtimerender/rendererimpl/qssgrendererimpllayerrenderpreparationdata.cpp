@@ -135,7 +135,6 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
     , camera(nullptr)
     , featuresDirty(true)
     , featureSetHash(0)
-    , tooManyLightsError(false)
 {
 }
 
@@ -315,12 +314,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbe);
 
         quint32 numLights = quint32(lights.size());
-        if (Q_UNLIKELY(numLights > QSSGShaderDefaultMaterialKeyProperties::LightCount && !tooManyLightsError)) {
-            tooManyLightsError = true;
-            numLights = QSSGShaderDefaultMaterialKeyProperties::LightCount;
-            qCCritical(INVALID_OPERATION, "Too many lights on layer, max is %d", QSSGShaderDefaultMaterialKeyProperties::LightCount);
-            Q_ASSERT(false);
-        }
+        Q_ASSERT(numLights <= QSSGShaderDefaultMaterialKeyProperties::LightCount);
         renderer->defaultMaterialShaderKeyProperties().m_lightCount.setValue(theGeneratedKey, numLights);
 
         int shadowMapCount = 0;
@@ -1169,6 +1163,14 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             int shadowMapCount = 0;
             // Lights
             for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
+                if (renderableLights.count() == QSSG_MAX_NUM_LIGHTS) {
+                    if (!tooManyLightsWarningShown) {
+                        qWarning("Too many lights in scene, maximum is %d", QSSG_MAX_NUM_LIGHTS);
+                        tooManyLightsWarningShown = true;
+                    }
+                    break;
+                }
+
                 QSSGRenderLight *theLight = *rIt;
                 wasDataDirty = wasDataDirty || theLight->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 bool lightResult = theLight->calculateGlobalVariables();
