@@ -180,10 +180,7 @@ enum class QSSGRhiSamplerBindingHints
 
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 15
-// directional light uses 2d shadow maps, other lights use cubemaps
-#define QSSG_SHADOW_MAP_TYPE_COUNT 2
-// this is the per-type (type as in 2d or cubemap) limit
-#define QSSG_MAX_NUM_SHADOWS_PER_TYPE 4
+#define QSSG_MAX_NUM_SHADOW_MAPS 8
 
 // note this struct must exactly match the memory layout of the uniform block in
 // funcSampleLightVars.glsllib
@@ -367,7 +364,7 @@ private:
     // transient (per-object) data; pointers are all non-owning
     bool m_lightsEnabled = false;
     QSSGShaderLightsUniformData m_lightsUniformData;
-    QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT> m_shadowMaps;
+    QVarLengthArray<QSSGRhiShadowMapProperties, QSSG_MAX_NUM_SHADOW_MAPS> m_shadowMaps;
     QRhiTexture *m_lightProbeTexture = nullptr;
     QSSGRenderTextureCoordOp m_lightProbeHorzTile = QSSGRenderTextureCoordOp::ClampToEdge;
     QSSGRenderTextureCoordOp m_lightProbeVertTile = QSSGRenderTextureCoordOp::ClampToEdge;
