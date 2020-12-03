@@ -323,15 +323,18 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         }
         renderer->defaultMaterialShaderKeyProperties().m_lightCount.setValue(theGeneratedKey, numLights);
 
+        int shadowMapCount = 0;
         for (int lightIdx = 0, lightEnd = lights.size(); lightIdx < lightEnd; ++lightIdx) {
             QSSGRenderLight *theLight(lights[lightIdx].light);
             const bool isDirectional = theLight->m_lightType == QSSGRenderLight::Type::Directional;
             const bool isSpot = theLight->m_lightType == QSSGRenderLight::Type::Spot;
-            const bool castShadowsArea = theLight->m_castShadow && receivesShadows;
+            const bool castsShadows = theLight->m_castShadow && receivesShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
+            if (castsShadows)
+                ++shadowMapCount;
 
             renderer->defaultMaterialShaderKeyProperties().m_lightFlags[lightIdx].setValue(theGeneratedKey, !isDirectional);
             renderer->defaultMaterialShaderKeyProperties().m_lightSpotFlags[lightIdx].setValue(theGeneratedKey, isSpot);
-            renderer->defaultMaterialShaderKeyProperties().m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castShadowsArea);
+            renderer->defaultMaterialShaderKeyProperties().m_lightShadowFlags[lightIdx].setValue(theGeneratedKey, castsShadows);
         }
     }
     return theGeneratedKey;
@@ -1163,6 +1166,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
             layer.renderedCamera = camera;
 
             QSSGShaderLightList renderableLights;
+            int shadowMapCount = 0;
             // Lights
             for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
                 QSSGRenderLight *theLight = *rIt;
@@ -1174,7 +1178,9 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 shaderLight.light = theLight;
                 shaderLight.enabled = theLight->flags.testFlag(QSSGRenderLight::Flag::GloballyActive);
                 shaderLight.enabled &= theLight->m_brightness > 0.0f;
-                shaderLight.shadows = theLight->m_castShadow;
+                shaderLight.shadows = theLight->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
+                if (shaderLight.shadows)
+                    ++shadowMapCount;
 
                 if (shaderLight.enabled)
                     renderableLights.push_back(shaderLight);
