@@ -43,10 +43,9 @@
 //
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
-
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
-
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 QT_BEGIN_NAMESPACE
 // We have an ever expanding set of properties we like to hash into one or more 32 bit
@@ -633,7 +632,7 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
 struct QSSGShaderDefaultMaterialKeyProperties
 {
     enum {
-        LightCount = 15,
+        LightCount = QSSG_MAX_NUM_LIGHTS,
     };
     enum {
         SingleChannelImageCount = 5,
