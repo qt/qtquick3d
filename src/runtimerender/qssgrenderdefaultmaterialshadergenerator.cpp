@@ -905,6 +905,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         // Iterate through all lights
         Q_ASSERT(lights.size() < INT32_MAX);
+        int shadowMapCount = 0;
         for (qint32 lightIdx = 0; lightIdx < lights.size(); ++lightIdx) {
             auto &shaderLight = lights[lightIdx];
             QSSGRenderLight *lightNode = shaderLight.light;
@@ -912,7 +913,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
             bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
             bool isSpot = lightNode->m_lightType == QSSGRenderLight::Type::Spot;
-            bool castsShadow = enableShadowMaps && lightNode->m_castShadow;
+            bool castsShadow = enableShadowMaps && lightNode->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
+            if (castsShadow)
+                ++shadowMapCount;
 
             fragmentShader.append("");
             char lightIdxStr[11];
