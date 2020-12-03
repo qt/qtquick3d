@@ -1395,7 +1395,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (lightEnabled && theLight->m_castShadow && shadowMapCount < (QSSG_MAX_NUM_SHADOWS_PER_TYPE * QSSG_SHADOW_MAP_TYPE_COUNT)) {
+        if (lightEnabled && theLight->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
             ++shadowMapCount;
 
