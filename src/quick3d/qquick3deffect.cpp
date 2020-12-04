@@ -891,7 +891,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 // Note that this key is not suitable as a unique key for the graphics resources because the same
                 // set of shader files can be used in multiple different passes, or in multiple active effects.
                 // But that's the effect system's problem.
-                QByteArray shaderPathKey;
+                QByteArray shaderPathKey("effect pipeline--");
                 QByteArray shaderSource[2];
                 QSSGCustomShaderMetaData shaderMeta[2];
                 for (QQuick3DShaderUtilsShader::Stage stage : { QQuick3DShaderUtilsShader::Stage::Vertex, QQuick3DShaderUtilsShader::Stage::Fragment }) {
@@ -969,6 +969,12 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
                     shaderSource[int(type)] = code;
                     shaderMeta[int(type)] = result.second;
+                }
+
+                {
+                    const auto &vertex = shaderSource[int(QSSGShaderCache::ShaderType::Vertex)];
+                    const auto &fragment = shaderSource[int(QSSGShaderCache::ShaderType::Fragment)];
+                    shaderPathKey.append(':' + QCryptographicHash::hash(vertex + fragment, QCryptographicHash::Algorithm::Sha1).toHex());
                 }
 
                 // Now that the final shaderPathKey is known, store the source and
