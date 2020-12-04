@@ -264,14 +264,14 @@ QByteArray QSSGShaderUtils::resolveShader(const QUrl &fileUrl, const QQmlContext
         shaderPathKey.append('>');
 
     const QUrl loadUrl = context ? context->resolvedUrl(fileUrl) : fileUrl;
-    const QString filename = QQmlFile::urlToLocalFileOrQrc(loadUrl);
+    const QString filePath = QQmlFile::urlToLocalFileOrQrc(loadUrl);
 
-    QFile f(filename);
+    QFile f(filePath);
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        shaderPathKey += filename.toLatin1();
+        shaderPathKey += loadUrl.fileName().toUtf8();
         return f.readAll();
     } else {
-        qWarning("Failed to read shader code from %s", qPrintable(filename));
+        qWarning("Failed to read shader code from %s", qPrintable(filePath));
     }
 
     return QByteArray();
