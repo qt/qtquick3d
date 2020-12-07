@@ -1180,9 +1180,18 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                 shaderLight.light = theLight;
                 shaderLight.enabled = theLight->flags.testFlag(QSSGRenderLight::Flag::GloballyActive);
                 shaderLight.enabled &= theLight->m_brightness > 0.0f;
-                shaderLight.shadows = theLight->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
-                if (shaderLight.shadows)
-                    ++shadowMapCount;
+                shaderLight.shadows = theLight->m_castShadow;
+                if (shaderLight.shadows) {
+                    if (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
+                        ++shadowMapCount;
+                    } else {
+                        shaderLight.shadows = false;
+                        if (!tooManyShadowLightsWarningShown) {
+                            qWarning("Too many shadow casting lights in scene, maximum is %d", QSSG_MAX_NUM_SHADOW_MAPS);
+                            tooManyShadowLightsWarningShown = true;
+                        }
+                    }
+                }
 
                 if (shaderLight.enabled)
                     renderableLights.push_back(shaderLight);
