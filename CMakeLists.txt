@@ -34,6 +34,11 @@ if(NOT TARGET Qt::Quick)
 endif()
 
 # special case begin
+if(NOT TARGET Qt::OpenGL)
+    message(NOTICE "Skipping the build as the condition \"TARGET Qt::OpenGL\" is not met.")
+    return()
+endif()
+
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS ShaderTools)
 # special case end
 
