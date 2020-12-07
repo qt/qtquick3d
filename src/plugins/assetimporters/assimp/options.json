@@ -105,7 +105,7 @@
         "globalScaleValue": {
             "name": "Global Scale Value",
             "description": "Global Scale factor.",
-            "value": 100,
+            "value": 1,
             "type": "Real",
             "conditions": [
                 {
