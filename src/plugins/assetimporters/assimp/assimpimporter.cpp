@@ -570,6 +570,10 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
     // scale
     if (!skipScaling) {
+        // Apply the global scale for a root node
+        if (tabLevel == 1)
+            scaling *= m_globalScaleValue;
+
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.x"), scaling.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.y"), scaling.y);
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.z"), scaling.z);
@@ -1533,11 +1537,9 @@ void AssimpImporter::processOptions(const QVariantMap &options)
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeGraph);
 
     if (checkBooleanOption(QStringLiteral("globalScale"), optionsObject)) {
-        m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GlobalScale);
-        qreal globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), optionsObject);
-        if (globalScaleValue == 0.0)
-            globalScaleValue = 1.0;
-        m_importer->SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, ai_real(globalScaleValue));
+        m_globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), optionsObject);
+        if (m_globalScaleValue == 0.0)
+            m_globalScaleValue = 1.0;
     }
 
     if (checkBooleanOption(QStringLiteral("dropNormals"), optionsObject))

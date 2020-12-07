@@ -112,6 +112,7 @@ private:
     QStringList m_generatedFiles;
     bool m_gltfMode = false;
     bool m_gltfUsed = false;
+    qreal m_globalScaleValue = 1.0;
 
     QVariantMap m_options;
     aiPostProcessSteps m_postProcessSteps;
