@@ -46,7 +46,7 @@ To limit the amount of shaders the tool needs to generate, the tool tries to onl
 it think the application needs. The heuristics used in the tool might not always be able to detect
 which materials should be generate, this is espcecially true for properties that change at run-time.
 To verify that the material shaders were successfully, and correctly, generated, the tool should have
-generated a \l{Genereated content}{.qsbc} file which can be inspected to verify that the content
+generated a \l{Generated content}{.qsbc} file which can be inspected to verify that the content
 matches the material used by the application. It's also possible to verify that the material
 was loaded from the pre-built cache by setting the environment variable \b QT_RHI_SHADER_DEBUG=1
 and looking at the debug output for mentions of the engine loading the \b pre-compiled
@@ -132,7 +132,7 @@ files the tool needs to process.
       List the content of the qsbc file.
 \endtable
 
-\section1 Genereated content
+\section1 Generated content
 
 The shadergen tools main output file is a .qsbc file. The .qsbc file contains a collection of
 \l {Qt Shader Tools} {.qsb} files plus some meta-data about the various material shaders,
