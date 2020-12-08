@@ -299,6 +299,7 @@ PropertyMap::PropertyMap()
     node->insert(QStringLiteral("eulerRotation.x"), 0);
     node->insert(QStringLiteral("eulerRotation.y"), 0);
     node->insert(QStringLiteral("eulerRotation.z"), 0);
+    node->insert(QStringLiteral("eulerRotation"), QVector3D(0, 0, 0));
     node->insert(QStringLiteral("scale"), QVector3D(1, 1, 1));
     node->insert(QStringLiteral("scale.x"), 1);
     node->insert(QStringLiteral("scale.y"), 1);
