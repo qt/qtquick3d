@@ -408,9 +408,8 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     m_pendingClears.clear();
 
     // now we need a proper unique key (unique in the scene), the filenames are not sufficient
-    const QByteArray key = inCmd->m_shaderPathKey
-            + QByteArray::number(quintptr(inCmd->m_effect))
-            + QByteArray::number(inCmd->m_passIndex);
+    const QByteArray key = inCmd->m_shaderPathKey + QByteArray::number(quintptr(inCmd))
+                                                  + QByteArray::number(m_currentUbufIndex);
 
     auto it = m_shaderPipelines.find(key);
     if (it != m_shaderPipelines.end()) {

@@ -146,18 +146,14 @@ struct QSSGBindBuffer : public QSSGCommand
 struct QSSGBindShader : public QSSGCommand
 {
     QByteArray m_shaderPathKey; // something like "vertex_filename>fragment_filename"
-    QSSGRenderEffect *m_effect;
-    int m_passIndex;
-    QSSGBindShader(const QByteArray &inShaderPathKey, QSSGRenderEffect *inEffect, int inPassIndex)
+    QSSGBindShader(const QByteArray &inShaderPathKey)
         : QSSGCommand(CommandType::BindShader),
-          m_shaderPathKey(inShaderPathKey),
-          m_effect(inEffect),
-          m_passIndex(inPassIndex)
+          m_shaderPathKey(inShaderPathKey)
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}
     void addDebug(QDebug &stream) const {
-        stream << "path:" <<  m_shaderPathKey << "effect:" << m_effect << "pass index:" << m_passIndex;
+        stream << "key:" <<  m_shaderPathKey << "effect:";
     }
 };
 

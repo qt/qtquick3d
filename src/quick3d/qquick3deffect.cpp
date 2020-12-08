@@ -883,7 +883,6 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         bool needsDepthTexture = false;
         if (!m_passes.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
-            int passIndex = 0;
             for (QQuick3DShaderUtilsRenderPass *pass : qAsConst(m_passes)) {
                 // Have a key composed more or less of the vertex and fragment filenames.
                 // The shaderLibraryManager uses stage+shaderPathKey as the key.
@@ -984,7 +983,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                                                                            shaderSource[int(type)], shaderMeta[int(type)]);
                 }
 
-                effectNode->commands.push_back(new QSSGBindShader(shaderPathKey, effectNode, passIndex));
+                effectNode->commands.push_back(new QSSGBindShader(shaderPathKey));
                 effectNode->commands.push_back(new QSSGApplyInstanceValue);
 
                 // Buffers
@@ -1018,8 +1017,6 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
 
                 effectNode->commands.push_back(new QSSGRender);
-
-                ++passIndex;
             }
         }
         effectNode->requiresDepthTexture = needsDepthTexture;
