@@ -410,6 +410,10 @@ static void cloneProperties(QObject &target, const QObject &source)
     const int propCount = sourceMo->propertyCount();
     for (int i = 0; i != propCount; ++i)
         targetMo->property(i).write(&target, sourceMo->property(i).read(&source));
+
+    // Clone the dynamic properties as well
+    for (const auto &prop : source.dynamicPropertyNames())
+        target.setProperty(prop.constData(), source.property(prop.constData()));
 }
 
 template <typename T>
