@@ -159,14 +159,10 @@ public:
     void commitBufferResourceUpdates();
 
 private:
-    bool loadRenderImage(QSSGRenderImageTextureData &textureData,
-                         const QSSGLoadedTexture *inTexture,
-                         bool inForceScanForTransparency = false,
-                         MipMode inMipMode = MipModeNone);
-    QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inSourcePath,
-                                               const QSSGRenderTextureFormat &inFormat = QSSGRenderTextureFormat::Unknown,
-                                               bool inForceScanForTransparency = false,
-                                               MipMode inMipMode = MipModeNone);
+    bool createRhiTexture(QSSGRenderImageTextureData &textureData,
+                          const QSSGLoadedTexture *inTexture,
+                          bool inForceScanForTransparency = false,
+                          MipMode inMipMode = MipModeNone);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
     bool loadRenderImageEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
     void releaseMesh(const QSSGRenderPath &inSourcePath);
