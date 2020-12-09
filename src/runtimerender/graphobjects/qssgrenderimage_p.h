@@ -61,8 +61,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     enum class Flag
     {
         Dirty = 1 << 0,
-        TransformDirty = 1 << 1,
-        ItemSizeDirty = 1 << 2
+        TransformDirty = 1 << 1
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -74,18 +73,16 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     };
 
     Q_DISABLE_COPY(QSSGRenderImage)
-    // Complete path to the file;
-    //*not* relative to the presentation directory
-    QSSGRenderPath m_imagePath;
 
     QSSGRenderGraphObject *m_parent = nullptr;
 
+    QSSGRenderPath m_imagePath;
+    QSGTexture *m_qsgTexture = nullptr; // overrides m_imagePath and m_rawTextureData when non-null
+    QSSGRenderTextureData *m_rawTextureData = nullptr; // overrides m_imagePath and m_qsgTexture when non-null
+
     QSSGRenderImageTextureData m_textureData;
 
-    QSGTexture *m_qsgTexture = nullptr; // overrides source if available
-    QSSGRenderTextureData *m_rawTextureData = nullptr; // also overrides source if available
-
-    Flags m_flags; // only dirty, transform dirty, and active apply
+    Flags m_flags;
 
     QVector2D m_scale { 1.0f, 1.0f };
     QVector2D m_pivot { 0.0f, 0.0f };
@@ -102,19 +99,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
     bool m_generateMipmaps = false;
 
-    // Setting any of the above variables means this object is dirty.
-    // Setting any of the vec2 properties means this object's transform is dirty
+    // Changing any of the above variables is covered by the Dirty flag, while
+    // the texture transform is covered by TransformDirty.
     QMatrix4x4 m_textureTransform;
 
     QSSGRenderImage();
     ~QSSGRenderImage();
-    // Renders the sub presentation
-    // Or finds the image.
-    // and sets up the texture transform
+
     bool clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager, bool forIbl = false);
-
     void calculateTextureTransform();
-
     bool isImageTransformIdentity() const;
 };
 

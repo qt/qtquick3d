@@ -1089,9 +1089,6 @@ void QQuick3DTexture::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange
     Q_UNUSED(item);
     Q_UNUSED(geometry);
     if (change.sizeChange()) {
-        auto renderImage = getRenderImage();
-        if (renderImage)
-            renderImage->m_flags.setFlag(QSSGRenderImage::Flag::ItemSizeDirty);
         m_dirtyFlags.setFlag(DirtyFlag::SourceItemDirty);
         update();
     }
