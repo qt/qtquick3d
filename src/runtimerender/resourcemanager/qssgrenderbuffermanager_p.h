@@ -171,10 +171,6 @@ private:
                                                const QSSGRenderTextureFormat &inFormat = QSSGRenderTextureFormat::Unknown,
                                                bool inForceScanForTransparency = false,
                                                MipMode inMipMode = MipModeNone);
-    QSSGRenderImageTextureData loadRenderImage(QSSGRenderImageTextureData &imageData,
-                                               QSSGRenderTextureData *textureData,
-                                               MipMode inMipMode = MipModeNone);
-    QSSGRenderImageTextureData loadRenderImage(QSGTexture *qsgTexture);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
     bool loadRenderImageEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
     void releaseMesh(const QSSGRenderPath &inSourcePath);

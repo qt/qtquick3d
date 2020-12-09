@@ -97,7 +97,29 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
 {
     QSSGRenderImageTextureData newImage;
     if (image->m_qsgTexture) {
-        newImage = loadRenderImage(image->m_qsgTexture);
+        QSGTexture *qsgTexture = image->m_qsgTexture;
+        // A QSGTexture from a textureprovider that is not a QSGDynamicTexture
+        // needs to be pushed to get its content updated (or even to create a
+        // QRhiTexture in the first place).
+        QRhi *rhi = context->rhi();
+        QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+        if (qsgTexture->isAtlasTexture()) {
+            // This returns a non-atlased QSGTexture (or does nothing if the
+            // extraction has already been done), the ownership of which stays with
+            // the atlas. As we do not store (and do not own) qsgTexture below,
+            // apart from using it as a cache key and querying its QRhiTexture
+            // (which we again do not own), we can just pretend we got the
+            // non-atlased QSGTexture in the first place.
+            qsgTexture = qsgTexture->removedFromAtlas(rub);
+        }
+        qsgTexture->commitTextureOperations(rhi, rub);
+        context->commandBuffer()->resourceUpdate(rub);
+        auto theImage = qsgImageMap.find(qsgTexture);
+        if (theImage == qsgImageMap.end())
+            theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
+        theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
+        theImage.value().m_textureFlags.setHasTransparency(qsgTexture->hasAlphaChannel());
+        newImage = theImage.value();
     } else if (image->m_rawTextureData) {
         // Textures using QSSGRenderTextureData
         // QSSGRenderImage can override the mipmode for its texture data
@@ -131,7 +153,15 @@ QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureD
         // reinsert the placeholder since releaseTextureData removed from map
         theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
     }
-    theImage.value() = loadRenderImage(theImage.value(), data, inMipMode);
+
+    QScopedPointer<QSSGLoadedTexture> theLoadedImage;
+    if (!data->textureData().isNull()) {
+        theLoadedImage.reset(QSSGLoadedTexture::loadTextureData(data));
+        theLoadedImage->ownsData = false;
+        if (!loadRenderImage(theImage.value(), theLoadedImage.data(), false, inMipMode))
+            theImage.value() = QSSGRenderImageTextureData();
+    }
+
     return theImage.value();
 }
 
@@ -865,57 +895,6 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
     }
 
     return QSSGRenderImageTextureData();
-}
-
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &imageData,
-                                                              QSSGRenderTextureData *textureData,
-                                                              MipMode inMipMode)
-{
-    QScopedPointer<QSSGLoadedTexture> theLoadedImage;
-    if (textureData->textureData().isNull())
-        return QSSGRenderImageTextureData();
-    theLoadedImage.reset(QSSGLoadedTexture::loadTextureData(textureData));
-    theLoadedImage->ownsData = false;
-
-    if (!loadRenderImage(imageData, theLoadedImage.data(), false, inMipMode))
-        return QSSGRenderImageTextureData();
-
-    return imageData;
-}
-
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(QSGTexture *qsgTexture)
-{
-    if (Q_UNLIKELY(!qsgTexture))
-        return QSSGRenderImageTextureData();
-
-    // A QSGTexture from a textureprovider that is not a QSGDynamicTexture
-    // needs to be pushed to get its content updated (or even to create a
-    // QRhiTexture in the first place).
-    QRhi *rhi = context->rhi();
-    QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-    if (qsgTexture->isAtlasTexture()) {
-        // This returns a non-atlased QSGTexture (or does nothing if the
-        // extraction has already been done), the ownership of which stays with
-        // the atlas. As we do not store (and do not own) qsgTexture below,
-        // apart from using it as a cache key and querying its QRhiTexture
-        // (which we again do not own), we can just pretend we got the
-        // non-atlased QSGTexture in the first place.
-        qsgTexture = qsgTexture->removedFromAtlas(rub);
-    }
-    qsgTexture->commitTextureOperations(rhi, rub);
-    context->commandBuffer()->resourceUpdate(rub);
-
-    auto theImage = qsgImageMap.find(qsgTexture);
-    if (theImage == qsgImageMap.end()) {
-        theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
-        theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
-    } else {
-        theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
-    }
-
-    theImage.value().m_textureFlags.setHasTransparency(qsgTexture->hasAlphaChannel());
-
-    return theImage.value();
 }
 
 QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
