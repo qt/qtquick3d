@@ -354,12 +354,6 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
                 || inMapType == QSSGRenderableImage::Type::Translucency)) {
             ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
-        // Textures used in general have linear characteristics.
-        // PKC -- The filters are properly set already.  Setting them here only overrides what
-        // would
-        // otherwise be a correct setting.
-        // inImage.m_TextureData.m_Texture->SetMinFilter( QSSGRenderTextureMinifyingOp::Linear );
-        // inImage.m_TextureData.m_Texture->SetMagFilter( QSSGRenderTextureMagnifyingOp::Linear );
 
         QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->contextInterface(), inMapType, inImage);
         QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
