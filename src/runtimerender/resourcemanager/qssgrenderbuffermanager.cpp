@@ -138,48 +138,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
             QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
             const auto &path = image->m_imagePath.path();
             theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, *inputStreamFactory, true));
-
-            // ### is this nonsense still needed?
-            // Hackish solution to custom materials not finding their textures if they are used
-            // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
-            // so this should be ok.
-            if (!theLoadedTexture) {
-                if (QDir(path).isRelative()) {
-                    QString searchPath = path;
-                    if (searchPath.startsWith(QLatin1String("./")))
-                        searchPath.prepend(QLatin1String("."));
-                    int loops = 0;
-                    while (!theLoadedTexture && ++loops <= 3) {
-                        theLoadedTexture.reset(QSSGLoadedTexture::load(searchPath,
-                                                                       image->m_format,
-                                                                       *inputStreamFactory,
-                                                                       true));
-                        searchPath.prepend(QLatin1String("../"));
-                    }
-                } else {
-                    // Some textures, for example environment maps for custom materials,
-                    // have absolute path at this point. It points to the wrong place with
-                    // the new project structure, so we need to split it up and construct
-                    // the new absolute path here.
-                    QStringList splitPath = path.split(QLatin1String("../"));
-                    if (splitPath.size() > 1) {
-                        QString searchPath = splitPath.at(0) + splitPath.at(1);
-                        int loops = 0;
-                        while (!theLoadedTexture && ++loops <= 3) {
-                            theLoadedTexture.reset(QSSGLoadedTexture::load(searchPath,
-                                                                           image->m_format,
-                                                                           *inputStreamFactory,
-                                                                           true));
-                            searchPath = splitPath.at(0);
-                            for (int i = 0; i < loops; i++)
-                                searchPath.append(QLatin1String("../"));
-                            searchPath.append(splitPath.at(1));
-                        }
-                    }
-                }
-            }
-
-            if (Q_LIKELY(theLoadedTexture)) {
+            if (theLoadedTexture) {
                 ImageMap::iterator theImage = imageMap.find({ image->m_imagePath, inMipMode });
                 const bool notFound = theImage == imageMap.end();
                 if (notFound)
@@ -211,8 +170,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
 
 QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
 {
-    if (Q_UNLIKELY(!data))
-        return QSSGRenderImageTextureData();
+    Q_ASSERT(data);
 
     auto theImage = customTextureMap.find(data);
     if (theImage == customTextureMap.end()) {
