@@ -120,14 +120,84 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
         theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
         theImage.value().m_textureFlags.setHasTransparency(qsgTexture->hasAlphaChannel());
         newImage = theImage.value();
+
     } else if (image->m_rawTextureData) {
+
         // Textures using QSSGRenderTextureData
         // QSSGRenderImage can override the mipmode for its texture data
         if (inMipMode == MipModeNone && image->m_generateMipmaps)
             inMipMode = MipModeGenerated;
         return image->m_rawTextureData->createOrUpdate(this, inMipMode);
+
     } else if (!image->m_imagePath.isEmpty()) {
-        newImage = loadRenderImage(image->m_imagePath, image->m_format, inForceScanForTransparency, inMipMode);
+
+        const auto foundIt = imageMap.constFind({ image->m_imagePath, inMipMode });
+        if (foundIt != imageMap.cend()) {
+            newImage = foundIt.value();
+        } else {
+            QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
+            const auto &path = image->m_imagePath.path();
+            theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, *inputStreamFactory, true));
+
+            // ### is this nonsense still needed?
+            // Hackish solution to custom materials not finding their textures if they are used
+            // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
+            // so this should be ok.
+            if (!theLoadedTexture) {
+                if (QDir(path).isRelative()) {
+                    QString searchPath = path;
+                    if (searchPath.startsWith(QLatin1String("./")))
+                        searchPath.prepend(QLatin1String("."));
+                    int loops = 0;
+                    while (!theLoadedTexture && ++loops <= 3) {
+                        theLoadedTexture.reset(QSSGLoadedTexture::load(searchPath,
+                                                                       image->m_format,
+                                                                       *inputStreamFactory,
+                                                                       true));
+                        searchPath.prepend(QLatin1String("../"));
+                    }
+                } else {
+                    // Some textures, for example environment maps for custom materials,
+                    // have absolute path at this point. It points to the wrong place with
+                    // the new project structure, so we need to split it up and construct
+                    // the new absolute path here.
+                    QStringList splitPath = path.split(QLatin1String("../"));
+                    if (splitPath.size() > 1) {
+                        QString searchPath = splitPath.at(0) + splitPath.at(1);
+                        int loops = 0;
+                        while (!theLoadedTexture && ++loops <= 3) {
+                            theLoadedTexture.reset(QSSGLoadedTexture::load(searchPath,
+                                                                           image->m_format,
+                                                                           *inputStreamFactory,
+                                                                           true));
+                            searchPath = splitPath.at(0);
+                            for (int i = 0; i < loops; i++)
+                                searchPath.append(QLatin1String("../"));
+                            searchPath.append(splitPath.at(1));
+                        }
+                    }
+                }
+            }
+
+            if (Q_LIKELY(theLoadedTexture)) {
+                ImageMap::iterator theImage = imageMap.find({ image->m_imagePath, inMipMode });
+                const bool notFound = theImage == imageMap.end();
+                if (notFound)
+                    theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTextureData());
+                const bool checkTransp = (notFound || inForceScanForTransparency);
+
+                if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), checkTransp, inMipMode))
+                    theImage.value() = QSSGRenderImageTextureData();
+                newImage = theImage.value();
+            } else {
+                // We want to make sure that bad path fails once and doesn't fail over and over
+                // again
+                // which could slow down the system quite a bit.
+                imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTextureData());
+                qCWarning(WARNING, "Failed to load image: %s", qPrintable(path));
+            }
+        }
+
         // Check if the source path has changed since the last load
         auto imagePathItr = cachedImagePathMap.constFind(image);
         if (imagePathItr != cachedImagePathMap.cend())
@@ -154,11 +224,11 @@ QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureD
         theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
     }
 
-    QScopedPointer<QSSGLoadedTexture> theLoadedImage;
+    QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
     if (!data->textureData().isNull()) {
-        theLoadedImage.reset(QSSGLoadedTexture::loadTextureData(data));
-        theLoadedImage->ownsData = false;
-        if (!loadRenderImage(theImage.value(), theLoadedImage.data(), false, inMipMode))
+        theLoadedTexture.reset(QSSGLoadedTexture::loadTextureData(data));
+        theLoadedTexture->ownsData = false;
+        if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), false, inMipMode))
             theImage.value() = QSSGRenderImageTextureData();
     }
 
@@ -710,10 +780,10 @@ bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *i
     return true;
 }
 
-bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
-                                        const QSSGLoadedTexture *inTexture,
-                                        bool inForceScanForTransparency,
-                                        MipMode inMipMode)
+bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTextureData &textureData,
+                                         const QSSGLoadedTexture *inTexture,
+                                         bool inForceScanForTransparency,
+                                         MipMode inMipMode)
 {
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
@@ -806,88 +876,6 @@ bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
 
     context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
     return true;
-}
-
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
-                                                              const QSSGRenderTextureFormat &inFormat,
-                                                              bool inForceScanForTransparency,
-                                                              MipMode inMipMode)
-{
-    if (Q_UNLIKELY(inImagePath.isNull()))
-        return QSSGRenderImageTextureData();
-
-    const auto foundIt = imageMap.constFind({ inImagePath, inMipMode });
-    if (foundIt != imageMap.cend())
-        return foundIt.value();
-
-    if (Q_LIKELY(!inImagePath.isNull())) {
-        QScopedPointer<QSSGLoadedTexture> theLoadedImage;
-        {
-            const auto &path = inImagePath.path();
-            theLoadedImage.reset(QSSGLoadedTexture::load(path, inFormat, *inputStreamFactory, true));
-
-            // ### is this nonsense still needed?
-
-            // Hackish solution to custom materials not finding their textures if they are used
-            // in sub-presentations. Note: Runtime 1 is going to be removed in Qt 3D Studio 2.x,
-            // so this should be ok.
-            if (!theLoadedImage) {
-                if (QDir(path).isRelative()) {
-                    QString searchPath = path;
-                    if (searchPath.startsWith(QLatin1String("./")))
-                        searchPath.prepend(QLatin1String("."));
-                    int loops = 0;
-                    while (!theLoadedImage && ++loops <= 3) {
-                        theLoadedImage.reset(QSSGLoadedTexture::load(searchPath,
-                                                                     inFormat,
-                                                                     *inputStreamFactory,
-                                                                     true));
-                        searchPath.prepend(QLatin1String("../"));
-                    }
-                } else {
-                    // Some textures, for example environment maps for custom materials,
-                    // have absolute path at this point. It points to the wrong place with
-                    // the new project structure, so we need to split it up and construct
-                    // the new absolute path here.
-                    QStringList splitPath = path.split(QLatin1String("../"));
-                    if (splitPath.size() > 1) {
-                        QString searchPath = splitPath.at(0) + splitPath.at(1);
-                        int loops = 0;
-                        while (!theLoadedImage && ++loops <= 3) {
-                            theLoadedImage.reset(QSSGLoadedTexture::load(searchPath,
-                                                                         inFormat,
-                                                                         *inputStreamFactory,
-                                                                         true));
-                            searchPath = splitPath.at(0);
-                            for (int i = 0; i < loops; i++)
-                                searchPath.append(QLatin1String("../"));
-                            searchPath.append(splitPath.at(1));
-                        }
-                    }
-                }
-            }
-        }
-
-        if (Q_LIKELY(theLoadedImage)) {
-            ImageMap::iterator theImage = imageMap.find({ inImagePath, inMipMode });
-            const bool notFound = theImage == imageMap.end();
-            if (notFound)
-                theImage = imageMap.insert({ inImagePath, inMipMode }, QSSGRenderImageTextureData());
-            const bool checkTransp = (notFound || inForceScanForTransparency);
-
-            if (!loadRenderImage(theImage.value(), theLoadedImage.data(), checkTransp, inMipMode))
-                theImage.value() = QSSGRenderImageTextureData();
-            return theImage.value();
-        }
-
-        // We want to make sure that bad path fails once and doesn't fail over and over
-        // again
-        // which could slow down the system quite a bit.
-        imageMap.insert({ inImagePath, inMipMode }, QSSGRenderImageTextureData());
-        qCWarning(WARNING, "Failed to load image: %s", qPrintable(inImagePath.path()));
-    }
-
-    return QSSGRenderImageTextureData();
 }
 
 QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
