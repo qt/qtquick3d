@@ -20,6 +20,19 @@ qt_internal_add_executable(qmlscenegrabber
         Qt::Quick3DPrivate
 )
 
+# Resources:
+set(scenegrabber_resource_files
+    "trim.ttf"
+)
+
+qt_internal_add_resource(qmlscenegrabber "scenegrabber"
+    PREFIX
+        "/"
+    FILES
+        ${scenegrabber_resource_files}
+)
+
+
 #### Keys ignored in scope 1:.:.:scenegrabber.pro:<TRUE>:
 # QML_IMPORT_NAME = "QtQuick3D.Lancelot"
 # QML_IMPORT_VERSION = "$$QT_VERSION"
