@@ -96,7 +96,7 @@ private:
     int m_currentUbufIndex = 0;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     QSSGRenderer *m_renderer = nullptr;
-    QHash<QByteArray, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
+    QHash<quintptr, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;
     char *m_currentUBufData = nullptr;
     QHash<QByteArray, QSSGRhiTexture> m_currentTextures;

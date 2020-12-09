@@ -43,6 +43,7 @@
 //
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 
 #include <QDebug>
 #include <QVariant>
@@ -146,9 +147,11 @@ struct QSSGBindBuffer : public QSSGCommand
 struct QSSGBindShader : public QSSGCommand
 {
     QByteArray m_shaderPathKey; // something like "vertex_filename>fragment_filename"
+    size_t m_hkey = 0;
     QSSGBindShader(const QByteArray &inShaderPathKey)
         : QSSGCommand(CommandType::BindShader),
-          m_shaderPathKey(inShaderPathKey)
+          m_shaderPathKey(inShaderPathKey),
+          m_hkey(QSSGShaderCacheKey::generateHashCode(inShaderPathKey, ShaderFeatureSetList()))
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}

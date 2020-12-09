@@ -407,11 +407,13 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     m_currentTextures.clear();
     m_pendingClears.clear();
 
-    // now we need a proper unique key (unique in the scene), the filenames are not sufficient
-    const QByteArray key = inCmd->m_shaderPathKey + QByteArray::number(quintptr(inCmd))
-                                                  + QByteArray::number(m_currentUbufIndex);
+    const QByteArray &key = inCmd->m_shaderPathKey;
+    const auto &hkey = inCmd->m_hkey;
+    Q_ASSERT(hkey != 0);
+    // now we need a proper "unique" key (unique in the scene), the filenames are not sufficient
+    const auto rkey = hkey ^ quintptr(inCmd) ^ m_currentUbufIndex;
 
-    auto it = m_shaderPipelines.find(key);
+    auto it = m_shaderPipelines.find(rkey);
     if (it != m_shaderPipelines.end()) {
         m_currentShaderPipeline = it.value().data();
 
@@ -450,7 +452,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     QSSGRef<QSSGRhiShaderPipeline> stages = generator->compileGeneratedRhiShader(key, ShaderFeatureSetList(), shaderLib, shaderCache,
                                                                                  QSSGRhiShaderPipeline::UsedWithoutIa);
     if (stages) {
-        m_shaderPipelines.insert(key, stages);
+        m_shaderPipelines.insert(rkey, stages);
         m_currentShaderPipeline = stages.data();
 
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
