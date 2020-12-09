@@ -388,7 +388,7 @@ static const float cube[] = {
     1.0f, 0.0f,
 };
 
-bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData)
+bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData)
 {
     // The objective of this method is to take the equirectangular texture
     // provided by inImage and create a cubeMap that contains both pre-filtered
@@ -798,7 +798,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTextureData &textureData
     if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
         textureData.m_textureFlags.setRgbe8(true);
     if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->compressedData.isValid())) {
-        if (loadRenderImageEnvironmentMap(inTexture, &textureData)) {
+        if (createEnvironmentMap(inTexture, &textureData)) {
             context->registerTexture(textureData.m_rhiTexture);
             return true;
         }

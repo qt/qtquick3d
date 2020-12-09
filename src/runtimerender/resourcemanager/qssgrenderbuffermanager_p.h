@@ -164,7 +164,7 @@ private:
                           bool inForceScanForTransparency = false,
                           MipMode inMipMode = MipModeNone);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
-    bool loadRenderImageEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
+    bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);
