@@ -452,7 +452,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
                                                                                  QSSGRhiShaderPipeline::UsedWithoutIa);
     if (stages) {
         m_shaderPipelines.insert(key, stages);
-        m_currentShaderPipeline = m_shaderPipelines[key].data();
+        m_currentShaderPipeline = stages.data();
 
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
         const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
