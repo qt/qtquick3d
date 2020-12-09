@@ -4,7 +4,7 @@
 ## renderer Test:
 #####################################################################
 
-qt_add_test(renderer
+qt_internal_add_test(renderer
     SOURCES
         tst_renderer.cpp
     PUBLIC_LIBRARIES
