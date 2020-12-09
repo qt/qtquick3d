@@ -164,9 +164,6 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         vertexShader.addFunction("getTransformedUVCoords");
         vertexShader.generateUVCoords(uvSet, key);
         vertexShader << "    vec2 " << names.imageFragCoordsTemp << " = qt_getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), qt_uTransform, qt_vTransform);\n";
-        if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
-            vertexShader << "    " << names.imageFragCoordsTemp << ".y = 1.0 - " << names.imageFragCoordsTemp << ".y;\n";
-
         vertexShader.assignOutput(names.imageFragCoords, names.imageFragCoordsTemp);
     } else {
         fragmentShader.addUniform(names.imageOffsets, "vec3");
@@ -175,8 +172,6 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         vertexShader.generateEnvMapReflection(key);
         fragmentShader.addFunction("getTransformedUVCoords");
         fragmentShader << "    vec2 " << names.imageFragCoords << " = qt_getTransformedUVCoords(environment_map_reflection, qt_uTransform, qt_vTransform);\n";
-        if (image.m_image.m_textureData.m_textureFlags.isInvertUVCoords())
-            fragmentShader << "    " << names.imageFragCoords << ".y = 1.0 - " << names.imageFragCoords << ".y;\n";
     }
     image.uvCoordsGenerated = true;
 }
@@ -1137,9 +1132,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler
                                << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << lookupSwizzle << ";\n";
 
-                if (image->m_image.m_textureData.m_textureFlags.isPreMultiplied())
-                    fragmentShader << "    qt_texture_color.rgb = qt_texture_color.a > 0.0 ? qt_texture_color.rgb / qt_texture_color.a : vec3(0.0);\n";
-
                 switch (image->m_mapType) {
                 case QSSGRenderableImage::Type::LightmapShadow:
                     // We use image offsets.z to switch between incoming premultiplied textures or
@@ -1589,7 +1581,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // The third member of the offsets contains a flag indicating if the texture was
         // premultiplied or not.
         // We use this to mix the texture alpha.
-        const float offsets[3] = { dataPtr[12], dataPtr[13], theImage->m_image.m_textureData.m_textureFlags.isPreMultiplied() ? 1.0f : 0.0f };
+        const float offsets[3] = { dataPtr[12], dataPtr[13], 0.0f /* non-premultiplied */ };
         shaders->setUniform(ubufData, names.imageOffsets, offsets, sizeof(offsets), &indices.imageOffsetsUniformIndex);
         // Grab just the upper 2x2 rotation matrix from the larger matrix.
         const float rotations[4] = { dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5] };

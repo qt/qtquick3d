@@ -396,9 +396,6 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             break;
         }
 
-        if (inImage.m_textureData.m_textureFlags.isInvertUVCoords())
-            theKeyProp.setInvertUVMap(inShaderKey, true);
-
         if (inImage.isImageTransformIdentity())
             theKeyProp.setIdentityTransform(inShaderKey, true);
 
@@ -406,10 +403,6 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             ioFirstImage = theImage;
         else
             ioNextImage->m_nextImage = theImage;
-
-        // assume offscreen renderer produces non-premultiplied image
-        if (inImage.m_textureData.m_textureFlags.isPreMultiplied())
-            theKeyProp.setPremultiplied(inShaderKey, true);
 
         ioNextImage = theImage;
 
