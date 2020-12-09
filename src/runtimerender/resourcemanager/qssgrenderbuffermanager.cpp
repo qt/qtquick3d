@@ -91,35 +91,41 @@ QSSGBufferManager::~QSSGBufferManager()
     clear();
 }
 
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
-                                                              bool inForceScanForTransparency,
-                                                              MipMode inMipMode)
+QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
+                                                          bool inForceScanForTransparency,
+                                                          MipMode inMipMode)
 {
-    QSSGRenderImageTextureData newImage;
+    QSSGRenderImageTexture result;
     if (image->m_qsgTexture) {
         QSGTexture *qsgTexture = image->m_qsgTexture;
-        // A QSGTexture from a textureprovider that is not a QSGDynamicTexture
-        // needs to be pushed to get its content updated (or even to create a
-        // QRhiTexture in the first place).
-        QRhi *rhi = context->rhi();
-        QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
-        if (qsgTexture->isAtlasTexture()) {
-            // This returns a non-atlased QSGTexture (or does nothing if the
-            // extraction has already been done), the ownership of which stays with
-            // the atlas. As we do not store (and do not own) qsgTexture below,
-            // apart from using it as a cache key and querying its QRhiTexture
-            // (which we again do not own), we can just pretend we got the
-            // non-atlased QSGTexture in the first place.
-            qsgTexture = qsgTexture->removedFromAtlas(rub);
+        if (qsgTexture->thread() == QThread::currentThread()) {
+            // A QSGTexture from a textureprovider that is not a QSGDynamicTexture
+            // needs to be pushed to get its content updated (or even to create a
+            // QRhiTexture in the first place).
+            QRhi *rhi = context->rhi();
+            QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+            if (qsgTexture->isAtlasTexture()) {
+                // This returns a non-atlased QSGTexture (or does nothing if the
+                // extraction has already been done), the ownership of which stays with
+                // the atlas. As we do not store (and do not own) qsgTexture below,
+                // apart from using it as a cache key and querying its QRhiTexture
+                // (which we again do not own), we can just pretend we got the
+                // non-atlased QSGTexture in the first place.
+                qsgTexture = qsgTexture->removedFromAtlas(rub);
+            }
+            qsgTexture->commitTextureOperations(rhi, rub);
+            context->commandBuffer()->resourceUpdate(rub);
+            auto theImage = qsgImageMap.find(qsgTexture);
+            if (theImage == qsgImageMap.end())
+                theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTexture());
+            theImage.value().m_texture = qsgTexture->rhiTexture();
+            theImage.value().m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
+            result = theImage.value();
+        } else {
+            qWarning("Cannot use QSGTexture (presumably from Texture.sourceItem) on a thread "
+                     "that is different from the Qt Quick render thread that created the QSGTexture. "
+                     "Consider switching to the 'basic' render loop or avoid using View3D.importScene between multiple windows.");
         }
-        qsgTexture->commitTextureOperations(rhi, rub);
-        context->commandBuffer()->resourceUpdate(rub);
-        auto theImage = qsgImageMap.find(qsgTexture);
-        if (theImage == qsgImageMap.end())
-            theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTextureData());
-        theImage.value().m_rhiTexture = qsgTexture->rhiTexture();
-        theImage.value().m_textureFlags.setHasTransparency(qsgTexture->hasAlphaChannel());
-        newImage = theImage.value();
 
     } else if (image->m_rawTextureData) {
 
@@ -133,7 +139,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
 
         const auto foundIt = imageMap.constFind({ image->m_imagePath, inMipMode });
         if (foundIt != imageMap.cend()) {
-            newImage = foundIt.value();
+            result = foundIt.value();
         } else {
             QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
             const auto &path = image->m_imagePath.path();
@@ -142,17 +148,17 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
                 ImageMap::iterator theImage = imageMap.find({ image->m_imagePath, inMipMode });
                 const bool notFound = theImage == imageMap.end();
                 if (notFound)
-                    theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTextureData());
+                    theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
                 const bool checkTransp = (notFound || inForceScanForTransparency);
 
                 if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), checkTransp, inMipMode))
-                    theImage.value() = QSSGRenderImageTextureData();
-                newImage = theImage.value();
+                    theImage.value() = QSSGRenderImageTexture();
+                result = theImage.value();
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
                 // again
                 // which could slow down the system quite a bit.
-                imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTextureData());
+                imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
                 qCWarning(WARNING, "Failed to load image: %s", qPrintable(path));
             }
         }
@@ -165,21 +171,21 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderIm
 
         addImageReference(image->m_imagePath, image);
     }
-    return newImage;
+    return result;
 }
 
-QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
+QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
 {
     Q_ASSERT(data);
 
     auto theImage = customTextureMap.find(data);
     if (theImage == customTextureMap.end()) {
-        theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
+        theImage = customTextureMap.insert(data, QSSGRenderImageTexture());
     } else {
         // release first
         releaseTextureData(data);
         // reinsert the placeholder since releaseTextureData removed from map
-        theImage = customTextureMap.insert(data, QSSGRenderImageTextureData());
+        theImage = customTextureMap.insert(data, QSSGRenderImageTexture());
     }
 
     QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
@@ -187,7 +193,7 @@ QSSGRenderImageTextureData QSSGBufferManager::loadTextureData(QSSGRenderTextureD
         theLoadedTexture.reset(QSSGLoadedTexture::loadTextureData(data));
         theLoadedTexture->ownsData = false;
         if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), false, inMipMode))
-            theImage.value() = QSSGRenderImageTextureData();
+            theImage.value() = QSSGRenderImageTexture();
     }
 
     return theImage.value();
@@ -346,7 +352,7 @@ static const float cube[] = {
     1.0f, 0.0f,
 };
 
-bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData)
+bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture)
 {
     // The objective of this method is to take the equirectangular texture
     // provided by inImage and create a cubeMap that contains both pre-filtered
@@ -733,12 +739,12 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     }
     cb->debugMarkEnd();
 
-    outImageData->m_rhiTexture = preFilteredEnvCubeMap;
-    outImageData->m_mipmapCount = mipmapCount;
+    outTexture->m_texture = preFilteredEnvCubeMap;
+    outTexture->m_mipmapCount = mipmapCount;
     return true;
 }
 
-bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTextureData &textureData,
+bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
                                          const QSSGLoadedTexture *inTexture,
                                          bool inForceScanForTransparency,
                                          MipMode inMipMode)
@@ -754,10 +760,10 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTextureData &textureData
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
     if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
-        textureData.m_textureFlags.setRgbe8(true);
+        texture.m_flags.setRgbe8(true);
     if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->compressedData.isValid())) {
-        if (createEnvironmentMap(inTexture, &textureData)) {
-            context->registerTexture(textureData.m_rhiTexture);
+        if (createEnvironmentMap(inTexture, &texture)) {
+            context->registerTexture(texture.m_texture);
             return true;
         }
     } else if (inTexture->compressedData.isValid()) {
@@ -819,8 +825,8 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTextureData &textureData
     tex->create();
 
     if (checkTransp)
-        textureData.m_textureFlags.setHasTransparency(hasTransp);
-    textureData.m_rhiTexture = tex;
+        texture.m_flags.setHasTransparency(hasTransp);
+    texture.m_texture = tex;
 
     QRhiTextureUploadDescription uploadDescription;
     uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
@@ -830,9 +836,9 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTextureData &textureData
         rub->generateMips(tex);
     context->commandBuffer()->resourceUpdate(rub);
 
-    textureData.m_mipmapCount = mipmapCount;
+    texture.m_mipmapCount = mipmapCount;
 
-    context->registerTexture(textureData.m_rhiTexture); // owned by the QSSGRhiContext from here on
+    context->registerTexture(texture.m_texture); // owned by the QSSGRhiContext from here on
     return true;
 }
 
@@ -1025,7 +1031,7 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
 {
     const auto textureDataItr = customTextureMap.constFind(textureData);
     if (textureDataItr != customTextureMap.cend()) {
-        auto rhiTexture = textureDataItr.value().m_rhiTexture;
+        auto rhiTexture = textureDataItr.value().m_texture;
         if (rhiTexture)
             context->releaseTexture(rhiTexture);
         customTextureMap.erase(textureDataItr);
@@ -1046,7 +1052,7 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
 {
     const auto imageItr = imageMap.constFind(key);
     if (imageItr != imageMap.cend()) {
-        auto rhiTexture = imageItr.value().m_rhiTexture;
+        auto rhiTexture = imageItr.value().m_texture;
         if (rhiTexture)
             context->releaseTexture(rhiTexture);
         imageMap.erase(imageItr);
@@ -1057,7 +1063,7 @@ void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
 {
     for (auto it = imageMap.begin(); it != imageMap.end(); ) {
         if (it.key().path == sourcePath) {
-            auto rhiTexture = it.value().m_rhiTexture;
+            auto rhiTexture = it.value().m_texture;
             if (rhiTexture)
                 context->releaseTexture(rhiTexture);
             it = imageMap.erase(it);

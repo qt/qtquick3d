@@ -94,9 +94,14 @@ void QSSGRenderTextureData::setHasTransparency(bool hasTransparency)
     m_dirty = true;
 }
 
-QSSGRenderImageTextureData QSSGRenderTextureData::createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager, QSSGBufferManager::MipMode mipMode)
+QSSGRenderImageTexture QSSGRenderTextureData::createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                             QSSGBufferManager::MipMode mipMode)
 {
     if (m_dirty) {
+        // The dirty flag is important also because loadTextureData destroys
+        // and creates a new QRhiTexture every time, so we do not want to enter
+        // it unless absolutely necessary.
+        m_dirty = false;
         m_texture = bufferManager->loadTextureData(this, mipMode);
         // release CPU texture data
         // ### make sure that we dont try to use the raw data again unless it is reset

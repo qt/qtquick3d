@@ -47,11 +47,14 @@
 
 QT_BEGIN_NAMESPACE
 
-/**
- *	Some precomputed information on a given image.  When generating a renderable, the shader
- *	generator goes through all the possible images on a material and for each valid image
- *	computes this renderable image and attaches it to the renderable.
- */
+// Some precomputed information on a given image. When generating a renderable,
+// the layer preparation step goes through all the possible images on a
+// material (which includes all regular texture maps, but does not include
+// light probes or custom texture properties for custom materials), and for
+// each valid image it generates, if not already done, the QRhiTexture (for the
+// current scene's window, and so render thread), and calculates some other
+// data and flags.
+
 struct QSSGRenderableImage
 {
     enum class Type : quint8
@@ -73,12 +76,13 @@ struct QSSGRenderableImage
         Metalness,
         Occlusion
     };
-    QSSGRenderImage &m_image;
+    const QSSGRenderImage &m_imageNode;
+    QSSGRenderImageTexture m_texture;
     QSSGRenderableImage *m_nextImage;
     Type m_mapType;
     bool uvCoordsGenerated = false;
-    QSSGRenderableImage(Type inMapType, QSSGRenderImage &inImage)
-        : m_image(inImage), m_nextImage(nullptr),  m_mapType(inMapType)
+    QSSGRenderableImage(Type inMapType, const QSSGRenderImage &inImageNode, const QSSGRenderImageTexture &inTexture)
+        : m_imageNode(inImageNode), m_texture(inTexture), m_nextImage(nullptr),  m_mapType(inMapType)
     {
     }
 };

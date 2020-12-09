@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_IMAGE_TEXTURE_DATA_H
-#define QSSG_RENDER_IMAGE_TEXTURE_DATA_H
+#ifndef QSSG_RENDER_IMAGE_TEXTURE_H
+#define QSSG_RENDER_IMAGE_TEXTURE_H
 
 //
 //  W A R N I N G
@@ -46,26 +46,26 @@ QT_BEGIN_NAMESPACE
 
 class QRhiTexture;
 
-enum class QSSGImageTextureFlagValue
+enum class QSSGRenderImageTextureFlagValue
 {
     HasTransparency = 1 << 0,
     RGBE8 = 1 << 1
 };
 
-struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
+struct QSSGRenderImageTextureFlags : public QFlags<QSSGRenderImageTextureFlagValue>
 {
-    bool hasTransparency() const { return this->operator&(QSSGImageTextureFlagValue::HasTransparency); }
-    void setHasTransparency(bool inValue) { setFlag(QSSGImageTextureFlagValue::HasTransparency, inValue); }
+    bool hasTransparency() const { return this->operator&(QSSGRenderImageTextureFlagValue::HasTransparency); }
+    void setHasTransparency(bool inValue) { setFlag(QSSGRenderImageTextureFlagValue::HasTransparency, inValue); }
 
-    bool isRgbe8() const { return this->operator&(QSSGImageTextureFlagValue::RGBE8); }
-    void setRgbe8(bool inValue) { setFlag(QSSGImageTextureFlagValue::RGBE8, inValue); }
+    bool isRgbe8() const { return this->operator&(QSSGRenderImageTextureFlagValue::RGBE8); }
+    void setRgbe8(bool inValue) { setFlag(QSSGRenderImageTextureFlagValue::RGBE8, inValue); }
 };
 
-struct QSSGRenderImageTextureData
+struct QSSGRenderImageTexture
 {
-    QRhiTexture *m_rhiTexture = nullptr; // not owned
+    QRhiTexture *m_texture = nullptr; // not owned
     int m_mipmapCount = 0;
-    QSSGRenderImageTextureFlags m_textureFlags;
+    QSSGRenderImageTextureFlags m_flags;
 };
 
 QT_END_NAMESPACE

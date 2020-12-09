@@ -44,7 +44,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderimagetexturedata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimagetexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
@@ -77,10 +78,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderGraphObject *m_parent = nullptr;
 
     QSSGRenderPath m_imagePath;
+    // The QSGTexture (from sourceItem) is not sharable between Qt Quick render
+    // threads, when the threaded render loop is in use. That's why we allow
+    // this exception here; the (per-QQuickWindow, and so per-render-thread)
+    // BufferManager will refuse to use this if the threads don't match.
     QSGTexture *m_qsgTexture = nullptr; // overrides m_imagePath and m_rawTextureData when non-null
     QSSGRenderTextureData *m_rawTextureData = nullptr; // overrides m_imagePath and m_qsgTexture when non-null
-
-    QSSGRenderImageTextureData m_textureData;
 
     Flags m_flags;
 
@@ -106,7 +109,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderImage();
     ~QSSGRenderImage();
 
-    bool clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager, bool forIbl = false);
+    QSSGRenderImageTexture updateTexture(const QSSGRef<QSSGBufferManager> &inBufferManager,
+                                         const QSSGBufferManager::MipMode *mipMode = nullptr);
+    bool clearDirty();
     void calculateTextureTransform();
     bool isImageTransformIdentity() const;
 };

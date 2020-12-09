@@ -247,14 +247,14 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 const int samplerHint = int(renderableImage->m_mapType);
                 int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
                 if (samplerBinding >= 0) {
-                    QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
+                    QRhiTexture *texture = renderableImage->m_texture.m_texture;
                     if (samplerBinding >= 0 && texture) {
                         const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                        QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_image.m_minFilterType),
-                                                                 toRhi(renderableImage->m_image.m_magFilterType),
-                                                                 mipmapped ? toRhi(renderableImage->m_image.m_mipFilterType) : QRhiSampler::None,
-                                                                 toRhi(renderableImage->m_image.m_horizontalTilingMode),
-                                                                 toRhi(renderableImage->m_image.m_verticalTilingMode) });
+                        QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
+                                                                 toRhi(renderableImage->m_imageNode.m_magFilterType),
+                                                                 mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                                                                 toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                                                                 toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
                         bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
                     }
                 } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
@@ -334,13 +334,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         const QSSGRenderCustomMaterial &material(renderable.material);
         QSSGCustomMaterialSystem &customMaterialSystem(*renderable.generator->contextInterface()->customMaterialSystem().data());
 
-        if (!inData.layer.lightProbe && renderable.material.m_iblProbe) {
-            inData.setShaderFeature(QSSGShaderDefines::LightProbe,
-                                    renderable.material.m_iblProbe->m_textureData.m_rhiTexture != nullptr);
-        } else if (inData.layer.lightProbe) {
-            inData.setShaderFeature(QSSGShaderDefines::LightProbe,
-                                    inData.layer.lightProbe->m_textureData.m_rhiTexture != nullptr);
-        }
+        inData.setShaderFeature(QSSGShaderDefines::LightProbe, inData.layer.lightProbe || renderable.material.m_iblProbe);
+
         customMaterialSystem.rhiPrepareRenderable(ps, renderable, inData.getShaderFeatureSet(),
                                                   material, inData, renderPassDescriptor, samples);
     } else {
@@ -1454,7 +1449,11 @@ void QSSGLayerRenderData::rhiPrepare()
         if (layer.background == QSSGRenderLayer::Background::SkyBox) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-            QRhiTexture *texture = layer.lightProbe->m_textureData.m_rhiTexture;
+            const QSSGBufferManager::MipMode iblMipMode = QSSGBufferManager::MipModeBsdf;
+            const QSSGRenderImageTexture lightProbeTexture =
+                    layer.lightProbe->updateTexture(renderer->contextInterface()->bufferManager(), &iblMipMode);
+            layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
+
             QSSGRhiShaderResourceBindingList bindings;
 
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
@@ -1463,7 +1462,7 @@ void QSSGLayerRenderData::rhiPrepare()
             const int ubufSize = 3 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 3x mat4 + 2 floats
             bindings.addTexture(samplerBinding,
                                 QRhiShaderResourceBinding::FragmentStage,
-                                texture, sampler);
+                                lightProbeTexture.m_texture, sampler);
 
             QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
 
@@ -1648,8 +1647,7 @@ void QSSGLayerRenderData::rhiRender()
         if (layer.background == QSSGRenderLayer::Background::SkyBox
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch))
         {
-            const bool isRGBE = layer.lightProbe->m_textureData.m_textureFlags.isRgbe8();
-            auto shaderPipeline = renderer->getRhiSkyBoxShader(layer.tonemapMode, isRGBE);
+            auto shaderPipeline = renderer->getRhiSkyBoxShader(layer.tonemapMode, layer.skyBoxIsRgbe8);
             Q_ASSERT(shaderPipeline);
             QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
             ps->shaderPipeline = shaderPipeline.data();
