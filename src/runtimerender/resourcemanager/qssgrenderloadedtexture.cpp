@@ -596,11 +596,9 @@ bool QSSGLoadedTexture::scanForTransparency() const
     case QSSGRenderTextureFormat::RGB32F:
     case QSSGRenderTextureFormat::RGBA16F:
     case QSSGRenderTextureFormat::RGBA32F:
-        // PKC TODO : For now, since IBL will be the main consumer, we'll just pretend there's no
-        // alpha.
-        // Need to do a proper scan down the line, but doing it for floats is a little different
-        // from
-        // integer scans.
+        // TODO : For now, since IBL will be the main consumer, we'll just
+        // pretend there's no alpha. Need to do a proper scan down the line,
+        // but doing it for floats is a little different from integer scans.
         return false;
     default:
         break;
