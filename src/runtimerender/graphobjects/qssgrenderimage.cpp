@@ -108,7 +108,4 @@ bool QSSGRenderImage::isImageTransformIdentity() const
     return m_textureTransform.isIdentity();
 }
 
-QSSGRenderImageTextureData::QSSGRenderImageTextureData() = default;
-QSSGRenderImageTextureData::~QSSGRenderImageTextureData() = default;
-
 QT_END_NAMESPACE
