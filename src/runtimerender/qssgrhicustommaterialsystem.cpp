@@ -395,14 +395,14 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             const int samplerHint = int(renderableImage->m_mapType);
             int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
             if (samplerBinding >= 0) {
-                QRhiTexture *texture = renderableImage->m_image.m_textureData.m_rhiTexture;
+                QRhiTexture *texture = renderableImage->m_texture.m_texture;
                 if (samplerBinding >= 0 && texture) {
                     const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                    QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_image.m_minFilterType),
-                                                             toRhi(renderableImage->m_image.m_magFilterType),
-                                                             mipmapped ? toRhi(renderableImage->m_image.m_mipFilterType) : QRhiSampler::None,
-                                                             toRhi(renderableImage->m_image.m_horizontalTilingMode),
-                                                             toRhi(renderableImage->m_image.m_verticalTilingMode) });
+                    QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
+                                                             toRhi(renderableImage->m_imageNode.m_magFilterType),
+                                                             mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                                                             toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                                                             toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
                     samplerBindingsSpecified.setBit(samplerBinding);
                     bindings.addTexture(samplerBinding,
                                         VISIBILITY_ALL,
@@ -488,11 +488,11 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                 mipMode = QSSGBufferManager::MipModeGenerated;
             // ### would we want MipModeBsdf in some cases?
 
-            QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image, false, mipMode);
-            if (theTextureData.m_rhiTexture) {
+            const QSSGRenderImageTexture texture = image->updateTexture(theBufferManager, &mipMode);
+            if (texture.m_texture) {
                 const QSSGRhiTexture t = {
                     inPropertyName,
-                    theTextureData.m_rhiTexture,
+                    texture.m_texture,
                     { toRhi(textureProperty->minFilterType),
                       toRhi(textureProperty->magFilterType),
                       textureProperty->mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty->mipFilterType) : QRhiSampler::None,
@@ -501,7 +501,6 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                 };
                 shaderPipeline->addExtraTexture(t);
             }
-            image->m_textureData = theTextureData;
         }
     } else {
         shaderPipeline->setUniformValue(ubufData, inPropertyName, propertyValue, inPropertyType);

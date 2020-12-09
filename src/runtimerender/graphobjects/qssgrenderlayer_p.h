@@ -184,6 +184,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // references to objects owned by the QSSGRhiContext
     QRhiShaderResourceBindings *skyBoxSrb = nullptr;
     QVarLengthArray<QRhiShaderResourceBindings *, 4> item2DSrbs;
+    bool skyBoxIsRgbe8 = false;
 
     QSSGRenderLayer();
     ~QSSGRenderLayer();

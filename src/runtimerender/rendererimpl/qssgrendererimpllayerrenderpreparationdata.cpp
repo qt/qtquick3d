@@ -116,11 +116,6 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         maybeQueueNodeForRender(theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex);
 }
 
-static inline bool hasValidLightProbe(QSSGRenderImage *inLightProbeImage)
-{
-    return inLightProbeImage && inLightProbeImage->m_textureData.m_rhiTexture;
-}
-
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
     : firstImage(nullptr), opacity(1.0f), materialKey(inKey), dirty(false)
 {
@@ -310,8 +305,7 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
     const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
     renderer->defaultMaterialShaderKeyProperties().m_hasLighting.setValue(theGeneratedKey, lighting);
     if (lighting) {
-        const bool lightProbe = layer.lightProbe && layer.lightProbe->m_textureData.m_rhiTexture;
-        renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbe);
+        renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, layer.lightProbe != nullptr);
 
         quint32 numLights = quint32(lights.size());
         Q_ASSERT(numLights <= QSSGShaderDefaultMaterialKeyProperties::LightCount);
@@ -346,16 +340,27 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
     const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
 
-    if (inImage.clearDirty(bufferManager))
+    if (inImage.clearDirty())
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
-    if (inImage.m_textureData.m_rhiTexture) {
-        if (inImage.m_textureData.m_textureFlags.hasTransparency()
+
+    // This is where the QRhiTexture gets created, if not already done. Note
+    // that the bufferManager is per-QQuickWindow, and so per-render-thread.
+    // Hence using the same Texture (backed by inImage as the backend node) in
+    // multiple windows will work by each scene in each window getting its own
+    // QRhiTexture. And that's why the QSSGRenderImageTexture cannot be a
+    // member of the QSSGRenderImage. Conceptually this matches what we do for
+    // models (QSSGRenderModel -> QSSGRenderMesh retrieved from the
+    // bufferManager in each prepareModelForRender, etc.).
+    const QSSGRenderImageTexture texture = inImage.updateTexture(bufferManager);
+
+    if (texture.m_texture) {
+        if (texture.m_flags.hasTransparency()
             && (inMapType == QSSGRenderableImage::Type::Diffuse || inMapType == QSSGRenderableImage::Type::Opacity
                 || inMapType == QSSGRenderableImage::Type::Translucency)) {
             ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
 
-        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->contextInterface(), inMapType, inImage);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->contextInterface(), inMapType, inImage, texture);
         QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
 
         theKeyProp.setEnabled(inShaderKey, true);
@@ -379,7 +384,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
 
         //### TODO: More formats
-        switch (inImage.m_textureData.m_rhiTexture->format()) {
+        switch (texture.m_texture->format()) {
         case QRhiTexture::Format::RED_OR_ALPHA8:
             hasA = !renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
             break;
@@ -518,10 +523,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 //        renderer->prepareImageForIbl(*theMaterial->iblProbe);
 //    }
 
-    if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey)) {
-        bool lightProbeValid = hasValidLightProbe(theMaterial->iblProbe);
-        setShaderFeature(QSSGShaderDefines::LightProbe, lightProbeValid);
-        renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, lightProbeValid);
+    if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
+        setShaderFeature(QSSGShaderDefines::LightProbe, true);
+        renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, true);
         // setShaderFeature(ShaderFeatureDefines::enableIblFov(),
         // m_Renderer.GetLayerRenderData()->m_Layer.m_ProbeFov < 180.0f );
     }
@@ -901,7 +905,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
                 if (theMaterial.m_iblProbe)
-                    checkLightProbeDirty(*theMaterial.m_iblProbe);
+                    theMaterial.m_iblProbe->clearDirty();
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->contextInterface(),
                                                                                      renderableFlags,
@@ -979,13 +983,6 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
     return wasDataDirty;
 }
 
-bool QSSGLayerRenderPreparationData::checkLightProbeDirty(QSSGRenderImage &inLightProbe)
-{
-    const QSSGRef<QSSGRenderContextInterface> &theContext(renderer->contextInterface());
-    const QSSGRef<QSSGBufferManager> &bufferManager = theContext->bufferManager();
-    return inLightProbe.clearDirty(bufferManager, true);
-}
-
 static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
 {
     // check if the node is parent of the lightScope
@@ -1057,6 +1054,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
         thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
 
         if (thePrepResult.isLayerVisible()) {
+            QSSGRenderImageTexture lightProbeTexture;
             if (layer.lightProbe) {
                 if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
                     // Choose on a format that makes sense for a light probe
@@ -1067,21 +1065,19 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                         layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBE8;
                 }
 
-                if (checkLightProbeDirty(*layer.lightProbe))
+                if (layer.lightProbe->clearDirty())
                     wasDataDirty = true;
-            }
 
-            bool lightProbeValid = hasValidLightProbe(layer.lightProbe);
+                const QSSGBufferManager::MipMode iblMipMode = QSSGBufferManager::MipModeBsdf;
+                lightProbeTexture = layer.lightProbe->updateTexture(renderer->contextInterface()->bufferManager(), &iblMipMode);
 
-            setShaderFeature(QSSGShaderDefines::LightProbe, lightProbeValid);
-            setShaderFeature(QSSGShaderDefines::IblOrientation, !layer.probeOrientation.isIdentity());
-            // By this point we will know what the actual texture format of the light probe is
-            // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
-            if (lightProbeValid &&
-                layer.lightProbe->m_textureData.m_rhiTexture &&
-                layer.lightProbe->m_textureData.m_textureFlags.isRgbe8())
-            {
-                setShaderFeature(QSSGShaderDefines::RGBELightProbe, true);
+                setShaderFeature(QSSGShaderDefines::LightProbe, true);
+                setShaderFeature(QSSGShaderDefines::IblOrientation, !layer.probeOrientation.isIdentity());
+
+                // By this point we will know what the actual texture format of the light probe is
+                // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
+                if (lightProbeTexture.m_flags.isRgbe8())
+                    setShaderFeature(QSSGShaderDefines::RGBELightProbe, true);
             }
 
             // ### TODO: Really this should only be done if renderableNodes is empty or dirty

@@ -263,10 +263,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                      QSSGLayerRenderPreparationResultFlags &ioFlags);
 
-    // returns true if this object will render something different than it rendered the last
-    // time.
     virtual void prepareForRender(const QSize &inViewportDimensions);
-    bool checkLightProbeDirty(QSSGRenderImage &inLightProbe);
     void setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue);
     const ShaderFeatureSetList &getShaderFeatureSet();
     size_t getShaderFeatureSetHash();

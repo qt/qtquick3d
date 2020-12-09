@@ -42,7 +42,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderimagetexturedata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimagetexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtCore/qsize.h>
@@ -68,13 +68,13 @@ public:
     bool hasTransparancy() const;
     void setHasTransparency(bool hasTransparency);
 
-    QSSGRenderImageTextureData createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager,
-                                              QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone);
+    QSSGRenderImageTexture createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager,
+                                          QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone);
 
 protected:
     Q_DISABLE_COPY(QSSGRenderTextureData)
 
-    QSSGRenderImageTextureData m_texture;
+    QSSGRenderImageTexture m_texture;
     QByteArray m_textureData;
     QSize m_size;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;

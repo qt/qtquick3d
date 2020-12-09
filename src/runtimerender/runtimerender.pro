@@ -18,7 +18,7 @@ HEADERS += \
     qssgrhicustommaterialsystem_p.h \
     qssgrenderdefaultmaterialshadergenerator_p.h \
     qssgrendererutil_p.h \
-    qssgrenderimagetexturedata_p.h \
+    qssgrenderimagetexture_p.h \
     qssgrenderinputstreamfactory_p.h \
     qssgrendermaterialshadergenerator_p.h \
     qssgrendermesh_p.h \

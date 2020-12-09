@@ -29,7 +29,6 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick/QSGTexture>
 
 QT_BEGIN_NAMESPACE
@@ -44,23 +43,23 @@ QSSGRenderImage::QSSGRenderImage()
 QSSGRenderImage::~QSSGRenderImage() = default;
 
 
-bool QSSGRenderImage::clearDirty(const QSSGRef<QSSGBufferManager> &inBufferManager, bool forIbl)
+QSSGRenderImageTexture QSSGRenderImage::updateTexture(const QSSGRef<QSSGBufferManager> &inBufferManager,
+                                                      const QSSGBufferManager::MipMode *mipMode)
 {
-    bool wasDirty = m_flags.testFlag(Flag::Dirty);
-    m_flags.setFlag(Flag::Dirty, false);
-
-    if (wasDirty) {
-        QSSGRenderImageTextureData newImage;
-        QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone;
-        if (forIbl)
-            mipMode = QSSGBufferManager::MipModeBsdf;
-        else if (m_generateMipmaps)
-            mipMode = QSSGBufferManager::MipModeGenerated;
-        newImage = inBufferManager->loadRenderImage(this, false, mipMode);
-        if (newImage.m_rhiTexture != m_textureData.m_rhiTexture)
-            m_textureData = newImage;
+    QSSGBufferManager::MipMode effectiveMipMode = QSSGBufferManager::MipModeNone;
+    if (mipMode) {
+        effectiveMipMode = *mipMode;
+    } else {
+        if (m_generateMipmaps)
+            effectiveMipMode = QSSGBufferManager::MipModeGenerated;
     }
+    return inBufferManager->loadRenderImage(this, false, effectiveMipMode);
+}
 
+bool QSSGRenderImage::clearDirty()
+{
+    const bool wasDirty = m_flags.testFlag(Flag::Dirty);
+    m_flags.setFlag(Flag::Dirty, false);
     if (m_flags.testFlag(Flag::TransformDirty)) {
         calculateTextureTransform();
         return true;

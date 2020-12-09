@@ -43,7 +43,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderimagetexturedata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderimagetexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
@@ -85,11 +85,11 @@ public:
     };
 
 private:
-    typedef QHash<ImageCacheKey, QSSGRenderImageTextureData> ImageMap;
-    typedef QHash<QSGTexture *, QSSGRenderImageTextureData> QSGImageMap;
+    typedef QHash<ImageCacheKey, QSSGRenderImageTexture> ImageMap;
+    typedef QHash<QSGTexture *, QSSGRenderImageTexture> QSGImageMap;
     typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
     typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
-    typedef QHash<QSSGRenderTextureData *, QSSGRenderImageTextureData> CustomTextureMap;
+    typedef QHash<QSSGRenderTextureData *, QSSGRenderImageTexture> CustomTextureMap;
 
     typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
     typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
@@ -130,10 +130,10 @@ public:
                       const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
     ~QSSGBufferManager();
 
-    QSSGRenderImageTextureData loadRenderImage(const QSSGRenderImage *image,
-                                               bool inForceScanForTransparency = false,
-                                               MipMode inMipMode = MipModeNone);
-    QSSGRenderImageTextureData loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
+    QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
+                                           bool inForceScanForTransparency = false,
+                                           MipMode inMipMode = MipModeNone);
+    QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
@@ -159,12 +159,12 @@ public:
     void commitBufferResourceUpdates();
 
 private:
-    bool createRhiTexture(QSSGRenderImageTextureData &textureData,
+    bool createRhiTexture(QSSGRenderImageTexture &texture,
                           const QSSGLoadedTexture *inTexture,
                           bool inForceScanForTransparency = false,
                           MipMode inMipMode = MipModeNone);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
-    bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTextureData *outImageData);
+    bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture);
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);

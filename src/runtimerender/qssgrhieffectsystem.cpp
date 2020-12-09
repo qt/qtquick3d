@@ -349,9 +349,8 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                         mipMode = QSSGBufferManager::MipModeGenerated;
                     // ### would we want MipModeBsdf in some cases?
 
-                    QSSGRenderImageTextureData theTextureData = theBufferManager->loadRenderImage(image, false, mipMode);
-
-                    if (theTextureData.m_rhiTexture) {
+                    const QSSGRenderImageTexture texture = image->updateTexture(theBufferManager, &mipMode);
+                    if (texture.m_texture) {
                         const QSSGRhiSamplerDescription desc{
                             toRhi(textureProperty.minFilterType),
                             toRhi(textureProperty.magFilterType),
@@ -359,10 +358,9 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                             toRhi(textureProperty.clampType),
                             toRhi(textureProperty.clampType)
                         };
-                        addTextureToShaderPipeline(textureProperty.name, theTextureData.m_rhiTexture, desc);
+                        addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
                         texAdded = true;
                     }
-                    image->m_textureData = theTextureData;
                 }
             }
             if (!texAdded) {
