@@ -171,6 +171,15 @@ QUrl QQuick3DTexture::source() const
     \note Currently there is no way to forward input events to the Item used as
     a texture source.
 
+    \note Using this property in a Texture that is referenced from multiple
+    windows is strongly discouraged. This includes usage via
+    \l{View3D::importScene}. As the source texture created by this property is
+    only accessible by one render thread, attempting to share it between
+    multiple QQuickWindow instances is going to fail, unless the \c basic
+    render loop of Qt Quick is used instead of the default \c threaded one. See
+    \l{Qt Quick Scene Graph} on more information about the Qt Quick render
+    loops.
+
     \sa source, textureData
 */
 QQuickItem *QQuick3DTexture::sourceItem() const
