@@ -66,17 +66,8 @@ struct QSSGRenderImageTextureData
     QRhiTexture *m_rhiTexture = nullptr; // not owned
     int m_mipmapCount = 0;
     QSSGRenderImageTextureFlags m_textureFlags;
-
-    QSSGRenderImageTextureData();
-    ~QSSGRenderImageTextureData();
-
-    bool hasTexture() const { return m_rhiTexture; }
-
-    bool operator!=(const QSSGRenderImageTextureData &inOther)
-    {
-        return m_rhiTexture != inOther.m_rhiTexture || m_textureFlags != inOther.m_textureFlags;
-    }
 };
+
 QT_END_NAMESPACE
 
 #endif
