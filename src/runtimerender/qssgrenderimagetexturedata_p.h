@@ -43,27 +43,19 @@
 //
 
 QT_BEGIN_NAMESPACE
-// forward declararion
+
 class QRhiTexture;
 
 enum class QSSGImageTextureFlagValue
 {
-    HasTransparency = 1,
-    InvertUVCoords = 1 << 1,
-    PreMultiplied = 1 << 2,
-    RGBE8 = 1 << 3
+    HasTransparency = 1 << 0,
+    RGBE8 = 1 << 1
 };
 
 struct QSSGRenderImageTextureFlags : public QFlags<QSSGImageTextureFlagValue>
 {
     bool hasTransparency() const { return this->operator&(QSSGImageTextureFlagValue::HasTransparency); }
     void setHasTransparency(bool inValue) { setFlag(QSSGImageTextureFlagValue::HasTransparency, inValue); }
-
-    bool isInvertUVCoords() const { return this->operator&(QSSGImageTextureFlagValue::InvertUVCoords); }
-    void setInvertUVCoords(bool inValue) { setFlag(QSSGImageTextureFlagValue::InvertUVCoords, inValue); }
-
-    bool isPreMultiplied() const { return this->operator&(QSSGImageTextureFlagValue::PreMultiplied); }
-    void setPreMultiplied(bool inValue) { setFlag(QSSGImageTextureFlagValue::PreMultiplied, inValue); }
 
     bool isRgbe8() const { return this->operator&(QSSGImageTextureFlagValue::RGBE8); }
     void setRgbe8(bool inValue) { setFlag(QSSGImageTextureFlagValue::RGBE8, inValue); }
