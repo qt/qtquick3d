@@ -159,10 +159,6 @@ public:
     void commitBufferResourceUpdates();
 
 private:
-    QSSGRenderImageTextureData loadRenderImage(const QSSGRenderPath &inImagePath,
-                                               const QSSGLoadedTexture *inTexture,
-                                               bool inForceScanForTransparency = false,
-                                               MipMode inMipMode = MipModeNone);
     bool loadRenderImage(QSSGRenderImageTextureData &textureData,
                          const QSSGLoadedTexture *inTexture,
                          bool inForceScanForTransparency = false,

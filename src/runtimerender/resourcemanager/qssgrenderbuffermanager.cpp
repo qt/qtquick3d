@@ -710,22 +710,6 @@ bool QSSGBufferManager::loadRenderImageEnvironmentMap(const QSSGLoadedTexture *i
     return true;
 }
 
-QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPath &inImagePath,
-                                                              const QSSGLoadedTexture *inLoadedImage,
-                                                              bool inForceScanForTransparency,
-                                                              MipMode inMipMode)
-{
-    ImageMap::iterator theImage = imageMap.find({ inImagePath, inMipMode });
-    const bool notFound = theImage == imageMap.end();
-    if (notFound)
-        theImage = imageMap.insert({ inImagePath, inMipMode }, QSSGRenderImageTextureData());
-    const bool checkTransp = (notFound || inForceScanForTransparency);
-
-    if (!loadRenderImage(theImage.value(), inLoadedImage, checkTransp, inMipMode))
-        theImage.value() = QSSGRenderImageTextureData();
-    return theImage.value();
-}
-
 bool QSSGBufferManager::loadRenderImage(QSSGRenderImageTextureData &textureData,
                                         const QSSGLoadedTexture *inTexture,
                                         bool inForceScanForTransparency,
@@ -884,8 +868,17 @@ QSSGRenderImageTextureData QSSGBufferManager::loadRenderImage(const QSSGRenderPa
             }
         }
 
-        if (Q_LIKELY(theLoadedImage))
-            return loadRenderImage(inImagePath, theLoadedImage.data(), inForceScanForTransparency, inMipMode);
+        if (Q_LIKELY(theLoadedImage)) {
+            ImageMap::iterator theImage = imageMap.find({ inImagePath, inMipMode });
+            const bool notFound = theImage == imageMap.end();
+            if (notFound)
+                theImage = imageMap.insert({ inImagePath, inMipMode }, QSSGRenderImageTextureData());
+            const bool checkTransp = (notFound || inForceScanForTransparency);
+
+            if (!loadRenderImage(theImage.value(), theLoadedImage.data(), checkTransp, inMipMode))
+                theImage.value() = QSSGRenderImageTextureData();
+            return theImage.value();
+        }
 
         // We want to make sure that bad path fails once and doesn't fail over and over
         // again
