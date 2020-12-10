@@ -103,18 +103,24 @@ template<> constexpr QmlType getTypeId<QQuick3DModel>() { return QmlType::Model;
 }
 
 using QmlTypeNames = QHash<QString, TypeInfo::QmlType>;
-Q_GLOBAL_STATIC_WITH_ARGS(QmlTypeNames, s_typeMap, ({{TypeInfo::typeStringTable[TypeInfo::View3D], TypeInfo::View3D},
-                                                     {TypeInfo::typeStringTable[TypeInfo::SceneEnvironment], TypeInfo::SceneEnvironment},
-                                                     {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
-                                                     {TypeInfo::typeStringTable[TypeInfo::DefaultMaterial], TypeInfo::DefaultMaterial},
-                                                     {TypeInfo::typeStringTable[TypeInfo::CustomMaterial], TypeInfo::CustomMaterial},
-                                                     {TypeInfo::typeStringTable[TypeInfo::DirectionalLight], TypeInfo::DirectionalLight},
-                                                     {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
-                                                     {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
-                                                     {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
-                                                     {TypeInfo::typeStringTable[TypeInfo::TextureInput], TypeInfo::TextureInput},
-                                                     {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model}
-                                                    }))
+
+QmlTypeNames baseTypeMap()
+{
+    return {{TypeInfo::typeStringTable[TypeInfo::View3D], TypeInfo::View3D},
+        {TypeInfo::typeStringTable[TypeInfo::SceneEnvironment], TypeInfo::SceneEnvironment},
+        {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
+        {TypeInfo::typeStringTable[TypeInfo::DefaultMaterial], TypeInfo::DefaultMaterial},
+        {TypeInfo::typeStringTable[TypeInfo::CustomMaterial], TypeInfo::CustomMaterial},
+        {TypeInfo::typeStringTable[TypeInfo::DirectionalLight], TypeInfo::DirectionalLight},
+        {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
+        {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
+        {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
+        {TypeInfo::typeStringTable[TypeInfo::TextureInput], TypeInfo::TextureInput},
+        {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model}
+       };
+}
+
+Q_GLOBAL_STATIC(QmlTypeNames, s_typeMap)
 
 struct Context
 {
@@ -1416,6 +1422,9 @@ static int parseQmlData(const QByteArray &code, Context &ctx)
 
 int MaterialParser::parseQmlData(const QByteArray &code, const QString &fileName, MaterialParser::SceneData &sceneData)
 {
+    // set initial type map
+    *s_typeMap = baseTypeMap();
+
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
 
@@ -1436,6 +1445,9 @@ int MaterialParser::parseQmlData(const QByteArray &code, const QString &fileName
 
 int MaterialParser::parseQmlFiles(const QVector<QString> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput)
 {
+    // set initial type map
+    *s_typeMap = baseTypeMap();
+
     int ret = 0;
 
     if (filePaths.isEmpty()) {
