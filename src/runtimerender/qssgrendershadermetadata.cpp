@@ -97,8 +97,8 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             break;
 
         const int size = jsonEnd - jsonStart;
-        // /*{"uniforms":{"name":"x","type":"y"}}*/ => 40
-        if (size < 40) {
+        // /*{"inputs":[]}*/ => 17
+        if (size < 17) {
             qWarning("Shader metadata section found, but content to small to be valid!");
             break;
         }
