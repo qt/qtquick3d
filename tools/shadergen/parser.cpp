@@ -974,6 +974,28 @@ static QQuick3DAbstractLight *buildLight(const QQmlJS::AST::UiObjectDefinition &
     return nullptr;
 }
 
+
+template <typename T>
+static void updateProperty(Context &ctx, T type, QStringView propName)
+{
+    if (ctx.property.target) {
+        if (ctx.dbgprint)
+            printf("Updating property %s on %s\n", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
+        const auto &target = ctx.property.target;
+        if (ctx.property.isMember || target->metaObject()->indexOfProperty(propName.toLatin1().constData()) != -1)
+            target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(type));
+    }
+}
+
+template <typename T>
+T *createType(Context &ctx, const QQmlJS::AST::UiObjectBinding &objectBinding, const QString &typeName, int &ret)
+{
+    auto &components = ctx.components;
+    const auto compIt = components.constFind(typeName);
+    const T *base = (compIt != components.cend()) ? qobject_cast<T *>(compIt->ptr) : nullptr;
+    return buildType(objectBinding, ctx, ret, base);
+}
+
 static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBinding, Context &ctx, int &ret)
 {
     if (ctx.dbgprint)
@@ -993,60 +1015,35 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
         switch (type) {
         case TypeInfo::SceneEnvironment:
         {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
-            if (QQuick3DSceneEnvironment *env = buildType(objectBinding, ctx, ret, base)) {
-                if (ctx.property.target) {
-                    if (ctx.dbgprint)
-                        printf("Updating property %s on %s\n", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
-                    const auto &target = ctx.property.target;
-                    const int idx = target->metaObject()->indexOfProperty(propName.toLatin1().constData());
-                    if (idx != -1)
-                        target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(env));
-                    else
-                        qWarning("Property %s not found on %s", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
+            if (ctx.property.targetType == TypeInfo::View3D) {
+                if (auto environment = createType<QQuick3DSceneEnvironment>(ctx, objectBinding, typeName, ret)) {
+                    auto viewport = qobject_cast<QQuick3DViewport *>(ctx.property.target);
+                    Q_ASSERT(viewport);
+                    viewport->setEnvironment(environment);
+                    handled = true;
                 }
             }
-            handled = true;
-            break;
         }
+            break;
         case TypeInfo::Texture:
         {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
-            if (QQuick3DTexture *tex = buildType(objectBinding, ctx, ret, base)) {
-                if (ctx.property.target) {
-                    if (ctx.dbgprint)
-                        printf("Updating property %s on %s\n", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
-                    const auto &target = ctx.property.target;
-                    if (ctx.property.isMember || target->metaObject()->indexOfProperty(propName.toLatin1().constData()) != -1)
-                        target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(tex));
-                }
+            if (auto tex = createType<QQuick3DTexture>(ctx, objectBinding, typeName, ret)) {
+                updateProperty(ctx, tex, propName);
                 ctx.sceneData.textures.append(tex);
             }
             handled = true;
-            break;
         }
+            break;
         case TypeInfo::TextureInput:
         {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DShaderUtilsTextureInput *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsTextureInput *>(compIt->ptr) : nullptr;
-            if (QQuick3DShaderUtilsTextureInput *texInput = buildType(objectBinding, ctx, ret, base)) {
-                if (ctx.property.target) {
-                    if (ctx.dbgprint)
-                        printf("Updating property %s on %s\n", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
-                    const auto &target = ctx.property.target;
-                    if (ctx.property.isMember || target->metaObject()->indexOfProperty(propName.toLatin1().constData()) != -1)
-                        target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(texInput));
-                }
+            auto texInput = createType<QQuick3DShaderUtilsTextureInput>(ctx, objectBinding, typeName, ret);
+            if (texInput && texInput->texture()) {
+                updateProperty(ctx, texInput, propName);
                 ctx.sceneData.textures.append(texInput->texture());
             }
             handled = true;
-            break;
         }
+            break;
         default:
             printf("Unhandled type\n");
             break;

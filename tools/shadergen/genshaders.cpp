@@ -187,7 +187,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     const auto &models = sceneData.models;
     for (const auto &model : models) {
         auto materialList = model->materials();
-        for (int i = 0; i != materialList.count(&materialList); ++i) {
+        for (int i = 0, e = materialList.count(&materialList); i != e; ++i) {
             auto mat = materialList.at(&materialList, i);
             QQuick3DObjectPrivate::get(mat)->sceneManager = sceneManager;
             auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
