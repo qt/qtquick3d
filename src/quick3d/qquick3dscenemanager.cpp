@@ -172,6 +172,7 @@ void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
     case QQuick3DObjectPrivate::Type::Lightmaps:
     case QQuick3DObjectPrivate::Type::Geometry:
     case QQuick3DObjectPrivate::Type::TextureData:
+    case QQuick3DObjectPrivate::Type::ModelInstance:
         // handle resource nodes
         updateDirtyResource(object);
         break;

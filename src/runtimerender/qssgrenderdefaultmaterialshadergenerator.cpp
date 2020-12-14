@@ -326,10 +326,11 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
                                        quint32 lightIdx,
                                        bool inShadowEnabled,
                                        QSSGRenderLight::Type inType,
-                                       const QSSGMaterialShaderGenerator::LightVariableNames &lightVarNames)
+                                       const QSSGMaterialShaderGenerator::LightVariableNames &lightVarNames,
+                                       const QSSGShaderDefaultMaterialKey &inKey)
 {
     if (inShadowEnabled) {
-        vertexShader.generateWorldPosition();
+        vertexShader.generateWorldPosition(inKey);
         const auto names = setupShadowMapVariableNames(lightIdx);
         fragmentShader.addInclude("shadowMapping.glsllib");
         if (inType == QSSGRenderLight::Type::Directional) {
@@ -397,6 +398,11 @@ const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
 const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
 {
     return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout ivec4 JOINTS, inout vec4 WEIGHTS, inout vec4 COLOR";
+}
+
+const char *QSSGMaterialShaderGenerator::vertexInstancedMainArgumentList()
+{
+    return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout ivec4 JOINTS, inout vec4 WEIGHTS, inout vec4 COLOR, inout mat4 INSTANCE_MODEL_MATRIX, inout mat4 INSTANCE_MODELVIEWPROJECTION_MATRIX";
 }
 
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
@@ -567,13 +573,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     if (hasLighting || hasCustomFrag) {
         // Do not move these three. These varyings are exposed to custom material shaders too.
-        vertexShader.generateViewVector();
+        vertexShader.generateViewVector(inKey);
         if (keyProps.m_usesProjectionMatrix.getValue(inKey))
             fragmentShader.addUniform("qt_projectionMatrix", "mat4");
         if (keyProps.m_usesInverseProjectionMatrix.getValue(inKey))
             fragmentShader.addUniform("qt_inverseProjectionMatrix", "mat4");
         vertexShader.generateWorldNormal(inKey);
-        vertexShader.generateWorldPosition();
+        vertexShader.generateWorldPosition(inKey);
 
         fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
         if (isDoubleSided) {
@@ -616,7 +622,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateDepth();
 
     if (isCubeShadowPass)
-        vertexShader.generateShadowWorldPosition();
+        vertexShader.generateShadowWorldPosition(inKey);
 
     if (hasImage && !isDepthPass && !isOrthoShadowPass && !isCubeShadowPass) {
         fragmentShader.append("    vec3 qt_uTransform;");
@@ -741,7 +747,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     if (hasLighting) {
         if (specularLightingEnabled) {
-            vertexShader.generateViewVector();
+            vertexShader.generateViewVector(inKey);
             fragmentShader.addUniform("qt_material_properties", "vec4");
 
             if (materialAdapter->isPrincipled())
@@ -923,7 +929,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_lightAttenuation = 1.0;\n";
 
             if (isDirectional) {
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames, inKey);
                 fragmentShader << "    tmp_light_color = " << lightVarNames.lightColor << ".rgb * (1.0 - qt_metalnessAmount);\n";
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_directionalLightProcessor"))) {
@@ -961,7 +967,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     }
                 }
             } else {
-                vertexShader.generateWorldPosition();
+                vertexShader.generateWorldPosition(inKey);
 
                 lightVarNames.relativeDirection = lightVarPrefix;
                 lightVarNames.relativeDirection.append("_relativeDirection");
@@ -985,7 +991,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << "    if (" << lightVarNames.spotAngle << " > " << lightVarNames.lightConeAngle << ") {\n";
                 }
 
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames, inKey);
 
                 fragmentShader.addFunction("calculatePointLightAttenuation");
 
@@ -1332,12 +1338,20 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders->setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     }
 
-    const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
-    shaders->setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
+    const bool usesInstancing = inProperties.m_usesInstancing.getValue(inKey);
+    if (!usesInstancing) {
+        const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
+        shaders->setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
 
-    shaders->setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
-                        QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
-
+        shaders->setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
+                            QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+    } else {
+        // Instanced calls have to calculate MVP and normalMatrix in the vertex shader
+        QMatrix4x4 viewProj;
+        inCamera.calculateViewProjectionMatrix(viewProj);
+        viewProj = clipSpaceCorrMatrix * viewProj;
+        shaders->setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
+    }
     shaders->setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     // Skinning

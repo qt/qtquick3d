@@ -6,6 +6,7 @@ HEADERS += \
     $$PWD/qssgrendergeometry_p.h \
     $$PWD/qssgrendergraphobject_p.h \
     $$PWD/qssgrenderimage_p.h \
+    $$PWD/qssgrenderinstancetable_p.h \
     $$PWD/qssgrenderlayer_p.h \
     $$PWD/qssgrenderlight_p.h \
     $$PWD/qssgrenderlightmaps_p.h \

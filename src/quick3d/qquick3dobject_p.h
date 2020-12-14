@@ -83,6 +83,7 @@ public:
         Skeleton, // its type is Node but it will be treated as a Resource
         TextureData, // Resource
         RenderPlugin, // Not used
+        ModelInstance, // Resource
         LastKnownGraphObjectType,
     };
 

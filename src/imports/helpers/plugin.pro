@@ -18,14 +18,16 @@ OTHER_FILES += $$QML_FILES
 
 SOURCES += \
     plugin.cpp \
-    gridgeometry.cpp
+    gridgeometry.cpp \
+    randominstancing.cpp
 
 DESTFILES += qmldir
 
 load(qml_plugin)
 
 HEADERS += \
-    gridgeometry_p.h
+    gridgeometry_p.h \
+    randominstancing_p.h
 
 QMLTYPES_FILENAME = plugins.qmltypes
 QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick3D/Helpers

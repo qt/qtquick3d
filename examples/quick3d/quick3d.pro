@@ -16,6 +16,8 @@ SUBDIRS += \
     quickitems \
     customgeometry \
     customeffect \
+    custominstancing \
+    instancing \
     skinning \
     offlineshaders \
     submeshes \

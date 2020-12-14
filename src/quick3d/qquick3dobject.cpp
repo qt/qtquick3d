@@ -878,6 +878,7 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::Geometry:
     case Type::Skeleton:
     case Type::TextureData:
+    case Type::ModelInstance:
         return true;
     default:
         return false;

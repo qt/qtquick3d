@@ -691,6 +691,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyVertexAttribute m_vertexAttributes;
     QSSGShaderKeyBoolean m_usesFloatJointIndices;
     qsizetype m_stringBufferSizeHint = 0;
+    QSSGShaderKeyBoolean m_usesInstancing;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -710,6 +711,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_alphaMode("alphaMode")
         , m_vertexAttributes("vertexAttributes")
         , m_usesFloatJointIndices("usesFloatJointIndices")
+        , m_usesInstancing("usesInstancing")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -858,6 +860,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_alphaMode);
         inVisitor.visit(m_vertexAttributes);
         inVisitor.visit(m_usesFloatJointIndices);
+        inVisitor.visit(m_usesInstancing);
     }
 
     struct OffsetVisitor

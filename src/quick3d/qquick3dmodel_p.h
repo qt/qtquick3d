@@ -44,6 +44,7 @@
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3dmaterial_p.h>
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
+#include <QtQuick3D/private/qquick3dinstancing_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
 
 #include <QtQml/QQmlListProperty>
@@ -51,6 +52,8 @@
 #include <QtCore/QVector>
 #include <QtCore/QList>
 #include <QtCore/QUrl>
+
+#include <QtGui/QVector4D>
 
 QT_BEGIN_NAMESPACE
 
@@ -73,6 +76,11 @@ public:
         m_minimum = bounds.m_minimum;
         m_maximum = bounds.m_maximum;
         return *this;
+    }
+
+    bool operator == (const QQuick3DBounds3 &other) const
+    {
+        return m_minimum == other.m_minimum && m_maximum == other.m_maximum;
     }
 
     QVector3D minimum() const
@@ -98,6 +106,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQmlListProperty<QQuick3DMaterial> materials READ materials)
     Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
     Q_PROPERTY(QQuick3DGeometry *geometry READ geometry WRITE setGeometry NOTIFY geometryChanged)
+    Q_PROPERTY(QQuick3DInstancing *instancing READ instancing WRITE setInstancing NOTIFY instancingChanged)
     Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
     Q_PROPERTY(QList<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION(1, 1))
@@ -120,6 +129,8 @@ public:
 
     QQmlListProperty<QQuick3DMaterial> materials();
 
+    QQuick3DInstancing * instancing() const;
+
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setCastsShadows(bool castsShadows);
@@ -131,6 +142,8 @@ public Q_SLOTS:
 
     void setBounds(const QVector3D &min, const QVector3D &max);
 
+    void setInstancing(QQuick3DInstancing * instancing);
+
 Q_SIGNALS:
     void sourceChanged();
     void castsShadowsChanged();
@@ -140,6 +153,7 @@ Q_SIGNALS:
     void skeletonChanged();
     void inverseBindPosesChanged();
     void boundsChanged();
+    void instancingChanged(QQuick3DInstancing * instancing);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -158,6 +172,7 @@ private:
         GeometryDirty =          0x00000010,
         SkeletonDirty =          0x00000020,
         PoseDirty =              0x00000040,
+        InstancesDirty =         0x00000080
     };
 
     QString translateSource();
@@ -181,8 +196,10 @@ private:
     QQuick3DBounds3 m_bounds;
     QQuick3DSkeleton *m_skeleton = nullptr;
     QList<QMatrix4x4> m_inverseBindPoses;
+    QQuick3DInstancing *m_instancing = nullptr;
     QMetaObject::Connection m_geometryConnection;
     QMetaObject::Connection m_skeletonConnection;
+    QMetaObject::Connection m_instancingConnection;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;

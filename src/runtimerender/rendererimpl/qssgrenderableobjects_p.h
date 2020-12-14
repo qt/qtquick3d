@@ -249,6 +249,7 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
     const QSSGRef<QSSGRenderer> &generator;
     const QSSGModelContext &modelContext;
     QSSGRenderSubset &subset;
+    QRhiBuffer *instanceBuffer = nullptr;
     float opacity;
 
     struct {

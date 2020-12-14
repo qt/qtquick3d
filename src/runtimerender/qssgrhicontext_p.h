@@ -79,7 +79,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 
     // Fills out inputLayout.attributes[].location based on
     // inputLayoutInputNames and the provided shader reflection info.
-    void bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders);
+    void bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders, int instanceBufferBinding = 0);
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
@@ -298,6 +298,14 @@ public:
         QVarLengthArray<ImageIndices, 16> imageIndices;
     } commonUniformIndices;
 
+    struct InstanceLocations {
+        int transform0 = -1;
+        int transform1 = -1;
+        int transform2 = -1;
+        int color = -1;
+        int data = -1;
+    } instanceLocations;
+
     enum class UniformFlag {
         Mat3 = 0x01
     };
@@ -346,6 +354,7 @@ public:
     const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
+    InstanceLocations instanceBufferLocations() const { return instanceLocations; }
 
 private:
     QSSGRhiContext &m_context;
@@ -356,6 +365,7 @@ private:
     QHash<QSSGRhiInputAssemblerState::InputSemantic, QShaderDescription::InOutVariable> m_vertexInputs;
     QHash<QByteArray, QShaderDescription::InOutVariable> m_combinedImageSamplers;
     int m_materialImageSamplerBindings[size_t(QSSGRhiSamplerBindingHints::BindingMapSize)];
+    int m_instBufSize = 0;
 
     QVarLengthArray<QSSGRhiShaderUniform, 32> m_uniforms; // members of the main (binding 0) uniform buffer
     QVarLengthArray<QSSGRhiShaderUniformArray, 8> m_uniformArrays;
@@ -643,6 +653,8 @@ inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) Q_DECL_NOT
 struct QSSGRhiDrawCallData
 {
     QRhiBuffer *ubuf = nullptr; // owned
+    QRhiBuffer *instanceBuf = nullptr; // owned
+    int instanceBufSerial = -1;
     QRhiShaderResourceBindings *srb = nullptr; // not owned
     QSSGRhiShaderResourceBindingList bindings;
     QRhiGraphicsPipeline *pipeline = nullptr; // not owned
@@ -652,6 +664,8 @@ struct QSSGRhiDrawCallData
     void reset() {
         delete ubuf;
         ubuf = nullptr;
+        delete instanceBuf;
+        instanceBuf = nullptr;
         srb = nullptr;
         pipeline = nullptr;
         pipelineRpDesc = nullptr;

@@ -121,7 +121,7 @@ QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRender
     return QRhiGraphicsPipeline::Triangles;
 }
 
-void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders)
+void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders, int instanceBufferBinding)
 {
     if (!shaders.vertexStage())
         return;
@@ -137,7 +137,38 @@ void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPip
             attrs.append(*it);
             attrs.last().setLocation(vertexInputVar->location);
         } // else the mesh has an input attribute that is not declared and used in the vertex shader - that's fine
+
         ++inputIndex;
+    }
+
+    // Add instance buffer input if necessary
+    if (instanceBufferBinding > 0) {
+        auto instanceBufferLocations = shaders.instanceBufferLocations();
+        // transform0
+        attrs.append(QRhiVertexInputAttribute(instanceBufferBinding,
+                                             instanceBufferLocations.transform0,
+                                             QRhiVertexInputAttribute::Float4,
+                                             0));
+        // transform1
+        attrs.append(QRhiVertexInputAttribute(instanceBufferBinding,
+                                             instanceBufferLocations.transform1,
+                                             QRhiVertexInputAttribute::Float4,
+                                             sizeof(float) * 4));
+        // transform2
+        attrs.append(QRhiVertexInputAttribute(instanceBufferBinding,
+                                             instanceBufferLocations.transform2,
+                                             QRhiVertexInputAttribute::Float4,
+                                             sizeof(float) * 4 * 2));
+        // color
+        attrs.append(QRhiVertexInputAttribute(instanceBufferBinding,
+                                             instanceBufferLocations.color,
+                                             QRhiVertexInputAttribute::Float4,
+                                             sizeof(float) * 4 * 3));
+        // data
+        attrs.append(QRhiVertexInputAttribute(instanceBufferBinding,
+                                             instanceBufferLocations.data,
+                                             QRhiVertexInputAttribute::Float4,
+                                             sizeof(float) * 4 * 4));
     }
 
     inputLayout.setAttributes(attrs.cbegin(), attrs.cend());
@@ -205,6 +236,16 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
                     m_vertexInputs[QSSGRhiInputAssemblerState::JointSemantic] = var;
                 else if (var.name == QSSGMeshUtilities::Mesh::getWeightAttrName())
                     m_vertexInputs[QSSGRhiInputAssemblerState::WeightSemantic] = var;
+                else if (var.name == "qt_instanceTransform0")
+                    instanceLocations.transform0 = var.location;
+                else if (var.name == "qt_instanceTransform1")
+                    instanceLocations.transform1 = var.location;
+                else if (var.name == "qt_instanceTransform2")
+                    instanceLocations.transform2 = var.location;
+                else if (var.name == "qt_instanceColor")
+                    instanceLocations.color = var.location;
+                else if (var.name == "qt_instanceData")
+                    instanceLocations.data = var.location;
                 else
                     qWarning("Ignoring vertex input %s in shader", var.name.constData());
             }

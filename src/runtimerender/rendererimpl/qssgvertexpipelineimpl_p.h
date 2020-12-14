@@ -156,7 +156,7 @@ struct QSSGMaterialVertexPipeline
         if (setCode(GenerationFlag::EnvMapReflection))
             return;
 
-        generateWorldPosition();
+        generateWorldPosition(inKey);
         generateWorldNormal(inKey);
         QSSGStageGeneratorBase &activeGenerator(activeStage());
         activeGenerator.addInclude("viewProperties.glsllib");
@@ -170,12 +170,14 @@ struct QSSGMaterialVertexPipeline
         fragment().append("    environment_map_reflection *= vec3( 0.5, 0.5, 0 );");
         fragment().append("    environment_map_reflection += vec3( 0.5, 0.5, 1.0 );");
     }
-    void generateViewVector()
+    void generateViewVector(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::ViewVector))
             return;
-        generateWorldPosition();
+
+        generateWorldPosition(inKey);
         activeStage().addUniform("qt_cameraPosition", "vec3");
+
 
         fragment() << "    vec3 qt_view_vector = normalize(qt_cameraPosition - qt_varWorldPos);\n";
     }
@@ -193,9 +195,9 @@ struct QSSGMaterialVertexPipeline
 
         if (hasCustomShadedMain || meshHasNormal) {
             addInterpolationParameter("qt_varNormal", "vec3");
-            doGenerateWorldNormal();
+            doGenerateWorldNormal(inKey);
         } else {
-            generateWorldPosition();
+            generateWorldPosition(inKey);
             fragment().append("    vec3 qt_varNormal = cross(dFdx(qt_varWorldPos), dFdy(qt_varWorldPos));");
         }
         fragment().append("    vec3 qt_world_normal = normalize(qt_varNormal);");
@@ -211,14 +213,18 @@ struct QSSGMaterialVertexPipeline
         fragment().append("    vec3 object_normal = normalize(qt_varObjectNormal);");
     }
 
-    void generateWorldPosition()
+    void generateWorldPosition(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::WorldPosition))
             return;
 
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varWorldPos", "vec3");
-        vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * qt_vertPosition).xyz;");
+        const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
+        if (!usesInstancing)
+            vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * qt_vertPosition).xyz;");
+        else
+            vertex().append("    vec3 qt_local_model_world_position = (qt_instancedModelMatrix * qt_vertPosition).xyz;");
 
         assignOutput("qt_varWorldPos", "qt_local_model_world_position");
     }
@@ -232,7 +238,7 @@ struct QSSGMaterialVertexPipeline
         vertex().append("    qt_varDepth = gl_Position.z / gl_Position.w;");
     }
 
-    void generateShadowWorldPosition()
+    void generateShadowWorldPosition(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::PerspDivWorldPos))
             return;
@@ -240,7 +246,11 @@ struct QSSGMaterialVertexPipeline
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varShadowWorldPos", "vec3");
 
-        vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * qt_vertPosition;");
+        const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
+        if (!usesInstancing)
+            vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * qt_vertPosition;");
+        else
+            vertex().append("    vec4 qt_shadow_world_tmp = qt_instancedModelMatrix * qt_vertPosition;");
         vertex().append("    qt_varShadowWorldPos = qt_shadow_world_tmp.xyz / qt_shadow_world_tmp.w;");
     }
 
@@ -256,12 +266,12 @@ struct QSSGMaterialVertexPipeline
         // since it is an abnormal case
         if (hasCustomShadedMain || meshHasTangent) {
             addInterpolationParameter("qt_varTangent", "vec3");
-            doGenerateVarTangent();
+            doGenerateVarTangent(inKey);
             fragment() << "    vec3 qt_tangent = normalize(qt_varTangent);\n";
 
             if (hasCustomShadedMain || meshHasBinormal) {
                 addInterpolationParameter("qt_varBinormal", "vec3");
-                doGenerateVarBinormal();
+                doGenerateVarBinormal(inKey);
                 fragment() << "    vec3 qt_binormal = normalize(qt_varBinormal);\n";
             } else {
                 fragment() << "    vec3 qt_binormal = vec3(0.0);\n";
@@ -277,8 +287,10 @@ struct QSSGMaterialVertexPipeline
             return;
 
         const bool meshHasColor = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Color, inKey);
+
         const bool usesVarColor = defaultMaterialShaderKeyProperties.m_usesVarColor.getValue(inKey);
-        if (hasCustomShadedMain || usesVarColor || meshHasColor) {
+        const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
+        if (hasCustomShadedMain || usesVarColor || meshHasColor || usesInstancing) {
             addInterpolationParameter("qt_varColor", "vec4");
             vertex().append("    qt_varColor = qt_vertColor;");
             fragment().append("    vec4 qt_vertColor = qt_varColor;\n");
@@ -353,9 +365,9 @@ struct QSSGMaterialVertexPipeline
     QSSGStageGeneratorBase &activeStage();
     void addInterpolationParameter(const QByteArray &inParamName, const QByteArray &inParamType);
 
-    void doGenerateWorldNormal();
-    void doGenerateVarTangent();
-    void doGenerateVarBinormal();
+    void doGenerateWorldNormal(const QSSGShaderDefaultMaterialKey &inKey);
+    void doGenerateVarTangent(const QSSGShaderDefaultMaterialKey &inKey);
+    void doGenerateVarBinormal(const QSSGShaderDefaultMaterialKey &inKey);
     bool hasAttributeInKey(QSSGShaderKeyVertexAttribute::VertexAttributeBits inAttr, const QSSGShaderDefaultMaterialKey &inKey);
 };
 

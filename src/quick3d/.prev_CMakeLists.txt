@@ -17,6 +17,7 @@ qt_internal_add_module(Quick3D
         qquick3deffect.cpp qquick3deffect_p.h
         qquick3dfrustumcamera.cpp qquick3dfrustumcamera_p.h
         qquick3dgeometry.cpp qquick3dgeometry.h qquick3dgeometry_p.h
+        qquick3dinstancing.cpp qquick3dinstancing.h qquick3dinstancing_p.h
         qquick3ditem2d.cpp qquick3ditem2d_p.h
         qquick3djoint.cpp qquick3djoint_p.h
         qquick3dloader.cpp qquick3dloader_p.h

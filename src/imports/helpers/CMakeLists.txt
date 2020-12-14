@@ -16,6 +16,7 @@ qt_internal_add_qml_module(qtquick3dhelpersplugin
     SOURCES
         gridgeometry.cpp gridgeometry_p.h
         plugin.cpp
+        randominstancing.cpp randominstancing_p.h
     PUBLIC_LIBRARIES
         Qt::Qml
         Qt::Quick

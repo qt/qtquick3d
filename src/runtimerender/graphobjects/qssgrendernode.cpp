@@ -84,8 +84,7 @@ bool QSSGRenderNode::calculateGlobalVariables()
     bool retval = flags.testFlag(Flag::Dirty);
     if (retval) {
         flags.setFlag(Flag::Dirty, false);
-        if (flags.testFlag(Flag::TransformDirty))
-            calculateLocalTransform();
+        calculateLocalTransform();
         globalOpacity = localOpacity;
         if (parent) {
             // Layer transforms do not flow down but affect the final layer's rendered
@@ -120,27 +119,29 @@ void QSSGRenderNode::calculateRotationMatrix(QMatrix4x4 &outMatrix) const
 
 void QSSGRenderNode::calculateLocalTransform()
 {
-    flags.setFlag(Flag::TransformDirty, false);
-    localTransform = QMatrix4x4();
-    globalTransform = localTransform;
-    float *writePtr = localTransform.data();
-    QVector3D theScaledPivot(-pivot[0] * scale[0], -pivot[1] * scale[1], -pivot[2] * scale[2]);
-    localTransform(0, 0) = scale[0];
-    localTransform(1, 1) = scale[1];
-    localTransform(2, 2) = scale[2];
+    if (flags.testFlag(Flag::TransformDirty)) {
+        flags.setFlag(Flag::TransformDirty, false);
+        localTransform = QMatrix4x4();
+        globalTransform = localTransform;
+        float *writePtr = localTransform.data();
+        QVector3D theScaledPivot(-pivot[0] * scale[0], -pivot[1] * scale[1], -pivot[2] * scale[2]);
+        localTransform(0, 0) = scale[0];
+        localTransform(1, 1) = scale[1];
+        localTransform(2, 2) = scale[2];
 
-    writePtr[12] = theScaledPivot[0];
-    writePtr[13] = theScaledPivot[1];
-    writePtr[14] = theScaledPivot[2];
+        writePtr[12] = theScaledPivot[0];
+        writePtr[13] = theScaledPivot[1];
+        writePtr[14] = theScaledPivot[2];
 
-    QMatrix4x4 theRotationTransform;
-    calculateRotationMatrix(theRotationTransform);
-    // may need column conversion in here somewhere.
-    localTransform = theRotationTransform * localTransform;
+        QMatrix4x4 theRotationTransform;
+        calculateRotationMatrix(theRotationTransform);
+        // may need column conversion in here somewhere.
+        localTransform = theRotationTransform * localTransform;
 
-    writePtr[12] += position[0];
-    writePtr[13] += position[1];
-    writePtr[14] += position[2];
+        writePtr[12] += position[0];
+        writePtr[13] += position[1];
+        writePtr[14] += position[2];
+    }
 }
 
 void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)

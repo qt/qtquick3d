@@ -11,6 +11,7 @@ SOURCES += \
     qquick3dcamera.cpp \
     qquick3deffect.cpp \
     qquick3dgeometry.cpp \
+    qquick3dinstancing.cpp \
     qquick3dorthographiccamera.cpp \
     qquick3dperspectivecamera.cpp \
     qquick3dfrustumcamera.cpp \
@@ -49,6 +50,8 @@ HEADERS += \
     qquick3deffect_p.h \
     qquick3dgeometry.h \
     qquick3dgeometry_p.h \
+    qquick3dinstancing.h \
+    qquick3dinstancing_p.h \
     qquick3dloader_p.h \
     qquick3dnode_p_p.h \
     qquick3dobject.h \

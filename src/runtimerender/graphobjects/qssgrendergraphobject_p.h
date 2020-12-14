@@ -76,6 +76,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Item2D,
         TextureData,
         ImportScene,
+        ModelInstance,
         LastKnownGraphObjectType
     };
 

@@ -31,11 +31,14 @@
 #include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
 #include "qquick3dnode_p_p.h"
+#include "qquick3dinstancing_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
+
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtQml/QQmlFile>
 
@@ -173,6 +176,20 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
                                             QQuick3DModel::qmlMaterialsCount,
                                             QQuick3DModel::qmlMaterialAt,
                                             QQuick3DModel::qmlClearMaterials);
+}
+
+/*!
+    \qmlproperty QtQuick3D::Instancing Model::instancing
+
+    If this property is set, the model will not be rendered normally. Instead, a number of
+    instances of the model will be rendered, as defined by the instance table.
+
+    \sa Instancing
+*/
+
+QQuick3DInstancing *QQuick3DModel::instancing() const
+{
+    return m_instancing;
 }
 
 void QQuick3DModel::markAllDirty()
@@ -392,6 +409,26 @@ void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
     }
 }
 
+void QQuick3DModel::setInstancing(QQuick3DInstancing *instancing)
+{
+    if (m_instancing == instancing)
+        return;
+
+    // Make sure to disconnect if the instance table gets deleted out from under us
+    QQuick3DObjectPrivate::updatePropertyListener(instancing, m_instancing, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("instancing"), m_connections, [this](QQuick3DObject *n) {
+        setInstancing(qobject_cast<QQuick3DInstancing *>(n));
+    });
+    if (m_skeleton)
+        QObject::disconnect(m_skeletonConnection);
+    m_instancing = instancing;
+    if (m_instancing) {
+        m_instancingConnection = QObject::connect
+                (m_instancing, &QQuick3DInstancing::instanceNodeDirty,
+                 this, [this]{ markDirty(InstancesDirty);});
+    }
+    emit instancingChanged(m_instancing);
+}
+
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
@@ -444,6 +481,15 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             // No materials
             modelNode->materials.clear();
         }
+    }
+
+    if (m_dirtyAttributes & InstancesDirty) {
+        if (m_instancing) {
+            modelNode->instanceTable = static_cast<QSSGRenderInstanceTable *>(QQuick3DObjectPrivate::get(m_instancing)->spatialNode);
+        } else {
+            modelNode->instanceTable = nullptr;
+        }
+        modelNode->instancingSerial++;
     }
 
     if (m_dirtyAttributes & GeometryDirty) {
@@ -509,6 +555,7 @@ void QQuick3DModel::updateSceneManager(QQuick3DSceneManager *sceneManager)
         sceneManager->dirtyBoundingBoxList.append(this);
         QQuick3DObjectPrivate::refSceneManager(m_skeleton, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_geometry, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_instancing, *sceneManager);
         for (Material &mat : m_materials) {
             if (!mat.material->parentItem() && !QQuick3DObjectPrivate::get(mat.material)->sceneManager) {
                 if (!mat.refed) {
@@ -520,6 +567,7 @@ void QQuick3DModel::updateSceneManager(QQuick3DSceneManager *sceneManager)
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_skeleton);
         QQuick3DObjectPrivate::derefSceneManager(m_geometry);
+        QQuick3DObjectPrivate::derefSceneManager(m_instancing);
         for (Material &mat : m_materials) {
             if (mat.refed) {
                 QQuick3DObjectPrivate::derefSceneManager(mat.material);

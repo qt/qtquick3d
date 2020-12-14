@@ -52,7 +52,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick3D
-
+import QtQuick3D.Helpers
 
 Window {
     visible: true
@@ -73,15 +73,10 @@ Window {
                                   randomWithRange(-300, 300),
                                   randomWithRange(-300, 300))
 
-            SequentialAnimation on eulerRotation.y {
-                running: true
-                loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: randomWithRange(100, 10000)
-                    from: 0
-                    to: 360
-                }
-            }
+            property real magnify: 5.0/randomWithRange(10, 100)/randomWithRange(1,10);
+
+
+            scale: Qt.vector3d(magnify, magnify, magnify)
 
             materials: DefaultMaterial {
                 diffuseColor: Qt.rgba(randomWithRange(0, 255) / 255,
@@ -104,15 +99,33 @@ Window {
             id: directionalLight
         }
 
-        PerspectiveCamera {
-            id: camera
-            z: 600
+        Node {
+
+            PerspectiveCamera {
+                z: 700
+            }
+
+            PropertyAnimation on eulerRotation.y {
+                from: 0
+                to: 360
+                running: true
+                duration: 50000
+                loops: -1
+            }
         }
 
         Repeater3D {
-            model: 100
+            eulerRotation: Qt.vector3d(15, 30, 45)
+            position: Qt.vector3d(-100, -100, -100)
+            model: 8000
             delegate: animatedCube
         }
 
     }
+    DebugView {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        source: viewport
+    }
+
 }

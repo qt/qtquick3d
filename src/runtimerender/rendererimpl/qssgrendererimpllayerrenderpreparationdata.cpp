@@ -855,9 +855,12 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
+                bool usesInstancing = theModelContext.model.instanceCount() > 0;
+                if (!rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing))
+                    usesInstancing = false;
                 // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
                 // if the mesh has it.
-                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor();
+                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing;
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights));
                 QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
@@ -870,6 +873,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+
+                // Instancing
+                renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
                                                                              renderableFlags,
@@ -903,6 +909,12 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+
+                // Instancing
+                bool usesInstancing = theModelContext.model.instanceCount() > 0;
+                if (!rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing))
+                    usesInstancing = false;
+                renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
 
                 if (theMaterial.m_iblProbe)
                     theMaterial.m_iblProbe->clearDirty();
