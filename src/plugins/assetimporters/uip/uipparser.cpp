@@ -75,7 +75,8 @@ UipPresentation *UipParser::createPresentation(const QString &presentationName)
     QXmlStreamReader *r = reader();
     if (r->readNextStartElement()) {
         if (r->name() == QStringLiteral("UIP")
-                && (r->attributes().value(QLatin1String("version")) == QStringLiteral("6")
+                && (r->attributes().value(QLatin1String("version")) == QStringLiteral("7")
+                    || r->attributes().value(QLatin1String("version")) == QStringLiteral("6")
                     || r->attributes().value(QLatin1String("version")) == QStringLiteral("5")
                     || r->attributes().value(QLatin1String("version")) == QStringLiteral("4")
                     || r->attributes().value(QLatin1String("version")) == QStringLiteral("3"))) {
