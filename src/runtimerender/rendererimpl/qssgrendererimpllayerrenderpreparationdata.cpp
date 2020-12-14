@@ -292,9 +292,9 @@ const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRende
  * so RENDER_FRAME_NEW() takes the RCI + T's arguments
  */
 template <typename T, typename... Args>
-inline T *RENDER_FRAME_NEW(const QSSGRef<QSSGRenderContextInterface> &ctx, const Args&... args)
+inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, const Args&... args)
 {
-    return new (ctx->perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
+    return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
 }
 
 QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey(
@@ -337,8 +337,8 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
                                                            quint32 inImageIndex,
                                                            QSSGRenderDefaultMaterial *inMaterial)
 {
-    const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
-    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
+    QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
+    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
 
     if (inImage.clearDirty())
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
@@ -360,7 +360,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
 
-        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(renderer->contextInterface(), inMapType, inImage, texture);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, inMapType, inImage, texture);
         QSSGShaderKeyImageMap &theKeyProp = renderer->defaultMaterialShaderKeyProperties().m_imageMaps[inImageIndex];
 
         theKeyProp.setEnabled(inShaderKey, true);
@@ -735,8 +735,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                                                            QSSGShaderLightList &lights,
                                                            QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
-    const QSSGRef<QSSGRenderContextInterface> &contextInterface(renderer->contextInterface());
-    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface->bufferManager();
+    QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
+    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
 
     // Up to the BufferManager to employ the appropriate caching mechanisms, so
     // loadMesh() is expected to be fast if already loaded. Note that preparing
@@ -750,7 +750,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
     if (theMesh == nullptr)
         return false;
 
-    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(renderer->contextInterface(), inModel, inViewProjection);
+    QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, inModel, inViewProjection);
     modelContexts.push_back(&theModelContext);
 
     bool subsetDirty = false;
@@ -871,7 +871,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(renderer->contextInterface(),
+                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
                                                                              renderableFlags,
                                                                              theModelCenter,
                                                                              renderer,
@@ -888,7 +888,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
 
-                const QSSGRef<QSSGCustomMaterialSystem> &theMaterialSystem(contextInterface->customMaterialSystem());
+                const QSSGRef<QSSGCustomMaterialSystem> &theMaterialSystem(contextInterface.customMaterialSystem());
                 subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
@@ -907,7 +907,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 if (theMaterial.m_iblProbe)
                     theMaterial.m_iblProbe->clearDirty();
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(renderer->contextInterface(),
+                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(contextInterface,
                                                                                      renderableFlags,
                                                                                      theModelCenter,
                                                                                      renderer,
