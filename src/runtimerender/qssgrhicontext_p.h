@@ -633,7 +633,11 @@ inline bool operator!=(const QSSGRhiDrawCallDataKey &a, const QSSGRhiDrawCallDat
 
 inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
-    return uint(k.selector) ^ uint(k.index) ^ qHash(k.layer, seed) ^ qHash(k.model, seed) ^ qHash(k.entry, seed);
+    return qHash(quintptr(k.layer)
+                 ^ quintptr(k.model)
+                 ^ quintptr(k.entry)
+                 ^ quintptr(k.selector)
+                 ^ quintptr(k.index), seed);
 }
 
 struct QSSGRhiDrawCallData
