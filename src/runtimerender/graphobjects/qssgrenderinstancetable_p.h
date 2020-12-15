@@ -46,6 +46,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 
+QT_BEGIN_NAMESPACE
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRenderNode
 {
     struct InstanceTableEntry {
@@ -62,10 +64,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRender
     qsizetype dataSize() const { return table.size(); }
     const void *constData() const { return table.constData(); }
     void resize(int count) { table.resize(count * sizeof(InstanceTableEntry)); instanceCount = count; }
-    void setData(const QByteArray &data, int count) { table = data; instanceCount = count; }
+    void setData(const QByteArray &data, int count) { table = data; instanceCount = count; ++instanceSerial; }
+    int serial() const { return instanceSerial; }
 
 private:
     int instanceCount = 0;
+    int instanceSerial = 0;
     QByteArray table;
 };
+
+QT_END_NAMESPACE
+
 #endif // QSSGRENDERINDEXTABLE_P_H

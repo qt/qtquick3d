@@ -52,10 +52,8 @@ class QQuick3DInstancingPrivate : public QQuick3DObjectPrivate
 {
 public:
     QQuick3DInstancingPrivate();
-//    QByteArray m_instanceBuffer;
-//    int m_instanceCount = 0;
     int m_instanceCountOverride = -1;
-//    bool m_instanceDataChanged = true;
+    bool m_instanceDataChanged = true;
 };
 
 QT_END_NAMESPACE

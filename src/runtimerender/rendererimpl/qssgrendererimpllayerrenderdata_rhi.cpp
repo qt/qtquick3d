@@ -226,22 +226,23 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Instancing
             const quint32 instanceCount = subsetRenderable.modelContext.model.instanceCount();
             if (instanceCount > 0) {
-                //TODO: QSSGRhiDrawCallData should not own the instance buffer
+                //TODO: move buffer creation code to instance table
                 auto *table = subsetRenderable.modelContext.model.instanceTable;
+                QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
                 qsizetype instanceBufferSize = table->dataSize();
-                // Create or resize the instance buffer
-                bool updateInstanceBuffer = subsetRenderable.modelContext.model.instancingSerial != dcd.instanceBufSerial;
-                if (dcd.instanceBuf && dcd.instanceBuf->size() < instanceBufferSize) {
+                // Create or resize the instance buffer ### if (instanceData.owned)
+                bool updateInstanceBuffer = table->serial() != instanceData.serial;
+                if (instanceData.buffer && instanceData.buffer->size() < instanceBufferSize) {
                     updateInstanceBuffer = true;
 //                    qDebug() << "Resizing instance buffer";
-                    dcd.instanceBuf->setSize(instanceBufferSize);
-                    dcd.instanceBuf->create();
+                    instanceData.buffer->setSize(instanceBufferSize);
+                    instanceData.buffer->create();
                 }
-                if (!dcd.instanceBuf) {
+                if (!instanceData.buffer) {
 //                    qDebug() << "Creating instance buffer";
                     updateInstanceBuffer = true;
-                    dcd.instanceBuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
-                    dcd.instanceBuf->create();
+                    instanceData.buffer = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
+                    instanceData.buffer->create();
                 }
                 if (updateInstanceBuffer) {
 //                    qDebug() << "****** UPDATING INST BUFFER. Count" << instanceCount << "size" << instanceBufferSize;
@@ -249,14 +250,14 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     const void *data = table->constData();
                     if (data) {
                         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-                        rub->updateDynamicBuffer(dcd.instanceBuf, 0, instanceBufferSize, data);
+                        rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
                         rhiCtx->commandBuffer()->resourceUpdate(rub);
                     } else {
                         qWarning() << "NO DATA IN INSTANCE TABLE";
                     }
-                    dcd.instanceBufSerial = subsetRenderable.modelContext.model.instancingSerial;
+                    instanceData.serial = table->serial();
                 }
-                subsetRenderable.instanceBuffer = dcd.instanceBuf;
+                subsetRenderable.instanceBuffer = instanceData.buffer;
             }
 
             ps->samples = samples;

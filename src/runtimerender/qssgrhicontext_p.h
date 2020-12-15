@@ -53,6 +53,7 @@ class QSSGRhiBuffer;
 struct QSSGShaderLightProperties;
 struct QSSGRenderModel;
 class QSSGRhiShaderPipeline;
+struct QSSGRenderInstanceTable;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
 {
@@ -652,8 +653,6 @@ inline size_t qHash(const QSSGRhiDrawCallDataKey &k, size_t seed = 0) Q_DECL_NOT
 struct QSSGRhiDrawCallData
 {
     QRhiBuffer *ubuf = nullptr; // owned
-    QRhiBuffer *instanceBuf = nullptr; // owned
-    int instanceBufSerial = -1;
     QRhiShaderResourceBindings *srb = nullptr; // not owned
     QSSGRhiShaderResourceBindingList bindings;
     QRhiGraphicsPipeline *pipeline = nullptr; // not owned
@@ -663,12 +662,17 @@ struct QSSGRhiDrawCallData
     void reset() {
         delete ubuf;
         ubuf = nullptr;
-        delete instanceBuf;
-        instanceBuf = nullptr;
         srb = nullptr;
         pipeline = nullptr;
         pipelineRpDesc = nullptr;
     }
+};
+
+struct QSSGRhiInstanceBufferData
+{
+    QRhiBuffer *buffer = nullptr;
+    int serial = -1;
+    bool owned = true;
 };
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
@@ -735,6 +739,11 @@ public:
         return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
     }
 
+    QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable)
+    {
+        return m_instanceBuffers[instanceTable];
+    }
+
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
@@ -749,6 +758,7 @@ private:
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
     QSet<QRhiTexture *> m_textures;
     QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;
+    QHash<QSSGRenderInstanceTable *, QSSGRhiInstanceBufferData> m_instanceBuffers;
 };
 
 inline QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op)

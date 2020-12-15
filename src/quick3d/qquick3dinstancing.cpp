@@ -129,15 +129,15 @@ void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
         return;
 
     d->m_instanceCountOverride = instanceCountOverride;
+    d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
     emit instanceCountOverrideChanged(d->m_instanceCountOverride);
-    markDirty();
 }
 
 void QQuick3DInstancing::markDirty()
 {
     Q_D(QQuick3DInstancing);
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
-    emit instanceNodeDirty();
+    d->m_instanceDataChanged = true;
 }
 
 QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -147,15 +147,15 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
         markAllDirty();
         node = new QSSGRenderInstanceTable();
         emit instanceNodeDirty();
+        d->m_instanceDataChanged = true;
     }
-    auto *instanceTable = static_cast<QSSGRenderInstanceTable *>(node);
-    //### TODO: check if we really need to do this
-    //    if (d->m_instanceDataChanged)
-   int count;
-   QByteArray buffer = instanceBuffer(&count);
-//   qDebug() << "QQuick3DInstancing:updateSpatialNode setting instance buffer data" << count;
-   instanceTable->setData(buffer, count);
-
+    if (d->m_instanceDataChanged) {
+        auto *instanceTable = static_cast<QSSGRenderInstanceTable *>(node);
+        int count;
+        QByteArray buffer = instanceBuffer(&count);
+        //   qDebug() << "QQuick3DInstancing:updateSpatialNode setting instance buffer data" << count;
+        instanceTable->setData(buffer, count);
+    }
     return node;
 }
 

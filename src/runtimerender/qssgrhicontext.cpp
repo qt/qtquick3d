@@ -860,7 +860,10 @@ QSSGRhiContext::~QSSGRhiContext()
     qDeleteAll(m_textures);
     for (const auto &samplerInfo : qAsConst(m_samplers))
         delete samplerInfo.second;
-
+    for (const auto &instanceData : qAsConst(m_instanceBuffers)) {
+        if (instanceData.owned)
+            delete instanceData.buffer;
+    }
     qDeleteAll(m_dummyTextures);
 }
 

@@ -489,7 +489,6 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         } else {
             modelNode->instanceTable = nullptr;
         }
-        modelNode->instancingSerial++;
     }
 
     if (m_dirtyAttributes & GeometryDirty) {
