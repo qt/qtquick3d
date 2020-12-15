@@ -429,12 +429,18 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
     // When changing render modes
     if (m_renderModeDirty) {
         if (node) {
+            SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
+            n->renderer->onRenderModeChanged();
+            n->renderer = nullptr;
+
             delete node;
             node = nullptr;
             m_node = nullptr;
             m_renderNode = nullptr;
         }
         if (m_directRenderer) {
+            m_directRenderer->renderer()->onRenderModeChanged();
+            m_directRenderer->onRenderModeChanged();
             delete m_directRenderer;
             m_directRenderer = nullptr;
         }

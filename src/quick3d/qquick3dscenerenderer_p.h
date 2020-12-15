@@ -80,6 +80,7 @@ protected:
     void synchronize(QQuick3DViewport *item, const QSize &size, bool useFBO = true);
     void update();
     void invalidateFramebufferObject();
+    void onRenderModeChanged();
     QSize surfaceSize() const { return m_surfaceSize; }
     QSSGRenderPickResult pick(const QPointF &pos);
     QSSGRenderPickResult syncPick(const QPointF &pos);
@@ -89,6 +90,7 @@ private:
     void updateLayerNode(QQuick3DViewport *view3D);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
+    void deleteResources();
     QSSGRef<QSSGRenderContextInterface> m_sgContext;
     QSharedPointer<QQuick3DSceneManager> m_sceneManager;
     QSSGRenderLayer *m_layer = nullptr;
@@ -170,6 +172,7 @@ public:
     ~QQuick3DSGDirectRenderer();
 
     QQuick3DSceneRenderer *renderer() { return m_renderer; }
+    void onRenderModeChanged() { m_renderer = nullptr; }
     void setViewport(const QRectF &viewport);
 
     void requestRender();

@@ -193,10 +193,11 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
-    delete m_layer;
-    delete m_fbo;
-    delete m_antialiasingFbo;
+    deleteResources();
 }
+
+
+
 
 GLuint QQuick3DSceneRenderer::render()
 {
@@ -403,6 +404,11 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
         static_cast<SGFramebufferObjectNode *>(data)->invalidatePending = true;
 }
 
+void QQuick3DSceneRenderer::onRenderModeChanged()
+{
+    deleteResources();
+}
+
 QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
 {
     return m_sgContext->renderer()->pick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
@@ -529,6 +535,13 @@ void QQuick3DSceneRenderer::addNodeToLayer(QSSGRenderNode *node)
         return;
 
     m_layer->addChild(*node);
+}
+
+void QQuick3DSceneRenderer::deleteResources()
+{
+    delete m_layer;
+    delete m_fbo;
+    delete m_antialiasingFbo;
 }
 
 QQuick3DSceneRenderer::FramebufferObject::FramebufferObject(const QSize &s,
