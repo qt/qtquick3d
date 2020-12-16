@@ -731,10 +731,15 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     // alpha cutoff
     if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Mask) {
-        fragmentShader << "    if (qt_diffuseColor.a < qt_material_properties3.y)\n"
+        // The Implementation Notes from
+        // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#alpha-coverage
+        // must be met. Hence the discard.
+        fragmentShader << "    if (qt_diffuseColor.a < qt_material_properties3.y) {\n"
                        << "        qt_diffuseColor = vec4(0.0);\n"
-                       << "    else\n"
-                       << "        qt_diffuseColor.a = 1.0;\n";
+                       << "        discard;\n"
+                       << "    } else {\n"
+                       << "        qt_diffuseColor.a = 1.0;\n"
+                       << "    }\n";
     } else if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque) {
         fragmentShader << "    qt_diffuseColor.a = 1.0;\n";
     }
