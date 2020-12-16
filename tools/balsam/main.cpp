@@ -31,13 +31,14 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QDir>
-#include <QtCore/QDebug>
 #include <QtCore/QVariant>
 #include <QtCore/QHash>
 
 #include <QtCore/QJsonObject>
 
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
+
+#include <iostream>
 
 class OptionsManager {
 public:
@@ -118,7 +119,7 @@ public:
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
                 options[QStringLiteral("generateSmoothNormals")] = opt;
-                qWarning() << "\"--generateSmoothNormals\" disabled due to \"--generateNormals\".";
+                std::cerr << "\"--generateSmoothNormals\" disabled due to \"--generateNormals\".\n";
             }
 
         } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("generateSmoothNormals")])) {
@@ -126,7 +127,7 @@ public:
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
                 options[QStringLiteral("generateNormals")] = opt;
-                qWarning() << "\"--generateNormals\" disabled due to \"--generateSmoothNormals\".";
+                std::cerr << "\"--generateNormals\" disabled due to \"--generateSmoothNormals\".\n";
             }
         }
 
@@ -136,14 +137,14 @@ public:
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
                 options[QStringLiteral("preTransformVertices")] = opt;
-                qWarning() << "\"--preTransformVertices\" disabled due to \"--optimizeGraph\".";
+                std::cerr << "\"--preTransformVertices\" disabled due to \"--optimizeGraph\".\n";
             }
         } else if (cmdLineParser.isSet(*m_optionsMap[QStringLiteral("preTransformVertices")])) {
             opt = options.value(QStringLiteral("optimizeGraph")).toObject();
             if (opt[QStringLiteral("value")] == true) {
                 opt[QStringLiteral("value")] = false;
                 options[QStringLiteral("optimizeGraph")] = opt;
-                qWarning() << "\"--optimizeGraph\" disabled due to \"--preTransformVertices\".";
+                std::cerr << "\"--optimizeGraph\" disabled due to \"--preTransformVertices\".\n";
             }
         }
     }
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
         outputDirectory = QDir(cmdLineParser.value(outputPathOption));
         if (!outputDirectory.exists()) {
             if (!outputDirectory.mkpath(QStringLiteral("."))) {
-                qWarning() << "Failed to create export directory: " << outputDirectory;
+                std::cerr << "Failed to create export directory: " << qPrintable(outputDirectory.path()) << "\n";
             }
         }
     }
@@ -197,7 +198,7 @@ int main(int argc, char *argv[])
         QVariantMap options = assetImporter.getOptionsForFile(assetFileName);
         options = optionsManager.processCommandLineOptions(cmdLineParser, options);
         if (assetImporter.importFile(assetFileName, outputDirectory, options, &errorString) != QSSGAssetImportManager::ImportState::Success)
-            qWarning() << "Failed to import file with error: " << errorString;
+            std::cerr << "Failed to import file with error: " << qPrintable(errorString) << "\n";
     }
 
     return 0;
