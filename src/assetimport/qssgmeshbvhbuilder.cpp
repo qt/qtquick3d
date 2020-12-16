@@ -61,32 +61,63 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh)
 
 }
 
+QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
+                                       int stride,
+                                       int posOffset,
+                                       bool hasUV0,
+                                       int uv0Offset,
+                                       bool hasIndexBuffer,
+                                       const QByteArray &indexBuffer,
+                                       QSSGRenderComponentType indexBufferType)
+{
+    m_vertexBufferData = QSSGByteView(vertexBuffer);
+    m_vertexStride = stride;
+    m_hasPositionData = true;
+    m_vertexPosOffset = posOffset;
+    m_hasUVData = hasUV0;
+    m_vertexUV0Offset = uv0Offset;
+    m_hasIndexBuffer = hasIndexBuffer;
+    m_indexBufferData = QSSGByteView(indexBuffer);
+    m_indexBufferComponentType = indexBufferType;
+}
+
 QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
 {
     m_roots.clear();
 
     // This only works with triangles
-    if (m_mesh->m_drawMode != QSSGRenderDrawMode::Triangles)
+    if (m_mesh && m_mesh->m_drawMode != QSSGRenderDrawMode::Triangles)
         return nullptr;
 
     // Calculate the bounds for each triangle in whole mesh once
-    const quint32 indexCount = m_indexBufferData.size() / getSizeOfType(m_indexBufferComponentType);
+    quint32 indexCount = 0;
+    if (m_hasIndexBuffer)
+        indexCount = m_indexBufferData.size() / getSizeOfType(m_indexBufferComponentType);
+    else
+        indexCount = m_vertexBufferData.size() / m_vertexStride;
     m_triangleBounds = calculateTriangleBounds(0, indexCount);
 
     // For each submesh, generate a root bvh node
-    for (quint32 subsetIdx = 0, subsetEnd = m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
-        const QSSGMeshUtilities::MeshSubset &source(m_mesh->m_subsets.index(m_baseAddress, subsetIdx));
+    if (m_mesh) {
+        for (quint32 subsetIdx = 0, subsetEnd = m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
+            const QSSGMeshUtilities::MeshSubset &source(m_mesh->m_subsets.index(m_baseAddress, subsetIdx));
+            QSSGMeshBVHNode *root = new QSSGMeshBVHNode();
+            // Offsets provided by subset are for the index buffer
+            // Convert them to work with the triangle bounds list
+            const quint32 triangleOffset = source.m_offset / 3;
+            const quint32 triangleCount = source.m_count / 3;
+            root->boundingData = getBounds(triangleOffset, triangleCount);
+            // Recursively split the mesh into a tree of smaller bounding volumns
+            root = splitNode(root, triangleOffset, triangleCount);
+            m_roots.append(root);
+        }
+    } else {
+        // Custom Geometry only has one subset
         QSSGMeshBVHNode *root = new QSSGMeshBVHNode();
-        // Offsets provided by subset are for the index buffer
-        // Convert them to work with the triangle bounds list
-        const quint32 triangleOffset = source.m_offset / 3;
-        const quint32 triangleCount = source.m_count / 3;
-        root->boundingData = getBounds(triangleOffset, triangleCount);
-        // Recursively split the mesh into a tree of smaller bounding volumns
-        root = splitNode(root, triangleOffset, triangleCount);
+        root->boundingData = getBounds(0, m_triangleBounds.count());
+        root = splitNode(root, 0, m_triangleBounds.count());
         m_roots.append(root);
     }
-
     return new QSSGMeshBVH(m_roots, m_triangleBounds);
 }
 
@@ -99,9 +130,15 @@ QVector<QSSGMeshBVHTriangle *> QSSGMeshBVHBuilder::calculateTriangleBounds(quint
         // Get the indices for the triangle
         const quint32 triangleIndex = i * 3 + indexOffset;
 
-        const quint32 index1 = getIndexBufferValue(triangleIndex + 0);
-        const quint32 index2 = getIndexBufferValue(triangleIndex + 1);
-        const quint32 index3 = getIndexBufferValue(triangleIndex + 2);
+        quint32 index1 = triangleIndex + 0;
+        quint32 index2 = triangleIndex + 1;
+        quint32 index3 = triangleIndex + 2;
+
+        if (m_hasIndexBuffer) {
+            index1 = getIndexBufferValue(triangleIndex + 0);
+            index2 = getIndexBufferValue(triangleIndex + 1);
+            index3 = getIndexBufferValue(triangleIndex + 2);
+        }
 
         QSSGMeshBVHTriangle *triangle = new QSSGMeshBVHTriangle();
 

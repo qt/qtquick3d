@@ -141,6 +141,7 @@ public:
                                    QSSGMeshUtilities::Mesh *mesh,
                                    bool update = false);
     QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
+    QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
     QSSGMeshUtilities::MultiLoadResult loadMeshData(const QSSGRenderPath &inSourcePath) const;
 
     QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result);

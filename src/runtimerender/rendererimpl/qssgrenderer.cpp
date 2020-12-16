@@ -474,8 +474,15 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     // TODO: Technically we should have some guard here, as the meshes are usually loaded on a different thread,
     // so this isn't really nice (assumes all meshes are loaded before picking and none are removed, which currently should be the case).
     auto mesh = bufferManager->getMesh(model.meshPath);
-    if (!mesh)
-        return;
+    if (!mesh) {
+        // Check if there is custom geometry before bailing out
+        if (model.geometry)
+            mesh = bufferManager->getMesh(model.geometry);
+
+        // If there is still no geometry bail out
+        if (!mesh)
+            return;
+    }
 
     const auto &globalTransform = model.globalTransform;
     auto rayData = QSSGRenderRay::createRayData(globalTransform, inRay);
