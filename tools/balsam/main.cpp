@@ -184,21 +184,25 @@ int main(int argc, char *argv[])
         if (!outputDirectory.exists()) {
             if (!outputDirectory.mkpath(QStringLiteral("."))) {
                 std::cerr << "Failed to create export directory: " << qPrintable(outputDirectory.path()) << "\n";
+                return 2;
             }
         }
     }
 
-    // if there is nothing to do return early
+    // if there is nothing to do show help
     if (assetFileNames.isEmpty())
-        return 0;
+        cmdLineParser.showHelp(1);
 
     // Convert each assetFile is possible
     for (const auto &assetFileName : assetFileNames) {
         QString errorString;
         QVariantMap options = assetImporter.getOptionsForFile(assetFileName);
         options = optionsManager.processCommandLineOptions(cmdLineParser, options);
-        if (assetImporter.importFile(assetFileName, outputDirectory, options, &errorString) != QSSGAssetImportManager::ImportState::Success)
+        if (assetImporter.importFile(assetFileName, outputDirectory, options, &errorString)
+            != QSSGAssetImportManager::ImportState::Success) {
             std::cerr << "Failed to import file with error: " << qPrintable(errorString) << "\n";
+            return 2;
+        }
     }
 
     return 0;
