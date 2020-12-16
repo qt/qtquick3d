@@ -355,8 +355,10 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
     if (texture.m_texture) {
         if (texture.m_flags.hasTransparency()
-            && (inMapType == QSSGRenderableImage::Type::Diffuse || inMapType == QSSGRenderableImage::Type::Opacity
-                || inMapType == QSSGRenderableImage::Type::Translucency)) {
+            && (inMapType == QSSGRenderableImage::Type::Diffuse // note: Type::BaseColor is skipped here intentionally
+                || inMapType == QSSGRenderableImage::Type::Opacity
+                || inMapType == QSSGRenderableImage::Type::Translucency))
+        {
             ioFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
 
@@ -537,8 +539,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         // - the default SourceOver blendMode does not imply alpha blending on
         //   its own,
         // - but other blendMode values do,
-        // - an alphaMode of Blend or Mask guarantees blending to be enabled
-        //   regardless of anything else.
+        // - an alphaMode of Blend guarantees blending to be enabled regardless
+        //   of anything else.
         // Additionally:
         // - Opacity and texture map alpha are handled elsewhere (that's when a
         //   blendMode of SourceOver or an alphaMode of Default/Opaque can in the
@@ -548,8 +550,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
         if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver
                 || theMaterial->opacityMap
-                || theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend
-                || theMaterial->alphaMode == QSSGRenderDefaultMaterial::Mask)
+                || theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend)
         {
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }

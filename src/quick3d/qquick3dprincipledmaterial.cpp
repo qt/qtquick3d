@@ -128,15 +128,14 @@ QT_BEGIN_NAMESPACE
     occlude objects behind them. This default mode does not guarantee alpha
     blending in the rendering pipeline on its own for models that use this
     material, but rather makes the decision dependent on a number of factors:
-    if the object's and material's total opacity is \c{1.0}, and there are no
-    texture maps in the material with semi-transparent pixels in them, and \l
-    alphaMode is not set to a value that enforces alpha blending, then the
-    model is treated as opaque, meaning it is rendered with depth testing and
-    depth write enabled, together with other opaque objects, with blending
-    disabled. Otherwise the model is treated as semi-transparent, and is
-    rendered after the opaque objects, together with other semi-transparent
-    objects in a back-to-front order based on their center's distance from the
-    camera, with alpha blending enabled.
+    if the object's and material's total opacity is \c{1.0}, there is no
+    opacity map in the material, and \l alphaMode is not set to a value that
+    enforces alpha blending, then the model is treated as opaque, meaning it is
+    rendered with depth testing and depth write enabled, together with other
+    opaque objects, with blending disabled. Otherwise the model is treated as
+    semi-transparent, and is rendered after the opaque objects, together with
+    other semi-transparent objects in a back-to-front order based on their
+    center's distance from the camera, with alpha blending enabled.
 
     \value PrincipledMaterial.Screen Colors are blended using an inverted
     multiply, producing a lighter result. This blend mode is order-independent;
@@ -159,6 +158,8 @@ QT_BEGIN_NAMESPACE
     the base color, while it's specular color, depending on the specular amount, will have a
     bright specular color. For metals the diffuse and specular channels will be mixed from
     the base color and have a dark diffuse channel and a specular channel close to the base color.
+
+    \sa baseColorMap, alphaMode
 */
 
 /*!
@@ -166,7 +167,7 @@ QT_BEGIN_NAMESPACE
 
     This property defines the texture used to set the base color of the material.
 
-    \sa baseColor
+    \sa baseColor, alphaMode
 */
 
 /*!
@@ -387,13 +388,13 @@ QT_BEGIN_NAMESPACE
     sampled alpha multiplied by the \l baseColor alpha.
 
     \value PrincipledMaterial.Default No test is applied, the effective alpha
-    value is passed on as-is. Note that a \l baseColor alpha less than \c 1.0
-    does not automatically imply alpha blending, the object with the material
-    may still be treated as opaque, if no other relevant properties (such as,
-    an opacity less than 1, the presence of an opacity map, or a non-default \l
-    blendMode value) trigger treating the object as semi-transparent. To ensure
-    alpha blending happens regardless of any other object or material property,
-    set \c Blend instead.
+    value is passed on as-is. Note that a \l baseColor or \l baseColorMap alpha
+    less than \c 1.0 does not automatically imply alpha blending, the object
+    with the material may still be treated as opaque, if no other relevant
+    properties (such as, an opacity less than 1, the presence of an opacity
+    map, or a non-default \l blendMode value) trigger treating the object as
+    semi-transparent. To ensure alpha blending happens regardless of any other
+    object or material property, set \c Blend instead.
 
     \value PrincipledMaterial.Blend No cutoff test is applied, but guarantees
     that alpha blending happens. The object with this material will therefore
@@ -410,11 +411,17 @@ QT_BEGIN_NAMESPACE
 
     \value PrincipledMaterial.Mask A test based on \l alphaCutoff is applied.
     If the effective alpha value falls below \l alphaCutoff, the fragment is
-    changed to fully transparent. Otherwise the alpha is changed to 1.0, so
-    that the fragment will become fully opaque. This mode implies \c Blend,
-    meaning an object with a material having alphaMode set to \c Mask is
-    rendered together with the semi-transparent objects, in back to front
-    order, regardless of the cutoff test's result.
+    changed to fully transparent and is discarded (with all implications of
+    discarding: the depth buffer is not written for that fragment). Otherwise
+    the alpha is changed to 1.0, so that the fragment will become fully opaque.
+    When it comes to alpha blending, the behavior of this mode is identical to
+    \c Opaque, regardless of the cutoff test's result. This means that the
+    \l{https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#alpha-coverage}{glTF
+    2 spec's alpha coverage} Implementation Notes are fulfilled. Objects with
+    alpha cutoff tests can also cast shadows since they behave like opaque
+    objects by default, unless the relevant properties (such as, an opacity
+    less than 1, an opacity map, or a non-default \l blendMode) imply otherwise
+    (in which case casting shadows will not be possible).
 
     \sa alphaCutoff, blendMode
 */
