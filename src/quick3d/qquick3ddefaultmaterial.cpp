@@ -102,15 +102,29 @@ QT_BEGIN_NAMESPACE
     This property determines how the colors of the model rendered blend with
     those behind it.
 
-    \value DefaultMaterial.SourceOver Default blend mode. Opaque objects occlude
-        objects behind them.
-    \value DefaultMaterial.Screen Colors are blended using an inverted multiply,
-        producing a lighter result. This blend mode is order-independent; if you are
-        using semi-opaque objects and experiencing \e popping as faces or models sort
-        differently, using Screen blending is one way to produce results without
-        popping.
+    \value DefaultMaterial.SourceOver Default blend mode. Opaque objects
+    occlude objects behind them. This default mode does not guarantee alpha
+    blending in the rendering pipeline on its own for models that use this
+    material, but rather makes the decision dependent on a number of factors:
+    if the object's and material's total opacity is \c{1.0} and there are no
+    texture maps in the material with semi-transparent pixels in them, then the
+    model is treated as opaque, meaning it is rendered with depth testing and
+    depth write enabled, together with other opaque objects, with blending
+    disabled. Otherwise the model is treated as semi-transparent, and is
+    rendered after the opaque objects, together with other semi-transparent
+    objects in a back-to-front order based on their center's distance from the
+    camera, with alpha blending enabled.
+
+    \value DefaultMaterial.Screen Colors are blended using an inverted
+    multiply, producing a lighter result. This blend mode is order-independent;
+    if you are using semi-opaque objects and experiencing \e popping as faces
+    or models sort differently, using Screen blending is one way to produce
+    results without popping.
+
     \value DefaultMaterial.Multiply Colors are blended using a multiply,
-        producing a darker result. This blend mode is also order-independent.
+    producing a darker result. This blend mode is also order-independent.
+
+    \sa {Qt Quick 3D Architecture}
 */
 
 /*!
