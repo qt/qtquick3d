@@ -306,8 +306,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGSubsetRen
                          const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                          const QSSGDataView<QMatrix3x3> &inBoneNormals,
                          const QSSGShaderLightList &lights);
-
-    QSSGRenderDefaultMaterial::MaterialBlendMode getBlendingMode() { return material.blendMode; }
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
