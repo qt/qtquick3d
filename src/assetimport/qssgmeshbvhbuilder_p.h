@@ -50,6 +50,14 @@ class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBVHBuilder
 {
 public:
     QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh);
+    QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
+                       int stride,
+                       int posOffset,
+                       bool hasUV0 = false,
+                       int uv0Offset = -1,
+                       bool hasIndexBuffer = false,
+                       const QByteArray &indexBuffer = QByteArray(),
+                       QSSGRenderComponentType indexBufferType = QSSGRenderComponentType::Integer32);
 
     QSSGMeshBVH* buildTree();
 
@@ -78,7 +86,7 @@ private:
     float getAverageValue(quint32 offset, quint32 count, Axis axis) const;
     quint32 partition(quint32 offset, quint32 count, const Split &split);
 
-    QSSGMeshUtilities::Mesh *m_mesh;
+    QSSGMeshUtilities::Mesh *m_mesh = nullptr;
     quint8 *m_baseAddress;
     QSSGRenderComponentType m_indexBufferComponentType;
     QSSGByteView m_indexBufferData;
@@ -88,6 +96,7 @@ private:
     quint32 m_vertexPosOffset;
     bool m_hasUVData = false;
     quint32 m_vertexUV0Offset;
+    bool m_hasIndexBuffer = true;
 
 
     QVector<QSSGMeshBVHTriangle *> m_triangleBounds;

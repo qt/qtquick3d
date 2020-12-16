@@ -1198,6 +1198,49 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
     return bvh;
 }
 
+QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
+{
+    if (!geometry)
+        return nullptr;
+
+    // We only support generating a BVH with Triangle primitives
+    if (geometry->primitiveType() != QSSGRenderGeometry::Triangles)
+        return nullptr;
+
+    // Build BVH
+    bool hasIndexBuffer = false;
+    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::Integer32;
+    bool hasUV0 = false;
+    int uv0Offset = -1;
+    int posOffset = -1;
+
+    for (int i = 0; i < geometry->attributeCount(); ++i) {
+        auto attribute = geometry->attribute(i);
+        if (attribute.semantic == QSSGRenderGeometry::Attribute::PositionSemantic) {
+            posOffset = attribute.offset;
+        } else if (attribute.semantic == QSSGRenderGeometry::Attribute::TexCoordSemantic) {
+            hasUV0 = true;
+            uv0Offset = attribute.offset;
+        } else if (attribute.semantic == QSSGRenderGeometry::Attribute::IndexSemantic) {
+            hasIndexBuffer = true;
+            if (attribute.componentType == QSSGRenderGeometry::Attribute::I16Type)
+                indexBufferFormat = QSSGRenderComponentType::Integer16;
+            else if (attribute.componentType == QSSGRenderGeometry::Attribute::I32Type)
+                indexBufferFormat = QSSGRenderComponentType::Integer32;
+        }
+    }
+
+    QSSGMeshBVHBuilder meshBVHBuilder(geometry->vertexBuffer(),
+                                      geometry->stride(),
+                                      posOffset,
+                                      hasUV0,
+                                      uv0Offset,
+                                      hasIndexBuffer,
+                                      geometry->indexBuffer(),
+                                      indexBufferFormat);
+    return meshBVHBuilder.buildTree();
+}
+
 QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath) const
 {
     // loading new mesh

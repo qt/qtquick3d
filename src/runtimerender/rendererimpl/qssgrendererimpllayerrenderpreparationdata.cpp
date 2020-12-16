@@ -779,8 +779,12 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                                     && (theModelContext.model.flags.testFlag(QSSGRenderModel::Flag::GloballyPickable));
     if (canModelBePickable) {
         // Check if there is BVH data, if not generate it
-        if (!theMesh->bvh && !inModel.meshPath.isNull()) {
-            theMesh->bvh = bufferManager->loadMeshBVH(inModel.meshPath);
+        if (!theMesh->bvh) {
+            if (!inModel.meshPath.isNull())
+                theMesh->bvh = bufferManager->loadMeshBVH(inModel.meshPath);
+            else if (inModel.geometry)
+                theMesh->bvh = bufferManager->loadMeshBVH(inModel.geometry);
+
             if (theMesh->bvh) {
                 for (int i = 0; i < theMesh->bvh->roots.count(); ++i)
                     theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
