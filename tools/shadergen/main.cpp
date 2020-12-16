@@ -127,6 +127,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     QCommandLineParser cmdLineparser;
+    cmdLineparser.addHelpOption();
     // File options
     QCommandLineOption changeDirOption({QChar(u'C'), QLatin1String("directory")},
                                        QLatin1String("Change the working directory"),
@@ -153,7 +154,7 @@ int main(int argc, char *argv[])
     QCommandLineOption extractQsbFileOption({QChar(u'e'), QLatin1String("extract-qsb")}, QLatin1String("Extract qsb from collection."), QLatin1String("key:[desc|vert|frag]"));
     cmdLineparser.addOption(extractQsbFileOption);
 
-    QCommandLineOption dirDepthOption(QLatin1String("depth"), QLatin1String("Override default max depth (16) value when traversing the filesystem."), QLatin1String("10"));
+    QCommandLineOption dirDepthOption(QLatin1String("depth"), QLatin1String("Override default max depth (16) value when traversing the filesystem."), QLatin1String("number"));
     cmdLineparser.addOption(dirDepthOption);
 
     cmdLineparser.process(a);
