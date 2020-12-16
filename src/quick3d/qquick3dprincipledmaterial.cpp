@@ -390,26 +390,31 @@ QT_BEGIN_NAMESPACE
     value is passed on as-is. Note that a \l baseColor alpha less than \c 1.0
     does not automatically imply alpha blending, the object with the material
     may still be treated as opaque, if no other relevant properties (such as,
-    an opacity less than 1, or the presence of an opacity map) trigger treating
-    the object as semi-transparent. To ensure alpha blending happens, set \c
-    Blend instead.
+    an opacity less than 1, the presence of an opacity map, or a non-default \l
+    blendMode value) trigger treating the object as semi-transparent. To ensure
+    alpha blending happens regardless of any other object or material property,
+    set \c Blend instead.
 
     \value PrincipledMaterial.Blend No cutoff test is applied, but guarantees
     that alpha blending happens. The object with this material will therefore
     never be treated as opaque by the renderer.
 
-    \value PrincipledMaterial.Opaque The rendered object is fully opaque, if
-    there is no other relevant properties (such as, an opacity less than 1,
-    or the presence of an opacity map.) That is, all the alpha values in the
-    vertex color, base color, and base color map are ignored.
+    \value PrincipledMaterial.Opaque No cutoff test is applied and the rendered
+    object is assumed to be fully opaque, meaning the alpha values in the
+    vertex color, base color, and base color map are ignored and a value of 1.0
+    is substituted instead. This mode does not guarantee alpha blending does
+    not happen. If relevant properties (such as, an opacity less than 1, an
+    opacity map, or a non-default \l blendMode) say so, then the object will
+    still be treated as semi-transparent by the rendering pipeline, just like
+    with the \c Default alphaMode.
 
     \value PrincipledMaterial.Mask A test based on \l alphaCutoff is applied.
     If the effective alpha value falls below \l alphaCutoff, the fragment is
-    changed to fully transparent. Otherwise the alpha is changed to 1, so that
-    the fragment will become fully opaque. This mode implies \c Blend, meaning
-    an object with a material having alphaMode set to \c Mask is rendered
-    together with the semi-transparent objects, in back to front order,
-    regardless of the cutoff test's result.
+    changed to fully transparent. Otherwise the alpha is changed to 1.0, so
+    that the fragment will become fully opaque. This mode implies \c Blend,
+    meaning an object with a material having alphaMode set to \c Mask is
+    rendered together with the semi-transparent objects, in back to front
+    order, regardless of the cutoff test's result.
 
     \sa alphaCutoff, blendMode
 */

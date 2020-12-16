@@ -532,10 +532,25 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
     if (subsetOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY) {
 
-        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver ||
-            theMaterial->opacityMap ||
-            theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend ||
-            theMaterial->alphaMode == QSSGRenderDefaultMaterial::Mask) {
+        // Set the semi-transparency flag as specified in PrincipledMaterial's
+        // blendMode and alphaMode:
+        // - the default SourceOver blendMode does not imply alpha blending on
+        //   its own,
+        // - but other blendMode values do,
+        // - an alphaMode of Blend or Mask guarantees blending to be enabled
+        //   regardless of anything else.
+        // Additionally:
+        // - Opacity and texture map alpha are handled elsewhere (that's when a
+        //   blendMode of SourceOver or an alphaMode of Default/Opaque can in the
+        //   end still result in HasTransparency),
+        // - the presence of an opacityMap guarantees alpha blending regardless
+        //   of its content.
+
+        if (theMaterial->blendMode != QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver
+                || theMaterial->opacityMap
+                || theMaterial->alphaMode == QSSGRenderDefaultMaterial::Blend
+                || theMaterial->alphaMode == QSSGRenderDefaultMaterial::Mask)
+        {
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
         }
 
