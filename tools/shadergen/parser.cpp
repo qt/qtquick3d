@@ -1373,6 +1373,29 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             }
             break;
         }
+        case TypeInfo::RenderPass:
+        {
+            auto &components = ctx.components;
+            const auto compIt = components.constFind(typeName);
+            const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsRenderPass *>(compIt->ptr) : nullptr;
+            if (auto *pass = buildType(def, ctx, ret, base)) {
+                // If this is a component we'll store it for lookups later.
+                if (!base) {
+                    const auto &fileName = ctx.currentFileInfo.fileName();
+                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
+                    components.insert(componentName.toString(), { pass, type });
+                }
+                if (ctx.property.target) {
+                    if (ctx.property.targetType == TypeInfo::Effect) {
+                        auto passes = qobject_cast<QQuick3DEffect *>(ctx.property.target)->passes();
+                        passes.append(&passes, pass);
+                        if (ctx.dbgprint)
+                            printf("Appending pass to %s\n", ctx.property.name.toLatin1().constData());
+                    }
+                }
+            }
+            break;
+        }
         default:
             if (ctx.dbgprint)
                 printf("Object def for \'%s\' was not handled\n", ctx.property.name.toLatin1().constData());
