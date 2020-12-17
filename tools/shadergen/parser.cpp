@@ -566,7 +566,8 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
             }
         }
 
-        printf("Unhandled type for property %s\n", ref.toLatin1().constData());
+        if (ctx.dbgprint)
+            printf("Unhandled type for property %s\n", ref.toLatin1().constData());
     }
 
     return QVariant();
@@ -1046,7 +1047,8 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
         }
             break;
         default:
-            printf("Unhandled type\n");
+            if (ctx.dbgprint)
+                printf("Unhandled type\n");
             break;
         }
     }
