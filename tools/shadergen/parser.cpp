@@ -809,6 +809,13 @@ struct Visitors
                         if (ctx.dbgprint)
                             printf("Appending effect to \'%s\'\n", ctx.property.name.toLatin1().constData());
                     }
+                } else if (ctx.property.targetType == TypeInfo::RenderPass) {
+                    if (QQuick3DShaderUtilsShader *shader = qobject_cast<QQuick3DShaderUtilsShader *>(*foundIt)) {
+                        auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
+                        shaders.append(&shaders, shader);
+                        if (ctx.dbgprint)
+                            printf("Appending shader to \'%s\'\n", ctx.property.name.toLatin1().constData());
+                    }
                 }
             } else {
                 ctx.identifierMap.insert(idExpr.name, ctx.property.target);
