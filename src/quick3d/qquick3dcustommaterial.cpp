@@ -1107,116 +1107,6 @@ static inline QRhiGraphicsPipeline::BlendFactor toRhiBlendFactor(QQuick3DCustomM
     }
 }
 
-template<QMetaType::Type>
-struct ShaderType
-{
-};
-
-template<>
-struct ShaderType<QMetaType::Double>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Float; }
-    static QByteArray name() { return QByteArrayLiteral("float"); }
-};
-
-template<>
-struct ShaderType<QMetaType::Bool>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Boolean; }
-    static QByteArray name() { return QByteArrayLiteral("bool"); }
-};
-
-template<>
-struct ShaderType<QMetaType::Int>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Integer; }
-    static QByteArray name() { return QByteArrayLiteral("int"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QVector2D>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec2; }
-    static QByteArray name() { return QByteArrayLiteral("vec2"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QVector3D>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec3; }
-    static QByteArray name() { return QByteArrayLiteral("vec3"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QVector4D>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec4; }
-    static QByteArray name() { return QByteArrayLiteral("vec4"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QColor>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rgba; }
-    static QByteArray name() { return QByteArrayLiteral("vec4"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QSize>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Size; }
-    static QByteArray name() { return QByteArrayLiteral("vec2"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QSizeF>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::SizeF; }
-    static QByteArray name() { return QByteArrayLiteral("vec2"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QPoint>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Point; }
-    static QByteArray name() { return QByteArrayLiteral("vec2"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QPointF>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::PointF; }
-    static QByteArray name() { return QByteArrayLiteral("vec2"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QRect>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rect; }
-    static QByteArray name() { return QByteArrayLiteral("vec4"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QRectF>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::RectF; }
-    static QByteArray name() { return QByteArrayLiteral("vec4"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QQuaternion>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Quaternion; }
-    static QByteArray name() { return QByteArrayLiteral("vec4"); }
-};
-
-template<>
-struct ShaderType<QMetaType::QMatrix4x4>
-{
-    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Matrix4x4; }
-    static QByteArray name() { return QByteArrayLiteral("mat4"); }
-};
-
 QQuick3DCustomMaterial::QQuick3DCustomMaterial(QQuick3DObject *parent)
     : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::CustomMaterial)), parent)
 {
@@ -1354,6 +1244,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
+    using namespace QSSGShaderUtils;
+
     const auto &renderContext = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
     if (!renderContext) {
         qWarning("QQuick3DCustomMaterial: No render context interface?");
@@ -1394,7 +1286,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             superClass = superClass->superClass();
         }
 
-        QVector<QMetaProperty> textureProperties;
+        using TextureInputProperty = QPair<QQuick3DShaderUtilsTextureInput *, const char *>;
+        QVector<TextureInputProperty> textureProperties; // We'll deal with these later
+
         for (int i = propOffset; i != propCount; ++i) {
             const auto property = metaObject()->property(i);
             if (Q_UNLIKELY(!property.isValid()))
@@ -1406,108 +1300,55 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                     connect(this, property.notifySignal(), this, propertyDirtyMethod);
             } // else already connected
 
+            const auto name = property.name();
             QMetaType propType = property.metaType();
             QVariant propValue = property.read(this);
             if (propType == QMetaType(QMetaType::QVariant))
                 propType = propValue.metaType();
 
-            switch (propType.id()) {
-            case QMetaType::Double:
-                uniforms.append({ ShaderType<QMetaType::Double>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::Double>::type(), i });
-                break;
-            case QMetaType::Bool:
-                uniforms.append({ ShaderType<QMetaType::Bool>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::Bool>::type(), i });
-                break;
-            case QMetaType::QVector2D:
-                uniforms.append({ ShaderType<QMetaType::QVector2D>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QVector2D>::type(), i });
-                break;
-            case QMetaType::QVector3D:
-                uniforms.append({ ShaderType<QMetaType::QVector3D>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QVector3D>::type(), i });
-                break;
-            case QMetaType::QVector4D:
-                uniforms.append({ ShaderType<QMetaType::QVector4D>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QVector4D>::type(), i });
-                break;
-            case QMetaType::Int:
-                uniforms.append({ ShaderType<QMetaType::Int>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::Int>::type(), i });
-                break;
-            case QMetaType::QColor:
-                uniforms.append({ ShaderType<QMetaType::QColor>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QColor>::type(), i });
-                break;
-            case QMetaType::QSize:
-                uniforms.append({ ShaderType<QMetaType::QSize>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QSize>::type(), i });
-                break;
-            case QMetaType::QSizeF:
-                uniforms.append({ ShaderType<QMetaType::QSizeF>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QSizeF>::type(), i });
-                break;
-            case QMetaType::QPoint:
-                uniforms.append({ ShaderType<QMetaType::QPoint>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QPoint>::type(), i });
-                break;
-            case QMetaType::QPointF:
-                uniforms.append({ ShaderType<QMetaType::QPointF>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QPointF>::type(), i });
-                break;
-            case QMetaType::QRect:
-                uniforms.append({ ShaderType<QMetaType::QRect>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QRect>::type(), i });
-                break;
-            case QMetaType::QRectF:
-                uniforms.append({ ShaderType<QMetaType::QRectF>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QRectF>::type(), i });
-                break;
-            case QMetaType::QQuaternion:
-                uniforms.append({ ShaderType<QMetaType::QQuaternion>::name(), property.name() });
-                customMaterial->m_properties.push_back(
-                        { property.name(), propValue, ShaderType<QMetaType::QQuaternion>::type(), i });
-                break;
-            case QMetaType::QMatrix4x4:
-                uniforms.append({ ShaderType<QMetaType::QMatrix4x4>::name(), property.name() });
-                customMaterial->m_properties.push_back({ property.name(), propValue, ShaderType<QMetaType::QMatrix4x4>::type(), i });
-                break;
-            case QMetaType::QObjectStar:
-                if (qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
-                    textureProperties.push_back(property);
-                break;
-            default:
-                if (property.metaType().id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>())
-                    textureProperties.push_back(property);
-                // ### figure out how _not_ to warn when there are no dynamic
-                // properties defined (because warnings like Skipping vertexShader etc. are not helpful)
-                //qWarning("No known uniform conversion found for custom material property %s. Skipping", property.name());
-                break;
+            if (propType.id() >= QMetaType::User) {
+                if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) {
+                    if (QQuick3DShaderUtilsTextureInput *texture = property.read(this).value<QQuick3DShaderUtilsTextureInput *>())
+                        textureProperties.push_back({texture, name});
+                }
+            } else if (propType == QMetaType(QMetaType::QObjectStar)) {
+                if (QQuick3DShaderUtilsTextureInput *texture = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
+                    textureProperties.push_back({texture, name});
+            } else {
+                const auto type = uniformType(propType);
+                if (type != QSSGRenderShaderDataType::Unknown) {
+                    uniforms.append({ uniformTypeName(propType), name });
+                    customMaterial->m_properties.push_back({ name, propValue, uniformType(propType), i});
+                    // Track the property changes
+                    if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
+                        connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                } else {
+                    // ### figure out how _not_ to warn when there are no dynamic
+                    // properties defined (because warnings like Blah blah objectName etc. are not helpful)
+                    //qWarning("No known uniform conversion found for effect property %s. Skipping", property.name());
+                }
             }
         }
 
-        for (const auto &textureProperty : qAsConst(textureProperties)) {
-            QQuick3DShaderUtilsTextureInput *texture = textureProperty.read(this).value<QQuick3DShaderUtilsTextureInput *>();
-            const QByteArray &name = textureProperty.name();
-            if (name.isEmpty())
-                continue;
-
-            texture->name = name;
+        const auto processTextureProperty = [&](QQuick3DShaderUtilsTextureInput &texture, const QByteArray &name) {
+            texture.name = name;
 
             QSSGRenderCustomMaterial::TextureProperty textureData;
-            textureData.texInput = texture;
+            textureData.texInput = &texture;
             textureData.name = name;
             textureData.shaderDataType = QSSGRenderShaderDataType::Texture2D;
 
             if (newBackendNode) {
-                connect(texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
-                connect(texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                connect(&texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
             } // else already connected
 
             uniforms.append({ QByteArrayLiteral("sampler2D"), textureData.name });
             customMaterial->m_textureProperties.push_back(textureData);
-        }
+        };
+
+        for (const auto &textureProperty : qAsConst(textureProperties))
+            processTextureProperty(*textureProperty.first, textureProperty.second);
 
         const QQmlContext *context = qmlContext(this);
         QByteArray vertex, fragment;

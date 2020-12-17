@@ -258,7 +258,9 @@ QT_BEGIN_NAMESPACE
     Specifies the value that will be set on the \c target uniform.
 */
 
-QByteArray QSSGShaderUtils::resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey)
+namespace QSSGShaderUtils {
+
+QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey)
 {
     if (!shaderPathKey.isEmpty())
         shaderPathKey.append('>');
@@ -275,6 +277,189 @@ QByteArray QSSGShaderUtils::resolveShader(const QUrl &fileUrl, const QQmlContext
     }
 
     return QByteArray();
+}
+
+template<>
+struct ShaderType<QMetaType::Double>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Float; }
+    static QByteArray name() { return QByteArrayLiteral("float"); }
+};
+
+template<>
+struct ShaderType<QMetaType::Bool>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Boolean; }
+    static QByteArray name() { return QByteArrayLiteral("bool"); }
+};
+
+template<>
+struct ShaderType<QMetaType::Int>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Integer; }
+    static QByteArray name() { return QByteArrayLiteral("int"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QVector2D>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec2; }
+    static QByteArray name() { return QByteArrayLiteral("vec2"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QVector3D>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec3; }
+    static QByteArray name() { return QByteArrayLiteral("vec3"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QVector4D>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Vec4; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QColor>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rgba; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QSize>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Size; }
+    static QByteArray name() { return QByteArrayLiteral("vec2"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QSizeF>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::SizeF; }
+    static QByteArray name() { return QByteArrayLiteral("vec2"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QPoint>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Point; }
+    static QByteArray name() { return QByteArrayLiteral("vec2"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QPointF>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::PointF; }
+    static QByteArray name() { return QByteArrayLiteral("vec2"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QRect>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Rect; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QRectF>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::RectF; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QQuaternion>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Quaternion; }
+    static QByteArray name() { return QByteArrayLiteral("vec4"); }
+};
+
+template<>
+struct ShaderType<QMetaType::QMatrix4x4>
+{
+    static constexpr QSSGRenderShaderDataType type() { return QSSGRenderShaderDataType::Matrix4x4; }
+    static QByteArray name() { return QByteArrayLiteral("mat4"); }
+};
+
+QByteArray uniformTypeName(QMetaType type)
+{
+    switch (type.id()) {
+    case QMetaType::Double:
+        return ShaderType<QMetaType::Double>::name();
+    case QMetaType::Bool:
+        return ShaderType<QMetaType::Bool>::name();
+    case QMetaType::QVector2D:
+        return ShaderType<QMetaType::QVector2D>::name();
+    case QMetaType::QVector3D:
+        return ShaderType<QMetaType::QVector3D>::name();
+    case QMetaType::QVector4D:
+        return ShaderType<QMetaType::QVector4D>::name();
+    case QMetaType::Int:
+        return ShaderType<QMetaType::Int>::name();
+    case QMetaType::QColor:
+        return ShaderType<QMetaType::QColor>::name();
+    case QMetaType::QSize:
+        return ShaderType<QMetaType::QSize>::name();
+    case QMetaType::QSizeF:
+        return ShaderType<QMetaType::QSizeF>::name();
+    case QMetaType::QPoint:
+        return ShaderType<QMetaType::QPoint>::name();
+    case QMetaType::QPointF:
+        return ShaderType<QMetaType::QPointF>::name();
+    case QMetaType::QRect:
+        return ShaderType<QMetaType::QRect>::name();
+    case QMetaType::QRectF:
+        return ShaderType<QMetaType::QRectF>::name();
+    case QMetaType::QQuaternion:
+        return ShaderType<QMetaType::QQuaternion>::name();
+    case QMetaType::QMatrix4x4:
+        return ShaderType<QMetaType::QMatrix4x4>::name();
+    default:
+        return QByteArray();
+    }
+}
+
+QSSGRenderShaderDataType uniformType(QMetaType type)
+{
+    switch (type.id()) {
+    case QMetaType::Double:
+        return ShaderType<QMetaType::Double>::type();
+    case QMetaType::Bool:
+        return ShaderType<QMetaType::Bool>::type();
+    case QMetaType::QVector2D:
+        return ShaderType<QMetaType::QVector2D>::type();
+    case QMetaType::QVector3D:
+        return ShaderType<QMetaType::QVector3D>::type();
+    case QMetaType::QVector4D:
+        return ShaderType<QMetaType::QVector4D>::type();
+    case QMetaType::Int:
+        return ShaderType<QMetaType::Int>::type();
+    case QMetaType::QColor:
+        return ShaderType<QMetaType::QColor>::type();
+    case QMetaType::QSize:
+        return ShaderType<QMetaType::QSize>::type();
+    case QMetaType::QSizeF:
+        return ShaderType<QMetaType::QSizeF>::type();
+    case QMetaType::QPoint:
+        return ShaderType<QMetaType::QPoint>::type();
+    case QMetaType::QPointF:
+        return ShaderType<QMetaType::QPointF>::type();
+    case QMetaType::QRect:
+        return ShaderType<QMetaType::QRect>::type();
+    case QMetaType::QRectF:
+        return ShaderType<QMetaType::QRectF>::type();
+    case QMetaType::QQuaternion:
+        return ShaderType<QMetaType::QQuaternion>::type();
+    case QMetaType::QMatrix4x4:
+        return ShaderType<QMetaType::QMatrix4x4>::type();
+    default:
+        return QSSGRenderShaderDataType::Unknown;
+    }
+}
+
 }
 
 QQuick3DShaderUtilsBuffer::TextureFormat QQuick3DShaderUtilsBuffer::mapRenderTextureFormat(QSSGRenderTextureFormat::Format fmt)

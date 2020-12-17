@@ -57,6 +57,14 @@ class QQmlContext;
 
 namespace QSSGShaderUtils {
 QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey);
+
+template<QMetaType::Type>
+struct ShaderType
+{
+};
+
+QByteArray uniformTypeName(QMetaType type);
+QSSGRenderShaderDataType uniformType(QMetaType type);
 }
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
