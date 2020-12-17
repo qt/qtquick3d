@@ -60,6 +60,9 @@ static int generateShaders(QVector<QString> &qsbcFiles,
             GenShaders genShaders(sourceDir.canonicalPath());
             if (!genShaders.process(sceneData, qsbcFiles, outDir, multilight, dryRun))
                 return -1;
+        } else if (verboseOutput) {
+            if (!sceneData.viewport)
+                qWarning() << "No View3D item found";
         }
     }
     return 0;
