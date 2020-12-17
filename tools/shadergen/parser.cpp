@@ -1372,8 +1372,9 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             break;
         }
         default:
-            Q_UNREACHABLE();
-            break;
+            if (ctx.dbgprint)
+                printf("Object def for \'%s\' was not handled\n", ctx.property.name.toLatin1().constData());
+            return false;
         }
         return true;
     }
