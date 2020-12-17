@@ -198,8 +198,17 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         auto materialList = model->materials();
         for (int i = 0, e = materialList.count(&materialList); i != e; ++i) {
             auto mat = materialList.at(&materialList, i);
-            QQuick3DObjectPrivate::get(mat)->sceneManager = sceneManager;
-            auto node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
+            auto obj = QQuick3DObjectPrivate::get(mat);
+            obj->sceneManager = sceneManager;
+            QSSGRenderGraphObject *node = nullptr;
+            if (obj->type == QQuick3DObjectPrivate::Type::CustomMaterial) {
+                auto customMatNode = new QSSGRenderCustomMaterial;
+                customMatNode->incompleteBuildTimeObject = true;
+                node = QQuick3DObjectPrivate::updateSpatialNode(mat, customMatNode);
+                customMatNode->incompleteBuildTimeObject = false;
+            } else {
+                node = QQuick3DObjectPrivate::updateSpatialNode(mat, nullptr);
+            }
             QQuick3DObjectPrivate::get(mat)->spatialNode = node;
             nodes.append(node);
         }

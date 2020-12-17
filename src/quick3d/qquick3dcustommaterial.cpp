@@ -1350,6 +1350,42 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         for (const auto &textureProperty : qAsConst(textureProperties))
             processTextureProperty(*textureProperty.first, textureProperty.second);
 
+        if (customMaterial->incompleteBuildTimeObject) { // This object came from the shadergen tool
+            const auto names = dynamicPropertyNames();
+            QVector<QByteArray> textureNames;
+            for (const auto &name : names) {
+                QVariant propValue = property(name.constData());
+                QMetaType propType = propValue.metaType();
+                if (propType == QMetaType(QMetaType::QVariant))
+                    propType = propValue.metaType();
+
+                if (propType.id() >= QMetaType::User) {
+                    if (propType.id() == qMetaTypeId<QQuick3DShaderUtilsTextureInput *>()) {
+                        if (QQuick3DShaderUtilsTextureInput *texture = propValue.value<QQuick3DShaderUtilsTextureInput *>())
+                            textureProperties.push_back({texture, name});
+                    }
+                } else if (propType.id() == QMetaType::QObjectStar) {
+                    if (QQuick3DShaderUtilsTextureInput *texture = qobject_cast<QQuick3DShaderUtilsTextureInput *>(propValue.value<QObject *>()))
+                        textureProperties.push_back({texture, name});
+                } else {
+                    const auto type = uniformType(propType);
+                    if (type != QSSGRenderShaderDataType::Unknown) {
+                        uniforms.append({ uniformTypeName(propType), name });
+                        customMaterial->m_properties.push_back({ name, propValue,
+                                                                 uniformType(propType), -1 /* aka. dynamic property */});
+                        // We don't need to track property changes
+                    } else {
+                        // ### figure out how _not_ to warn when there are no dynamic
+                        // properties defined (because warnings like Blah blah objectName etc. are not helpful)
+                        qWarning("No known uniform conversion found for custom material property %s. Skipping", name.constData());
+                    }
+                }
+            }
+
+            for (const auto &property : qAsConst(textureProperties))
+                processTextureProperty(*property.first, property.second);
+        }
+
         const QQmlContext *context = qmlContext(this);
         QByteArray vertex, fragment;
         QSSGCustomShaderMetaData vertexMeta, fragmentMeta;
