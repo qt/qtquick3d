@@ -49,7 +49,7 @@ To verify that the material shaders were successfully, and correctly, generated,
 generated a \l{Generated content}{.qsbc} file which can be inspected to verify that the content
 matches the material used by the application. It's also possible to verify that the material
 was loaded from the pre-built cache by setting the environment variable \b QT_RHI_SHADER_DEBUG=1
-and looking at the debug output for mentions of the engine loading the \b pre-compiled
+and looking at the debug output for mentions of the engine loading the \b pregenerated
 shader successfully.
 
 Known limitations are:
