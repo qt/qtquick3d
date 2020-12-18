@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     By default, a point light intensity diminishes according to inverse-square-law. However, the fade-off
     (and range) can be controlled with the \l {constantFade}, \l {linearFade}, and
     \l quadraticFade properties. Light attenuation is calculated using the formula:
-    \l {constantFade} + \c distance * (\l {linearFade} * 0.01) + \c distance * (\l {quadraticFade} * 0.0001)^2
+    \l {constantFade} + \c distance * (\l {linearFade} * 0.01) + \c distance^2 * (\l {quadraticFade} * 0.0001)
 
     \section2 A simple example: shading a sphere in three different ways
 
