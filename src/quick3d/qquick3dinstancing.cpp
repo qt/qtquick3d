@@ -327,6 +327,12 @@ QQmlListProperty<QQuick3DInstanceListEntry> QQuick3DInstanceList::instances()
                                                           qmlClearInstanceListEntries);
 }
 
+void QQuick3DInstanceList::onInstanceDestroyed(QObject *object)
+{
+    if (m_instances.removeAll(object))
+        handleInstanceChange();
+}
+
 void QQuick3DInstanceList::qmlAppendInstanceListEntry(QQmlListProperty<QQuick3DInstanceListEntry> *list, QQuick3DInstanceListEntry *instance)
 {
     if (instance == nullptr)
@@ -337,6 +343,7 @@ void QQuick3DInstanceList::qmlAppendInstanceListEntry(QQmlListProperty<QQuick3DI
     if (instance->parentItem() == nullptr)
         instance->setParentItem(self);
     connect(instance, &QQuick3DInstanceListEntry::changed, self, &QQuick3DInstanceList::handleInstanceChange);
+    connect(instance, &QObject::destroyed, self, &QQuick3DInstanceList::onInstanceDestroyed);
     self->handleInstanceChange();
 }
 
@@ -355,6 +362,10 @@ qsizetype QQuick3DInstanceList::qmlInstanceListEntriesCount(QQmlListProperty<QQu
 void QQuick3DInstanceList::qmlClearInstanceListEntries(QQmlListProperty<QQuick3DInstanceListEntry> *list)
 {
     auto *self = static_cast<QQuick3DInstanceList *>(list->object);
+    for (auto *instance : self->m_instances) {
+        disconnect(instance, &QObject::destroyed, self, &QQuick3DInstanceList::onInstanceDestroyed);
+        disconnect(instance, &QQuick3DInstanceListEntry::changed, self, &QQuick3DInstanceList::handleInstanceChange);
+    }
     self->m_instances.clear();
     self->handleInstanceChange();
 }

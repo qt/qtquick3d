@@ -184,6 +184,7 @@ public:
 
 private Q_SLOTS:
     void handleInstanceChange();
+    void onInstanceDestroyed(QObject *object);
 
 private:
     void generateInstanceData();
