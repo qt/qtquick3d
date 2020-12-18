@@ -742,13 +742,16 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
 
     if (light->mType == aiLightSource_POINT || light->mType == aiLightSource_SPOT) {
         // constantFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
+        // Some assets have this constant attenuation value as 0.0f and it makes light attenuation makes infinite at distance 0.
+        // In that case, we will use the default constant attenuation, 1.0f.
+        if (light->mAttenuationConstant != 0.0f)
+            QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("constantFade"), light->mAttenuationConstant);
 
         // linearFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("linearFade"), light->mAttenuationLinear);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("linearFade"), light->mAttenuationLinear * 100);
 
         // exponentialFade
-        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("quadraticFade"), light->mAttenuationQuadratic * 10000);
 
         if (light->mType == aiLightSource_SPOT) {
             // coneAngle
