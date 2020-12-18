@@ -681,18 +681,35 @@ QSSGQmlUtilities::PropertyMap::Type AssimpImporter::generateLightProperties(aiNo
     else
         generateNodeProperties(lightNode, output, tabLevel, nullptr, true);
 
-    // diffuseColor
-    QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r, light->mColorDiffuse.g, light->mColorDiffuse.b);
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("color"), diffuseColor);
+    // brightness
+    // Assimp has no property related to brightness or intensity.
+    // They are multiplied to diffuse, ambient and specular colors.
+    // For extracting the property value, we will check the maximum value of them.
+    // (In most cases, Assimp uses the same specular values with diffuse values,
+    // so we will compare just components of the diffuse and the ambient)
+    float brightness = qMax(qMax(1.0f, light->mColorDiffuse.r),
+                            qMax(light->mColorDiffuse.g, light->mColorDiffuse.b));
 
     // ambientColor
     if (light->mType == aiLightSource_AMBIENT) {
+        brightness = qMax(qMax(brightness, light->mColorAmbient.r),
+                          qMax(light->mColorAmbient.g, light->mColorAmbient.b));
+
         // We only want ambient light color if it is explicit
-        QColor ambientColor = QColor::fromRgbF(light->mColorAmbient.r, light->mColorAmbient.g, light->mColorAmbient.b);
+        QColor ambientColor = QColor::fromRgbF(light->mColorAmbient.r / brightness,
+                                               light->mColorAmbient.g / brightness,
+                                               light->mColorAmbient.b / brightness);
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("ambientColor"), ambientColor);
     }
-    // brightness
-    // Its default value is 100 and the normalized value 1 will be used.
+
+    // diffuseColor
+    QColor diffuseColor = QColor::fromRgbF(light->mColorDiffuse.r / brightness,
+                                           light->mColorDiffuse.g / brightness,
+                                           light->mColorDiffuse.b / brightness);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("color"), diffuseColor);
+
+    // describe brightness here
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, lightType, QStringLiteral("brightness"), brightness);
 
     if (light->mType == aiLightSource_POINT || light->mType == aiLightSource_SPOT) {
         // constantFade
