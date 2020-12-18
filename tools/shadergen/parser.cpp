@@ -779,7 +779,8 @@ struct Visitors
                         materials.append(&materials, mat);
                         // Remove the material from the "free" list (materials that aren't use anywhere).
                         auto &freeMaterials = ctx.sceneData.materials;
-                        if (const auto idx = freeMaterials.indexOf({ qobject_cast<QQuick3DPrincipledMaterial *>(mat), TypeInfo::PrincipledMaterial }))
+                        const auto idx = freeMaterials.indexOf({ qobject_cast<QQuick3DPrincipledMaterial *>(mat), TypeInfo::PrincipledMaterial });
+                        if (idx != -1)
                             freeMaterials.removeAt(idx);
                         if (ctx.dbgprint)
                             printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
