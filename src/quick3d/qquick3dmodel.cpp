@@ -418,8 +418,8 @@ void QQuick3DModel::setInstancing(QQuick3DInstancing *instancing)
     QQuick3DObjectPrivate::updatePropertyListener(instancing, m_instancing, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("instancing"), m_connections, [this](QQuick3DObject *n) {
         setInstancing(qobject_cast<QQuick3DInstancing *>(n));
     });
-    if (m_skeleton)
-        QObject::disconnect(m_skeletonConnection);
+    if (m_instancing)
+        QObject::disconnect(m_instancingConnection);
     m_instancing = instancing;
     if (m_instancing) {
         m_instancingConnection = QObject::connect
