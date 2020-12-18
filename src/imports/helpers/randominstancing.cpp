@@ -220,12 +220,16 @@ void QQuick3DRandomInstancing::setPosition(QQuick3DInstanceRange *position)
     if (m_position == position)
         return;
 
+    if (m_position)
+        disconnect(m_position,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_position = position;
     emit positionChanged(m_position);
     m_dirty = true;
     markDirty();
-    if (position)
-        connect(position, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+    if (m_position) {
+        connect(m_position, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+        connect(m_position, &QObject::destroyed, this, [this](QObject *obj){ if (obj == m_position) m_position = nullptr; });
+    }
 }
 
 void QQuick3DRandomInstancing::setScale(QQuick3DInstanceRange *scale)
@@ -233,12 +237,16 @@ void QQuick3DRandomInstancing::setScale(QQuick3DInstanceRange *scale)
     if (m_scale == scale)
         return;
 
+    if (m_scale)
+        disconnect(m_scale,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_scale = scale;
     emit scaleChanged(m_scale);
     m_dirty = true;
     markDirty();
-    if (scale)
-        connect(scale, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+    if (m_scale) {
+        connect(m_scale, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+        connect(m_scale, &QObject::destroyed, this, [this](QObject *obj){ if (obj == m_scale) m_scale = nullptr; });
+    }
 }
 
 void QQuick3DRandomInstancing::setRotation(QQuick3DInstanceRange *rotation)
@@ -246,12 +254,16 @@ void QQuick3DRandomInstancing::setRotation(QQuick3DInstanceRange *rotation)
     if (m_rotation == rotation)
         return;
 
+    if (m_rotation)
+        disconnect(m_rotation,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_rotation = rotation;
     emit rotationChanged(m_rotation);
     m_dirty = true;
     markDirty();
-    if (rotation)
-        connect(rotation, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+    if (m_rotation) {
+        connect(m_rotation, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+        connect(m_rotation, &QObject::destroyed, this, [this](QObject *obj){ if (obj == m_rotation) m_rotation = nullptr; });
+    }
 }
 
 void QQuick3DRandomInstancing::setColor(QQuick3DInstanceRange *color)
@@ -259,12 +271,16 @@ void QQuick3DRandomInstancing::setColor(QQuick3DInstanceRange *color)
     if (m_color == color)
         return;
 
+    if (m_color)
+        disconnect(m_color,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_color = color;
     emit colorChanged(m_color);
     m_dirty = true;
     markDirty();
-    if (color)
-        connect(color, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+    if (m_color) {
+        connect(m_color, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+        connect(m_color, &QObject::destroyed, this, [this](QObject *obj){ if (obj == m_color) m_color = nullptr; });
+    }
 
 }
 
@@ -273,12 +289,16 @@ void QQuick3DRandomInstancing::setCustomData(QQuick3DInstanceRange *customData)
     if (m_customData == customData)
         return;
 
+    if (m_customData)
+        disconnect(m_customData,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_customData = customData;
     emit customDataChanged(m_customData);
     m_dirty = true;
     markDirty();
-    if (customData)
-        connect(customData, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+    if (m_customData) {
+        connect(m_customData, &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
+        connect(m_customData, &QObject::destroyed, this, [this](QObject *obj){ if (obj == m_customData) m_customData = nullptr; });
+    }
 }
 
 void QQuick3DRandomInstancing::handleChange()
