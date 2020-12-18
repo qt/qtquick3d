@@ -298,7 +298,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
 
     static const bool shaderDebug = qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG");
     if (shaderDebug)
-        qDebug("Loading pre-compiled rhi shader(s)");
+        qDebug("Loading pregenerated rhi shader(s)");
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
     QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
