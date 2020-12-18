@@ -442,7 +442,8 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
 
     // instancing
     { "INSTANCE_COLOR", "qt_instanceColor"},
-    { "INSTANCE_DATA", "qt_instanceData"}
+    { "INSTANCE_DATA", "qt_instanceData"},
+    { "INSTANCE_INDEX", "gl_InstanceIndex"}
 };
 
 // Functions that, if present, get an argument list injected.

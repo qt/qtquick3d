@@ -857,6 +857,20 @@ QT_BEGIN_NAMESPACE
 
     \endlist
 
+    \section2 Instancing
+    \note The instancing feature is in tech preview in Qt 6.1. \b {The API is
+    under development and subject to change.}
+
+    When doing instanced rendering, some of the keywords above do not apply.
+    The following keywords are only available with instancing:
+
+    \list
+    \li \c INSTANCE_MODEL_MATRIX -> mat4, replacement for \c MODEL_MATRIX, including the instancing transformation.
+    \li \c INSTANCE_MODELVIEWPROJECTION_MATRIX -> mat4, replacement for \c MODELVIEWPROJECTION_MATRIX, including the instancing transformation.
+    \li \c INSTANCE_COLOR -> vec4, the instance color: to be combined with \c {COLOR}.
+    \li \c INSTANCE_DATA -> vec4, instance custom data.
+    \li \c INSTANCE_INDEX -> int, the instance number, and index into the instancing table.
+
     \section1 Screen, depth, and other textures
 
     The rendering pipeline can expose a number of textures to the custom
