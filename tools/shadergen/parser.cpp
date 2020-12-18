@@ -1071,7 +1071,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
         if (ctx.type == Context::Type::Component) {
             const auto &fileName = ctx.currentFileInfo.fileName();
             const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-            s_typeMap->insert(componentName.toString(), typeIt.value());
+            s_typeMap->insert(componentName.toString(), type);
         } else if (ctx.dbgprint) {
             printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), TypeInfo::typeStringTable[type]);
         }
