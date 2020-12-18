@@ -26,6 +26,7 @@ set(qml_resource_files
     "qml/EffectA.qml"
     "qml/ModelA.qml"
     "qml/main.qml"
+    "qml/instancing.qml"
 )
 
 qt_internal_add_resource(tst_shadergen "qml" # special case

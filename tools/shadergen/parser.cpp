@@ -53,6 +53,9 @@
 #include <QtQuick3D/private/qquick3dpointlight_p.h>
 #include <QtQuick3D/private/qquick3ddirectionallight_p.h>
 
+// Instancing
+#include <QtQuick3D/private/qquick3dinstancing_p.h>
+
 #include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
@@ -98,6 +101,8 @@ DECLARE_QQ3D_TYPE(QQuick3DModel, Model);
 DECLARE_QQ3D_TYPE(QQuick3DEffect, Effect);
 DECLARE_QQ3D_TYPE(QQuick3DShaderUtilsRenderPass, Pass);
 DECLARE_QQ3D_TYPE(QQuick3DShaderUtilsShader, Shader);
+DECLARE_QQ3D_TYPE(QQuick3DInstanceList, InstanceList);
+DECLARE_QQ3D_TYPE(QQuick3DInstanceListEntry, InstanceListEntry);
 
 using QmlTypeNames = QHash<QString, int>;
 
@@ -118,7 +123,9 @@ QmlTypeNames baseTypeMap()
              QQ3D_TYPE_ENTRY(QQuick3DModel),
              QQ3D_TYPE_ENTRY(QQuick3DEffect),
              QQ3D_TYPE_ENTRY(QQuick3DShaderUtilsRenderPass),
-             QQ3D_TYPE_ENTRY(QQuick3DShaderUtilsShader)
+             QQ3D_TYPE_ENTRY(QQuick3DShaderUtilsShader),
+             QQ3D_TYPE_ENTRY(QQuick3DInstanceList),
+             QQ3D_TYPE_ENTRY(QQuick3DInstanceListEntry)
     };
 }
 
@@ -801,6 +808,10 @@ struct Visitors
                         materials.append(&materials, mat);
                         if (ctx.dbgprint)
                             printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                    } else if (QQuick3DInstanceList *instancingList = qobject_cast<QQuick3DInstanceList *>(*foundIt)) {
+                        qobject_cast<QQuick3DModel *>(ctx.property.target)->setInstancing(instancingList);
+                        if (ctx.dbgprint)
+                            printf("Setting instance list on model\n");
                     }
                 } else if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
                     if (QQuick3DEffect *effect = qobject_cast<QQuick3DEffect *>(*foundIt)) {
@@ -830,6 +841,26 @@ struct Visitors
                         if (ctx.dbgprint)
                             printf("Appending shader to \'%s\'\n", ctx.property.name.toLatin1().constData());
                     }
+                } else if (ctx.property.targetType == TypeInfo<QQuick3DInstanceList>::typeId()) {
+                    if (QQuick3DInstanceListEntry *listEntry = qobject_cast<QQuick3DInstanceListEntry *>(*foundIt)) {
+                        auto instances = qobject_cast<QQuick3DInstanceList *>(ctx.property.target)->instances();
+                        // Since we are initializing this for the first time, make sure we clean out any inherited data!
+                        if (ctx.property.memberState == Context::Property::Uninitialized) {
+                            if (ctx.dbgprint)
+                                printf("Clearing inherited instances\n");
+                            instances.clear(&instances);
+                            ctx.property.memberState = Context::Property::Initialized;
+                        }
+                        instances.append(&instances, listEntry);
+                        if (ctx.dbgprint)
+                            printf("Appending instance entry to %s\n", ctx.property.name.toLatin1().constData());
+                    } else if (QQuick3DInstanceList *instancingList = qobject_cast<QQuick3DInstanceList *>(*foundIt)) {
+                        qobject_cast<QQuick3DModel *>(ctx.property.target)->setInstancing(instancingList);
+                        if (ctx.dbgprint)
+                            printf("Setting instance list on model\n");
+                    }
+                } else if (ctx.dbgprint) {
+                    printf("Unhandled binding: %s\n", idExpr.name.toLatin1().constData());
                 }
             } else {
                 // If no item with 'this' id was found, then that id is for 'this' object (if this not the case, then something is broken, e.g., a ref to an unknown item).
@@ -1392,6 +1423,35 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     passes.append(&passes, pass);
                     if (ctx.dbgprint)
                         printf("Appending pass to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+        }
+    } else if (type == TypeInfo<QQuick3DInstanceList>::typeId()) {
+        const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DInstanceList *>(compIt->ptr) : nullptr;
+        if (auto *instanceList = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ instanceList, type });
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                    qobject_cast<QQuick3DModel *>(ctx.property.target)->setInstancing(instanceList);
+                    if (ctx.dbgprint)
+                        printf("Setting instance list on %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+        }
+    } else if (type == TypeInfo<QQuick3DInstanceListEntry>::typeId()) {
+        const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DInstanceListEntry *>(compIt->ptr) : nullptr;
+        if (auto *instanceListEntry = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ instanceListEntry, type });
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DInstanceList>::typeId()) {
+                    auto instances = qobject_cast<QQuick3DInstanceList *>(ctx.property.target)->instances();
+                    instances.append(&instances, instanceListEntry);
+                    if (ctx.dbgprint)
+                        printf("Appending instance list entry to %s\n", ctx.property.name.toLatin1().constData());
                 }
             }
         }

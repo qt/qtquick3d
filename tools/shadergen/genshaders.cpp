@@ -214,6 +214,13 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             QQuick3DObjectPrivate::get(mat)->spatialNode = node;
             nodes.append(node);
         }
+        if (auto instanceList = qobject_cast<QQuick3DInstanceList *>(model->instancing())) {
+            auto obj = QQuick3DObjectPrivate::get(instanceList);
+            auto node = QQuick3DObjectPrivate::updateSpatialNode(instanceList, nullptr);
+            obj->spatialNode = node;
+            nodes.append(node);
+        }
+
         auto node = QQuick3DObjectPrivate::updateSpatialNode(model, nullptr);
         QQuick3DObjectPrivate::get(model)->spatialNode = node;
         nodes.append(node);

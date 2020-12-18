@@ -37,6 +37,7 @@
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3deffect_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
+#include <QtQuick3D/private/qquick3dinstancing_p.h>
 
 #include <parser.h>
 
@@ -58,6 +59,7 @@ private Q_SLOTS:
     void tst_effectUniforms_data();
     void tst_effectUniforms();
     void tst_componentResolving();
+    void tst_instancing();
 
 private:
     MaterialParser::SceneData lastSceneData;
@@ -320,6 +322,28 @@ void Shadergen::tst_componentResolving()
         const auto &model = models.at(7);
         auto materials = model->materials();
         QCOMPARE(materials.count(&materials), 2);
+    }
+}
+
+void Shadergen::tst_instancing()
+{
+    QVector<QString> filePaths { ":/qml/instancing.qml" };
+
+    MaterialParser::SceneData sceneData;
+    MaterialParser::parseQmlFiles(filePaths, QString(), sceneData, false);
+
+    // instancing.qml(Model).
+    const auto &models = sceneData.models;
+    QCOMPARE(models.size(), 1);
+
+    {
+        const auto &model = models.at(0);
+        auto instancing = model->instancing();
+        QVERIFY(instancing != nullptr);
+        int count = -1;
+        const auto buffer = instancing->instanceBuffer(&count);
+        (void)buffer;
+        QCOMPARE(count, 2);
     }
 }
 
