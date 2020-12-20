@@ -86,6 +86,7 @@ struct QSSGMaterialVertexPipeline
     bool useFloatJointIndices;
     QSSGDataView<float> morphWeights;
     bool hasCustomShadedMain;
+    bool usesInstancing;
     bool skipCustomFragmentSnippet;
 
     QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
