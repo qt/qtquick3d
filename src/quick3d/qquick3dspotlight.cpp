@@ -144,14 +144,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty real SpotLight::coneAngle
 
-    This property defines the cut-off angle beyond which the light doesn't affect the scene.
+    This property defines the cut-off angle (from edge to edge) beyond which the light doesn't affect the scene.
     Defined in degrees between 0 and 180. The default value is 40.
 */
 
 /*!
     \qmlproperty real SpotLight::innerConeAngle
 
-    This property defines the angle at which the light intensity starts to gradually diminish
+    This property defines the angle (from edge to edge) at which the light intensity starts to gradually diminish
     as it approaches \l {coneAngle}. Defined in degrees between 0 and 180. If the value is set
     larger than \l {coneAngle}, it'll behave as if it had the same value as \l {coneAngle}.
     The default value is 30.
@@ -268,8 +268,8 @@ QSSGRenderGraphObject *QQuick3DSpotLight::updateSpatialNode(QSSGRenderGraphObjec
 
     if (m_dirtyFlags.testFlag(DirtyFlag::AreaDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::AreaDirty, false);
-        light->m_coneAngle = m_coneAngle;
-        light->m_innerConeAngle = m_innerConeAngle;
+        light->m_coneAngle = qBound(0.0f, m_coneAngle * 0.5, 90.0f);
+        light->m_innerConeAngle = qBound(0.0f, m_innerConeAngle * 0.5, 90.0f);
     }
 
     return node;

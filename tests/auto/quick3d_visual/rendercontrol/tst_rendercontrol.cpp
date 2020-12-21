@@ -529,8 +529,8 @@ void tst_RenderControl::dynamicLights()
         QVERIFY(readCompleted);
         QCOMPARE(result.size(), QSize(640, 480));
 
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(101, 255, 83), FUZZ));
-        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(56, 113, 38), 20));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.5, QColor::fromRgb(0, 255, 83), FUZZ));
+        QVERIFY(comparePixelNormPos(result, 0.5, 0.8, QColor::fromRgb(17, 113, 39), 20));
     }
 
     // Case: add a lot of lights, to exceed the limit of 15. Should survive

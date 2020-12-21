@@ -153,8 +153,10 @@ void tst_QQuick3DSpotLight::testProperties()
     QCOMPARE(color1Vec3, node->m_diffuseColor);
     QCOMPARE(color1Vec3, node->m_specularColor);
     QCOMPARE(color2Vec3, node->m_ambientColor);
-    QCOMPARE(coneAngle, node->m_coneAngle);
-    QCOMPARE(innerConeAngle, node->m_innerConeAngle);
+    // light's coneAngles are from edge to edge
+    // while qssgrenderlight's are from center to edge
+    QCOMPARE(coneAngle, node->m_coneAngle * 2);
+    QCOMPARE(innerConeAngle, node->m_innerConeAngle * 2);
 }
 
 void tst_QQuick3DSpotLight::testScope()

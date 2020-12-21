@@ -1496,15 +1496,11 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
             lightData.coneAngle = 180.0f;
             if (theLight->m_lightType == QSSGRenderLight::Type::Spot) {
-                lightData.coneAngle
-                        = qCos(qDegreesToRadians(theLight->m_coneAngle));
-                float innerConeAngle = theLight->m_innerConeAngle;
-                if (theLight->m_innerConeAngle < 0)
-                    innerConeAngle = theLight->m_coneAngle * 0.7f;
-                else if (theLight->m_innerConeAngle > theLight->m_coneAngle)
-                    innerConeAngle = theLight->m_coneAngle;
-                lightData.innerConeAngle
-                        = qCos(qDegreesToRadians(innerConeAngle));
+                const float coneAngle = theLight->m_coneAngle;
+                const float innerConeAngle = (theLight->m_innerConeAngle > coneAngle) ?
+                                                coneAngle : theLight->m_innerConeAngle;
+                lightData.coneAngle = qCos(qDegreesToRadians(coneAngle));
+                lightData.innerConeAngle = qCos(qDegreesToRadians(innerConeAngle));
             }
         }
 
