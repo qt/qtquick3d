@@ -439,15 +439,11 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     sourceTexture->deleteLater();
 
     // Upload the equirectangular texture
-    QRhiTextureUploadDescription desc;
-    if (inImage->compressedData.isValid()) {
-        desc = {{ 0, 0, { inImage->compressedData.data().constData() + inImage->compressedData.dataOffset(0),
-                          int(inImage->compressedData.dataLength(0)) }
-               }};
-    } else {
-        desc = {{ 0, 0, { inImage->data, int(inImage->dataSizeInBytes) }
-               }};
-    }
+    const auto desc = inImage->compressedData.isValid()
+            ? QRhiTextureUploadDescription(
+                    { 0, 0, QRhiTextureSubresourceUploadDescription(inImage->compressedData.getDataView().toByteArray()) })
+            : QRhiTextureUploadDescription({ 0, 0, { inImage->data, int(inImage->dataSizeInBytes) } });
+
     auto *rub = rhi->nextResourceUpdateBatch();
     rub->uploadTexture(sourceTexture, desc);
 
@@ -773,7 +769,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
         for (int i = 0; i < tex.numLevels(); i++) {
             QRhiTextureSubresourceUploadDescription subDesc;
             subDesc.setSourceSize(sizeForMipLevel(i, size));
-            subDesc.setData(tex.data().mid(tex.dataOffset(i), tex.dataLength(i)));
+            subDesc.setData(tex.getDataView(i).toByteArray());
             textureUploads << QRhiTextureUploadEntry{ 0, i, subDesc };
         }
         rhiFormat = toRhiFormat(inTexture->format.format);
