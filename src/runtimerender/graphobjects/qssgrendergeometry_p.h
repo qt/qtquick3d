@@ -76,22 +76,10 @@ public:
             JointSemantic,              // attr_joints
             WeightSemantic,             // attr_weights
             ColorSemantic,              // attr_color
-            TargetPosition0Semantic,    // attr_tpos0
-            TargetPosition1Semantic,    // attr_tpos1
-            TargetPosition2Semantic,    // attr_tpos2
-            TargetPosition3Semantic,    // attr_tpos3
-            TargetPosition4Semantic,    // attr_tpos4
-            TargetPosition5Semantic,    // attr_tpos5
-            TargetPosition6Semantic,    // attr_tpos6
-            TargetPosition7Semantic,    // attr_tpos7
-            TargetNormal0Semantic,      // attr_tnorm0
-            TargetNormal1Semantic,      // attr_tnorm1
-            TargetNormal2Semantic,      // attr_tnorm2
-            TargetNormal3Semantic,      // attr_tnorm3
-            TargetTangent0Semantic,     // attr_ttan0
-            TargetTangent1Semantic,     // attr_ttan1
-            TargetBinormal0Semantic,    // attr_tbinorm0
-            TargetBinormal1Semantic     // attr_tbinorm1
+            TargetPositionSemantic,    // attr_tpos0
+            TargetNormalSemantic,      // attr_tnorm0
+            TargetTangentSemantic,     // attr_ttan0
+            TargetBinormalSemantic,    // attr_tbinorm0
         };
         enum ComponentType { // must match MeshData::Attribute::ComponentType
             U8Type = 0,

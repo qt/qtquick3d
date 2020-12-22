@@ -620,13 +620,13 @@ static QSSGRenderGeometry::Attribute::Semantic mapSemantic(QQuick3DGeometry::Att
     case QQuick3DGeometry::Attribute::ColorSemantic:
         return QSSGRenderGeometry::Attribute::ColorSemantic;
     case QQuick3DGeometry::Attribute::TargetPositionSemantic:
-        return QSSGRenderGeometry::Attribute::TargetPosition0Semantic;
+        return QSSGRenderGeometry::Attribute::TargetPositionSemantic;
     case QQuick3DGeometry::Attribute::TargetNormalSemantic:
-        return QSSGRenderGeometry::Attribute::TargetNormal0Semantic;
+        return QSSGRenderGeometry::Attribute::TargetNormalSemantic;
     case QQuick3DGeometry::Attribute::TargetTangentSemantic:
-        return QSSGRenderGeometry::Attribute::TargetTangent0Semantic;
+        return QSSGRenderGeometry::Attribute::TargetTangentSemantic;
     case QQuick3DGeometry::Attribute::TargetBinormalSemantic:
-        return QSSGRenderGeometry::Attribute::TargetBinormal0Semantic;
+        return QSSGRenderGeometry::Attribute::TargetBinormalSemantic;
     default:
         Q_ASSERT(false);
         return QSSGRenderGeometry::Attribute::PositionSemantic;
