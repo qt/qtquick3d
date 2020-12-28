@@ -188,7 +188,7 @@
     well. In order to support picking (input), the class must specify the bounding volume using setBounds().
     For proper lighting, an attribute with NormalSemantic is needed. When the
     material uses texturing, at least one set of UV coordinates must be
-    provided and described in an TexCoordSemantic attribute. Some materials may
+    provided and described in an TexCoord0Semantic or TexCoord1Semantic attribute. Some materials may
     require tangents and binormals as well.
 
     As a concrete, minimal example, the following class would provide geometry
@@ -509,7 +509,8 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 
     \value PositionSemantic The attribute is a position. 3 components: \e x, \e y, and \e z
     \value NormalSemantic The attribute is a normal vector. 3 components: \e x, \e y, and \e z
-    \value TexCoordSemantic The attribute is a texture coordinate. 2 components: \e u and \e v
+    \value TexCoord0Semantic The attribute is a texture coordinate. 2 components: \e u and \e v
+    \value TexCoord1Semantic The attribute is a texture coordinate. 2 components: \e u and \e v
     \value TangentSemantic The attribute is a tangent vector. 3 components: \e x, \e y, and \e z
     \value BinormalSemantic The attribute is a binormal vector. 3 components: \e x, \e y, and \e z
     \value JointSemantic The attribute is a joint index vector for  \l {Vertex Skinning}{skinning}. 4 components: joint index 1-4
@@ -607,8 +608,10 @@ static QSSGRenderGeometry::Attribute::Semantic mapSemantic(QQuick3DGeometry::Att
         return QSSGRenderGeometry::Attribute::PositionSemantic;
     case QQuick3DGeometry::Attribute::NormalSemantic:
         return QSSGRenderGeometry::Attribute::NormalSemantic;
-    case QQuick3DGeometry::Attribute::TexCoordSemantic:
-        return QSSGRenderGeometry::Attribute::TexCoordSemantic;
+    case QQuick3DGeometry::Attribute::TexCoord0Semantic:
+        return QSSGRenderGeometry::Attribute::TexCoord0Semantic;
+    case QQuick3DGeometry::Attribute::TexCoord1Semantic:
+        return QSSGRenderGeometry::Attribute::TexCoord1Semantic;
     case QQuick3DGeometry::Attribute::TangentSemantic:
         return QSSGRenderGeometry::Attribute::TangentSemantic;
     case QQuick3DGeometry::Attribute::BinormalSemantic:

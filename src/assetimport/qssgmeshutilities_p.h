@@ -72,18 +72,20 @@ struct MeshData
     struct Attribute {
         enum Semantic {
             IndexSemantic = 0,
-            PositionSemantic,           // attr_pos
-            NormalSemantic,             // attr_norm
-            TexCoordSemantic,           // attr_uv0
-            TangentSemantic,            // attr_textan
-            BinormalSemantic,           // attr_binormal
-            JointSemantic,              // attr_joints
-            WeightSemantic,             // attr_weights
-            ColorSemantic,              // attr_color
-            TargetPositionSemantic,     // attr_tpos0
-            TargetNormalSemantic,       // attr_tnorm0
-            TargetTangentSemantic,      // attr_ttan0
-            TargetBinormalSemantic      // attr_tbinorm0
+            PositionSemantic,                       // attr_pos
+            NormalSemantic,                         // attr_norm
+            TexCoordSemantic,                       // attr_uv0
+            TangentSemantic,                        // attr_textan
+            BinormalSemantic,                       // attr_binormal
+            JointSemantic,                          // attr_joints
+            WeightSemantic,                         // attr_weights
+            ColorSemantic,                          // attr_color
+            TargetPositionSemantic,                 // attr_tpos0
+            TargetNormalSemantic,                   // attr_tnorm0
+            TargetTangentSemantic,                  // attr_ttan0
+            TargetBinormalSemantic,                 // attr_tbinorm0
+            TexCoord1Semantic,                      // attr_uv1
+            TexCoord0Semantic = TexCoordSemantic    // attr_uv0
         };
         enum ComponentType { // must match QSSGRenderGeometry::Attribute::ComponentType
             U8Type = 0,
@@ -125,7 +127,8 @@ struct MeshData
             case IndexSemantic:             return 1;
             case PositionSemantic:          return 3;
             case NormalSemantic:            return 3;
-            case TexCoordSemantic:          return 2;
+            case TexCoord0Semantic:         return 2;
+            case TexCoord1Semantic:         return 2;
             case TangentSemantic:           return 3;
             case BinormalSemantic:          return 3;
             case JointSemantic:             return 4;

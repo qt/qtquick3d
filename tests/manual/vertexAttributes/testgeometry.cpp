@@ -522,7 +522,7 @@ QSSGRenderGraphObject *TestGeometry::updateSpatialNode(QSSGRenderGraphObject *no
         }
         if (texcoord1()) {
             uv1Data = generateTexcoords1(positionData);
-            addAttribute(QQuick3DGeometry::Attribute::TexCoordSemantic, offsetof(Vertex, uv1),
+            addAttribute(QQuick3DGeometry::Attribute::TexCoord1Semantic, offsetof(Vertex, uv1),
                          QQuick3DGeometry::Attribute::ComponentType::F32Type);
         }
         if (tangent()) {

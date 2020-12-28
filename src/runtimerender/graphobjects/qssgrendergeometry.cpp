@@ -35,7 +35,7 @@ QSSGRenderGeometry::QSSGRenderGeometry()
     : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Geometry)
 {
     Q_STATIC_ASSERT(int(Triangles) == int(QSSGMeshUtilities::MeshData::Triangles));
-    Q_STATIC_ASSERT(int(Attribute::ColorSemantic) == int(QSSGMeshUtilities::MeshData::Attribute::ColorSemantic));
+    Q_STATIC_ASSERT(int(Attribute::TexCoord1Semantic) == int(QSSGMeshUtilities::MeshData::Attribute::TexCoord1Semantic));
     Q_STATIC_ASSERT(int(Attribute::F32Type) == int(QSSGMeshUtilities::MeshData::Attribute::F32Type));
 }
 
