@@ -445,6 +445,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     QSSGRenderableImage *normalImage = nullptr;
     // translucency map
     QSSGRenderableImage *translucencyImage = nullptr;
+    // opacity map
+    QSSGRenderableImage *opacityImage = nullptr;
     // lightmaps
     QSSGRenderableImage *lightmapIndirectImage = nullptr;
     QSSGRenderableImage *lightmapRadiosityImage = nullptr;
@@ -496,6 +498,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             normalImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Translucency) {
             translucencyImage = img;
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Opacity) {
+            opacityImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Emissive) {
             hasEmissiveMap = true;
         } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapIndirect) {
@@ -773,6 +777,18 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                        << "    }\n";
     } else if (materialAdapter->alphaMode() == QSSGRenderDefaultMaterial::MaterialAlphaMode::Opaque) {
         fragmentShader << "    qt_diffuseColor.a = 1.0;\n";
+    }
+
+    if (opacityImage) {
+        const bool hasIdentityMap = identityImages.contains(opacityImage);
+        if (hasIdentityMap)
+            generateImageUVSampler(vertexShader, fragmentShader, inKey, *opacityImage, imageFragCoords, opacityImage->m_imageNode.m_indexUV);
+        else
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, opacityImage->m_imageNode.m_indexUV);
+
+        const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Opacity)];
+        const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
+        fragmentShader << "    qt_objectOpacity *= texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
     }
 
     if (hasLighting) {
@@ -1141,10 +1157,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasImage) {
             bool texColorDeclared = false;
             for (QSSGRenderableImage *image = firstImage; image; image = image->m_nextImage) {
-                // map types other than these 4 are handled elsewhere
+                // map types other than these 3 are handled elsewhere
                 if (image->m_mapType != QSSGRenderableImage::Type::LightmapShadow
                         && image->m_mapType != QSSGRenderableImage::Type::Specular
-                        && image->m_mapType != QSSGRenderableImage::Type::Opacity
                         && image->m_mapType != QSSGRenderableImage::Type::Emissive)
                 {
                     continue;
@@ -1181,12 +1196,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader.append("    global_specular_light.rgb += qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;");
                     fragmentShader.append("    global_diffuse_light.a *= qt_texture_color.a;");
                     break;
-                case QSSGRenderableImage::Type::Opacity:
-                {
-                    const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
-                    fragmentShader << "    global_diffuse_light.a *= qt_texture_color" << channelStr(channelProps, inKey) << ";\n";
-                    break;
-                }
                 case QSSGRenderableImage::Type::Emissive:
                     fragmentShader.addInclude("tonemapping.glsllib");
                     fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb) * qt_texture_color.a;");
