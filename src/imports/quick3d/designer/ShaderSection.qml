@@ -46,7 +46,7 @@ Column {
             SecondColumnLayout {
                 UrlChooser {
                     backendValue: backendValues.shader
-                    filter: "*.*"
+                    filter: "*.vert *.frag *.glslv *.glslf *.glsl *.vsh *.fsh"
                 }
             }
             Label {
