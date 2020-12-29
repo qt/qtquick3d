@@ -246,12 +246,15 @@ void QSSGStageGeneratorBase::buildShaderSourcePass1(QSSGShaderResourceMergeConte
     addShaderOutgoingMap();
     m_mergeContext = nullptr;
 
-    for (auto defString : m_addedDefinitions) {
+    for (auto iter = m_addedDefinitions.begin(), end = m_addedDefinitions.end();
+            iter != end; ++iter) {
         m_finalBuilder.append("#ifndef ");
-        m_finalBuilder.append(defString);
+        m_finalBuilder.append(iter.key());
         m_finalBuilder.append("\n");
         m_finalBuilder.append("#define ");
-        m_finalBuilder.append(defString);
+        m_finalBuilder.append(iter.key());
+        if (!iter.value().isEmpty())
+            m_finalBuilder.append(QByteArrayLiteral(" ") + iter.value());
         m_finalBuilder.append("\n#endif\n");
     }
 
@@ -370,11 +373,9 @@ void QSSGStageGeneratorBase::addFunction(const QByteArray &functionName)
     }
 }
 
-void QSSGStageGeneratorBase::addDefinition(const QByteArray &name)
+void QSSGStageGeneratorBase::addDefinition(const QByteArray &name, const QByteArray &value)
 {
-    if (!m_addedDefinitions.contains(name)) {
-        m_addedDefinitions.push_back(name);
-    }
+    m_addedDefinitions.insert(name, value);
 }
 
 void QSSGProgramGenerator::linkStages()
