@@ -540,22 +540,24 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // Morphing
     if (numMorphTargets > 0) {
         vertexShader.addInclude("morphanim.glsllib");
+        vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_MAX_COUNT"),
+                QByteArray::number(keyProps.m_morphTargetCount.getValue(inKey)));
         for (quint32 i = 0; i < numMorphTargets; ++i) {
             quint32 attribs = keyProps.m_morphTargetAttributes[i].getValue(inKey);
             if (attribs & QSSGShaderKeyVertexAttribute::Position) {
-                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_POSITION") + QByteArray::number(i));
+                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_POSITION") + QByteArray::number(i));
                 vertexShader.addIncoming(QByteArrayLiteral("attr_tpos") + QByteArray::number(i), "vec3");
             }
             if (attribs & QSSGShaderKeyVertexAttribute::Normal) {
-                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_NORMAL") + QByteArray::number(i));
+                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_NORMAL") + QByteArray::number(i));
                 vertexShader.addIncoming(QByteArrayLiteral("attr_tnorm") + QByteArray::number(i), "vec3");
             }
             if (attribs & QSSGShaderKeyVertexAttribute::Tangent) {
-                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_TANGENT") + QByteArray::number(i));
+                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_TANGENT") + QByteArray::number(i));
                 vertexShader.addIncoming(QByteArrayLiteral("attr_ttan") + QByteArray::number(i), "vec3");
             }
             if (attribs & QSSGShaderKeyVertexAttribute::Binormal) {
-                vertexShader.addDefinition(QByteArrayLiteral("ATTR_TARGET_BINORMAL") + QByteArray::number(i));
+                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_BINORMAL") + QByteArray::number(i));
                 vertexShader.addIncoming(QByteArrayLiteral("attr_tbinorm") + QByteArray::number(i), "vec3");
             }
         }
