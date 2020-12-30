@@ -33,6 +33,7 @@
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/anim.h>
 #include <assimp/material.h>
+#include <assimp/camera.h>
 
 int main(int , char **)
 {
@@ -49,6 +50,10 @@ int main(int , char **)
   // Check for something that was set in a recent version
   aiMaterial aiM;
   (void)aiM.GetName();
+
+  // Chack that the version includes the new camera member
+  aiCamera aiC;
+  aic.mOrthographicWidth = 0.0;
 
   return 0;
 }
