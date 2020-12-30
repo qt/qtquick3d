@@ -327,8 +327,8 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
     QSSGShaderDefaultMaterialKey shaderDescription;
     QSSGDataView<QMatrix4x4> boneGlobals;
     QSSGDataView<QMatrix3x3> boneNormals;
-    QSSGDataView<float> morphWeights;
     const QSSGShaderLightList &lights;
+    QSSGDataView<float> morphWeights;
 
     QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
                                  const QVector3D &inWorldCenterPt,
@@ -341,7 +341,8 @@ struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
                                  QSSGShaderDefaultMaterialKey inShaderKey,
                                  const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                                  const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                                 const QSSGShaderLightList &lights);
+                                 const QSSGShaderLightList &lights,
+                                 const QSSGDataView<float> &inMorphWeights);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGCustomMaterialRenderable>::value);

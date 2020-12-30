@@ -292,7 +292,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         if (hasCustomShadedMain)
             vertexShader.append(customMainCallWithArguments(usesInstancing));
 
-        if (m_hasMorphing)
+        if (m_hasMorphing && !hasCustomVertexShader)
             vertexShader.append("    qt_vertPosition.xyz = qt_getMorphPosition(qt_vertPosition.xyz);");
 
         if (m_hasSkinning) {

@@ -193,6 +193,7 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
     \note 3rd and 4th  morph targets can have maximum 2 attributes among
     position, and normal.
     \note Remaining morph targets can have only the position attribute.
+    \note This property is not used when the model is shaded by \l {CustomMaterial}.
 
     \sa {MorphTarget}
 */

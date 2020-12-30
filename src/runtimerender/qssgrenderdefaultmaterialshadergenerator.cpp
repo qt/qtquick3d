@@ -405,6 +405,8 @@ const char *QSSGMaterialShaderGenerator::vertexInstancedMainArgumentList()
     return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout ivec4 JOINTS, inout vec4 WEIGHTS, inout vec4 COLOR, inout mat4 INSTANCE_MODEL_MATRIX, inout mat4 INSTANCE_MODELVIEWPROJECTION_MATRIX";
 }
 
+#define MAX_MORPH_TARGET 8
+
 static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    QSSGMaterialVertexPipeline &vertexShader,
                                    const QSSGShaderDefaultMaterialKey &inKey,
@@ -537,12 +539,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             isCubeShadowPass = featureSet.at(idx).enabled;
     }
 
+    const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
+
     // Morphing
-    if (numMorphTargets > 0) {
-        vertexShader.addInclude("morphanim.glsllib");
+    if (numMorphTargets > 0 || hasCustomVert) {
         vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_MAX_COUNT"),
                 QByteArray::number(keyProps.m_morphTargetCount.getValue(inKey)));
-        for (quint32 i = 0; i < numMorphTargets; ++i) {
+        const quint32 endIter = hasCustomVert ? MAX_MORPH_TARGET : numMorphTargets;
+        for (quint32 i = 0; i < endIter; ++i) {
             quint32 attribs = keyProps.m_morphTargetAttributes[i].getValue(inKey);
             if (attribs & QSSGShaderKeyVertexAttribute::Position) {
                 vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_POSITION") + QByteArray::number(i));
@@ -562,6 +566,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
         }
     }
+    if (numMorphTargets > 0)
+        vertexShader.addInclude("morphanim.glsllib");
 
     bool includeCustomFragmentMain = true;
     if (isDepthPass || isOrthoShadowPass || isCubeShadowPass) {

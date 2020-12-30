@@ -91,7 +91,8 @@ QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectF
                                                            QSSGShaderDefaultMaterialKey inShaderKey,
                                                            const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                                                           const QSSGShaderLightList &inLights)
+                                                           const QSSGShaderLightList &inLights,
+                                                           const QSSGDataView<float> &inMorphWeights)
     : QSSGSubsetRenderableBase(inFlags, inWorldCenterPt, gen, inSubset, inModelContext, inOpacity)
     , material(mat)
     , firstImage(inFirstImage)
@@ -99,6 +100,7 @@ QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectF
     , boneGlobals(inBoneGlobals)
     , boneNormals(inBoneNormals)
     , lights(inLights)
+    , morphWeights(inMorphWeights)
 {
     renderableFlags.setCustomMaterialMeshSubset(true);
 }

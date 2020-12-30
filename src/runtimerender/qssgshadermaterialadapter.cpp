@@ -443,7 +443,26 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     // instancing
     { "INSTANCE_COLOR", "qt_instanceColor"},
     { "INSTANCE_DATA", "qt_instanceData"},
-    { "INSTANCE_INDEX", "gl_InstanceIndex"}
+    { "INSTANCE_INDEX", "gl_InstanceIndex"},
+
+    // morphing
+    { "MORPH_POSITION0", "attr_tpos0"},
+    { "MORPH_POSITION1", "attr_tpos1"},
+    { "MORPH_POSITION2", "attr_tpos2"},
+    { "MORPH_POSITION3", "attr_tpos3"},
+    { "MORPH_POSITION4", "attr_tpos4"},
+    { "MORPH_POSITION5", "attr_tpos5"},
+    { "MORPH_POSITION6", "attr_tpos6"},
+    { "MORPH_POSITION7", "attr_tpos7"},
+    { "MORPH_NORMAL0", "attr_tnorm0"},
+    { "MORPH_NORMAL1", "attr_tnorm1"},
+    { "MORPH_NORMAL2", "attr_tnorm2"},
+    { "MORPH_NORMAL3", "attr_tnorm3"},
+    { "MORPH_TANGENT0", "attr_ttan0"},
+    { "MORPH_TANGENT1", "attr_ttan1"},
+    { "MORPH_BINORMAL0", "attr_tbinorm0"},
+    { "MORPH_BINORMAL1", "attr_tbinorm1"},
+    { "MORPH_WEIGHTS", "qt_morphWeights"}
 };
 
 // Functions that, if present, get an argument list injected.

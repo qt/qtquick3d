@@ -78,6 +78,7 @@ inline void collectNode(const V &node, QVector<T> &dst, int &dstPos)
     ++dstPos;
 }
 
+#define MAX_MORPH_TARGET 8
 #define MAX_MORPH_TARGET_INDEX_SUPPORTS_NORMALS 3
 #define MAX_MORPH_TARGET_INDEX_SUPPORTS_TANGENTS 1
 
@@ -804,7 +805,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
     // many renderableFlags are the same for all the subsets
     QSSGRenderableObjectFlags renderableFlagsForModel;
-    quint32 morphTargetAttribs[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    quint32 morphTargetAttribs[MAX_MORPH_TARGET] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     if (theMesh->subsets.size() > 0) {
         QSSGRenderSubset &theSubset = theMesh->subsets[0];
@@ -968,6 +969,11 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 if (!rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing))
                     usesInstancing = false;
                 renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
+                // Morphing
+                renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
+                // For custommaterials, it is allowed to use morph inputs without morphTargets
+                for (int i = 0; i < MAX_MORPH_TARGET; ++i)
+                    renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, morphTargetAttribs[i]);
 
                 if (theMaterial.m_iblProbe)
                     theMaterial.m_iblProbe->clearDirty();
@@ -984,7 +990,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                                                                                      theGeneratedKey,
                                                                                      boneGlobals,
                                                                                      boneNormals,
-                                                                                     lights);
+                                                                                     lights,
+                                                                                     morphWeights);
             }
             if (theRenderableObject) {
 
