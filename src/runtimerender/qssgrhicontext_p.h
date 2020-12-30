@@ -81,12 +81,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
         TargetNormal3Semantic,      // attr_tnorm3
         TargetTangent0Semantic,     // attr_ttan0
         TargetTangent1Semantic,     // attr_ttan1
-        TargetTangent2Semantic,     // attr_ttan2
-        TargetTangent3Semantic,     // attr_ttan3
         TargetBinormal0Semantic,    // attr_tbinorm0
-        TargetBinormal1Semantic,    // attr_tbinorm1
-        TargetBinormal2Semantic,    // attr_tbinorm2
-        TargetBinormal3Semantic     // attr_tbinorm3
+        TargetBinormal1Semantic     // attr_tbinorm1
     };
 
     QRhiVertexInputLayout inputLayout;
