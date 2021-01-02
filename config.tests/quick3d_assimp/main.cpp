@@ -53,7 +53,7 @@ int main(int , char **)
 
   // Chack that the version includes the new camera member
   aiCamera aiC;
-  aic.mOrthographicWidth = 0.0;
+  aiC.mOrthographicWidth = 0.0;
 
   return 0;
 }
