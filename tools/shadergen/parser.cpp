@@ -492,10 +492,6 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
             return QVariant::fromValue(toVec<QVector4D>(ref));
         case QMetaType::QQuaternion:
             return QVariant::fromValue(toQuaternion(ref));
-        case QMetaType::QMatrix4x4:
-            break;
-        default:
-            break;
         }
 
         return QVariant();
