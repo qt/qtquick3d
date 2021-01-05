@@ -69,62 +69,54 @@ struct InvasiveListView : protected QSSGInvasiveSingleLinkedList<T, N>
     explicit InvasiveListView(const T &obj) { m_head = &const_cast<T &>(obj); }
 };
 
-// name mapping.
-namespace TypeInfo
+template <typename T> struct TypeInfo
 {
-
-constexpr const char *typeStringTable[] {
-    "View3D",
-    "SceneEnvironment",
-    "PrincipledMaterial",
-    "DefaultMaterial",
-    "CustomMaterial",
-    "DirectionalLight",
-    "PointLight",
-    "SpotLight",
-    "Texture",
-    "TextureInput",
-    "Model",
-    "Effect",
-    "Pass",
-    "Shader"
+    static constexpr const char *qmlTypeName() { return "Unknown"; }
+    static constexpr int typeId() { return QMetaType::UnknownType; }
 };
 
-template<typename T> constexpr QmlType getTypeId() { return QmlType::Unknown; }
-template<> constexpr QmlType getTypeId<QQuick3DViewport>() { return QmlType::View3D; }
-template<> constexpr QmlType getTypeId<QQuick3DSceneEnvironment>() { return QmlType::SceneEnvironment; }
-template<> constexpr QmlType getTypeId<QQuick3DPrincipledMaterial>() { return QmlType::PrincipledMaterial; }
-template<> constexpr QmlType getTypeId<QQuick3DDefaultMaterial>() { return QmlType::DefaultMaterial; }
-template<> constexpr QmlType getTypeId<QQuick3DCustomMaterial>() { return QmlType::CustomMaterial; }
-template<> constexpr QmlType getTypeId<QQuick3DDirectionalLight>() { return QmlType::DirectionalLight; }
-template<> constexpr QmlType getTypeId<QQuick3DPointLight>() { return QmlType::PointLight; }
-template<> constexpr QmlType getTypeId<QQuick3DSpotLight>() { return QmlType::SpotLight; }
-template<> constexpr QmlType getTypeId<QQuick3DTexture>() { return QmlType::Texture; }
-template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsTextureInput>() { return QmlType::TextureInput; }
-template<> constexpr QmlType getTypeId<QQuick3DModel>() { return QmlType::Model; }
-template<> constexpr QmlType getTypeId<QQuick3DEffect>() { return QmlType::Effect; }
-template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsRenderPass>() { return QmlType::RenderPass; }
-template<> constexpr QmlType getTypeId<QQuick3DShaderUtilsShader>() { return QmlType::RenderShader; }
-
+#define DECLARE_QQ3D_TYPE(CLASS, TYPE_NAME) \
+template<> struct TypeInfo<CLASS> \
+{ \
+    static constexpr const char *qmlTypeName() { return #TYPE_NAME; } \
+    inline static constexpr int typeId() { return qMetaTypeId<CLASS>(); } \
 }
-using QmlTypeNames = QHash<QString, TypeInfo::QmlType>;
+
+DECLARE_QQ3D_TYPE(QQuick3DViewport, View3D);
+DECLARE_QQ3D_TYPE(QQuick3DSceneEnvironment, SceneEnvironment);
+DECLARE_QQ3D_TYPE(QQuick3DPrincipledMaterial, PrincipledMaterial);
+DECLARE_QQ3D_TYPE(QQuick3DDefaultMaterial, DefaultMaterial);
+DECLARE_QQ3D_TYPE(QQuick3DCustomMaterial, CustomMaterial);
+DECLARE_QQ3D_TYPE(QQuick3DDirectionalLight, DirectionalLight);
+DECLARE_QQ3D_TYPE(QQuick3DPointLight, PointLight);
+DECLARE_QQ3D_TYPE(QQuick3DSpotLight, SpotLight);
+DECLARE_QQ3D_TYPE(QQuick3DTexture, Texture);
+DECLARE_QQ3D_TYPE(QQuick3DShaderUtilsTextureInput, TextureInput);
+DECLARE_QQ3D_TYPE(QQuick3DModel, Model);
+DECLARE_QQ3D_TYPE(QQuick3DEffect, Effect);
+DECLARE_QQ3D_TYPE(QQuick3DShaderUtilsRenderPass, Pass);
+DECLARE_QQ3D_TYPE(QQuick3DShaderUtilsShader, Shader);
+
+using QmlTypeNames = QHash<QString, int>;
+
+#define QQ3D_TYPE_ENTRY(TYPE) { TypeInfo<TYPE>::qmlTypeName(), TypeInfo<TYPE>::typeId() }
 
 QmlTypeNames baseTypeMap()
 {
-    return {{TypeInfo::typeStringTable[TypeInfo::View3D], TypeInfo::View3D},
-        {TypeInfo::typeStringTable[TypeInfo::SceneEnvironment], TypeInfo::SceneEnvironment},
-        {TypeInfo::typeStringTable[TypeInfo::PrincipledMaterial], TypeInfo::PrincipledMaterial},
-        {TypeInfo::typeStringTable[TypeInfo::DefaultMaterial], TypeInfo::DefaultMaterial},
-        {TypeInfo::typeStringTable[TypeInfo::CustomMaterial], TypeInfo::CustomMaterial},
-        {TypeInfo::typeStringTable[TypeInfo::DirectionalLight], TypeInfo::DirectionalLight},
-        {TypeInfo::typeStringTable[TypeInfo::PointLight], TypeInfo::PointLight},
-        {TypeInfo::typeStringTable[TypeInfo::SpotLight], TypeInfo::SpotLight},
-        {TypeInfo::typeStringTable[TypeInfo::Texture], TypeInfo::Texture},
-        {TypeInfo::typeStringTable[TypeInfo::TextureInput], TypeInfo::TextureInput},
-        {TypeInfo::typeStringTable[TypeInfo::Model], TypeInfo::Model},
-        {TypeInfo::typeStringTable[TypeInfo::Effect], TypeInfo::Effect},
-        {TypeInfo::typeStringTable[TypeInfo::RenderPass], TypeInfo::RenderPass},
-        {TypeInfo::typeStringTable[TypeInfo::RenderShader], TypeInfo::RenderShader}
+    return { QQ3D_TYPE_ENTRY(QQuick3DViewport),
+             QQ3D_TYPE_ENTRY(QQuick3DSceneEnvironment),
+             QQ3D_TYPE_ENTRY(QQuick3DPrincipledMaterial),
+             QQ3D_TYPE_ENTRY(QQuick3DDefaultMaterial),
+             QQ3D_TYPE_ENTRY(QQuick3DCustomMaterial),
+             QQ3D_TYPE_ENTRY(QQuick3DDirectionalLight),
+             QQ3D_TYPE_ENTRY(QQuick3DPointLight),
+             QQ3D_TYPE_ENTRY(QQuick3DSpotLight),
+             QQ3D_TYPE_ENTRY(QQuick3DTexture),
+             QQ3D_TYPE_ENTRY(QQuick3DShaderUtilsTextureInput),
+             QQ3D_TYPE_ENTRY(QQuick3DModel),
+             QQ3D_TYPE_ENTRY(QQuick3DEffect),
+             QQ3D_TYPE_ENTRY(QQuick3DShaderUtilsRenderPass),
+             QQ3D_TYPE_ENTRY(QQuick3DShaderUtilsShader)
     };
 }
 
@@ -141,9 +133,8 @@ struct Context
     struct Property {
         QObject *target = nullptr;
         QStringView name;
-        TypeInfo::QmlType targetType = TypeInfo::Unknown;
-        TypeInfo::QmlType propertyType = TypeInfo::Unknown;
-        QMetaType::Type builtinType = QMetaType::UnknownType;
+        int targetType = QMetaType::UnknownType;
+        QMetaType::Type type = QMetaType::UnknownType;
         bool isMember = false;
     };
 
@@ -163,7 +154,7 @@ struct Context
     struct Component
     {
         QObject *ptr = nullptr;
-        TypeInfo::QmlType type = TypeInfo::QmlType::Unknown;
+        int type = QMetaType::UnknownType;
     };
 
     QHash<QStringView, QObject *> identifierMap;
@@ -497,81 +488,68 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
         return QVariant();
     };
 
-    if (p.propertyType == TypeInfo::Builtin) { // Built in Qt types int, vector3d etc
-        return toBuiltinType(p.builtinType, ref, ctx.workingDir);
-    } else { // hard mode, detect the property type
-        // We only care about the types that are relevant for us
-        if (p.targetType != TypeInfo::Unknown) {
-            Q_ASSERT(p.target);
-            Q_ASSERT(!p.name.isEmpty());
-            const int idx = p.target->metaObject()->indexOfProperty(p.name.toLatin1().constData());
-            const auto property = p.target->metaObject()->property(idx);
-            if (property.metaType().id() >= QMetaType::User) {
-                const QMetaType metaType = property.metaType();
-                switch (p.targetType) {
-                case TypeInfo::DefaultMaterial:
-                    Q_FALLTHROUGH();
-                case TypeInfo::PrincipledMaterial:
-                {
-                    // Common for both materials
-                    if (metaType.id() == qMetaTypeId<QQuick3DMaterial::CullMode>())
-                        return fromStringEnumHelper<QQuick3DMaterial::CullMode>(ref, property);
-                    if (metaType.id() == qMetaTypeId<QQuick3DMaterial::TextureChannelMapping>())
-                        return fromStringEnumHelper<QQuick3DMaterial::TextureChannelMapping>(ref, property);
+    if (p.type != QMetaType::UnknownType) // Built in Qt types int, vector3d etc
+        return toBuiltinType(p.type, ref, ctx.workingDir);
 
-                    if (p.targetType == TypeInfo::PrincipledMaterial) {
-                        if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::Lighting>())
-                            return fromStringEnumHelper<QQuick3DPrincipledMaterial::Lighting>(ref, property);
-                        if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::BlendMode>())
-                            return fromStringEnumHelper<QQuick3DPrincipledMaterial::BlendMode>(ref, property);
-                        if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::AlphaMode>())
-                            return fromStringEnumHelper<QQuick3DPrincipledMaterial::AlphaMode>(ref, property);
-                    } else if (p.targetType == TypeInfo::DefaultMaterial) {
-                        if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::Lighting>())
-                            return fromStringEnumHelper<QQuick3DDefaultMaterial::Lighting>(ref, property);
-                        if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::BlendMode>())
-                            return fromStringEnumHelper<QQuick3DDefaultMaterial::BlendMode>(ref, property);
-                        if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::SpecularModel>())
-                            return fromStringEnumHelper<QQuick3DDefaultMaterial::SpecularModel>(ref, property);
-                    }
+    // hard mode, detect the property type
+    // We only care about the types that are relevant for us
+    if (p.targetType != QMetaType::UnknownType) {
+        Q_ASSERT(p.target);
+        Q_ASSERT(!p.name.isEmpty());
+        const int idx = p.target->metaObject()->indexOfProperty(p.name.toLatin1().constData());
+        const auto property = p.target->metaObject()->property(idx);
+        if (property.metaType().id() >= QMetaType::User) {
+            const QMetaType metaType = property.metaType();
+            if (p.targetType == TypeInfo<QQuick3DDefaultMaterial>::typeId() || p.targetType == TypeInfo<QQuick3DPrincipledMaterial>::typeId()) {
+                // Common for both materials
+                if (metaType.id() == qMetaTypeId<QQuick3DMaterial::CullMode>())
+                    return fromStringEnumHelper<QQuick3DMaterial::CullMode>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DMaterial::TextureChannelMapping>())
+                    return fromStringEnumHelper<QQuick3DMaterial::TextureChannelMapping>(ref, property);
+
+                if (p.targetType == TypeInfo<QQuick3DPrincipledMaterial>::typeId()) {
+                    if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::Lighting>())
+                        return fromStringEnumHelper<QQuick3DPrincipledMaterial::Lighting>(ref, property);
+                    if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::BlendMode>())
+                        return fromStringEnumHelper<QQuick3DPrincipledMaterial::BlendMode>(ref, property);
+                    if (metaType.id() == qMetaTypeId<QQuick3DPrincipledMaterial::AlphaMode>())
+                        return fromStringEnumHelper<QQuick3DPrincipledMaterial::AlphaMode>(ref, property);
+                } else if (p.targetType == TypeInfo<QQuick3DDefaultMaterial>::typeId()) {
+                    if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::Lighting>())
+                        return fromStringEnumHelper<QQuick3DDefaultMaterial::Lighting>(ref, property);
+                    if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::BlendMode>())
+                        return fromStringEnumHelper<QQuick3DDefaultMaterial::BlendMode>(ref, property);
+                    if (metaType.id() == qMetaTypeId<QQuick3DDefaultMaterial::SpecularModel>())
+                        return fromStringEnumHelper<QQuick3DDefaultMaterial::SpecularModel>(ref, property);
                 }
-                    break;
-                case TypeInfo::CustomMaterial:
-                    if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::ShadingMode>())
-                        return fromStringEnumHelper<QQuick3DCustomMaterial::ShadingMode>(ref, property);
-                    if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::BlendMode>())
-                        return fromStringEnumHelper<QQuick3DCustomMaterial::BlendMode>(ref, property);
-                    break;
-                case TypeInfo::SpotLight:
-                    Q_FALLTHROUGH();
-                case TypeInfo::PointLight:
-                    if (metaType.id() == qMetaTypeId<QQuick3DAbstractLight::QSSGShadowMapQuality>())
-                        return fromStringEnumHelper<QQuick3DAbstractLight::QSSGShadowMapQuality>(ref, property);
-                    break;
-                case TypeInfo::SceneEnvironment:
-                    if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes>())
-                        return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes>(ref, property);
-                    if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues>())
-                        return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues>(ref, property);
-                    if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues>())
-                        return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues>(ref, property);
-                    if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>())
-                        return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>(ref, property);
-                    break;
-                case TypeInfo::RenderShader:
-                    if (metaType.id() == qMetaTypeId<QQuick3DShaderUtilsShader::Stage>())
-                        return fromStringEnumHelper<QQuick3DShaderUtilsShader::Stage>(ref, property);
-                default:
-                    break;
-                }
-            } else { // Qt type
-                return toBuiltinType(property.metaType().id(), ref, ctx.workingDir);
+            } else if (p.targetType == TypeInfo<QQuick3DCustomMaterial>::typeId()) {
+                if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::ShadingMode>())
+                    return fromStringEnumHelper<QQuick3DCustomMaterial::ShadingMode>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DCustomMaterial::BlendMode>())
+                    return fromStringEnumHelper<QQuick3DCustomMaterial::BlendMode>(ref, property);
+            } else if (p.targetType == TypeInfo<QQuick3DSpotLight>::typeId() || p.targetType == TypeInfo<QQuick3DPointLight>::typeId()) {
+                if (metaType.id() == qMetaTypeId<QQuick3DAbstractLight::QSSGShadowMapQuality>())
+                    return fromStringEnumHelper<QQuick3DAbstractLight::QSSGShadowMapQuality>(ref, property);
+            } else if (p.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
+                if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes>())
+                    return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues>())
+                    return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues>())
+                    return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues>(ref, property);
+                if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>())
+                    return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>(ref, property);
+            } else if (p.targetType == TypeInfo<QQuick3DShaderUtilsShader>::typeId()) {
+                if (metaType.id() == qMetaTypeId<QQuick3DShaderUtilsShader::Stage>())
+                    return fromStringEnumHelper<QQuick3DShaderUtilsShader::Stage>(ref, property);
             }
+        } else { // Qt type
+            return toBuiltinType(property.metaType().id(), ref, ctx.workingDir);
         }
-
-        if (ctx.dbgprint)
-            printf("Unhandled type for property %s\n", ref.toLatin1().constData());
     }
+
+    if (ctx.dbgprint)
+        printf("Unhandled type for property %s\n", ref.toLatin1().constData());
 
     return QVariant();
 }
@@ -691,8 +669,7 @@ struct Visitors
         const bool isMemberCpy = ctx.property.isMember;
         ctx.property.name = member.name;
         ctx.property.isMember = true;
-        const auto propCpy = ctx.property.propertyType;
-        const auto builtinTypeCpy = ctx.property.builtinType;
+        const auto typeCpy = ctx.property.type;
 
         if (!(ctx.interceptPMFunc && ctx.interceptPMFunc(member, ctx, ret))) {
             if (member.statement) {
@@ -711,8 +688,7 @@ struct Visitors
         }
 
         qSwap(ctx.property.name, name);
-        ctx.property.propertyType = propCpy;
-        ctx.property.builtinType = builtinTypeCpy;
+        ctx.property.type = typeCpy;
         ctx.property.isMember = isMemberCpy;
     }
 
@@ -777,7 +753,7 @@ struct Visitors
             const auto foundIt = ctx.identifierMap.constFind(idExpr.name);
             const auto end = ctx.identifierMap.constEnd();
             if (foundIt != end) {
-                if (ctx.property.targetType == TypeInfo::Model) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
                     if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(*foundIt)) {
                         auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
                         materials.append(&materials, mat);
@@ -789,7 +765,7 @@ struct Visitors
                         if (ctx.dbgprint)
                             printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
                     }
-                } else if (ctx.property.targetType == TypeInfo::SceneEnvironment) {
+                } else if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
                     if (QQuick3DEffect *effect = qobject_cast<QQuick3DEffect *>(*foundIt)) {
                         auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
                         effects.append(&effects, effect);
@@ -801,7 +777,7 @@ struct Visitors
                         if (ctx.dbgprint)
                             printf("Appending effect to \'%s\'\n", ctx.property.name.toLatin1().constData());
                     }
-                } else if (ctx.property.targetType == TypeInfo::RenderPass) {
+                } else if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
                     if (QQuick3DShaderUtilsShader *shader = qobject_cast<QQuick3DShaderUtilsShader *>(*foundIt)) {
                         auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
                         shaders.append(&shaders, shader);
@@ -959,7 +935,7 @@ T *buildType(const O &obj, Context &ctx, int &ret, const T *base = nullptr)
     T *instance = nullptr;
 
     if (ctx.dbgprint)
-        printf("Building %s!\n", TypeInfo::typeStringTable[TypeInfo::getTypeId<T>()]);
+        printf("Building %s!\n", TypeInfo<T>::qmlTypeName());
 
     if (obj.initializer) {
         instance = new T;
@@ -968,7 +944,7 @@ T *buildType(const O &obj, Context &ctx, int &ret, const T *base = nullptr)
 
         if (obj.initializer) {
             ctx.property.target = instance;
-            ctx.property.targetType = TypeInfo::getTypeId<T>();
+            ctx.property.targetType = TypeInfo<T>::typeId();
             Visitors::visit(*obj.initializer, ctx, ret);
         }
     }
@@ -982,19 +958,15 @@ T *buildType(const O &obj, Context &ctx, int &ret, const T *base = nullptr)
 static QQuick3DAbstractLight *buildLight(const QQmlJS::AST::UiObjectDefinition &def,
                                          Context &ctx,
                                          int &ret,
-                                         TypeInfo::QmlType lightType,
+                                         int lightType,
                                          const QQuick3DAbstractLight *base = nullptr)
 {
-    switch (lightType) {
-    case TypeInfo::DirectionalLight:
+    if (lightType == TypeInfo<QQuick3DDirectionalLight>::typeId())
         return buildType(def, ctx, ret, qobject_cast<const QQuick3DDirectionalLight *>(base));
-    case TypeInfo::PointLight:
+    if (lightType == TypeInfo<QQuick3DPointLight>::typeId())
         return buildType(def, ctx, ret, qobject_cast<const QQuick3DPointLight *>(base));
-    case TypeInfo::SpotLight:
+    if (lightType == TypeInfo<QQuick3DSpotLight>::typeId())
         return buildType(def, ctx, ret, qobject_cast<const QQuick3DSpotLight *>(base));
-    default:
-        break;
-    }
     return nullptr;
 }
 
@@ -1004,7 +976,7 @@ static void updateProperty(Context &ctx, T type, QStringView propName)
 {
     if (ctx.property.target) {
         if (ctx.dbgprint)
-            printf("Updating property %s on %s\n", propName.toLatin1().constData(), TypeInfo::typeStringTable[ctx.property.targetType]);
+            printf("Updating property %s on %s\n", propName.toLatin1().constData(), "TODO");
         const auto &target = ctx.property.target;
         if (ctx.property.isMember || target->metaObject()->indexOfProperty(propName.toLatin1().constData()) != -1)
             target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(type));
@@ -1034,12 +1006,10 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
     if (typeIt != s_typeMap->constEnd()) {
         const auto type = *typeIt;
         if (ctx.dbgprint)
-            printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), TypeInfo::typeStringTable[type]);
+            printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), qPrintable(typeName));
 
-        switch (type) {
-        case TypeInfo::SceneEnvironment:
-        {
-            if (ctx.property.targetType == TypeInfo::View3D) {
+        if (type == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DViewport>::typeId()) {
                 if (auto environment = createType<QQuick3DSceneEnvironment>(ctx, objectBinding, typeName, ret)) {
                     auto viewport = qobject_cast<QQuick3DViewport *>(ctx.property.target);
                     Q_ASSERT(viewport);
@@ -1047,30 +1017,21 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
                     handled = true;
                 }
             }
-        }
-            break;
-        case TypeInfo::Texture:
-        {
+        } else if (type == TypeInfo<QQuick3DTexture>::typeId()) {
             if (auto tex = createType<QQuick3DTexture>(ctx, objectBinding, typeName, ret)) {
                 updateProperty(ctx, tex, propName);
                 ctx.sceneData.textures.append(tex);
             }
             handled = true;
-        }
-            break;
-        case TypeInfo::TextureInput:
-        {
+        } else if (type == TypeInfo<QQuick3DShaderUtilsTextureInput>::typeId()) {
             auto texInput = createType<QQuick3DShaderUtilsTextureInput>(ctx, objectBinding, typeName, ret);
             if (texInput && texInput->texture()) {
                 updateProperty(ctx, texInput, propName);
                 ctx.sceneData.textures.append(texInput->texture());
             }
             handled = true;
-            break;
-        }
-        case TypeInfo::Effect:
-        {
-            if (ctx.property.targetType== TypeInfo::SceneEnvironment) {
+        } else if (type == TypeInfo<QQuick3DEffect>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
                 if (auto effect = createType<QQuick3DEffect>(ctx, objectBinding, typeName, ret)) {
                     auto sceneEnvironment = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target);
                     Q_ASSERT(sceneEnvironment);
@@ -1079,11 +1040,8 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
                     handled = true;
                 }
             }
-        }
-            break;
-        case TypeInfo::RenderPass:
-        {
-            if (ctx.property.targetType == TypeInfo::Effect) {
+        } else if (type == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DEffect>::typeId()) {
                 if (auto pass = createType<QQuick3DShaderUtilsRenderPass>(ctx, objectBinding, typeName, ret)) {
                     auto effect = qobject_cast<QQuick3DEffect *>(ctx.property.target);
                     Q_ASSERT(effect);
@@ -1092,11 +1050,8 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
                     handled = true;
                 }
             }
-        }
-            break;
-        case TypeInfo::RenderShader:
-        {
-            if (ctx.property.targetType == TypeInfo::RenderPass) {
+        } else if (type == TypeInfo<QQuick3DShaderUtilsShader>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
                 if (auto shader = createType<QQuick3DShaderUtilsShader>(ctx, objectBinding, typeName, ret)) {
                     auto pass = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target);
                     Q_ASSERT(pass);
@@ -1105,12 +1060,8 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
                     handled = true;
                 }
             }
-        }
-            break;
-        default:
-            if (ctx.dbgprint)
-                printf("Unhandled type\n");
-            break;
+        } else if (ctx.dbgprint) {
+            printf("Unhandled type\n");
         }
     }
 
@@ -1134,12 +1085,10 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
             const auto componentName = QStringView(fileName).left(fileName.length() - 4);
             s_typeMap->insert(componentName.toString(), type);
         } else if (ctx.dbgprint) {
-            printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), TypeInfo::typeStringTable[type]);
+            printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), qPrintable(typeName));
         }
 
-        switch (type) {
-        case TypeInfo::View3D:
-        {
+        if (type == TypeInfo<QQuick3DViewport>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DViewport *base = (compIt != components.cend()) ? qobject_cast<QQuick3DViewport *>(compIt->ptr) : nullptr;
@@ -1154,10 +1103,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (!ctx.sceneData.viewport)
                     ctx.sceneData.viewport = viewport;
             }
-            break;
-        }
-        case TypeInfo::SceneEnvironment:
-        {
+        } else if (type == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
@@ -1172,10 +1118,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (ctx.sceneData.viewport)
                     ctx.sceneData.viewport->setEnvironment(sceneEnv);
             }
-            break;
-        }
-        case TypeInfo::PrincipledMaterial:
-        {
+        } else if (type == TypeInfo<QQuick3DPrincipledMaterial>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DPrincipledMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DPrincipledMaterial *>(compIt->ptr) : nullptr;
@@ -1189,7 +1132,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
 
                 bool handled = false;
                 if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo::Model) {
+                    if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
                         auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
                         materials.append(&materials, mat);
                         handled = true;
@@ -1201,10 +1144,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (!handled)
                     ctx.sceneData.materials.push_back(mat);
             }
-            break;
-        }
-        case TypeInfo::DefaultMaterial:
-        {
+        } else if (type == TypeInfo<QQuick3DDefaultMaterial>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DDefaultMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DDefaultMaterial *>(compIt->ptr) : nullptr;
@@ -1218,7 +1158,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
 
                 bool handled = false;
                 if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo::Model) {
+                    if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
                         auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
                         materials.append(&materials, mat);
                         handled = true;
@@ -1230,10 +1170,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (!handled)
                     ctx.sceneData.materials.push_back(mat);
             }
-            break;
-        }
-        case TypeInfo::CustomMaterial:
-        {
+        } else if (type == TypeInfo<QQuick3DCustomMaterial>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DCustomMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DCustomMaterial *>(compIt->ptr) : nullptr;
@@ -1247,7 +1184,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
 
                 bool handled = false;
                 if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo::Model) {
+                    if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
                         auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
                         materials.append(&materials, mat);
                         handled = true;
@@ -1259,10 +1196,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (!handled)
                     ctx.sceneData.materials.push_back(mat);
             }
-            break;
-        }
-        case TypeInfo::Effect:
-        {
+        } else if (type == TypeInfo<QQuick3DEffect>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DEffect *base = (compIt != components.cend()) ? qobject_cast<QQuick3DEffect *>(compIt->ptr) : nullptr;
@@ -1276,7 +1210,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
 
                 bool handled = false;
                 if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo::SceneEnvironment) {
+                    if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
                         auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
                         effects.append(&effects, effect);
                         handled = true;
@@ -1288,14 +1222,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (!handled)
                     ctx.sceneData.effects.push_back(effect);
             }
-            break;
-        }
-        case TypeInfo::DirectionalLight:
-            Q_FALLTHROUGH();
-        case TypeInfo::PointLight:
-            Q_FALLTHROUGH();
-        case TypeInfo::SpotLight:
-        {
+        } else if (type == TypeInfo<QQuick3DDirectionalLight>::typeId() || type == TypeInfo<QQuick3DPointLight>::typeId() || type == TypeInfo<QQuick3DSpotLight>::typeId())  {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DAbstractLight *base = (compIt != components.cend()) ? qobject_cast<QQuick3DAbstractLight *>(compIt->ptr) : nullptr;
@@ -1307,12 +1234,8 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     components.insert(componentName.toString(), { light, type });
                 }
                 ctx.sceneData.lights.push_back(light);
-
             }
-            break;
-        }
-        case TypeInfo::Texture:
-        {
+        } else if (type == TypeInfo<QQuick3DTexture>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
@@ -1326,10 +1249,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 ctx.sceneData.textures.push_back(tex);
 
             }
-            break;
-        }
-        case TypeInfo::Model:
-        {
+        } else if (type == TypeInfo<QQuick3DModel>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DModel *>(compIt->ptr) : nullptr;
@@ -1342,10 +1262,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 }
                 ctx.sceneData.models.push_back(model);
             }
-            break;
-        }
-        case TypeInfo::RenderShader:
-        {
+        } else if (type == TypeInfo<QQuick3DShaderUtilsShader>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsShader *>(compIt->ptr) : nullptr;
@@ -1358,7 +1275,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 }
                 bool handled = false;
                 if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo::RenderPass) {
+                    if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
                         auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
                         shaders.append(&shaders, shader);
                         handled = true;
@@ -1370,10 +1287,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                 if (!handled)
                     ctx.sceneData.shaders.push_back(shader);
             }
-            break;
-        }
-        case TypeInfo::RenderPass:
-        {
+        } else if (type == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
             auto &components = ctx.components;
             const auto compIt = components.constFind(typeName);
             const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsRenderPass *>(compIt->ptr) : nullptr;
@@ -1385,7 +1299,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     components.insert(componentName.toString(), { pass, type });
                 }
                 if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo::Effect) {
+                    if (ctx.property.targetType == TypeInfo<QQuick3DEffect>::typeId()) {
                         auto passes = qobject_cast<QQuick3DEffect *>(ctx.property.target)->passes();
                         passes.append(&passes, pass);
                         if (ctx.dbgprint)
@@ -1393,9 +1307,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     }
                 }
             }
-            break;
-        }
-        default:
+        } else {
             if (ctx.dbgprint)
                 printf("Object def for \'%s\' was not handled\n", ctx.property.name.toLatin1().constData());
             return false;
@@ -1415,43 +1327,39 @@ static bool interceptPublicMember(const QQmlJS::AST::UiPublicMember &member, Con
         printf("Intercepted public member!\n");
 
     if (member.statement && member.statement->kind == Node::Kind_ExpressionStatement) {
-        if ((ctx.property.targetType == TypeInfo::CustomMaterial || ctx.property.targetType == TypeInfo::Effect) && member.memberType) {
+        if ((ctx.property.targetType == TypeInfo<QQuick3DCustomMaterial>::typeId() || ctx.property.targetType == TypeInfo<QQuick3DEffect>::typeId()) && member.memberType) {
             // For custom materials we have properties that are user provided, so we'll
             // need to add these to the objects properties (we add these here to be able
             // to piggyback on the existing type matching code)
             if (member.memberType->name == u"real") {
-                ctx.property.builtinType = QMetaType::Double;
+                ctx.property.type = QMetaType::Double;
             } else if (member.memberType->name == u"bool") {
-                ctx.property.builtinType = QMetaType::Bool;
+                ctx.property.type = QMetaType::Bool;
             } else if (member.memberType->name == u"int") {
-                ctx.property.builtinType = QMetaType::Int;
+                ctx.property.type = QMetaType::Int;
             } else if (member.memberType->name == u"size") {
-                ctx.property.builtinType = QMetaType::QSizeF;
+                ctx.property.type = QMetaType::QSizeF;
             } else if (member.memberType->name == u"rect") {
-                ctx.property.builtinType = QMetaType::QRectF;
+                ctx.property.type = QMetaType::QRectF;
             } else if (member.memberType->name == u"point") {
-                ctx.property.builtinType = QMetaType::QPointF;
+                ctx.property.type = QMetaType::QPointF;
             } else if (member.memberType->name == u"color") {
-                ctx.property.builtinType = QMetaType::QColor;
+                ctx.property.type = QMetaType::QColor;
             } else if (member.memberType->name.startsWith(u"vector")) {
                 if (member.memberType->name.endsWith(u"2d")) {
-                    ctx.property.builtinType = QMetaType::QVector2D;
+                    ctx.property.type = QMetaType::QVector2D;
                 } else if (member.memberType->name.endsWith(u"3d")) {
-                    ctx.property.builtinType = QMetaType::QVector3D;
+                    ctx.property.type = QMetaType::QVector3D;
                 } else if (member.memberType->name.endsWith(u"4d")) {
-                    ctx.property.builtinType = QMetaType::QVector4D;
+                    ctx.property.type = QMetaType::QVector4D;
                 }
             } else if (member.memberType->name == u"matrix4x4") {
-                ctx.property.builtinType = QMetaType::QMatrix4x4;;
+                ctx.property.type = QMetaType::QMatrix4x4;;
             } else if (member.memberType->name == u"quaternion") {
-                ctx.property.builtinType = QMetaType::QQuaternion;
+                ctx.property.type = QMetaType::QQuaternion;
             } else if (member.memberType->name == u"var") {
-                ctx.property.builtinType = QMetaType::QVariant;
+                ctx.property.type = QMetaType::QVariant;
             }
-
-            ctx.property.propertyType = (ctx.property.builtinType != QMetaType::UnknownType)
-                    ? TypeInfo::Builtin
-                    : TypeInfo::Unknown;
         }
     }
 
@@ -1640,11 +1548,11 @@ int MaterialParser::parseQmlFiles(const QVector<QString> &filePaths, const QDir 
                 int idx = code.indexOf('{');
                 if (idx != -1) {
                     const QByteArray section = code.mid(0, idx);
-                    QVarLengthArray<TypeInfo::QmlType, 3> componentTypes { TypeInfo::PrincipledMaterial,
-                                                                           TypeInfo::CustomMaterial,
-                                                                           TypeInfo::DefaultMaterial};
+                    QVarLengthArray<const char *, 3> componentTypes { TypeInfo<QQuick3DPrincipledMaterial>::qmlTypeName(),
+                                                                           TypeInfo<QQuick3DCustomMaterial>::qmlTypeName(),
+                                                                           TypeInfo<QQuick3DDefaultMaterial>::qmlTypeName()};
                     for (const auto compType : qAsConst(componentTypes)) {
-                        if ((idx = section.indexOf(TypeInfo::typeStringTable[compType])) != -1)
+                        if ((idx = section.indexOf(compType)) != -1)
                             break;
                     }
                     if (idx != -1) {

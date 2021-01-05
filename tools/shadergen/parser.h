@@ -47,30 +47,6 @@ class QQuick3DEffect;
 class QQuick3DShaderUtilsShader;
 class QDir;
 
-namespace TypeInfo {
-enum QmlType
-{
-    View3D,
-    SceneEnvironment,
-    PrincipledMaterial,
-    DefaultMaterial,
-    CustomMaterial,
-    DirectionalLight,
-    PointLight,
-    SpotLight,
-    Texture,
-    TextureInput,
-    Model,
-    Effect,
-    // Types used for custom effects
-    RenderPass,
-    RenderShader,
-    // End effect types
-    Builtin,
-    Unknown
-};
-}
-
 namespace MaterialParser {
 
 struct SceneData
