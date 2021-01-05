@@ -894,6 +894,7 @@ QT_BEGIN_NAMESPACE
     \li \c INSTANCE_COLOR -> vec4, the instance color: to be combined with \c {COLOR}.
     \li \c INSTANCE_DATA -> vec4, instance custom data.
     \li \c INSTANCE_INDEX -> int, the instance number, and index into the instancing table.
+    \endlist
 
     \section1 Screen, depth, and other textures
 
