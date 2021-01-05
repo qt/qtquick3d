@@ -34,7 +34,7 @@ Qt Quick 3D provides a high-level API for creating 3D content and 3D user interf
 based on \l{Qt Quick}. Rather than using an external engine which creates syncing issues,
 and additional layers of abstraction, we provide extensions to the existing
 \l{Qt Quick Scene Graph} for spatial content, and a renderer for that extended
-scene graph. When using the spatial scene graph it is also be possible to mix
+scene graph. When using the spatial scene graph it is also possible to mix
 Qt Quick 2D content with 3D content.
 
 \image dragon.jpg
