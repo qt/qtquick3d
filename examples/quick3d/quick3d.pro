@@ -21,4 +21,5 @@ SUBDIRS += \
     skinning \
     offlineshaders \
     submeshes \
-    quickball
+    quickball \
+    helloqtquick3d
