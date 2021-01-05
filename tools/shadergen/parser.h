@@ -69,29 +69,6 @@ enum QmlType
     Builtin,
     Unknown
 };
-
-enum BuiltinType {
-    Var = QMetaType::User,
-    Int = QMetaType::Int,
-    Bool = QMetaType::Bool,
-    Real = QMetaType::Double,
-    String = QMetaType::QString,
-    Url = QMetaType::QUrl,
-    Color = QMetaType::QColor,
-    Font = QMetaType::QFont,
-    Time = QMetaType::QTime,
-    Date = QMetaType::QDate,
-    DateTime = QMetaType::QDateTime,
-    Rect = QMetaType::QRectF,
-    Point = QMetaType::QPointF,
-    Size = QMetaType::QSizeF,
-    Vector2D = QMetaType::QVector2D,
-    Vector3D = QMetaType::QVector3D,
-    Vector4D = QMetaType::QVector4D,
-    Matrix4x4 = QMetaType::QMatrix4x4,
-    Quaternion = QMetaType::QQuaternion,
-    InvalidBuiltin = QMetaType::UnknownType
-};
 }
 
 namespace MaterialParser {

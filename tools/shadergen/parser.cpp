@@ -143,7 +143,7 @@ struct Context
         QStringView name;
         TypeInfo::QmlType targetType = TypeInfo::Unknown;
         TypeInfo::QmlType propertyType = TypeInfo::Unknown;
-        TypeInfo::BuiltinType builtinType = TypeInfo::InvalidBuiltin;
+        QMetaType::Type builtinType = QMetaType::UnknownType;
         bool isMember = false;
     };
 
@@ -442,28 +442,26 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
         using namespace BuiltinHelpers;
         bool ok = false;
         switch (type) {
-        case TypeInfo::Var:
-            break;
-        case TypeInfo::Int:
+        case QMetaType::Int:
         {
             const auto v = ref.toInt(&ok);
             return (ok ? QVariant::fromValue(v) : QVariant());
         }
             break;
-        case TypeInfo::Bool:
+        case QMetaType::Bool:
         {
             const auto v = ref.toInt(&ok);
             return (ok ? QVariant::fromValue(bool(v)) : QVariant());
         }
-        case TypeInfo::Real:
+        case QMetaType::Double:
         {
             const auto v = ref.toDouble(&ok);
             return (ok ? QVariant::fromValue(qreal(v)) : QVariant());
         }
             break;
-        case TypeInfo::String:
+        case QMetaType::QString:
             return QVariant::fromValue(ref);
-        case TypeInfo::Url:
+        case QMetaType::QUrl:
         {
             if (ref.startsWith(u':') || ref.startsWith(QDir::separator()))
                 return QVariant::fromValue(QUrl::fromLocalFile(ref.toString()));
@@ -472,33 +470,31 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
             else
                 return QVariant::fromValue(QUrl::fromUserInput(ref.toString(), workingDir.canonicalPath()));
         }
-        case TypeInfo::Color:
+        case QMetaType::QColor:
             return QVariant::fromValue(QColor(ref));
-        case TypeInfo::Time:
+        case QMetaType::QTime:
             return QVariant::fromValue(QTime::fromString(ref.toString()));
-        case TypeInfo::Date:
+        case QMetaType::QDate:
             return QVariant::fromValue(QDate::fromString(ref.toString()));
-        case TypeInfo::DateTime:
+        case QMetaType::QDateTime:
             return QVariant::fromValue(QDateTime::fromString(ref.toString()));
-        case TypeInfo::Rect:
+        case QMetaType::QRectF:
             return QVariant::fromValue(toRect(ref));
-        case TypeInfo::Point:
+        case QMetaType::QPointF:
             return QVariant::fromValue(toPoint(ref));
-        case TypeInfo::Size:
+        case QMetaType::QSizeF:
             return QVariant::fromValue(toSize(ref));
-        case TypeInfo::Vector2D:
+        case QMetaType::QVector2D:
             return QVariant::fromValue(toVec<QVector2D>(ref));
-        case TypeInfo::Vector3D:
+        case QMetaType::QVector3D:
             return QVariant::fromValue(toVec<QVector3D>(ref));
-        case TypeInfo::Vector4D:
+        case QMetaType::QVector4D:
             return QVariant::fromValue(toVec<QVector4D>(ref));
-        case TypeInfo::Quaternion:
+        case QMetaType::QQuaternion:
             return QVariant::fromValue(toQuaternion(ref));
-        case TypeInfo::Font:
+        case QMetaType::QMatrix4x4:
             break;
-        case TypeInfo::Matrix4x4:
-            break;
-        case TypeInfo::InvalidBuiltin:
+        default:
             break;
         }
 
@@ -1428,36 +1424,36 @@ static bool interceptPublicMember(const QQmlJS::AST::UiPublicMember &member, Con
             // need to add these to the objects properties (we add these here to be able
             // to piggyback on the existing type matching code)
             if (member.memberType->name == u"real") {
-                ctx.property.builtinType = TypeInfo::Real;
+                ctx.property.builtinType = QMetaType::Double;
             } else if (member.memberType->name == u"bool") {
-                ctx.property.builtinType = TypeInfo::Bool;
+                ctx.property.builtinType = QMetaType::Bool;
             } else if (member.memberType->name == u"int") {
-                ctx.property.builtinType = TypeInfo::Int;
+                ctx.property.builtinType = QMetaType::Int;
             } else if (member.memberType->name == u"size") {
-                ctx.property.builtinType = TypeInfo::Size;
+                ctx.property.builtinType = QMetaType::QSizeF;
             } else if (member.memberType->name == u"rect") {
-                ctx.property.builtinType = TypeInfo::Rect;
+                ctx.property.builtinType = QMetaType::QRectF;
             } else if (member.memberType->name == u"point") {
-                ctx.property.builtinType = TypeInfo::Point;
+                ctx.property.builtinType = QMetaType::QPointF;
             } else if (member.memberType->name == u"color") {
-                ctx.property.builtinType = TypeInfo::Color;
+                ctx.property.builtinType = QMetaType::QColor;
             } else if (member.memberType->name.startsWith(u"vector")) {
                 if (member.memberType->name.endsWith(u"2d")) {
-                    ctx.property.builtinType = TypeInfo::Vector2D;
+                    ctx.property.builtinType = QMetaType::QVector2D;
                 } else if (member.memberType->name.endsWith(u"3d")) {
-                    ctx.property.builtinType = TypeInfo::Vector3D;
+                    ctx.property.builtinType = QMetaType::QVector3D;
                 } else if (member.memberType->name.endsWith(u"4d")) {
-                    ctx.property.builtinType = TypeInfo::Vector4D;
+                    ctx.property.builtinType = QMetaType::QVector4D;
                 }
             } else if (member.memberType->name == u"matrix4x4") {
-                ctx.property.builtinType = TypeInfo::Matrix4x4;;
+                ctx.property.builtinType = QMetaType::QMatrix4x4;;
             } else if (member.memberType->name == u"quaternion") {
-                ctx.property.builtinType = TypeInfo::Quaternion;
+                ctx.property.builtinType = QMetaType::QQuaternion;
             } else if (member.memberType->name == u"var") {
-                ctx.property.builtinType = TypeInfo::Var;
+                ctx.property.builtinType = QMetaType::QVariant;
             }
 
-            ctx.property.propertyType = (ctx.property.builtinType != TypeInfo::InvalidBuiltin)
+            ctx.property.propertyType = (ctx.property.builtinType != QMetaType::UnknownType)
                     ? TypeInfo::Builtin
                     : TypeInfo::Unknown;
         }
