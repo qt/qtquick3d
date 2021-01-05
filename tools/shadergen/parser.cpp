@@ -294,7 +294,7 @@ static QMatrix4x4 toMat44(const ArgumentListView &list, bool *ok = nullptr)
     float args[e];
     for (const auto &listItem : list) {
         if (listItem.expression && i != e)
-            args[i] = expressionValue(*listItem.expression);
+            args[i] = float(expressionValue(*listItem.expression));
         ++i;
     }
 
@@ -312,7 +312,7 @@ static QQuaternion toQuaternion(const ArgumentListView &list, bool *ok = nullptr
     float args[e];
     for (const auto &listItem : list) {
         if (listItem.expression && listItem.expression->kind == Node::Kind_NumericLiteral && i != e)
-            args[i] = expressionValue(*listItem.expression);
+            args[i] = float(expressionValue(*listItem.expression));
         ++i;
     }
 
