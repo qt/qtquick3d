@@ -75,7 +75,7 @@ void Shadergen::tst_principledMaterialComponent()
     MaterialParser::parseQmlData(data, file.fileName(), sceneData);
 
     QCOMPARE(sceneData.materials.size(), 1);
-    QQuick3DPrincipledMaterial *mat = qobject_cast<QQuick3DPrincipledMaterial *>(sceneData.materials.at(0).ptr);
+    QQuick3DPrincipledMaterial *mat = qobject_cast<QQuick3DPrincipledMaterial *>(sceneData.materials.at(0));
     QVERIFY(qFuzzyCompare(mat->metalness(), 0.1f));
     QVERIFY(qFuzzyCompare(mat->roughness(), 0.2f));
     QCOMPARE(mat->baseColor(), QColor("green"));
@@ -91,7 +91,7 @@ void Shadergen::tst_defaultMaterialComponent()
     MaterialParser::parseQmlData(data, file.fileName(), sceneData);
 
     QCOMPARE(sceneData.materials.size(), 1);
-    QQuick3DDefaultMaterial *mat = qobject_cast<QQuick3DDefaultMaterial *>(sceneData.materials.at(0).ptr);
+    QQuick3DDefaultMaterial *mat = qobject_cast<QQuick3DDefaultMaterial *>(sceneData.materials.at(0));
     QVERIFY(qFuzzyCompare(mat->specularAmount(), 0.1f));
     QVERIFY(qFuzzyCompare(mat->specularRoughness(), 0.2f));
     QCOMPARE(mat->diffuseColor(), QColor("pink"));
@@ -107,7 +107,7 @@ void Shadergen::tst_customMaterialComponent()
     MaterialParser::parseQmlData(data, file.fileName(), sceneData);
 
     QCOMPARE(sceneData.materials.size(), 1);
-    QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(sceneData.materials.at(0).ptr);
+    QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(sceneData.materials.at(0));
     QCOMPARE(mat->shadingMode(), QQuick3DCustomMaterial::ShadingMode::Unshaded);
 }
 
@@ -146,7 +146,7 @@ void Shadergen::tst_customMaterialUniforms()
     // Test that public QML members are added to the object
     const auto &sceneData = lastSceneData;
     QCOMPARE(sceneData.materials.size(), 1);
-    QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(sceneData.materials.at(0).ptr);
+    QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(sceneData.materials.at(0));
     QCOMPARE(mat->shadingMode(), QQuick3DCustomMaterial::ShadingMode::Unshaded);
 
     QFETCH(QMetaType, type);

@@ -102,19 +102,11 @@ struct Light
     TypeInfo::QmlType type;
 };
 
-struct Material
-{
-    QQuick3DMaterial *ptr = nullptr;
-    TypeInfo::QmlType type;
-};
-
-inline bool operator==(const Material &l, const Material &r) { return (l.ptr == r.ptr); }
-
 struct SceneData
 {
     QQuick3DViewport *viewport = nullptr; // NOTE!!! we're only handling one viewport atm.
     QVector<Light> lights;
-    QVector<Material> materials;
+    QVector<QQuick3DMaterial *> materials;
     QVector<QQuick3DTexture *> textures;
     QVector<QQuick3DModel *> models;
     QVector<QQuick3DEffect *> effects;
