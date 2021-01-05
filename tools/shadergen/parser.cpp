@@ -553,7 +553,7 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
                         return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues>(ref, property);
                     if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>())
                         return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>(ref, property);
-                    Q_FALLTHROUGH();
+                    break;
                 default:
                     break;
                 }
