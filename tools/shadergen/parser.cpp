@@ -561,7 +561,7 @@ static QVariant fromString(const QStringView &ref, const Context &ctx)
                         return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues>(ref, property);
                     if (metaType.id() == qMetaTypeId<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>())
                         return fromStringEnumHelper<QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes>(ref, property);
-                    Q_FALLTHROUGH();
+                    break;
                 case TypeInfo::RenderShader:
                     if (metaType.id() == qMetaTypeId<QQuick3DShaderUtilsShader::Stage>())
                         return fromStringEnumHelper<QQuick3DShaderUtilsShader::Stage>(ref, property);
