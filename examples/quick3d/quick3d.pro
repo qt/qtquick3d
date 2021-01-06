@@ -22,4 +22,5 @@ SUBDIRS += \
     offlineshaders \
     submeshes \
     quickball \
-    helloqtquick3d
+    helloqtquick3d \
+    morphing
