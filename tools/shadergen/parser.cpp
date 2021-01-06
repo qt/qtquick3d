@@ -1314,7 +1314,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
                     const auto componentName = QStringView(fileName).left(fileName.length() - 4);
                     components.insert(componentName.toString(), { light, type });
                 }
-                ctx.sceneData.lights.push_back({light, type});
+                ctx.sceneData.lights.push_back(light);
 
             }
             break;

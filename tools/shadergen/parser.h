@@ -96,16 +96,10 @@ enum BuiltinType {
 
 namespace MaterialParser {
 
-struct Light
-{
-    QQuick3DAbstractLight *ptr = nullptr;
-    TypeInfo::QmlType type;
-};
-
 struct SceneData
 {
     QQuick3DViewport *viewport = nullptr; // NOTE!!! we're only handling one viewport atm.
-    QVector<Light> lights;
+    QVector<QQuick3DAbstractLight *> lights;
     QVector<QQuick3DMaterial *> materials;
     QVector<QQuick3DTexture *> textures;
     QVector<QQuick3DModel *> models;
@@ -118,8 +112,6 @@ int parseQmlData(const QByteArray &code, const QString &fileName, SceneData &sce
 int parseQmlFiles(const QVector<QString> &filePaths, const QDir &sourceDir, SceneData &sceneData, bool verboseOutput);
 
 }
-
-Q_DECLARE_TYPEINFO(MaterialParser::Light, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 

@@ -183,11 +183,11 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     // Lights
     const auto &lights = sceneData.lights;
     for (const auto &light : lights) {
-        auto node = QQuick3DObjectPrivate::updateSpatialNode(light.ptr, nullptr);
-        nodes.append(node);
-        layer.addChild(static_cast<QSSGRenderNode &>(*node));
-        if (light.ptr->castsShadow()) {
-            if (light.type == TypeInfo::PointLight)
+        if (auto node = QQuick3DObjectPrivate::updateSpatialNode(light, nullptr)) {
+            nodes.append(node);
+            layer.addChild(static_cast<QSSGRenderNode &>(*node));
+            const auto &lightNode = static_cast<const QSSGRenderLight &>(*node);
+            if (lightNode.m_lightType == QSSGRenderLight::Type::Point)
                 shadowCubePass |= true;
             else
                 shadowMapPass |= true;
