@@ -32,4 +32,6 @@ DEFINES += QT_BUILD_QUICK3DASSETIMPORT_LIB
 
 OTHER_FILES += options-schema.json
 
+include(../3rdparty/xatlas/xatlas.pri)
+
 load(qt_module)

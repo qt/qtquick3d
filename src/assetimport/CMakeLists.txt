@@ -7,11 +7,14 @@
 qt_internal_add_module(Quick3DAssetImport
     PLUGIN_TYPES assetimporters
     SOURCES
+        ../3rdparty/xatlas/xatlas.cpp ../3rdparty/xatlas/xatlas.h
         qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
         qssgmesh.cpp qssgmesh_p.h
         qtquick3dassetimportglobal_p.h
     DEFINES
         QT_BUILD_QUICK3DASSETIMPORT_LIB
+    INCLUDE_DIRECTORIES
+        ../3rdparty/xatlas
     LIBRARIES
         Qt::CorePrivate
         Qt::Quick3DUtilsPrivate
