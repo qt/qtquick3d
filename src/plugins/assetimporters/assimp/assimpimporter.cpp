@@ -76,7 +76,6 @@ using Qt::endl;
     aiProcess_GenSmoothNormals              |  \
     aiProcess_JoinIdenticalVertices         |  \
     aiProcess_ImproveCacheLocality          |  \
-    aiProcess_LimitBoneWeights              |  \
     aiProcess_RemoveRedundantMaterials      |  \
     aiProcess_SplitLargeMeshes              |  \
     aiProcess_Triangulate                   |  \
