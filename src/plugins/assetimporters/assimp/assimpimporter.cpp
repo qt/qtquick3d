@@ -918,12 +918,12 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     // Check if we need placeholders in certain channels
     bool needsPositionData = false;
     bool needsNormalData = false;
+    bool needsUV0Data = false;
     bool needsUV1Data = false;
-    bool needsUV2Data = false;
     bool needsTangentData = false;
     bool needsVertexColorData = false;
+    unsigned uv0Components = 0;
     unsigned uv1Components = 0;
-    unsigned uv2Components = 0;
     unsigned totalVertices = 0;
     bool needsBones = false;
 
@@ -951,12 +951,12 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
 
     for (const auto *mesh : meshes) {
         totalVertices += mesh->mNumVertices;
-        uv1Components = qMax(mesh->mNumUVComponents[0], uv1Components);
-        uv2Components = qMax(mesh->mNumUVComponents[1], uv2Components);
+        uv0Components = qMax(mesh->mNumUVComponents[0], uv0Components);
+        uv1Components = qMax(mesh->mNumUVComponents[1], uv1Components);
         needsPositionData |= mesh->HasPositions();
         needsNormalData |= mesh->HasNormals();
-        needsUV1Data |= mesh->HasTextureCoords(0);
-        needsUV2Data |= mesh->HasTextureCoords(1);
+        needsUV0Data |= mesh->HasTextureCoords(0);
+        needsUV1Data |= mesh->HasTextureCoords(1);
         needsTangentData |= mesh->HasTangentsAndBitangents();
         needsVertexColorData |=mesh->HasVertexColors(0);
         needsBones |= mesh->HasBones();
@@ -983,8 +983,8 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
 
     QByteArray positionData;
     QByteArray normalData;
+    QByteArray uv0Data;
     QByteArray uv1Data;
-    QByteArray uv2Data;
     QByteArray tangentData;
     QByteArray binormalData;
     QByteArray vertexColorData;
@@ -1014,13 +1014,30 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
         else if (needsNormalData)
             normalData += QByteArray(mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
 
-        // UV1
+        // UV0
         if (mesh->HasTextureCoords(0)) {
+            QVector<float> uvCoords;
+            uvCoords.resize(uv0Components * mesh->mNumVertices);
+            for (uint i = 0; i < mesh->mNumVertices; ++i) {
+                int offset = i * uv0Components;
+                aiVector3D *textureCoords = mesh->mTextureCoords[0];
+                uvCoords[offset] = textureCoords[i].x;
+                uvCoords[offset + 1] = textureCoords[i].y;
+                if (uv0Components == 3)
+                    uvCoords[offset + 2] = textureCoords[i].z;
+            }
+            uv0Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
+        } else {
+            uv0Data += QByteArray(mesh->mNumVertices * uv0Components * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+        }
+
+        // UV1
+        if (mesh->HasTextureCoords(1)) {
             QVector<float> uvCoords;
             uvCoords.resize(uv1Components * mesh->mNumVertices);
             for (uint i = 0; i < mesh->mNumVertices; ++i) {
                 int offset = i * uv1Components;
-                aiVector3D *textureCoords = mesh->mTextureCoords[0];
+                aiVector3D *textureCoords = mesh->mTextureCoords[1];
                 uvCoords[offset] = textureCoords[i].x;
                 uvCoords[offset + 1] = textureCoords[i].y;
                 if (uv1Components == 3)
@@ -1029,23 +1046,6 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
             uv1Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
         } else {
             uv1Data += QByteArray(mesh->mNumVertices * uv1Components * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
-        }
-
-        // UV2
-        if (mesh->HasTextureCoords(1)) {
-            QVector<float> uvCoords;
-            uvCoords.resize(uv2Components * mesh->mNumVertices);
-            for (uint i = 0; i < mesh->mNumVertices; ++i) {
-                int offset = i * uv2Components;
-                aiVector3D *textureCoords = mesh->mTextureCoords[1];
-                uvCoords[offset] = textureCoords[i].x;
-                uvCoords[offset + 1] = textureCoords[i].y;
-                if (uv2Components == 3)
-                    uvCoords[offset + 2] = textureCoords[i].z;
-            }
-            uv2Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
-        } else {
-            uv2Data += QByteArray(mesh->mNumVertices * uv2Components * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
         }
 
         if (mesh->HasTangentsAndBitangents()) {
@@ -1199,19 +1199,19 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
                                                                    3);
         entries.append(normalAttribute);
     }
+    if (uv0Data.length() > 0) {
+        QSSGMeshUtilities::MeshBuilderVBufEntry uv0Attribute( QSSGMeshUtilities::Mesh::getUV0AttrName(),
+                                                                uv0Data,
+                                                                QSSGRenderComponentType::Float32,
+                                                                uv0Components);
+        entries.append(uv0Attribute);
+    }
     if (uv1Data.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry uv1Attribute( QSSGMeshUtilities::Mesh::getUVAttrName(),
+        QSSGMeshUtilities::MeshBuilderVBufEntry uv1Attribute( QSSGMeshUtilities::Mesh::getUV1AttrName(),
                                                                 uv1Data,
                                                                 QSSGRenderComponentType::Float32,
                                                                 uv1Components);
         entries.append(uv1Attribute);
-    }
-    if (uv2Data.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry uv2Attribute( QSSGMeshUtilities::Mesh::getUV2AttrName(),
-                                                                uv2Data,
-                                                                QSSGRenderComponentType::Float32,
-                                                                uv2Components);
-        entries.append(uv2Attribute);
     }
 
     if (tangentData.length() > 0) {

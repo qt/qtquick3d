@@ -368,8 +368,8 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
 
     static const char *getPositionAttrName() { return "attr_pos"; }
     static const char *getNormalAttrName() { return "attr_norm"; }
-    static const char *getUVAttrName() { return "attr_uv0"; }
-    static const char *getUV2AttrName() { return "attr_uv1"; }
+    static const char *getUV0AttrName() { return "attr_uv0"; }
+    static const char *getUV1AttrName() { return "attr_uv1"; }
     static const char *getTexTanAttrName() { return "attr_textan"; }
     static const char *getTexBinormalAttrName() { return "attr_binormal"; }
     static const char *getColorAttrName() { return "attr_color"; }

@@ -222,9 +222,9 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
                     m_vertexInputs[QSSGRhiInputAssemblerState::PositionSemantic] = var;
                 } else if (var.name == QSSGMeshUtilities::Mesh::getNormalAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::NormalSemantic] = var;
-                } else if (var.name == QSSGMeshUtilities::Mesh::getUVAttrName()) {
+                } else if (var.name == QSSGMeshUtilities::Mesh::getUV0AttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
-                } else if (var.name == QSSGMeshUtilities::Mesh::getUV2AttrName()) {
+                } else if (var.name == QSSGMeshUtilities::Mesh::getUV1AttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
                 } else if (var.name == QSSGMeshUtilities::Mesh::getTexTanAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;

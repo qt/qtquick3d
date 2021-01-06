@@ -52,7 +52,7 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh)
         if (!strcmp(entry.m_name, QSSGMeshUtilities::Mesh::getPositionAttrName())) {
             m_hasPositionData = true;
             m_vertexPosOffset = entry.m_firstItemOffset;
-        } else if (!strcmp(entry.m_name, QSSGMeshUtilities::Mesh::getUVAttrName())) {
+        } else if (!strcmp(entry.m_name, QSSGMeshUtilities::Mesh::getUV0AttrName())) {
             m_hasUVData = true;
             m_vertexUV0Offset = entry.m_firstItemOffset;
         }

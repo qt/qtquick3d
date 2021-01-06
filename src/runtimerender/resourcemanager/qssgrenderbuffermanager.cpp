@@ -964,9 +964,9 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
             rhi.ia.inputs << QSSGRhiInputAssemblerState::PositionSemantic;
         } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getNormalAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::NormalSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUVAttrName())) {
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUV0AttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::TexCoord0Semantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUV2AttrName())) {
+        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUV1AttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::TexCoord1Semantic;
         } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getTexTanAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::TangentSemantic;

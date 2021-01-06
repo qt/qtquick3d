@@ -1378,10 +1378,10 @@ public:
                     name = Mesh::getNormalAttrName();
                     break;
                 case MeshData::Attribute::TexCoord0Semantic:
-                    name = Mesh::getUVAttrName();
+                    name = Mesh::getUV0AttrName();
                     break;
                 case MeshData::Attribute::TexCoord1Semantic:
-                    name = Mesh::getUV2AttrName();
+                    name = Mesh::getUV1AttrName();
                     break;
                 case MeshData::Attribute::TangentSemantic:
                     name = Mesh::getTexTanAttrName();
