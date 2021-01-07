@@ -53,8 +53,8 @@ public:
     QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
                        int stride,
                        int posOffset,
-                       bool hasUV0 = false,
-                       int uv0Offset = -1,
+                       bool hasUV = false,
+                       int uvOffset = -1,
                        bool hasIndexBuffer = false,
                        const QByteArray &indexBuffer = QByteArray(),
                        QSSGRenderComponentType indexBufferType = QSSGRenderComponentType::Integer32);
@@ -77,7 +77,7 @@ private:
     QVector<QSSGMeshBVHTriangle*> calculateTriangleBounds(quint32 indexOffset, quint32 indexCount) const;
     quint32 getIndexBufferValue(quint32 index) const;
     QVector3D getVertexBufferValuePosition(quint32 index) const;
-    QVector2D getVertexBufferValueUV0(quint32 index) const;
+    QVector2D getVertexBufferValueUV(quint32 index) const;
 
     QSSGMeshBVHNode *splitNode(QSSGMeshBVHNode *node, quint32 offset, quint32 count, quint32 depth = 0);
     QSSGBounds3 getBounds(quint32 offset, quint32 count) const;
@@ -95,7 +95,7 @@ private:
     bool m_hasPositionData = false;
     quint32 m_vertexPosOffset;
     bool m_hasUVData = false;
-    quint32 m_vertexUV0Offset;
+    quint32 m_vertexUVOffset;
     bool m_hasIndexBuffer = true;
 
 

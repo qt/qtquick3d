@@ -1265,17 +1265,20 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
     // Build BVH
     bool hasIndexBuffer = false;
     QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::Integer32;
-    bool hasUV0 = false;
-    int uv0Offset = -1;
+    bool hasUV = false;
+    int uvOffset = -1;
     int posOffset = -1;
 
     for (int i = 0; i < geometry->attributeCount(); ++i) {
         auto attribute = geometry->attribute(i);
         if (attribute.semantic == QSSGRenderGeometry::Attribute::PositionSemantic) {
             posOffset = attribute.offset;
-        } else if (attribute.semantic == QSSGRenderGeometry::Attribute::TexCoordSemantic) {
-            hasUV0 = true;
-            uv0Offset = attribute.offset;
+        } else if (attribute.semantic == QSSGRenderGeometry::Attribute::TexCoord0Semantic) {
+            hasUV = true;
+            uvOffset = attribute.offset;
+        } else if (!hasUV && attribute.semantic == QSSGRenderGeometry::Attribute::TexCoord1Semantic) {
+            hasUV = true;
+            uvOffset = attribute.offset;
         } else if (attribute.semantic == QSSGRenderGeometry::Attribute::IndexSemantic) {
             hasIndexBuffer = true;
             if (attribute.componentType == QSSGRenderGeometry::Attribute::I16Type)
@@ -1288,8 +1291,8 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
     QSSGMeshBVHBuilder meshBVHBuilder(geometry->vertexBuffer(),
                                       geometry->stride(),
                                       posOffset,
-                                      hasUV0,
-                                      uv0Offset,
+                                      hasUV,
+                                      uvOffset,
                                       hasIndexBuffer,
                                       geometry->indexBuffer(),
                                       indexBufferFormat);

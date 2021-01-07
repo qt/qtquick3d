@@ -46,6 +46,8 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh)
         m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger32;
 
     // Get VertexBuffer Information
+    // When using the texture coordinates, UV0 has priority but if the mesh has
+    // UV1 without UV0, UV1 will be used instead of UV0.
     const auto &entries = m_mesh->m_vertexBuffer.m_entries;
     for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx) {
         QSSGRenderVertexBufferEntry entry = entries.index(m_baseAddress, entryIdx).toVertexBufferEntry(m_baseAddress);
@@ -54,7 +56,10 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh)
             m_vertexPosOffset = entry.m_firstItemOffset;
         } else if (!strcmp(entry.m_name, QSSGMeshUtilities::Mesh::getUV0AttrName())) {
             m_hasUVData = true;
-            m_vertexUV0Offset = entry.m_firstItemOffset;
+            m_vertexUVOffset = entry.m_firstItemOffset;
+        } else if (!m_hasUVData && !strcmp(entry.m_name, QSSGMeshUtilities::Mesh::getUV1AttrName())) {
+            m_hasUVData = true;
+            m_vertexUVOffset = entry.m_firstItemOffset;
         }
     }
     m_vertexStride = m_mesh->m_vertexBuffer.m_stride;
@@ -64,8 +69,8 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh)
 QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
                                        int stride,
                                        int posOffset,
-                                       bool hasUV0,
-                                       int uv0Offset,
+                                       bool hasUV,
+                                       int uvOffset,
                                        bool hasIndexBuffer,
                                        const QByteArray &indexBuffer,
                                        QSSGRenderComponentType indexBufferType)
@@ -74,8 +79,8 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
     m_vertexStride = stride;
     m_hasPositionData = true;
     m_vertexPosOffset = posOffset;
-    m_hasUVData = hasUV0;
-    m_vertexUV0Offset = uv0Offset;
+    m_hasUVData = hasUV;
+    m_vertexUVOffset = uvOffset;
     m_hasIndexBuffer = hasIndexBuffer;
     m_indexBufferData = QSSGByteView(indexBuffer);
     m_indexBufferComponentType = indexBufferType;
@@ -145,9 +150,9 @@ QVector<QSSGMeshBVHTriangle *> QSSGMeshBVHBuilder::calculateTriangleBounds(quint
         triangle->vertex1 = getVertexBufferValuePosition(index1);
         triangle->vertex2 = getVertexBufferValuePosition(index2);
         triangle->vertex3 = getVertexBufferValuePosition(index3);
-        triangle->uvCoord1 = getVertexBufferValueUV0(index1);
-        triangle->uvCoord2 = getVertexBufferValueUV0(index2);
-        triangle->uvCoord3 = getVertexBufferValueUV0(index3);
+        triangle->uvCoord1 = getVertexBufferValueUV(index1);
+        triangle->uvCoord2 = getVertexBufferValueUV(index2);
+        triangle->uvCoord3 = getVertexBufferValueUV(index3);
 
         triangle->bounds.include(triangle->vertex1);
         triangle->bounds.include(triangle->vertex2);
@@ -187,15 +192,15 @@ QVector3D QSSGMeshBVHBuilder::getVertexBufferValuePosition(quint32 index) const
     return *position;
 }
 
-QVector2D QSSGMeshBVHBuilder::getVertexBufferValueUV0(quint32 index) const
+QVector2D QSSGMeshBVHBuilder::getVertexBufferValueUV(quint32 index) const
 {
     if (!m_hasUVData)
         return QVector2D();
 
-    const quint32 offset = index * m_vertexStride + m_vertexUV0Offset;
-    const QVector2D *uv0 = reinterpret_cast<const QVector2D *>(m_vertexBufferData.begin() + offset);
+    const quint32 offset = index * m_vertexStride + m_vertexUVOffset;
+    const QVector2D *uv = reinterpret_cast<const QVector2D *>(m_vertexBufferData.begin() + offset);
 
-    return *uv0;
+    return *uv;
 }
 
 QSSGMeshBVHNode *QSSGMeshBVHBuilder::splitNode(QSSGMeshBVHNode *node, quint32 offset, quint32 count, quint32 depth)
