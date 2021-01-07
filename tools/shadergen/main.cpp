@@ -159,8 +159,15 @@ int main(int argc, char *argv[])
 
     cmdLineparser.process(a);
 
-    if (cmdLineparser.isSet(changeDirOption))
-        QDir::setCurrent(cmdLineparser.value(changeDirOption));
+    if (cmdLineparser.isSet(changeDirOption)) {
+        const auto value = cmdLineparser.value(changeDirOption);
+        QFileInfo fi(value);
+        if (!fi.isDir()) {
+            qWarning("%s : %s - Not a directory", qPrintable(a.applicationName()), qPrintable(value));
+            return -1;
+        }
+        QDir::setCurrent(value);
+    }
 
     QSet<QString> filePaths;
     auto args = cmdLineparser.positionalArguments();
