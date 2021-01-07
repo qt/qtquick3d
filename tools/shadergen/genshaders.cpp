@@ -166,8 +166,10 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     // Free Materials (see also the model section)
     const auto &materials = sceneData.materials;
     for (const auto &mat : materials) {
+        auto obj = QQuick3DObjectPrivate::get(mat.ptr);
+        obj->sceneManager = sceneManager;
         auto node = QQuick3DObjectPrivate::updateSpatialNode(mat.ptr, nullptr);
-        QQuick3DObjectPrivate::get(mat.ptr)->spatialNode = node;
+        obj->spatialNode = node;
         nodes.append(node);
     }
 
