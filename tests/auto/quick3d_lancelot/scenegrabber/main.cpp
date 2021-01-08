@@ -112,6 +112,9 @@ private slots:
 #ifdef GRABBERDEBUG
         printf("...sceneStabilized IN\n");
 #endif
+        if (QGuiApplication::platformName() == QLatin1String("eglfs"))
+            lastGrab = lastGrab.copy(QRect(QPoint(0, 0), initialSize()));
+
         if (ofile == "-") {   // Write to stdout
             QFile of;
 #ifdef Q_OS_WIN
