@@ -23,4 +23,5 @@ SUBDIRS += \
     submeshes \
     quickball \
     helloqtquick3d \
-    morphing
+    morphing \
+    custommorphing
