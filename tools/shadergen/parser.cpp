@@ -80,10 +80,12 @@ template<> struct TypeInfo<CLASS> \
 { \
     static constexpr const char *qmlTypeName() { return #TYPE_NAME; } \
     inline static constexpr int typeId() { return qMetaTypeId<CLASS>(); } \
+    inline static constexpr int qmlListTypeId() { return qMetaTypeId<QQmlListProperty<CLASS>>(); } \
 }
 
 DECLARE_QQ3D_TYPE(QQuick3DViewport, View3D);
 DECLARE_QQ3D_TYPE(QQuick3DSceneEnvironment, SceneEnvironment);
+DECLARE_QQ3D_TYPE(QQuick3DMaterial, Material);
 DECLARE_QQ3D_TYPE(QQuick3DPrincipledMaterial, PrincipledMaterial);
 DECLARE_QQ3D_TYPE(QQuick3DDefaultMaterial, DefaultMaterial);
 DECLARE_QQ3D_TYPE(QQuick3DCustomMaterial, CustomMaterial);
@@ -131,11 +133,17 @@ struct Context
     };
 
     struct Property {
+        enum MemberState : quint8
+        {
+            Uninitialized,
+            Initialized
+        };
+
         QObject *target = nullptr;
         QStringView name;
         int targetType = QMetaType::UnknownType;
         QMetaType::Type type = QMetaType::UnknownType;
-        bool isMember = false;
+        MemberState memberState = Uninitialized;
     };
 
     template<typename T> using Vector = QVector<T>;
@@ -401,14 +409,44 @@ static QQuaternion toQuaternion(const QStringView &ref)
 
 } // BuiltinHelpers
 
+template <typename T>
+static void cloneQmlList(const QObject &so, QMetaProperty &sp, QObject &to, QMetaProperty &tp) {
+    Q_ASSERT(sp.typeId() == tp.typeId());
+    const auto tv = tp.read(&to);
+    const auto sv = sp.read(&so);
+    if (sv.isValid() && tv.isValid()) {
+        auto tl = tv.value<QQmlListProperty<T>>();
+        auto sl = sv.value<QQmlListProperty<T>>();
+        const auto count = sl.count(&sl);
+        for (int i = 0; count != i; ++i) {
+            const auto &item = sl.at(&sl, i);
+            tl.append(&tl, item);
+        }
+    }
+}
+
 static void cloneProperties(QObject &target, const QObject &source)
 {
     Q_ASSERT(target.metaObject() == source.metaObject());
-    const auto sourceMo = source.metaObject();
-    auto targetMo = target.metaObject();
-    const int propCount = sourceMo->propertyCount();
-    for (int i = 0; i != propCount; ++i)
-        targetMo->property(i).write(&target, sourceMo->property(i).read(&source));
+    const auto smo = source.metaObject();
+    auto tmo = target.metaObject();
+    const int propCount = smo->propertyCount();
+    for (int i = 0; i != propCount; ++i) {
+        auto sp = smo->property(i);
+        auto tp = tmo->property(i);
+        if (sp.typeId() == tp.typeId()) {
+            if (sp.typeId() == TypeInfo<QQuick3DMaterial>::qmlListTypeId())
+                cloneQmlList<QQuick3DMaterial>(source, sp, target, tp);
+            else if (sp.typeId() == TypeInfo<QQuick3DEffect>::qmlListTypeId())
+                cloneQmlList<QQuick3DEffect>(source, sp, target, tp);
+            else if (sp.typeId() == TypeInfo<QQuick3DShaderUtilsRenderPass>::qmlListTypeId())
+                cloneQmlList<QQuick3DShaderUtilsRenderPass>(source, sp, target, tp);
+            else if (sp.typeId() == TypeInfo<QQuick3DShaderUtilsShader>::qmlListTypeId())
+                cloneQmlList<QQuick3DShaderUtilsShader>(source, sp, target, tp);
+            else
+                tmo->property(i).write(&target, smo->property(i).read(&source));
+        }
+    }
 
     // Clone the dynamic properties as well
     for (const auto &prop : source.dynamicPropertyNames())
@@ -666,9 +704,7 @@ struct Visitors
             printf("%s member -> %s ", (member.type == UiPublicMember::Signal ? "Signal" : "Property"), member.name.toLocal8Bit().constData());
 
         auto name = ctx.property.name;
-        const bool isMemberCpy = ctx.property.isMember;
         ctx.property.name = member.name;
-        ctx.property.isMember = true;
         const auto typeCpy = ctx.property.type;
 
         if (!(ctx.interceptPMFunc && ctx.interceptPMFunc(member, ctx, ret))) {
@@ -689,7 +725,6 @@ struct Visitors
 
         qSwap(ctx.property.name, name);
         ctx.property.type = typeCpy;
-        ctx.property.isMember = isMemberCpy;
     }
 
     static void visit(const QQmlJS::AST::ExpressionStatement &exprStatement, Context &ctx, int &ret)
@@ -749,43 +784,56 @@ struct Visitors
         if (ctx.dbgprint)
             printf("-> Identifier: %s\n", idExpr.name.toLocal8Bit().constData());
 
-        if (ctx.property.target) {
+        if (ctx.property.target && ctx.type != Context::Type::Component) {
             const auto foundIt = ctx.identifierMap.constFind(idExpr.name);
             const auto end = ctx.identifierMap.constEnd();
-            if (foundIt != end) {
+            if (foundIt != end) { // If an item was found it means this is a reference
                 if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
                     if (QQuick3DMaterial *mat = qobject_cast<QQuick3DMaterial *>(*foundIt)) {
                         auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                        // Since we are initializing this for the first time, make sure we clean out any inherited data!
+                        if (ctx.property.memberState == Context::Property::Uninitialized) {
+                            if (ctx.dbgprint)
+                                printf("Clearing inherited materials\n");
+                            materials.clear(&materials);
+                            ctx.property.memberState = Context::Property::Initialized;
+                        }
                         materials.append(&materials, mat);
-                        // Remove the material from the "free" list (materials that aren't use anywhere).
-                        auto &freeMaterials = ctx.sceneData.materials;
-                        const auto idx = freeMaterials.indexOf(qobject_cast<QQuick3DPrincipledMaterial *>(mat));
-                        if (idx != -1)
-                            freeMaterials.removeAt(idx);
                         if (ctx.dbgprint)
                             printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
                     }
                 } else if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
                     if (QQuick3DEffect *effect = qobject_cast<QQuick3DEffect *>(*foundIt)) {
                         auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
+                        // Since we are initializing this for the first time, make sure we clean out any inherited data!
+                        if (ctx.property.memberState == Context::Property::Uninitialized) {
+                            if (ctx.dbgprint)
+                                printf("Clearing inherited effects\n");
+                            effects.clear(&effects);
+                            ctx.property.memberState = Context::Property::Initialized;
+                        }
                         effects.append(&effects, effect);
-                        // Remove the effect from the "free" list (effects that aren't used anywhere).
-                        auto &freeEffecs = ctx.sceneData.effects;
-                        const auto idx = freeEffecs.indexOf(effect);
-                        if (idx != -1)
-                            freeEffecs.removeAt(idx);
                         if (ctx.dbgprint)
                             printf("Appending effect to \'%s\'\n", ctx.property.name.toLatin1().constData());
                     }
                 } else if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
                     if (QQuick3DShaderUtilsShader *shader = qobject_cast<QQuick3DShaderUtilsShader *>(*foundIt)) {
                         auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
+                        // Since we are initializing this for the first time, make sure we clean out any inherited data!
+                        if (ctx.property.memberState == Context::Property::Uninitialized) {
+                            if (ctx.dbgprint)
+                                printf("Clearing inherited shaders\n");
+                            shaders.clear(&shaders);
+                            ctx.property.memberState = Context::Property::Initialized;
+                        }
                         shaders.append(&shaders, shader);
                         if (ctx.dbgprint)
                             printf("Appending shader to \'%s\'\n", ctx.property.name.toLatin1().constData());
                     }
                 }
             } else {
+                // If no item with 'this' id was found, then that id is for 'this' object (if this not the case, then something is broken, e.g., a ref to an unknown item).
+                // NOTE: This can be a problem in the future and we might need to add some more guards, but for now it just won't generate the correct shader(s).
                 ctx.identifierMap.insert(idExpr.name, ctx.property.target);
             }
         }
@@ -893,22 +941,28 @@ struct Visitors
         using ObjectMemberItem = UiObjectMemberList;
         using ObjectMembers = InvasiveListView<ObjectMemberItem>;
 
+        const auto oldEvalType = ctx.property.memberState;
+
         ObjectMembers objectMembers(memberList);
         for (const auto &member : objectMembers) {
             if (member.member) {
                 if (member.member->kind == Node::Kind_UiScriptBinding) {
+                    ctx.property.memberState = Context::Property::MemberState::Uninitialized;
                     const auto &scriptBinding = static_cast<const UiScriptBinding &>(*member.member);
                     visit(scriptBinding, ctx, ret);
                 } else if (member.member->kind == Node::Kind_UiArrayBinding) {
+                    ctx.property.memberState = Context::Property::MemberState::Uninitialized;
                     const auto &arrayBinding = static_cast<const UiArrayBinding &>(*member.member);
                     visit(arrayBinding, ctx, ret);
                 } else if (member.member->kind == Node::Kind_UiObjectDefinition) {
                     const auto &objectDef = static_cast<const UiObjectDefinition &>(*member.member);
                     visit(objectDef, ctx, ret);
                 } else if (member.member->kind == Node::Kind_UiObjectBinding) {
+                    ctx.property.memberState = Context::Property::MemberState::Uninitialized;
                     const auto &objBinding = static_cast<const UiObjectBinding &>(*member.member);
                     visit(objBinding, ctx, ret);
                 } else if (member.member->kind == Node::Kind_UiPublicMember) {
+                    ctx.property.memberState = Context::Property::MemberState::Uninitialized;
                     const auto &pubMember = static_cast<const UiPublicMember &>(*member.member);
                     visit(pubMember, ctx, ret);
                 } else {
@@ -917,6 +971,8 @@ struct Visitors
                 }
             }
         }
+
+        ctx.property.memberState = oldEvalType;
     }
 
 private:
@@ -976,20 +1032,19 @@ static void updateProperty(Context &ctx, T type, QStringView propName)
 {
     if (ctx.property.target) {
         if (ctx.dbgprint)
-            printf("Updating property %s on %s\n", propName.toLatin1().constData(), "TODO");
+            printf("Updating property %s\n", propName.toLatin1().constData());
         const auto &target = ctx.property.target;
-        if (ctx.property.isMember || target->metaObject()->indexOfProperty(propName.toLatin1().constData()) != -1)
+        if (ctx.property.memberState == Context::Property::Uninitialized) {
             target->setProperty(propName.toLatin1().constData(), QVariant::fromValue(type));
+            ctx.property.memberState = Context::Property::Initialized;
+        } else {
+            const int idx = target->metaObject()->indexOfProperty(propName.toLatin1().constData());
+            if (idx != -1) {
+                auto prop = target->metaObject()->property(idx);
+                prop.write(target, QVariant::fromValue(type));
+            }
+        }
     }
-}
-
-template <typename T>
-T *createType(Context &ctx, const QQmlJS::AST::UiObjectBinding &objectBinding, const QString &typeName, int &ret)
-{
-    auto &components = ctx.components;
-    const auto compIt = components.constFind(typeName);
-    const T *base = (compIt != components.cend()) ? qobject_cast<T *>(compIt->ptr) : nullptr;
-    return buildType(objectBinding, ctx, ret, base);
 }
 
 static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBinding, Context &ctx, int &ret)
@@ -1002,15 +1057,29 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
     const auto &typeName = objectBinding.qualifiedTypeNameId->name.toString();
     const auto &propName = objectBinding.qualifiedId->name;
 
+    int type = -1;
+
+    // Base type?
     const auto typeIt = s_typeMap->constFind(typeName);
-    if (typeIt != s_typeMap->constEnd()) {
-        const auto type = *typeIt;
+    if (typeIt != s_typeMap->cend())
+        type = *typeIt;
+
+    // Component?
+    auto &components = ctx.components;
+    const auto compIt = (type == -1) ? components.constFind(typeName) : components.cend();
+    QObject *base = nullptr;
+    if (compIt != components.cend()) {
+        type = compIt->type;
+        base = compIt->ptr;
+    }
+
+    if (type != -1) {
         if (ctx.dbgprint)
-            printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), qPrintable(typeName));
+            printf("Resolving: \'%s\'\n", qPrintable(typeName));
 
         if (type == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
             if (ctx.property.targetType == TypeInfo<QQuick3DViewport>::typeId()) {
-                if (auto environment = createType<QQuick3DSceneEnvironment>(ctx, objectBinding, typeName, ret)) {
+                if (auto environment = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DSceneEnvironment *>(base))) {
                     auto viewport = qobject_cast<QQuick3DViewport *>(ctx.property.target);
                     Q_ASSERT(viewport);
                     viewport->setEnvironment(environment);
@@ -1018,13 +1087,13 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
                 }
             }
         } else if (type == TypeInfo<QQuick3DTexture>::typeId()) {
-            if (auto tex = createType<QQuick3DTexture>(ctx, objectBinding, typeName, ret)) {
+            if (auto tex = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DTexture *>(base))) {
                 updateProperty(ctx, tex, propName);
                 ctx.sceneData.textures.append(tex);
             }
             handled = true;
         } else if (type == TypeInfo<QQuick3DShaderUtilsTextureInput>::typeId()) {
-            auto texInput = createType<QQuick3DShaderUtilsTextureInput>(ctx, objectBinding, typeName, ret);
+            auto texInput = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DShaderUtilsTextureInput *>(base));
             if (texInput && texInput->texture()) {
                 updateProperty(ctx, texInput, propName);
                 ctx.sceneData.textures.append(texInput->texture());
@@ -1032,7 +1101,7 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
             handled = true;
         } else if (type == TypeInfo<QQuick3DEffect>::typeId()) {
             if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
-                if (auto effect = createType<QQuick3DEffect>(ctx, objectBinding, typeName, ret)) {
+                if (auto effect = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DEffect *>(base))) {
                     auto sceneEnvironment = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target);
                     Q_ASSERT(sceneEnvironment);
                     auto effects = sceneEnvironment->effects();
@@ -1042,7 +1111,7 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
             }
         } else if (type == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
             if (ctx.property.targetType == TypeInfo<QQuick3DEffect>::typeId()) {
-                if (auto pass = createType<QQuick3DShaderUtilsRenderPass>(ctx, objectBinding, typeName, ret)) {
+                if (auto pass = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DShaderUtilsRenderPass *>(base))) {
                     auto effect = qobject_cast<QQuick3DEffect *>(ctx.property.target);
                     Q_ASSERT(effect);
                     auto passes = effect->passes();
@@ -1052,11 +1121,43 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
             }
         } else if (type == TypeInfo<QQuick3DShaderUtilsShader>::typeId()) {
             if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
-                if (auto shader = createType<QQuick3DShaderUtilsShader>(ctx, objectBinding, typeName, ret)) {
+                if (auto shader = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DShaderUtilsShader *>(base))) {
                     auto pass = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target);
                     Q_ASSERT(pass);
                     auto shaders = pass->shaders();
                     shaders.append(&shaders, shader);
+                    handled = true;
+                }
+            }
+        } else if (type == TypeInfo<QQuick3DDefaultMaterial>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                if (auto mat = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DDefaultMaterial *>(base))) {
+                    auto model = qobject_cast<QQuick3DModel *>(ctx.property.target);
+                    Q_ASSERT(model);
+                    auto materials = model->materials();
+                    materials.append(&materials, mat);
+                    handled = true;
+                    if (ctx.dbgprint)
+                        printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+        } else if (type == TypeInfo<QQuick3DPrincipledMaterial>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                if (auto mat = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DPrincipledMaterial *>(base))) {
+                    auto model = qobject_cast<QQuick3DModel *>(ctx.property.target);
+                    Q_ASSERT(model);
+                    auto materials = model->materials();
+                    materials.append(&materials, mat);
+                    handled = true;
+                }
+            }
+        } else if (type == TypeInfo<QQuick3DCustomMaterial>::typeId()) {
+            if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                if (auto mat = buildType(objectBinding, ctx, ret, qobject_cast<QQuick3DCustomMaterial *>(base))) {
+                    auto model = qobject_cast<QQuick3DModel *>(ctx.property.target);
+                    Q_ASSERT(model);
+                    auto materials = model->materials();
+                    materials.append(&materials, mat);
                     handled = true;
                 }
             }
@@ -1070,252 +1171,237 @@ static bool interceptObjectBinding(const QQmlJS::AST::UiObjectBinding &objectBin
 
 static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Context &ctx, int &ret)
 {
-    if (ctx.dbgprint)
-        printf("Intercepted object definition!\n");
-
     const auto &typeName = def.qualifiedTypeNameId->name.toString();
 
-    // known type?
+    if (ctx.dbgprint)
+        printf("Intercepted object definition (\'%s\')!\n", typeName.toLatin1().constData());
+
+    QString componentName;
+    int type = -1;
+    bool doRegisterComponent = false;
+
+    // Base type?
     const auto typeIt = s_typeMap->constFind(typeName);
-    if (typeIt != s_typeMap->constEnd()) {
-        const auto type = *typeIt;
-        // If this is a component of a known type register the component name
-        if (ctx.type == Context::Type::Component) {
-            const auto &fileName = ctx.currentFileInfo.fileName();
-            const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-            s_typeMap->insert(componentName.toString(), type);
-        } else if (ctx.dbgprint) {
-            printf("Resolving: %s -> \'%s\'\n", qPrintable(typeIt.key()), qPrintable(typeName));
-        }
+    if (typeIt != s_typeMap->cend())
+        type = *typeIt;
 
-        if (type == TypeInfo<QQuick3DViewport>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DViewport *base = (compIt != components.cend()) ? qobject_cast<QQuick3DViewport *>(compIt->ptr) : nullptr;
-            if (QQuick3DViewport *viewport = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { viewport, type });
-                }
-                // Only one viewport supported atm (see SceneEnvironment case as well).
-                if (!ctx.sceneData.viewport)
-                    ctx.sceneData.viewport = viewport;
-            }
-        } else if (type == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
-            if (QQuick3DSceneEnvironment *sceneEnv = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { sceneEnv, type });
-                }
+    // Component?
+    auto &components = ctx.components;
+    const auto compIt = (type == -1) ? components.constFind(typeName) : components.cend();
+    if (compIt != components.cend())
+        type = compIt->type;
 
-                if (ctx.sceneData.viewport)
-                    ctx.sceneData.viewport->setEnvironment(sceneEnv);
-            }
-        } else if (type == TypeInfo<QQuick3DPrincipledMaterial>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DPrincipledMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DPrincipledMaterial *>(compIt->ptr) : nullptr;
-            if (QQuick3DPrincipledMaterial *mat = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { mat, type });
-                }
-
-                bool handled = false;
-                if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
-                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
-                        materials.append(&materials, mat);
-                        handled = true;
-                        if (ctx.dbgprint)
-                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
-                    }
-                }
-
-                if (!handled)
-                    ctx.sceneData.materials.push_back(mat);
-            }
-        } else if (type == TypeInfo<QQuick3DDefaultMaterial>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DDefaultMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DDefaultMaterial *>(compIt->ptr) : nullptr;
-            if (QQuick3DDefaultMaterial *mat = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { mat, type });
-                }
-
-                bool handled = false;
-                if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
-                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
-                        materials.append(&materials, mat);
-                        handled = true;
-                        if (ctx.dbgprint)
-                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
-                    }
-                }
-
-                if (!handled)
-                    ctx.sceneData.materials.push_back(mat);
-            }
-        } else if (type == TypeInfo<QQuick3DCustomMaterial>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DCustomMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DCustomMaterial *>(compIt->ptr) : nullptr;
-            if (QQuick3DCustomMaterial *mat = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.left(fileName.length() - 4);
-                    components.insert(componentName, { mat, type });
-                }
-
-                bool handled = false;
-                if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
-                        auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
-                        materials.append(&materials, mat);
-                        handled = true;
-                        if (ctx.dbgprint)
-                            printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
-                    }
-                }
-
-                if (!handled)
-                    ctx.sceneData.materials.push_back(mat);
-            }
-        } else if (type == TypeInfo<QQuick3DEffect>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DEffect *base = (compIt != components.cend()) ? qobject_cast<QQuick3DEffect *>(compIt->ptr) : nullptr;
-            if (QQuick3DEffect *effect = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = fileName.left(fileName.length() - 4);
-                    components.insert(componentName, { effect, type });
-                }
-
-                bool handled = false;
-                if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
-                        auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
-                        effects.append(&effects, effect);
-                        handled = true;
-                        if (ctx.dbgprint)
-                            printf("Appending effect to %s\n", ctx.property.name.toLatin1().constData());
-                    }
-                }
-
-                if (!handled)
-                    ctx.sceneData.effects.push_back(effect);
-            }
-        } else if (type == TypeInfo<QQuick3DDirectionalLight>::typeId() || type == TypeInfo<QQuick3DPointLight>::typeId() || type == TypeInfo<QQuick3DSpotLight>::typeId())  {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DAbstractLight *base = (compIt != components.cend()) ? qobject_cast<QQuick3DAbstractLight *>(compIt->ptr) : nullptr;
-            if (QQuick3DAbstractLight *light = buildLight(def, ctx, ret, type, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { light, type });
-                }
-                ctx.sceneData.lights.push_back(light);
-            }
-        } else if (type == TypeInfo<QQuick3DTexture>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
-            if (QQuick3DTexture *tex = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { tex, type });
-                }
-                ctx.sceneData.textures.push_back(tex);
-
-            }
-        } else if (type == TypeInfo<QQuick3DModel>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DModel *>(compIt->ptr) : nullptr;
-            if (auto *model = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { model, type });
-                }
-                ctx.sceneData.models.push_back(model);
-            }
-        } else if (type == TypeInfo<QQuick3DShaderUtilsShader>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsShader *>(compIt->ptr) : nullptr;
-            if (auto *shader = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { shader, type });
-                }
-                bool handled = false;
-                if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
-                        auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
-                        shaders.append(&shaders, shader);
-                        handled = true;
-                        if (ctx.dbgprint)
-                            printf("Appending shader to %s\n", ctx.property.name.toLatin1().constData());
-                    }
-                }
-
-                if (!handled)
-                    ctx.sceneData.shaders.push_back(shader);
-            }
-        } else if (type == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
-            auto &components = ctx.components;
-            const auto compIt = components.constFind(typeName);
-            const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsRenderPass *>(compIt->ptr) : nullptr;
-            if (auto *pass = buildType(def, ctx, ret, base)) {
-                // If this is a component we'll store it for lookups later.
-                if (!base) {
-                    const auto &fileName = ctx.currentFileInfo.fileName();
-                    const auto componentName = QStringView(fileName).left(fileName.length() - 4);
-                    components.insert(componentName.toString(), { pass, type });
-                }
-                if (ctx.property.target) {
-                    if (ctx.property.targetType == TypeInfo<QQuick3DEffect>::typeId()) {
-                        auto passes = qobject_cast<QQuick3DEffect *>(ctx.property.target)->passes();
-                        passes.append(&passes, pass);
-                        if (ctx.dbgprint)
-                            printf("Appending pass to %s\n", ctx.property.name.toLatin1().constData());
-                    }
-                }
-            }
-        } else {
-            if (ctx.dbgprint)
-                printf("Object def for \'%s\' was not handled\n", ctx.property.name.toLatin1().constData());
-            return false;
-        }
-        return true;
+    // If this is a new component register it
+    if (ctx.type == Context::Type::Component && ctx.property.target == nullptr && type != -1) {
+        const auto &fileName = ctx.currentFileInfo.fileName();
+        componentName = fileName.left(fileName.length() - 4);
+        doRegisterComponent = !componentName.isEmpty();
     }
 
-    return false;
+    const auto registerComponent = [&ctx, &components, &componentName](Context::Component component) {
+        if (ctx.dbgprint)
+            printf("Registering component \'%s\'\n", qPrintable(componentName));
+        components.insert(componentName, component);
+    };
+
+    if (type == TypeInfo<QQuick3DViewport>::typeId()) {
+        const QQuick3DViewport *base = (compIt != components.cend()) ? qobject_cast<QQuick3DViewport *>(compIt->ptr) : nullptr;
+        if (QQuick3DViewport *viewport = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ viewport, type });
+            // Only one viewport supported atm (see SceneEnvironment case as well).
+            if (!ctx.sceneData.viewport)
+                ctx.sceneData.viewport = viewport;
+        }
+    } else if (type == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
+        const QQuick3DSceneEnvironment *base = (compIt != components.cend()) ? qobject_cast<QQuick3DSceneEnvironment *>(compIt->ptr) : nullptr;
+        if (QQuick3DSceneEnvironment *sceneEnv = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ sceneEnv, type });
+
+            if (ctx.sceneData.viewport)
+                ctx.sceneData.viewport->setEnvironment(sceneEnv);
+        }
+    } else if (type == TypeInfo<QQuick3DPrincipledMaterial>::typeId()) {
+        const QQuick3DPrincipledMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DPrincipledMaterial *>(compIt->ptr) : nullptr;
+        if (QQuick3DPrincipledMaterial *mat = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ mat, type });
+
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                    auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                    if (ctx.property.memberState == Context::Property::Uninitialized) {
+                        if (ctx.dbgprint)
+                            printf("Clearing inherited materials\n");
+                        materials.clear(&materials);
+                        ctx.property.memberState = Context::Property::Initialized;
+                    }
+                    materials.append(&materials, mat);
+                    if (ctx.dbgprint)
+                        printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+
+            // At this point we don't know if this material is going to be referenced somewhere else, so keep it in the list
+            ctx.sceneData.materials.push_back(mat);
+        }
+    } else if (type == TypeInfo<QQuick3DDefaultMaterial>::typeId()) {
+        const QQuick3DDefaultMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DDefaultMaterial *>(compIt->ptr) : nullptr;
+        if (QQuick3DDefaultMaterial *mat = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ mat, type });
+
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                    auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                    if (ctx.property.memberState == Context::Property::Uninitialized) {
+                        if (ctx.dbgprint)
+                            printf("Clearing inherited materials\n");
+                        materials.clear(&materials);
+                        ctx.property.memberState = Context::Property::Initialized;
+                    }
+                    materials.append(&materials, mat);
+                    if (ctx.dbgprint)
+                        printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+
+            // At this point we don't know if this material is going to be referenced somewhere else, so keep it in the list
+            ctx.sceneData.materials.push_back(mat);
+        }
+    } else if (type == TypeInfo<QQuick3DCustomMaterial>::typeId()) {
+        const QQuick3DCustomMaterial *base = (compIt != components.cend()) ? qobject_cast<QQuick3DCustomMaterial *>(compIt->ptr) : nullptr;
+        if (QQuick3DCustomMaterial *mat = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ mat, type });
+
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DModel>::typeId()) {
+                    auto materials = qobject_cast<QQuick3DModel *>(ctx.property.target)->materials();
+                    if (ctx.property.memberState == Context::Property::Uninitialized) {
+                        if (ctx.dbgprint)
+                            printf("Clearing inherited materials\n");
+                        materials.clear(&materials);
+                        ctx.property.memberState = Context::Property::Initialized;
+                    }
+                    materials.append(&materials, mat);
+                    if (ctx.dbgprint)
+                        printf("Appending material to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+
+            // At this point we don't know if this material is going to be referenced somewhere else, so keep it in the list
+            ctx.sceneData.materials.push_back(mat);
+        }
+    } else if (type == TypeInfo<QQuick3DEffect>::typeId()) {
+        const QQuick3DEffect *base = (compIt != components.cend()) ? qobject_cast<QQuick3DEffect *>(compIt->ptr) : nullptr;
+        if (QQuick3DEffect *effect = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ effect, type });
+
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DSceneEnvironment>::typeId()) {
+                    auto effects = qobject_cast<QQuick3DSceneEnvironment *>(ctx.property.target)->effects();
+                    if (ctx.property.memberState == Context::Property::Uninitialized) {
+                        if (ctx.dbgprint)
+                            printf("Clearing inherited effects\n");
+                        effects.clear(&effects);
+                        ctx.property.memberState = Context::Property::Initialized;
+                    }
+                    effects.append(&effects, effect);
+                    if (ctx.dbgprint)
+                        printf("Appending effect to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+
+            // At this point we don't know if this effect is going to be referenced somewhere else, so keep it in the list
+            ctx.sceneData.effects.push_back(effect);
+        }
+    } else if (type == TypeInfo<QQuick3DDirectionalLight>::typeId() || type == TypeInfo<QQuick3DPointLight>::typeId() || type == TypeInfo<QQuick3DSpotLight>::typeId())  {
+        const QQuick3DAbstractLight *base = (compIt != components.cend()) ? qobject_cast<QQuick3DAbstractLight *>(compIt->ptr) : nullptr;
+        if (QQuick3DAbstractLight *light = buildLight(def, ctx, ret, type, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ light, type });
+
+            ctx.sceneData.lights.push_back(light);
+        }
+    } else if (type == TypeInfo<QQuick3DTexture>::typeId()) {
+        const QQuick3DTexture *base = (compIt != components.cend()) ? qobject_cast<QQuick3DTexture *>(compIt->ptr) : nullptr;
+        if (QQuick3DTexture *tex = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ tex, type });
+
+            ctx.sceneData.textures.push_back(tex);
+        }
+    } else if (type == TypeInfo<QQuick3DModel>::typeId()) {
+        const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DModel *>(compIt->ptr) : nullptr;
+        if (auto *model = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ model, type });
+
+            ctx.sceneData.models.push_back(model);
+        }
+    } else if (type == TypeInfo<QQuick3DShaderUtilsShader>::typeId()) {
+        const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsShader *>(compIt->ptr) : nullptr;
+        if (auto *shader = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ shader, type });
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
+                    auto shaders = qobject_cast<QQuick3DShaderUtilsRenderPass *>(ctx.property.target)->shaders();
+                    if (ctx.property.memberState == Context::Property::Uninitialized) {
+                        if (ctx.dbgprint)
+                            printf("Clearing inherited shaders\n");
+                        shaders.clear(&shaders);
+                        ctx.property.memberState = Context::Property::Initialized;
+                    }
+                    shaders.append(&shaders, shader);
+                    if (ctx.dbgprint)
+                        printf("Appending shader to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+
+            ctx.sceneData.shaders.push_back(shader);
+        }
+    } else if (type == TypeInfo<QQuick3DShaderUtilsRenderPass>::typeId()) {
+        const auto *base = (compIt != components.cend()) ? qobject_cast<QQuick3DShaderUtilsRenderPass *>(compIt->ptr) : nullptr;
+        if (auto *pass = buildType(def, ctx, ret, base)) {
+            // If this is a component we'll store it for lookups later.
+            if (doRegisterComponent)
+                registerComponent({ pass, type });
+            if (ctx.property.target) {
+                if (ctx.property.targetType == TypeInfo<QQuick3DEffect>::typeId()) {
+                    auto passes = qobject_cast<QQuick3DEffect *>(ctx.property.target)->passes();
+                    if (ctx.property.memberState == Context::Property::Uninitialized) {
+                        if (ctx.dbgprint)
+                            printf("Clearing inherited passes\n");
+                        passes.clear(&passes);
+                        ctx.property.memberState = Context::Property::Initialized;
+                    }
+                    passes.append(&passes, pass);
+                    if (ctx.dbgprint)
+                        printf("Appending pass to %s\n", ctx.property.name.toLatin1().constData());
+                }
+            }
+        }
+    } else {
+        if (ctx.dbgprint)
+            printf("Object def for \'%s\' was not handled\n", ctx.property.name.toLatin1().constData());
+        return false;
+    }
+
+    return true;
 }
 
 static bool interceptPublicMember(const QQmlJS::AST::UiPublicMember &member, Context &ctx, int &ret)

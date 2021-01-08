@@ -36,6 +36,7 @@
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3deffect_p.h>
+#include <QtQuick3D/private/qquick3dmodel_p.h>
 
 #include <parser.h>
 
@@ -56,6 +57,7 @@ private Q_SLOTS:
     void tst_effectComponent();
     void tst_effectUniforms_data();
     void tst_effectUniforms();
+    void tst_componentResolving();
 
 private:
     MaterialParser::SceneData lastSceneData;
@@ -260,6 +262,64 @@ void Shadergen::tst_effectUniforms()
         QVERIFY(ok);
     } else {
         QCOMPARE(prop, value);
+    }
+}
+
+void Shadergen::tst_componentResolving()
+{
+    QVector<QString> filePaths { ":/qml/main.qml", ":/qml/ModelA.qml", ":/qml/DefaultMaterialA.qml" };
+
+    MaterialParser::SceneData sceneData;
+    MaterialParser::parseQmlFiles(filePaths, QString(), sceneData, false);
+
+    // main.qml(ModelA, Model, Model, ModelA, ModelA, ModelA, ModelA). Component should not be added as it's used
+    const auto &models = sceneData.models;
+    // The correct number should be 7 here, but we don't track if a component is
+    // actually used so it gets pushed into the same list as the regular instances.
+    QCOMPARE(models.size(), 8);
+
+    // We skip testing the component here and start at index 1
+
+    { // Model component (ModelA) with inherited material (1)
+        const auto &model = models.at(1);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 1);
+    }
+
+    { // Model with refed component material (DefaultMaterialA) (1)
+        const auto &model = models.at(2);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 1);
+    }
+
+    { // Model with inline component material (DefaultMaterialA) (1)
+        const auto &model = models.at(3);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 1);
+    }
+
+    { // Model component (ModelA) overrides inherited material with refed component material (DefaultMaterialA) (1)
+        const auto &model = models.at(4);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 1);
+    }
+
+    { // Model component (ModelA) overrides inherited material inline (DefaultMaterial) (1)
+        const auto &model = models.at(5);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 1);
+    }
+
+    { // Model component (ModelA) override inherited material with refed materials (2)
+        const auto &model = models.at(6);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 2);
+    }
+
+    { // Model component (ModelA) override inherited material with inline materials (2)
+        const auto &model = models.at(7);
+        auto materials = model->materials();
+        QCOMPARE(materials.count(&materials), 2);
     }
 }
 

@@ -24,6 +24,8 @@ set(qml_resource_files
     "qml/DefaultMaterialA.qml"
     "qml/PrincipledMaterialA.qml"
     "qml/EffectA.qml"
+    "qml/ModelA.qml"
+    "qml/main.qml"
 )
 
 qt_internal_add_resource(tst_shadergen "qml" # special case
