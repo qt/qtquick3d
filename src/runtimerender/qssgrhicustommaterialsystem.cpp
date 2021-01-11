@@ -49,75 +49,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGCustomMaterialRenderContext::QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
-                                                                 const QSSGLayerRenderData &inData,
-                                                                 const QSSGShaderLightList &inLights,
-                                                                 QSSGRenderCamera &inCamera,
-                                                                 const QSSGRenderModel &inModel,
-                                                                 const QSSGRenderSubset &inSubset,
-                                                                 const QMatrix4x4 &inMvp,
-                                                                 const QMatrix4x4 &inWorld,
-                                                                 const QMatrix3x3 &inNormal,
-                                                                 const QSSGRenderCustomMaterial &inMaterial,
-                                                                 QRhiTexture *inRhiDepthTex,
-                                                                 QRhiTexture *inRhiAoTex,
-                                                                 QRhiTexture *inRhiScreenTex,
-                                                                 QSSGShaderDefaultMaterialKey inMaterialKey,
-                                                                 QSSGRenderableImage *inFirstImage,
-                                                                 float inOpacity)
-    : layer(inLayer)
-    , layerData(inData)
-    , lights(inLights)
-    , camera(inCamera)
-    , model(inModel)
-    , subset(inSubset)
-    , modelViewProjection(inMvp)
-    , modelMatrix(inWorld)
-    , normalMatrix(inNormal)
-    , material(inMaterial)
-    , rhiDepthTexture(inRhiDepthTex)
-    , rhiAoTexture(inRhiAoTex)
-    , rhiScreenTexture(inRhiScreenTex)
-    , materialKey(inMaterialKey)
-    , firstImage(inFirstImage)
-    , opacity(inOpacity)
-{
-}
-
-QSSGCustomMaterialRenderContext::~QSSGCustomMaterialRenderContext() = default;
-
 QSSGCustomMaterialSystem::QSSGCustomMaterialSystem() = default;
 
 QSSGCustomMaterialSystem::~QSSGCustomMaterialSystem()
 {
-}
-
-QSSGLayerGlobalRenderProperties QSSGCustomMaterialSystem::getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext)
-{
-    const QSSGRenderLayer &theLayer = inRenderContext.layer;
-    const QSSGLayerRenderData &theData = inRenderContext.layerData;
-
-    const bool isYUpInFramebuffer = context->rhiContext()->isValid()
-            ? context->rhiContext()->rhi()->isYUpInFramebuffer()
-            : true;
-    const bool isClipDepthZeroToOne = context->rhiContext()->isValid()
-            ? context->rhiContext()->rhi()->isClipDepthZeroToOne()
-            : true;
-
-    return QSSGLayerGlobalRenderProperties{ theLayer,
-                const_cast<QSSGRenderCamera &>(inRenderContext.camera),
-                theData.cameraDirection,
-                theData.shadowMapManager,
-                inRenderContext.rhiDepthTexture,
-                inRenderContext.rhiAoTexture,
-                inRenderContext.rhiScreenTexture,
-                theLayer.lightProbe,
-                theLayer.probeHorizon,
-                theLayer.probeExposure,
-                theLayer.probeOrientation,
-                isYUpInFramebuffer,
-                isClipDepthZeroToOne
-    };
 }
 
 bool QSSGCustomMaterialSystem::prepareForRender(const QSSGRenderModel &,
@@ -194,24 +129,26 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
     const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
                                                      : renderable.modelContext.modelViewProjection);
 
-    QSSGCustomMaterialRenderContext customMaterialContext(layerData.layer,
-                                                          layerData,
-                                                          renderable.lights,
-                                                          camera,
-                                                          renderable.modelContext.model,
-                                                          renderable.subset,
-                                                          mvp,
-                                                          renderable.globalTransform,
-                                                          renderable.modelContext.normalMatrix,
-                                                          material,
-                                                          layerData.m_rhiDepthTexture.texture,
-                                                          layerData.m_rhiAoTexture.texture,
-                                                          layerData.m_rhiScreenTexture.texture,
-                                                          renderable.shaderDescription,
-                                                          renderable.firstImage,
-                                                          renderable.opacity);
-
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
+    const bool isYUpInFramebuffer = rhiCtx->rhi()->isYUpInFramebuffer();
+    const bool isClipDepthZeroToOne = rhiCtx->rhi()->isClipDepthZeroToOne();
+
+    const QSSGLayerGlobalRenderProperties globalProperties =
+    {
+        layerData.layer,
+        camera,
+        layerData.cameraDirection,
+        layerData.shadowMapManager,
+        layerData.m_rhiDepthTexture.texture,
+        layerData.m_rhiAoTexture.texture,
+        layerData.m_rhiScreenTexture.texture,
+        layerData.layer.lightProbe,
+        layerData.layer.probeHorizon,
+        layerData.layer.probeExposure,
+        layerData.layer.probeOrientation,
+        isYUpInFramebuffer,
+        isClipDepthZeroToOne
+    };
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,
@@ -220,18 +157,18 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           material,
                                                           renderable.shaderDescription,
                                                           context->renderer()->defaultMaterialShaderKeyProperties(),
-                                                          customMaterialContext.camera,
-                                                          customMaterialContext.modelViewProjection,
-                                                          customMaterialContext.normalMatrix,
-                                                          customMaterialContext.modelMatrix,
+                                                          camera,
+                                                          mvp,
+                                                          renderable.modelContext.normalMatrix,
+                                                          renderable.globalTransform,
                                                           clipSpaceCorrMatrix,
                                                           renderable.boneGlobals,
                                                           renderable.boneNormals,
                                                           renderable.morphWeights,
-                                                          customMaterialContext.firstImage,
-                                                          customMaterialContext.opacity,
-                                                          getLayerGlobalRenderProperties(customMaterialContext),
-                                                          customMaterialContext.lights,
+                                                          renderable.firstImage,
+                                                          renderable.opacity,
+                                                          globalProperties,
+                                                          renderable.lights,
                                                           true,
                                                           depthAdjust);
 }

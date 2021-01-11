@@ -65,47 +65,6 @@ struct QSSGRenderLight;
 struct QSSGRenderCamera;
 class QRhiTexture;
 
-struct QSSGCustomMaterialRenderContext
-{
-    // The lights and camera will not change per layer,
-    // so that information can be set once for all the shaders.
-    const QSSGRenderLayer &layer;
-    const QSSGLayerRenderData &layerData;
-    const QSSGShaderLightList &lights;
-    QSSGRenderCamera &camera;
-
-    // Per-object information.
-    const QSSGRenderModel &model;
-    const QSSGRenderSubset &subset;
-    const QMatrix4x4 &modelViewProjection;
-    const QMatrix4x4 &modelMatrix; ///< model to world transformation
-    const QMatrix3x3 &normalMatrix;
-    const QSSGRenderCustomMaterial &material;
-    QRhiTexture *rhiDepthTexture;
-    QRhiTexture *rhiAoTexture;
-    QRhiTexture *rhiScreenTexture;
-    QSSGShaderDefaultMaterialKey materialKey;
-    QSSGRenderableImage *firstImage;
-    float opacity;
-
-    QSSGCustomMaterialRenderContext(const QSSGRenderLayer &inLayer,
-                                      const QSSGLayerRenderData &inData,
-                                      const QSSGShaderLightList &inLights,
-                                      QSSGRenderCamera &inCamera,
-                                      const QSSGRenderModel &inModel,
-                                      const QSSGRenderSubset &inSubset,
-                                      const QMatrix4x4 &inMvp,
-                                      const QMatrix4x4 &inWorld,
-                                      const QMatrix3x3 &inNormal,
-                                      const QSSGRenderCustomMaterial &inMaterial,
-                                      QRhiTexture *inRhiDepthTex,
-                                      QRhiTexture *inRhiAoTex,
-                                      QRhiTexture *inRhiScreenTex,
-                                      QSSGShaderDefaultMaterialKey inMaterialKey,
-                                      QSSGRenderableImage *inFirstImage = nullptr,
-                                      float inOpacity = 1.0);
-    ~QSSGCustomMaterialRenderContext();
-};
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialSystem
 {
@@ -119,8 +78,6 @@ private:
 
     QSSGRenderContextInterface *context = nullptr;
     TShaderMap shaderMap;
-
-    QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties(QSSGCustomMaterialRenderContext &inRenderContext);
 
     void setShaderResources(char *ubufData,
                             const QSSGRenderCustomMaterial &inMaterial,
