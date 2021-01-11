@@ -100,7 +100,7 @@ public:
 
     QSSGRef<QSSGRhiShaderPipeline> shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                             const QSSGRenderCustomMaterial &material,
-                                                            QSSGCustomMaterialRenderable &renderable,
+                                                            QSSGSubsetRenderable &renderable,
                                                             const ShaderFeatureSetList &featureSet);
 
     void updateUniformsForCustomMaterial(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
@@ -108,14 +108,14 @@ public:
                                          char *ubufData,
                                          QSSGRhiGraphicsPipelineState *ps,
                                          const QSSGRenderCustomMaterial &material,
-                                         QSSGCustomMaterialRenderable &renderable,
+                                         QSSGSubsetRenderable &renderable,
                                          QSSGLayerRenderData &layerData,
                                          QSSGRenderCamera &camera,
                                          const QVector2D *depthAdjust,
                                          const QMatrix4x4 *alteredModelViewProjection);
 
     void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
-                              QSSGCustomMaterialRenderable &renderable,
+                              QSSGSubsetRenderable &renderable,
                               const ShaderFeatureSetList &featureSet,
                               const QSSGRenderCustomMaterial &material,
                               QSSGLayerRenderData &layerData,
@@ -125,7 +125,7 @@ public:
                                       const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
-                             QSSGCustomMaterialRenderable &renderable,
+                             QSSGSubsetRenderable &renderable,
                              QSSGLayerRenderData &inData,
                              bool *needsSetViewport);
 };

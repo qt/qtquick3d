@@ -939,9 +939,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                                                                              theModelCenter,
                                                                              renderer,
                                                                              theSubset,
-                                                                             theMaterial,
                                                                              theModelContext,
                                                                              subsetOpacity,
+                                                                             theMaterial,
                                                                              firstImage,
                                                                              theGeneratedKey,
                                                                              boneGlobals,
@@ -982,20 +982,20 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                 if (theMaterial.m_iblProbe)
                     theMaterial.m_iblProbe->clearDirty();
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGCustomMaterialRenderable>(contextInterface,
-                                                                                     renderableFlags,
-                                                                                     theModelCenter,
-                                                                                     renderer,
-                                                                                     theSubset,
-                                                                                     theMaterial,
-                                                                                     theModelContext,
-                                                                                     subsetOpacity,
-                                                                                     firstImage,
-                                                                                     theGeneratedKey,
-                                                                                     boneGlobals,
-                                                                                     boneNormals,
-                                                                                     lights,
-                                                                                     morphWeights);
+                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
+                                                                             renderableFlags,
+                                                                             theModelCenter,
+                                                                             renderer,
+                                                                             theSubset,
+                                                                             theModelContext,
+                                                                             subsetOpacity,
+                                                                             theMaterial,
+                                                                             firstImage,
+                                                                             theGeneratedKey,
+                                                                             boneGlobals,
+                                                                             boneNormals,
+                                                                             lights,
+                                                                             morphWeights);
             }
             if (theRenderableObject) {
 

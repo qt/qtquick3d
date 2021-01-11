@@ -258,17 +258,17 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 }
             } else if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::CustomMaterialMeshSubset)) {
                 Q_ASSERT(layerData.camera);
-                QSSGCustomMaterialRenderable &cmr(static_cast<QSSGCustomMaterialRenderable &>(*renderable));
+                QSSGSubsetRenderable &cmr(static_cast<QSSGSubsetRenderable &>(*renderable));
                 const auto &rhiContext = renderContext->rhiContext();
                 const auto pipelineState = rhiContext->graphicsPipelineState(&layerData);
                 const auto &cms = renderContext->customMaterialSystem();
                 auto shaderPipeline = cms->shadersForCustomMaterial(pipelineState,
-                                                                    cmr.material,
+                                                                    cmr.customMaterial(),
                                                                     cmr,
                                                                     features);
 
                 if (shaderPipeline) {
-                    shaderString = cmr.material.m_shaderPathKey;
+                    shaderString = cmr.customMaterial().m_shaderPathKey;
                     const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
                     const auto vertexStage = shaderPipeline->vertexStage();
                     const auto fragmentStage = shaderPipeline->fragmentStage();

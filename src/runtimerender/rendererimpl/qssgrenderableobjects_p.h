@@ -252,13 +252,20 @@ class QSSGRenderer;
 struct QSSGLayerRenderData;
 struct QSSGShadowMapEntry;
 
-struct QSSGSubsetRenderableBase : public QSSGRenderableObject
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject
 {
     const QSSGRef<QSSGRenderer> &generator;
     const QSSGModelContext &modelContext;
     QSSGRenderSubset &subset;
     QRhiBuffer *instanceBuffer = nullptr;
     float opacity;
+    const QSSGRenderGraphObject &material;
+    QSSGRenderableImage *firstImage;
+    QSSGShaderDefaultMaterialKey shaderDescription;
+    QSSGDataView<QMatrix4x4> boneGlobals;
+    QSSGDataView<QMatrix3x3> boneNormals;
+    const QSSGShaderLightList &lights;
+    QSSGDataView<float> morphWeights;
 
     struct {
         // Transient (due to the subsetRenderable being allocated using a
@@ -278,74 +285,33 @@ struct QSSGSubsetRenderableBase : public QSSGRenderableObject
         } shadowPass;
     } rhiRenderData;
 
-    QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
-                               const QVector3D &inWorldCenterPt,
-                               const QSSGRef<QSSGRenderer> &gen,
-                               QSSGRenderSubset &inSubset,
-                               const QSSGModelContext &inModelContext,
-                               float inOpacity);
-};
-
-Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderableBase>::value);
-
-/**
- *	A renderable that corresponds to a subset (a part of a model).
- *	These are created per subset per layer and are responsible for actually
- *	rendering this type of object.
- */
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGSubsetRenderableBase
-{
-    const QSSGRenderDefaultMaterial &material;
-    QSSGRenderableImage *firstImage;
-    QSSGShaderDefaultMaterialKey shaderDescription;
-    QSSGDataView<QMatrix4x4> boneGlobals;
-    QSSGDataView<QMatrix3x3> boneNormals;
-    const QSSGShaderLightList &lights;
-    QSSGDataView<float> morphWeights;
-
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QSSGRef<QSSGRenderer> &gen,
                          QSSGRenderSubset &inSubset,
-                         const QSSGRenderDefaultMaterial &mat,
                          const QSSGModelContext &inModelContext,
                          float inOpacity,
+                         const QSSGRenderGraphObject &mat,
                          QSSGRenderableImage *inFirstImage,
                          QSSGShaderDefaultMaterialKey inShaderKey,
                          const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                          const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                         const QSSGShaderLightList &lights,
+                         const QSSGShaderLightList &inLights,
                          const QSSGDataView<float> &inMorphWeights);
+
+    const QSSGRenderDefaultMaterial &defaultMaterial() const
+    {
+        Q_ASSERT(renderableFlags.isDefaultMaterialMeshSubset());
+        return static_cast<const QSSGRenderDefaultMaterial &>(material);
+    }
+    const QSSGRenderCustomMaterial &customMaterial() const
+    {
+        Q_ASSERT(renderableFlags.isCustomMaterialMeshSubset());
+        return static_cast<const QSSGRenderCustomMaterial &>(material);
+    }
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
-
-struct QSSGCustomMaterialRenderable : public QSSGSubsetRenderableBase
-{
-    const QSSGRenderCustomMaterial &material;
-    QSSGRenderableImage *firstImage;
-    QSSGShaderDefaultMaterialKey shaderDescription;
-    QSSGDataView<QMatrix4x4> boneGlobals;
-    QSSGDataView<QMatrix3x3> boneNormals;
-    const QSSGShaderLightList &lights;
-    QSSGDataView<float> morphWeights;
-
-    QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
-                                 const QVector3D &inWorldCenterPt,
-                                 const QSSGRef<QSSGRenderer> &gen,
-                                 QSSGRenderSubset &inSubset,
-                                 const QSSGRenderCustomMaterial &mat,
-                                 const QSSGModelContext &inModelContext,
-                                 float inOpacity,
-                                 QSSGRenderableImage *inFirstImage,
-                                 QSSGShaderDefaultMaterialKey inShaderKey,
-                                 const QSSGDataView<QMatrix4x4> &inBoneGlobals,
-                                 const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                                 const QSSGShaderLightList &lights,
-                                 const QSSGDataView<float> &inMorphWeights);
-};
-
-Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGCustomMaterialRenderable>::value);
 
 QT_END_NAMESPACE
 

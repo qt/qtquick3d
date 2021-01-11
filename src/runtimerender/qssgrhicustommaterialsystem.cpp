@@ -69,7 +69,7 @@ void QSSGCustomMaterialSystem::setRenderContextInterface(QSSGRenderContextInterf
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                                                   const QSSGRenderCustomMaterial &material,
-                                                                                  QSSGCustomMaterialRenderable &renderable,
+                                                                                  QSSGSubsetRenderable &renderable,
                                                                                   const ShaderFeatureSetList &featureSet)
 {
     // This just references inFeatureSet and inRenderable.shaderDescription -
@@ -120,7 +120,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                                char *ubufData,
                                                                QSSGRhiGraphicsPipelineState *ps,
                                                                const QSSGRenderCustomMaterial &material,
-                                                               QSSGCustomMaterialRenderable &renderable,
+                                                               QSSGSubsetRenderable &renderable,
                                                                QSSGLayerRenderData &layerData,
                                                                QSSGRenderCamera &camera,
                                                                const QVector2D *depthAdjust,
@@ -177,7 +177,7 @@ static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
 void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
-                                                    QSSGCustomMaterialRenderable &renderable,
+                                                    QSSGSubsetRenderable &renderable,
                                                     const ShaderFeatureSetList &featureSet,
                                                     const QSSGRenderCustomMaterial &material,
                                                     QSSGLayerRenderData &layerData,
@@ -517,7 +517,7 @@ void QSSGCustomMaterialSystem::applyRhiShaderPropertyValues(char *ubufData,
 }
 
 void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
-                                             QSSGCustomMaterialRenderable &renderable,
+                                             QSSGSubsetRenderable &renderable,
                                              QSSGLayerRenderData &inData,
                                              bool *needsSetViewport)
 {

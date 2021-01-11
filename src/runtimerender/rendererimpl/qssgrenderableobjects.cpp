@@ -39,36 +39,24 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderableImage;
 struct QSSGSubsetRenderable;
 
-QSSGSubsetRenderableBase::QSSGSubsetRenderableBase(QSSGRenderableObjectFlags inFlags,
-                                                       const QVector3D &inWorldCenterPt,
-                                                       const QSSGRef<QSSGRenderer> &gen,
-                                                       QSSGRenderSubset &inSubset,
-                                                       const QSSGModelContext &inModelContext,
-                                                       float inOpacity)
-    : QSSGRenderableObject(inFlags, inWorldCenterPt, inModelContext.model.globalTransform, inSubset.bounds)
-    , generator(gen)
-    , modelContext(inModelContext)
-    , subset(inSubset)
-    , opacity(inOpacity)
-{
-}
-
-// An interface to the shader generator that is available to the renderables
-
 QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            const QVector3D &inWorldCenterPt,
                                            const QSSGRef<QSSGRenderer> &gen,
                                            QSSGRenderSubset &inSubset,
-                                           const QSSGRenderDefaultMaterial &mat,
                                            const QSSGModelContext &inModelContext,
                                            float inOpacity,
+                                           const QSSGRenderGraphObject &mat,
                                            QSSGRenderableImage *inFirstImage,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
                                            const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                            const QSSGShaderLightList &inLights,
                                            const QSSGDataView<float> &inMorphWeights)
-    : QSSGSubsetRenderableBase(inFlags, inWorldCenterPt, gen, inSubset, inModelContext, inOpacity)
+    : QSSGRenderableObject(inFlags, inWorldCenterPt, inModelContext.model.globalTransform, inSubset.bounds)
+    , generator(gen)
+    , modelContext(inModelContext)
+    , subset(inSubset)
+    , opacity(inOpacity)
     , material(mat)
     , firstImage(inFirstImage)
     , shaderDescription(inShaderKey)
@@ -77,32 +65,10 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , lights(inLights)
     , morphWeights(inMorphWeights)
 {
-    renderableFlags.setDefaultMaterialMeshSubset(true);
-}
-
-QSSGCustomMaterialRenderable::QSSGCustomMaterialRenderable(QSSGRenderableObjectFlags inFlags,
-                                                           const QVector3D &inWorldCenterPt,
-                                                           const QSSGRef<QSSGRenderer> &gen,
-                                                           QSSGRenderSubset &inSubset,
-                                                           const QSSGRenderCustomMaterial &mat,
-                                                           const QSSGModelContext &inModelContext,
-                                                           float inOpacity,
-                                                           QSSGRenderableImage *inFirstImage,
-                                                           QSSGShaderDefaultMaterialKey inShaderKey,
-                                                           const QSSGDataView<QMatrix4x4> &inBoneGlobals,
-                                                           const QSSGDataView<QMatrix3x3> &inBoneNormals,
-                                                           const QSSGShaderLightList &inLights,
-                                                           const QSSGDataView<float> &inMorphWeights)
-    : QSSGSubsetRenderableBase(inFlags, inWorldCenterPt, gen, inSubset, inModelContext, inOpacity)
-    , material(mat)
-    , firstImage(inFirstImage)
-    , shaderDescription(inShaderKey)
-    , boneGlobals(inBoneGlobals)
-    , boneNormals(inBoneNormals)
-    , lights(inLights)
-    , morphWeights(inMorphWeights)
-{
-    renderableFlags.setCustomMaterialMeshSubset(true);
+    if (mat.type == QSSGRenderGraphObject::Type::CustomMaterial)
+        renderableFlags.setCustomMaterialMeshSubset(true);
+    else
+        renderableFlags.setDefaultMaterialMeshSubset(true);
 }
 
 QT_END_NAMESPACE

@@ -204,7 +204,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
 
     QSSGMaterialVertexPipeline pipeline(shaderProgramGenerator,
                                         shaderKeyProperties,
-                                        renderable.material.adapter,
+                                        renderable.defaultMaterial().adapter,
                                         renderable.boneGlobals,
                                         renderable.boneNormals,
                                         renderable.morphWeights);
@@ -551,10 +551,7 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
 
     // Leave the coordinates relative for right now.
     const QSSGRenderGraphObject *thePickObject = nullptr;
-    if (inRenderableObject.renderableFlags.isDefaultMaterialMeshSubset())
-        thePickObject = &static_cast<QSSGSubsetRenderable *>(&inRenderableObject)->modelContext.model;
-    else if (inRenderableObject.renderableFlags.isCustomMaterialMeshSubset())
-        thePickObject = &static_cast<QSSGCustomMaterialRenderable *>(&inRenderableObject)->modelContext.model;
+    thePickObject = &static_cast<QSSGSubsetRenderable *>(&inRenderableObject)->modelContext.model;
 
     if (thePickObject != nullptr) {
         outIntersectionResultList.push_back(
