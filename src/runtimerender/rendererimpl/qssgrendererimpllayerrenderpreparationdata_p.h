@@ -258,7 +258,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                QSSGShaderLightList &lights,
                                QSSGLayerRenderPreparationResultFlags &ioFlags);
 
-    // Helper function used during PRepareForRender and PrepareAndRender
+    // Helper function used during PrepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                      QSSGLayerRenderPreparationResultFlags &ioFlags);

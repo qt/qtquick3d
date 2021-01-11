@@ -1077,7 +1077,6 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
 
     features.clear();
     featureSetHash = 0;
-    QVector2D thePresentationDimensions((float)inViewportDimensions.width(), (float)inViewportDimensions.height());
     QRect theViewport(renderer->contextInterface()->viewport());
     QRect theScissor(renderer->contextInterface()->scissorRect());
     if (theScissor.isNull() || (theScissor == theViewport))
