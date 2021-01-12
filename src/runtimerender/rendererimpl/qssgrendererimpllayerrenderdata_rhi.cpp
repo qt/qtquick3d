@@ -1496,7 +1496,7 @@ void QSSGLayerRenderData::rhiPrepare()
         ps->depthFunc = QRhiGraphicsPipeline::LessOrEqual;
         ps->blendEnable = false;
 
-        if (layer.background == QSSGRenderLayer::Background::SkyBox) {
+        if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
             const QSSGBufferManager::MipMode iblMipMode = QSSGBufferManager::MipModeBsdf;
@@ -1704,7 +1704,8 @@ void QSSGLayerRenderData::rhiRender()
         }
 
         if (layer.background == QSSGRenderLayer::Background::SkyBox
-                && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch))
+                && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
+                && layer.skyBoxSrb)
         {
             auto shaderPipeline = renderer->getRhiSkyBoxShader(layer.tonemapMode, layer.skyBoxIsRgbe8);
             Q_ASSERT(shaderPipeline);

@@ -389,8 +389,10 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
         QColor clearColor = Qt::transparent;
-        if (m_backgroundMode == QSSGRenderLayer::Background::Color)
+        if (m_backgroundMode == QSSGRenderLayer::Background::Color
+                || (m_backgroundMode == QSSGRenderLayer::Background::SkyBox && !m_layer->lightProbe)) {
             clearColor = m_backgroundColor;
+        }
         cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
         rhiRender();
         cb->endPass();
