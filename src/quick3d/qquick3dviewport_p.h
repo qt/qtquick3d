@@ -109,7 +109,10 @@ public:
 
     void setShaderCacheFile(const QUrl &shaderCacheFile);
     QUrl shaderCacheFile();
+    void setShaderCache(const QByteArray &shaderCache);
     void exportShaderCache(const QUrl &shaderCacheFile, bool binaryShaders, int compressionLevel = -1);
+    void exportShaderCache(bool binaryShaders, int compressionLevel = -1);
+    QByteArray shaderCacheData() const;
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -160,10 +163,11 @@ private:
     QQuick3DRenderStats *m_renderStats = nullptr;
     QUrl m_shaderCacheFile;
     QByteArray m_shaderCacheData;
-    QByteArray m_shaderCacheImport;
+    QByteArray m_shaderCacheIO;
     QUrl m_exportShaderCacheFile;
     bool m_exportShaderCacheRequested = false;
     bool m_binaryShaders = false;
+    bool m_fileExport = false;
     int m_compressionLevel = -1;
     QHash<QObject*, QMetaObject::Connection> m_connections;
 };
