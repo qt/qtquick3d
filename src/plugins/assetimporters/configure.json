@@ -28,7 +28,7 @@
             "label": "System Assimp",
             "enable": "input.quick3d-assimp == 'system'",
             "disable": "input.quick3d-assimp == 'qt'",
-            "condition": "features.quick3d-assimp && libs.quick3d-assimp",
+            "condition": "features.shared && features.quick3d-assimp && libs.quick3d-assimp",
             "output": [ "privateFeature" ]
         }
     },
