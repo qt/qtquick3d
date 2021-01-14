@@ -446,22 +446,21 @@ QSSGRef<QSSGRenderShaderProgram> QSSGShaderCache::forceCompileProgram(const QByt
                                                         separableProgram).m_shader;
     const auto inserted = m_shaders.insert(tempKey, shaderProgram);
     if (shaderProgram) {
-        // This is unnecessary memory waste in final deployed product, so we don't store this
-        // information when shaders were initialized from a cache.
-        // Unfortunately it is not practical to just regenerate shader source from scratch, when we
-        // want to export it, as the triggers and original sources are spread all over the place.
-        if (!m_shadersInitializedFromCache && inserted != m_shaders.end()) {
+        if (inserted != m_shaders.end()) {
             // Store sources for possible cache generation later
             QSSGShaderSource ss;
             for (int i = 0, end = inFeatures.size(); i < end; ++i)
                 ss.features.append(inFeatures[i]);
             ss.key = inKey;
             ss.flags = inFlags;
-            ss.vertexCode = inVert;
-            ss.fragmentCode = inFrag;
-            ss.tessCtrlCode = inTessCtrl;
-            ss.tessEvalCode = inTessEval;
-            ss.geometryCode = inGeom;
+            // Do not store shader sources for binary cache
+            if (!m_binaryShaderCache) {
+                ss.vertexCode = inVert;
+                ss.fragmentCode = inFrag;
+                ss.tessCtrlCode = inTessCtrl;
+                ss.tessEvalCode = inTessEval;
+                ss.geometryCode = inGeom;
+            }
             m_shaderSourceCache.append(ss);
         }
         // ### Shader Chache Writing Code is disabled
@@ -713,6 +712,8 @@ void QSSGShaderCache::importShaderCache(const QByteArray &shaderCache, QByteArra
 
     #undef BAILOUT
 
+    m_binaryShaderCache = isBinary;
+
     int progCount;
     data >> progCount;
     m_shadersInitializedFromCache = progCount > 0;
@@ -787,9 +788,13 @@ void QSSGShaderCache::importShaderCache(const QByteArray &shaderCache, QByteArra
 QByteArray QSSGShaderCache::exportShaderCache(bool binaryShaders)
 {
     if (m_shadersInitializedFromCache) {
-        qWarning() << __FUNCTION__ << "Warning: Shader cache export is not supported when"
-                                      " shaders were originally imported from a cache file.";
-        return {};
+        if (m_binaryShaderCache != binaryShaders) {
+            qWarning() << __FUNCTION__ << "Warning: Shader cache export and"
+                                          " import mode mismatch.";
+            return {};
+        }
+        qWarning() << __FUNCTION__ << "Warning: Shader cache export while also imported"
+                                      " from the cache. This might not be intended.";
     }
 
     auto binaryShadersSupported = [this]() -> bool {

@@ -164,6 +164,7 @@ private:
     QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     bool m_shaderCompilationEnabled;
     bool m_shadersInitializedFromCache = false;
+    bool m_binaryShaderCache = false;
 
     struct QSSGShaderSource
     {
