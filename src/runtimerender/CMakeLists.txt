@@ -84,7 +84,6 @@ qt_internal_add_module(Quick3DRuntimeRender
 
 # Resources:
 set(res_resource_files
-    "res/effectlib/Fxaa3_11.glsllib"
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
     "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/depthpass.glsllib"

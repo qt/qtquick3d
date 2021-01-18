@@ -492,7 +492,6 @@ Tokenizer::Token Tokenizer::next()
                 // '//' comment
                 ++pos;
                 while (*pos && *pos != '\n') ++pos;
-                if (*pos) ++pos; // skip the newline
                 return Token_Comment;
             } else if (*pos == '*') {
                 // /* */ comment
@@ -518,7 +517,7 @@ Tokenizer::Token Tokenizer::next()
                     ++pos;
                 }
             }
-            break;
+            return Token_Unspecified;
         }
 
         case ';': return Token_SemiColon;
