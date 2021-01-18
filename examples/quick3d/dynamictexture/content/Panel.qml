@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -50,134 +50,100 @@
 
 import QtQuick
 
-Component {
-    Item {
-        property variant stickies
+Image {
+    id: corkPanel
+    source: "content/cork.jpg"
+    width: ListView.view.width
+    height: ListView.view.height
+    fillMode: Image.PreserveAspectCrop
 
-        id: page
-        width: ListView.view.width + 40
-        height: ListView.view.height
+    TapHandler {
+        objectName: name
+        onTapped: corkPanel.Window.activeFocusItem.focus = false
+    }
 
-        Image {
-            source: "cork.jpg"
-            width: page.ListView.view.width
-            height: page.ListView.view.height
-            fillMode: Image.PreserveAspectCrop
-            clip: true
-        }
+    Text {
+        text: name
+        x: 15
+        y: 8
+        height: 40
+        width: 370
+        font.pixelSize: 18
+        font.bold: true
+        color: "white"
+        style: Text.Outline
+        styleColor: "black"
+        wrapMode: Text.Wrap
+    }
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: page.focus = false;
-        }
+    Repeater {
+        model: notes
+        Item {
+            id: fulcrum
 
-        Text {
-            text: name
-            x: 15
-            y: 8
-            height: 40
-            width: 370
-            font.pixelSize: 18
-            font.bold: true
-            color: "white"
-            style: Text.Outline
-            styleColor: "black"
-            wrapMode: Text.Wrap
-        }
+            x: 100 + Math.random() * (corkPanel.width - 0.5 * paper.width)
+            y: 50 + Math.random() * (corkPanel.height - 0.5 * paper.height)
 
-        Repeater {
-            model: notes
             Item {
-                id: stickyPage
+                id: note
+                scale: 0.7
 
-                property int randomX: Math.random()
-                                      * (page.ListView.view.width - 0.5 * stickyImage.width)
-                                      + 100
-                property int randomY: Math.random()
-                                      * (page.ListView.view.height - 0.5 * stickyImage.height)
-                                      + 50
+                Image {
+                    id: paper
+                    x: 8 + -width * 0.6 / 2
+                    y: -20
+                    source: "note-yellow.png"
+                    scale: 0.6
+                    transformOrigin: Item.TopLeft
+                    antialiasing: true
 
-                x: randomX
-                y: randomY
+                    DragHandler {
+                        target: fulcrum
+                        xAxis.minimum: 100
+                        xAxis.maximum: corkPanel.width - 80
+                        yAxis.minimum: 0
+                        yAxis.maximum: corkPanel.height - 80
+                    }
+                }
 
-                rotation: -flickable.horizontalVelocity / 100;
+                TextEdit {
+                    id: text
+                    x: -104
+                    y: 36
+                    width: 215
+                    height: 24
+                    font.pixelSize: 24
+                    readOnly: false
+                    selectByMouse: activeFocus
+                    rotation: -8
+                    text: noteText
+                    wrapMode: Text.Wrap
+                }
+
+                rotation: -flickable.horizontalVelocity / 100
                 Behavior on rotation {
                     SpringAnimation { spring: 2.0; damping: 0.15 }
                 }
+            }
 
-                Item {
-                    id: sticky
-                    scale: 0.7
+            Image {
+                x: -width / 2
+                y: -height * 0.5 / 2
+                source: "tack.png"
+                scale: 0.7
+                transformOrigin: Item.TopLeft
+            }
 
-                    Image {
-                        id: stickyImage
-                        x: 8 + -width * 0.6 / 2
-                        y: -20
-                        source: "note-yellow.png"
-                        scale: 0.6
-                        transformOrigin: Item.TopLeft
-                    }
+            states: State {
+                name: "pressed"
+                when: text.activeFocus
+                PropertyChanges { target: note; rotation: 8; scale: 1 }
+                PropertyChanges { target: fulcrum; z: 8 }
+            }
 
-                    TextEdit {
-                        id: myText
-                        x: -104
-                        y: 36
-                        width: 215
-                        height: 200
-                        font.pixelSize: 24
-                        readOnly: false
-                        rotation: -8
-                        text: noteText
-                        wrapMode: Text.Wrap
-                    }
-
-                    Item {
-                        x: stickyImage.x
-                        y: -20
-                        width: stickyImage.width * stickyImage.scale
-                        height: stickyImage.height * stickyImage.scale
-
-                        MouseArea {
-                            id: mouse
-                            anchors.fill: parent
-                            drag.target: stickyPage
-                            drag.axis: Drag.XAndYAxis
-                            drag.minimumY: 0
-                            drag.maximumY: page.height - 80
-                            drag.minimumX: 100
-                            drag.maximumX: page.width - 140
-                            onClicked: myText.forceActiveFocus()
-                        }
-                    }
-                }
-
-                Image {
-                    x: -width / 2
-                    y: -height * 0.5 / 2
-                    source: "tack.png"
-                    scale: 0.7
-                    transformOrigin: Item.TopLeft
-                }
-
-                states: State {
-                    name: "pressed"
-                    when: mouse.pressed
-                    PropertyChanges { target: sticky; rotation: 8; scale: 1 }
-                    PropertyChanges { target: page; z: 8 }
-                }
-
-                transitions: Transition {
-                    NumberAnimation { properties: "rotation,scale"; duration: 200 }
-                }
+            transitions: Transition {
+                NumberAnimation { properties: "rotation,scale"; duration: 200 }
             }
         }
     }
 }
-
-
-
-
-
-
-
-

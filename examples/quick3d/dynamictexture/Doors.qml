@@ -90,6 +90,7 @@ Node {
     Model {
         id: door1
     //! [model heading]
+        objectName: "left door"
         pivot.x: 20
         x: 80
         y: 70
@@ -140,6 +141,7 @@ Node {
 
     Model {
         id: door2
+        objectName: "right door"
         x: -80
         y: 70
         scale.x: 2

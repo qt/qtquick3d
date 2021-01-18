@@ -72,12 +72,12 @@ Window {
         Doors { id: door }
 
         //! [picking]
-        MouseArea {
-            anchors.fill: parent
-
-            onClicked: {
-                var result = view.pick(mouse.x, mouse.y);
+        TapHandler {
+            onTapped: {
+                var result = view.pick(point.position.x, point.position.y);
                 if (result.objectHit) {
+                    console.log("pick dist", result.distance, "hit", result.objectHit,
+                                "scene pos", result.scenePosition, "uv", result.uvPosition);
                     var pickedDoor = result.objectHit;
                     if (pickedDoor.state === "")
                         pickedDoor.state = "opened";
@@ -101,6 +101,7 @@ Window {
 
         CorkBoards { }
 
+        clip: true
         layer.enabled: true
     }
     //! [2d layer]
