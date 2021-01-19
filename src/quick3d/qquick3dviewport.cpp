@@ -44,6 +44,7 @@
 #include <QSGRendererInterface>
 #include <QQuickWindow>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickpointerhandler_p.h>
 
 #include <QtQml>
 
@@ -136,9 +137,8 @@ static void ssgn_append(QQmlListProperty<QObject> *property, QObject *obj)
     if (QQuick3DObject *sceneObject = qmlobject_cast<QQuick3DObject *>(obj)) {
         QQmlListProperty<QObject> itemProperty = QQuick3DObjectPrivate::get(view3d->scene())->data();
         itemProperty.append(&itemProperty, sceneObject);
-    } else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {
-        // TODO: Should probably also setup the rest of the methods for this case
-        item->setParentItem(view3d);
+    } else {
+        QQuickItemPrivate::data_append(property, obj);
     }
 }
 
