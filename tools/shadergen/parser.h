@@ -87,7 +87,7 @@ struct SceneData
     QVector<Material> materials;
     QVector<QQuick3DTexture *> textures;
     QVector<QQuick3DModel *> models;
-    bool hasData() { return viewport && (models.size() != 0 || materials.size() != 0); }
+    bool hasData() const { return viewport && (models.size() != 0 || materials.size() != 0); }
 };
 
 int parseQmlData(const QByteArray &code, const QString &fileName, SceneData &sceneData);
