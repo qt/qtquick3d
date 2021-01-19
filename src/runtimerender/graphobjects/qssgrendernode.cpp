@@ -96,8 +96,24 @@ bool QSSGRenderNode::calculateGlobalVariables()
                     globalTransform = parent->globalTransform * localTransform;
                 else
                     globalTransform = localTransform;
-            } else
+            } else {
                 globalTransform = localTransform;
+            }
+            if (instanceRoot) {
+                //### technically O(n^2) -- we could cache localInstanceTransform if every node in the tree is guaranteed to have the same instance root
+                globalInstanceTransform = instanceRoot->globalInstanceTransform;
+                localInstanceTransform = localTransform;
+                auto *p = parent;
+                while (p) {
+                    localInstanceTransform = p->localTransform * localInstanceTransform;
+                    if (p == instanceRoot)
+                        break;
+                    p = p->parent;
+                }
+            } else {
+                localInstanceTransform = localTransform;
+                globalInstanceTransform = parent->globalTransform; //ignore IgnoreParentTransform since it does not seem to be set anywhere(??)
+            }
 
             flags.setFlag(Flag::GloballyActive, (flags.testFlag(Flag::Active) && parent->flags.testFlag(Flag::GloballyActive)));
             flags.setFlag(Flag::GloballyPickable, (flags.testFlag(Flag::LocallyPickable) || parent->flags.testFlag(Flag::GloballyPickable)));
@@ -105,6 +121,8 @@ bool QSSGRenderNode::calculateGlobalVariables()
             globalTransform = localTransform;
             flags.setFlag(Flag::GloballyActive, flags.testFlag(Flag::Active));
             flags.setFlag(Flag::GloballyPickable, flags.testFlag(Flag::LocallyPickable));
+            localInstanceTransform = localTransform;
+            globalInstanceTransform = {};
         }
     }
     // We always clear dirty in a reasonable manner but if we aren't active

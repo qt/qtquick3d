@@ -150,6 +150,10 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
         isClipDepthZeroToOne
     };
 
+
+    const QMatrix4x4 &localInstanceTransform(renderable.modelContext.model.localInstanceTransform);
+    const QMatrix4x4 &globalInstanceTransform(renderable.modelContext.model.globalInstanceTransform);
+
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,
                                                           ubufData,
@@ -162,6 +166,8 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           renderable.modelContext.normalMatrix,
                                                           renderable.globalTransform,
                                                           clipSpaceCorrMatrix,
+                                                          localInstanceTransform,
+                                                          globalInstanceTransform,
                                                           renderable.boneGlobals,
                                                           renderable.boneNormals,
                                                           renderable.morphWeights,

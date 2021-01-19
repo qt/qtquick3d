@@ -112,6 +112,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // These end up right handed
     QMatrix4x4 localTransform;
     QMatrix4x4 globalTransform;
+    QMatrix4x4 localInstanceTransform;
+    QMatrix4x4 globalInstanceTransform;
     float globalOpacity = 1.0f;
     qint32 skeletonId = -1;
 
@@ -119,6 +121,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QSSGRenderNode *parent = nullptr;
     QSSGRenderNode *nextSibling = nullptr;
     QSSGRenderNode *previousSibling = nullptr;
+    QSSGRenderNode *instanceRoot = nullptr;
     // Property maintained solely by the render system.
     // Depth-first-search index assigned and maintained by render system.
     quint32 dfsIndex = 0;

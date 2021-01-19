@@ -1341,6 +1341,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QMatrix3x3 &inNormalMatrix,
                                                            const QMatrix4x4 &inGlobalTransform,
                                                            const QMatrix4x4 &clipSpaceCorrMatrix,
+                                                           const QMatrix4x4 &localInstanceTransform,
+                                                           const QMatrix4x4 &globalInstanceTransform,
                                                            const QSSGDataView<QMatrix4x4> &inBoneGlobals,
                                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                                            const QSSGDataView<float> &inMorphWeights,
@@ -1393,14 +1395,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
         shaders->setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
                             QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+        shaders->setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
     } else {
         // Instanced calls have to calculate MVP and normalMatrix in the vertex shader
         QMatrix4x4 viewProj;
         inCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;
         shaders->setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
+        shaders->setUniform(ubufData, "qt_modelMatrix", localInstanceTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
+        shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
     }
-    shaders->setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     // Skinning
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);

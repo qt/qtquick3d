@@ -114,13 +114,40 @@ Window {
 
             materials: DefaultMaterial {
                 diffuseColor: "lightgray"
-                opacity: 0.6
+                opacity: 0.3
             }
+        }
+
+        InstanceList {
+            id: manualInstancing
+            instances: [
+                InstanceListEntry {
+                    position: Qt.vector3d(0, 0, 0)
+                    color: "green"
+                },
+                InstanceListEntry {
+                    position: Qt.vector3d(-300, 0, 200)
+                    color: "red"
+                    customData: Qt.vector4d(1.0, 0.0, 1.0, 1.0)
+                },
+                InstanceListEntry {
+                    position: Qt.vector3d(200, 200, 100)
+                    color: "blue"
+                    customData: Qt.vector4d(0.0, 0.3, 1.0, 1.0)
+                },
+                InstanceListEntry {
+                    position: Qt.vector3d(300, 0, 00)
+                    eulerRotation: Qt.vector3d(-10, 0, 30)
+                    color: "orange"
+                    customData: Qt.vector4d(0.0, 0.5, 1.0, 1.0)
+                }
+
+            ]
         }
 
         RandomInstancing {
             id: randomWithData
-            instanceCount: 350
+            instanceCount: 10
 
             position: InstanceRange {
                 from: Qt.vector3d(-500, -400, -500)
@@ -163,7 +190,7 @@ Window {
         Model {
             id: cubeModel
             source: "#Cube"
-            instancing: randomWithData
+            instancing: manualInstancing    //randomWithData
 
             materials: DefaultMaterial {
                 diffuseColor: "white"
@@ -179,6 +206,7 @@ Window {
                 id: sphereModel
                 source: "#Sphere"
                 instancing: parent.instancing
+                instanceRoot: parent
 
                 property real scaleFactor: 0.5
                 scale: Qt.vector3d(scaleFactor, scaleFactor, scaleFactor);

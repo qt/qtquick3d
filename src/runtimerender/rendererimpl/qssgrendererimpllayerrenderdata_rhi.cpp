@@ -117,6 +117,11 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
     const QMatrix4x4 &mvp(alteredModelViewProjection ? *alteredModelViewProjection
                                                      : subsetRenderable.modelContext.modelViewProjection);
+
+
+    const QMatrix4x4 &localInstanceTransform(subsetRenderable.modelContext.model.localInstanceTransform);
+    const QMatrix4x4 &globalInstanceTransform(subsetRenderable.modelContext.model.globalInstanceTransform);
+
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
                                                           shaderPipeline,
                                                           ubufData,
@@ -129,6 +134,8 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           subsetRenderable.modelContext.normalMatrix,
                                                           subsetRenderable.modelContext.model.globalTransform,
                                                           clipSpaceCorrMatrix,
+                                                          localInstanceTransform,
+                                                          globalInstanceTransform,
                                                           subsetRenderable.boneGlobals,
                                                           subsetRenderable.boneNormals,
                                                           subsetRenderable.morphWeights,

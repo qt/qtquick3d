@@ -109,6 +109,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(bool pickable READ pickable WRITE setPickable NOTIFY pickableChanged)
     Q_PROPERTY(QQuick3DGeometry *geometry READ geometry WRITE setGeometry NOTIFY geometryChanged)
     Q_PROPERTY(QQuick3DInstancing *instancing READ instancing WRITE setInstancing NOTIFY instancingChanged)
+    Q_PROPERTY(QQuick3DNode *instanceRoot READ instanceRoot WRITE setInstanceRoot NOTIFY instanceRootChanged)
     Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
     Q_PROPERTY(QList<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION(1, 1))
@@ -132,7 +133,8 @@ public:
     QQmlListProperty<QQuick3DMaterial> materials();
     QQmlListProperty<QQuick3DMorphTarget> morphTargets();
 
-    QQuick3DInstancing * instancing() const;
+    QQuick3DInstancing *instancing() const;
+    QQuick3DNode *instanceRoot() const;
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
@@ -142,10 +144,9 @@ public Q_SLOTS:
     void setGeometry(QQuick3DGeometry *geometry);
     void setSkeleton(QQuick3DSkeleton *skeleton);
     void setInverseBindPoses(const QList<QMatrix4x4> &poses);
-
     void setBounds(const QVector3D &min, const QVector3D &max);
-
-    void setInstancing(QQuick3DInstancing * instancing);
+    void setInstancing(QQuick3DInstancing *instancing);
+    void setInstanceRoot(QQuick3DNode *instanceRoot);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -156,7 +157,8 @@ Q_SIGNALS:
     void skeletonChanged();
     void inverseBindPosesChanged();
     void boundsChanged();
-    void instancingChanged(QQuick3DInstancing * instancing);
+    void instancingChanged(QQuick3DInstancing *instancing);
+    void instanceRootChanged(QQuick3DNode *instanceRoot);
     void morphTargetsChanged();
 
 protected:
@@ -210,6 +212,7 @@ private:
     QQuick3DSkeleton *m_skeleton = nullptr;
     QList<QMatrix4x4> m_inverseBindPoses;
     QQuick3DInstancing *m_instancing = nullptr;
+    QQuick3DNode *m_instanceRoot = nullptr;
     QMetaObject::Connection m_geometryConnection;
     QMetaObject::Connection m_skeletonConnection;
     QMetaObject::Connection m_instancingConnection;

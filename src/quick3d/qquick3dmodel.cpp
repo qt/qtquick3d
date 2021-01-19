@@ -222,6 +222,11 @@ QQuick3DInstancing *QQuick3DModel::instancing() const
     return m_instancing;
 }
 
+QQuick3DNode *QQuick3DModel::instanceRoot() const
+{
+    return m_instanceRoot;
+}
+
 
 void QQuick3DModel::markAllDirty()
 {
@@ -458,6 +463,15 @@ void QQuick3DModel::setInstancing(QQuick3DInstancing *instancing)
                  this, [this]{ markDirty(InstancesDirty);});
     }
     emit instancingChanged(m_instancing);
+}
+
+void QQuick3DModel::setInstanceRoot(QQuick3DNode *instanceRoot)
+{
+    if (m_instanceRoot == instanceRoot)
+        return;
+
+    m_instanceRoot = instanceRoot;
+    emit instanceRootChanged(m_instanceRoot);
 }
 
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)

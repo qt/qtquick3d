@@ -217,6 +217,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     } else {
         // Must manualy calculate a MVP
         vertexShader.addUniform("qt_modelMatrix", "mat4");
+        vertexShader.addUniform("qt_parentMatrix", "mat4");
         vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
     }
 
@@ -280,7 +281,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     if (usesInstancing) {
         vertexShader.append("    qt_vertColor *= qt_instanceColor;");
         vertexShader.append("    mat4 qt_instanceMatrix = mat4(qt_instanceTransform0, qt_instanceTransform1, qt_instanceTransform2, vec4(0.0, 0.0, 0.0, 1.0));");
-        vertexShader.append("    mat4 qt_instancedModelMatrix = transpose(qt_instanceMatrix) * qt_modelMatrix;");
+        vertexShader.append("    mat4 qt_instancedModelMatrix =  qt_parentMatrix * transpose(qt_instanceMatrix) * qt_modelMatrix;");
         vertexShader.append("    mat3 qt_instancedNormalMatrix = mat3(transpose(inverse(qt_instancedModelMatrix)));");
         vertexShader.append("    mat4 qt_instancedMVPMatrix = qt_viewProjectionMatrix * qt_instancedModelMatrix;");
     }
