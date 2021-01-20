@@ -1072,6 +1072,7 @@ static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
 
 void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDimensions)
 {
+    Q_UNUSED(inViewportDimensions);
     if (layerPrepResult.hasValue())
         return;
 
