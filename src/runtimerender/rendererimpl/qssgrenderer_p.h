@@ -119,6 +119,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
 
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingRhiShader;
+
     TLayerRenderList m_lastFrameLayers;
 
     // Set from the first layer.
@@ -274,6 +276,7 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiSupersampleResolveShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiProgressiveAAShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiTexturedQuadShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiParticleShader();
 
 private:
     friend class QSSGRenderContextInterface;

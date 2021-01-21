@@ -17,7 +17,8 @@ HEADERS += \
     $$PWD/qssgrenderskeleton_p.h \
     $$PWD/qssgrenderjoint_p.h \
     $$PWD/qssgrendertexturedata_p.h \
-    $$PWD/qssgrendermorphtarget_p.h
+    $$PWD/qssgrendermorphtarget_p.h \
+    $$PWD/qssgrenderparticles_p.h
 
 SOURCES += \
     $$PWD/qssgrendercamera.cpp \
@@ -35,4 +36,5 @@ SOURCES += \
     $$PWD/qssgrenderskeleton.cpp \
     $$PWD/qssgrenderjoint.cpp \
     $$PWD/qssgrendertexturedata.cpp \
-    $$PWD/qssgrendermorphtarget.cpp
+    $$PWD/qssgrendermorphtarget.cpp \
+    $$PWD/qssgrenderparticles.cpp

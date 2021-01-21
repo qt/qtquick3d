@@ -34,6 +34,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
@@ -99,6 +100,16 @@ static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsP
 {
     const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiShaders(subsetRenderable, featureSet);
+    if (shaderPipeline)
+        ps->shaderPipeline = shaderPipeline.data();
+    return shaderPipeline;
+}
+
+static QSSGRef<QSSGRhiShaderPipeline> shadersForParticleMaterial(QSSGRhiGraphicsPipelineState *ps,
+                                                                 QSSGParticlesRenderable &particleRenderable)
+{
+    const QSSGRef<QSSGRenderer> &generator(particleRenderable.generator);
+    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiParticleShader();
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.data();
     return shaderPipeline;
@@ -206,8 +217,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  int samples)
 {
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
-    QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
         const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
 
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
@@ -386,6 +397,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
         }
     } else if (inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
         const QSSGRenderCustomMaterial &material(subsetRenderable.customMaterial());
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
 
@@ -393,6 +405,11 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, inData.getShaderFeatureSet(),
                                                   material, inData, renderPassDescriptor, samples);
+    } else if (inObject.renderableFlags.isParticlesRenderable()) {
+        QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
+        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
+        if (shaderPipeline)
+            QSSGParticleRenderer::rhiPrepareRenderable(shaderPipeline, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples);
     } else {
         Q_ASSERT(false);
     }
@@ -410,15 +427,17 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
     ShaderFeatureSetList featureSet;
     featureSet.append({ QSSGShaderDefines::DepthPass, true });
-    QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
+
     QSSGRhiDrawCallData *dcd = nullptr;
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         const void *layerNode = &layerData.layer;
         const void *modelNode = &subsetRenderable.modelContext.model;
         dcd = &rhiCtx->drawCallData({ layerNode, modelNode, material, 0, ubufSel });
     }
 
     if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
 
         shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
@@ -432,6 +451,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
             return false;
         }
     } else if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
 
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
@@ -452,6 +472,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
     // the rest is common, only relying on QSSGSubsetRenderableBase, not the subclasses
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
 
+        QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->ia = subsetRenderable.subset.rhi.ia;
         ps->ia.bakeVertexInputLocations(*shaderPipeline);
 
@@ -1673,6 +1694,9 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
         customMaterialSystem.rhiRenderRenderable(rhiCtx, subsetRenderable, inData, needsSetViewport);
+    } else if (object.renderableFlags.isParticlesRenderable()) {
+        QSSGParticlesRenderable &renderable(static_cast<QSSGParticlesRenderable &>(object));
+        QSSGParticleRenderer::rhiRenderRenderable(rhiCtx, renderable, inData, needsSetViewport);
     } else {
         Q_ASSERT(false);
     }

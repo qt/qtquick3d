@@ -45,6 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -62,6 +63,7 @@ enum class QSSGRenderableObjectFlag
     Dirty = 1 << 2,
     Pickable = 1 << 3,
     DefaultMaterialMeshSubset = 1 << 4,
+    Particles = 1 << 5,
     CustomMaterialMeshSubset = 1 << 7,
     CastsShadows = 1 << 9,
     ReceivesShadows = 1 << 10,
@@ -152,6 +154,15 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     bool isCustomMaterialMeshSubset() const
     {
         return this->operator&(QSSGRenderableObjectFlag::CustomMaterialMeshSubset);
+    }
+
+    void setParticlesRenderable(bool set)
+    {
+        setFlag(QSSGRenderableObjectFlag::Particles, set);
+    }
+    bool isParticlesRenderable() const
+    {
+        return this->operator&(QSSGRenderableObjectFlag::Particles);
     }
 
     void setPointsTopology(bool v)
@@ -312,6 +323,46 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
+
+/**
+ * A renderable that corresponds to a particles.
+ */
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
+{
+    const QSSGRef<QSSGRenderer> &generator;
+    const QSSGRenderParticles &particles;
+    QSSGRenderableImage *firstImage;
+    const QSSGShaderLightList &lights;
+    float opacity;
+
+    struct {
+        // Transient (due to the subsetRenderable being allocated using a
+        // per-frame allocator on every frame), not owned refs from the
+        // rhi-prepare step, used by the rhi-render step.
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } mainPass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb = nullptr;
+        } depthPrePass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb[6] = {};
+        } shadowPass;
+    } rhiRenderData;
+
+    QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
+                            const QVector3D &inWorldCenterPt,
+                            const QSSGRef<QSSGRenderer> &gen,
+                            QSSGRenderParticles &inParticles,
+                            QSSGRenderableImage *inFirstImage,
+                            const QSSGShaderLightList &inLights,
+                            float inOpacity);
+};
+
+Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGParticlesRenderable>::value);
 
 QT_END_NAMESPACE
 

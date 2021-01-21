@@ -220,6 +220,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     size_t featureSetHash;
     bool tooManyLightsWarningShown = false;
     bool tooManyShadowLightsWarningShown = false;
+    bool particlesNotSupportedWarningShown = false;
 
     QSSGRenderShadowMap *shadowMapManager = nullptr;
 
@@ -257,6 +258,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGShaderLightList &lights,
                                QSSGLayerRenderPreparationResultFlags &ioFlags);
+    bool prepareParticlesForRender(const QSSGRenderParticles &inParticles,
+                                   const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
+                                   QSSGShaderLightList &lights);
 
     // Helper function used during PrepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,

@@ -344,6 +344,7 @@ public:
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
     void ensureCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf);
+    void ensureUniformBuffer(QRhiBuffer **ubuf);
 
     void setLightProbeTexture(QRhiTexture *texture,
                               QSSGRenderTextureCoordOp hTile = QSSGRenderTextureCoordOp::ClampToEdge,
@@ -373,6 +374,8 @@ public:
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
     InstanceLocations instanceBufferLocations() const { return instanceLocations; }
+
+    int offsetOfUniform(const QByteArray &name);
 
 private:
     QSSGRhiContext &m_context;
@@ -692,6 +695,38 @@ struct QSSGRhiInstanceBufferData
     bool owned = true;
 };
 
+struct QSSGRhiParticleData
+{
+    QRhiTexture *texture = nullptr;
+    int particleCount = 0;
+};
+
+struct QSSGRhiDummyTextureKey
+{
+    QRhiTexture::Flags flags;
+    QSize size;
+    QColor color;
+};
+
+inline size_t qHash(const QSSGRhiDummyTextureKey &k, size_t seed) Q_DECL_NOTHROW
+{
+    return qHash(k.flags, seed)
+            ^ qHash(k.size.width() ^ k.size.height() ^ k.color.red() ^ k.color.green()
+                        ^ k.color.blue() ^ k.color.alpha());
+}
+
+inline bool operator==(const QSSGRhiDummyTextureKey &a, const QSSGRhiDummyTextureKey &b) Q_DECL_NOTHROW
+{
+    return a.flags == b.flags && a.size == b.size && a.color == b.color;
+}
+
+inline bool operator!=(const QSSGRhiDummyTextureKey &a, const QSSGRhiDummyTextureKey &b) Q_DECL_NOTHROW
+{
+    return !(a == b);
+}
+
+struct QSSGRenderParticles;
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
 {
     Q_DISABLE_COPY(QSSGRhiContext)
@@ -747,7 +782,8 @@ public:
 
     void cleanupDrawCallData(const QSSGRenderModel *model);
 
-    QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub);
+    QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
+                              const QSize &size = QSize(64, 64), const QColor &fillColor = Qt::black);
 
     static inline QRhiCommandBuffer::BeginPassFlags commonPassFlags()
     {
@@ -759,6 +795,10 @@ public:
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable)
     {
         return m_instanceBuffers[instanceTable];
+    }
+    QSSGRhiParticleData &particleData(const QSSGRenderParticles *particles)
+    {
+        return m_particleData[particles];
     }
 
 private:
@@ -774,8 +814,9 @@ private:
     QHash<QSSGRhiDrawCallDataKey, QSSGRhiDrawCallData> m_drawCallData;
     QVector<QPair<QSSGRhiSamplerDescription, QRhiSampler*>> m_samplers;
     QSet<QRhiTexture *> m_textures;
-    QHash<QRhiTexture::Flags, QRhiTexture *> m_dummyTextures;
+    QHash<QSSGRhiDummyTextureKey, QRhiTexture *> m_dummyTextures;
     QHash<QSSGRenderInstanceTable *, QSSGRhiInstanceBufferData> m_instanceBuffers;
+    QHash<const QSSGRenderParticles *, QSSGRhiParticleData> m_particleData;
 };
 
 inline QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op)

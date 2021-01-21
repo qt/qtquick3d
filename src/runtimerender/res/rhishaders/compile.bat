@@ -111,3 +111,6 @@ qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o environmentmapirradiance.ver
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o environmentmapirradiance.frag.qsb environmentmapirradiance.frag
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o environmentmapirradiance_rgbe.vert.qsb environmentmapirradiance.vert
 qsb --glsl "300 es,150" --hlsl 50 --msl 12 --define QSSG_ENABLE_RGBE_LIGHT_PROBE -O -c -o environmentmapirradiance_rgbe.frag.qsb environmentmapirradiance.frag
+
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o particlesnolight.vert.qsb particles.vert
+qsb --glsl "300 es,150" --hlsl 50 --msl 12 -O -c -o particlesnolight.frag.qsb particles.frag

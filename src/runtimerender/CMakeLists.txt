@@ -27,6 +27,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
+        graphobjects/qssgrenderparticles.cpp graphobjects/qssgrenderparticles_p.h
         qssgrendercommands.cpp qssgrendercommands_p.h
         qssgrendercontextcore.cpp qssgrendercontextcore_p.h
         qssgrenderdefaultmaterialshadergenerator.cpp qssgrenderdefaultmaterialshadergenerator_p.h
@@ -41,6 +42,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrendershaderkeys_p.h
         qssgrendershadermetadata.cpp qssgrendershadermetadata_p.h
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
+        qssgrhiparticles.cpp qssgrhiparticles_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h
         qssgrhicustommaterialsystem.cpp qssgrhicustommaterialsystem_p.h
         qssgrhieffectsystem.cpp qssgrhieffectsystem_p.h
@@ -159,6 +161,8 @@ set(res_resource_files
     "res/rhishaders/ssao.vert.qsb"
     "res/rhishaders/texturedquad.frag.qsb"
     "res/rhishaders/texturedquad.vert.qsb"
+    "res/rhishaders/particlesnolight.frag.qsb"
+    "res/rhishaders/particlesnolight.vert.qsb"
 )
 
 qt_internal_add_resource(Quick3DRuntimeRender "res"

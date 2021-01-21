@@ -78,6 +78,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         ImportScene,
         ModelInstance,
         MorphTarget,
+        Particles,
         LastKnownGraphObjectType
     };
 

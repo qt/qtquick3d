@@ -489,6 +489,14 @@ void QSSGRhiShaderPipeline::setUniformValue(char *ubufData, const char *name, co
     }
 }
 
+int QSSGRhiShaderPipeline::offsetOfUniform(const QByteArray &name)
+{
+    auto iter = m_ub0.constFind(name);
+    if (iter != m_ub0.cend())
+        return iter->offset;
+    return -1;
+}
+
 void QSSGRhiShaderPipeline::setUniform(char *ubufData, const char *name, const void *data, size_t size, int *storeIndex, UniformFlags flags)
 {
     int index = -1;
@@ -879,6 +887,14 @@ void QSSGRhiShaderPipeline::ensureCombinedMainLightsUniformBuffer(QRhiBuffer **u
     }
 }
 
+void QSSGRhiShaderPipeline::ensureUniformBuffer(QRhiBuffer **ubuf)
+{
+    if (!*ubuf) {
+        *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, m_ub0Size);
+        (*ubuf)->create();
+    }
+}
+
 int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
 {
     if (hint >= 0) {
@@ -915,6 +931,8 @@ QSSGRhiContext::~QSSGRhiContext()
         if (instanceData.owned)
             delete instanceData.buffer;
     }
+    for (const auto &particleData : qAsConst(m_particleData))
+        delete particleData.texture;
     qDeleteAll(m_dummyTextures);
 }
 
@@ -1083,22 +1101,23 @@ void QSSGRhiContext::cleanupDrawCallData(const QSSGRenderModel *model)
     }
 }
 
-QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub)
+QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
+                                          const QSize &size, const QColor &fillColor)
 {
-    auto it = m_dummyTextures.constFind(flags);
+    auto it = m_dummyTextures.constFind({flags, size, fillColor});
     if (it != m_dummyTextures.constEnd())
         return *it;
 
-    QRhiTexture *t = m_rhi->newTexture(QRhiTexture::RGBA8, QSize(64, 64), 1, flags);
+    QRhiTexture *t = m_rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
     if (t->create()) {
         QImage image(t->pixelSize(), QImage::Format_RGBA8888);
-        image.fill(Qt::black);
+        image.fill(fillColor);
         rub->uploadTexture(t, image);
     } else {
         qWarning("Failed to build dummy texture");
     }
 
-    m_dummyTextures.insert(flags, t);
+    m_dummyTextures.insert({flags, size, fillColor}, t);
     return t;
 }
 

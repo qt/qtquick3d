@@ -129,4 +129,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiTexturedQuadShader()
     return getBuiltinRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiParticleShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("particlesnolight"), m_particlesNoLightingRhiShader);
+}
+
 QT_END_NAMESPACE

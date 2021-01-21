@@ -36,6 +36,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderjoint_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermorphtarget_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
@@ -126,6 +127,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
     } else if (inNode.type == QSSGRenderGraphObject::Type::Light) {
         collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
+    } else if (inNode.type == QSSGRenderGraphObject::Type::Particles) {
+        collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
     }
 
     for (auto &theChild : inNode.children)
@@ -1017,6 +1020,79 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
     return subsetDirty;
 }
 
+bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderParticles &inParticles,
+                                                               const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
+                                                               QSSGShaderLightList &lights)
+{
+    QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
+
+    const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
+    if (!supportRgba32f) {
+        if (!particlesNotSupportedWarningShown)
+            qWarning () << "Particles not supported due to missing RGBA32F texture format support";
+        particlesNotSupportedWarningShown = true;
+        return false;
+    }
+
+    QSSGRenderableObjectFlags renderableFlags;
+    renderableFlags.setPickable(false);
+    renderableFlags.setCastsShadows(false);
+    renderableFlags.setReceivesShadows(false);
+    renderableFlags.setHasAttributePosition(true);
+    renderableFlags.setHasAttributeNormal(true);
+    renderableFlags.setHasAttributeTexCoord0(true);
+    renderableFlags.setHasAttributeColor(true);
+
+    float opacity = inParticles.globalOpacity;
+    QVector3D center(inParticles.m_particleBuffer.bounds().center());
+    center = mat44::transform(inParticles.globalTransform, center);
+
+    if (opacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY && inClipFrustum.hasValue()) {
+        // Check bounding box against the clipping planes
+        QSSGBounds3 theGlobalBounds = inParticles.m_particleBuffer.bounds();
+        theGlobalBounds.transform(inParticles.globalTransform);
+        if (!inClipFrustum->intersectsWith(theGlobalBounds))
+            opacity = 0.0f;
+    }
+
+    bool dirty = false;
+
+    QSSGRenderableImage *firstImage = nullptr;
+    if (inParticles.m_sprite) {
+        const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+
+        if (inParticles.m_sprite->clearDirty())
+            dirty = true;
+
+        const QSSGRenderImageTexture texture = inParticles.m_sprite->updateTexture(bufferManager);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *inParticles.m_sprite, texture);
+        firstImage = theImage;
+        if (texture.m_flags.hasTransparency())
+            renderableFlags.setHasTransparency(true);
+    }
+    if (opacity < (1.0 - QSSG_RENDER_MINIMUM_RENDER_OPACITY))
+        renderableFlags.setHasTransparency(true);
+
+    if (opacity > 0.0f && inParticles.m_particleBuffer.particleCount()) {
+        auto *theRenderableObject = RENDER_FRAME_NEW<QSSGParticlesRenderable>(contextInterface,
+                                                                              renderableFlags,
+                                                                              center,
+                                                                              renderer,
+                                                                              inParticles,
+                                                                              firstImage,
+                                                                              lights,
+                                                                              opacity);
+        if (theRenderableObject) {
+            if (theRenderableObject->renderableFlags.hasTransparency())
+                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
+            else
+                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
+        }
+    }
+
+    return dirty;
+}
+
 bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
@@ -1034,6 +1110,14 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
             theModel->calculateGlobalVariables();
             if (theModel->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
                 bool wasModelDirty = prepareModelForRender(*theModel, inViewProjection, inClipFrustum, theNodeEntry.lights, ioFlags);
+                wasDataDirty = wasDataDirty || wasModelDirty;
+            }
+        } break;
+        case QSSGRenderGraphObject::Type::Particles: {
+            QSSGRenderParticles *theParticles = static_cast<QSSGRenderParticles *>(theNode);
+            theParticles->calculateGlobalVariables();
+            if (theParticles->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
+                bool wasModelDirty = prepareParticlesForRender(*theParticles, inClipFrustum, theNodeEntry.lights);
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
         } break;

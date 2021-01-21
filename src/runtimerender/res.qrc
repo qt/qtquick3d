@@ -74,5 +74,7 @@
         <file>res/rhishaders/environmentmapirradiance_rgbe.vert.qsb</file>
         <file>res/rhishaders/environmentmapprefilter_rgbe.frag.qsb</file>
         <file>res/rhishaders/environmentmapprefilter_rgbe.vert.qsb</file>
+        <file>res/rhishaders/particlesnolight.frag.qsb</file>
+        <file>res/rhishaders/particlesnolight.vert.qsb</file>
     </qresource>
 </RCC>

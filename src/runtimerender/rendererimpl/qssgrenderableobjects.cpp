@@ -71,4 +71,21 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
         renderableFlags.setDefaultMaterialMeshSubset(true);
 }
 
+QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
+                                                 const QVector3D &inWorldCenterPt,
+                                                 const QSSGRef<QSSGRenderer> &gen,
+                                                 QSSGRenderParticles &inParticles,
+                                                 QSSGRenderableImage *inFirstImage,
+                                                 const QSSGShaderLightList &inLights,
+                                                 float inOpacity)
+    : QSSGRenderableObject(inFlags, inWorldCenterPt, inParticles.globalTransform, inParticles.m_particleBuffer.bounds())
+    , generator(gen)
+    , particles(inParticles)
+    , firstImage(inFirstImage)
+    , lights(inLights)
+    , opacity(inOpacity)
+{
+    renderableFlags.setParticlesRenderable(true);
+}
+
 QT_END_NAMESPACE
