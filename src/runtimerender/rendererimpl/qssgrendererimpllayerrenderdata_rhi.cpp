@@ -231,8 +231,8 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
             // Instancing
-            const quint32 instanceCount = subsetRenderable.modelContext.model.instanceCount();
-            if (instanceCount > 0) {
+            const bool instancing = subsetRenderable.modelContext.model.instancing();
+            if (instancing) {
                 //TODO: move buffer creation code to instance table
                 auto *table = subsetRenderable.modelContext.model.instanceTable;
                 QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
@@ -274,7 +274,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             ps->ia = subsetRenderable.subset.rhi.ia;
             int instanceBufferBinding = 0;
-            if (instanceCount > 0) {
+            if (instancing) {
                 // Need to setup new bindings for instanced buffers
                 QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
                 std::copy(ps->ia.inputLayout.cbeginBindings(),
@@ -1656,10 +1656,9 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         QRhiCommandBuffer::VertexInput vertexBuffers[2];
         int vertexBufferCount = 1;
         vertexBuffers[0] = QRhiCommandBuffer::VertexInput(vertexBuffer, 0);
-        quint32 instances = subsetRenderable.modelContext.model.instanceCount();
-        if (instances == 0) {
-            instances = 1;
-        } else {
+        quint32 instances = 1;
+        if ( subsetRenderable.modelContext.model.instancing()) {
+            instances = subsetRenderable.modelContext.model.instanceCount();
             vertexBuffers[1] = QRhiCommandBuffer::VertexInput(subsetRenderable.instanceBuffer, 0);
             vertexBufferCount = 2;
         }

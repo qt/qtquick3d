@@ -71,6 +71,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QVector<QMatrix3x3> boneNormalTransforms;
     QSSGRenderInstanceTable *instanceTable = nullptr;
     int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }
+    bool instancing() const { return instanceTable;}
 
     QVector<float> morphWeights;
     QVector<quint32> morphAttributes;

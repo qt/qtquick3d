@@ -909,9 +909,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
-                bool usesInstancing = theModelContext.model.instanceCount() > 0;
-                if (!rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing))
-                    usesInstancing = false;
+                bool usesInstancing = theModelContext.model.instancing()
+                        && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
                 // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
                 // if the mesh has it.
                 theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing;
@@ -969,9 +968,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
                 // Instancing
-                bool usesInstancing = theModelContext.model.instanceCount() > 0;
-                if (!rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing))
-                    usesInstancing = false;
+                bool usesInstancing = theModelContext.model.instancing()
+                        && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
                 renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
                 renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);

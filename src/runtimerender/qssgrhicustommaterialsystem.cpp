@@ -219,8 +219,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
 
         // Instancing ### Duplicated logic from default material: refactor
-        const quint32 instanceCount = renderable.modelContext.model.instanceCount();
-        if (instanceCount > 0) {
+        const bool instancing = renderable.modelContext.model.instancing();
+        if (instancing) {
             auto *table = renderable.modelContext.model.instanceTable;
             QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
             qsizetype instanceBufferSize = table->dataSize();
@@ -267,7 +267,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         //### More copied code from default materials
         int instanceBufferBinding = 0;
-        if (instanceCount > 0) {
+        if (instancing) {
             // Need to setup new bindings for instanced buffers
             QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
             std::copy(ps->ia.inputLayout.cbeginBindings(),
@@ -547,10 +547,9 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     QRhiCommandBuffer::VertexInput vertexBuffers[2];
     int vertexBufferCount = 1;
     vertexBuffers[0] = QRhiCommandBuffer::VertexInput(vertexBuffer, 0);
-    quint32 instances = renderable.modelContext.model.instanceCount();
-    if (instances == 0) {
-        instances = 1;
-    } else {
+    quint32 instances = 1;
+    if (renderable.modelContext.model.instancing()) {
+        instances = renderable.modelContext.model.instanceCount();
         vertexBuffers[1] = QRhiCommandBuffer::VertexInput(renderable.instanceBuffer, 0);
         vertexBufferCount = 2;
     }
