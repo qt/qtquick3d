@@ -170,9 +170,14 @@ QSSGRenderMesh *QSSGRenderGeometry::createOrUpdate(const QSSGRef<QSSGBufferManag
         m_meshBuilder = QSSGMeshUtilities::QSSGMeshBuilder::createMeshBuilder();
 
     if (m_dirty) {
+        QSSGRenderMesh *renderMesh = nullptr;
         QString error;
-        auto mesh = m_meshBuilder->buildMesh(m_meshData, error, m_bounds);
-        auto renderMesh = bufferManager->loadCustomMesh(this, mesh, true);
+        if (m_meshBuilder->setData(m_meshData, error, m_bounds)) {
+            QSSGMeshUtilities::Mesh &mesh = m_meshBuilder->getMesh();
+            renderMesh = bufferManager->loadCustomMesh(this, &mesh, true);
+        } else {
+            qWarning("Mesh building failed: %s", qPrintable(error));
+        }
         m_meshBuilder->reset();
         m_dirty = false;
         return renderMesh;

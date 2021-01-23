@@ -1260,16 +1260,16 @@ public:
         return *retval;
     }
 
-    Mesh *buildMesh(const MeshData &meshData, QString &error, const QSSGBounds3 &inBounds) override
+    bool setData(const MeshData &meshData, QString &error, const QSSGBounds3 &inBounds) override
     {
         // Do some basic validation of the meshData
         if (meshData.m_vertexBuffer.size() == 0) {
             error = QObject::tr("Vertex buffer empty");
-            return nullptr;
+            return false;
         }
         if (meshData.m_attributeCount == 0) {
             error = QObject::tr("No attributes defined");
-            return nullptr;
+            return false;
         }
 
         reset();
@@ -1402,7 +1402,7 @@ public:
                 default:
                     error = QObject::tr("Warning: Invalid attribute semantic: %1")
                             .arg(att.semantic);
-                    return nullptr;
+                    return false;
                 }
                 vBufEntries << QSSGRenderVertexBufferEntry(name, componentType,
                                                            unsigned(att.componentCount()),
@@ -1421,7 +1421,7 @@ public:
 
         addMeshSubset(Mesh::m_defaultName, unsigned(vertexCount), 0, inBounds);
 
-        return &getMesh();
+        return true;
     }
 };
 }

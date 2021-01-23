@@ -562,12 +562,13 @@ public:
      */
     virtual void connectSubMeshes() = 0;
 
-    // Return the current mesh.  This is only good for this function call, item may change or be
-    // released
-    // due to any further function calls.
-    virtual Mesh &getMesh() = 0;
+    // Alternative to setVertexBuffer() et al for models with custom geometry.
+    // Returns true if successful. When successful, getMesh() can be called.
+    virtual bool setData(const MeshData &data, QString &error, const QSSGBounds3 &inBounds) = 0;
 
-    virtual Mesh *buildMesh(const MeshData &data, QString &error, const QSSGBounds3 &inBounds) = 0;
+    // Builds and returns the current mesh. The returned reference is valid
+    // only until the builder is live or is reset.
+    virtual Mesh &getMesh() = 0;
 
     // Uses new/delete.
     static QSSGRef<QSSGMeshBuilder> createMeshBuilder();
