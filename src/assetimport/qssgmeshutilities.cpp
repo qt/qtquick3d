@@ -1145,17 +1145,6 @@ public:
         }
     }
 
-    // Here is the NVTriStrip magic.
-    void optimizeMesh() override
-    {
-        if (getSizeOfType(m_indexBuffer.m_compType) != 2) {
-            // we currently re-arrange unsigned int indices.
-            // this is because NvTriStrip only supports short indices
-            Q_ASSERT(getSizeOfType(m_indexBuffer.m_compType) == 4);
-            return;
-        }
-    }
-
     template<typename TDataType>
     static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, const QByteArray &inDestData)
     {

@@ -554,13 +554,6 @@ public:
 
     virtual void addMeshSubset(const char16_t *inSubsetName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds) = 0;
 
-    // Call to optimize the index and vertex buffers.  This doesn't change the subset information,
-    // each triangle is rendered precisely the same.
-    // It just orders the vertex data so we iterate through it as linearly as possible.
-    // This *only* works if the *entire* builder is using triangles as the draw mode.  This will be
-    // a disaster if that condition is not met.
-    virtual void optimizeMesh() = 0;
-
     /**
      * @brief This functions stitches together sub-meshes with the same material.
      *		 This re-writes the index buffer
