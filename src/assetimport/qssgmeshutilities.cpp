@@ -562,12 +562,6 @@ void QSSGMeshBuilder::reset()
     m_meshBuffer.clear();
 }
 
-void QSSGMeshBuilder::setDrawParameters(QSSGRenderDrawMode drawMode, QSSGRenderWinding winding)
-{
-    m_drawMode = drawMode;
-    m_winding = winding;
-}
-
 bool QSSGMeshBuilder::setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries)
 {
     quint32 currentOffset = 0;
@@ -800,36 +794,35 @@ bool QSSGMeshBuilder::setRuntimeData(const RuntimeMeshData &meshData, QString &e
 
     reset();
 
-    QSSGRenderDrawMode drawMode = QSSGRenderDrawMode::Triangles;
+    m_drawMode = QSSGRenderDrawMode::Triangles;
     switch (meshData.m_primitiveType) {
     case QSSGMeshUtilities::RuntimeMeshData::Points:
-        drawMode = QSSGRenderDrawMode::Points;
+        m_drawMode = QSSGRenderDrawMode::Points;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::LineStrip:
-        drawMode = QSSGRenderDrawMode::LineStrip;
+        m_drawMode = QSSGRenderDrawMode::LineStrip;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::LineLoop:
-        drawMode = QSSGRenderDrawMode::LineLoop;
+        m_drawMode = QSSGRenderDrawMode::LineLoop;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::Lines:
-        drawMode = QSSGRenderDrawMode::Lines;
+        m_drawMode = QSSGRenderDrawMode::Lines;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::TriangleStrip:
-        drawMode = QSSGRenderDrawMode::TriangleStrip;
+        m_drawMode = QSSGRenderDrawMode::TriangleStrip;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::TriangleFan:
-        drawMode = QSSGRenderDrawMode::TriangleFan;
+        m_drawMode = QSSGRenderDrawMode::TriangleFan;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::Triangles:
-        drawMode = QSSGRenderDrawMode::Triangles;
+        m_drawMode = QSSGRenderDrawMode::Triangles;
         break;
     case QSSGMeshUtilities::RuntimeMeshData::Patches:
-        drawMode = QSSGRenderDrawMode::Patches;
+        m_drawMode = QSSGRenderDrawMode::Patches;
         break;
     default:
         break;
     }
-    setDrawParameters(drawMode, QSSGRenderWinding::CounterClockwise);
 
     // The expectation is that the vertex buffer included in meshData is already properly
     // formatted and doesn't need further processing.

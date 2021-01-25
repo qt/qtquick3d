@@ -481,8 +481,6 @@ public:
     ~QSSGMeshBuilder();
     void reset();
 
-    // Set the draw parameters for any subsets.  Defaults to triangles and counter clockwise
-    void setDrawParameters(QSSGRenderDrawMode drawMode, QSSGRenderWinding winding);
     // Set the vertex buffer and have the mesh builder interleave the data for you
     bool setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries);
     // Set the vertex buffer from interleaved data.
