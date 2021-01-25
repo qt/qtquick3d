@@ -285,14 +285,12 @@ inline quint32 nextIndex(const QByteArray &inData, QSSGRenderComponentType inCom
     return 0;
 }
 
-template<typename TMeshType>
-// Not exposed to the outside world
-TMeshType *doInitialize(quint16 /*meshFlags*/, QSSGByteView data)
+Mesh *doInitialize(quint16 /*meshFlags*/, QSSGByteView data)
 {
     const quint8 *newMem = data.begin();
-    quint32 amountLeft = quint32(data.size() - sizeof(TMeshType));
-    MemoryAssigningSerializer s(newMem, amountLeft, sizeof(TMeshType));
-    TMeshType *retval = (TMeshType *)newMem;
+    quint32 amountLeft = quint32(data.size() - sizeof(Mesh));
+    MemoryAssigningSerializer s(newMem, amountLeft, sizeof(Mesh));
+    Mesh *retval = const_cast<Mesh *>(reinterpret_cast<const Mesh *>(newMem));
     serialize(s, *retval);
     if (s.m_failure)
         return nullptr;
@@ -327,9 +325,6 @@ QSSGBounds3 Mesh::calculateSubsetBounds(const QSSGRenderVertexBufferEntry &inEnt
     quint32 numBytes = inVertxData.size();
     quint32 dataStride = inStride;
     quint32 posOffset = entry.m_firstItemOffset;
-    // The loop below could be template specialized *if* we wanted to do this.
-    // and the perf of the existing loop was determined to be a problem.
-    // Else I would rather stay way from the template specialization.
     for (quint32 idx = 0, __numItems = (quint32)inSubsetCount; idx < __numItems; ++idx) {
         quint32 dataIdx = nextIndex(inIndexData, inIndexCompType, idx + inSubsetOffset);
         quint32 finalOffset = (dataIdx * dataStride) + posOffset;
@@ -391,7 +386,7 @@ Mesh *Mesh::initialize(quint16 meshVersion, quint16 meshFlags, QSSGByteView data
 {
     if (meshVersion != MeshDataHeader::getCurrentFileVersion())
         return nullptr;
-    return doInitialize<Mesh>(meshFlags, data);
+    return doInitialize(meshFlags, data);
 }
 
 quint32 Mesh::saveMulti(QIODevice &inStream, quint32 inId) const
