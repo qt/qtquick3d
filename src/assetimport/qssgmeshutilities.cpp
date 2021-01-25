@@ -30,7 +30,6 @@
 #include "qssgmeshutilities_p.h"
 
 #include <QtCore/QVector>
-#include <QtCore/QBuffer>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -523,14 +522,14 @@ static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<T
 {
     inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
     inBuffer.m_size = inDestData.size();
-    memcpy(inDataAddress, inDestData.data(), inDestData.size());
+    memcpy(inDataAddress, inDestData.constData(), inDestData.size());
 }
 template<typename TDataType>
 static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, const QVector<TDataType> &inDestData)
 {
     inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
     inBuffer.m_size = inDestData.size();
-    memcpy(inDataAddress, inDestData.data(), inDestData.size());
+    memcpy(inDataAddress, inDestData.constData(), inDestData.size());
 }
 template<typename TDataType>
 static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, quint32 inDestSize)
@@ -599,6 +598,7 @@ bool QSSGMeshBuilder::setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entri
         currentOffset += byteSize;
     }
     m_vertexBuffer.m_stride = getAlignedOffset(currentOffset, bufferAlignment);
+    m_vertexBuffer.m_vertexData.clear();
 
     // Packed interleave the data
     for (quint32 idx = 0; idx < numItems; ++idx) {
@@ -613,14 +613,11 @@ bool QSSGMeshBuilder::setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entri
             quint32 byteSize = alignment * entry.m_numComponents;
             quint32 offset = byteSize * idx;
             quint32 newOffset = getAlignedOffset(dataOffset, alignment);
-            QBuffer vertexDataBuffer(&m_vertexBuffer.m_vertexData);
-            vertexDataBuffer.open(QIODevice::WriteOnly | QIODevice::Append);
             if (newOffset != dataOffset) {
                 QByteArray filler(newOffset - dataOffset, '\0');
-                vertexDataBuffer.write(filler);
+                m_vertexBuffer.m_vertexData.append(filler);
             }
-            vertexDataBuffer.write(entry.m_data.begin() + offset, byteSize);
-            vertexDataBuffer.close();
+            m_vertexBuffer.m_vertexData.append(entry.m_data.begin() + offset, byteSize);
             dataOffset = newOffset + byteSize;
         }
         Q_ASSERT(dataOffset == m_vertexBuffer.m_stride);
@@ -630,13 +627,11 @@ bool QSSGMeshBuilder::setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entri
 
 void QSSGMeshBuilder::setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, const QByteArray &data)
 {
-    for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
+    for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx)
         m_vertexBuffer.m_vertexBufferEntries.push_back(entries[idx]);
-    }
-    QBuffer vertexDataBuffer(&m_vertexBuffer.m_vertexData);
-    vertexDataBuffer.open(QIODevice::WriteOnly);
-    vertexDataBuffer.write(data);
-    vertexDataBuffer.close();
+
+    m_vertexBuffer.m_vertexData = data;
+
     if (stride == 0) {
         // Calculate the stride of the buffer using the vbuf entries
         for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
@@ -652,10 +647,7 @@ void QSSGMeshBuilder::setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry>
 void QSSGMeshBuilder::setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp)
 {
     m_indexBuffer.m_compType = comp;
-    QBuffer indexBuffer(&m_indexBuffer.m_indexData);
-    indexBuffer.open(QIODevice::WriteOnly);
-    indexBuffer.write(data);
-    indexBuffer.close();
+    m_indexBuffer.m_indexData = data;
 }
 
 void QSSGMeshBuilder::addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace)

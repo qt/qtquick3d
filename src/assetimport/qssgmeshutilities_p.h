@@ -50,7 +50,6 @@
 #include <QtCore/QString>
 #include <QtCore/QByteArray>
 #include <QtCore/QIODevice>
-#include <QtCore/QFile>
 
 QT_BEGIN_NAMESPACE
 

@@ -29,6 +29,7 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QFile>
 #include <QtCore/QDebug>
 
 #include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
