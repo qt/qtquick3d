@@ -37,107 +37,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QSSGMeshUtilities {
 
-struct MeshSubsetV1
-{
-    // See description of a logical vertex buffer below
-    quint32 m_logicalVbufIndex;
-    // std::numeric_limits<quint32>::max() means use all available items
-    quint32 m_count;
-    // Offset is in item size, not bytes.
-    quint32 m_offset;
-    // Bounds of this subset.  This is filled in by the builder
-    // see AddMeshSubset
-    QSSGBounds3 m_bounds;
-};
-
-struct LogicalVertexBuffer
-{
-    quint32 m_byteOffset{ 0 };
-    quint32 m_byteSize{ 0 };
-    LogicalVertexBuffer(quint32 byteOff, quint32 byteSize) : m_byteOffset(byteOff), m_byteSize(byteSize) {}
-    LogicalVertexBuffer() = default;
-};
-
-struct MeshV1
-{
-    VertexBuffer m_vertexBuffer;
-    IndexBuffer m_indexBuffer;
-    OffsetDataRef<LogicalVertexBuffer> m_logicalVertexBuffers; // may be empty
-    OffsetDataRef<MeshSubsetV1> m_subsets;
-    QSSGRenderDrawMode m_drawMode;
-    QSSGRenderWinding m_winding;
-    typedef MeshSubsetV1 TSubsetType;
-};
-
-template<typename TSerializer>
-void serialize(TSerializer &serializer, MeshV1 &mesh)
-{
-    quint8 *baseAddr = reinterpret_cast<quint8 *>(&mesh);
-    serializer.streamify(mesh.m_vertexBuffer.m_entries);
-    serializer.align();
-    for (quint32 entry = 0, __numItems = (quint32)mesh.m_vertexBuffer.m_entries.size(); entry < __numItems; ++entry) {
-        MeshVertexBufferEntry &entryData = const_cast<MeshVertexBufferEntry &>(mesh.m_vertexBuffer.m_entries.index(baseAddr, entry));
-        serializer.streamifyCharPointerOffset(entryData.m_nameOffset);
-        serializer.align();
-    }
-    serializer.streamify(mesh.m_vertexBuffer.m_data);
-    serializer.align();
-    serializer.streamify(mesh.m_indexBuffer.m_data);
-    serializer.align();
-    serializer.streamify(mesh.m_logicalVertexBuffers);
-    serializer.align();
-    serializer.streamify(mesh.m_subsets);
-    serializer.align();
-}
-
-struct MeshSubsetV2
-{
-    quint32 m_logicalVbufIndex;
-    quint32 m_count;
-    quint32 m_offset;
-    QSSGBounds3 m_bounds;
-    OffsetDataRef<char16_t> m_name;
-};
-
-struct MeshV2
-{
-    static const char16_t *m_defaultName;
-
-    VertexBuffer m_vertexBuffer;
-    IndexBuffer m_indexBuffer;
-    OffsetDataRef<LogicalVertexBuffer> m_logicalVertexBuffers; // may be empty
-    OffsetDataRef<MeshSubsetV2> m_subsets;
-    QSSGRenderDrawMode m_drawMode;
-    QSSGRenderWinding m_winding;
-    typedef MeshSubsetV2 TSubsetType;
-};
-
-template<typename TSerializer>
-void serialize(TSerializer &serializer, MeshV2 &mesh)
-{
-    quint8 *baseAddr = reinterpret_cast<quint8 *>(&mesh);
-    serializer.streamify(mesh.m_vertexBuffer.m_entries);
-    serializer.align();
-    for (quint32 entry = 0, __numItems = (quint32)mesh.m_vertexBuffer.m_entries.size(); entry < __numItems; ++entry) {
-        MeshVertexBufferEntry &entryData = const_cast<MeshVertexBufferEntry &>(mesh.m_vertexBuffer.m_entries.index(baseAddr, entry));
-        serializer.streamifyCharPointerOffset(entryData.m_nameOffset);
-        serializer.align();
-    }
-    serializer.streamify(mesh.m_vertexBuffer.m_data);
-    serializer.align();
-    serializer.streamify(mesh.m_indexBuffer.m_data);
-    serializer.align();
-    serializer.streamify(mesh.m_logicalVertexBuffers);
-    serializer.align();
-    serializer.streamify(mesh.m_subsets);
-    serializer.align();
-    for (quint32 entry = 0, __numItems = (quint32)mesh.m_subsets.size(); entry < __numItems; ++entry) {
-        MeshSubsetV2 &theSubset = const_cast<MeshSubsetV2 &>(mesh.m_subsets.index(baseAddr, entry));
-        serializer.streamify(theSubset.m_name);
-        serializer.align();
-    }
-}
-
 // Localize the knowledge required to read/write a mesh into one function
 // written in such a way that you can both read and write by passing
 // in one serializer type or another.
@@ -405,35 +304,6 @@ static char16_t g_DefaultName[] = { 0 };
 
 const char16_t *Mesh::m_defaultName = g_DefaultName;
 
-template<typename TMeshType>
-struct SubsetNameHandler
-{
-};
-
-template<>
-struct SubsetNameHandler<MeshV1>
-{
-    void assignName(const quint8 * /*v1BaseAddress*/, const MeshSubsetV1 & /*mesh*/, quint8 * /*baseAddress*/, quint8 *& /*nameBuffer*/, MeshSubset &outDest)
-    {
-        outDest.m_name = OffsetDataRef<char16_t>();
-    }
-    quint32 nameLength(const MeshSubsetV1 &) { return 0; }
-};
-
-template<>
-struct SubsetNameHandler<MeshV2>
-{
-    void assignName(const quint8 *v2BaseAddress, const MeshSubsetV2 &mesh, quint8 *baseAddress, quint8 *&nameBuffer, MeshSubset &outDest)
-    {
-        outDest.m_name.m_size = mesh.m_name.m_size;
-        outDest.m_name.m_offset = (quint32)(nameBuffer - baseAddress);
-        quint32 dtypeSize = mesh.m_name.m_size * 2;
-        memcpy(nameBuffer, mesh.m_name.begin(v2BaseAddress), dtypeSize);
-        nameBuffer += dtypeSize;
-    }
-    quint32 nameLength(const MeshSubsetV2 &mesh) { return (mesh.m_name.size() + 1) * 2; }
-};
-
 quint32 getAlignedOffset(quint32 offset, quint32 align)
 {
     Q_ASSERT(align > 0);
@@ -441,88 +311,6 @@ quint32 getAlignedOffset(quint32 offset, quint32 align)
     if (leftover)
         return offset + (align - leftover);
     return offset;
-}
-
-template<typename TPreviousMeshType>
-Mesh *createMeshFromPreviousMesh(TPreviousMeshType *temp)
-{
-    quint32 newMeshSize = sizeof(Mesh);
-    quint8 *tempBaseAddress = reinterpret_cast<quint8 *>(temp);
-    quint32 alignment = sizeof(void *);
-
-    quint32 vertBufferSize = getAlignedOffset(temp->m_vertexBuffer.m_data.size(), alignment);
-    newMeshSize += vertBufferSize;
-    quint32 entryDataSize = temp->m_vertexBuffer.m_entries.size() * sizeof(MeshVertexBufferEntry);
-    newMeshSize += entryDataSize;
-    quint32 indexBufferSize = getAlignedOffset(temp->m_indexBuffer.m_data.size(), alignment);
-    newMeshSize += indexBufferSize;
-    quint32 entryNameSize = 0;
-    for (quint32 entryIdx = 0, entryEnd = temp->m_vertexBuffer.m_entries.size(); entryIdx < entryEnd; ++entryIdx) {
-        const QSSGRenderVertexBufferEntry theEntry = temp->m_vertexBuffer.m_entries.index(tempBaseAddress, entryIdx).toVertexBufferEntry(tempBaseAddress);
-        const char *namePtr = theEntry.m_name;
-        if (namePtr == nullptr)
-            namePtr = "";
-
-        entryNameSize += (quint32)strlen(theEntry.m_name) + 1;
-    }
-    entryNameSize = getAlignedOffset(entryNameSize, alignment);
-
-    newMeshSize += entryNameSize;
-    quint32 subsetBufferSize = temp->m_subsets.size() * sizeof(MeshSubset);
-    newMeshSize += subsetBufferSize;
-    quint32 nameLength = 0;
-    for (quint32 subsetIdx = 0, subsetEnd = temp->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
-        nameLength += SubsetNameHandler<TPreviousMeshType>().nameLength(temp->m_subsets.index(tempBaseAddress, subsetIdx));
-    }
-    nameLength = getAlignedOffset(nameLength, alignment);
-
-    newMeshSize += nameLength;
-
-    Mesh *retval = new Mesh();
-    quint8 *baseOffset = reinterpret_cast<quint8 *>(retval);
-    quint8 *vertBufferData = baseOffset + sizeof(Mesh);
-    quint8 *entryBufferData = vertBufferData + vertBufferSize;
-    quint8 *entryNameBuffer = entryBufferData + entryDataSize;
-    quint8 *indexBufferData = entryNameBuffer + entryNameSize;
-    quint8 *subsetBufferData = indexBufferData + indexBufferSize;
-    quint8 *nameData = subsetBufferData + subsetBufferSize;
-
-    retval->m_drawMode = temp->m_drawMode;
-    retval->m_winding = temp->m_winding;
-    retval->m_vertexBuffer = temp->m_vertexBuffer;
-    retval->m_vertexBuffer.m_data.m_offset = (quint32)(vertBufferData - baseOffset);
-    retval->m_vertexBuffer.m_entries.m_offset = (quint32)(entryBufferData - baseOffset);
-    memcpy(vertBufferData, temp->m_vertexBuffer.m_data.begin(tempBaseAddress), temp->m_vertexBuffer.m_data.size());
-    memcpy(entryBufferData, temp->m_vertexBuffer.m_entries.begin(tempBaseAddress), entryDataSize);
-    for (quint32 idx = 0, __numItems = (quint32)temp->m_vertexBuffer.m_entries.size(); idx < __numItems; ++idx) {
-        const MeshVertexBufferEntry &src = temp->m_vertexBuffer.m_entries.index(tempBaseAddress, idx);
-        MeshVertexBufferEntry &dest = retval->m_vertexBuffer.m_entries.index(baseOffset, idx);
-
-        const char *targetName = reinterpret_cast<const char *>(src.m_nameOffset + tempBaseAddress);
-        if (src.m_nameOffset == 0)
-            targetName = "";
-        quint32 nameLen = (quint32)strlen(targetName) + 1;
-        dest.m_nameOffset = (quint32)(entryNameBuffer - baseOffset);
-        memcpy(entryNameBuffer, targetName, nameLen);
-        entryNameBuffer += nameLen;
-    }
-
-    retval->m_indexBuffer = temp->m_indexBuffer;
-    retval->m_indexBuffer.m_data.m_offset = (quint32)(indexBufferData - baseOffset);
-    memcpy(indexBufferData, temp->m_indexBuffer.m_data.begin(tempBaseAddress), temp->m_indexBuffer.m_data.size());
-
-    retval->m_subsets.m_size = temp->m_subsets.m_size;
-    retval->m_subsets.m_offset = (quint32)(subsetBufferData - baseOffset);
-
-    for (quint32 idx = 0, numItems = (quint32)temp->m_subsets.size(); idx < numItems; ++idx) {
-        MeshSubset &dest = const_cast<MeshSubset &>(retval->m_subsets.index(baseOffset, idx));
-        const typename TPreviousMeshType::TSubsetType &src = temp->m_subsets.index(tempBaseAddress, idx);
-        dest.m_count = src.m_count;
-        dest.m_offset = src.m_offset;
-        dest.m_bounds = src.m_bounds;
-        SubsetNameHandler<TPreviousMeshType>().assignName(tempBaseAddress, src, baseOffset, nameData, dest);
-    }
-    return retval;
 }
 
 QSSGBounds3 Mesh::calculateSubsetBounds(const QSSGRenderVertexBufferEntry &inEntry,
@@ -584,32 +372,18 @@ Mesh *Mesh::load(QIODevice &inStream)
     Q_ASSERT(header.m_fileId == MeshDataHeader::getFileId());
     if (header.m_fileId != MeshDataHeader::getFileId())
         return nullptr;
-    if (header.m_fileVersion < 1 || header.m_fileVersion > MeshDataHeader::getCurrentFileVersion())
+    if (header.m_fileVersion != MeshDataHeader::getCurrentFileVersion())
         return nullptr;
     if (header.m_sizeInBytes < sizeof(Mesh))
         return nullptr;
     char *meshBufferData = reinterpret_cast<char *>(::malloc(header.m_sizeInBytes));
     qint64 sizeRead = inStream.read(meshBufferData, header.m_sizeInBytes);
-    //    QByteArray meshBuffer = inStream.read(header.m_sizeInBytes);
     if (sizeRead == header.m_sizeInBytes) {
         QSSGByteView meshBuffer = toByteView(meshBufferData, header.m_sizeInBytes);
-        if (header.m_fileVersion == 1) {
-            MeshV1 *temp = doInitialize<MeshV1>(header.m_headerFlags, meshBuffer);
-            if (temp == nullptr)
-                goto failure;
-            return createMeshFromPreviousMesh(temp);
-
-        } else if (header.m_fileVersion == 2) {
-            MeshV2 *temp = doInitialize<MeshV2>(header.m_headerFlags, meshBuffer);
-            if (temp == nullptr)
-                goto failure;
-            return createMeshFromPreviousMesh(temp);
-        } else {
-            Mesh *retval = initialize(header.m_fileVersion, header.m_headerFlags, meshBuffer);
-            if (retval == nullptr)
-                goto failure;
-            return retval;
-        }
+        Mesh *retval = initialize(header.m_fileVersion, header.m_headerFlags, meshBuffer);
+        if (retval == nullptr)
+            goto failure;
+        return retval;
     }
 
 failure:
@@ -742,32 +516,7 @@ MeshMultiHeader *Mesh::loadMultiHeader(QIODevice &inStream)
     return retval;
 }
 
-quint32 GetHighestId(MeshMultiHeader *inHeader)
-{
-    if (inHeader == nullptr) {
-        Q_ASSERT(false);
-        return 0;
-    }
-    quint8 *baseHeaderAddr = reinterpret_cast<quint8 *>(inHeader);
-    quint32 highestId = 0;
-    for (quint32 idx = 0, end = inHeader->m_entries.size(); idx < end; ++idx)
-        highestId = qMax(highestId, inHeader->m_entries.index(baseHeaderAddr, idx).m_meshId);
-    return highestId;
-}
-
-quint32 Mesh::getHighestMultiVersion(QIODevice &inStream)
-{
-    return GetHighestId(loadMultiHeader(inStream));
-}
-
 namespace {
-
-#if 0
-MeshBuilderVBufEntry ToEntry(const QVector<float> &data, const char *name, quint32 numComponents)
-{
-    return MeshBuilderVBufEntry(name, QByteArray(reinterpret_cast<const char *>(data.data())), QSSGRenderComponentTypes::Float32, numComponents);
-}
-#endif
 
 struct DynamicVBuf
 {

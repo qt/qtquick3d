@@ -472,9 +472,6 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
 
     // Load a multi header from a file using malloc.  Header needs to be freed using free.
     static MeshMultiHeader *loadMultiHeader(QIODevice &inStream);
-
-    // Get the highest mesh version from a file.
-    static quint32 getHighestMultiVersion(QIODevice &inStream);
 };
 
 struct MeshDataHeader
