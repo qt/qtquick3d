@@ -328,8 +328,6 @@ struct MultiLoadResult
 
 struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
 {
-    static const char16_t *m_defaultName;
-
     VertexBuffer m_vertexBuffer;
     IndexBuffer m_indexBuffer;
     OffsetDataRef<MeshSubset> m_subsets;
@@ -498,7 +496,7 @@ public:
      *  if set to something other than std::numeric_limits<quint32>::max(),
      *  drives the calculation of the aa-bounds of the subset using mesh::CalculateSubsetBounds.
      */
-    void addMeshSubset(const char16_t *inSubsetName = Mesh::m_defaultName,
+    void addMeshSubset(const char16_t *inSubsetName,
                        quint32 count = std::numeric_limits<quint32>::max(),
                        quint32 offset = 0,
                        quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max());

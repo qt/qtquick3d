@@ -299,10 +299,6 @@ TMeshType *doInitialize(quint16 /*meshFlags*/, QSSGByteView data)
     return retval;
 }
 
-static char16_t g_DefaultName[] = { 0 };
-
-const char16_t *Mesh::m_defaultName = g_DefaultName;
-
 quint32 getAlignedOffset(quint32 offset, quint32 align)
 {
     Q_ASSERT(align > 0);
@@ -930,7 +926,8 @@ bool QSSGMeshBuilder::setRuntimeData(const RuntimeMeshData &meshData, QString &e
         vertexCount = meshData.m_vertexBuffer.size() / meshData.m_stride;
     }
 
-    addMeshSubset(Mesh::m_defaultName, unsigned(vertexCount), 0, inBounds);
+    static char16_t defaultName[] = { 0 };
+    addMeshSubset(defaultName, unsigned(vertexCount), 0, inBounds);
 
     return true;
 }
