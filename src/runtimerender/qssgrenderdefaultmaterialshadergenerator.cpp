@@ -597,8 +597,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
         if (isDoubleSided) {
-            fragmentShader.addInclude("doubleSided.glsllib");
-            fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_material_properties3.z);\n");
+            fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;\n");
+            fragmentShader.append("    qt_world_normal *= qt_facing;\n");
         }
     }
 
@@ -662,24 +662,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
 
-        fragmentShader.append("    float qt_facing = step(0.0, dot(qt_view_vector, qt_org_normal)) * 2.0 - 1.0;\n");
-
-        if (bumpImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, bumpImage->m_imageNode.m_indexUV);
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
-
-            fragmentShader << "    if (qt_tangent == vec3(0.0)) {\n"
-                           << "        vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
-                           << "        vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
-        } else if (normalImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, normalImage->m_imageNode.m_indexUV);
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
-            fragmentShader << "    if (qt_tangent == vec3(0.0)) {\n"
-                           << "        vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
-                           << "        vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
-        }
-
         if (enableBumpNormal) {
+            const int id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
+            const auto &names = imageStringTable[id];
+            fragmentShader << "    if (qt_tangent == vec3(0.0)) {\n"
+                           << "        vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
+                           << "        vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
             fragmentShader << "        qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
                            << "        qt_tangent = qt_tangent - dot(qt_org_normal, qt_tangent) * qt_org_normal;\n"
                            << "        qt_tangent = normalize(qt_tangent);\n"
@@ -689,25 +677,24 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         // apply facing factor before fetching texture
-        fragmentShader.append("    qt_org_normal *= qt_facing;");
-        if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal) {
+        if (isDoubleSided && (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)) {
             fragmentShader.append("    qt_tangent *= qt_facing;");
             fragmentShader.append("    qt_binormal *= qt_facing;");
         }
 
         if (bumpImage != nullptr) {
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, bumpImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
             fragmentShader.addUniform(names.imageSamplerSize, "vec2");
+            fragmentShader.append("    float bumpAmount = qt_material_properties2.y;\n");
             fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
-            fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", qt_material_properties2.y, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal, " << names.imageSamplerSize << ");\n";
-            if (isDoubleSided)
-                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_material_properties3.z);\n");
+            fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal, " << names.imageSamplerSize << ");\n";
         } else if (normalImage != nullptr) {
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, normalImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
+            fragmentShader.append("    float normalStrength = qt_material_properties2.y;\n");
             fragmentShader.addFunction("sampleNormalTexture");
-            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", qt_material_properties2.y, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_org_normal);\n";
-            if (isDoubleSided)
-                fragmentShader.append("    qt_world_normal = qt_adjustNormalForFace(qt_world_normal, qt_varWorldPos, qt_material_properties3.z);\n");
+            fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", normalStrength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
         }
 
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
@@ -1560,6 +1547,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // takes care of getting identical behavior regardless of the
         // underlying API, but here it matters since we kind of take things
         // into our own hands)
+        // It is not used in the principled material shader, but exposed in
+        // the custom material shader
         inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,
         inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f
     };

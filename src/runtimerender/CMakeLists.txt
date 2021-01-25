@@ -89,7 +89,6 @@ set(res_resource_files
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
     "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/depthpass.glsllib"
-    "res/effectlib/doubleSided.glsllib"
     "res/effectlib/funccalculatePointLightAttenuation.glsllib"
     "res/effectlib/funcdiffuseBurleyBSDF.glsllib"
     "res/effectlib/funcdiffuseReflectionBSDF.glsllib"
