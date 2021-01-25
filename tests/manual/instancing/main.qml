@@ -105,16 +105,24 @@ Window {
         CustomInstancing {
             id: customInstancing
             instanceCount: 121
+            hasTransparency: true
         }
 
-        Model {
-            id: transparentModel
-            source: "#Cube"
-            instancing: customInstancing
+        Node {
+            Model {
+                id: transparentModel
+                source: "#Cube"
+                instancing: customInstancing
 
-            materials: DefaultMaterial {
-                diffuseColor: "lightgray"
-                opacity: 0.3
+                materials: DefaultMaterial {
+                    diffuseColor: "lightgray"
+                }
+            }
+            NumberAnimation on eulerRotation.y {
+                from: 0
+                to: 360
+                duration: 30000
+                loops: -1
             }
         }
 
@@ -147,15 +155,15 @@ Window {
 
         RandomInstancing {
             id: randomWithData
-            instanceCount: 10
+            instanceCount: 350
 
             position: InstanceRange {
                 from: Qt.vector3d(-500, -400, -500)
                 to: Qt.vector3d(500, 400, 500)
             }
             scale: InstanceRange {
-                from: Qt.vector3d(0.2, 0.2, 0.2)
-                to: Qt.vector3d(1.0, 1.0, 1.0)
+                from: Qt.vector3d(0.1, 0.1, 0.1)
+                to: Qt.vector3d(0.7, 0.7, 0.7)
                 proportional: true
             }
             rotation: InstanceRange {
@@ -190,7 +198,7 @@ Window {
         Model {
             id: cubeModel
             source: "#Cube"
-            instancing: manualInstancing    //randomWithData
+            instancing: randomWithData //manualInstancing
 
             materials: DefaultMaterial {
                 diffuseColor: "white"

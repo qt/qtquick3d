@@ -238,7 +238,7 @@ QVector3D QQuick3DNode::pivot() const
     \qmlproperty real QtQuick3D::Node::opacity
 
     This property contains the local opacity value of the Node.  Since Node
-    objects are not necessarialy visible, this value might not have any affect,
+    objects are not necessarily visible, this value might not have any effect,
     but this value is inherited by all children of the Node, which might be visible.
 
 */

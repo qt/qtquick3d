@@ -66,10 +66,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRender
     void resize(int count) { table.resize(count * sizeof(InstanceTableEntry)); instanceCount = count; }
     void setData(const QByteArray &data, int count) { table = data; instanceCount = count; ++instanceSerial; }
     int serial() const { return instanceSerial; }
+    bool hasTransparency() { return transparency; }
+    void setHasTransparency( bool t) { transparency = t; }
 
 private:
     int instanceCount = 0;
     int instanceSerial = 0;
+    bool transparency = false;
     QByteArray table;
 };
 

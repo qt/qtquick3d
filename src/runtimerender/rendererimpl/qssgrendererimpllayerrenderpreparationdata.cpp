@@ -907,10 +907,13 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
             if (theMaterialObject == nullptr)
                 continue;
 
+            bool usesInstancing = theModelContext.model.instancing()
+                    && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
+            if (usesInstancing && theModelContext.model.instanceTable->hasTransparency())
+                renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
             if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
-                bool usesInstancing = theModelContext.model.instancing()
-                        && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
                 // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
                 // if the mesh has it.
                 theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing;

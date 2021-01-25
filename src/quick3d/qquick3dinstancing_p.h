@@ -53,6 +53,7 @@ class QQuick3DInstancingPrivate : public QQuick3DObjectPrivate
 public:
     QQuick3DInstancingPrivate();
     int m_instanceCountOverride = -1;
+    bool m_hasTransparency = false;
     bool m_instanceDataChanged = true;
 };
 

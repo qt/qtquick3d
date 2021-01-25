@@ -67,6 +67,15 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool Instancing::hasTransparency
+
+    Set this property to true if the instancing table contains alpha values that should be used when
+    rendering the model. This property only makes a difference if the model is opaque: If the model has a
+    transparent \l{Model::materials}{material}, or an \l{Node::opacity}{opacity} less than one, the
+    alpha value from the table will be used regardless.
+*/
+
+/*!
     \class QQuick3DInstancing
     \inmodule QtQuick3D
     \inherits QQuick3DObject
@@ -122,6 +131,12 @@ int QQuick3DInstancing::instanceCountOverride() const
     return d->m_instanceCountOverride;
 }
 
+bool QQuick3DInstancing::hasTransparency() const
+{
+    Q_D(const QQuick3DInstancing);
+    return d->m_hasTransparency;
+}
+
 void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
 {
     Q_D(QQuick3DInstancing);
@@ -131,6 +146,17 @@ void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
     d->m_instanceCountOverride = instanceCountOverride;
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
     emit instanceCountOverrideChanged(d->m_instanceCountOverride);
+}
+
+void QQuick3DInstancing::setHasTransparency(bool hasTransparency)
+{
+    Q_D(QQuick3DInstancing);
+    if (d->m_hasTransparency == hasTransparency)
+        return;
+
+    d->m_hasTransparency = hasTransparency;
+    d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
+    emit hasTransparencyChanged(d->m_hasTransparency);
 }
 
 void QQuick3DInstancing::markDirty()
@@ -149,13 +175,14 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
         emit instanceNodeDirty();
         d->m_instanceDataChanged = true;
     }
+    auto *instanceTable = static_cast<QSSGRenderInstanceTable *>(node);
     if (d->m_instanceDataChanged) {
-        auto *instanceTable = static_cast<QSSGRenderInstanceTable *>(node);
         int count;
         QByteArray buffer = instanceBuffer(&count);
         //   qDebug() << "QQuick3DInstancing:updateSpatialNode setting instance buffer data" << count;
         instanceTable->setData(buffer, count);
     }
+    instanceTable->setHasTransparency(d->m_hasTransparency);
     return node;
 }
 

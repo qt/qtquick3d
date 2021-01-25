@@ -101,7 +101,7 @@ QByteArray CustomInstancing::getInstanceBuffer(int *instanceCount)
         xform(1, 1) = scale;
         xform(2, 2) = scale;
 
-        QVector4D color(float(ix)/columns, float(iy)/columns, 1.0, 1.0);
+        QVector4D color(float(ix)/columns, float(iy)/columns, 1.0, float(i) / m_instanceCount);
 
         array[i] = {
             xform.row(0),

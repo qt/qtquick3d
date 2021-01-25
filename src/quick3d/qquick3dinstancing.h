@@ -48,6 +48,7 @@ class Q_QUICK3D_EXPORT QQuick3DInstancing : public QQuick3DObject
     QML_UNCREATABLE("Instancing is Abstract")
     //QML_ADDED_IN_VERSION(6, 1)
     Q_PROPERTY(int instanceCountOverride READ instanceCountOverride WRITE setInstanceCountOverride NOTIFY instanceCountOverrideChanged)
+    Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
 
 public:
     struct InstanceTableEntry {
@@ -61,20 +62,20 @@ public:
     explicit QQuick3DInstancing(QQuick3DObject *parent = nullptr);
     ~QQuick3DInstancing() override;
 
-
-
 //#### TODO: must have bounds somehow ...and later support instance picking
 
     QByteArray instanceBuffer(int *instanceCount);
     int instanceCountOverride() const;
+    bool hasTransparency() const;
 
 public Q_SLOTS:
     void setInstanceCountOverride(int instanceCountOverride);
+    void setHasTransparency(bool hasTransparency);
 
 Q_SIGNALS:
     void instanceNodeDirty();
-
     void instanceCountOverrideChanged(int instanceCountOverride);
+    void hasTransparencyChanged(bool hasTransparency);
 
 protected:
     virtual QByteArray getInstanceBuffer(int *instanceCount) = 0;
