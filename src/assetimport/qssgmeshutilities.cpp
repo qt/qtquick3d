@@ -577,19 +577,6 @@ void Mesh::save(QIODevice &outStream) const
     serialize(writer, mesh);
 }
 
-bool Mesh::save(const char *inFilePath) const
-{
-    QFile file(QString::fromLocal8Bit(inFilePath));
-    if (!file.open(QIODevice::ReadWrite)) {
-        Q_ASSERT(false);
-        return false;
-    }
-
-    save(file);
-    file.close();
-    return true;
-}
-
 Mesh *Mesh::load(QIODevice &inStream)
 {
     MeshDataHeader header;
@@ -629,19 +616,6 @@ failure:
     Q_ASSERT(false);
     ::free(meshBufferData);
     return nullptr;
-}
-
-Mesh *Mesh::load(const char *inFilePath)
-{
-    QFile file(QString::fromLocal8Bit(inFilePath));
-    if (!file.open(QIODevice::ReadOnly)) {
-        Q_ASSERT(false);
-        return nullptr;
-    }
-
-    auto mesh = load(file);
-    file.close();
-    return mesh;
 }
 
 Mesh *Mesh::initialize(quint16 meshVersion, quint16 meshFlags, QSSGByteView data)
@@ -699,19 +673,6 @@ quint32 Mesh::saveMulti(QIODevice &inStream, quint32 inId) const
     return static_cast<quint32>(nextId);
 }
 
-quint32 Mesh::saveMulti(const char *inFilePath) const
-{
-    QFile file(QString::fromLocal8Bit(inFilePath));
-    if (!file.open(QIODevice::ReadWrite)) {
-        Q_ASSERT(false);
-        return (quint32)-1;
-    }
-
-    quint32 id = saveMulti(file);
-    file.close();
-    return id;
-}
-
 MultiLoadResult Mesh::loadMulti(QIODevice &inStream, quint32 inId)
 {
     MeshMultiHeader *theHeader(loadMultiHeader(inStream));
@@ -740,19 +701,6 @@ MultiLoadResult Mesh::loadMulti(QIODevice &inStream, quint32 inId)
     retval = load(inStream);
 endFunction:
     return MultiLoadResult(retval, theId);
-}
-
-MultiLoadResult Mesh::loadMulti(const char *inFilePath, quint32 inId)
-{
-    QFile file(QString::fromLocal8Bit(inFilePath));
-    if (!file.open(QIODevice::ReadOnly)) {
-        Q_ASSERT(false);
-        return MultiLoadResult();
-    }
-
-    auto result = loadMulti(file, inId);
-    file.close();
-    return result;
 }
 
 bool Mesh::isMulti(QIODevice &inStream)
@@ -794,19 +742,6 @@ MeshMultiHeader *Mesh::loadMultiHeader(QIODevice &inStream)
     return retval;
 }
 
-MeshMultiHeader *Mesh::loadMultiHeader(const char *inFilePath)
-{
-    QFile file(QString::fromLocal8Bit(inFilePath));
-    if (!file.open(QIODevice::ReadOnly)) {
-        Q_ASSERT(false);
-        return nullptr;
-    }
-
-    auto result = loadMultiHeader(file);
-    file.close();
-    return result;
-}
-
 quint32 GetHighestId(MeshMultiHeader *inHeader)
 {
     if (inHeader == nullptr) {
@@ -823,19 +758,6 @@ quint32 GetHighestId(MeshMultiHeader *inHeader)
 quint32 Mesh::getHighestMultiVersion(QIODevice &inStream)
 {
     return GetHighestId(loadMultiHeader(inStream));
-}
-
-quint32 Mesh::getHighestMultiVersion(const char *inFilePath)
-{
-    QFile file(QString::fromLocal8Bit(inFilePath));
-    if (!file.open(QIODevice::ReadOnly)) {
-        Q_ASSERT(false);
-        return (quint32)-1;
-    }
-
-    auto result = getHighestMultiVersion(file);
-    file.close();
-    return result;
 }
 
 namespace {

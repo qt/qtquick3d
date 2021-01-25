@@ -363,9 +363,6 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     {
     }
 
-    quint8 *getBaseAddress() { return reinterpret_cast<quint8 *>(this); }
-    const quint8 *getBaseAddress() const { return reinterpret_cast<const quint8 *>(this); }
-
     static const char *getPositionAttrName() { return "attr_pos"; }
     static const char *getNormalAttrName() { return "attr_norm"; }
     static const char *getUV0AttrName() { return "attr_uv0"; }
@@ -450,17 +447,12 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     // Format is:
     // MeshDataHeader
     // mesh data.
-
     void save(QIODevice &outStream) const;
-
-    // Save a mesh using fopen and fwrite
-    bool save(const char *inFilePath) const;
 
     // read the header, then read the object.
     // Load a mesh using fopen and fread
     // Mesh needs to be freed by the caller using free
     static Mesh *load(QIODevice &inStream);
-    static Mesh *load(const char *inFilePath);
 
     // Create a mesh given this header, and that data.  data.size() must match
     // header.SizeInBytes.  The mesh returned starts a data[0], so however data
@@ -471,22 +463,18 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     // integer for the multi file.  The original meshes aren't changed, and the file
     // is appended to.
     quint32 saveMulti(QIODevice &inStream, quint32 inId = 0) const;
-    quint32 saveMulti(const char *inFilePath) const;
 
     // Load a single mesh using c file API and malloc/free.
     static MultiLoadResult loadMulti(QIODevice &inStream, quint32 inId);
-    static MultiLoadResult loadMulti(const char *inFilePath, quint32 inId);
 
     // Returns true if this is a multimesh (several meshes in one file).
     static bool isMulti(QIODevice &inStream);
 
     // Load a multi header from a file using malloc.  Header needs to be freed using free.
     static MeshMultiHeader *loadMultiHeader(QIODevice &inStream);
-    static MeshMultiHeader *loadMultiHeader(const char *inFilePath);
 
     // Get the highest mesh version from a file.
     static quint32 getHighestMultiVersion(QIODevice &inStream);
-    static quint32 getHighestMultiVersion(const char *inFilePath);
 };
 
 struct MeshDataHeader
