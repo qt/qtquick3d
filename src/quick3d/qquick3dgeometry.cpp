@@ -438,10 +438,13 @@ void QQuick3DGeometry::setIndexData(int offset, const QByteArray &data)
     Sets the stride of the vertex buffer to \a stride, measured in bytes.
     This is the distance between two consecutive vertices in the buffer.
 
-    For example, a tightly packed vertex buffer for a geometry using
-    \c PositionSemantic, \c IndexSemantic, and \c ColorSemantic will have stride
+    For example, a tightly packed, interleaved vertex buffer for a geometry using
+    \c PositionSemantic, \c IndexSemantic, and \c ColorSemantic will have a stride of
     \c 28 (Seven floats in total: Three for position, four for color, and none for indexes,
     which do not go in the vertex buffer.)
+
+    \note QQuick3DGeometry expects, and works only with, vertex data with an
+    interleaved attribute layout.
 
     \sa addAttribute
 */
