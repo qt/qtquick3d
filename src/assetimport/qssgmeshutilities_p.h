@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QSSGMeshUtilities {
 
-struct MeshData
+struct RuntimeMeshData // for custom geometry (QQuick3DGeometry)
 {
     enum PrimitiveType { // must match QSSGRenderGeometry::PrimitiveType
         Points = 0,
@@ -245,20 +245,6 @@ struct IndexBuffer
     IndexBuffer() : m_componentType(QSSGRenderComponentType::UnsignedInteger16) {}
 };
 
-template<quint32 TNumBytes>
-struct MeshPadding
-{
-    quint8 m_padding[TNumBytes];
-    MeshPadding() { memZero(m_padding, TNumBytes); }
-};
-
-struct Vec3
-{
-    float x;
-    float y;
-    float z;
-};
-
 struct MeshSubset
 {
     // std::numeric_limits<quint32>::max() means use all available items
@@ -430,12 +416,11 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
         return "attr_unsupported";
     }
 
-    // Run through the vertex buffer items indicated by subset
-    // Assume vbuf entry[posEntryIndex] is the position entry
-    // This entry has to be QT3DSF32 and 3 components.
-    // Using this entry and the (possibly empty) index buffer
-    // along with the (possibly emtpy) logical vbuf data
-    // return a bounds of the given vertex buffer.
+    // Run through the vertex buffer items indicated by subset Assume vbuf
+    // entry[posEntryIndex] is the position entry This entry has to be 3
+    // component float. Using this entry and the (possibly empty) index buffer
+    // along with the (possibly emtpy) logical vbuf data return a bounds of the
+    // given vertex buffer.
     static QSSGBounds3 calculateSubsetBounds(const QSSGRenderVertexBufferEntry &inEntry,
                                                const QByteArray &inVertxData,
                                                quint32 inStride,
@@ -444,14 +429,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
                                                quint32 inSubsetCount,
                                                quint32 inSubsetOffset);
 
-    // Format is:
-    // MeshDataHeader
-    // mesh data.
     void save(QIODevice &outStream) const;
-
-    // read the header, then read the object.
-    // Load a mesh using fopen and fread
-    // Mesh needs to be freed by the caller using free
     static Mesh *load(QIODevice &inStream);
 
     // Create a mesh given this header, and that data.  data.size() must match
@@ -459,18 +437,9 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     // was allocated is how the mesh should be deallocated.
     static Mesh *initialize(quint16 meshVersion, quint16 meshFlags, QSSGByteView data);
 
-    // You can save multiple meshes in a file.  Each mesh returns an incrementing
-    // integer for the multi file.  The original meshes aren't changed, and the file
-    // is appended to.
     quint32 saveMulti(QIODevice &inStream, quint32 inId = 0) const;
-
-    // Load a single mesh using c file API and malloc/free.
     static MultiLoadResult loadMulti(QIODevice &inStream, quint32 inId);
-
-    // Returns true if this is a multimesh (several meshes in one file).
     static bool isMulti(QIODevice &inStream);
-
-    // Load a multi header from a file using malloc.  Header needs to be freed using free.
     static MeshMultiHeader *loadMultiHeader(QIODevice &inStream);
 };
 
@@ -503,26 +472,26 @@ struct MeshBuilderVBufEntry
     }
 };
 
-// Useful class to build up a mesh.  Necessary since meshes don't include that
-// sort of utility.
 class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBuilder
 {
 public:
     QAtomicInt ref;
-    virtual ~QSSGMeshBuilder();
-    virtual void release() = 0;
-    virtual void reset() = 0;
+
+    QSSGMeshBuilder();
+    ~QSSGMeshBuilder();
+    void reset();
+
     // Set the draw parameters for any subsets.  Defaults to triangles and counter clockwise
-    virtual void setDrawParameters(QSSGRenderDrawMode drawMode, QSSGRenderWinding winding) = 0;
+    void setDrawParameters(QSSGRenderDrawMode drawMode, QSSGRenderWinding winding);
     // Set the vertex buffer and have the mesh builder interleave the data for you
-    virtual bool setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries) = 0;
+    bool setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries);
     // Set the vertex buffer from interleaved data.
-    virtual void setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, QByteArray data) = 0;
+    void setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, const QByteArray &data);
     // The builder (and the majority of the rest of the product) only supports unsigned 16 bit
     // indexes
-    virtual void setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp) = 0;
+    void setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp);
     // Assets if the supplied parameters are out of range.
-    virtual void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace) = 0;
+    void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace);
     /**
      *  Add a subset, which equates roughly to a draw call.
      *  A logical vertex buffer allows you to have more that 64K vertexes but still
@@ -532,31 +501,71 @@ public:
      *  if set to something other than std::numeric_limits<quint32>::max(),
      *  drives the calculation of the aa-bounds of the subset using mesh::CalculateSubsetBounds.
      */
-    virtual void addMeshSubset(const char16_t *inSubsetName = Mesh::m_defaultName,
-                               quint32 count = std::numeric_limits<quint32>::max(),
-                               quint32 offset = 0,
-                               quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max()) = 0;
+    void addMeshSubset(const char16_t *inSubsetName = Mesh::m_defaultName,
+                       quint32 count = std::numeric_limits<quint32>::max(),
+                       quint32 offset = 0,
+                       quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max());
 
-    virtual void addMeshSubset(const char16_t *inSubsetName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds) = 0;
-
-    /**
-     * @brief This functions stitches together sub-meshes with the same material.
-     *		 This re-writes the index buffer
-     *
-     * @return no return.
-     */
-    virtual void connectSubMeshes() = 0;
+    void addMeshSubset(const char16_t *inSubsetName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds);
 
     // Alternative to setVertexBuffer() et al for models with custom geometry.
     // Returns true if successful. When successful, getMesh() can be called.
-    virtual bool setData(const MeshData &data, QString &error, const QSSGBounds3 &inBounds) = 0;
+    bool setRuntimeData(const RuntimeMeshData &data, QString &error, const QSSGBounds3 &inBounds);
 
     // Builds and returns the current mesh. The returned reference is valid
-    // only until the builder is live or is reset.
-    virtual Mesh &getMesh() = 0;
+    // only until the builder is alive or is reset.
+    Mesh &getMesh();
 
-    // Uses new/delete.
-    static QSSGRef<QSSGMeshBuilder> createMeshBuilder();
+private:
+    struct DynamicVBuf
+    {
+        quint32 m_stride;
+        QVector<QSSGRenderVertexBufferEntry> m_vertexBufferEntries;
+        QByteArray m_vertexData;
+
+        void clear()
+        {
+            m_stride = 0;
+            m_vertexBufferEntries.clear();
+            m_vertexData.clear();
+        }
+    };
+
+    struct DynamicIndexBuf
+    {
+        QSSGRenderComponentType m_compType;
+        QByteArray m_indexData;
+        void clear() { m_indexData.clear(); }
+    };
+
+    struct SubsetDesc
+    {
+        quint32 m_count{ 0 };
+        quint32 m_offset{ 0 };
+
+        QSSGBounds3 m_bounds;
+        QString m_name;
+        SubsetDesc(quint32 c, quint32 off) : m_count(c), m_offset(off) {}
+        SubsetDesc() = default;
+    };
+
+    SubsetDesc createSubset(const char16_t *inName, quint32 count, quint32 offset)
+    {
+        if (inName == nullptr)
+            inName = u"";
+        SubsetDesc retval(count, offset);
+        retval.m_name = QString::fromUtf16(inName);
+        return retval;
+    }
+
+    DynamicVBuf m_vertexBuffer;
+    DynamicIndexBuf m_indexBuffer;
+    QVector<Joint> m_joints;
+    QVector<SubsetDesc> m_meshSubsetDescs;
+    QSSGRenderDrawMode m_drawMode;
+    QSSGRenderWinding m_winding;
+    QByteArray m_newIndexBuffer;
+    QVector<quint8> m_meshBuffer;
 };
 
 } // end QSSGMeshUtilities namespace

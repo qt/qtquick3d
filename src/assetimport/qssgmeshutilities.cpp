@@ -338,10 +338,10 @@ QSSGBounds3 Mesh::calculateSubsetBounds(const QSSGRenderVertexBufferEntry &inEnt
     for (quint32 idx = 0, __numItems = (quint32)inSubsetCount; idx < __numItems; ++idx) {
         quint32 dataIdx = nextIndex(inIndexData, inIndexCompType, idx + inSubsetOffset);
         quint32 finalOffset = (dataIdx * dataStride) + posOffset;
-        if (finalOffset + sizeof(Vec3) <= numBytes) {
-            const quint8 *dataPtr = beginPtr + finalOffset;
-            const auto vec3 = *reinterpret_cast<const Vec3 *>(dataPtr);
-            retval.include(QVector3D(vec3.x, vec3.y, vec3.z));
+        float v[3];
+        if (finalOffset + sizeof(v) <= numBytes) {
+            memcpy(v, beginPtr + finalOffset, sizeof(v));
+            retval.include(QVector3D(v[0], v[1], v[2]));
         } else {
             Q_ASSERT(false);
         }
@@ -518,591 +518,438 @@ MeshMultiHeader *Mesh::loadMultiHeader(QIODevice &inStream)
 
 namespace {
 
-struct DynamicVBuf
+template<typename TDataType>
+static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, const QByteArray &inDestData)
 {
-    quint32 m_stride;
-    QVector<QSSGRenderVertexBufferEntry> m_vertexBufferEntries;
-    QByteArray m_vertexData;
+    inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
+    inBuffer.m_size = inDestData.size();
+    memcpy(inDataAddress, inDestData.data(), inDestData.size());
+}
+template<typename TDataType>
+static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, const QVector<TDataType> &inDestData)
+{
+    inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
+    inBuffer.m_size = inDestData.size();
+    memcpy(inDataAddress, inDestData.data(), inDestData.size());
+}
+template<typename TDataType>
+static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, quint32 inDestSize)
+{
+    inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
+    inBuffer.m_size = inDestSize;
+}
 
-    void clear()
-    {
-        m_stride = 0;
-        m_vertexBufferEntries.clear();
-        m_vertexData.clear();
+} // namespace
+
+QSSGMeshBuilder::QSSGMeshBuilder()
+{
+    reset();
+}
+
+QSSGMeshBuilder::~QSSGMeshBuilder()
+{
+    reset();
+}
+
+void QSSGMeshBuilder::reset()
+{
+    m_vertexBuffer.clear();
+    m_indexBuffer.clear();
+    m_joints.clear();
+    m_meshSubsetDescs.clear();
+    m_drawMode = QSSGRenderDrawMode::Triangles;
+    m_winding = QSSGRenderWinding::CounterClockwise;
+    m_meshBuffer.clear();
+}
+
+void QSSGMeshBuilder::setDrawParameters(QSSGRenderDrawMode drawMode, QSSGRenderWinding winding)
+{
+    m_drawMode = drawMode;
+    m_winding = winding;
+}
+
+bool QSSGMeshBuilder::setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries)
+{
+    quint32 currentOffset = 0;
+    quint32 bufferAlignment = 0;
+    quint32 numItems = 0;
+    bool retval = true;
+    for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
+        const MeshBuilderVBufEntry &entry(entries[idx]);
+        // Ignore entries with no data.
+        if (entry.m_data.begin() == nullptr || entry.m_data.size() == 0)
+            continue;
+
+        quint32 alignment = getSizeOfType(entry.m_componentType);
+        bufferAlignment = qMax(bufferAlignment, alignment);
+        quint32 byteSize = alignment * entry.m_numComponents;
+
+        if (entry.m_data.size() % alignment != 0) {
+            Q_ASSERT(false);
+            retval = false;
+        }
+
+        quint32 localNumItems = entry.m_data.size() / byteSize;
+        if (numItems == 0) {
+            numItems = localNumItems;
+        } else if (numItems != localNumItems) {
+            Q_ASSERT(false);
+            retval = false;
+            numItems = qMin(numItems, localNumItems);
+        }
+        // Lots of platforms can't handle non-aligned data.
+        // so ensure we are aligned.
+        currentOffset = getAlignedOffset(currentOffset, alignment);
+        QSSGRenderVertexBufferEntry vbufEntry(entry.m_name, entry.m_componentType, entry.m_numComponents, currentOffset);
+        m_vertexBuffer.m_vertexBufferEntries.push_back(vbufEntry);
+        currentOffset += byteSize;
     }
-};
-struct DynamicIndexBuf
-{
-    QSSGRenderComponentType m_compType;
-    QByteArray m_indexData;
-    void clear() { m_indexData.clear(); }
-};
+    m_vertexBuffer.m_stride = getAlignedOffset(currentOffset, bufferAlignment);
 
-struct SubsetDesc
-{
-    quint32 m_count{ 0 };
-    quint32 m_offset{ 0 };
-
-    QSSGBounds3 m_bounds;
-    QString m_name;
-    SubsetDesc(quint32 c, quint32 off) : m_count(c), m_offset(off) {}
-    SubsetDesc() = default;
-};
-
-class MeshBuilderImpl : public QSSGMeshBuilder
-{
-    DynamicVBuf m_vertexBuffer;
-    DynamicIndexBuf m_indexBuffer;
-    QVector<Joint> m_joints;
-    QVector<SubsetDesc> m_meshSubsetDescs;
-    QSSGRenderDrawMode m_drawMode;
-    QSSGRenderWinding m_winding;
-    QByteArray m_newIndexBuffer;
-    QVector<quint8> m_meshBuffer;
-
-public:
-    MeshBuilderImpl() { reset(); }
-    ~MeshBuilderImpl() override { reset(); }
-    void release() override { delete this; }
-    void reset() override
-    {
-        m_vertexBuffer.clear();
-        m_indexBuffer.clear();
-        m_joints.clear();
-        m_meshSubsetDescs.clear();
-        m_drawMode = QSSGRenderDrawMode::Triangles;
-        m_winding = QSSGRenderWinding::CounterClockwise;
-        m_meshBuffer.clear();
-    }
-
-    void setDrawParameters(QSSGRenderDrawMode drawMode, QSSGRenderWinding winding) override
-    {
-        m_drawMode = drawMode;
-        m_winding = winding;
-    }
-
-    // Somewhat burly method to interleave the data as tightly as possible
-    // while taking alignment into account.
-    bool setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries) override
-    {
-        quint32 currentOffset = 0;
-        quint32 bufferAlignment = 0;
-        quint32 numItems = 0;
-        bool retval = true;
-        for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
-            const MeshBuilderVBufEntry &entry(entries[idx]);
+    // Packed interleave the data
+    for (quint32 idx = 0; idx < numItems; ++idx) {
+        quint32 dataOffset = 0;
+        for (qint32 entryIdx = 0; entryIdx < entries.size(); ++entryIdx) {
+            const MeshBuilderVBufEntry &entry(entries[entryIdx]);
             // Ignore entries with no data.
             if (entry.m_data.begin() == nullptr || entry.m_data.size() == 0)
                 continue;
 
-            quint32 alignment = getSizeOfType(entry.m_componentType);
-            bufferAlignment = qMax(bufferAlignment, alignment);
+            quint32 alignment = (quint32)getSizeOfType(entry.m_componentType);
             quint32 byteSize = alignment * entry.m_numComponents;
-
-            if (entry.m_data.size() % alignment != 0) {
-                Q_ASSERT(false);
-                retval = false;
+            quint32 offset = byteSize * idx;
+            quint32 newOffset = getAlignedOffset(dataOffset, alignment);
+            QBuffer vertexDataBuffer(&m_vertexBuffer.m_vertexData);
+            vertexDataBuffer.open(QIODevice::WriteOnly | QIODevice::Append);
+            if (newOffset != dataOffset) {
+                QByteArray filler(newOffset - dataOffset, '\0');
+                vertexDataBuffer.write(filler);
             }
-
-            quint32 localNumItems = entry.m_data.size() / byteSize;
-            if (numItems == 0) {
-                numItems = localNumItems;
-            } else if (numItems != localNumItems) {
-                Q_ASSERT(false);
-                retval = false;
-                numItems = qMin(numItems, localNumItems);
-            }
-            // Lots of platforms can't handle non-aligned data.
-            // so ensure we are aligned.
-            currentOffset = getAlignedOffset(currentOffset, alignment);
-            QSSGRenderVertexBufferEntry vbufEntry(entry.m_name, entry.m_componentType, entry.m_numComponents, currentOffset);
-            m_vertexBuffer.m_vertexBufferEntries.push_back(vbufEntry);
-            currentOffset += byteSize;
+            vertexDataBuffer.write(entry.m_data.begin() + offset, byteSize);
+            vertexDataBuffer.close();
+            dataOffset = newOffset + byteSize;
         }
-        m_vertexBuffer.m_stride = getAlignedOffset(currentOffset, bufferAlignment);
-
-        // Packed interleave the data
-        for (quint32 idx = 0; idx < numItems; ++idx) {
-            quint32 dataOffset = 0;
-            for (qint32 entryIdx = 0; entryIdx < entries.size(); ++entryIdx) {
-                const MeshBuilderVBufEntry &entry(entries[entryIdx]);
-                // Ignore entries with no data.
-                if (entry.m_data.begin() == nullptr || entry.m_data.size() == 0)
-                    continue;
-
-                quint32 alignment = (quint32)getSizeOfType(entry.m_componentType);
-                quint32 byteSize = alignment * entry.m_numComponents;
-                quint32 offset = byteSize * idx;
-                quint32 newOffset = getAlignedOffset(dataOffset, alignment);
-                QBuffer vertexDataBuffer(&m_vertexBuffer.m_vertexData);
-                vertexDataBuffer.open(QIODevice::WriteOnly | QIODevice::Append);
-                if (newOffset != dataOffset) {
-                    QByteArray filler(newOffset - dataOffset, '\0');
-                    vertexDataBuffer.write(filler);
-                }
-                vertexDataBuffer.write(entry.m_data.begin() + offset, byteSize);
-                vertexDataBuffer.close();
-                dataOffset = newOffset + byteSize;
-            }
-            Q_ASSERT(dataOffset == m_vertexBuffer.m_stride);
-        }
-        return retval;
+        Q_ASSERT(dataOffset == m_vertexBuffer.m_stride);
     }
+    return retval;
+}
 
-    void setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, QByteArray data) override
-    {
+void QSSGMeshBuilder::setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, const QByteArray &data)
+{
+    for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
+        m_vertexBuffer.m_vertexBufferEntries.push_back(entries[idx]);
+    }
+    QBuffer vertexDataBuffer(&m_vertexBuffer.m_vertexData);
+    vertexDataBuffer.open(QIODevice::WriteOnly);
+    vertexDataBuffer.write(data);
+    vertexDataBuffer.close();
+    if (stride == 0) {
+        // Calculate the stride of the buffer using the vbuf entries
         for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
-            m_vertexBuffer.m_vertexBufferEntries.push_back(entries[idx]);
-        }
-        QBuffer vertexDataBuffer(&m_vertexBuffer.m_vertexData);
-        vertexDataBuffer.open(QIODevice::WriteOnly);
-        vertexDataBuffer.write(data);
-        vertexDataBuffer.close();
-        if (stride == 0) {
-            // Calculate the stride of the buffer using the vbuf entries
-            for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
-                const QSSGRenderVertexBufferEntry &entry(entries[idx]);
-                stride = qMax(stride,
-                              (quint32)(entry.m_firstItemOffset
-                                        + (entry.m_numComponents * getSizeOfType(entry.m_componentType))));
-            }
-        }
-        m_vertexBuffer.m_stride = stride;
-    }
-
-    void setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp) override
-    {
-        m_indexBuffer.m_compType = comp;
-        QBuffer indexBuffer(&m_indexBuffer.m_indexData);
-        indexBuffer.open(QIODevice::WriteOnly);
-        indexBuffer.write(data);
-        indexBuffer.close();
-    }
-
-    void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace) override
-    {
-        m_joints.push_back(Joint(jointID, parentID, invBindPose, localToGlobalBoneSpace));
-    }
-
-    SubsetDesc createSubset(const char16_t *inName, quint32 count, quint32 offset)
-    {
-        if (inName == nullptr)
-            inName = u"";
-        SubsetDesc retval(count, offset);
-        retval.m_name = QString::fromUtf16(inName);
-        return retval;
-    }
-
-    // indexBuffer std::numeric_limits<quint32>::max() means no index buffer.
-    // count of std::numeric_limits<quint32>::max() means use all available items.
-    // offset means exactly what you would think.  Offset is in item size, not bytes.
-    void addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, quint32 boundsPositionEntryIndex) override
-    {
-        SubsetDesc retval = createSubset(inName, count, offset);
-        if (boundsPositionEntryIndex != std::numeric_limits<quint32>::max()) {
-            retval.m_bounds = Mesh::calculateSubsetBounds(m_vertexBuffer.m_vertexBufferEntries[boundsPositionEntryIndex],
-                                                          m_vertexBuffer.m_vertexData,
-                                                          m_vertexBuffer.m_stride,
-                                                          m_indexBuffer.m_indexData,
-                                                          m_indexBuffer.m_compType,
-                                                          count,
-                                                          offset);
-        }
-        m_meshSubsetDescs.push_back(retval);
-    }
-
-    void addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds) override
-    {
-        SubsetDesc retval = createSubset(inName, count, offset);
-        retval.m_bounds = inBounds;
-        m_meshSubsetDescs.push_back(retval);
-    }
-
-    // We connect sub meshes which habe the same material
-    void connectSubMeshes() override
-    {
-        if (m_meshSubsetDescs.size() < 2) {
-            // nothing to do
-            return;
-        }
-
-        quint32 matDuplicates = 0;
-
-        // as a pre-step we check if we have duplicate material at all
-        for (quint32 i = 0, subsetEnd = m_meshSubsetDescs.size(); i < subsetEnd && !matDuplicates; ++i) {
-            SubsetDesc &currentSubset = m_meshSubsetDescs[i];
-
-            for (quint32 j = 0, subsetEnd = m_meshSubsetDescs.size(); j < subsetEnd; ++j) {
-                SubsetDesc &theSubset = m_meshSubsetDescs[j];
-
-                if (i == j)
-                    continue;
-
-                if (currentSubset.m_name == theSubset.m_name) {
-                    matDuplicates++;
-                    break; // found a duplicate bail out
-                }
-            }
-        }
-
-        // did we find some duplicates?
-        if (matDuplicates) {
-            QVector<SubsetDesc> newMeshSubsetDescs;
-            QString curMatName;
-            m_newIndexBuffer.clear();
-
-            for (int i = 0, subsetEnd = m_meshSubsetDescs.size(); i < subsetEnd; ++i) {
-                bool bProcessed = false;
-
-                for (QVector<SubsetDesc>::iterator iter = newMeshSubsetDescs.begin(); iter != newMeshSubsetDescs.end(); ++iter) {
-                    if (m_meshSubsetDescs[i].m_name == iter->m_name) {
-                        bProcessed = true;
-                        break;
-                    }
-                }
-
-                if (bProcessed)
-                    continue;
-
-                curMatName = m_meshSubsetDescs[i].m_name;
-
-                quint32 theIndexCompSize = (quint32)getSizeOfType(m_indexBuffer.m_compType);
-                // get pointer to indices
-                char *theIndices = (m_indexBuffer.m_indexData.begin()) + (m_meshSubsetDescs[i].m_offset * theIndexCompSize);
-                // write new offset
-                m_meshSubsetDescs[i].m_offset = m_newIndexBuffer.size() / theIndexCompSize;
-                // store indices
-                QBuffer newIndexBuffer(&m_newIndexBuffer);
-                newIndexBuffer.open(QIODevice::WriteOnly);
-                newIndexBuffer.write(theIndices, m_meshSubsetDescs[i].m_count * theIndexCompSize);
-
-                for (int j = 0, subsetEnd = m_meshSubsetDescs.size(); j < subsetEnd; ++j) {
-                    if (j == i)
-                        continue;
-
-                    SubsetDesc &theSubset = m_meshSubsetDescs[j];
-
-                    if (curMatName == theSubset.m_name) {
-                        // get pointer to indices
-                        char *theIndices = (m_indexBuffer.m_indexData.data()) + (theSubset.m_offset * theIndexCompSize);
-                        // store indices
-                        newIndexBuffer.write(theIndices, theSubset.m_count * theIndexCompSize);
-                        // increment indices count
-                        m_meshSubsetDescs[i].m_count += theSubset.m_count;
-                    }
-                    newIndexBuffer.close();
-                }
-
-                newMeshSubsetDescs.push_back(m_meshSubsetDescs[i]);
-            }
-
-            m_meshSubsetDescs.clear();
-            m_meshSubsetDescs = newMeshSubsetDescs;
-            m_indexBuffer.m_indexData.clear();
-            QBuffer indexBuffer(&m_indexBuffer.m_indexData);
-            indexBuffer.open(QIODevice::WriteOnly);
-            indexBuffer.write(m_newIndexBuffer);
-            indexBuffer.close();
-            // compute new bounding box
-            for (auto theIter = m_meshSubsetDescs.begin(); theIter != m_meshSubsetDescs.end(); ++theIter) {
-                theIter->m_bounds = Mesh::calculateSubsetBounds(m_vertexBuffer.m_vertexBufferEntries[0],
-                                                                m_vertexBuffer.m_vertexData,
-                                                                m_vertexBuffer.m_stride,
-                                                                m_indexBuffer.m_indexData,
-                                                                m_indexBuffer.m_compType,
-                                                                theIter->m_count,
-                                                                theIter->m_offset);
-            }
+            const QSSGRenderVertexBufferEntry &entry(entries[idx]);
+            stride = qMax(stride,
+                          (quint32)(entry.m_firstItemOffset
+                                    + (entry.m_numComponents * getSizeOfType(entry.m_componentType))));
         }
     }
+    m_vertexBuffer.m_stride = stride;
+}
 
-    template<typename TDataType>
-    static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, const QByteArray &inDestData)
-    {
-        inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
-        inBuffer.m_size = inDestData.size();
-        memcpy(inDataAddress, inDestData.data(), inDestData.size());
+void QSSGMeshBuilder::setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp)
+{
+    m_indexBuffer.m_compType = comp;
+    QBuffer indexBuffer(&m_indexBuffer.m_indexData);
+    indexBuffer.open(QIODevice::WriteOnly);
+    indexBuffer.write(data);
+    indexBuffer.close();
+}
+
+void QSSGMeshBuilder::addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace)
+{
+    m_joints.push_back(Joint(jointID, parentID, invBindPose, localToGlobalBoneSpace));
+}
+
+// indexBuffer std::numeric_limits<quint32>::max() means no index buffer.
+// count of std::numeric_limits<quint32>::max() means use all available items.
+// offset means exactly what you would think.  Offset is in item size, not bytes.
+void QSSGMeshBuilder::addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, quint32 boundsPositionEntryIndex)
+{
+    SubsetDesc retval = createSubset(inName, count, offset);
+    if (boundsPositionEntryIndex != std::numeric_limits<quint32>::max()) {
+        retval.m_bounds = Mesh::calculateSubsetBounds(m_vertexBuffer.m_vertexBufferEntries[boundsPositionEntryIndex],
+                                                      m_vertexBuffer.m_vertexData,
+                                                      m_vertexBuffer.m_stride,
+                                                      m_indexBuffer.m_indexData,
+                                                      m_indexBuffer.m_compType,
+                                                      count,
+                                                      offset);
     }
-    template<typename TDataType>
-    static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, const QVector<TDataType> &inDestData)
-    {
-        inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
-        inBuffer.m_size = inDestData.size();
-        memcpy(inDataAddress, inDestData.data(), inDestData.size());
+    m_meshSubsetDescs.push_back(retval);
+}
+
+void QSSGMeshBuilder::addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds)
+{
+    SubsetDesc retval = createSubset(inName, count, offset);
+    retval.m_bounds = inBounds;
+    m_meshSubsetDescs.push_back(retval);
+}
+
+Mesh &QSSGMeshBuilder::getMesh()
+{
+    quint32 meshSize = sizeof(Mesh);
+    quint32 alignment = sizeof(void *);
+    quint32 vertDataSize = getAlignedOffset(m_vertexBuffer.m_vertexData.size(), alignment);
+    meshSize += vertDataSize;
+    quint32 entrySize = quint32(m_vertexBuffer.m_vertexBufferEntries.size()) * sizeof(QSSGRenderVertexBufferEntry);
+    meshSize += entrySize;
+    quint32 entryNameSize = 0;
+    for (quint32 idx = 0, end = m_vertexBuffer.m_vertexBufferEntries.size(); idx < end; ++idx) {
+        const QSSGRenderVertexBufferEntry &theEntry(m_vertexBuffer.m_vertexBufferEntries[idx]);
+        const char *entryName = theEntry.m_name;
+        if (entryName == nullptr)
+            entryName = "";
+        entryNameSize += (quint32)(strlen(theEntry.m_name)) + 1;
     }
-    template<typename TDataType>
-    static void assign(quint8 *inBaseAddress, quint8 *inDataAddress, OffsetDataRef<TDataType> &inBuffer, quint32 inDestSize)
-    {
-        inBuffer.m_offset = (quint32)(inDataAddress - inBaseAddress);
-        inBuffer.m_size = inDestSize;
+    entryNameSize = getAlignedOffset(entryNameSize, alignment);
+    meshSize += entryNameSize;
+    quint32 indexBufferSize = getAlignedOffset(m_indexBuffer.m_indexData.size(), alignment);
+    meshSize += indexBufferSize;
+    quint32 subsetSize = quint32(m_meshSubsetDescs.size()) * sizeof(MeshSubset);
+    quint32 nameSize = 0;
+    for (quint32 idx = 0, end = m_meshSubsetDescs.size(); idx < end; ++idx) {
+        if (!m_meshSubsetDescs[idx].m_name.isEmpty())
+            nameSize += m_meshSubsetDescs[idx].m_name.size() + 1;
     }
-    // Return the current mesh.  This is only good for this function call, item may change or be
-    // released
-    // due to any further function calls.
-    Mesh &getMesh() override
-    {
-        quint32 meshSize = sizeof(Mesh);
-        quint32 alignment = sizeof(void *);
-        quint32 vertDataSize = getAlignedOffset(m_vertexBuffer.m_vertexData.size(), alignment);
-        meshSize += vertDataSize;
-        quint32 entrySize = quint32(m_vertexBuffer.m_vertexBufferEntries.size()) * sizeof(QSSGRenderVertexBufferEntry);
-        meshSize += entrySize;
-        quint32 entryNameSize = 0;
-        for (quint32 idx = 0, end = m_vertexBuffer.m_vertexBufferEntries.size(); idx < end; ++idx) {
-            const QSSGRenderVertexBufferEntry &theEntry(m_vertexBuffer.m_vertexBufferEntries[idx]);
-            const char *entryName = theEntry.m_name;
-            if (entryName == nullptr)
-                entryName = "";
-            entryNameSize += (quint32)(strlen(theEntry.m_name)) + 1;
-        }
-        entryNameSize = getAlignedOffset(entryNameSize, alignment);
-        meshSize += entryNameSize;
-        quint32 indexBufferSize = getAlignedOffset(m_indexBuffer.m_indexData.size(), alignment);
-        meshSize += indexBufferSize;
-        quint32 subsetSize = quint32(m_meshSubsetDescs.size()) * sizeof(MeshSubset);
-        quint32 nameSize = 0;
-        for (quint32 idx = 0, end = m_meshSubsetDescs.size(); idx < end; ++idx) {
-            if (!m_meshSubsetDescs[idx].m_name.isEmpty())
-                nameSize += m_meshSubsetDescs[idx].m_name.size() + 1;
-        }
-        nameSize *= sizeof(char16_t);
-        nameSize = getAlignedOffset(nameSize, alignment);
+    nameSize *= sizeof(char16_t);
+    nameSize = getAlignedOffset(nameSize, alignment);
 
-        meshSize += subsetSize + nameSize;
-        quint32 jointsSize = quint32(m_joints.size()) * sizeof(Joint);
-        meshSize += jointsSize;
-        m_meshBuffer.resize(meshSize);
-        quint8 *baseAddress = m_meshBuffer.data();
-        Mesh *retval = reinterpret_cast<Mesh *>(baseAddress);
-        retval->m_drawMode = m_drawMode;
-        retval->m_winding = m_winding;
-        quint8 *vertBufferData = baseAddress + sizeof(Mesh);
-        quint8 *vertEntryData = vertBufferData + vertDataSize;
-        quint8 *vertEntryNameData = vertEntryData + entrySize;
-        quint8 *indexBufferData = vertEntryNameData + entryNameSize;
-        quint8 *subsetBufferData = indexBufferData + indexBufferSize;
-        quint8 *nameBufferData = subsetBufferData + subsetSize;
-        quint8 *jointBufferData = nameBufferData + nameSize;
+    meshSize += subsetSize + nameSize;
+    quint32 jointsSize = quint32(m_joints.size()) * sizeof(Joint);
+    meshSize += jointsSize;
+    m_meshBuffer.resize(meshSize);
+    quint8 *baseAddress = m_meshBuffer.data();
+    Mesh *retval = reinterpret_cast<Mesh *>(baseAddress);
+    retval->m_drawMode = m_drawMode;
+    retval->m_winding = m_winding;
+    quint8 *vertBufferData = baseAddress + sizeof(Mesh);
+    quint8 *vertEntryData = vertBufferData + vertDataSize;
+    quint8 *vertEntryNameData = vertEntryData + entrySize;
+    quint8 *indexBufferData = vertEntryNameData + entryNameSize;
+    quint8 *subsetBufferData = indexBufferData + indexBufferSize;
+    quint8 *nameBufferData = subsetBufferData + subsetSize;
+    quint8 *jointBufferData = nameBufferData + nameSize;
 
-        retval->m_vertexBuffer.m_stride = m_vertexBuffer.m_stride;
-        assign(baseAddress, vertBufferData, retval->m_vertexBuffer.m_data, m_vertexBuffer.m_vertexData);
-        retval->m_vertexBuffer.m_entries.m_size = m_vertexBuffer.m_vertexBufferEntries.size();
-        retval->m_vertexBuffer.m_entries.m_offset = (quint32)(vertEntryData - baseAddress);
-        for (quint32 idx = 0, end = m_vertexBuffer.m_vertexBufferEntries.size(); idx < end; ++idx) {
-            const QSSGRenderVertexBufferEntry &theEntry(m_vertexBuffer.m_vertexBufferEntries[idx]);
-            MeshVertexBufferEntry &theDestEntry(retval->m_vertexBuffer.m_entries.index(baseAddress, idx));
-            theDestEntry.m_componentType = theEntry.m_componentType;
-            theDestEntry.m_firstItemOffset = theEntry.m_firstItemOffset;
-            theDestEntry.m_numComponents = theEntry.m_numComponents;
-            const char *targetName = theEntry.m_name;
-            if (targetName == nullptr)
-                targetName = "";
+    retval->m_vertexBuffer.m_stride = m_vertexBuffer.m_stride;
+    assign(baseAddress, vertBufferData, retval->m_vertexBuffer.m_data, m_vertexBuffer.m_vertexData);
+    retval->m_vertexBuffer.m_entries.m_size = m_vertexBuffer.m_vertexBufferEntries.size();
+    retval->m_vertexBuffer.m_entries.m_offset = (quint32)(vertEntryData - baseAddress);
+    for (quint32 idx = 0, end = m_vertexBuffer.m_vertexBufferEntries.size(); idx < end; ++idx) {
+        const QSSGRenderVertexBufferEntry &theEntry(m_vertexBuffer.m_vertexBufferEntries[idx]);
+        MeshVertexBufferEntry &theDestEntry(retval->m_vertexBuffer.m_entries.index(baseAddress, idx));
+        theDestEntry.m_componentType = theEntry.m_componentType;
+        theDestEntry.m_firstItemOffset = theEntry.m_firstItemOffset;
+        theDestEntry.m_numComponents = theEntry.m_numComponents;
+        const char *targetName = theEntry.m_name;
+        if (targetName == nullptr)
+            targetName = "";
 
-            quint32 entryNameLen = (quint32)(strlen(targetName)) + 1;
-            theDestEntry.m_nameOffset = (quint32)(vertEntryNameData - baseAddress);
-            memcpy(vertEntryNameData, theEntry.m_name, entryNameLen);
-            vertEntryNameData += entryNameLen;
-        }
-
-        retval->m_indexBuffer.m_componentType = m_indexBuffer.m_compType;
-        assign(baseAddress, indexBufferData, retval->m_indexBuffer.m_data, m_indexBuffer.m_indexData);
-        assign(baseAddress, subsetBufferData, retval->m_subsets, m_meshSubsetDescs.size());
-        for (quint32 idx = 0, end = m_meshSubsetDescs.size(); idx < end; ++idx) {
-            SubsetDesc &theDesc = m_meshSubsetDescs[idx];
-            MeshSubset &theSubset = reinterpret_cast<MeshSubset *>(subsetBufferData)[idx];
-            theSubset.m_bounds = theDesc.m_bounds;
-            theSubset.m_count = theDesc.m_count;
-            theSubset.m_offset = theDesc.m_offset;
-            if (!theDesc.m_name.isEmpty()) {
-                theSubset.m_name.m_size = theDesc.m_name.size() + 1;
-                theSubset.m_name.m_offset = (quint32)(nameBufferData - baseAddress);
-                std::transform(theDesc.m_name.begin(),
-                               theDesc.m_name.end(),
-                               reinterpret_cast<char16_t *>(nameBufferData),
-                               [](QChar c) { return static_cast<char16_t>(c.unicode()); });
-                reinterpret_cast<char16_t *>(nameBufferData)[theDesc.m_name.size()] = 0;
-                nameBufferData += (theDesc.m_name.size() + 1) * sizeof(char16_t);
-            } else {
-                theSubset.m_name.m_size = 0;
-                theSubset.m_name.m_offset = 0;
-            }
-        }
-        assign(baseAddress, jointBufferData, retval->m_joints, m_joints);
-        return *retval;
+        quint32 entryNameLen = (quint32)(strlen(targetName)) + 1;
+        theDestEntry.m_nameOffset = (quint32)(vertEntryNameData - baseAddress);
+        memcpy(vertEntryNameData, theEntry.m_name, entryNameLen);
+        vertEntryNameData += entryNameLen;
     }
 
-    bool setData(const MeshData &meshData, QString &error, const QSSGBounds3 &inBounds) override
-    {
-        // Do some basic validation of the meshData
-        if (meshData.m_vertexBuffer.size() == 0) {
-            error = QObject::tr("Vertex buffer empty");
-            return false;
+    retval->m_indexBuffer.m_componentType = m_indexBuffer.m_compType;
+    assign(baseAddress, indexBufferData, retval->m_indexBuffer.m_data, m_indexBuffer.m_indexData);
+    assign(baseAddress, subsetBufferData, retval->m_subsets, m_meshSubsetDescs.size());
+    for (quint32 idx = 0, end = m_meshSubsetDescs.size(); idx < end; ++idx) {
+        SubsetDesc &theDesc = m_meshSubsetDescs[idx];
+        MeshSubset &theSubset = reinterpret_cast<MeshSubset *>(subsetBufferData)[idx];
+        theSubset.m_bounds = theDesc.m_bounds;
+        theSubset.m_count = theDesc.m_count;
+        theSubset.m_offset = theDesc.m_offset;
+        if (!theDesc.m_name.isEmpty()) {
+            theSubset.m_name.m_size = theDesc.m_name.size() + 1;
+            theSubset.m_name.m_offset = (quint32)(nameBufferData - baseAddress);
+            std::transform(theDesc.m_name.begin(),
+                           theDesc.m_name.end(),
+                           reinterpret_cast<char16_t *>(nameBufferData),
+                           [](QChar c) { return static_cast<char16_t>(c.unicode()); });
+            reinterpret_cast<char16_t *>(nameBufferData)[theDesc.m_name.size()] = 0;
+            nameBufferData += (theDesc.m_name.size() + 1) * sizeof(char16_t);
+        } else {
+            theSubset.m_name.m_size = 0;
+            theSubset.m_name.m_offset = 0;
         }
-        if (meshData.m_attributeCount == 0) {
-            error = QObject::tr("No attributes defined");
-            return false;
-        }
+    }
+    assign(baseAddress, jointBufferData, retval->m_joints, m_joints);
+    return *retval;
+}
 
-        reset();
+bool QSSGMeshBuilder::setRuntimeData(const RuntimeMeshData &meshData, QString &error, const QSSGBounds3 &inBounds)
+{
+    // Do some basic validation of the meshData
+    if (meshData.m_vertexBuffer.size() == 0) {
+        error = QObject::tr("Vertex buffer empty");
+        return false;
+    }
+    if (meshData.m_attributeCount == 0) {
+        error = QObject::tr("No attributes defined");
+        return false;
+    }
 
-        QSSGRenderDrawMode drawMode = QSSGRenderDrawMode::Triangles;
-        switch (meshData.m_primitiveType) {
-        case QSSGMeshUtilities::MeshData::Points:
-            drawMode = QSSGRenderDrawMode::Points;
+    reset();
+
+    QSSGRenderDrawMode drawMode = QSSGRenderDrawMode::Triangles;
+    switch (meshData.m_primitiveType) {
+    case QSSGMeshUtilities::RuntimeMeshData::Points:
+        drawMode = QSSGRenderDrawMode::Points;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::LineStrip:
+        drawMode = QSSGRenderDrawMode::LineStrip;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::LineLoop:
+        drawMode = QSSGRenderDrawMode::LineLoop;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::Lines:
+        drawMode = QSSGRenderDrawMode::Lines;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::TriangleStrip:
+        drawMode = QSSGRenderDrawMode::TriangleStrip;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::TriangleFan:
+        drawMode = QSSGRenderDrawMode::TriangleFan;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::Triangles:
+        drawMode = QSSGRenderDrawMode::Triangles;
+        break;
+    case QSSGMeshUtilities::RuntimeMeshData::Patches:
+        drawMode = QSSGRenderDrawMode::Patches;
+        break;
+    default:
+        break;
+    }
+    setDrawParameters(drawMode, QSSGRenderWinding::CounterClockwise);
+
+    // The expectation is that the vertex buffer included in meshData is already properly
+    // formatted and doesn't need further processing.
+
+    // Validate attributes
+    QVector<QSSGRenderVertexBufferEntry> vBufEntries;
+    bool hasIndexBuffer = false;
+    QSSGRenderComponentType indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger16;
+    int indexBufferTypeSize = 2;
+    for (int i = 0; i < meshData.m_attributeCount; ++i) {
+        const RuntimeMeshData::Attribute &att = meshData.m_attributes[i];
+        QSSGRenderComponentType componentType = QSSGRenderComponentType::Float32;
+        switch (att.componentType) {
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::U8Type:
+            componentType = QSSGRenderComponentType::UnsignedInteger8;
             break;
-        case QSSGMeshUtilities::MeshData::LineStrip:
-            drawMode = QSSGRenderDrawMode::LineStrip;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::I8Type:
+            componentType = QSSGRenderComponentType::Integer8;
             break;
-        case QSSGMeshUtilities::MeshData::LineLoop:
-            drawMode = QSSGRenderDrawMode::LineLoop;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::U16Type:
+            componentType = QSSGRenderComponentType::UnsignedInteger16;
             break;
-        case QSSGMeshUtilities::MeshData::Lines:
-            drawMode = QSSGRenderDrawMode::Lines;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::I16Type:
+            componentType = QSSGRenderComponentType::Integer16;
             break;
-        case QSSGMeshUtilities::MeshData::TriangleStrip:
-            drawMode = QSSGRenderDrawMode::TriangleStrip;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::U32Type:
+            componentType = QSSGRenderComponentType::UnsignedInteger32;
             break;
-        case QSSGMeshUtilities::MeshData::TriangleFan:
-            drawMode = QSSGRenderDrawMode::TriangleFan;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::I32Type:
+            componentType = QSSGRenderComponentType::Integer32;
             break;
-        case QSSGMeshUtilities::MeshData::Triangles:
-            drawMode = QSSGRenderDrawMode::Triangles;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::U64Type:
+            componentType = QSSGRenderComponentType::UnsignedInteger64;
             break;
-        case QSSGMeshUtilities::MeshData::Patches:
-            drawMode = QSSGRenderDrawMode::Patches;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::I64Type:
+            componentType = QSSGRenderComponentType::Integer64;
+            break;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::F16Type:
+            componentType = QSSGRenderComponentType::Float16;
+            break;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::F32Type:
+            componentType = QSSGRenderComponentType::Float32;
+            break;
+        case QSSGMeshUtilities::RuntimeMeshData::Attribute::F64Type:
+            componentType = QSSGRenderComponentType::Float64;
             break;
         default:
             break;
         }
-        setDrawParameters(drawMode, QSSGRenderWinding::CounterClockwise);
-
-        // The expectation is that the vertex buffer included in meshData is already properly
-        // formatted and doesn't need further processing.
-
-        // Validate attributes
-        QVector<QSSGRenderVertexBufferEntry> vBufEntries;
-        bool hasIndexBuffer = false;
-        QSSGRenderComponentType indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger16;
-        int indexBufferTypeSize = 2;
-        for (int i = 0; i < meshData.m_attributeCount; ++i) {
-            const MeshData::Attribute &att = meshData.m_attributes[i];
-            QSSGRenderComponentType componentType = QSSGRenderComponentType::Float32;
-            switch (att.componentType) {
-            case QSSGMeshUtilities::MeshData::Attribute::U8Type:
-                componentType = QSSGRenderComponentType::UnsignedInteger8;
+        if (att.semantic == RuntimeMeshData::Attribute::IndexSemantic) {
+            hasIndexBuffer = true;
+            indexBufferComponentType = componentType;
+            indexBufferTypeSize = att.typeSize();
+        } else {
+            const char *name = nullptr;
+            switch (att.semantic) {
+            case RuntimeMeshData::Attribute::PositionSemantic:
+                name = Mesh::getPositionAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::I8Type:
-                componentType = QSSGRenderComponentType::Integer8;
+            case RuntimeMeshData::Attribute::NormalSemantic:
+                name = Mesh::getNormalAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::U16Type:
-                componentType = QSSGRenderComponentType::UnsignedInteger16;
+            case RuntimeMeshData::Attribute::TexCoord0Semantic:
+                name = Mesh::getUV0AttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::I16Type:
-                componentType = QSSGRenderComponentType::Integer16;
+            case RuntimeMeshData::Attribute::TexCoord1Semantic:
+                name = Mesh::getUV1AttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::U32Type:
-                componentType = QSSGRenderComponentType::UnsignedInteger32;
+            case RuntimeMeshData::Attribute::TangentSemantic:
+                name = Mesh::getTexTanAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::I32Type:
-                componentType = QSSGRenderComponentType::Integer32;
+            case RuntimeMeshData::Attribute::BinormalSemantic:
+                name = Mesh::getTexBinormalAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::U64Type:
-                componentType = QSSGRenderComponentType::UnsignedInteger64;
+            case RuntimeMeshData::Attribute::JointSemantic:
+                name = Mesh::getJointAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::I64Type:
-                componentType = QSSGRenderComponentType::Integer64;
+            case RuntimeMeshData::Attribute::WeightSemantic:
+                name = Mesh::getWeightAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::F16Type:
-                componentType = QSSGRenderComponentType::Float16;
+            case RuntimeMeshData::Attribute::ColorSemantic:
+                name = Mesh::getColorAttrName();
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::F32Type:
-                componentType = QSSGRenderComponentType::Float32;
+            case RuntimeMeshData::Attribute::TargetPositionSemantic:
+                name = Mesh::getTargetPositionAttrName(0);
                 break;
-            case QSSGMeshUtilities::MeshData::Attribute::F64Type:
-                componentType = QSSGRenderComponentType::Float64;
+            case RuntimeMeshData::Attribute::TargetNormalSemantic:
+                name = Mesh::getTargetNormalAttrName(0);
+                break;
+            case RuntimeMeshData::Attribute::TargetTangentSemantic:
+                name = Mesh::getTargetTangentAttrName(0);
+                break;
+            case RuntimeMeshData::Attribute::TargetBinormalSemantic:
+                name = Mesh::getTargetBinormalAttrName(0);
                 break;
             default:
-                break;
+                error = QObject::tr("Warning: Invalid attribute semantic: %1")
+                        .arg(att.semantic);
+                return false;
             }
-            if (att.semantic == MeshData::Attribute::IndexSemantic) {
-                hasIndexBuffer = true;
-                indexBufferComponentType = componentType;
-                indexBufferTypeSize = att.typeSize();
-            } else {
-                const char *name = nullptr;
-                switch (att.semantic) {
-                case MeshData::Attribute::PositionSemantic:
-                    name = Mesh::getPositionAttrName();
-                    break;
-                case MeshData::Attribute::NormalSemantic:
-                    name = Mesh::getNormalAttrName();
-                    break;
-                case MeshData::Attribute::TexCoord0Semantic:
-                    name = Mesh::getUV0AttrName();
-                    break;
-                case MeshData::Attribute::TexCoord1Semantic:
-                    name = Mesh::getUV1AttrName();
-                    break;
-                case MeshData::Attribute::TangentSemantic:
-                    name = Mesh::getTexTanAttrName();
-                    break;
-                case MeshData::Attribute::BinormalSemantic:
-                    name = Mesh::getTexBinormalAttrName();
-                    break;
-                case MeshData::Attribute::JointSemantic:
-                    name = Mesh::getJointAttrName();
-                    break;
-                case MeshData::Attribute::WeightSemantic:
-                    name = Mesh::getWeightAttrName();
-                    break;
-                case MeshData::Attribute::ColorSemantic:
-                    name = Mesh::getColorAttrName();
-                    break;
-                case MeshData::Attribute::TargetPositionSemantic:
-                    name = Mesh::getTargetPositionAttrName(0);
-                    break;
-                case MeshData::Attribute::TargetNormalSemantic:
-                    name = Mesh::getTargetNormalAttrName(0);
-                    break;
-                case MeshData::Attribute::TargetTangentSemantic:
-                    name = Mesh::getTargetTangentAttrName(0);
-                    break;
-                case MeshData::Attribute::TargetBinormalSemantic:
-                    name = Mesh::getTargetBinormalAttrName(0);
-                    break;
-                default:
-                    error = QObject::tr("Warning: Invalid attribute semantic: %1")
-                            .arg(att.semantic);
-                    return false;
-                }
-                vBufEntries << QSSGRenderVertexBufferEntry(name, componentType,
-                                                           unsigned(att.componentCount()),
-                                                           unsigned(att.offset));
-            }
+            vBufEntries << QSSGRenderVertexBufferEntry(name, componentType,
+                                                       unsigned(att.componentCount()),
+                                                       unsigned(att.offset));
         }
-        setVertexBuffer(vBufEntries, unsigned(meshData.m_stride), meshData.m_vertexBuffer);
-
-        int vertexCount = 0;
-        if (hasIndexBuffer) {
-            setIndexBuffer(meshData.m_indexBuffer, indexBufferComponentType);
-            vertexCount = meshData.m_indexBuffer.size() / indexBufferTypeSize;
-        } else {
-            vertexCount = meshData.m_vertexBuffer.size() / meshData.m_stride;
-        }
-
-        addMeshSubset(Mesh::m_defaultName, unsigned(vertexCount), 0, inBounds);
-
-        return true;
     }
-};
+    setVertexBuffer(vBufEntries, unsigned(meshData.m_stride), meshData.m_vertexBuffer);
+
+    int vertexCount = 0;
+    if (hasIndexBuffer) {
+        setIndexBuffer(meshData.m_indexBuffer, indexBufferComponentType);
+        vertexCount = meshData.m_indexBuffer.size() / indexBufferTypeSize;
+    } else {
+        vertexCount = meshData.m_vertexBuffer.size() / meshData.m_stride;
+    }
+
+    addMeshSubset(Mesh::m_defaultName, unsigned(vertexCount), 0, inBounds);
+
+    return true;
 }
 
-QSSGMeshBuilder::~QSSGMeshBuilder() = default;
-
-QSSGRef<QSSGMeshBuilder> QSSGMeshBuilder::createMeshBuilder()
-{
-    return QSSGRef<QSSGMeshBuilder>(new MeshBuilderImpl());
-}
-}
+} // namespace QSSGMeshUtilities
 
 QT_END_NAMESPACE

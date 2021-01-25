@@ -913,7 +913,7 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
         return QStringLiteral("Could not open device to write mesh file");
 
 
-    auto meshBuilder = QSSGMeshUtilities::QSSGMeshBuilder::createMeshBuilder();
+    auto meshBuilder = new QSSGMeshUtilities::QSSGMeshBuilder;
 
     // Check if we need placeholders in certain channels
     bool needsPositionData = false;

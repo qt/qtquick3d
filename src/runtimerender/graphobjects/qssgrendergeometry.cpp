@@ -34,9 +34,9 @@
 QSSGRenderGeometry::QSSGRenderGeometry()
     : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Geometry)
 {
-    Q_STATIC_ASSERT(int(Triangles) == int(QSSGMeshUtilities::MeshData::Triangles));
-    Q_STATIC_ASSERT(int(Attribute::TexCoord1Semantic) == int(QSSGMeshUtilities::MeshData::Attribute::TexCoord1Semantic));
-    Q_STATIC_ASSERT(int(Attribute::F32Type) == int(QSSGMeshUtilities::MeshData::Attribute::F32Type));
+    Q_STATIC_ASSERT(int(Triangles) == int(QSSGMeshUtilities::RuntimeMeshData::Triangles));
+    Q_STATIC_ASSERT(int(Attribute::TexCoord1Semantic) == int(QSSGMeshUtilities::RuntimeMeshData::Attribute::TexCoord1Semantic));
+    Q_STATIC_ASSERT(int(Attribute::F32Type) == int(QSSGMeshUtilities::RuntimeMeshData::Attribute::F32Type));
 }
 
 QSSGRenderGeometry::~QSSGRenderGeometry()
@@ -113,10 +113,10 @@ void QSSGRenderGeometry::addAttribute(const Attribute &att)
 {
     int index = m_meshData.m_attributeCount;
     m_meshData.m_attributes[index].semantic
-            = static_cast<QSSGMeshUtilities::MeshData::Attribute::Semantic>(att.semantic);
+            = static_cast<QSSGMeshUtilities::RuntimeMeshData::Attribute::Semantic>(att.semantic);
     m_meshData.m_attributes[index].offset = att.offset;
     m_meshData.m_attributes[index].componentType
-            = static_cast<QSSGMeshUtilities::MeshData::Attribute::ComponentType>(att.componentType);
+            = static_cast<QSSGMeshUtilities::RuntimeMeshData::Attribute::ComponentType>(att.componentType);
     ++m_meshData.m_attributeCount;
     m_dirty = true;
 }
@@ -130,7 +130,7 @@ void QSSGRenderGeometry::setStride(int stride)
 void QSSGRenderGeometry::setPrimitiveType(PrimitiveType type)
 {
     m_meshData.m_primitiveType
-            = static_cast<QSSGMeshUtilities::MeshData::PrimitiveType>(type);
+            = static_cast<QSSGMeshUtilities::RuntimeMeshData::PrimitiveType>(type);
     m_dirty = true;
 }
 
@@ -167,12 +167,12 @@ void QSSGRenderGeometry::setIndexData(const QByteArray &data)
 QSSGRenderMesh *QSSGRenderGeometry::createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager)
 {
     if (!m_meshBuilder)
-        m_meshBuilder = QSSGMeshUtilities::QSSGMeshBuilder::createMeshBuilder();
+        m_meshBuilder = new QSSGMeshUtilities::QSSGMeshBuilder;
 
     if (m_dirty) {
         QSSGRenderMesh *renderMesh = nullptr;
         QString error;
-        if (m_meshBuilder->setData(m_meshData, error, m_bounds)) {
+        if (m_meshBuilder->setRuntimeData(m_meshData, error, m_bounds)) {
             QSSGMeshUtilities::Mesh &mesh = m_meshBuilder->getMesh();
             renderMesh = bufferManager->loadCustomMesh(this, &mesh, true);
         } else {

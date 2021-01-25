@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGeometry : public QSSGRenderGraphObject
 {
 public:
-    enum PrimitiveType { // must match MeshData::PrimitiveType
+    enum PrimitiveType { // must match RuntimeMeshData::PrimitiveType
         Points = 0,
         LineStrip,
         LineLoop,
@@ -66,7 +66,7 @@ public:
     };
 
     struct Attribute {
-        enum Semantic { // must match MeshData::Attribute::Semantic
+        enum Semantic { // must match RuntimeMeshData::Attribute::Semantic
             IndexSemantic = 0,
             PositionSemantic,                       // attr_pos
             NormalSemantic,                         // attr_norm
@@ -83,7 +83,7 @@ public:
             TexCoord1Semantic,                      // attr_uv1
             TexCoord0Semantic = TexCoordSemantic    // attr_uv0
         };
-        enum ComponentType { // must match MeshData::Attribute::ComponentType
+        enum ComponentType { // must match RuntimeMeshData::Attribute::ComponentType
             U8Type = 0,
             I8Type,
             U16Type,
@@ -134,7 +134,7 @@ protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 
     bool m_dirty = true;
-    QSSGMeshUtilities::MeshData m_meshData;
+    QSSGMeshUtilities::RuntimeMeshData m_meshData;
     QSSGRef<QSSGMeshUtilities::QSSGMeshBuilder> m_meshBuilder;
     QSSGBounds3 m_bounds;
 };
