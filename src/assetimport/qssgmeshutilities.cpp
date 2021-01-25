@@ -646,9 +646,6 @@ void QSSGMeshBuilder::addJoint(qint32 jointID, qint32 parentID, const float *inv
     m_joints.push_back(Joint(jointID, parentID, invBindPose, localToGlobalBoneSpace));
 }
 
-// indexBuffer std::numeric_limits<quint32>::max() means no index buffer.
-// count of std::numeric_limits<quint32>::max() means use all available items.
-// offset means exactly what you would think.  Offset is in item size, not bytes.
 void QSSGMeshBuilder::addMeshSubset(const char16_t *inName, quint32 count, quint32 offset, quint32 boundsPositionEntryIndex)
 {
     SubsetDesc retval = createSubset(inName, count, offset);

@@ -246,9 +246,9 @@ struct IndexBuffer
 
 struct MeshSubset
 {
-    // std::numeric_limits<quint32>::max() means use all available items
+    // Item (index or vertex) count.
     quint32 m_count;
-    // Offset is in item size, not bytes.
+    // Offset is in items, not bytes.
     quint32 m_offset;
     // Bounds of this subset.  This is filled in by the builder
     // see AddMeshSubset
@@ -264,7 +264,6 @@ struct MeshSubset
     {
     }
     MeshSubset() : m_count(quint32(-1)), m_offset(0), m_bounds() {}
-    bool hasCount() const { return m_count != 4294967295U; } // AKA U_MAX 0xffffffff
 };
 
 struct Joint
@@ -487,21 +486,22 @@ public:
     void setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp);
     // Assets if the supplied parameters are out of range.
     void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace);
-    /**
-     *  Add a subset, which equates roughly to a draw call.
-     *  A logical vertex buffer allows you to have more that 64K vertexes but still
-     *  use u16 index buffers.  In any case, if the mesh has an index buffer then this subset
-     *  refers to that index buffer, else it is assumed to index into the vertex buffer.
-     *  count and offset do exactly what they seem to do, while boundsPositionEntryIndex,
-     *  if set to something other than std::numeric_limits<quint32>::max(),
-     *  drives the calculation of the aa-bounds of the subset using mesh::CalculateSubsetBounds.
-     */
+
+    // Add a subset, which equates roughly to a draw call. If the mesh has an
+    // index buffer then this subset refers to that index buffer, else it is
+    // assumed to index into the vertex buffer. count and offset do exactly
+    // what they seem to do, while boundsPositionEntryIndex, if set to
+    // something other than std::numeric_limits<quint32>::max(), drives the
+    // calculation of the aa-bounds of the subset using calculateSubsetBounds.
     void addMeshSubset(const char16_t *inSubsetName,
-                       quint32 count = std::numeric_limits<quint32>::max(),
-                       quint32 offset = 0,
+                       quint32 count,
+                       quint32 offset,
                        quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max());
 
-    void addMeshSubset(const char16_t *inSubsetName, quint32 count, quint32 offset, const QSSGBounds3 &inBounds);
+    void addMeshSubset(const char16_t *inSubsetName,
+                       quint32 count,
+                       quint32 offset,
+                       const QSSGBounds3 &inBounds);
 
     // Alternative to setVertexBuffer() et al for models with custom geometry.
     // Returns true if successful. When successful, getMesh() can be called.

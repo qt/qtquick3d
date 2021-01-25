@@ -193,7 +193,6 @@ int main(int argc, char *argv[])
                 for (quint32 idx = 0, end = mesh->m_subsets.size(); idx < end; ++idx) {
                     qDebug() << "\t\t -- Subset " << idx << "-- ";
                     MeshSubset &subset = reinterpret_cast<MeshSubset *>(subsetEntriesData.data())[idx];
-                    qDebug() << "\t\thasCount: " << subset.hasCount();
                     qDebug() << "\t\tcount: " << subset.m_count;
                     qDebug() << "\t\toffset(size): " << subset.m_offset;
                     qDebug() << "\t\tbounds: (" << subset.m_bounds.minimum.x() << "," <<
