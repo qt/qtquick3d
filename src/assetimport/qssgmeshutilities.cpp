@@ -618,21 +618,12 @@ bool QSSGMeshBuilder::setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entri
 
 void QSSGMeshBuilder::setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, const QByteArray &data)
 {
+    m_vertexBuffer.m_stride = stride;
+
     for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx)
         m_vertexBuffer.m_vertexBufferEntries.push_back(entries[idx]);
 
     m_vertexBuffer.m_vertexData = data;
-
-    if (stride == 0) {
-        // Calculate the stride of the buffer using the vbuf entries
-        for (quint32 idx = 0, __numItems = (quint32)entries.size(); idx < __numItems; ++idx) {
-            const QSSGRenderVertexBufferEntry &entry(entries[idx]);
-            stride = qMax(stride,
-                          (quint32)(entry.m_firstItemOffset
-                                    + (entry.m_numComponents * getSizeOfType(entry.m_componentType))));
-        }
-    }
-    m_vertexBuffer.m_stride = stride;
 }
 
 void QSSGMeshBuilder::setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp)

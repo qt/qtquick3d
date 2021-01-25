@@ -669,6 +669,8 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
     if (d->m_geometryChanged) {
         geometry->setBounds(d->m_min, d->m_max);
         geometry->setStride(d->m_stride);
+        if (d->m_stride < 1)
+            qWarning("%d is an invalid stride, was QQuick3DGeometry::setStride() called?", d->m_stride);
         geometry->setIndexData(d->m_indexBuffer);
         geometry->setVertexData(d->m_vertexBuffer);
         geometry->setPrimitiveType(mapPrimitiveType(d->m_primitiveType));
