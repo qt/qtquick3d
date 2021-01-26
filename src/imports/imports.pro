@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 SUBDIRS = \
     effectlib \
     quick3d \
-    helpers
+    helpers \
+    particles3d

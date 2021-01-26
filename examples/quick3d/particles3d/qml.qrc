@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Snowing.qml</file>
+        <file>qml/CustomCheckBox.qml</file>
+        <file>qml/CustomSlider.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/images/arrow_icon.png</file>
+        <file>qml/ColorfulParticles.qml</file>
+        <file>qml/EmitterShapes.qml</file>
+        <file>qml/SystemPlayPause.qml</file>
+        <file>qml/images/snowflake.png</file>
+        <file>qml/AttractorShapes.qml</file>
+        <file>qml/FadingInOut.qml</file>
+        <file>qml/EmitAndBurst.qml</file>
+        <file>qml/QtLogoAnimation.qml</file>
+        <file>qml/images/star.png</file>
+        <file>qml/images/qt_logo.png</file>
+        <file>qml/images/smoke.png</file>
+        <file>qml/QtLogoAnimation2.qml</file>
+        <file>qml/images/icon_pause.png</file>
+        <file>qml/images/icon_play.png</file>
+        <file>qml/LoggingView.qml</file>
+        <file>qml/images/icon_logging.png</file>
+        <file>qml/images/icon_interval.png</file>
+    </qresource>
+</RCC>

@@ -24,4 +24,5 @@ SUBDIRS += \
     quickball \
     helloqtquick3d \
     morphing \
-    custommorphing
+    custommorphing \
+    particles3d

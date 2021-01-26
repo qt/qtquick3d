@@ -1,0 +1,111 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef QQUICK3DPARTICLEMODELPARTICLE_H
+#define QQUICK3DPARTICLEMODELPARTICLE_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QColor>
+#include <QVector4D>
+#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dmodel_p.h>
+#include <QtQuick3D/qquick3dinstancing.h>
+
+#include "qquick3dparticle_p.h"
+#include "qquick3dparticlesystem_p.h"
+#include "qquick3dparticledata_p.h"
+
+QT_BEGIN_NAMESPACE
+
+class QQmlInstanceModel;
+class QQmlChangeSet;
+class QQuick3DParticleInstanceTable;
+
+class QQuick3DParticleModelParticle : public QQuick3DParticle
+{
+    Q_OBJECT
+
+    // TODO: Should this be called delegate or model? In Repeater(3D) and ListView model is very different.
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+
+    QML_NAMED_ELEMENT(ModelParticle3D)
+    Q_CLASSINFO("DefaultProperty", "delegate")
+
+public:
+    QQuick3DParticleModelParticle(QQuick3DNode *parent = nullptr);
+
+    QQmlComponent *delegate() const;
+
+public Q_SLOTS:
+    void setDelegate(QQmlComponent *delegate);
+
+Q_SIGNALS:
+    void delegateChanged();
+
+protected:
+    void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void reset() override;
+
+private:
+    void regenerate();
+    void handleMaxAmountChanged(int amount);
+
+    friend class QQuick3DParticleSystem;
+    friend class QQuick3DParticleEmitter;
+
+    void clearInstanceTable();
+    void addInstance(const QVector3D &position, const QVector3D &scale,
+                     const QVector3D &eulerRotation, const QColor &color);
+    void commitInstance();
+    void setHasTransparency(bool transparent);
+
+    QQuick3DParticleSystem* m_system = nullptr;
+    QPointer<QQmlComponent> m_delegate;
+    QPointer<QQuick3DModel> m_3dModel;
+    QQuick3DParticleInstanceTable *m_instanceTable = nullptr;
+
+    QVector3D m_initialScale;
+    float m_initialOpacity = 1.0;
+    bool m_explicitColor;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICK3DPARTICLEMODELPARTICLE_H
