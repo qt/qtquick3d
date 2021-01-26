@@ -183,7 +183,7 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
 /*!
     \qmlproperty List<QtQuick3D::MorphTarget> Model::morphTargets
 
-    This property contains a list of \l{Qt3DAnimation::QMorphTarget}{MorphTarget}s used to
+    This property contains a list of \l [QtQuick3D QML] {MorphTarget}{MorphTarget}s used to
     render the provided geometry. Meshes should have at least one attribute
     among positions, normals, tangent, bitangent for the morph targets.
     Quick3D supports maximum 8 morph targets and remains will be ignored.
