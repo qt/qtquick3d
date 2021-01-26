@@ -764,6 +764,40 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
         texture.m_flags.setRgbe8(true);
     if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->compressedData.isValid())) {
+        // Before creating an environment map, check if the provided texture is a
+        // pre-baked environment map
+        if (inTexture->compressedData.isValid() && inTexture->compressedData.keyValueMetadata().contains("QT_IBL_BAKER_VERSION")) {
+            Q_ASSERT(inTexture->compressedData.numFaces() == 6);
+            Q_ASSERT(inTexture->compressedData.numLevels() >= 5);
+
+            const QTextureFileData &tex = inTexture->compressedData;
+            rhiFormat = toRhiFormat(inTexture->format.format);
+            size = tex.size();
+            mipmapCount = tex.numLevels();
+            const int faceCount = tex.numFaces();
+            QRhiTexture *environmentCubeMap = rhi->newTexture(rhiFormat, size, 1, QRhiTexture::CubeMap | QRhiTexture::MipMapped);
+            environmentCubeMap->create();
+            for (int layer = 0; layer < faceCount; ++layer) {
+                for (int level = 0; level < mipmapCount; ++level) {
+                    QRhiTextureSubresourceUploadDescription subDesc;
+                    subDesc.setSourceSize(sizeForMipLevel(level, size));
+                    subDesc.setData(tex.getDataView(level, layer).toByteArray());
+                    textureUploads << QRhiTextureUploadEntry { layer, level, subDesc };
+                }
+            }
+            texture.m_texture = environmentCubeMap;
+
+            QRhiTextureUploadDescription uploadDescription;
+            uploadDescription.setEntries(textureUploads.cbegin(), textureUploads.cend());
+            auto *rub = rhi->nextResourceUpdateBatch();
+            rub->uploadTexture(environmentCubeMap, uploadDescription);
+            context->commandBuffer()->resourceUpdate(rub);
+            texture.m_mipmapCount = mipmapCount;
+            context->registerTexture(texture.m_texture);
+            return true;
+        }
+
+        // If we get this far then we need to create an environment map at runtime.
         if (createEnvironmentMap(inTexture, &texture)) {
             context->registerTexture(texture.m_texture);
             return true;
