@@ -150,7 +150,7 @@ struct ByteWritingSerializer
     }
 };
 
-struct MemoryAssigningSerializer
+struct MemoryAssigningSerializer // aka the deserializer
 {
     const quint8 *m_memory;
     const quint8 *m_baseAddress;
@@ -184,7 +184,7 @@ struct MemoryAssigningSerializer
         quint32 numBytes = m_byteCounter.m_numBytes - current;
         if (numBytes) {
             data.m_offset = (quint32)(m_memory - m_baseAddress);
-            updateMemoryBuffer(numBytes);
+            advance(numBytes);
         } else {
             data.m_offset = 0;
             data.m_size = 0;
@@ -200,7 +200,7 @@ struct MemoryAssigningSerializer
             return;
         }
         memcpy(&len, m_memory, 4);
-        updateMemoryBuffer(4);
+        advance(4);
         m_byteCounter.m_numBytes += len;
         if (m_byteCounter.m_numBytes > m_size) {
             _data = "";
@@ -208,7 +208,7 @@ struct MemoryAssigningSerializer
             return;
         }
         _data = (const char *)m_memory;
-        updateMemoryBuffer(len);
+        advance(len);
     }
     void streamifyCharPointerOffset(quint32 &inOffset)
     {
@@ -221,10 +221,10 @@ struct MemoryAssigningSerializer
         if (m_byteCounter.needsAlignment()) {
             quint32 numBytes = m_byteCounter.getAlignmentAmount();
             m_byteCounter.align();
-            updateMemoryBuffer(numBytes);
+            advance(numBytes);
         }
     }
-    void updateMemoryBuffer(quint32 numBytes) { m_memory += numBytes; }
+    void advance(quint32 numBytes) { m_memory += numBytes; }
 };
 
 inline quint32 getMeshDataSize(Mesh &mesh)
