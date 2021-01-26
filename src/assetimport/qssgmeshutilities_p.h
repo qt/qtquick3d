@@ -559,7 +559,6 @@ private:
     QVector<SubsetDesc> m_meshSubsetDescs;
     QSSGRenderDrawMode m_drawMode;
     QSSGRenderWinding m_winding;
-    QByteArray m_newIndexBuffer;
     QVector<quint8> m_meshBuffer;
 };
 
