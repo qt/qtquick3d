@@ -428,11 +428,6 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
     void save(QIODevice &outStream) const;
     static Mesh *load(QIODevice &inStream);
 
-    // Create a mesh given this header, and that data.  data.size() must match
-    // header.SizeInBytes.  The mesh returned starts a data[0], so however data
-    // was allocated is how the mesh should be deallocated.
-    static Mesh *initialize(quint16 meshVersion, quint16 meshFlags, QSSGByteView data);
-
     quint32 saveMulti(QIODevice &inStream, quint32 inId = 0) const;
     static MultiLoadResult loadMulti(QIODevice &inStream, quint32 inId);
     static bool isMulti(QIODevice &inStream);

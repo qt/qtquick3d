@@ -285,18 +285,6 @@ inline quint32 nextIndex(const QByteArray &inData, QSSGRenderComponentType inCom
     return 0;
 }
 
-Mesh *doInitialize(quint16 /*meshFlags*/, QSSGByteView data)
-{
-    const quint8 *newMem = data.begin();
-    quint32 amountLeft = quint32(data.size() - sizeof(Mesh));
-    MemoryAssigningSerializer s(newMem, amountLeft, sizeof(Mesh));
-    Mesh *retval = const_cast<Mesh *>(reinterpret_cast<const Mesh *>(newMem));
-    serialize(s, *retval);
-    if (s.m_failure)
-        return nullptr;
-    return retval;
-}
-
 quint32 getAlignedOffset(quint32 offset, quint32 align)
 {
     Q_ASSERT(align > 0);
@@ -369,24 +357,24 @@ Mesh *Mesh::load(QIODevice &inStream)
     char *meshBufferData = reinterpret_cast<char *>(::malloc(header.m_sizeInBytes));
     qint64 sizeRead = inStream.read(meshBufferData, header.m_sizeInBytes);
     if (sizeRead == header.m_sizeInBytes) {
-        QSSGByteView meshBuffer = toByteView(meshBufferData, header.m_sizeInBytes);
-        Mesh *retval = initialize(header.m_fileVersion, header.m_headerFlags, meshBuffer);
-        if (retval == nullptr)
+        if (header.m_fileVersion != MeshDataHeader::getCurrentFileVersion())
             goto failure;
-        return retval;
+
+        const quint8 *data = reinterpret_cast<const quint8 *>(meshBufferData);
+        quint32 amountLeft = quint32(header.m_sizeInBytes - sizeof(Mesh));
+        MemoryAssigningSerializer s(data, amountLeft, sizeof(Mesh));
+        Mesh *mesh = const_cast<Mesh *>(reinterpret_cast<const Mesh *>(data));
+        serialize(s, *mesh);
+        if (s.m_failure)
+            goto failure;
+
+        return mesh;
     }
 
 failure:
     Q_ASSERT(false);
     ::free(meshBufferData);
     return nullptr;
-}
-
-Mesh *Mesh::initialize(quint16 meshVersion, quint16 meshFlags, QSSGByteView data)
-{
-    if (meshVersion != MeshDataHeader::getCurrentFileVersion())
-        return nullptr;
-    return doInitialize(meshFlags, data);
 }
 
 quint32 Mesh::saveMulti(QIODevice &inStream, quint32 inId) const
