@@ -49,64 +49,35 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderSubsetBase
+struct QSSGRenderSubset
 {
     quint32 count;
     quint32 offset;
     QSSGBounds3 bounds; // Vertex buffer bounds
     QSSGMeshBVHNode *bvhRoot = nullptr;
-    QSSGRenderSubsetBase() = default;
-    QSSGRenderSubsetBase(const QSSGRenderSubsetBase &inOther)
-        : count(inOther.count)
-        , offset(inOther.offset)
-        , bounds(inOther.bounds)
-        , bvhRoot(inOther.bvhRoot)
-    {
-    }
-
-    QSSGRenderSubsetBase &operator=(const QSSGRenderSubsetBase &inOther)
-    {
-        count = inOther.count;
-        offset = inOther.offset;
-        bounds = inOther.bounds;
-        bvhRoot = inOther.bvhRoot;
-        return *this;
-    }
-};
-
-struct QSSGRenderSubset : public QSSGRenderSubsetBase
-{
     struct {
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
     } rhi;
-    QString name;
-    QVector<QSSGRenderSubsetBase> subSubsets;
 
     QSSGRenderSubset() = default;
     QSSGRenderSubset(const QSSGRenderSubset &inOther)
-        : QSSGRenderSubsetBase(inOther)
-        , name(inOther.name)
-        , subSubsets(inOther.subSubsets)
+        : count(inOther.count)
+        , offset(inOther.offset)
+        , bounds(inOther.bounds)
+        , bvhRoot(inOther.bvhRoot)
+        , rhi(inOther.rhi)
     {
-        rhi = inOther.rhi;
     }
-    // Note that subSubsets is *not* copied.
-    QSSGRenderSubset(const QSSGRenderSubset &inOther, const QSSGRenderSubsetBase &inBase)
-        : QSSGRenderSubsetBase(inBase)
-        , name(inOther.name)
-    {
-        rhi = inOther.rhi;
-    }
-
     QSSGRenderSubset &operator=(const QSSGRenderSubset &inOther)
     {
         if (this != &inOther) {
-            QSSGRenderSubsetBase::operator=(inOther);
+            count = inOther.count;
+            offset = inOther.offset;
+            bounds = inOther.bounds;
+            bvhRoot = inOther.bvhRoot;
             rhi = inOther.rhi;
-            name = inOther.name;
-            subSubsets = inOther.subSubsets;
         }
         return *this;
     }
