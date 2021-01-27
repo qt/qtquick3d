@@ -838,23 +838,26 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     return true;
 }
 
-QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
+NewMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
 {
     QByteArray theName = inRelativePath.toUtf8();
     for (size_t idx = 0; idx < nPrimitives; ++idx) {
         if (primitives[idx].primitive == theName) {
             QString pathBuilder = QString::fromLatin1(primitivesDirectory);
             pathBuilder += QLatin1String(primitives[idx].file);
-            quint32 id = 1;
-            QSharedPointer<QIODevice> theInStream(inputStreamFactory->getStreamForFile(pathBuilder));
-            if (theInStream)
-                return QSSGMeshUtilities::Mesh::loadMulti(*theInStream, id);
+            const quint32 id = 1;
+            QSharedPointer<QIODevice> device(inputStreamFactory->getStreamForFile(pathBuilder));
+            if (device) {
+                NewMesh::Mesh mesh = NewMesh::Mesh::loadMesh(device.data(), id);
+                if (mesh.isValid())
+                    return mesh;
+            }
 
             qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(pathBuilder));
-            return QSSGMeshUtilities::MultiLoadResult();
+            return NewMesh::Mesh();
         }
     }
-    return QSSGMeshUtilities::MultiLoadResult();
+    return NewMesh::Mesh();
 }
 
 QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderPath &inSourcePath) const
@@ -890,19 +893,17 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel *model)
     return theMesh;
 }
 
-QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result)
+QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const NewMesh::Mesh &mesh)
 {
-    QSSGRenderMesh *newMesh = new QSSGRenderMesh(result.m_mesh->m_drawMode,
-                                                 result.m_mesh->m_winding,
-                                                 result.m_id);
-    quint8 *baseAddress = reinterpret_cast<quint8 *>(result.m_mesh);
-    QSSGByteView vertexBufferData(result.m_mesh->m_vertexBuffer.m_data.begin(baseAddress),
-                                  result.m_mesh->m_vertexBuffer.m_data.size());
+    QSSGRenderMesh *newMesh = new QSSGRenderMesh(QSSGRenderDrawMode(mesh.drawMode()),
+                                                 QSSGRenderWinding(mesh.winding()));
+    const NewMesh::Mesh::VertexBuffer vertexBuffer = mesh.vertexBuffer();
+    const NewMesh::Mesh::IndexBuffer indexBuffer = mesh.indexBuffer();
 
     QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::UnsignedInteger16;
     QRhiCommandBuffer::IndexFormat rhiIndexFormat = QRhiCommandBuffer::IndexUInt16;
-    if (result.m_mesh->m_indexBuffer.m_data.size()) {
-        indexBufComponentType = result.m_mesh->m_indexBuffer.m_componentType;
+    if (!indexBuffer.data.isEmpty()) {
+        indexBufComponentType = QSSGRenderComponentType(indexBuffer.componentType);
         const quint32 sizeofType = getSizeOfType(indexBufComponentType);
         if (sizeofType == 2 || sizeofType == 4) {
             // Ensure type is unsigned; else things will fail in rendering pipeline.
@@ -927,31 +928,26 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
     rhi.vertexBuffer = new QSSGRhiBuffer(*context.data(),
                                          QRhiBuffer::Static,
                                          QRhiBuffer::VertexBuffer,
-                                         result.m_mesh->m_vertexBuffer.m_stride,
-                                         vertexBufferData.size());
-    rub->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBufferData);
+                                         vertexBuffer.stride,
+                                         vertexBuffer.data.size());
+    rub->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBuffer.data);
 
-    if (result.m_mesh->m_indexBuffer.m_data.size()) {
-        QSSGByteView indexBufferData(result.m_mesh->m_indexBuffer.m_data.begin(baseAddress),
-                                     result.m_mesh->m_indexBuffer.m_data.size());
+    if (!indexBuffer.data.isEmpty()) {
         rhi.indexBuffer = new QSSGRhiBuffer(*context.data(),
                                             QRhiBuffer::Static,
                                             QRhiBuffer::IndexBuffer,
                                             0,
-                                            indexBufferData.size(),
+                                            indexBuffer.data.size(),
                                             rhiIndexFormat);
-        rub->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBufferData);
+        rub->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBuffer.data);
     }
 
-    const QSSGMeshUtilities::OffsetDataRef<QSSGMeshUtilities::MeshVertexBufferEntry> &entries
-            = result.m_mesh->m_vertexBuffer.m_entries;
-    entryBuffer.resize(entries.size());
-    for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx)
-        entryBuffer[entryIdx] = entries.index(baseAddress, entryIdx).toVertexBufferEntry(baseAddress);
-
+    entryBuffer.resize(vertexBuffer.entries.size());
+    for (quint32 entryIdx = 0, entryEnd = vertexBuffer.entries.size(); entryIdx < entryEnd; ++entryIdx)
+        entryBuffer[entryIdx] = vertexBuffer.entries[entryIdx].toRenderVertexBufferEntry();
 
     QVarLengthArray<QRhiVertexInputAttribute, 4> inputAttrs;
-    for (quint32 entryIdx = 0, entryEnd = entries.size(); entryIdx < entryEnd; ++entryIdx) {
+    for (quint32 entryIdx = 0, entryEnd = entryBuffer.size(); entryIdx < entryEnd; ++entryIdx) {
         const QSSGRenderVertexBufferEntry &vbe(entryBuffer[entryIdx]);
         const int binding = 0;
         const int location = 0; // for now, will be resolved later, hence the separate inputLayoutInputNames list
@@ -960,85 +956,86 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         const int offset = int(vbe.m_firstItemOffset);
 
         bool ok = true;
-        if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getPositionAttrName())) {
+        const char *nameStr = vbe.m_name.constData();
+        if (!strcmp(nameStr, NewMesh::MeshInternal::getPositionAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::PositionSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getNormalAttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getNormalAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::NormalSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUV0AttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getUV0AttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::TexCoord0Semantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getUV1AttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getUV1AttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::TexCoord1Semantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getTexTanAttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getTexTanAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::TangentSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getTexBinormalAttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getTexBinormalAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::BinormalSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getColorAttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getColorAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::ColorSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getJointAttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getJointAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::JointSemantic;
-        } else if (!strcmp(vbe.m_name, QSSGMeshUtilities::Mesh::getWeightAttrName())) {
+        } else if (!strcmp(nameStr, NewMesh::MeshInternal::getWeightAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::WeightSemantic;
-        } else if (!strncmp(vbe.m_name, QSSGMeshUtilities::Mesh::getMorphTargetAttrNamePrefix(), 6)) {
+        } else if (!strncmp(nameStr, NewMesh::MeshInternal::getMorphTargetAttrNamePrefix(), 6)) {
             // it's for morphing animation and it is not common to use these
             // attributes. So we will check the prefix first and then remainings
-            if (!strncmp(&(vbe.m_name[6]), "pos", 3)) {
-                if (vbe.m_name[9] == '0') {
+            if (!strncmp(&(nameStr[6]), "pos", 3)) {
+                if (nameStr[9] == '0') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition0Semantic;
-                } else if (vbe.m_name[9] == '1') {
+                } else if (nameStr[9] == '1') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition1Semantic;
-                } else if (vbe.m_name[9] == '2') {
+                } else if (nameStr[9] == '2') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition2Semantic;
-                } else if (vbe.m_name[9] == '3') {
+                } else if (nameStr[9] == '3') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition3Semantic;
-                } else if (vbe.m_name[9] == '4') {
+                } else if (nameStr[9] == '4') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition4Semantic;
-                } else if (vbe.m_name[9] == '5') {
+                } else if (nameStr[9] == '5') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition5Semantic;
-                } else if (vbe.m_name[9] == '6') {
+                } else if (nameStr[9] == '6') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition6Semantic;
-                } else if (vbe.m_name[9] == '7') {
+                } else if (nameStr[9] == '7') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition7Semantic;
                 } else {
-                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    qWarning("Unknown vertex input %s in mesh", nameStr);
                     ok = false;
                 }
-            } else if (!strncmp(&(vbe.m_name[6]), "norm", 4)) {
-                if (vbe.m_name[10] == '0') {
+            } else if (!strncmp(&(nameStr[6]), "norm", 4)) {
+                if (nameStr[10] == '0') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal0Semantic;
-                } else if (vbe.m_name[10] == '1') {
+                } else if (nameStr[10] == '1') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal1Semantic;
-                } else if (vbe.m_name[10] == '2') {
+                } else if (nameStr[10] == '2') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal2Semantic;
-                } else if (vbe.m_name[10] == '3') {
+                } else if (nameStr[10] == '3') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal3Semantic;
                 } else {
-                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    qWarning("Unknown vertex input %s in mesh", nameStr);
                     ok = false;
                 }
-            } else if (!strncmp(&(vbe.m_name[6]), "tan", 3)) {
-                if (vbe.m_name[9] == '0') {
+            } else if (!strncmp(&(nameStr[6]), "tan", 3)) {
+                if (nameStr[9] == '0') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetTangent0Semantic;
-                } else if (vbe.m_name[9] == '1') {
+                } else if (nameStr[9] == '1') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetTangent1Semantic;
                 } else {
-                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    qWarning("Unknown vertex input %s in mesh", nameStr);
                     ok = false;
                 }
-            } else if (!strncmp(&(vbe.m_name[6]), "binorm", 6)) {
-                if (vbe.m_name[12] == '0') {
+            } else if (!strncmp(&(nameStr[6]), "binorm", 6)) {
+                if (nameStr[12] == '0') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetBinormal0Semantic;
-                } else if (vbe.m_name[12] == '1') {
+                } else if (nameStr[12] == '1') {
                     rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetBinormal1Semantic;
                 } else {
-                    qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                    qWarning("Unknown vertex input %s in mesh", nameStr);
                     ok = false;
                 }
             } else {
-                qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+                qWarning("Unknown vertex input %s in mesh", nameStr);
                 ok = false;
             }
         } else {
-            qWarning("Unknown vertex input %s in mesh", vbe.m_name);
+            qWarning("Unknown vertex input %s in mesh", nameStr);
             ok = false;
         }
         if (ok) {
@@ -1047,18 +1044,19 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMeshUtilities::Mul
         }
     }
     rhi.ia.inputLayout.setAttributes(inputAttrs.cbegin(), inputAttrs.cend());
-    rhi.ia.inputLayout.setBindings({ result.m_mesh->m_vertexBuffer.m_stride });
-    rhi.ia.topology = QSSGRhiInputAssemblerState::toTopology(result.m_mesh->m_drawMode);
+    rhi.ia.inputLayout.setBindings({ vertexBuffer.stride });
+    rhi.ia.topology = QSSGRhiInputAssemblerState::toTopology(QSSGRenderDrawMode(mesh.drawMode()));
     rhi.ia.vertexBuffer = rhi.vertexBuffer;
     rhi.ia.indexBuffer = rhi.indexBuffer;
 
-    for (quint32 subsetIdx = 0, subsetEnd = result.m_mesh->m_subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
+    QVector<NewMesh::Mesh::Subset> meshSubsets = mesh.subsets();
+    for (quint32 subsetIdx = 0, subsetEnd = meshSubsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
         QSSGRenderSubset subset;
-        const QSSGMeshUtilities::MeshSubset &source(result.m_mesh->m_subsets.index(baseAddress, subsetIdx));
-        subset.bounds = source.m_bounds;
+        const NewMesh::Mesh::Subset &source(meshSubsets[subsetIdx]);
+        subset.bounds = QSSGBounds3(source.bounds.min, source.bounds.max);
         subset.bvhRoot = nullptr;
-        subset.count = source.m_count;
-        subset.offset = source.m_offset;
+        subset.count = source.count;
+        subset.offset = source.offset;
 
         if (rhi.vertexBuffer) {
             subset.rhi.vertexBuffer = rhi.vertexBuffer;
@@ -1197,10 +1195,8 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
     if (meshItr != meshMap.cend())
         return meshItr.value();
 
-    // loading new mesh
-    QSSGMeshUtilities::MultiLoadResult result = loadMeshData(inMeshPath);
-
-    if (result.m_mesh == nullptr) {
+    NewMesh::Mesh result = loadMeshData(inMeshPath);
+    if (!result.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
         return nullptr;
     }
@@ -1208,15 +1204,14 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
     auto ret = createRenderMesh(result);
     meshMap.insert(inMeshPath, ret);
 
-    ::free(result.m_mesh);
     return ret;
 }
 
 QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry,
-                                                  QSSGMeshUtilities::Mesh *mesh,
+                                                  const NewMesh::Mesh &mesh,
                                                   bool update)
 {
-    if (geometry && mesh) {
+    if (geometry && mesh.isValid()) {
         CustomMeshMap::iterator meshItr = customMeshMap.find(geometry);
         // Only create the mesh if it doesn't yet exist or update is true
         if (meshItr == customMeshMap.end() || update) {
@@ -1224,11 +1219,9 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry,
                 delete meshItr.value();
                 customMeshMap.erase(meshItr);
             }
-            QSSGMeshUtilities::MultiLoadResult result;
-            result.m_mesh = mesh;
-            auto ret = createRenderMesh(result);
-            customMeshMap.insert(geometry, ret);
-            return ret;
+            QSSGRenderMesh *result = createRenderMesh(mesh);
+            customMeshMap.insert(geometry, result);
+            return result;
         }
     }
     return nullptr;
@@ -1236,20 +1229,13 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry,
 
 QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
 {
-    // loading new mesh
-    QSSGMeshUtilities::MultiLoadResult result = loadMeshData(inSourcePath);
-
-    if (result.m_mesh == nullptr) {
+    NewMesh::Mesh mesh = loadMeshData(inSourcePath);
+    if (!mesh.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inSourcePath.path()));
         return nullptr;
     }
-
-    // Build BVH for Mesh
-    QSSGMeshBVHBuilder meshBVHBuilder(result.m_mesh);
-    auto bvh = meshBVHBuilder.buildTree();
-
-    ::free(result.m_mesh);
-    return bvh;
+    QSSGMeshBVHBuilder meshBVHBuilder(mesh);
+    return meshBVHBuilder.buildTree();
 }
 
 QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
@@ -1258,7 +1244,7 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
         return nullptr;
 
     // We only support generating a BVH with Triangle primitives
-    if (geometry->primitiveType() != QSSGRenderGeometry::Triangles)
+    if (geometry->primitiveType() != NewMesh::Mesh::DrawMode::Triangles)
         return nullptr;
 
     // Build BVH
@@ -1270,19 +1256,19 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
 
     for (int i = 0; i < geometry->attributeCount(); ++i) {
         auto attribute = geometry->attribute(i);
-        if (attribute.semantic == QSSGRenderGeometry::Attribute::PositionSemantic) {
+        if (attribute.semantic == NewMesh::RuntimeMeshData::Attribute::PositionSemantic) {
             posOffset = attribute.offset;
-        } else if (attribute.semantic == QSSGRenderGeometry::Attribute::TexCoord0Semantic) {
+        } else if (attribute.semantic == NewMesh::RuntimeMeshData::Attribute::TexCoord0Semantic) {
             hasUV = true;
             uvOffset = attribute.offset;
-        } else if (!hasUV && attribute.semantic == QSSGRenderGeometry::Attribute::TexCoord1Semantic) {
+        } else if (!hasUV && attribute.semantic == NewMesh::RuntimeMeshData::Attribute::TexCoord1Semantic) {
             hasUV = true;
             uvOffset = attribute.offset;
-        } else if (attribute.semantic == QSSGRenderGeometry::Attribute::IndexSemantic) {
+        } else if (attribute.semantic == NewMesh::RuntimeMeshData::Attribute::IndexSemantic) {
             hasIndexBuffer = true;
-            if (attribute.componentType == QSSGRenderGeometry::Attribute::I16Type)
+            if (attribute.componentType == NewMesh::Mesh::ComponentType::Int16)
                 indexBufferFormat = QSSGRenderComponentType::Integer16;
-            else if (attribute.componentType == QSSGRenderGeometry::Attribute::I32Type)
+            else if (attribute.componentType == NewMesh::Mesh::ComponentType::Int32)
                 indexBufferFormat = QSSGRenderComponentType::Integer32;
         }
     }
@@ -1298,30 +1284,33 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
     return meshBVHBuilder.buildTree();
 }
 
-QSSGMeshUtilities::MultiLoadResult QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath) const
+NewMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath) const
 {
-    // loading new mesh
-    QSSGMeshUtilities::MultiLoadResult result;
+    NewMesh::Mesh result;
 
     // check to see if this is a primitive mesh
     if (inMeshPath.path().startsWith(QChar::fromLatin1('#')))
         result = loadPrimitive(inMeshPath.path());
 
     // Attempt a load from the filesystem if this mesh isn't a primitive.
-    if (result.m_mesh == nullptr) {
+    if (!result.isValid()) {
         QString pathBuilder = inMeshPath.path();
         int poundIndex = pathBuilder.lastIndexOf(QChar::fromLatin1('#'));
-        int id = 0;
+        quint32 id = 0;
         if (poundIndex != -1) {
-            id = QStringView(pathBuilder).mid(poundIndex + 1).toInt();
+            id = QStringView(pathBuilder).mid(poundIndex + 1).toUInt();
             pathBuilder = pathBuilder.left(poundIndex);
         }
         if (!pathBuilder.isEmpty()) {
-            QSharedPointer<QIODevice> ioStream(inputStreamFactory->getStreamForFile(pathBuilder));
-            if (ioStream)
-                result = QSSGMeshUtilities::Mesh::loadMulti(*ioStream, id);
+            QSharedPointer<QIODevice> device(inputStreamFactory->getStreamForFile(pathBuilder));
+            if (device) {
+                NewMesh::Mesh mesh = NewMesh::Mesh::loadMesh(device.data(), id);
+                if (mesh.isValid())
+                    result = mesh;
+            }
         }
     }
+
     return result;
 }
 

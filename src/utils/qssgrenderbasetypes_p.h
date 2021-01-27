@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class QSSGRenderComponentType // stored in mesh files, the values must not change
+enum class QSSGRenderComponentType // stored in mesh files, the values must not change, must match Mesh::ComponentType
 {
     UnsignedInteger8 = 1,
     Integer8,
@@ -984,7 +984,7 @@ inline const char *toString(QSSGRenderTextureCoordOp value)
 
 struct QSSGRenderVertexBufferEntry
 {
-    const char *m_name;
+    QByteArray m_name;
     /** Datatype of the this entry points to in the buffer */
     QSSGRenderComponentType m_componentType;
     /** Number of components of each data member. 1,2,3, or 4.  Don't be stupid.*/
@@ -992,16 +992,16 @@ struct QSSGRenderVertexBufferEntry
     /** Offset from the beginning of the buffer of the first item */
     quint32 m_firstItemOffset;
 
-    QSSGRenderVertexBufferEntry(const char *nm,
-                                  QSSGRenderComponentType type,
-                                  quint32 numComponents,
-                                  quint32 firstItemOffset = 0)
+    QSSGRenderVertexBufferEntry(const QByteArray &nm,
+                                QSSGRenderComponentType type,
+                                quint32 numComponents,
+                                quint32 firstItemOffset = 0)
         : m_name(nm), m_componentType(type), m_numComponents(numComponents), m_firstItemOffset(firstItemOffset)
     {
     }
 
     QSSGRenderVertexBufferEntry()
-        : m_name(nullptr), m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0), m_firstItemOffset(0)
+        : m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0), m_firstItemOffset(0)
     {
     }
 
@@ -1025,7 +1025,7 @@ struct QSSGRenderVertexBufferEntry
     }
 };
 
-enum class QSSGRenderDrawMode // stored in mesh files, the values must not change
+enum class QSSGRenderDrawMode // stored in mesh files, the values must not change, must match Mesh::DrawMode
 {
     Points = 1,
     LineStrip,
@@ -1033,11 +1033,10 @@ enum class QSSGRenderDrawMode // stored in mesh files, the values must not chang
     Lines,
     TriangleStrip,
     TriangleFan,
-    Triangles,
-    Patches,
+    Triangles
 };
 
-enum class QSSGRenderWinding
+enum class QSSGRenderWinding // stored in mesh files, the values must not change, must match Mesh::Winding
 {
     Clockwise = 1,
     CounterClockwise

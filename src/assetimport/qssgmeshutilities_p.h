@@ -53,119 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QSSGMeshUtilities {
-
-struct RuntimeMeshData // for custom geometry (QQuick3DGeometry)
-{
-    enum PrimitiveType { // must match QSSGRenderGeometry::PrimitiveType
-        Points = 0,
-        LineStrip,
-        LineLoop,
-        Lines,
-        TriangleStrip,
-        TriangleFan,
-        Triangles, // Default primitive type
-        Patches
-    };
-
-    struct Attribute {
-        enum Semantic {
-            IndexSemantic = 0,
-            PositionSemantic,                       // attr_pos
-            NormalSemantic,                         // attr_norm
-            TexCoordSemantic,                       // attr_uv0
-            TangentSemantic,                        // attr_textan
-            BinormalSemantic,                       // attr_binormal
-            JointSemantic,                          // attr_joints
-            WeightSemantic,                         // attr_weights
-            ColorSemantic,                          // attr_color
-            TargetPositionSemantic,                 // attr_tpos0
-            TargetNormalSemantic,                   // attr_tnorm0
-            TargetTangentSemantic,                  // attr_ttan0
-            TargetBinormalSemantic,                 // attr_tbinorm0
-            TexCoord1Semantic,                      // attr_uv1
-            TexCoord0Semantic = TexCoordSemantic    // attr_uv0
-        };
-        enum ComponentType { // must match QSSGRenderGeometry::Attribute::ComponentType
-            U8Type = 0,
-            I8Type,
-            U16Type,
-            I16Type,
-            U32Type,
-            I32Type,
-            U64Type,
-            I64Type,
-            F16Type,
-            F32Type,
-            F64Type
-        };
-
-        int typeSize() const
-        {
-            switch (componentType) {
-            case U8Type:  return 1;
-            case I8Type:  return 1;
-            case U16Type: return 2;
-            case I16Type: return 2;
-            case U32Type: return 4;
-            case I32Type: return 4;
-            case U64Type: return 8;
-            case I64Type: return 8;
-            case F16Type: return 2;
-            case F32Type: return 4;
-            case F64Type: return 8;
-            default:
-                Q_ASSERT(false);
-                return 0;
-            }
-        }
-
-        int componentCount() const
-        {
-            switch (semantic) {
-            case IndexSemantic:             return 1;
-            case PositionSemantic:          return 3;
-            case NormalSemantic:            return 3;
-            case TexCoord0Semantic:         return 2;
-            case TexCoord1Semantic:         return 2;
-            case TangentSemantic:           return 3;
-            case BinormalSemantic:          return 3;
-            case JointSemantic:             return 4;
-            case WeightSemantic:            return 4;
-            case ColorSemantic:             return 4;
-            case TargetPositionSemantic:    return 3;
-            case TargetNormalSemantic:      return 3;
-            case TargetTangentSemantic:     return 3;
-            case TargetBinormalSemantic:    return 3;
-            default:
-                Q_ASSERT(false);
-                return 0;
-            }
-        }
-
-        Semantic semantic = PositionSemantic;
-        ComponentType componentType = F32Type;
-        int offset = 0;
-    };
-
-    static const int MAX_ATTRIBUTES = 8;
-
-    void clear()
-    {
-        m_vertexBuffer.clear();
-        m_indexBuffer.clear();
-        m_attributeCount = 0;
-        m_primitiveType = Triangles;
-    }
-
-    QByteArray m_vertexBuffer;
-    QByteArray m_indexBuffer;
-
-    Attribute m_attributes[MAX_ATTRIBUTES];
-    int m_attributeCount = 0;
-    PrimitiveType m_primitiveType = Triangles;
-    int m_stride = 0;
-};
+namespace OldMesh {
 
 template<typename DataType>
 struct OffsetDataRef
@@ -286,44 +174,7 @@ struct Joint
     }
 };
 
-// Tells us what offset a mesh with this ID starts.
-struct MeshMultiEntry
-{
-    quint64 m_meshOffset;
-    quint32 m_meshId;
-    quint32 m_padding;
-    MeshMultiEntry() : m_meshOffset(0), m_meshId(0), m_padding(0) {}
-    MeshMultiEntry(quint64 mo, quint32 meshId) : m_meshOffset(mo), m_meshId(meshId), m_padding(0) {}
-};
-
-// The multi headers are actually saved at the end of the file.
-// Thus when you append to the file we overwrite the last header
-// then write out a new header structure.
-// The last 8 bytes of the file contain the multi header.
-// The previous N*8 bytes contain the mesh entries.
-struct MeshMultiHeader
-{
-    quint32 m_fileId;
-    quint32 m_version;
-    OffsetDataRef<MeshMultiEntry> m_entries;
-    static quint32 getMultiStaticFileId() { return 555777497U; }
-    static quint32 getMultiStaticVersion() { return 1; }
-
-    MeshMultiHeader() : m_fileId(getMultiStaticFileId()), m_version(getMultiStaticVersion()) {}
-};
-
-struct Mesh;
-
-// Result of a multi-load operation.  This returns both the mesh
-// and the id of the mesh that was loaded.
-struct MultiLoadResult
-{
-    Mesh *m_mesh;
-    quint32 m_id;
-    MultiLoadResult(Mesh *inMesh, quint32 inId) : m_mesh(inMesh), m_id(inId) {}
-    MultiLoadResult() : m_mesh(nullptr), m_id(0) {}
-    operator Mesh *() { return m_mesh; }
-};
+struct MeshMultiHeader;
 
 struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
 {
@@ -343,6 +194,373 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
          QSSGRenderWinding winding = QSSGRenderWinding::CounterClockwise)
         : m_vertexBuffer(vbuf), m_indexBuffer(ibuf), m_subsets(insts), m_joints(joints), m_drawMode(drawMode), m_winding(winding)
     {
+    }
+
+    // Run through the vertex buffer items indicated by subset Assume vbuf
+    // entry[posEntryIndex] is the position entry This entry has to be 3
+    // component float. Using this entry and the (possibly empty) index buffer
+    // along with the (possibly emtpy) logical vbuf data return a bounds of the
+    // given vertex buffer.
+    static QSSGBounds3 calculateSubsetBounds(const QSSGRenderVertexBufferEntry &inEntry,
+                                               const QByteArray &inVertxData,
+                                               quint32 inStride,
+                                               const QByteArray &inIndexData,
+                                               QSSGRenderComponentType inIndexCompType,
+                                               quint32 inSubsetCount,
+                                               quint32 inSubsetOffset);
+
+    void save(QIODevice &outStream) const;
+    quint32 saveMulti(QIODevice &inStream, quint32 inId = 0) const;
+    static MeshMultiHeader *loadMultiHeader(QIODevice &inStream);
+};
+
+struct MeshBuilderVBufEntry
+{
+    const char *m_name;
+    QByteArray m_data;
+    QSSGRenderComponentType m_componentType;
+    quint32 m_numComponents;
+    MeshBuilderVBufEntry() : m_name(nullptr), m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0)
+    {
+    }
+    MeshBuilderVBufEntry(const char *name, const QByteArray &data, QSSGRenderComponentType componentType, quint32 numComponents)
+        : m_name(name), m_data(data), m_componentType(componentType), m_numComponents(numComponents)
+    {
+    }
+};
+
+class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBuilder
+{
+public:
+    QAtomicInt ref;
+
+    QSSGMeshBuilder();
+    ~QSSGMeshBuilder();
+    void reset();
+
+    // Set the vertex buffer and have the mesh builder interleave the data for you
+    bool setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries);
+    // The builder (and the majority of the rest of the product) only supports unsigned 16 bit
+    // indexes
+    void setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp);
+    // Assets if the supplied parameters are out of range.
+    void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace);
+
+    // Add a subset, which equates roughly to a draw call. If the mesh has an
+    // index buffer then this subset refers to that index buffer, else it is
+    // assumed to index into the vertex buffer. count and offset do exactly
+    // what they seem to do, while boundsPositionEntryIndex, if set to
+    // something other than std::numeric_limits<quint32>::max(), drives the
+    // calculation of the aa-bounds of the subset using calculateSubsetBounds.
+    void addMeshSubset(const char16_t *inSubsetName,
+                       quint32 count,
+                       quint32 offset,
+                       quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max());
+
+    // Builds and returns the current mesh. The returned reference is valid
+    // only until the builder is alive or is reset.
+    Mesh &getMesh();
+
+private:
+    struct DynamicVBuf
+    {
+        quint32 m_stride;
+        QVector<QSSGRenderVertexBufferEntry> m_vertexBufferEntries;
+        QByteArray m_vertexData;
+
+        void clear()
+        {
+            m_stride = 0;
+            m_vertexBufferEntries.clear();
+            m_vertexData.clear();
+        }
+    };
+
+    struct DynamicIndexBuf
+    {
+        QSSGRenderComponentType m_compType;
+        QByteArray m_indexData;
+        void clear() { m_indexData.clear(); }
+    };
+
+    struct SubsetDesc
+    {
+        quint32 m_count{ 0 };
+        quint32 m_offset{ 0 };
+
+        QSSGBounds3 m_bounds;
+        QString m_name;
+        SubsetDesc(quint32 c, quint32 off) : m_count(c), m_offset(off) {}
+        SubsetDesc() = default;
+    };
+
+    DynamicVBuf m_vertexBuffer;
+    DynamicIndexBuf m_indexBuffer;
+    QVector<Joint> m_joints;
+    QVector<SubsetDesc> m_meshSubsetDescs;
+    QSSGRenderDrawMode m_drawMode;
+    QSSGRenderWinding m_winding;
+    QVector<quint8> m_meshBuffer;
+};
+
+} // namespace OldMesh
+
+namespace NewMesh {
+
+struct RuntimeMeshData;
+
+class Q_QUICK3DASSETIMPORT_EXPORT Mesh
+{
+public:
+    enum class DrawMode {
+        Points = 1,
+        LineStrip,
+        LineLoop,
+        Lines,
+        TriangleStrip,
+        TriangleFan,
+        Triangles
+    };
+
+    enum class Winding {
+        Clockwise = 1,
+        CounterClockwise
+    };
+
+    enum class ComponentType {
+        UnsignedInt8 = 1,
+        Int8,
+        UnsignedInt16,
+        Int16,
+        UnsignedInt32,
+        Int32,
+        UnsignedInt64,
+        Int64,
+        Float16,
+        Float32,
+        Float64
+    };
+
+    struct VertexBufferEntry {
+        ComponentType componentType = ComponentType::Float32;
+        quint32 componentCount = 0;
+        quint32 offset = 0;
+        QByteArray name;
+
+        QSSGRenderVertexBufferEntry toRenderVertexBufferEntry() const {
+            return QSSGRenderVertexBufferEntry(name,
+                                               QSSGRenderComponentType(componentType),
+                                               componentCount,
+                                               offset);
+        }
+    };
+
+    struct VertexBuffer {
+        quint32 stride = 0;
+        QVector<VertexBufferEntry> entries;
+        QByteArray data;
+    };
+
+    struct IndexBuffer {
+        ComponentType componentType = ComponentType::UnsignedInt32;
+        QByteArray data;
+    };
+
+    struct SubsetBounds {
+        QVector3D min;
+        QVector3D max;
+    };
+
+    struct Subset {
+        QString name;
+        SubsetBounds bounds;
+        quint32 count = 0;
+        quint32 offset = 0;
+    };
+
+    struct Joint {
+        quint32 jointId = 0;
+        quint32 parentId = 0;
+        QMatrix4x4 inverseBindPose;
+        QMatrix4x4 localToGlobalBoneSpace;
+    };
+
+    // can just return by value (big data is all implicitly shared)
+    VertexBuffer vertexBuffer() const { return m_vertexBuffer; }
+    IndexBuffer indexBuffer() const { return m_indexBuffer; }
+    QVector<Subset> subsets() const { return m_subsets; }
+    QVector<Joint> joints() const { return m_joints; }
+
+    // id 0 == first, otherwise has to match
+    static Mesh loadMesh(QIODevice *device, quint32 id = 0);
+
+    static QMap<quint32, Mesh> loadAll(QIODevice *device);
+
+    static Mesh fromRuntimeData(const RuntimeMeshData &data, const QSSGBounds3 &bounds, QString *error);
+
+    bool isValid() const { return !m_subsets.isEmpty(); }
+
+    DrawMode drawMode() const { return m_drawMode; }
+    Winding winding() const { return m_winding; }
+
+private:
+    DrawMode m_drawMode;
+    Winding m_winding;
+    VertexBuffer m_vertexBuffer;
+    IndexBuffer m_indexBuffer;
+    QVector<Subset> m_subsets;
+    QVector<Joint> m_joints;
+    friend struct MeshInternal;
+};
+
+struct Q_QUICK3DASSETIMPORT_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeometry, QSSGRenderGeometry)
+{
+    struct Attribute {
+        enum Semantic {
+            IndexSemantic = 0,
+            PositionSemantic,                       // attr_pos
+            NormalSemantic,                         // attr_norm
+            TexCoordSemantic,                       // attr_uv0
+            TangentSemantic,                        // attr_textan
+            BinormalSemantic,                       // attr_binormal
+            JointSemantic,                          // attr_joints
+            WeightSemantic,                         // attr_weights
+            ColorSemantic,                          // attr_color
+            TargetPositionSemantic,                 // attr_tpos0
+            TargetNormalSemantic,                   // attr_tnorm0
+            TargetTangentSemantic,                  // attr_ttan0
+            TargetBinormalSemantic,                 // attr_tbinorm0
+            TexCoord1Semantic,                      // attr_uv1
+            TexCoord0Semantic = TexCoordSemantic    // attr_uv0
+        };
+
+        Semantic semantic = PositionSemantic;
+        Mesh::ComponentType componentType = Mesh::ComponentType::Float32;
+        int offset = 0;
+
+        int componentCount() const {
+            switch (semantic) {
+            case IndexSemantic:             return 1;
+            case PositionSemantic:          return 3;
+            case NormalSemantic:            return 3;
+            case TexCoord0Semantic:         return 2;
+            case TexCoord1Semantic:         return 2;
+            case TangentSemantic:           return 3;
+            case BinormalSemantic:          return 3;
+            case JointSemantic:             return 4;
+            case WeightSemantic:            return 4;
+            case ColorSemantic:             return 4;
+            case TargetPositionSemantic:    return 3;
+            case TargetNormalSemantic:      return 3;
+            case TargetTangentSemantic:     return 3;
+            case TargetBinormalSemantic:    return 3;
+            default:
+                Q_ASSERT(false);
+                return 0;
+            }
+        }
+    };
+
+    static const int MAX_ATTRIBUTES = 8;
+
+    void clear()
+    {
+        m_vertexBuffer.clear();
+        m_indexBuffer.clear();
+        m_attributeCount = 0;
+        m_primitiveType = Mesh::DrawMode::Triangles;
+    }
+
+    QByteArray m_vertexBuffer;
+    QByteArray m_indexBuffer;
+
+    Attribute m_attributes[MAX_ATTRIBUTES];
+    int m_attributeCount = 0;
+    Mesh::DrawMode m_primitiveType = Mesh::DrawMode::Triangles;
+    int m_stride = 0;
+};
+
+struct Q_QUICK3DASSETIMPORT_EXPORT MeshInternal
+{
+    struct MultiMeshInfo {
+        quint32 fileId = 0;
+        quint32 fileVersion = 0;
+        QMap<quint32, quint64> meshEntries;
+        bool isValid() const {
+            return fileId == 555777497 && fileVersion == 1;
+        }
+    };
+
+    struct MeshDataHeader {
+        quint32 fileId = 0;
+        quint16 fileVersion = 0;
+        quint16 flags = 0;
+        quint32 sizeInBytes = 0;
+        bool isValid() const {
+            return fileId == 3365961549 && fileVersion == 3;
+        }
+    };
+
+    struct MeshOffsetTracker {
+        quint32 startOffset = 0;
+        quint32 byteCounter = 0;
+
+        MeshOffsetTracker(int offset)
+            : startOffset(offset) {}
+
+        int offset() {
+            return startOffset + byteCounter;
+        }
+
+        void alignedAdvance(int advanceAmount) {
+            advance(advanceAmount);
+            quint32 alignmentAmount = 4 - (byteCounter % 4);
+            byteCounter += alignmentAmount;
+        }
+
+        void advance(int advanceAmount) {
+            byteCounter += advanceAmount;
+        }
+    };
+
+    struct Subset {
+        QByteArray rawNameUtf16;
+        quint32 nameLength = 0;
+        Mesh::SubsetBounds bounds;
+        quint32 offset = 0;
+        quint32 count = 0;
+
+        Mesh::Subset toMeshSubset() const {
+            Mesh::Subset subset;
+            subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(rawNameUtf16.constData()));
+            subset.bounds.min = bounds.min;
+            subset.bounds.max = bounds.max;
+            subset.count = count;
+            subset.offset = offset;
+            return subset;
+        }
+    };
+
+    static MultiMeshInfo loadFileHeader(QIODevice *device);
+    static quint64 loadMeshData(QIODevice *device, quint64 offset, Mesh *mesh, MeshDataHeader *header);
+
+    static int byteSizeForComponentType(Mesh::ComponentType componentType) {
+        switch (componentType) {
+        case Mesh::ComponentType::UnsignedInt8:  return 1;
+        case Mesh::ComponentType::Int8:  return 1;
+        case Mesh::ComponentType::UnsignedInt16: return 2;
+        case Mesh::ComponentType::Int16: return 2;
+        case Mesh::ComponentType::UnsignedInt32: return 4;
+        case Mesh::ComponentType::Int32: return 4;
+        case Mesh::ComponentType::UnsignedInt64: return 8;
+        case Mesh::ComponentType::Int64: return 8;
+        case Mesh::ComponentType::Float16: return 2;
+        case Mesh::ComponentType::Float32: return 4;
+        case Mesh::ComponentType::Float64: return 8;
+        default:
+            Q_ASSERT(false);
+            return 0;
+        }
     }
 
     static const char *getPositionAttrName() { return "attr_pos"; }
@@ -412,152 +630,16 @@ struct Q_QUICK3DASSETIMPORT_EXPORT Mesh
         return "attr_unsupported";
     }
 
-    // Run through the vertex buffer items indicated by subset Assume vbuf
-    // entry[posEntryIndex] is the position entry This entry has to be 3
-    // component float. Using this entry and the (possibly empty) index buffer
-    // along with the (possibly emtpy) logical vbuf data return a bounds of the
-    // given vertex buffer.
-    static QSSGBounds3 calculateSubsetBounds(const QSSGRenderVertexBufferEntry &inEntry,
-                                               const QByteArray &inVertxData,
-                                               quint32 inStride,
-                                               const QByteArray &inIndexData,
-                                               QSSGRenderComponentType inIndexCompType,
-                                               quint32 inSubsetCount,
-                                               quint32 inSubsetOffset);
-
-    void save(QIODevice &outStream) const;
-    static Mesh *load(QIODevice &inStream);
-
-    quint32 saveMulti(QIODevice &inStream, quint32 inId = 0) const;
-    static MultiLoadResult loadMulti(QIODevice &inStream, quint32 inId);
-    static bool isMulti(QIODevice &inStream);
-    static MeshMultiHeader *loadMultiHeader(QIODevice &inStream);
+    static QSSGBounds3 calculateSubsetBounds(const Mesh::VertexBufferEntry &entry,
+                                             const QByteArray &vertexBufferData,
+                                             quint32 vertexBufferStride,
+                                             const QByteArray &indexBufferData,
+                                             Mesh::ComponentType indexComponentType,
+                                             quint32 subsetCount,
+                                             quint32 subsetOffset);
 };
 
-struct MeshDataHeader
-{
-    static quint32 getFileId() { return quint32(-929005747); }
-    static quint16 getCurrentFileVersion() { return 3; }
-    quint32 m_fileId;
-    quint16 m_fileVersion;
-    quint16 m_headerFlags;
-    quint32 m_sizeInBytes;
-    MeshDataHeader(quint32 size = 0)
-        : m_fileId(getFileId()), m_fileVersion(getCurrentFileVersion()), m_sizeInBytes(size)
-    {
-    }
-};
-
-struct MeshBuilderVBufEntry
-{
-    const char *m_name;
-    QByteArray m_data;
-    QSSGRenderComponentType m_componentType;
-    quint32 m_numComponents;
-    MeshBuilderVBufEntry() : m_name(nullptr), m_componentType(QSSGRenderComponentType::Float32), m_numComponents(0)
-    {
-    }
-    MeshBuilderVBufEntry(const char *name, const QByteArray &data, QSSGRenderComponentType componentType, quint32 numComponents)
-        : m_name(name), m_data(data), m_componentType(componentType), m_numComponents(numComponents)
-    {
-    }
-};
-
-class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBuilder
-{
-public:
-    QAtomicInt ref;
-
-    QSSGMeshBuilder();
-    ~QSSGMeshBuilder();
-    void reset();
-
-    // Set the vertex buffer and have the mesh builder interleave the data for you
-    bool setVertexBuffer(const QVector<MeshBuilderVBufEntry> &entries);
-    // Set the vertex buffer from interleaved data.
-    void setVertexBuffer(const QVector<QSSGRenderVertexBufferEntry> &entries, quint32 stride, const QByteArray &data);
-    // The builder (and the majority of the rest of the product) only supports unsigned 16 bit
-    // indexes
-    void setIndexBuffer(const QByteArray &data, QSSGRenderComponentType comp);
-    // Assets if the supplied parameters are out of range.
-    void addJoint(qint32 jointID, qint32 parentID, const float *invBindPose, const float *localToGlobalBoneSpace);
-
-    // Add a subset, which equates roughly to a draw call. If the mesh has an
-    // index buffer then this subset refers to that index buffer, else it is
-    // assumed to index into the vertex buffer. count and offset do exactly
-    // what they seem to do, while boundsPositionEntryIndex, if set to
-    // something other than std::numeric_limits<quint32>::max(), drives the
-    // calculation of the aa-bounds of the subset using calculateSubsetBounds.
-    void addMeshSubset(const char16_t *inSubsetName,
-                       quint32 count,
-                       quint32 offset,
-                       quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max());
-
-    void addMeshSubset(const char16_t *inSubsetName,
-                       quint32 count,
-                       quint32 offset,
-                       const QSSGBounds3 &inBounds);
-
-    // Alternative to setVertexBuffer() et al for models with custom geometry.
-    // Returns true if successful. When successful, getMesh() can be called.
-    bool setRuntimeData(const RuntimeMeshData &data, QString &error, const QSSGBounds3 &inBounds);
-
-    // Builds and returns the current mesh. The returned reference is valid
-    // only until the builder is alive or is reset.
-    Mesh &getMesh();
-
-private:
-    struct DynamicVBuf
-    {
-        quint32 m_stride;
-        QVector<QSSGRenderVertexBufferEntry> m_vertexBufferEntries;
-        QByteArray m_vertexData;
-
-        void clear()
-        {
-            m_stride = 0;
-            m_vertexBufferEntries.clear();
-            m_vertexData.clear();
-        }
-    };
-
-    struct DynamicIndexBuf
-    {
-        QSSGRenderComponentType m_compType;
-        QByteArray m_indexData;
-        void clear() { m_indexData.clear(); }
-    };
-
-    struct SubsetDesc
-    {
-        quint32 m_count{ 0 };
-        quint32 m_offset{ 0 };
-
-        QSSGBounds3 m_bounds;
-        QString m_name;
-        SubsetDesc(quint32 c, quint32 off) : m_count(c), m_offset(off) {}
-        SubsetDesc() = default;
-    };
-
-    SubsetDesc createSubset(const char16_t *inName, quint32 count, quint32 offset)
-    {
-        if (inName == nullptr)
-            inName = u"";
-        SubsetDesc retval(count, offset);
-        retval.m_name = QString::fromUtf16(inName);
-        return retval;
-    }
-
-    DynamicVBuf m_vertexBuffer;
-    DynamicIndexBuf m_indexBuffer;
-    QVector<Joint> m_joints;
-    QVector<SubsetDesc> m_meshSubsetDescs;
-    QSSGRenderDrawMode m_drawMode;
-    QSSGRenderWinding m_winding;
-    QVector<quint8> m_meshBuffer;
-};
-
-} // end QSSGMeshUtilities namespace
+} // namespace NewMesh
 
 QT_END_NAMESPACE
 

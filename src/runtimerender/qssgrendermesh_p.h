@@ -89,12 +89,11 @@ struct QSSGRenderMesh
 
     QVector<QSSGRenderSubset> subsets;
     QSSGRenderDrawMode drawMode;
-    QSSGRenderWinding winding; // counterclockwise
-    quint32 meshId; // Id from the file of this mesh.
+    QSSGRenderWinding winding;
     QSSGMeshBVH *bvh = nullptr;
 
-    QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding, quint32 inMeshId)
-        : drawMode(inDrawMode), winding(inWinding), meshId(inMeshId)
+    QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding)
+        : drawMode(inDrawMode), winding(inWinding)
     {
     }
 

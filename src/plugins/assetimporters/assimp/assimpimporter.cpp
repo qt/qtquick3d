@@ -913,7 +913,7 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
         return QStringLiteral("Could not open device to write mesh file");
 
 
-    auto meshBuilder = new QSSGMeshUtilities::QSSGMeshBuilder;
+    auto meshBuilder = new OldMesh::QSSGMeshBuilder;
 
     // Check if we need placeholders in certain channels
     bool needsPositionData = false;
@@ -1184,30 +1184,30 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
 
     // Vertex Buffer Entries
-    QVector<QSSGMeshUtilities::MeshBuilderVBufEntry> entries;
+    QVector<OldMesh::MeshBuilderVBufEntry> entries;
     if (positionData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry positionAttribute( QSSGMeshUtilities::Mesh::getPositionAttrName(),
+        OldMesh::MeshBuilderVBufEntry positionAttribute( NewMesh::MeshInternal::getPositionAttrName(),
                                                                      positionData,
                                                                      QSSGRenderComponentType::Float32,
                                                                      3);
         entries.append(positionAttribute);
     }
     if (normalData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry normalAttribute( QSSGMeshUtilities::Mesh::getNormalAttrName(),
+        OldMesh::MeshBuilderVBufEntry normalAttribute( NewMesh::MeshInternal::getNormalAttrName(),
                                                                    normalData,
                                                                    QSSGRenderComponentType::Float32,
                                                                    3);
         entries.append(normalAttribute);
     }
     if (uv0Data.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry uv0Attribute( QSSGMeshUtilities::Mesh::getUV0AttrName(),
+        OldMesh::MeshBuilderVBufEntry uv0Attribute( NewMesh::MeshInternal::getUV0AttrName(),
                                                                 uv0Data,
                                                                 QSSGRenderComponentType::Float32,
                                                                 uv0Components);
         entries.append(uv0Attribute);
     }
     if (uv1Data.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry uv1Attribute( QSSGMeshUtilities::Mesh::getUV1AttrName(),
+        OldMesh::MeshBuilderVBufEntry uv1Attribute( NewMesh::MeshInternal::getUV1AttrName(),
                                                                 uv1Data,
                                                                 QSSGRenderComponentType::Float32,
                                                                 uv1Components);
@@ -1215,7 +1215,7 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
 
     if (tangentData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry tangentsAttribute( QSSGMeshUtilities::Mesh::getTexTanAttrName(),
+        OldMesh::MeshBuilderVBufEntry tangentsAttribute( NewMesh::MeshInternal::getTexTanAttrName(),
                                                                      tangentData,
                                                                      QSSGRenderComponentType::Float32,
                                                                      3);
@@ -1223,7 +1223,7 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
 
     if (binormalData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry binormalAttribute( QSSGMeshUtilities::Mesh::getTexBinormalAttrName(),
+        OldMesh::MeshBuilderVBufEntry binormalAttribute( NewMesh::MeshInternal::getTexBinormalAttrName(),
                                                                      binormalData,
                                                                      QSSGRenderComponentType::Float32,
                                                                      3);
@@ -1231,7 +1231,7 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
 
     if (vertexColorData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry vertexColorAttribute( QSSGMeshUtilities::Mesh::getColorAttrName(),
+        OldMesh::MeshBuilderVBufEntry vertexColorAttribute( NewMesh::MeshInternal::getColorAttrName(),
                                                                         vertexColorData,
                                                                         QSSGRenderComponentType::Float32,
                                                                         4);
@@ -1239,12 +1239,12 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
 
     if (boneIndexData.length() > 0) {
-        QSSGMeshUtilities::MeshBuilderVBufEntry jointAttribute( QSSGMeshUtilities::Mesh::getJointAttrName(),
+        OldMesh::MeshBuilderVBufEntry jointAttribute( NewMesh::MeshInternal::getJointAttrName(),
                                                                 boneIndexData,
                                                                 QSSGRenderComponentType::Integer32,
                                                                 4);
         entries.append(jointAttribute);
-        QSSGMeshUtilities::MeshBuilderVBufEntry weightAttribute( QSSGMeshUtilities::Mesh::getWeightAttrName(),
+        OldMesh::MeshBuilderVBufEntry weightAttribute( NewMesh::MeshInternal::getWeightAttrName(),
                                                                 boneWeightData,
                                                                 QSSGRenderComponentType::Float32,
                                                                 4);
@@ -1252,32 +1252,32 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
     for (uint i = 0; i < numMorphTargets; ++i) {
         if (targetPositionData[i].length() > 0) {
-            QSSGMeshUtilities::MeshBuilderVBufEntry targetPositionAttribute(
-                            QSSGMeshUtilities::Mesh::getTargetPositionAttrName(i),
+            OldMesh::MeshBuilderVBufEntry targetPositionAttribute(
+                            NewMesh::MeshInternal::getTargetPositionAttrName(i),
                             targetPositionData[i],
                             QSSGRenderComponentType::Float32,
                             3);
             entries.append(targetPositionAttribute);
         }
         if (targetNormalData[i].length() > 0) {
-            QSSGMeshUtilities::MeshBuilderVBufEntry targetNormalAttribute(
-                            QSSGMeshUtilities::Mesh::getTargetNormalAttrName(i),
+            OldMesh::MeshBuilderVBufEntry targetNormalAttribute(
+                            NewMesh::MeshInternal::getTargetNormalAttrName(i),
                             targetNormalData[i],
                             QSSGRenderComponentType::Float32,
                             3);
             entries.append(targetNormalAttribute);
         }
         if (targetTangentData[i].length() > 0) {
-            QSSGMeshUtilities::MeshBuilderVBufEntry targetTangentAttribute(
-                            QSSGMeshUtilities::Mesh::getTargetTangentAttrName(i),
+            OldMesh::MeshBuilderVBufEntry targetTangentAttribute(
+                            NewMesh::MeshInternal::getTargetTangentAttrName(i),
                             targetTangentData[i],
                             QSSGRenderComponentType::Float32,
                             3);
             entries.append(targetTangentAttribute);
         }
         if (targetBinormalData[i].length() > 0) {
-            QSSGMeshUtilities::MeshBuilderVBufEntry targetBinormalAttribute(
-                            QSSGMeshUtilities::Mesh::getTargetBinormalAttrName(i),
+            OldMesh::MeshBuilderVBufEntry targetBinormalAttribute(
+                            NewMesh::MeshInternal::getTargetBinormalAttrName(i),
                             targetBinormalData[i],
                             QSSGRenderComponentType::Float32,
                             3);

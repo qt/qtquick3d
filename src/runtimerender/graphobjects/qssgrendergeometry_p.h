@@ -54,51 +54,10 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGeometry : public QSSGRenderGraphObject
 {
 public:
-    enum PrimitiveType { // must match RuntimeMeshData::PrimitiveType
-        Points = 0,
-        LineStrip,
-        LineLoop,
-        Lines,
-        TriangleStrip,
-        TriangleFan,
-        Triangles, // Default primitive type
-        Patches
-    };
-
     struct Attribute {
-        enum Semantic { // must match RuntimeMeshData::Attribute::Semantic
-            IndexSemantic = 0,
-            PositionSemantic,                       // attr_pos
-            NormalSemantic,                         // attr_norm
-            TexCoordSemantic,                       // attr_uv0
-            TangentSemantic,                        // attr_textan
-            BinormalSemantic,                       // attr_binormal
-            JointSemantic,                          // attr_joints
-            WeightSemantic,                         // attr_weights
-            ColorSemantic,                          // attr_color
-            TargetPositionSemantic,                 // attr_tpos0
-            TargetNormalSemantic,                   // attr_tnorm0
-            TargetTangentSemantic,                  // attr_ttan0
-            TargetBinormalSemantic,                 // attr_tbinorm0
-            TexCoord1Semantic,                      // attr_uv1
-            TexCoord0Semantic = TexCoordSemantic    // attr_uv0
-        };
-        enum ComponentType { // must match RuntimeMeshData::Attribute::ComponentType
-            U8Type = 0,
-            I8Type,
-            U16Type,
-            I16Type,
-            U32Type,
-            I32Type,
-            U64Type,
-            I64Type,
-            F16Type,
-            F32Type,
-            F64Type
-        };
-        Semantic semantic = PositionSemantic;
+        NewMesh::RuntimeMeshData::Attribute::Semantic semantic = NewMesh::RuntimeMeshData::Attribute::PositionSemantic;
         int offset = -1;
-        ComponentType componentType = F32Type;
+        NewMesh::Mesh::ComponentType componentType = NewMesh::Mesh::ComponentType::Float32;
     };
 
     explicit QSSGRenderGeometry();
@@ -110,7 +69,7 @@ public:
     QByteArray &indexBuffer();
     int attributeCount() const;
     Attribute attribute(int idx) const;
-    PrimitiveType primitiveType() const;
+    NewMesh::Mesh::DrawMode primitiveType() const;
     QVector3D boundsMin() const;
     QVector3D boundsMax() const;
     int stride() const;
@@ -119,10 +78,11 @@ public:
     void setIndexData(const QByteArray &data);
     void setStride(int stride);
     void setBounds(const QVector3D &min, const QVector3D &max);
-    void setPrimitiveType(PrimitiveType type);
+    void setPrimitiveType(NewMesh::Mesh::DrawMode type);
 
-    void addAttribute(Attribute::Semantic semantic, int offset,
-                      Attribute::ComponentType componentType);
+    void addAttribute(NewMesh::RuntimeMeshData::Attribute::Semantic semantic,
+                      int offset,
+                      NewMesh::Mesh::ComponentType componentType);
     void addAttribute(const Attribute &att);
 
     void clear();
@@ -134,8 +94,7 @@ protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 
     bool m_dirty = true;
-    QSSGMeshUtilities::RuntimeMeshData m_meshData;
-    QSSGRef<QSSGMeshUtilities::QSSGMeshBuilder> m_meshBuilder;
+    NewMesh::RuntimeMeshData m_meshData;
     QSSGBounds3 m_bounds;
 };
 

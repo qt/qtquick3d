@@ -581,78 +581,78 @@ void QQuick3DGeometry::clear()
     d->m_max = {};
 }
 
-static QSSGRenderGeometry::PrimitiveType mapPrimitiveType(QQuick3DGeometry::PrimitiveType t)
+static inline NewMesh::Mesh::DrawMode mapPrimitiveType(QQuick3DGeometry::PrimitiveType t)
 {
     switch (t) {
     case QQuick3DGeometry::PrimitiveType::Points:
-        return QSSGRenderGeometry::Points;
+        return NewMesh::Mesh::DrawMode::Points;
     case QQuick3DGeometry::PrimitiveType::LineStrip:
-        return QSSGRenderGeometry::LineStrip;
+        return NewMesh::Mesh::DrawMode::LineStrip;
     case QQuick3DGeometry::PrimitiveType::Lines:
-        return QSSGRenderGeometry::Lines;
+        return NewMesh::Mesh::DrawMode::Lines;
     case QQuick3DGeometry::PrimitiveType::TriangleStrip:
-        return QSSGRenderGeometry::TriangleStrip;
+        return NewMesh::Mesh::DrawMode::TriangleStrip;
     case QQuick3DGeometry::PrimitiveType::TriangleFan:
-        return QSSGRenderGeometry::TriangleFan;
+        return NewMesh::Mesh::DrawMode::TriangleFan;
     case QQuick3DGeometry::PrimitiveType::Triangles:
-        return QSSGRenderGeometry::Triangles;
+        return NewMesh::Mesh::DrawMode::Triangles;
     default:
         Q_ASSERT(false);
-        return QSSGRenderGeometry::Triangles;
+        return NewMesh::Mesh::DrawMode::Triangles;
     }
 }
 
-static QSSGRenderGeometry::Attribute::Semantic mapSemantic(QQuick3DGeometry::Attribute::Semantic s)
+static inline NewMesh::RuntimeMeshData::Attribute::Semantic mapSemantic(QQuick3DGeometry::Attribute::Semantic s)
 {
     switch (s) {
     case QQuick3DGeometry::Attribute::IndexSemantic:
-        return QSSGRenderGeometry::Attribute::IndexSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::IndexSemantic;
     case QQuick3DGeometry::Attribute::PositionSemantic:
-        return QSSGRenderGeometry::Attribute::PositionSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::PositionSemantic;
     case QQuick3DGeometry::Attribute::NormalSemantic:
-        return QSSGRenderGeometry::Attribute::NormalSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::NormalSemantic;
     case QQuick3DGeometry::Attribute::TexCoord0Semantic:
-        return QSSGRenderGeometry::Attribute::TexCoord0Semantic;
+        return NewMesh::RuntimeMeshData::Attribute::TexCoord0Semantic;
     case QQuick3DGeometry::Attribute::TexCoord1Semantic:
-        return QSSGRenderGeometry::Attribute::TexCoord1Semantic;
+        return NewMesh::RuntimeMeshData::Attribute::TexCoord1Semantic;
     case QQuick3DGeometry::Attribute::TangentSemantic:
-        return QSSGRenderGeometry::Attribute::TangentSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::TangentSemantic;
     case QQuick3DGeometry::Attribute::BinormalSemantic:
-        return QSSGRenderGeometry::Attribute::BinormalSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::BinormalSemantic;
     case QQuick3DGeometry::Attribute::JointSemantic:
-        return QSSGRenderGeometry::Attribute::JointSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::JointSemantic;
     case QQuick3DGeometry::Attribute::WeightSemantic:
-        return QSSGRenderGeometry::Attribute::WeightSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::WeightSemantic;
     case QQuick3DGeometry::Attribute::ColorSemantic:
-        return QSSGRenderGeometry::Attribute::ColorSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::ColorSemantic;
     case QQuick3DGeometry::Attribute::TargetPositionSemantic:
-        return QSSGRenderGeometry::Attribute::TargetPositionSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::TargetPositionSemantic;
     case QQuick3DGeometry::Attribute::TargetNormalSemantic:
-        return QSSGRenderGeometry::Attribute::TargetNormalSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::TargetNormalSemantic;
     case QQuick3DGeometry::Attribute::TargetTangentSemantic:
-        return QSSGRenderGeometry::Attribute::TargetTangentSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::TargetTangentSemantic;
     case QQuick3DGeometry::Attribute::TargetBinormalSemantic:
-        return QSSGRenderGeometry::Attribute::TargetBinormalSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::TargetBinormalSemantic;
     default:
         Q_ASSERT(false);
-        return QSSGRenderGeometry::Attribute::PositionSemantic;
+        return NewMesh::RuntimeMeshData::Attribute::PositionSemantic;
     }
 }
 
-static QSSGRenderGeometry::Attribute::ComponentType mapComponentType(QQuick3DGeometry::Attribute::ComponentType t)
+static inline NewMesh::Mesh::ComponentType mapComponentType(QQuick3DGeometry::Attribute::ComponentType t)
 {
     switch (t) {
     case QQuick3DGeometry::Attribute::U16Type:
-        return QSSGRenderGeometry::Attribute::U16Type;
+        return NewMesh::Mesh::ComponentType::UnsignedInt16;
     case QQuick3DGeometry::Attribute::U32Type:
-        return QSSGRenderGeometry::Attribute::U32Type;
+        return NewMesh::Mesh::ComponentType::UnsignedInt32;
     case QQuick3DGeometry::Attribute::I32Type:
-        return QSSGRenderGeometry::Attribute::I32Type;
+        return NewMesh::Mesh::ComponentType::Int32;
     case QQuick3DGeometry::Attribute::F32Type:
-        return QSSGRenderGeometry::Attribute::F32Type;
+        return NewMesh::Mesh::ComponentType::Float32;
     default:
         Q_ASSERT(false);
-        return QSSGRenderGeometry::Attribute::F32Type;
+        return NewMesh::Mesh::ComponentType::Float32;
     }
 }
 

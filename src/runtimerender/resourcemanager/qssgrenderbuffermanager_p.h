@@ -63,9 +63,6 @@ class QSSGRenderGeometry;
 class QSSGRenderTextureData;
 struct QSSGRenderModel;
 struct QSSGRenderImage;
-namespace QSSGMeshUtilities {
-    struct MultiLoadResult;
-}
 
 // There is one QSSGBufferManager per QSSGRenderContextInterface, and so per
 // QQuickWindow, and by extension, per scenegraph render thread. This is
@@ -114,9 +111,7 @@ private:
 
     void clear();
 
-    QSSGMeshUtilities::MultiLoadResult loadPrimitive(const QString &inRelativePath) const;
-    QVector<QVector3D> createPackedPositionDataArray(
-            const QSSGMeshUtilities::MultiLoadResult &inResult) const;
+    NewMesh::Mesh loadPrimitive(const QString &inRelativePath) const;
 
 public:
     enum MipMode {
@@ -138,13 +133,13 @@ public:
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
     QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry,
-                                   QSSGMeshUtilities::Mesh *mesh,
+                                   const NewMesh::Mesh &mesh,
                                    bool update = false);
     QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
     QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
-    QSSGMeshUtilities::MultiLoadResult loadMeshData(const QSSGRenderPath &inSourcePath) const;
+    NewMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath) const;
 
-    QSSGRenderMesh *createRenderMesh(const QSSGMeshUtilities::MultiLoadResult &result);
+    QSSGRenderMesh *createRenderMesh(const NewMesh::Mesh &mesh);
 
     void addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
     void addImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);

@@ -36,59 +36,9 @@
 
 #include <QtGui/QMatrix4x4>
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-// QTextStream functions are moved to a namespace in Qt6
 using Qt::hex;
-#endif
 
-using namespace QSSGMeshUtilities;
-
-class MeshOffsetTracker
-{
-public:
-    MeshOffsetTracker(qint64 startOffset)
-        : m_startOffset(startOffset)
-    {
-    }
-
-    bool needsAlignment() { return getAlignmentAmount() > 0; }
-    quint32 getAlignmentAmount() { return 4 - (m_byteCounter % 4); }
-    void align()
-    {
-        if (needsAlignment())
-            m_byteCounter += getAlignmentAmount();
-    }
-
-    void advance(qint64 offset, bool forceAlign = true) {
-        m_byteCounter += offset;
-        if (forceAlign)
-            align();
-    }
-
-    template <typename TDataType>
-    void advance(OffsetDataRef<TDataType> &data, bool forceAlign = true)
-    {
-        data.m_offset = m_byteCounter;
-        m_byteCounter += data.size() * sizeof(TDataType);
-        if (forceAlign)
-            align();
-    }
-
-    qint64 startOffset() const
-    {
-        return m_startOffset;
-    }
-
-    qint64 offset() const
-    {
-        return m_startOffset + m_byteCounter;
-    }
-
-private:
-    qint64 m_startOffset = 0;
-    qint64 m_byteCounter = 0;
-};
-
+using namespace NewMesh;
 
 int main(int argc, char *argv[])
 {
@@ -107,131 +57,97 @@ int main(int argc, char *argv[])
     for (const auto &meshFileName : meshFileNames) {
         QFile meshFile(meshFileName);
         if (!meshFile.open(QIODevice::ReadOnly)) {
-            qWarning() << "could not open " << meshFileName;
+            qWarning() << "could not open" << meshFileName;
             continue;
         }
 
-        if (Mesh::isMulti(meshFile)) {
-            MeshMultiHeader* multiHeader = Mesh::loadMultiHeader(meshFile);
-            if (!multiHeader) {
-                qWarning() << "could not read MeshMultiHeader in " << meshFileName;
-                continue;
-            }
-
+        MeshInternal::MultiMeshInfo multiHeader = MeshInternal::loadFileHeader(&meshFile);
+        if (multiHeader.isValid()) {
             // Print Multiheader information
-            qDebug() << " -- Multiheader -- ";
-            qDebug() << "fileId: " << multiHeader->m_fileId;
-            qDebug() << "version: " << multiHeader->m_version;
-            qDebug() << "mesh entries: " << multiHeader->m_entries.m_size;
+            qDebug() << " -- Multiheader --";
+            qDebug() << "fileId:" << multiHeader.fileId;
+            qDebug() << "version:" << multiHeader.fileVersion;
+            qDebug() << "mesh entries:" << multiHeader.meshEntries.count();
 
-            quint8 *theHeaderBaseAddr = reinterpret_cast<quint8 *>(multiHeader);
-            bool foundMesh = false;
-            for (quint32 idx = 0, end = multiHeader->m_entries.size(); idx < end && !foundMesh; ++idx) {
-                const MeshMultiEntry &entry(multiHeader->m_entries.index(theHeaderBaseAddr, idx));
-                qDebug() << "\t -- mesh entry" << idx << " -- ";
-                qDebug() << "\tid: " << entry.m_meshId;
-                qDebug() << "\toffset: " << Qt::hex << entry.m_meshOffset;
-                qDebug() << "\tpadding: " << entry.m_padding;
+            for (auto it = multiHeader.meshEntries.cbegin(), end = multiHeader.meshEntries.cend(); it != end; ++it) {
+                const quint32 meshId = it.key();
+                const quint64 meshOffset = it.value();
+                qDebug() << "\t -- mesh entry --";
+                qDebug() << "\tid:" << meshId;
+                qDebug() << "\toffset:" << Qt::hex << meshOffset;
 
-                meshFile.seek(entry.m_meshOffset);
+                MeshInternal::MeshDataHeader header;
+                Mesh mesh;
+                if (!MeshInternal::loadMeshData(&meshFile, meshOffset, &mesh, &header)) {
+                    qWarning("Failed to load mesh body");
+                    continue;
+                }
 
-                // Read mesh header
-                MeshDataHeader header;
-                meshFile.read(reinterpret_cast<char *>(&header), sizeof(MeshDataHeader));
-                qDebug() << "\t -- MeshDataHeader -- ";
-                qDebug() << "\tfileId: " << header.m_fileId;
-                qDebug() << "\tfileVersion: " << header.m_fileVersion;
-                qDebug() << "\tflags: " << header.m_headerFlags;
-                qDebug() << "\tsize(in bytes): " << header.m_sizeInBytes;
+                // Header
+                qDebug() << "\t -- MeshDataHeader --";
+                qDebug() << "\tfileId:" << header.fileId;
+                qDebug() << "\tfileVersion:" << header.fileVersion;
+                qDebug() << "\tflags:" << header.flags;
+                qDebug() << "\tsize in bytes:" << header.sizeInBytes;
 
-                QByteArray meshMetadataData = meshFile.read(sizeof(Mesh));
-                Mesh *mesh = reinterpret_cast<Mesh *>(meshMetadataData.data());
-                MeshOffsetTracker offsetTracker(entry.m_meshOffset + sizeof(MeshDataHeader));
-                offsetTracker.advance(sizeof(Mesh), false);
+                // Draw Mode
+                qDebug() << "\t\tdraw mode:" << static_cast<int>(mesh.drawMode());
+
+                // Winding
+                qDebug() << "\t\twinding:" << toString(QSSGRenderWinding(mesh.winding()));
 
                 // Vertex Buffer
+                const Mesh::VertexBuffer vb = mesh.vertexBuffer();
                 qDebug() << "\t\t -- Vertex Buffer --";
-                meshFile.seek(offsetTracker.offset());
-                offsetTracker.advance(mesh->m_vertexBuffer.m_entries);
-                qDebug() << "\t\tentries offset: " << Qt::hex << mesh->m_vertexBuffer.m_entries.m_offset;
-                qDebug() << "\t\tentries size: " << mesh->m_vertexBuffer.m_entries.m_size * sizeof(MeshVertexBufferEntry);
-                QByteArray vertexBufferEntriesData = meshFile.read(mesh->m_vertexBuffer.m_entries.m_size * sizeof(MeshVertexBufferEntry));
-                for (quint32 idx = 0, end = mesh->m_vertexBuffer.m_entries.size(); idx < end; ++idx) {
-                    // get name length
-                    meshFile.seek(offsetTracker.offset());
-                    QByteArray lenghtBuffer = meshFile.read(sizeof (quint32));
-                    const quint32 &nameLenght = *reinterpret_cast<const quint32 *>(lenghtBuffer.constData());
-                    offsetTracker.advance(sizeof(quint32), false);
-                    QByteArray nameBuffer = meshFile.read(nameLenght);
-                    offsetTracker.advance(nameLenght);
-                    qDebug() << "\t\t\t -- Vertex Buffer Entry " << idx << "-- ";
-                    const MeshVertexBufferEntry &entry = reinterpret_cast<const MeshVertexBufferEntry *>(vertexBufferEntriesData.constData())[idx];
-                    qDebug() << "\t\t\tname: " << nameBuffer.constData();
-                    qDebug() << "\t\t\ttype: " << toString(entry.m_componentType);
-                    qDebug() << "\t\t\tnumComponents: " << entry.m_numComponents;
-                    qDebug() << "\t\t\tfirstItemOffset: " << entry.m_firstItemOffset;
+                qDebug() << "\t\tentry count:" << vb.entries.count();
+                for (quint32 idx = 0, end = vb.entries.count(); idx < end; ++idx) {
+                    qDebug() << "\t\t\t -- Vertex Buffer Entry" << idx << "--";
+                    const Mesh::VertexBufferEntry &entry(vb.entries[idx]);
+                    qDebug() << "\t\t\tname:" << entry.name;
+                    qDebug() << "\t\t\ttype:" << toString(QSSGRenderComponentType(entry.componentType));
+                    qDebug() << "\t\t\tcompnentCount:" << entry.componentCount;
+                    qDebug() << "\t\t\tstart offset:" << entry.offset;
                 }
-                offsetTracker.advance(mesh->m_vertexBuffer.m_data);
-                qDebug() << "\t\tstride: " << mesh->m_vertexBuffer.m_stride;
-                qDebug() << "\t\tdata Offset: " << Qt::hex << mesh->m_vertexBuffer.m_data.m_offset;
-                qDebug() << "\t\tdata Size: " << mesh->m_vertexBuffer.m_data.m_size * sizeof(quint8);
+                qDebug() << "\t\tstride:" << vb.stride;
+                qDebug() << "\t\tdata size in bytes:" << vb.data.size();
 
                 // Index Buffer
-                qDebug() << "\t\t -- Index Buffer -- ";
-                offsetTracker.advance(mesh->m_indexBuffer.m_data);
-                qDebug() << "\t\tcomponentType: " << toString(mesh->m_indexBuffer.m_componentType);
-                qDebug() << "\t\tdata Offset: " << Qt::hex << mesh->m_indexBuffer.m_data.m_offset;
-                qDebug() << "\t\tdata Size: " << mesh->m_indexBuffer.m_data.m_size * sizeof(quint8);
+                const Mesh::IndexBuffer ib = mesh.indexBuffer();
+                qDebug() << "\t\t -- Index Buffer --";
+                qDebug() << "\t\tcomponentType:" << toString(QSSGRenderComponentType(ib.componentType));
+                qDebug() << "\t\tdata size in bytes:" << ib.data.size();
 
                 // Subsets
-                qDebug() << "\t\t -- Subsets -- ";
-                meshFile.seek(offsetTracker.offset());
-                offsetTracker.advance(mesh->m_subsets);
-                qDebug() << "\t\toffset: " << Qt::hex << mesh->m_subsets.m_offset;
-                qDebug() << "\t\tsize: " << mesh->m_subsets.m_size * sizeof(MeshSubset);
-                QByteArray subsetEntriesData = meshFile.read(mesh->m_subsets.m_size * sizeof(MeshSubset));
-                for (quint32 idx = 0, end = mesh->m_subsets.size(); idx < end; ++idx) {
-                    qDebug() << "\t\t -- Subset " << idx << "-- ";
-                    MeshSubset &subset = reinterpret_cast<MeshSubset *>(subsetEntriesData.data())[idx];
-                    qDebug() << "\t\tcount: " << subset.m_count;
-                    qDebug() << "\t\toffset(size): " << subset.m_offset;
-                    qDebug() << "\t\tbounds: (" << subset.m_bounds.minimum.x() << "," <<
-                                subset.m_bounds.minimum.y() << "," <<
-                                subset.m_bounds.minimum.z() << ") (" <<
-                                subset.m_bounds.maximum.x() << "," <<
-                                subset.m_bounds.maximum.y() << "," <<
-                                subset.m_bounds.maximum.z() << ")";
-                    meshFile.seek(offsetTracker.offset());
-                    offsetTracker.advance(subset.m_name);
-                    qDebug() << "\t\tname offset: " << Qt::hex << subset.m_name.m_offset;
-                    qDebug() << "\t\tname size: " << subset.m_name.m_size * sizeof(char16_t);
-                    QByteArray subsetNameBuffer = meshFile.read(subset.m_name.m_size * sizeof(char16_t));
-                    const char16_t* name = reinterpret_cast<const char16_t*>(subsetNameBuffer.constData());
-                    qDebug() << "\t\tname: " << QString::fromUtf16(name);
+                const QVector<Mesh::Subset> subsets = mesh.subsets();
+                qDebug() << "\t\t -- Subsets --";
+                qDebug() << "\t\tsubset count:" << subsets.count();
+                for (quint32 idx = 0, end = subsets.count(); idx < end; ++idx) {
+                    qDebug() << "\t\t -- Subset" << idx << "--";
+                    const Mesh::Subset &subset(subsets[idx]);
+                    qDebug() << "\t\tindex count:" << subset.count;
+                    qDebug() << "\t\tstart offset in indices:" << subset.offset;
+                    qDebug() << "\t\tbounds: (" <<
+                                subset.bounds.min.x() << "," <<
+                                subset.bounds.min.y() << "," <<
+                                subset.bounds.min.z() << ") (" <<
+                                subset.bounds.max.x() << "," <<
+                                subset.bounds.max.y() << "," <<
+                                subset.bounds.max.z() << ")";
+                    qDebug() << "\t\tname:" << subset.name;
                 }
 
                 // Joints
-                qDebug() << "\t\t -- Joints -- ";
-                meshFile.seek(offsetTracker.offset());
-                offsetTracker.advance(mesh->m_joints);
-                qDebug() << "\t\toffset: " << Qt::hex << mesh->m_joints.m_offset;
-                qDebug() << "\t\tsize: " << mesh->m_joints.m_size * sizeof(Joint);
-                QByteArray jointsData = meshFile.read(mesh->m_joints.m_size * sizeof(Joint));
-                for (quint32 idx = 0, end = mesh->m_joints.size(); idx < end; ++idx) {
-                    qDebug() << "\t\t -- Joint " << idx << "-- ";
-                    const Joint &joint = reinterpret_cast<const Joint *>(jointsData.constData())[idx];
-                    qDebug() << "\t\tid: " << joint.m_jointID;
-                    qDebug() << "\t\tparentId: " << joint.m_parentID;
-                    qDebug() << "\t\tinvBindPose: " << QMatrix4x4(joint.m_invBindPose);
-                    qDebug() << "\t\tlocalToGlobalBoneSpace: " << QMatrix4x4(joint.m_localToGlobalBoneSpace);
+                const QVector<Mesh::Joint> joints = mesh.joints();
+                qDebug() << "\t\t -- Joints --";
+                qDebug() << "\t\tjoint count:" << joints.count();
+                for (quint32 idx = 0, end = joints.count(); idx < end; ++idx) {
+                    qDebug() << "\t\t -- Joint" << idx << "--";
+                    const Mesh::Joint &joint(joints[idx]);
+                    qDebug() << "\t\tid:" << joint.jointId;
+                    qDebug() << "\t\tparentId:" << joint.parentId;
+                    qDebug() << "\t\tinverseBindPose:" << QMatrix4x4(joint.inverseBindPose);
+                    qDebug() << "\t\tlocalToGlobalBoneSpace:" << QMatrix4x4(joint.localToGlobalBoneSpace);
                 }
-
-                // Draw Mode
-                qDebug() << "\t\tdraw Mode: " << static_cast<int>(mesh->m_drawMode);
-
-                // Winding
-                qDebug() << "\t\twinding: " << toString(mesh->m_winding);
-
             }
 
         }

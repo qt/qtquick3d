@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBVHBuilder
 {
 public:
-    QSSGMeshBVHBuilder(QSSGMeshUtilities::Mesh *mesh);
+    QSSGMeshBVHBuilder(const NewMesh::Mesh &mesh);
     QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
                        int stride,
                        int posOffset,
@@ -86,11 +86,10 @@ private:
     float getAverageValue(quint32 offset, quint32 count, Axis axis) const;
     quint32 partition(quint32 offset, quint32 count, const Split &split);
 
-    QSSGMeshUtilities::Mesh *m_mesh = nullptr;
-    quint8 *m_baseAddress;
+    NewMesh::Mesh m_mesh;
     QSSGRenderComponentType m_indexBufferComponentType;
-    QSSGByteView m_indexBufferData;
-    QSSGByteView m_vertexBufferData;
+    QByteArray m_indexBufferData;
+    QByteArray m_vertexBufferData;
     quint32 m_vertexStride;
     bool m_hasPositionData = false;
     quint32 m_vertexPosOffset;
