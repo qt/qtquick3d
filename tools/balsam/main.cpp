@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include <QtCore/QCoreApplication>
+#include <QtGui/QGuiApplication>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QDir>
@@ -156,7 +156,7 @@ private:
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     QSSGAssetImportManager assetImporter;
     OptionsManager optionsManager;

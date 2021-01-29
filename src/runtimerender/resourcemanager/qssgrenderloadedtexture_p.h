@@ -63,7 +63,7 @@ struct QSSGTextureData
 
 // Utility class used for loading image data from disk.
 // Supports jpg, png, and dds.
-struct QSSGLoadedTexture
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLoadedTexture
 {
 public:
     qint32 width = 0;
