@@ -37,7 +37,7 @@
 #include <assimp/pbrmaterial.h>
 #include <assimp/importerdesc.h>
 
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 
 #include <QtGui/QImage>
 #include <QtGui/QImageReader>
@@ -633,8 +633,12 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
         meshFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputMeshFile;
     }
     QFile meshFile(meshFilePath);
-    if (generateMeshFile(modelNode, meshFile, meshes).isEmpty())
+    const QString errMsg = generateMeshFile(modelNode, meshFile, meshes);
+    if (errMsg.isEmpty())
         m_generatedFiles << meshFilePath;
+    else
+        qWarning("%s", qPrintable(errMsg));
+    meshFile.close();
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile
            << QStringLiteral("\"") << QStringLiteral("\n");
@@ -907,13 +911,10 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
 }
 
-QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QVector<aiMesh *> &meshes)
+QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<aiMesh *> &meshes)
 {
     if (!file.open(QIODevice::WriteOnly))
         return QStringLiteral("Could not open device to write mesh file");
-
-
-    auto meshBuilder = new OldMesh::QSSGMeshBuilder;
 
     // Check if we need placeholders in certain channels
     bool needsPositionData = false;
@@ -997,22 +998,26 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     QByteArray targetBinormalData[8];
     QVector<SubsetEntryData> subsetData;
     quint32 baseIndex = 0;
-    QSSGRenderComponentType indexType = QSSGRenderComponentType::UnsignedInteger32;
-    if ((totalVertices / 3) > std::numeric_limits<quint16>::max())
-        indexType = QSSGRenderComponentType::UnsignedInteger32;
+    QSSGMesh::Mesh::ComponentType indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt16;
+    // 0xFFFF is the primitive restart value, bump to uint32 already at that to avoid confusion
+    if (totalVertices >= std::numeric_limits<quint16>::max())
+        indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
 
+    const quint32 float32ByteSize = QSSGMesh::MeshInternal::byteSizeForComponentType(QSSGMesh::Mesh::ComponentType::Float32);
     for (const auto *mesh : meshes) {
         // Position
         if (mesh->HasPositions())
-            positionData += QByteArray(reinterpret_cast<char*>(mesh->mVertices), mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+            positionData += QByteArray(reinterpret_cast<char*>(mesh->mVertices),
+                                       mesh->mNumVertices * 3 * float32ByteSize);
         else if (needsPositionData)
-            positionData += QByteArray(mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            positionData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
 
         // Normal
         if (mesh->HasNormals())
-            normalData += QByteArray(reinterpret_cast<char*>(mesh->mNormals), mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+            normalData += QByteArray(reinterpret_cast<char*>(mesh->mNormals),
+                                     mesh->mNumVertices * 3 * float32ByteSize);
         else if (needsNormalData)
-            normalData += QByteArray(mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            normalData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
 
         // UV0
         if (mesh->HasTextureCoords(0)) {
@@ -1028,7 +1033,7 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
             }
             uv0Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
         } else {
-            uv0Data += QByteArray(mesh->mNumVertices * uv0Components * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            uv0Data += QByteArray(mesh->mNumVertices * uv0Components * float32ByteSize, '\0');
         }
 
         // UV1
@@ -1045,17 +1050,19 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
             }
             uv1Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
         } else {
-            uv1Data += QByteArray(mesh->mNumVertices * uv1Components * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            uv1Data += QByteArray(mesh->mNumVertices * uv1Components * float32ByteSize, '\0');
         }
 
         if (mesh->HasTangentsAndBitangents()) {
             // Tangents
-            tangentData += QByteArray(reinterpret_cast<char*>(mesh->mTangents), mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+            tangentData += QByteArray(reinterpret_cast<char*>(mesh->mTangents),
+                                      mesh->mNumVertices * 3 * float32ByteSize);
             // Binormals (They are actually supposed to be Bitangents despite what they are called)
-            binormalData += QByteArray(reinterpret_cast<char*>(mesh->mBitangents), mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+            binormalData += QByteArray(reinterpret_cast<char*>(mesh->mBitangents),
+                                       mesh->mNumVertices * 3 * float32ByteSize);
         } else if (needsTangentData) {
-            tangentData += QByteArray(mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
-            binormalData += QByteArray(mesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            tangentData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
+            binormalData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
         }
 
         // ### Bones + Weights
@@ -1110,16 +1117,16 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
             boneWeightData += QByteArray(reinterpret_cast<const char *>(weights.constData()), weights.size() * sizeof(float));
         } else if (needsBones) {
             // Bone Indexes
-            boneIndexData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Integer32), '\0');
+            boneIndexData += QByteArray(mesh->mNumVertices * 4 * QSSGMesh::MeshInternal::byteSizeForComponentType(QSSGMesh::Mesh::ComponentType::Int32), '\0');
             // Bone Weights
-            boneWeightData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            boneWeightData += QByteArray(mesh->mNumVertices * 4 * float32ByteSize, '\0');
         }
 
         // Color
         if (mesh->HasVertexColors(0))
-            vertexColorData += QByteArray(reinterpret_cast<char*>(mesh->mColors[0]), mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32));
+            vertexColorData += QByteArray(reinterpret_cast<char*>(mesh->mColors[0]), mesh->mNumVertices * 4 * float32ByteSize);
         else if (needsVertexColorData)
-            vertexColorData += QByteArray(mesh->mNumVertices * 4 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+            vertexColorData += QByteArray(mesh->mNumVertices * 4 * float32ByteSize, '\0');
 
         for (uint i = 0; i < numMorphTargets; ++i) {
             aiAnimMesh *animMesh = nullptr;
@@ -1128,23 +1135,23 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
 
             if (needsTargetPosition[i]) {
                 if (animMesh && animMesh->HasPositions())
-                    targetPositionData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mVertices), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                    targetPositionData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mVertices), animMesh->mNumVertices * 3 * float32ByteSize);
                 else
-                    targetPositionData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+                    targetPositionData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
             }
             if (needsTargetNormal[i]) {
                 if (animMesh && animMesh->HasNormals())
-                    targetNormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mNormals), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                    targetNormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mNormals), animMesh->mNumVertices * 3 * float32ByteSize);
                 else
-                    targetNormalData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+                    targetNormalData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
             }
             if (needsTargetTangent[i]) {
                 if (animMesh && animMesh->HasTangentsAndBitangents()) {
-                    targetTangentData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mTangents), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
-                    targetBinormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mBitangents), animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32));
+                    targetTangentData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mTangents), animMesh->mNumVertices * 3 * float32ByteSize);
+                    targetBinormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mBitangents), animMesh->mNumVertices * 3 * float32ByteSize);
                 } else {
-                    targetTangentData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
-                    targetBinormalData[i] += QByteArray(animMesh->mNumVertices * 3 * getSizeOfType(QSSGRenderComponentType::Float32), '\0');
+                    targetTangentData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
+                    targetBinormalData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
                 }
             }
         }
@@ -1165,17 +1172,19 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
         baseIndex = *std::max_element(indexes.constBegin(), indexes.constEnd()) + 1;
 
         SubsetEntryData subsetEntry;
-        subsetEntry.indexOffset = indexBufferData.length() / getSizeOfType(indexType);
+        subsetEntry.indexOffset = indexBufferData.length() / QSSGMesh::MeshInternal::byteSizeForComponentType(indexType);
         subsetEntry.indexLength = indexes.length();
-        if (indexType == QSSGRenderComponentType::UnsignedInteger32) {
-            indexBufferData += QByteArray(reinterpret_cast<const char *>(indexes.constData()), indexes.length() * getSizeOfType(indexType));
+        if (indexType == QSSGMesh::Mesh::ComponentType::UnsignedInt32) {
+            indexBufferData += QByteArray(reinterpret_cast<const char *>(indexes.constData()),
+                                          indexes.length() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
         } else {
             // convert data to quint16
             QVector<quint16> shortIndexes;
             shortIndexes.resize(indexes.length());
             for (int i = 0; i < shortIndexes.length(); ++i)
                 shortIndexes[i] = quint16(indexes[i]);
-            indexBufferData += QByteArray(reinterpret_cast<const char *>(shortIndexes.constData()), shortIndexes.length() * getSizeOfType(indexType));
+            indexBufferData += QByteArray(reinterpret_cast<const char *>(shortIndexes.constData()),
+                                          shortIndexes.length() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
         }
 
         // Subset
@@ -1184,124 +1193,138 @@ QString AssimpImporter::generateMeshFile(aiNode *node, QIODevice &file, const QV
     }
 
     // Vertex Buffer Entries
-    QVector<OldMesh::MeshBuilderVBufEntry> entries;
+    QVector<QSSGMesh::AssetVertexEntry> entries;
     if (positionData.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry positionAttribute( NewMesh::MeshInternal::getPositionAttrName(),
-                                                                     positionData,
-                                                                     QSSGRenderComponentType::Float32,
-                                                                     3);
-        entries.append(positionAttribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getPositionAttrName(),
+                           positionData,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           3
+                       });
     }
     if (normalData.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry normalAttribute( NewMesh::MeshInternal::getNormalAttrName(),
-                                                                   normalData,
-                                                                   QSSGRenderComponentType::Float32,
-                                                                   3);
-        entries.append(normalAttribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getNormalAttrName(),
+                           normalData,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           3
+                       });
     }
     if (uv0Data.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry uv0Attribute( NewMesh::MeshInternal::getUV0AttrName(),
-                                                                uv0Data,
-                                                                QSSGRenderComponentType::Float32,
-                                                                uv0Components);
-        entries.append(uv0Attribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getUV0AttrName(),
+                           uv0Data,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           uv0Components
+                       });
     }
     if (uv1Data.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry uv1Attribute( NewMesh::MeshInternal::getUV1AttrName(),
-                                                                uv1Data,
-                                                                QSSGRenderComponentType::Float32,
-                                                                uv1Components);
-        entries.append(uv1Attribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getUV1AttrName(),
+                           uv1Data,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           uv1Components
+                       });
     }
 
     if (tangentData.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry tangentsAttribute( NewMesh::MeshInternal::getTexTanAttrName(),
-                                                                     tangentData,
-                                                                     QSSGRenderComponentType::Float32,
-                                                                     3);
-        entries.append(tangentsAttribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getTexTanAttrName(),
+                           tangentData,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           3
+                       });
     }
 
     if (binormalData.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry binormalAttribute( NewMesh::MeshInternal::getTexBinormalAttrName(),
-                                                                     binormalData,
-                                                                     QSSGRenderComponentType::Float32,
-                                                                     3);
-        entries.append(binormalAttribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getTexBinormalAttrName(),
+                           binormalData,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           3
+                       });
     }
 
     if (vertexColorData.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry vertexColorAttribute( NewMesh::MeshInternal::getColorAttrName(),
-                                                                        vertexColorData,
-                                                                        QSSGRenderComponentType::Float32,
-                                                                        4);
-        entries.append(vertexColorAttribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getColorAttrName(),
+                           vertexColorData,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           4
+                       });
     }
 
     if (boneIndexData.length() > 0) {
-        OldMesh::MeshBuilderVBufEntry jointAttribute( NewMesh::MeshInternal::getJointAttrName(),
-                                                                boneIndexData,
-                                                                QSSGRenderComponentType::Integer32,
-                                                                4);
-        entries.append(jointAttribute);
-        OldMesh::MeshBuilderVBufEntry weightAttribute( NewMesh::MeshInternal::getWeightAttrName(),
-                                                                boneWeightData,
-                                                                QSSGRenderComponentType::Float32,
-                                                                4);
-        entries.append(weightAttribute);
+        entries.append({
+                           QSSGMesh::MeshInternal::getJointAttrName(),
+                           boneIndexData,
+                           QSSGMesh::Mesh::ComponentType::Int32,
+                           4
+                       });
+        entries.append({
+                           QSSGMesh::MeshInternal::getWeightAttrName(),
+                           boneWeightData,
+                           QSSGMesh::Mesh::ComponentType::Float32,
+                           4
+                       });
     }
     for (uint i = 0; i < numMorphTargets; ++i) {
         if (targetPositionData[i].length() > 0) {
-            OldMesh::MeshBuilderVBufEntry targetPositionAttribute(
-                            NewMesh::MeshInternal::getTargetPositionAttrName(i),
-                            targetPositionData[i],
-                            QSSGRenderComponentType::Float32,
-                            3);
-            entries.append(targetPositionAttribute);
+            entries.append({
+                               QSSGMesh::MeshInternal::getTargetPositionAttrName(i),
+                               targetPositionData[i],
+                               QSSGMesh::Mesh::ComponentType::Float32,
+                               3
+                           });
         }
         if (targetNormalData[i].length() > 0) {
-            OldMesh::MeshBuilderVBufEntry targetNormalAttribute(
-                            NewMesh::MeshInternal::getTargetNormalAttrName(i),
-                            targetNormalData[i],
-                            QSSGRenderComponentType::Float32,
-                            3);
-            entries.append(targetNormalAttribute);
+            entries.append({
+                               QSSGMesh::MeshInternal::getTargetNormalAttrName(i),
+                               targetNormalData[i],
+                               QSSGMesh::Mesh::ComponentType::Float32,
+                               3
+                           });
         }
         if (targetTangentData[i].length() > 0) {
-            OldMesh::MeshBuilderVBufEntry targetTangentAttribute(
-                            NewMesh::MeshInternal::getTargetTangentAttrName(i),
-                            targetTangentData[i],
-                            QSSGRenderComponentType::Float32,
-                            3);
-            entries.append(targetTangentAttribute);
+            entries.append({
+                               QSSGMesh::MeshInternal::getTargetTangentAttrName(i),
+                               targetTangentData[i],
+                               QSSGMesh::Mesh::ComponentType::Float32,
+                               3
+                           });
         }
         if (targetBinormalData[i].length() > 0) {
-            OldMesh::MeshBuilderVBufEntry targetBinormalAttribute(
-                            NewMesh::MeshInternal::getTargetBinormalAttrName(i),
-                            targetBinormalData[i],
-                            QSSGRenderComponentType::Float32,
-                            3);
-            entries.append(targetBinormalAttribute);
+            entries.append({
+                               QSSGMesh::MeshInternal::getTargetBinormalAttrName(i),
+                               targetBinormalData[i],
+                               QSSGMesh::Mesh::ComponentType::Float32,
+                               3
+                           });
         }
     }
-    meshBuilder->setVertexBuffer(entries);
-    meshBuilder->setIndexBuffer(indexBufferData, indexType);
 
-    // Subsets
-    for (const auto &subset : subsetData)
-        meshBuilder->addMeshSubset(reinterpret_cast<const char16_t *>(subset.name.utf16()),
-                                   subset.indexLength,
-                                   subset.indexOffset,
-                                   0);
+    QVector<QSSGMesh::AssetMeshSubset> subsets;
+    for (const SubsetEntryData &subset : subsetData) {
+        subsets.append({
+                           subset.name,
+                           quint32(subset.indexLength),
+                           quint32(subset.indexOffset),
+                           0 // the builder will calculate bounds from the position data
+                       });
+    }
 
-    auto &outputMesh = meshBuilder->getMesh();
-    outputMesh.saveMulti(file, 0);
+    const QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromAssetData(entries, indexBufferData, indexType, subsets);
+    if (mesh.isValid()) {
+        if (!mesh.save(&file))
+            return QString::asprintf("Failed to serialize mesh to %s", qPrintable(file.fileName()));
+    } else {
+        return QString::asprintf("Mesh building failed for %s", qPrintable(file.fileName()));
+    }
 
-    file.close();
     return QString();
 }
 
-QVector<QString> AssimpImporter::generateMorphing(aiNode *node, const QVector<aiMesh *> &meshes, QTextStream &output, int tabLevel)
+QVector<QString> AssimpImporter::generateMorphing(aiNode *, const QVector<aiMesh *> &meshes, QTextStream &output, int tabLevel)
 {
     QVector<QString> targets;
     quint32 numMorphTargets = 0;

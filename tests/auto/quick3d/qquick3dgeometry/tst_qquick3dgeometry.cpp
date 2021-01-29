@@ -33,7 +33,7 @@
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 
 class tst_QQuick3DGeometry : public QObject
 {
@@ -88,49 +88,49 @@ void tst_QQuick3DGeometry::testGeometry()
     QVERIFY(qFuzzyCompare(emptyBounds.maximum, geom.boundsMax()));
     QCOMPARE(geom.attributeCount(), 0);
 
-    const NewMesh::Mesh::DrawMode primitiveTypes[] = {
-        NewMesh::Mesh::DrawMode::Points,
-        NewMesh::Mesh::DrawMode::LineStrip,
-        NewMesh::Mesh::DrawMode::LineLoop,
-        NewMesh::Mesh::DrawMode::Lines,
-        NewMesh::Mesh::DrawMode::TriangleStrip,
-        NewMesh::Mesh::DrawMode::TriangleFan,
-        NewMesh::Mesh::DrawMode::Triangles
+    const QSSGMesh::Mesh::DrawMode primitiveTypes[] = {
+        QSSGMesh::Mesh::DrawMode::Points,
+        QSSGMesh::Mesh::DrawMode::LineStrip,
+        QSSGMesh::Mesh::DrawMode::LineLoop,
+        QSSGMesh::Mesh::DrawMode::Lines,
+        QSSGMesh::Mesh::DrawMode::TriangleStrip,
+        QSSGMesh::Mesh::DrawMode::TriangleFan,
+        QSSGMesh::Mesh::DrawMode::Triangles
     };
     for (const auto primitiveType : primitiveTypes) {
         geom.setPrimitiveType(primitiveType);
         QCOMPARE(primitiveType, geom.primitiveType());
     }
 
-    const NewMesh::RuntimeMeshData::Attribute::Semantic semantics[] = {
-        NewMesh::RuntimeMeshData::Attribute::IndexSemantic,
-        NewMesh::RuntimeMeshData::Attribute::PositionSemantic,
-        NewMesh::RuntimeMeshData::Attribute::NormalSemantic,
-        NewMesh::RuntimeMeshData::Attribute::TexCoordSemantic,
-        NewMesh::RuntimeMeshData::Attribute::TangentSemantic,
-        NewMesh::RuntimeMeshData::Attribute::BinormalSemantic,
+    const QSSGMesh::RuntimeMeshData::Attribute::Semantic semantics[] = {
+        QSSGMesh::RuntimeMeshData::Attribute::IndexSemantic,
+        QSSGMesh::RuntimeMeshData::Attribute::PositionSemantic,
+        QSSGMesh::RuntimeMeshData::Attribute::NormalSemantic,
+        QSSGMesh::RuntimeMeshData::Attribute::TexCoordSemantic,
+        QSSGMesh::RuntimeMeshData::Attribute::TangentSemantic,
+        QSSGMesh::RuntimeMeshData::Attribute::BinormalSemantic,
     };
 
     const int offsets[] = {
         0, 16, 21, 33, 46, 52,
     };
 
-    const NewMesh::Mesh::ComponentType types[] = {
-        NewMesh::Mesh::ComponentType::UnsignedInt8,
-        NewMesh::Mesh::ComponentType::Int8,
-        NewMesh::Mesh::ComponentType::UnsignedInt16,
-        NewMesh::Mesh::ComponentType::Int16,
-        NewMesh::Mesh::ComponentType::UnsignedInt32,
-        NewMesh::Mesh::ComponentType::Int32,
-        NewMesh::Mesh::ComponentType::UnsignedInt64,
-        NewMesh::Mesh::ComponentType::Int64,
-        NewMesh::Mesh::ComponentType::Float16,
-        NewMesh::Mesh::ComponentType::Float32,
-        NewMesh::Mesh::ComponentType::Float64
+    const QSSGMesh::Mesh::ComponentType types[] = {
+        QSSGMesh::Mesh::ComponentType::UnsignedInt8,
+        QSSGMesh::Mesh::ComponentType::Int8,
+        QSSGMesh::Mesh::ComponentType::UnsignedInt16,
+        QSSGMesh::Mesh::ComponentType::Int16,
+        QSSGMesh::Mesh::ComponentType::UnsignedInt32,
+        QSSGMesh::Mesh::ComponentType::Int32,
+        QSSGMesh::Mesh::ComponentType::UnsignedInt64,
+        QSSGMesh::Mesh::ComponentType::Int64,
+        QSSGMesh::Mesh::ComponentType::Float16,
+        QSSGMesh::Mesh::ComponentType::Float32,
+        QSSGMesh::Mesh::ComponentType::Float64
     };
 
     for (int i = 0; i < 6; i++) {
-        geom.addAttribute(semantics[i], offsets[i], NewMesh::Mesh::ComponentType::Float32);
+        geom.addAttribute(semantics[i], offsets[i], QSSGMesh::Mesh::ComponentType::Float32);
         QCOMPARE(semantics[i], geom.attribute(i).semantic);
         QCOMPARE(offsets[i], geom.attribute(i).offset);
         QCOMPARE(geom.attributeCount(), i+1);
@@ -140,7 +140,7 @@ void tst_QQuick3DGeometry::testGeometry()
     QCOMPARE(geom.attributeCount(), 0);
 
     for (auto componentType : types) {
-        geom.addAttribute(NewMesh::RuntimeMeshData::Attribute::PositionSemantic, 0, componentType);
+        geom.addAttribute(QSSGMesh::RuntimeMeshData::Attribute::PositionSemantic, 0, componentType);
         QCOMPARE(componentType, geom.attribute(0).componentType);
         geom.clear();
     }

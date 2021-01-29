@@ -7,12 +7,12 @@ QT += core-private gui qml quick3dutils-private
 
 SOURCES = \
     qssgmeshbvhbuilder.cpp \
-    qssgmeshutilities.cpp
+    qssgmesh.cpp
 
 HEADERS = \
     qssgmeshbvhbuilder_p.h \
     qtquick3dassetimportglobal_p.h \
-    qssgmeshutilities_p.h
+    qssgmesh_p.h
 
 !integrity:!android|android_app:!wasm:!cross_compile {
 SOURCES += \

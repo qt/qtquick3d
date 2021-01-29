@@ -8,7 +8,7 @@ qt_internal_add_module(Quick3DAssetImport
     PLUGIN_TYPES assetimporters
     SOURCES
         qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
-        qssgmeshutilities.cpp qssgmeshutilities_p.h
+        qssgmesh.cpp qssgmesh_p.h
         qtquick3dassetimportglobal_p.h
     DEFINES
         QT_BUILD_QUICK3DASSETIMPORT_LIB

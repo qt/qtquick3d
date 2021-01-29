@@ -80,7 +80,7 @@ int QSSGRenderGeometry::stride() const
     return m_meshData.m_stride;
 }
 
-NewMesh::Mesh::DrawMode QSSGRenderGeometry::primitiveType() const
+QSSGMesh::Mesh::DrawMode QSSGRenderGeometry::primitiveType() const
 {
     return m_meshData.m_primitiveType;
 }
@@ -95,9 +95,9 @@ QSSGRenderGeometry::Attribute QSSGRenderGeometry::attribute(int idx) const
     return attr;
 }
 
-void QSSGRenderGeometry::addAttribute(NewMesh::RuntimeMeshData::Attribute::Semantic semantic,
+void QSSGRenderGeometry::addAttribute(QSSGMesh::RuntimeMeshData::Attribute::Semantic semantic,
                                       int offset,
-                                      NewMesh::Mesh::ComponentType componentType)
+                                      QSSGMesh::Mesh::ComponentType componentType)
 {
     Attribute attr;
     attr.semantic = semantic;
@@ -109,13 +109,13 @@ void QSSGRenderGeometry::addAttribute(NewMesh::RuntimeMeshData::Attribute::Seman
 void QSSGRenderGeometry::addAttribute(const Attribute &att)
 {
     int index = m_meshData.m_attributeCount;
-    if (index == NewMesh::RuntimeMeshData::MAX_ATTRIBUTES) {
+    if (index == QSSGMesh::RuntimeMeshData::MAX_ATTRIBUTES) {
         qWarning("Maximum number (%d) of vertex attributes in custom geometry has been reached; ignoring extra attributes",
-                 NewMesh::RuntimeMeshData::MAX_ATTRIBUTES);
+                 QSSGMesh::RuntimeMeshData::MAX_ATTRIBUTES);
         return;
     }
     m_meshData.m_attributes[index].semantic
-            = static_cast<NewMesh::RuntimeMeshData::Attribute::Semantic>(att.semantic);
+            = static_cast<QSSGMesh::RuntimeMeshData::Attribute::Semantic>(att.semantic);
     m_meshData.m_attributes[index].offset = att.offset;
     m_meshData.m_attributes[index].componentType = att.componentType;
     ++m_meshData.m_attributeCount;
@@ -128,7 +128,7 @@ void QSSGRenderGeometry::setStride(int stride)
     m_dirty = true;
 }
 
-void QSSGRenderGeometry::setPrimitiveType(NewMesh::Mesh::DrawMode type)
+void QSSGRenderGeometry::setPrimitiveType(QSSGMesh::Mesh::DrawMode type)
 {
     m_meshData.m_primitiveType = type;
     m_dirty = true;
@@ -169,7 +169,7 @@ QSSGRenderMesh *QSSGRenderGeometry::createOrUpdate(const QSSGRef<QSSGBufferManag
     if (m_dirty) {
         QSSGRenderMesh *renderMesh = nullptr;
         QString error;
-        NewMesh::Mesh mesh = NewMesh::Mesh::fromRuntimeData(m_meshData, m_bounds, &error);
+        QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(m_meshData, m_bounds, &error);
         if (mesh.isValid())
             renderMesh = bufferManager->loadCustomMesh(this, mesh, true);
         else

@@ -42,14 +42,14 @@
 //
 #include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
 #include <QtQuick3DUtils/private/qssgmeshbvh_p.h>
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBVHBuilder
 {
 public:
-    QSSGMeshBVHBuilder(const NewMesh::Mesh &mesh);
+    QSSGMeshBVHBuilder(const QSSGMesh::Mesh &mesh);
     QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
                        int stride,
                        int posOffset,
@@ -86,7 +86,7 @@ private:
     float getAverageValue(quint32 offset, quint32 count, Axis axis) const;
     quint32 partition(quint32 offset, quint32 count, const Split &split);
 
-    NewMesh::Mesh m_mesh;
+    QSSGMesh::Mesh m_mesh;
     QSSGRenderComponentType m_indexBufferComponentType;
     QByteArray m_indexBufferData;
     QByteArray m_vertexBufferData;

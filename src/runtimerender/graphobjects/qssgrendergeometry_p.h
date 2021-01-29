@@ -45,7 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 
 #include <QtCore/qbytearray.h>
 
@@ -55,9 +55,9 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGeometry : public QSSGRenderGraphO
 {
 public:
     struct Attribute {
-        NewMesh::RuntimeMeshData::Attribute::Semantic semantic = NewMesh::RuntimeMeshData::Attribute::PositionSemantic;
+        QSSGMesh::RuntimeMeshData::Attribute::Semantic semantic = QSSGMesh::RuntimeMeshData::Attribute::PositionSemantic;
         int offset = -1;
-        NewMesh::Mesh::ComponentType componentType = NewMesh::Mesh::ComponentType::Float32;
+        QSSGMesh::Mesh::ComponentType componentType = QSSGMesh::Mesh::ComponentType::Float32;
     };
 
     explicit QSSGRenderGeometry();
@@ -69,7 +69,7 @@ public:
     QByteArray &indexBuffer();
     int attributeCount() const;
     Attribute attribute(int idx) const;
-    NewMesh::Mesh::DrawMode primitiveType() const;
+    QSSGMesh::Mesh::DrawMode primitiveType() const;
     QVector3D boundsMin() const;
     QVector3D boundsMax() const;
     int stride() const;
@@ -78,11 +78,11 @@ public:
     void setIndexData(const QByteArray &data);
     void setStride(int stride);
     void setBounds(const QVector3D &min, const QVector3D &max);
-    void setPrimitiveType(NewMesh::Mesh::DrawMode type);
+    void setPrimitiveType(QSSGMesh::Mesh::DrawMode type);
 
-    void addAttribute(NewMesh::RuntimeMeshData::Attribute::Semantic semantic,
+    void addAttribute(QSSGMesh::RuntimeMeshData::Attribute::Semantic semantic,
                       int offset,
-                      NewMesh::Mesh::ComponentType componentType);
+                      QSSGMesh::Mesh::ComponentType componentType);
     void addAttribute(const Attribute &att);
 
     void clear();
@@ -94,7 +94,7 @@ protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 
     bool m_dirty = true;
-    NewMesh::RuntimeMeshData m_meshData;
+    QSSGMesh::RuntimeMeshData m_meshData;
     QSSGBounds3 m_bounds;
 };
 

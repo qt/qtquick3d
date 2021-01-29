@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qssgrhicontext_p.h"
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtCore/QVariant>
@@ -218,23 +218,23 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
         if (!flags.testFlag(UsedWithoutIa)) {
             const QVector<QShaderDescription::InOutVariable> inputs = stage.shader().description().inputVariables();
             for (const QShaderDescription::InOutVariable &var : inputs) {
-                if (var.name == NewMesh::MeshInternal::getPositionAttrName()) {
+                if (var.name == QSSGMesh::MeshInternal::getPositionAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::PositionSemantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getNormalAttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getNormalAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::NormalSemantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getUV0AttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getUV0AttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getUV1AttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getUV1AttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getTexTanAttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getTexTanAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getTexBinormalAttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getTexBinormalAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::BinormalSemantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getColorAttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getColorAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::ColorSemantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getJointAttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getJointAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::JointSemantic] = var;
-                } else if (var.name == NewMesh::MeshInternal::getWeightAttrName()) {
+                } else if (var.name == QSSGMesh::MeshInternal::getWeightAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::WeightSemantic] = var;
                 } else if (var.name == "qt_instanceTransform0") {
                     instanceLocations.transform0 = var.location;

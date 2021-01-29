@@ -48,7 +48,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 #include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
 
@@ -111,7 +111,7 @@ private:
 
     void clear();
 
-    NewMesh::Mesh loadPrimitive(const QString &inRelativePath) const;
+    QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath) const;
 
 public:
     enum MipMode {
@@ -133,13 +133,13 @@ public:
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
     QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry,
-                                   const NewMesh::Mesh &mesh,
+                                   const QSSGMesh::Mesh &mesh,
                                    bool update = false);
     QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
     QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
-    NewMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath) const;
+    QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath) const;
 
-    QSSGRenderMesh *createRenderMesh(const NewMesh::Mesh &mesh);
+    QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh);
 
     void addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
     void addImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);

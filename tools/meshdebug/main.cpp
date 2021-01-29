@@ -32,13 +32,13 @@
 #include <QtCore/QFile>
 #include <QtCore/QDebug>
 
-#include <QtQuick3DAssetImport/private/qssgmeshutilities_p.h>
+#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 
 #include <QtGui/QMatrix4x4>
 
 using Qt::hex;
 
-using namespace NewMesh;
+using namespace QSSGMesh;
 
 int main(int argc, char *argv[])
 {
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        MeshInternal::MultiMeshInfo multiHeader = MeshInternal::loadFileHeader(&meshFile);
+        MeshInternal::MultiMeshInfo multiHeader = MeshInternal::readFileHeader(&meshFile);
         if (multiHeader.isValid()) {
             // Print Multiheader information
             qDebug() << " -- Multiheader --";
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
                 MeshInternal::MeshDataHeader header;
                 Mesh mesh;
-                if (!MeshInternal::loadMeshData(&meshFile, meshOffset, &mesh, &header)) {
+                if (!MeshInternal::readMeshData(&meshFile, meshOffset, &mesh, &header)) {
                     qWarning("Failed to load mesh body");
                     continue;
                 }
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
                     const Mesh::VertexBufferEntry &entry(vb.entries[idx]);
                     qDebug() << "\t\t\tname:" << entry.name;
                     qDebug() << "\t\t\ttype:" << toString(QSSGRenderComponentType(entry.componentType));
-                    qDebug() << "\t\t\tcompnentCount:" << entry.componentCount;
+                    qDebug() << "\t\t\tcomponentCount:" << entry.componentCount;
                     qDebug() << "\t\t\tstart offset:" << entry.offset;
                 }
                 qDebug() << "\t\tstride:" << vb.stride;

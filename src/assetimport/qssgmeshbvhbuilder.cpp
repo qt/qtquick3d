@@ -31,11 +31,11 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const NewMesh::Mesh &mesh)
+QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QSSGMesh::Mesh &mesh)
     : m_mesh(mesh)
 {
-    const NewMesh::Mesh::VertexBuffer vb = mesh.vertexBuffer();
-    const NewMesh::Mesh::IndexBuffer ib = mesh.indexBuffer();
+    const QSSGMesh::Mesh::VertexBuffer vb = mesh.vertexBuffer();
+    const QSSGMesh::Mesh::IndexBuffer ib = mesh.indexBuffer();
     m_vertexBufferData = vb.data;
     m_indexBufferData = ib.data;
     m_indexBufferComponentType = QSSGRenderComponentType(ib.componentType);
@@ -49,13 +49,13 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const NewMesh::Mesh &mesh)
     // UV1 without UV0, UV1 will be used instead of UV0.
     for (quint32 entryIdx = 0, entryEnd = vb.entries.size(); entryIdx < entryEnd; ++entryIdx) {
         QSSGRenderVertexBufferEntry entry = vb.entries[entryIdx].toRenderVertexBufferEntry();
-        if (!strcmp(entry.m_name, NewMesh::MeshInternal::getPositionAttrName())) {
+        if (!strcmp(entry.m_name, QSSGMesh::MeshInternal::getPositionAttrName())) {
             m_hasPositionData = true;
             m_vertexPosOffset = entry.m_firstItemOffset;
-        } else if (!strcmp(entry.m_name, NewMesh::MeshInternal::getUV0AttrName())) {
+        } else if (!strcmp(entry.m_name, QSSGMesh::MeshInternal::getUV0AttrName())) {
             m_hasUVData = true;
             m_vertexUVOffset = entry.m_firstItemOffset;
-        } else if (!m_hasUVData && !strcmp(entry.m_name, NewMesh::MeshInternal::getUV1AttrName())) {
+        } else if (!m_hasUVData && !strcmp(entry.m_name, QSSGMesh::MeshInternal::getUV1AttrName())) {
             m_hasUVData = true;
             m_vertexUVOffset = entry.m_firstItemOffset;
         }
@@ -88,7 +88,7 @@ QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
     m_roots.clear();
 
     // This only works with triangles
-    if (m_mesh.isValid() && m_mesh.drawMode() != NewMesh::Mesh::DrawMode::Triangles)
+    if (m_mesh.isValid() && m_mesh.drawMode() != QSSGMesh::Mesh::DrawMode::Triangles)
         return nullptr;
 
     // Calculate the bounds for each triangle in whole mesh once
@@ -101,9 +101,9 @@ QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
 
     // For each submesh, generate a root bvh node
     if (m_mesh.isValid()) {
-        const QVector<NewMesh::Mesh::Subset> subsets = m_mesh.subsets();
+        const QVector<QSSGMesh::Mesh::Subset> subsets = m_mesh.subsets();
         for (quint32 subsetIdx = 0, subsetEnd = subsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {
-            const NewMesh::Mesh::Subset &source(subsets[subsetIdx]);
+            const QSSGMesh::Mesh::Subset &source(subsets[subsetIdx]);
             QSSGMeshBVHNode *root = new QSSGMeshBVHNode();
             // Offsets provided by subset are for the index buffer
             // Convert them to work with the triangle bounds list
