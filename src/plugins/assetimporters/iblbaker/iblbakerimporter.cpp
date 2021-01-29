@@ -1,0 +1,759 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "iblbakerimporter.h"
+#include <QFile>
+#include <QFileInfo>
+#include <QDir>
+#include <QDataStream>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+#include <QtGlobal>
+#include <QScopeGuard>
+
+#include <QtQuick/QSGTexture>
+#include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgcompressedtexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
+
+#include <QtShaderTools/private/qshaderbaker_p.h>
+
+#if QT_CONFIG(opengl)
+#include <QtGui/private/qrhigles2_p.h>
+#endif
+#if QT_CONFIG(vulkan)
+#include <QtGui/private/qrhivulkan_p.h>
+#endif
+#ifdef Q_OS_WIN
+#include <QtGui/private/qrhid3d11_p.h>
+#endif
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#include <QtGui/private/qrhimetal_p.h>
+#endif
+
+QT_BEGIN_NAMESPACE
+
+#define GL_FLOAT 0x1406
+#define GL_HALF_FLOAT 0x140B
+#define GL_UNSIGNED_BYTE 0x1401
+#define GL_RGBA 0x1908
+#define GL_RGBA8 0x8058
+#define GL_RGBA16F 0x881A
+#define GL_RGBA32F 0x8814
+
+static constexpr QSSGRenderTextureFormat FORMAT(QSSGRenderTextureFormat::RGBA16F);
+
+const QString IblBakerImporter::name() const
+{
+    return QStringLiteral("hdr");
+}
+
+const QStringList IblBakerImporter::inputExtensions() const
+{
+    QStringList extensions;
+    extensions.append("hdr");
+    return extensions;
+}
+
+const QString IblBakerImporter::outputExtension() const
+{
+    return QStringLiteral(".ktx");
+}
+
+const QString IblBakerImporter::type() const
+{
+    return QStringLiteral("Bake");
+}
+
+const QString IblBakerImporter::typeDescription() const
+{
+    return QStringLiteral("HDR baker to ktx file");
+}
+
+const QVariantMap IblBakerImporter::importOptions() const
+{
+    return m_options;
+}
+
+namespace {
+void writeUInt32(QIODevice &device, quint32 value)
+{
+    device.write(reinterpret_cast<char *>(&value), sizeof(qint32));
+}
+
+void appendBinaryVector(QVector<char> &dest, const quint32 src)
+{
+    dest.reserve(dest.size() + sizeof(src));
+    for (size_t i = 0; i < sizeof(src); i++)
+        dest.push_back(reinterpret_cast<const char *>(&src)[i]);
+}
+
+void appendBinaryVector(QVector<char> &dest, const std::string &src)
+{
+    dest.reserve(dest.size() + src.size() + 1);
+    for (auto c : src)
+        dest.push_back(c);
+    dest.push_back('\0');
+}
+}
+
+// Vertex data for rendering environment cube map
+static const float cube[] = {
+    -1.0f, -1.0f, -1.0f, // -X side
+    -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f, // -Z side
+    1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f,
+
+    -1.0f, -1.0f, -1.0f, // -Y side
+    1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
+
+    -1.0f, 1.0f,  -1.0f, // +Y side
+    -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f,
+
+    1.0f,  1.0f,  -1.0f, // +X side
+    1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f,
+
+    -1.0f, 1.0f,  1.0f, // +Z side
+    -1.0f, -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
+
+    0.0f,  1.0f, // -X side
+    1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+
+    1.0f,  1.0f, // -Z side
+    0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+
+    1.0f,  0.0f, // -Y side
+    1.0f,  1.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+    1.0f,  0.0f, // +Y side
+    0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+
+    1.0f,  0.0f, // +X side
+    0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,
+
+    0.0f,  0.0f, // +Z side
+    0.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,  1.0f,  0.0f,
+};
+
+QString renderToKTXFileInternal(const char *name, const QString &inPath, const QString &outPath, QRhi::Implementation impl, QRhiInitParams *initParams)
+{
+    qInfo() << "Using RHI backend " << name;
+
+    // Open output file
+    QFile ktxOutputFile(outPath);
+    if (!ktxOutputFile.open(QIODevice::WriteOnly)) {
+        return QString("Could not open file: %1").arg(outPath);
+    }
+    auto cleanupCloseFile = qScopeGuard([&ktxOutputFile] { ktxOutputFile.close(); });
+
+    QScopedPointer<QRhi> rhi(QRhi::create(impl, initParams, QRhi::Flags(), nullptr));
+    QRhiCommandBuffer *cb;
+    rhi->beginOffscreenFrame(&cb);
+
+    const auto rhiContext = QSSGRef<QSSGRhiContext>(new QSSGRhiContext);
+    rhiContext->initialize(rhi.get());
+    rhiContext->setCommandBuffer(cb);
+
+    auto inputStreamFactory = new QSSGInputStreamFactory;
+    auto inImage = QSSGLoadedTexture::loadHdrImage(inputStreamFactory->getStreamForFile(inPath), FORMAT);
+    if (!inImage) {
+        return "Failed to load hdr file";
+    }
+    auto cleanupImage = QScopeGuard([inImage]() { delete inImage; });
+    auto shaderCache = std::make_unique<QSSGShaderCache>(rhiContext, inputStreamFactory);
+
+    // The objective of this method is to take the equirectangular texture
+    // provided by inImage and create a cubeMap that contains both pre-filtered
+    // specular environment maps, as well as a irradiance map for diffuse
+    // operations.
+    // To achieve this though we first convert convert the Equirectangular texture
+    // to a cubeMap with genereated mip map levels (no filtering) to make the
+    // process of creating the prefiltered and irradiance maps eaiser. This
+    // intermediate texture as well as the original equirectangular texture are
+    // destroyed after this frame completes, and all further associations with
+    // the source lightProbe texture are instead associated with the final
+    // generated environment map.
+    // The intermediate environment cubemap is used to generate the final
+    // cubemap. This cubemap will generate 6 mip levels for each face
+    // (the remaining faces are unused).  This is what the contents of each
+    // face mip level looks like:
+    // 0: Pre-filtered with roughness 0 (basically unfiltered)
+    // 1: Pre-filtered with roughness 0.25
+    // 2: Pre-filtered with roughness 0.5
+    // 3: Pre-filtered with roughness 0.75
+    // 4: Pre-filtered with rougnness 1.0
+    // 5: Irradiance map (ideally at least 16x16)
+    // It would be better if we could use a separate cubemap for irradiance, but
+    // right now there is a 1:1 association between texture sources on the front-
+    // end and backend.
+
+    // Right now minimum face size needs to be 512x512 to be able to have 6 reasonably sized mips
+    const int suggestedSize = qMax(512.f, inImage->height * 0.5f);
+    const QSize environmentMapSize(suggestedSize, suggestedSize);
+    const bool isRGBE = inImage->format.format == QSSGRenderTextureFormat::Format::RGBE8;
+
+    // Phase 1: Convert the Equirectangular texture to a Cubemap
+    QRhiTexture *envCubeMap = rhi->newTexture(QRhiTexture::RGBA16F,
+                                              environmentMapSize,
+                                              1,
+                                              QRhiTexture::RenderTarget | QRhiTexture::CubeMap | QRhiTexture::MipMapped
+                                                      | QRhiTexture::UsedWithGenerateMips);
+    if (!envCubeMap->create()) {
+        return "Failed to create Environment Cube Map";
+    }
+    envCubeMap->deleteLater();
+
+    // Create a renderbuffer the size of a the cubeMap face
+    QRhiRenderBuffer *envMapRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, environmentMapSize);
+    if (!envMapRenderBuffer->create()) {
+        return "Failed to create Environment Map Render Buffer";
+    }
+    envMapRenderBuffer->deleteLater();
+
+    // Setup the 6 render targets for each cube face
+    QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
+    QRhiRenderPassDescriptor *renderPassDesc = nullptr;
+    for (int face = 0; face < 6; ++face) {
+        QRhiColorAttachment att(envCubeMap);
+        att.setLayer(face);
+        QRhiTextureRenderTargetDescription rtDesc;
+        rtDesc.setColorAttachments({ att });
+        auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+        renderTarget->setDescription(rtDesc);
+        if (!renderPassDesc)
+            renderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();
+        renderTarget->setRenderPassDescriptor(renderPassDesc);
+        if (!renderTarget->create()) {
+            return "Failed to build env map render target";
+        }
+        renderTarget->deleteLater();
+        renderTargets << renderTarget;
+    }
+    renderPassDesc->deleteLater();
+
+    // Setup the sampler for reading the equirectangular loaded texture
+    QSize size(inImage->width, inImage->height);
+    auto *sourceTexture = rhi->newTexture(QRhiTexture::RGBA16F, size, 1);
+    if (!sourceTexture->create()) {
+        return "failed to create source env map texture";
+    }
+    sourceTexture->deleteLater();
+
+    // Upload the equirectangular texture
+    QRhiTextureUploadDescription desc;
+    if (inImage->compressedData.isValid()) {
+        desc = { { 0,
+                   0,
+                   { inImage->compressedData.data().constData() + inImage->compressedData.dataOffset(0),
+                     int(inImage->compressedData.dataLength(0)) } } };
+    } else {
+        desc = { { 0, 0, { inImage->data, int(inImage->dataSizeInBytes) } } };
+    }
+    auto *rub = rhi->nextResourceUpdateBatch();
+    rub->uploadTexture(sourceTexture, desc);
+
+    const QSSGRhiSamplerDescription samplerDesc {
+        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
+    };
+    QRhiSampler *sampler = rhiContext->sampler(samplerDesc);
+
+    // Load shader and setup render pipeline
+    QSSGRef<QSSGRhiShaderPipeline> envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
+
+    // Vertex Buffer - Just a single cube that will be viewed from inside
+    QRhiBuffer *vertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(cube));
+    vertexBuffer->create();
+    vertexBuffer->deleteLater();
+    rub->uploadStaticBuffer(vertexBuffer, cube);
+
+    // Uniform Buffer - 2x mat4
+    int ubufElementSize = rhi->ubufAligned(128);
+    QRhiBuffer *uBuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufElementSize * 6);
+    uBuf->create();
+    uBuf->deleteLater();
+
+    // Shader Resource Bindings
+    QRhiShaderResourceBindings *envMapSrb = rhi->newShaderResourceBindings();
+    envMapSrb->setBindings(
+            { QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+              QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, sourceTexture, sampler) });
+    envMapSrb->create();
+    envMapSrb->deleteLater();
+
+    // Pipeline
+    QRhiGraphicsPipeline *envMapPipeline = rhi->newGraphicsPipeline();
+    envMapPipeline->setCullMode(QRhiGraphicsPipeline::Front);
+    envMapPipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
+    envMapPipeline->setShaderStages({ *envMapShaderStages->vertexStage(), *envMapShaderStages->fragmentStage() });
+
+    QRhiVertexInputLayout inputLayout;
+    inputLayout.setBindings({ { 3 * sizeof(float) } });
+    inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float3, 0 } });
+
+    envMapPipeline->setVertexInputLayout(inputLayout);
+    envMapPipeline->setShaderResourceBindings(envMapSrb);
+    envMapPipeline->setRenderPassDescriptor(renderPassDesc);
+    if (!envMapPipeline->create()) {
+        return "failed to create source env map pipeline state";
+    }
+    envMapPipeline->deleteLater();
+
+    // Do the actual render passes
+    cb->debugMarkBegin("Environment Cubemap Generation");
+    const QRhiCommandBuffer::VertexInput vbufBinding(vertexBuffer, 0);
+
+    // Set the Uniform Data
+    QMatrix4x4 mvp = rhi->clipSpaceCorrMatrix();
+    mvp.perspective(90.0f, 1.0f, 0.1f, 10.0f);
+
+    auto lookAt = [](const QVector3D &eye, const QVector3D &center, const QVector3D &up) {
+        QMatrix4x4 viewMatrix;
+        viewMatrix.lookAt(eye, center, up);
+        return viewMatrix;
+    };
+    QVarLengthArray<QMatrix4x4, 6> views;
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(1.0, 0.0, 0.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(-1.0, 0.0, 0.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    if (rhi->isYUpInFramebuffer()) {
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 1.0, 0.0), QVector3D(0.0f, 0.0f, 1.0f)));
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, -1.0, 0.0), QVector3D(0.0f, 0.0f, -1.0f)));
+    } else {
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, -1.0, 0.0), QVector3D(0.0f, 0.0f, -1.0f)));
+        views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 1.0, 0.0), QVector3D(0.0f, 0.0f, 1.0f)));
+    }
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, 1.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, -1.0), QVector3D(0.0f, -1.0f, 0.0f)));
+    for (int face = 0; face < 6; ++face) {
+        rub->updateDynamicBuffer(uBuf, face * ubufElementSize, 64, mvp.constData());
+        rub->updateDynamicBuffer(uBuf, face * ubufElementSize + 64, 64, views[face].constData());
+    }
+    cb->resourceUpdate(rub);
+
+    for (int face = 0; face < 6; ++face) {
+        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+
+        // Execute render pass
+        cb->setGraphicsPipeline(envMapPipeline);
+        cb->setVertexInput(0, 1, &vbufBinding);
+        cb->setViewport(QRhiViewport(0, 0, environmentMapSize.width(), environmentMapSize.height()));
+        QPair<int, quint32> dynamicOffset = { 0, quint32(ubufElementSize * face) };
+        cb->setShaderResources(envMapSrb, 1, &dynamicOffset);
+
+        cb->draw(36);
+        cb->endPass();
+    }
+    cb->debugMarkEnd();
+
+    if (!isRGBE) {
+        // Generate mipmaps for envMap
+        rub = rhi->nextResourceUpdateBatch();
+        rub->generateMips(envCubeMap);
+        cb->resourceUpdate(rub);
+    }
+
+    // Phase 2: Generate the pre-filtered environment cubemap
+    cb->debugMarkBegin("Pre-filtered Environment Cubemap Generation");
+    QRhiTexture *preFilteredEnvCubeMap = rhi->newTexture(QRhiTexture::RGBA16F,
+                                                         environmentMapSize,
+                                                         1,
+                                                         QRhiTexture::RenderTarget | QRhiTexture::CubeMap | QRhiTexture::MipMapped);
+    if (!preFilteredEnvCubeMap->create())
+        qWarning("Failed to create Pre-filtered Environment Cube Map");
+    int mipmapCount = rhi->mipLevelsForSize(environmentMapSize);
+    mipmapCount = qMin(mipmapCount, 6); // don't create more than 6 mip levels
+    QMap<int, QSize> mipLevelSizes;
+    QMap<int, QVarLengthArray<QRhiTextureRenderTarget *, 6>> renderTargetsMap;
+    QRhiRenderPassDescriptor *renderPassDescriptorPhase2 = nullptr;
+
+    // Create a renderbuffer for each mip level
+    for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
+        const QSize levelSize = QSize(environmentMapSize.width() * std::pow(0.5, mipLevel),
+                                      environmentMapSize.height() * std::pow(0.5, mipLevel));
+        mipLevelSizes.insert(mipLevel, levelSize);
+        // Setup Render targets (6 * mipmapCount)
+        QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
+        for (int face = 0; face < 6; ++face) {
+            QRhiColorAttachment att(preFilteredEnvCubeMap);
+            att.setLayer(face);
+            att.setLevel(mipLevel);
+            QRhiTextureRenderTargetDescription rtDesc;
+            rtDesc.setColorAttachments({ att });
+            auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+            renderTarget->setDescription(rtDesc);
+            if (!renderPassDescriptorPhase2)
+                renderPassDescriptorPhase2 = renderTarget->newCompatibleRenderPassDescriptor();
+            renderTarget->setRenderPassDescriptor(renderPassDescriptorPhase2);
+            if (!renderTarget->create())
+                qWarning("Failed to build prefilter env map render target");
+            renderTarget->deleteLater();
+            renderTargets << renderTarget;
+        }
+        renderTargetsMap.insert(mipLevel, renderTargets);
+        renderPassDescriptorPhase2->deleteLater();
+    }
+
+    // Load the prefilter shader stages
+    QSSGRef<QSSGRhiShaderPipeline> prefilterShaderStages;
+    if (isRGBE)
+        prefilterShaderStages = shaderCache->loadBuiltinForRhi("environmentmapprefilter_rgbe");
+    else
+        prefilterShaderStages = shaderCache->loadBuiltinForRhi("environmentmapprefilter");
+
+    // Create a new Sampler
+    const QSSGRhiSamplerDescription samplerMipMapDesc {
+        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
+    };
+
+    QRhiSampler *envMapCubeSampler = nullptr;
+    // Only use mipmap interpoliation if not using RGBE
+    if (!isRGBE)
+        envMapCubeSampler = rhiContext->sampler(samplerMipMapDesc);
+    else
+        envMapCubeSampler = sampler;
+
+    // Reuse Vertex Buffer from phase 1
+    // Reuse UniformBuffer from phase 1 (for vertex shader)
+
+    // UniformBuffer (roughness + resolution)
+    int ubufRoughnessElementSize = rhi->ubufAligned(8);
+    QRhiBuffer *uBufRoughness = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufRoughnessElementSize * mipmapCount);
+    uBufRoughness->create();
+    uBufRoughness->deleteLater();
+
+    // Shader Resource Bindings
+    QRhiShaderResourceBindings *preFilterSrb = rhi->newShaderResourceBindings();
+    preFilterSrb->setBindings(
+            { QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+              QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, uBufRoughness, 8),
+              QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, envCubeMap, envMapCubeSampler) });
+    preFilterSrb->create();
+    preFilterSrb->deleteLater();
+
+    // Pipeline
+    QRhiGraphicsPipeline *prefilterPipeline = rhi->newGraphicsPipeline();
+    prefilterPipeline->setCullMode(QRhiGraphicsPipeline::Front);
+    prefilterPipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
+    prefilterPipeline->setDepthOp(QRhiGraphicsPipeline::LessOrEqual);
+    prefilterPipeline->setShaderStages({ *prefilterShaderStages->vertexStage(), *prefilterShaderStages->fragmentStage() });
+    // same as phase 1
+    prefilterPipeline->setVertexInputLayout(inputLayout);
+    prefilterPipeline->setShaderResourceBindings(preFilterSrb);
+    prefilterPipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
+    if (!prefilterPipeline->create()) {
+        return "failed to create pre-filter env map pipeline state";
+    }
+    prefilterPipeline->deleteLater();
+
+    // Load the prefilter shader stages
+    QSSGRef<QSSGRhiShaderPipeline> irradianceShaderStages;
+    if (isRGBE)
+        irradianceShaderStages = shaderCache->loadBuiltinForRhi("environmentmapirradiance_rgbe");
+    else
+        irradianceShaderStages = shaderCache->loadBuiltinForRhi("environmentmapirradiance");
+
+    // Setup Irradiance pipline as well
+
+    QRhiGraphicsPipeline *irradiancePipeline = rhi->newGraphicsPipeline();
+    irradiancePipeline->setCullMode(QRhiGraphicsPipeline::Front);
+    irradiancePipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
+    irradiancePipeline->setDepthOp(QRhiGraphicsPipeline::LessOrEqual);
+    irradiancePipeline->setShaderStages({ *irradianceShaderStages->vertexStage(), *irradianceShaderStages->fragmentStage() });
+    QRhiShaderResourceBindings *irradianceSrb = rhi->newShaderResourceBindings();
+    irradianceSrb->setBindings(
+            { QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+              QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, envCubeMap, sampler) });
+    irradianceSrb->create();
+    irradianceSrb->deleteLater();
+    irradiancePipeline->setShaderResourceBindings(irradianceSrb);
+    irradiancePipeline->setVertexInputLayout(inputLayout);
+    irradiancePipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
+    if (!irradiancePipeline->create()) {
+        return "failed to create irradiance env map pipeline state";
+    }
+    irradiancePipeline->deleteLater();
+
+    // Uniform Data
+    // set the roughness uniform buffer data
+    rub = rhi->nextResourceUpdateBatch();
+    for (int mipLevel = 0; mipLevel < mipmapCount - 1; ++mipLevel) {
+        Q_ASSERT(mipmapCount - 2);
+        const float roughness = float(mipLevel) / float(mipmapCount - 2);
+        const float resolution = environmentMapSize.width();
+        rub->updateDynamicBuffer(uBufRoughness, mipLevel * ubufRoughnessElementSize, 4, &roughness);
+        rub->updateDynamicBuffer(uBufRoughness, mipLevel * ubufRoughnessElementSize + 4, 4, &resolution);
+    }
+    cb->resourceUpdate(rub);
+
+    // Render
+    for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
+        for (int face = 0; face < 6; ++face) {
+            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            if (mipLevel < mipmapCount - 1) {
+                // Specular pre-filtered Environment Map levels
+                cb->setGraphicsPipeline(prefilterPipeline);
+                cb->setVertexInput(0, 1, &vbufBinding);
+                cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
+                QVector<QPair<int, quint32>> dynamicOffsets = { { 0, quint32(ubufElementSize * face) },
+                                                                { 2, quint32(ubufRoughnessElementSize * mipLevel) } };
+                cb->setShaderResources(preFilterSrb, 2, dynamicOffsets.constData());
+            } else {
+                // Diffuse Irradiance
+                cb->setGraphicsPipeline(irradiancePipeline);
+                cb->setVertexInput(0, 1, &vbufBinding);
+                cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
+                QVector<QPair<int, quint32>> dynamicOffsets = {
+                    { 0, quint32(ubufElementSize * face) },
+                };
+                cb->setShaderResources(irradianceSrb, 1, dynamicOffsets.constData());
+            }
+            cb->draw(36);
+            cb->endPass();
+        }
+    }
+    cb->debugMarkEnd();
+
+    // Write ktx
+
+    const quint32 numberOfMipmapLevels = renderTargetsMap.size();
+    const quint32 numberOfFaces = 6;
+
+    constexpr size_t KTX_IDENTIFIER_LENGTH = 12;
+    constexpr char ktxIdentifier[KTX_IDENTIFIER_LENGTH] = { '\xAB', 'K',    'T',  'X',  ' ',    '1',
+                                                            '1',    '\xBB', '\r', '\n', '\x1A', '\n' };
+    constexpr quint32 platformEndianIdentifier = 0x04030201;
+    QVector<char> keyValueData;
+
+    // Prepare Key/Value array
+    {
+        std::map<std::string, std::string> keyValueList;
+
+        // Add a key to the metadata to know it was created by our IBL baker and what version was used.
+        keyValueList["QT_IBL_BAKER_VERSION"] = "1";
+
+        for (auto &kv : keyValueList) {
+            quint32 keyAndValueByteSize = kv.first.size() + kv.second.size() + 2; // NB: 2x null terminator
+            appendBinaryVector(keyValueData, keyAndValueByteSize);
+            appendBinaryVector(keyValueData, kv.first);
+            appendBinaryVector(keyValueData, kv.second);
+
+            const quint32 padding = 3 - ((keyAndValueByteSize + 3) % 4); // Pad until next multiple of 4
+            for (quint32 i = 0; i < padding; i++)
+                keyValueData.push_back(char(0x00));
+        }
+    }
+
+    // Header
+
+    // identifier
+    ktxOutputFile.write(ktxIdentifier, KTX_IDENTIFIER_LENGTH);
+
+    // endianness
+    writeUInt32(ktxOutputFile, quint32(platformEndianIdentifier));
+
+    // glType
+    writeUInt32(ktxOutputFile, quint32(GL_HALF_FLOAT));
+
+    // glTypeSize (in bytes per component)
+    writeUInt32(ktxOutputFile, quint32(FORMAT.getSizeofFormat()) / quint32(FORMAT.getNumberOfComponent()));
+
+    // glFormat
+    writeUInt32(ktxOutputFile, quint32(GL_RGBA));
+
+    // glInternalFormat
+    writeUInt32(ktxOutputFile, quint32(GL_RGBA16F));
+
+    // glBaseInternalFormat
+    writeUInt32(ktxOutputFile, quint32(GL_RGBA));
+
+    // pixelWidth
+    writeUInt32(ktxOutputFile, quint32(environmentMapSize.width()));
+
+    // pixelHeight
+    writeUInt32(ktxOutputFile, quint32(environmentMapSize.height()));
+
+    // pixelDepth
+    writeUInt32(ktxOutputFile, quint32(0));
+
+    // numberOfArrayElements
+    writeUInt32(ktxOutputFile, quint32(0));
+
+    // numberOfFaces
+    writeUInt32(ktxOutputFile, quint32(numberOfFaces));
+
+    // numberOfMipLevels
+    writeUInt32(ktxOutputFile, quint32(numberOfMipmapLevels));
+
+    // bytesOfKeyValueData
+    writeUInt32(ktxOutputFile, quint32(keyValueData.size()));
+
+    // Key/Value
+    ktxOutputFile.write(keyValueData.data(), keyValueData.size());
+
+    // Images
+    for (quint32 mipmap_level = 0; mipmap_level < numberOfMipmapLevels; mipmap_level++) {
+        quint32 imageSize = 0;
+        for (size_t face = 0; face < numberOfFaces; face++) {
+            QRhiTextureRenderTarget *renderTarget = renderTargetsMap[mipmap_level][face];
+
+            // Read back texture
+            Q_ASSERT(rhi->isRecordingFrame());
+
+            const auto texture = renderTarget->description().cbeginColorAttachments()->texture();
+
+            QRhiReadbackResult result;
+            QRhiReadbackDescription readbackDesc(texture); // null src == read from swapchain backbuffer
+            readbackDesc.setLayer(face);
+            readbackDesc.setLevel(mipmap_level);
+
+            QRhiResourceUpdateBatch *resourceUpdates = rhi->nextResourceUpdateBatch();
+            resourceUpdates->readBackTexture(readbackDesc, &result);
+
+            cb->resourceUpdate(resourceUpdates);
+            rhi->finish(); // make sure the readback has finished, stall the pipeline if needed
+
+            // Write imageSize once size is known
+            if (imageSize == 0) {
+                imageSize = result.data.length();
+                writeUInt32(ktxOutputFile, quint32(imageSize));
+            }
+
+            ktxOutputFile.write(result.data);
+        }
+    }
+
+    ktxOutputFile.close();
+
+    preFilteredEnvCubeMap->deleteLater();
+
+    rhi->endOffscreenFrame();
+    rhi->finish();
+
+    return {};
+}
+
+QRhi::Implementation getRhiImplementation()
+{
+    QRhi::Implementation implementation = QRhi::Implementation::Null;
+
+    // check env.vars., fall back to platform-specific defaults when backend is not set
+    const QByteArray rhiBackend = qgetenv("QSG_RHI_BACKEND");
+    if (rhiBackend == QByteArrayLiteral("gl") || rhiBackend == QByteArrayLiteral("gles2")
+        || rhiBackend == QByteArrayLiteral("opengl")) {
+        implementation = QRhi::OpenGLES2;
+    } else if (rhiBackend == QByteArrayLiteral("d3d11") || rhiBackend == QByteArrayLiteral("d3d")) {
+        implementation = QRhi::D3D11;
+    } else if (rhiBackend == QByteArrayLiteral("vulkan")) {
+        implementation = QRhi::Vulkan;
+    } else if (rhiBackend == QByteArrayLiteral("metal")) {
+        implementation = QRhi::Metal;
+    } else if (rhiBackend == QByteArrayLiteral("null")) {
+        implementation = QRhi::Null;
+    } else {
+        if (!rhiBackend.isEmpty()) {
+            qWarning("Unknown key \"%s\" for QSG_RHI_BACKEND, falling back to default backend.", rhiBackend.constData());
+        }
+#if defined(Q_OS_WIN)
+        implementation = QRhi::D3D11;
+#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+        implementation = QRhi::Metal;
+#elif QT_CONFIG(opengl)
+        implementation = QRhi::OpenGLES2;
+#else
+        implementation = QRhi::Vulkan;
+#endif
+    }
+
+    return implementation;
+}
+
+QString renderToKTXFile(const QString &inPath, const QString &outPath)
+{
+    const auto rhiImplementation = getRhiImplementation();
+
+#if QT_CONFIG(opengl)
+    if (rhiImplementation == QRhi::OpenGLES2) {
+        QRhiGles2InitParams params;
+        params.fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
+        return renderToKTXFileInternal("OpenGL (with default QSurfaceFormat)", inPath, outPath, QRhi::OpenGLES2, &params);
+    }
+#endif
+
+#if QT_CONFIG(vulkan)
+    if (rhiImplementation == QRhi::Vulkan) {
+        QVulkanInstance vulkanInstance;
+        vulkanInstance.create();
+        QRhiVulkanInitParams params;
+        params.inst = &vulkanInstance;
+        auto cleanup = qScopeGuard([&vulkanInstance] { vulkanInstance.destroy(); });
+        return renderToKTXFileInternal("Vulkan", inPath, outPath, QRhi::Vulkan, &params);
+    }
+#endif
+
+#ifdef Q_OS_WIN
+    if (rhiImplementation == QRhi::D3D11) {
+        QRhiD3D11InitParams params;
+        return renderToKTXFileInternal("Direct3D 11", inPath, outPath, QRhi::D3D11, &params);
+    }
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    if (rhiImplementation == QRhi::Metal) {
+        QRhiMetalInitParams params;
+        return renderToKTXFileInternal("Metal", inPath, outPath, QRhi::Metal, &params);
+    }
+#endif
+
+    return "No RHI context available";
+}
+
+const QString IblBakerImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
+{
+    Q_UNUSED(options);
+
+    QString outFileName = savePath.absoluteFilePath(QFileInfo(sourceFile).baseName() + QStringLiteral(".ktx"));
+
+    auto result = renderToKTXFile(sourceFile, outFileName);
+
+    if (!result.isEmpty()) {
+        return result;
+    }
+
+    m_generatedFiles.append(outFileName);
+
+    if (generatedFiles)
+        *generatedFiles = m_generatedFiles;
+
+    return QString();
+}
+
+QT_END_NAMESPACE

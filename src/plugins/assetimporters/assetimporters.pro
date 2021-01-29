@@ -1,7 +1,8 @@
 TEMPLATE = subdirs
 
 SUBDIRS = \
-    uip
+    uip \
+    iblbaker
 
 qtConfig(quick3d-assimp): {
     SUBDIRS += assimp
