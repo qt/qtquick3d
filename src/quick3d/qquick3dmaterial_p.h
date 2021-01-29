@@ -52,9 +52,6 @@ class QQuick3DSceneManager;
 class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DTexture *lightmapIndirect READ lightmapIndirect WRITE setLightmapIndirect NOTIFY lightmapIndirectChanged)
-    Q_PROPERTY(QQuick3DTexture *lightmapRadiosity READ lightmapRadiosity WRITE setLightmapRadiosity NOTIFY lightmapRadiosityChanged)
-    Q_PROPERTY(QQuick3DTexture *lightmapShadow READ lightmapShadow WRITE setLightmapShadow NOTIFY lightmapShadowChanged)
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
 
@@ -80,27 +77,16 @@ public:
 
     ~QQuick3DMaterial() override;
 
-    QQuick3DTexture *lightmapIndirect() const;
-    QQuick3DTexture *lightmapRadiosity() const;
-    QQuick3DTexture *lightmapShadow() const;
     QQuick3DTexture *lightProbe() const;
 
     CullMode cullMode() const;
 
 public Q_SLOTS:
-    void setLightmapIndirect(QQuick3DTexture *lightmapIndirect);
-    void setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity);
-    void setLightmapShadow(QQuick3DTexture *lightmapShadow);
     void setLightProbe(QQuick3DTexture *lightProbe);
-
     void setCullMode(CullMode cullMode);
 
 Q_SIGNALS:
-    void lightmapIndirectChanged(QQuick3DTexture *lightmapIndirect);
-    void lightmapRadiosityChanged(QQuick3DTexture *lightmapRadiosity);
-    void lightmapShadowChanged(QQuick3DTexture *lightmapShadow);
     void lightProbeChanged(QQuick3DTexture *lightProbe);
-
     void cullModeChanged(CullMode cullMode);
 
 protected:
@@ -112,9 +98,6 @@ protected:
 
 private:
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
-    QQuick3DTexture *m_lightmapIndirect = nullptr;
-    QQuick3DTexture *m_lightmapRadiosity = nullptr;
-    QQuick3DTexture *m_lightmapShadow = nullptr;
     QQuick3DTexture *m_iblProbe = nullptr;
 
     CullMode m_cullMode = CullMode::BackFaceCulling;

@@ -44,39 +44,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Texture Material::lightmapIndirect
-
-    This property defines a baked lightmap Texture containing indirect lighting
-    information for this material.
-
-    \note This feature is still in development so there is currently no way to
-    bake lights. The texture currently still uses the UV1 coordinates which is
-    going to change later to UV2.
-*/
-
-/*!
-    \qmlproperty Texture Material::lightmapRadiosity
-
-    This property defines a baked lightmap Texture containing direct lighting
-    information for this material.
-
-    \note This feature is still in development so there is currently no way to
-    bake lights. The texture currently still uses the UV1 coordinates which is
-    going to change later to UV2.
-*/
-
-/*!
-    \qmlproperty Texture Material::lightmapShadow
-
-    This property defines a baked lightmap Texture containing shadowing
-    information for this material.
-
-    \note This feature is still in development so there is currently no way to
-    bake lights. The texture currently still uses the UV1 coordinates which is
-    going to change later to UV2.
-*/
-
-/*!
     \qmlproperty Texture Material::lightProbe
 
     This property defines a Texture for overriding or setting an image based
@@ -115,21 +82,6 @@ QQuick3DMaterial::~QQuick3DMaterial()
         disconnect(connection);
 }
 
-QQuick3DTexture *QQuick3DMaterial::lightmapIndirect() const
-{
-    return m_lightmapIndirect;
-}
-
-QQuick3DTexture *QQuick3DMaterial::lightmapRadiosity() const
-{
-    return m_lightmapRadiosity;
-}
-
-QQuick3DTexture *QQuick3DMaterial::lightmapShadow() const
-{
-    return m_lightmapShadow;
-}
-
 QQuick3DTexture *QQuick3DMaterial::lightProbe() const
 {
     return m_iblProbe;
@@ -138,48 +90,6 @@ QQuick3DTexture *QQuick3DMaterial::lightProbe() const
 QQuick3DMaterial::CullMode QQuick3DMaterial::cullMode() const
 {
     return m_cullMode;
-}
-
-void QQuick3DMaterial::setLightmapIndirect(QQuick3DTexture *lightmapIndirect)
-{
-    if (m_lightmapIndirect == lightmapIndirect)
-        return;
-
-    QQuick3DObjectPrivate::updatePropertyListener(lightmapIndirect, m_lightmapIndirect, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapIndirect"), m_connections, [this](QQuick3DObject *n) {
-        setLightmapIndirect(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_lightmapIndirect = lightmapIndirect;
-    emit lightmapIndirectChanged(m_lightmapIndirect);
-    update();
-}
-
-void QQuick3DMaterial::setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity)
-{
-    if (m_lightmapRadiosity == lightmapRadiosity)
-        return;
-
-    QQuick3DObjectPrivate::updatePropertyListener(lightmapRadiosity, m_lightmapRadiosity, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapRadiosity"), m_connections, [this](QQuick3DObject *n) {
-        setLightmapRadiosity(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_lightmapRadiosity = lightmapRadiosity;
-    emit lightmapRadiosityChanged(m_lightmapRadiosity);
-    update();
-}
-
-void QQuick3DMaterial::setLightmapShadow(QQuick3DTexture *lightmapShadow)
-{
-    if (m_lightmapShadow == lightmapShadow)
-        return;
-
-    QQuick3DObjectPrivate::updatePropertyListener(lightmapShadow, m_lightmapShadow, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightmapShadow"), m_connections, [this](QQuick3DObject *n) {
-        setLightmapShadow(qobject_cast<QQuick3DTexture *>(n));
-    });
-
-    m_lightmapShadow = lightmapShadow;
-    emit lightmapShadowChanged(m_lightmapShadow);
-    update();
 }
 
 void QQuick3DMaterial::setLightProbe(QQuick3DTexture *iblProbe)
@@ -214,20 +124,6 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
     // Set the common properties
     if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial || node->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
         auto defaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(node);
-        if (!m_lightmapIndirect)
-            defaultMaterial->lightmaps.m_lightmapIndirect = nullptr;
-        else
-            defaultMaterial->lightmaps.m_lightmapIndirect = m_lightmapIndirect->getRenderImage();
-
-        if (!m_lightmapRadiosity)
-            defaultMaterial->lightmaps.m_lightmapRadiosity = nullptr;
-        else
-            defaultMaterial->lightmaps.m_lightmapRadiosity = m_lightmapRadiosity->getRenderImage();
-
-        if (!m_lightmapShadow)
-            defaultMaterial->lightmaps.m_lightmapShadow = nullptr;
-        else
-            defaultMaterial->lightmaps.m_lightmapShadow = m_lightmapShadow->getRenderImage();
 
         if (!m_iblProbe)
             defaultMaterial->iblProbe = nullptr;
@@ -239,20 +135,6 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
 
     } else if (node->type == QSSGRenderGraphObject::Type::CustomMaterial) {
         auto customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
-        if (!m_lightmapIndirect)
-            customMaterial->m_lightmaps.m_lightmapIndirect = nullptr;
-        else
-            customMaterial->m_lightmaps.m_lightmapIndirect = m_lightmapIndirect->getRenderImage();
-
-        if (!m_lightmapRadiosity)
-            customMaterial->m_lightmaps.m_lightmapRadiosity = nullptr;
-        else
-            customMaterial->m_lightmaps.m_lightmapRadiosity = m_lightmapRadiosity->getRenderImage();
-
-        if (!m_lightmapShadow)
-            customMaterial->m_lightmaps.m_lightmapShadow = nullptr;
-        else
-            customMaterial->m_lightmaps.m_lightmapShadow = m_lightmapShadow->getRenderImage();
 
         if (!m_iblProbe)
             customMaterial->m_iblProbe = nullptr;
@@ -275,14 +157,8 @@ void QQuick3DMaterial::itemChange(QQuick3DObject::ItemChange change, const QQuic
 void QQuick3DMaterial::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     if (sceneManager) {
-        QQuick3DObjectPrivate::refSceneManager(m_lightmapIndirect, *sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_lightmapRadiosity, *sceneManager);
-        QQuick3DObjectPrivate::refSceneManager(m_lightmapShadow, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_iblProbe, *sceneManager);
     } else {
-       QQuick3DObjectPrivate::derefSceneManager(m_lightmapIndirect);
-       QQuick3DObjectPrivate::derefSceneManager(m_lightmapRadiosity);
-       QQuick3DObjectPrivate::derefSceneManager(m_lightmapShadow);
        QQuick3DObjectPrivate::derefSceneManager(m_iblProbe);
     }
 }

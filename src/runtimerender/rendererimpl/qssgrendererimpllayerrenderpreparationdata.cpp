@@ -625,15 +625,6 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         CHECK_IMAGE_AND_PREPARE(theMaterial->translucencyMap,
                                 QSSGRenderableImage::Type::Translucency,
                                 QSSGShaderDefaultMaterialKeyProperties::TranslucencyMap);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->lightmaps.m_lightmapIndirect,
-                                QSSGRenderableImage::Type::LightmapIndirect,
-                                QSSGShaderDefaultMaterialKeyProperties::LightmapIndirect);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->lightmaps.m_lightmapRadiosity,
-                                QSSGRenderableImage::Type::LightmapRadiosity,
-                                QSSGShaderDefaultMaterialKeyProperties::LightmapRadiosity);
-        CHECK_IMAGE_AND_PREPARE(theMaterial->lightmaps.m_lightmapShadow,
-                                QSSGRenderableImage::Type::LightmapShadow,
-                                QSSGShaderDefaultMaterialKeyProperties::LightmapShadow);
     }
 #undef CHECK_IMAGE_AND_PREPARE
 
@@ -735,26 +726,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
         ioFlags.setRequiresSsaoPass(true);
     }
 
-    QSSGRenderableImage *firstImage = nullptr;
-    QSSGRenderableImage *nextImage = nullptr;
+    retval.firstImage = nullptr;
 
-#define CHECK_IMAGE_AND_PREPARE(img, imgtype, shadercomponent)                          \
-    if ((img))                                                                          \
-        prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags,  \
-                              theGeneratedKey, shadercomponent, nullptr)
-
-    CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapIndirect,
-                            QSSGRenderableImage::Type::LightmapIndirect,
-                            QSSGShaderDefaultMaterialKeyProperties::LightmapIndirect);
-    CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapRadiosity,
-                            QSSGRenderableImage::Type::LightmapRadiosity,
-                            QSSGShaderDefaultMaterialKeyProperties::LightmapRadiosity);
-    CHECK_IMAGE_AND_PREPARE(inMaterial.m_lightmaps.m_lightmapShadow,
-                            QSSGRenderableImage::Type::LightmapShadow,
-                            QSSGShaderDefaultMaterialKeyProperties::LightmapShadow);
-#undef CHECK_IMAGE_AND_PREPARE
-
-    retval.firstImage = firstImage;
     if (retval.dirty || alreadyDirty)
         renderer->addMaterialDirtyClear(&inMaterial);
     return retval;

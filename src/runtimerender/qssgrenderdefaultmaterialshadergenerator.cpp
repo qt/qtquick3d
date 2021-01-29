@@ -70,9 +70,6 @@ DefineImageStrings(Bump);
 DefineImageStrings(SpecularAmountMap);
 DefineImageStrings(Normal);
 DefineImageStrings(Translucency);
-DefineImageStrings(LightmapIndirect);
-DefineImageStrings(LightmapRadiosity);
-DefineImageStrings(LightmapShadow);
 DefineImageStrings(Roughness);
 DefineImageStrings(BaseColor);
 DefineImageStrings(Metalness);
@@ -102,9 +99,6 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(SpecularAmountMap),
     DefineImageStringTableEntry(Normal),
     DefineImageStringTableEntry(Translucency),
-    DefineImageStringTableEntry(LightmapIndirect),
-    DefineImageStringTableEntry(LightmapRadiosity),
-    DefineImageStringTableEntry(LightmapShadow),
     DefineImageStringTableEntry(Roughness),
     DefineImageStringTableEntry(BaseColor),
     DefineImageStringTableEntry(Metalness),
@@ -434,7 +428,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
     bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe; // always true for Custom, depends for others
     bool hasEmissiveMap = false;
-    bool hasLightmaps = false;
     quint32 numMorphTargets = keyProps.m_morphTargetCount.getValue(inKey);
     // Pull the bump out as
     QSSGRenderableImage *bumpImage = nullptr;
@@ -449,18 +442,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     QSSGRenderableImage *translucencyImage = nullptr;
     // opacity map
     QSSGRenderableImage *opacityImage = nullptr;
-    // lightmaps
-    QSSGRenderableImage *lightmapIndirectImage = nullptr;
-    QSSGRenderableImage *lightmapRadiosityImage = nullptr;
-    QSSGRenderableImage *lightmapShadowImage = nullptr;
 
     QSSGRenderableImage *baseImage = nullptr;
 
     // Use shared texcoord when transforms are identity
     QVector<QSSGRenderableImage *> identityImages;
     char imageFragCoords[TEXCOORD_VAR_LEN];
-
-    Q_UNUSED(lightmapShadowImage);
 
     auto channelStr = [](const QSSGShaderKeyTextureChannel &chProp, const QSSGShaderDefaultMaterialKey &inKey) -> QByteArray {
         QByteArray ret;
@@ -504,16 +491,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             opacityImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Emissive) {
             hasEmissiveMap = true;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapIndirect) {
-            // LightmapIndirect/Radiosity/Shadow are possible also with a custom material, unlike all other image maps
-            lightmapIndirectImage = img;
-            hasLightmaps = true;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapRadiosity) {
-            lightmapRadiosityImage = img;
-            hasLightmaps = true;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::LightmapShadow) {
-            lightmapShadowImage = img;
-            hasLightmaps = true;
         }
     }
 
@@ -681,9 +658,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addFunction("diffuseBurleyBSDF");
         else
             fragmentShader.addFunction("diffuseReflectionBSDF");
-
-        if (hasLightmaps)
-            fragmentShader.addInclude("evalLightmaps.glsllib");
 
         if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
             vertexShader.generateVarTangentAndBinormal(inKey);
@@ -863,36 +837,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         if (specularLightingEnabled)
             fragmentShader << "    vec3 qt_specularAmount = qt_specularBase * vec3(qt_metalnessAmount + qt_specularFactor * (1.0 - qt_metalnessAmount));\n";
-
-        if (lightmapIndirectImage != nullptr) {
-            const bool hasIdentityMap = identityImages.contains(lightmapIndirectImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *lightmapIndirectImage, imageFragCoords, 1);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *lightmapIndirectImage, 1);
-
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::LightmapIndirect)];
-            // NOTE: When we start baking lightmaps, we need to make sure they are in linear colorspace
-            fragmentShader << "    vec4 qt_indirect_light = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
-            fragmentShader << "    global_diffuse_light += qt_indirect_light;\n";
-            if (specularLightingEnabled)
-                fragmentShader << "    global_specular_light += qt_indirect_light.rgb * qt_specularAmount;\n";
-        }
-
-        if (lightmapRadiosityImage != nullptr) {
-            const bool hasIdentityMap = identityImages.contains(lightmapRadiosityImage);
-            if (identityImages.contains(lightmapRadiosityImage))
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *lightmapRadiosityImage, imageFragCoords, 1);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *lightmapRadiosityImage, 1);
-
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::LightmapRadiosity)];
-            // NOTE: When we start baking lightmaps, we need to make sure they are in linear colorspace
-            fragmentShader << "    vec4 qt_direct_light = texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
-            fragmentShader << "    global_diffuse_light += qt_direct_light;\n";
-            if (specularLightingEnabled)
-                fragmentShader << "    global_specular_light += qt_direct_light.rgb * qt_specularAmount;\n";
-        }
 
         if (translucencyImage != nullptr) {
             const bool hasIdentityMap = identityImages.contains(translucencyImage);
@@ -1138,12 +1082,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
         }
 
-        // since we already modulate our material diffuse color
-        // into the light color we will miss it entirely if no IBL
-        // or light is used
-        if (hasLightmaps && !(lights.size() || hasIblProbe))
-            fragmentShader << "    global_diffuse_light.rgb *= qt_diffuseColor.rgb;\n";
-
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
             if (materialAdapter->isPrincipled()) {
@@ -1165,9 +1103,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasImage) {
             bool texColorDeclared = false;
             for (QSSGRenderableImage *image = firstImage; image; image = image->m_nextImage) {
-                // map types other than these 3 are handled elsewhere
-                if (image->m_mapType != QSSGRenderableImage::Type::LightmapShadow
-                        && image->m_mapType != QSSGRenderableImage::Type::Specular
+                // map types other than these 2 are handled elsewhere
+                if (image->m_mapType != QSSGRenderableImage::Type::Specular
                         && image->m_mapType != QSSGRenderableImage::Type::Emissive)
                 {
                     continue;
@@ -1192,13 +1129,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << lookupSwizzle << ";\n";
 
                 switch (image->m_mapType) {
-                case QSSGRenderableImage::Type::LightmapShadow:
-                    // We use image offsets.z to switch between incoming premultiplied textures or
-                    // not premultiplied textures.
-                    // If Z is 1, then we assume the incoming texture is already premultiplied, else
-                    // we just read the rgb value.
-                    fragmentShader.append("    global_diffuse_light *= qt_texture_color;");
-                    break;
                 case QSSGRenderableImage::Type::Specular:
                     fragmentShader.addInclude("tonemapping.glsllib");
                     fragmentShader.append("    global_specular_light.rgb += qt_sRGBToLinear(qt_texture_color.rgb) * qt_specularTint;");

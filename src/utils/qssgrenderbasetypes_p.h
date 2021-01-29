@@ -1273,10 +1273,7 @@ enum class QSSGRenderTextureTypeValue
     Normal,
     Emissive,
     Anisotropy,
-    Translucent,
-    LightmapIndirect,
-    LightmapRadiosity,
-    LightmapShadow
+    Translucent
 };
 
 inline const char *toString(QSSGRenderTextureTypeValue value)
@@ -1300,12 +1297,6 @@ inline const char *toString(QSSGRenderTextureTypeValue value)
         return "Anisotropy";
     case QSSGRenderTextureTypeValue::Translucent:
         return "Translucent";
-    case QSSGRenderTextureTypeValue::LightmapIndirect:
-        return "LightmapIndirect";
-    case QSSGRenderTextureTypeValue::LightmapRadiosity:
-        return "LightmapRadiosity";
-    case QSSGRenderTextureTypeValue::LightmapShadow:
-        return "LightmapShadow";
     }
     return nullptr;
 }

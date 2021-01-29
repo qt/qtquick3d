@@ -645,9 +645,6 @@ struct QSSGShaderDefaultMaterialKeyProperties
         BumpMap,
         SpecularAmountMap,
         NormalMap,
-        LightmapIndirect,
-        LightmapRadiosity,
-        LightmapShadow,
         // single channel images
         OpacityMap,
         RoughnessMap,
@@ -790,14 +787,11 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[4].name = "bumpMap";
         m_imageMaps[5].name = "specularAmountMap";
         m_imageMaps[6].name = "normalMap";
-        m_imageMaps[7].name = "lightmapIndirect";
-        m_imageMaps[8].name = "lightmapRadiosity";
-        m_imageMaps[9].name = "lightmapShadow";
-        m_imageMaps[10].name = "opacityMap";
-        m_imageMaps[11].name = "roughnessMap";
-        m_imageMaps[12].name = "metalnessMap";
-        m_imageMaps[13].name = "occlusionMap";
-        m_imageMaps[14].name = "translucencyMap";
+        m_imageMaps[7].name = "opacityMap";
+        m_imageMaps[8].name = "roughnessMap";
+        m_imageMaps[9].name = "metalnessMap";
+        m_imageMaps[10].name = "occlusionMap";
+        m_imageMaps[11].name = "translucencyMap";
 
         m_textureSwizzle[0].name = "diffuseMap_swizzle";
         m_textureSwizzle[1].name = "emissiveMap_swizzle";
@@ -806,14 +800,11 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureSwizzle[4].name = "bumpMap_swizzle";
         m_textureSwizzle[5].name = "specularAmountMap_swizzle";
         m_textureSwizzle[6].name = "normalMap_swizzle";
-        m_textureSwizzle[7].name = "lightmapIndirect_swizzle";
-        m_textureSwizzle[8].name = "lightmapRadiosity_swizzle";
-        m_textureSwizzle[9].name = "lightmapShadow_swizzle";
-        m_textureSwizzle[10].name = "opacityMap_swizzle";
-        m_textureSwizzle[11].name = "roughnessMap_swizzle";
-        m_textureSwizzle[12].name = "metalnessMap_swizzle";
-        m_textureSwizzle[13].name = "occlusionMap_swizzle";
-        m_textureSwizzle[14].name = "translucencyMap_swizzle";
+        m_textureSwizzle[7].name = "opacityMap_swizzle";
+        m_textureSwizzle[8].name = "roughnessMap_swizzle";
+        m_textureSwizzle[9].name = "metalnessMap_swizzle";
+        m_textureSwizzle[10].name = "occlusionMap_swizzle";
+        m_textureSwizzle[11].name = "translucencyMap_swizzle";
 
         m_textureChannels[0].name = "opacityMap_channel";
         m_textureChannels[1].name = "roughnessMap_channel";

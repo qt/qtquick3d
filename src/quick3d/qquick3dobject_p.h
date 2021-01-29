@@ -78,7 +78,6 @@ public:
         Image, // Resource
         Effect, // Resource
         CustomMaterial, // Resource
-        Lightmaps, // Resource
         Geometry, // Resource
         Skeleton, // its type is Node but it will be treated as a Resource
         TextureData, // Resource

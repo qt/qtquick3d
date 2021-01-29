@@ -44,7 +44,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermaterialdirty_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderlightmaps_p.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
@@ -105,8 +104,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *translucencyMap = nullptr;
     QSSGRenderImage *metalnessMap = nullptr;
     QSSGRenderImage *occlusionMap = nullptr;
-    // lightmap section
-    QSSGRenderLightmaps lightmaps;
 
     // Note that most default values here are irrelevant as the material
     // (Default or Principled) will write its own defaults or actual values

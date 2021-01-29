@@ -71,7 +71,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Effect,
         CustomMaterial,
         RenderPlugin,
-        Lightmaps,
         Geometry,
         Item2D,
         TextureData,
@@ -96,11 +95,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
     inline bool isMaterialType() const Q_DECL_NOTHROW
     {
         return (type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
-    }
-
-    inline bool isLightmapType() const Q_DECL_NOTHROW
-    {
-        return (type == Type::Lightmaps || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
     }
 
     inline bool isNodeType() const Q_DECL_NOTHROW

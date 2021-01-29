@@ -7,7 +7,6 @@
         <file>res/effectlib/funccalculatePointLightAttenuation.glsllib</file>
         <file>res/effectlib/depthpass.glsllib</file>
         <file>res/effectlib/funcdiffuseReflectionBSDF.glsllib</file>
-        <file>res/effectlib/evalLightmaps.glsllib</file>
         <file>res/effectlib/physGlossyBSDF.glsllib</file>
         <file>res/effectlib/funcsampleLightVars.glsllib</file>
         <file>res/effectlib/sampleProbe.glsllib</file>

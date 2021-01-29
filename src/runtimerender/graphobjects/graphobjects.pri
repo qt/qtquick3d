@@ -9,7 +9,6 @@ HEADERS += \
     $$PWD/qssgrenderinstancetable_p.h \
     $$PWD/qssgrenderlayer_p.h \
     $$PWD/qssgrenderlight_p.h \
-    $$PWD/qssgrenderlightmaps_p.h \
     $$PWD/qssgrendermaterialdirty_p.h \
     $$PWD/qssgrendermodel_p.h \
     $$PWD/qssgrendernode_p.h \
@@ -28,7 +27,6 @@ SOURCES += \
     $$PWD/qssgrenderimage.cpp \
     $$PWD/qssgrenderlayer.cpp \
     $$PWD/qssgrenderlight.cpp \
-    $$PWD/qssgrenderlightmaps.cpp \
     $$PWD/qssgrendermodel.cpp \
     $$PWD/qssgrendernode.cpp \
     $$PWD/qssgrendergraphobject.cpp \

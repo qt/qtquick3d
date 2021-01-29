@@ -80,11 +80,6 @@ Rectangle {
             tilingModeHorizontal: Texture.ClampToEdge
         }
 
-        Texture {
-            id: lightmap_radiosity
-            source: "maps/core_lightmap_radiosity.jpg"
-        }
-
         Model {
             id: no_ibl
             position: Qt.vector3d(0, 100, -100)
@@ -117,23 +112,6 @@ Rectangle {
                     lighting: DefaultMaterial.FragmentLighting
 
                     lightProbe: lightprobe_texture
-                }
-            ]
-        }
-
-        Model {
-            id: radiosity_lightmap
-            position: Qt.vector3d(0, 0, -100)
-            rotation: Quaternion.fromEulerAngles(30, -40, 0)
-            scale: Qt.vector3d(30, 30, 30)
-            source: "models/testCube/meshes/Cube.mesh"
-
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: "blue"
-                    lighting: DefaultMaterial.FragmentLighting
-
-                    lightmapRadiosity: lightmap_radiosity
                 }
             ]
         }

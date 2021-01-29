@@ -874,7 +874,6 @@ bool QQuick3DObjectPrivate::isResourceNode() const
     case Type::PrincipledMaterial:
     case Type::Image:
     case Type::CustomMaterial:
-    case Type::Lightmaps:
     case Type::Geometry:
     case Type::Skeleton:
     case Type::TextureData:
@@ -902,7 +901,6 @@ bool QQuick3DObjectPrivate::isSpatialNode() const
     case Type::PrincipledMaterial:
     case Type::Image:
     case Type::CustomMaterial:
-    case Type::Lightmaps:
     case Type::Geometry:
     case Type::Skeleton:
     case Type::TextureData:

@@ -2496,12 +2496,6 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("vertexcolors"), m_vertexColors);
 
     // Common Material values
-    if (!m_lightmapIndirectMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapIndirect: ") << UniqueIdMapper::instance()->queryId(m_lightmapIndirectMap_unresolved) << Qt::endl;
-    if (!m_lightmapRadiosityMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapRadiosity: ") << UniqueIdMapper::instance()->queryId(m_lightmapRadiosityMap_unresolved) << Qt::endl;
-    if (!m_lightmapShadowMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << Qt::endl;
     if (!m_lightProbe_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
 }
@@ -2563,12 +2557,6 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuselightwrap"), m_diffuseLightWrap);
         } else if (targetProperty == QStringLiteral("vertexcolors")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("vertexcolors"), m_vertexColors);
-        } else if (targetProperty == QStringLiteral("lightmapindirect")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapIndirect: ") << UniqueIdMapper::instance()->queryId(m_lightmapIndirectMap_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("lightmapradiosity")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapRadiosity: ") << UniqueIdMapper::instance()->queryId(m_lightmapRadiosityMap_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("lightmapshadow")) {
-            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << Qt::endl;
         } else if (targetProperty == QStringLiteral("iblprobe")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
         }
@@ -2659,12 +2647,6 @@ void ReferencedMaterial::writeQmlProperties(QTextStream &output, int tabLevel, b
 {
     Q_UNUSED(isInRootLevel);
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("id: ") << qmlId() << Qt::endl;
-    if (!m_lightmapIndirectMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapIndirect: ") << UniqueIdMapper::instance()->queryId(m_lightmapIndirectMap_unresolved) << Qt::endl;
-    if (!m_lightmapRadiosityMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapRadiosity: ") << UniqueIdMapper::instance()->queryId(m_lightmapRadiosityMap_unresolved) << Qt::endl;
-    if (!m_lightmapShadowMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << Qt::endl;
     if (!m_lightProbe_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
 }
@@ -2735,12 +2717,6 @@ void CustomMaterialInstance::writeQmlProperties(QTextStream &output, int tabLeve
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QStringLiteral("\"") << UniqueIdMapper::instance()->queryId(m_material_unresolved) << QStringLiteral("\"") << Qt::endl;
 
     // Common Material values
-    if (!m_lightmapIndirectMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapIndirect: ") << UniqueIdMapper::instance()->queryId(m_lightmapIndirectMap_unresolved) << Qt::endl;
-    if (!m_lightmapRadiosityMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapRadiosity: ") << UniqueIdMapper::instance()->queryId(m_lightmapRadiosityMap_unresolved) << Qt::endl;
-    if (!m_lightmapShadowMap_unresolved.isEmpty())
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightmapShadow: ") << UniqueIdMapper::instance()->queryId(m_lightmapShadowMap_unresolved) << Qt::endl;
     if (!m_lightProbe_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("lightProbe: ") << UniqueIdMapper::instance()->queryId(m_lightProbe_unresolved) << Qt::endl;
 }

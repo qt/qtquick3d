@@ -17,7 +17,6 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrenderjoint.cpp graphobjects/qssgrenderjoint_p.h
         graphobjects/qssgrenderlayer.cpp graphobjects/qssgrenderlayer_p.h
         graphobjects/qssgrenderlight.cpp graphobjects/qssgrenderlight_p.h
-        graphobjects/qssgrenderlightmaps.cpp graphobjects/qssgrenderlightmaps_p.h
         graphobjects/qssgrendermaterialdirty_p.h
         graphobjects/qssgrendermodel.cpp graphobjects/qssgrendermodel_p.h
         graphobjects/qssgrendernode.cpp graphobjects/qssgrendernode_p.h
@@ -91,7 +90,6 @@ set(res_resource_files
     "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/depthpass.glsllib"
     "res/effectlib/doubleSided.glsllib"
-    "res/effectlib/evalLightmaps.glsllib"
     "res/effectlib/funccalculatePointLightAttenuation.glsllib"
     "res/effectlib/funcdiffuseBurleyBSDF.glsllib"
     "res/effectlib/funcdiffuseReflectionBSDF.glsllib"
