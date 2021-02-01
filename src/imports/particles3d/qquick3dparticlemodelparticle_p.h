@@ -63,6 +63,7 @@ class QQuick3DParticleModelParticle : public QQuick3DParticle
 
     // TODO: Should this be called delegate or model? In Repeater(3D) and ListView model is very different.
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QQuick3DInstancing *instanceTable READ instanceTable NOTIFY instanceTableChanged)
 
     QML_NAMED_ELEMENT(ModelParticle3D)
     Q_CLASSINFO("DefaultProperty", "delegate")
@@ -71,12 +72,14 @@ public:
     QQuick3DParticleModelParticle(QQuick3DNode *parent = nullptr);
 
     QQmlComponent *delegate() const;
+    QQuick3DInstancing *instanceTable() const;
 
 public Q_SLOTS:
     void setDelegate(QQmlComponent *delegate);
 
 Q_SIGNALS:
     void delegateChanged();
+    void instanceTableChanged();
 
 protected:
     void componentComplete() override;
