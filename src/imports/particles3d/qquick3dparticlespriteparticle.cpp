@@ -269,12 +269,13 @@ void QQuick3DParticleSpriteParticle::updateParticleBuffer()
     for (int s = 0; s < slices; s++) {
         QSSGParticle *dp = reinterpret_cast<QSSGParticle *>(dest);
         for (int p = 0; p < pps && i < particleCount; i++, p++) {
-            bounds.include(src->position);
+            if (src->size > 0.0f)
+                bounds.include(src->position);
             dp->position = src->position;
             dp->rotation = src->rotation * float(M_PI / 180.0f);
             dp->color = src->color;
-            dp->size = qBound(0.0f, src->size * 5.0f, c_MaxParticleSize);
-            dp->age = 0.0f;
+            dp->size = src->size * 5.0f;
+            dp->age = src->age;
             dp++;
             src++;
         }

@@ -125,8 +125,8 @@ private:
         QVector3D position;
         QVector3D rotation;
         QVector4D color;
-        float size;
-        float age;
+        float size = 0.0f;
+        float age = 0.0f;
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -142,8 +142,6 @@ private:
     bool m_bufferUpdated = false;
     bool m_dirty = true;
     QVector<SpriteParticleData> m_spriteParticleData;
-
-    const float c_MaxParticleSize = 100.0f;
 };
 
 QT_END_NAMESPACE

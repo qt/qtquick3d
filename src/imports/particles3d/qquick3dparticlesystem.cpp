@@ -309,6 +309,11 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
             if (timeS < d->startTime || timeS > particleTimeEnd) {
                 // Particle not alive currently
+                if (spriteParticle) {
+                    spriteParticle->setParticleData(i, {}, {},
+                                                    {},
+                                                    0.0f, 0.0f);
+                }
                 continue;
             } else {
                 // Required currently so that particles come back after moving time backwards
@@ -397,7 +402,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             if (spriteParticle) {
                 spriteParticle->setParticleData(i, currentData.position, currentData.rotation,
                                                 QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()),
-                                                currentData.scale.x(), 0.0f);
+                                                currentData.scale.x(), timeChange);
             }
             if (currentData.color.a != 255)
                 semiTransparent = true;
