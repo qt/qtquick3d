@@ -92,6 +92,10 @@ private:
     int current = 0;
 };
 
+QQuick3DInstancing *QQuick3DParticleModelParticle::instanceTable() const
+{
+    return m_instanceTable;
+}
 
 void QQuick3DParticleModelParticle::clearInstanceTable()
 {
@@ -122,13 +126,20 @@ void QQuick3DParticleModelParticle::regenerate()
     delete m_3dModel;
     m_3dModel = nullptr;
 
-    if (!isComponentComplete() || m_delegate.isNull())
+    if (!isComponentComplete())
         return;
 
-    if (!m_instanceTable)
-        m_instanceTable = new QQuick3DParticleInstanceTable;
-    else
+    if (!m_instanceTable) {
+        m_instanceTable = new QQuick3DParticleInstanceTable();
+        m_instanceTable->setParent(this);
+        m_instanceTable->setParentItem(this);
+        emit instanceTableChanged();
+    } else {
         m_instanceTable->clear();
+    }
+
+    if (m_delegate.isNull())
+        return;
 
     auto *obj = m_delegate->create(m_delegate->creationContext());
 
