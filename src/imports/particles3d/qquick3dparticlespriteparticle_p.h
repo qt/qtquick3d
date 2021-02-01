@@ -60,6 +60,7 @@ class QQuick3DParticleSpriteParticle : public QQuick3DParticle
     Q_PROPERTY(int spriteImages READ spriteImages WRITE setSpriteImages NOTIFY spriteImagesChanged)
     Q_PROPERTY(bool blendImages READ blendImages WRITE setBlendImages NOTIFY blendImagesChanged)
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
+    Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
 
 public:
@@ -81,6 +82,7 @@ public:
     int spriteImages() const;
     bool blendImages() const;
     bool receivesShadows() const;
+    float particleScale() const;
 
 public Q_SLOTS:
     void setLighting(Lighting lighting);
@@ -89,6 +91,7 @@ public Q_SLOTS:
     void setSpriteImages(int imageCount);
     void setBlendImages(bool blend);
     void setReceivesShadows(bool receive);
+    void setParticleScale(float scale);
 
 Q_SIGNALS:
     void lightingChanged();
@@ -97,6 +100,7 @@ Q_SIGNALS:
     void spriteImagesChanged();
     void blendImagesChanged();
     void receivesShadowsChanged();
+    void particleScaleChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -136,6 +140,7 @@ private:
     Lighting m_lighting = NoLighting;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
+    float m_particleScale = 5.0f;
     int m_spriteImageCount = SingleImage;
     bool m_blendImages = false;
     bool m_receivesShadows = false;
