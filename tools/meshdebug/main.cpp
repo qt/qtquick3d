@@ -34,8 +34,6 @@
 
 #include <QtQuick3DAssetImport/private/qssgmesh_p.h>
 
-#include <QtGui/QMatrix4x4>
-
 using Qt::hex;
 
 using namespace QSSGMesh;
@@ -134,19 +132,6 @@ int main(int argc, char *argv[])
                                 subset.bounds.max.y() << "," <<
                                 subset.bounds.max.z() << ")";
                     qDebug() << "\t\tname:" << subset.name;
-                }
-
-                // Joints
-                const QVector<Mesh::Joint> joints = mesh.joints();
-                qDebug() << "\t\t -- Joints --";
-                qDebug() << "\t\tjoint count:" << joints.count();
-                for (quint32 idx = 0, end = joints.count(); idx < end; ++idx) {
-                    qDebug() << "\t\t -- Joint" << idx << "--";
-                    const Mesh::Joint &joint(joints[idx]);
-                    qDebug() << "\t\tid:" << joint.jointId;
-                    qDebug() << "\t\tparentId:" << joint.parentId;
-                    qDebug() << "\t\tinverseBindPose:" << QMatrix4x4(joint.inverseBindPose);
-                    qDebug() << "\t\tlocalToGlobalBoneSpace:" << QMatrix4x4(joint.localToGlobalBoneSpace);
                 }
             }
 

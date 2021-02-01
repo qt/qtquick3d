@@ -128,18 +128,10 @@ public:
         quint32 offset = 0;
     };
 
-    struct Joint {
-        quint32 jointId = 0;
-        quint32 parentId = 0;
-        QMatrix4x4 inverseBindPose;
-        QMatrix4x4 localToGlobalBoneSpace;
-    };
-
     // can just return by value (big data is all implicitly shared)
     VertexBuffer vertexBuffer() const { return m_vertexBuffer; }
     IndexBuffer indexBuffer() const { return m_indexBuffer; }
     QVector<Subset> subsets() const { return m_subsets; }
-    QVector<Joint> joints() const { return m_joints; }
 
     // id 0 == first, otherwise has to match
     static Mesh loadMesh(QIODevice *device, quint32 id = 0);
@@ -169,7 +161,6 @@ private:
     VertexBuffer m_vertexBuffer;
     IndexBuffer m_indexBuffer;
     QVector<Subset> m_subsets;
-    QVector<Joint> m_joints;
     friend struct MeshInternal;
 };
 

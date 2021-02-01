@@ -54,9 +54,6 @@ static const size_t VERTEX_BUFFER_ENTRY_STRUCT_SIZE = 16;
 // subset list: count, offset, minXYZ, maxXYZ, nameOffset, nameLength
 static const size_t SUBSET_STRUCT_SIZE = 40;
 
-// joint list: jointId, parentId, invBindPose[16], localToGlobal[16]
-static const size_t JOINT_STRUCT_SIZE = 136;
-
 MeshInternal::MultiMeshInfo MeshInternal::readFileHeader(QIODevice *device)
 {
     const qint64 multiHeaderStartOffset = device->size() - qint64(MULTI_HEADER_STRUCT_SIZE);
@@ -150,7 +147,7 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     inputStream >> subsetsOffsets >> subsetsCount;
 
     quint32 jointsOffsets; // unused
-    quint32 jointsCount;
+    quint32 jointsCount; // unused
     inputStream >> jointsOffsets >> jointsCount;
 
     quint32 drawMode;
@@ -240,23 +237,6 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     for (const MeshInternal::Subset &internalSubset : internalSubsets)
         mesh->m_subsets.append(internalSubset.toMeshSubset());
 
-    for (quint32 i = 0; i < jointsCount; ++i) {
-        Mesh::Joint joint;
-        inputStream >> joint.jointId >> joint.parentId;
-        float invBindPos[16];
-        for (int j = 0; j < 16; ++j)
-            inputStream >> invBindPos[j];
-        float localToGlobalBoneSpace[16];
-        for (int j = 0; j < 16; ++j)
-            inputStream >> localToGlobalBoneSpace[j];
-        joint.inverseBindPose = QMatrix4x4(invBindPos);
-        joint.localToGlobalBoneSpace = QMatrix4x4(localToGlobalBoneSpace);
-        mesh->m_joints.append(joint);
-        alignAmount = offsetTracker.alignedAdvance(JOINT_STRUCT_SIZE);
-        if (alignAmount)
-            device->read(alignPadding, alignAmount);
-    }
-
     return header->sizeInBytes;
 }
 
@@ -309,9 +289,8 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     outputStream << quint32(0) // legacy offset
                  << subsetsCount;
 
-    const quint32 jointsCount = mesh.m_joints.count();
     outputStream << quint32(0) // legacy offset
-                 << jointsCount;
+                 << quint32(0); // legacy jointsCount
 
     const quint32 drawMode = quint32(mesh.m_drawMode);
     const quint32 winding = quint32(mesh.m_winding);
@@ -393,23 +372,6 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
         if (alignAmount)
             device->write(alignPadding, alignAmount);
     }
-
-    quint32 jointsByteSize = 0;
-    for (quint32 i = 0; i < jointsCount; ++i) {
-        const Mesh::Joint &joint(mesh.m_joints[i]);
-        outputStream << joint.jointId << joint.parentId;
-        // ### is this supposed to be row or column major in the file? who knows, it's unused anyway
-        const float *invBindPos = joint.inverseBindPose.constData();
-        for (int j = 0; j < 16; ++j)
-            outputStream << invBindPos[j];
-        const float *localToGlobalBoneSpace = joint.localToGlobalBoneSpace.constData();
-        for (int j = 0; j < 16; ++j)
-            outputStream << localToGlobalBoneSpace[j];
-        jointsByteSize += JOINT_STRUCT_SIZE;
-    }
-    alignAmount = offsetTracker.alignedAdvance(jointsByteSize);
-    if (alignAmount)
-        device->write(alignPadding, alignAmount);
 
     const quint32 endPos = device->pos();
     const quint32 sizeInBytes = endPos - startPos;
