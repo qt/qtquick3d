@@ -80,6 +80,11 @@ bool QQuick3DParticleSpriteParticle::receivesShadows() const
     return m_receivesShadows;
 }
 
+float QQuick3DParticleSpriteParticle::particleScale() const
+{
+    return m_particleScale;
+}
+
 void QQuick3DParticleSpriteParticle::setLighting(Lighting lighting)
 {
     if (m_lighting == lighting)
@@ -140,6 +145,15 @@ void QQuick3DParticleSpriteParticle::setReceivesShadows(bool receive)
     m_receivesShadows = receive;
     m_dirty = true;
     Q_EMIT receivesShadowsChanged();
+}
+
+void QQuick3DParticleSpriteParticle::setParticleScale(float scale)
+{
+    if (qFuzzyCompare(scale, m_particleScale))
+        return;
+    m_particleScale = scale;
+    m_dirty = true;
+    Q_EMIT particleScaleChanged();
 }
 
 
@@ -274,7 +288,7 @@ void QQuick3DParticleSpriteParticle::updateParticleBuffer()
             dp->position = src->position;
             dp->rotation = src->rotation * float(M_PI / 180.0f);
             dp->color = src->color;
-            dp->size = src->size * 5.0f;
+            dp->size = src->size * m_particleScale;
             dp->age = src->age;
             dp++;
             src++;
