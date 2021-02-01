@@ -133,12 +133,12 @@ private:
     void updateParticleBuffer();
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;
-    Lighting m_lighting = VertexLighting;
+    Lighting m_lighting = NoLighting;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
     int m_spriteImageCount = SingleImage;
-    bool m_blendImages = true;
-    bool m_receivesShadows = true;
+    bool m_blendImages = false;
+    bool m_receivesShadows = false;
     bool m_bufferUpdated = false;
     bool m_dirty = true;
     QVector<SpriteParticleData> m_spriteParticleData;
