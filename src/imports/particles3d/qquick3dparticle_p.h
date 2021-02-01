@@ -136,7 +136,6 @@ private:
     FadeType m_fadeOutEffect = FadeOpacity;
     int m_fadeInDuration = 250;
     int m_fadeOutDuration = 250;
-    QQuick3DNode *m_emitter = nullptr;
 };
 
 QT_END_NAMESPACE
