@@ -30,7 +30,7 @@
 #include "qquick3dparticleemitter_p.h"
 #include "qquick3dparticlemodelparticle_p.h"
 #include "qquick3dparticlerandomizer_p.h"
-#include "qquick3dparticleshapecube_p.h"
+#include "qquick3dparticleshape_p.h"
 
 QT_BEGIN_NAMESPACE
 

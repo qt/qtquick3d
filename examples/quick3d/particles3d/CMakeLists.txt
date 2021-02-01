@@ -58,6 +58,7 @@ set(qml_resource_files
     "qml/images/smoke.png"
     "qml/images/snowflake.png"
     "qml/images/star.png"
+    "qml/images/dot.png"
     "qml/main.qml"
 )
 

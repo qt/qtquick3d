@@ -200,7 +200,8 @@ Item {
                     id: emitter1
                     particle: particleWhite
                     scale: Qt.vector3d(2.0, 2.0, 2.0)
-                    shape: ShapeCube3D {
+                    shape: ParticleShape3D {
+                        type: ParticleShape3D.Cube
                         fill: false
                     }
                     velocity: TargetDirection3D {
@@ -256,7 +257,9 @@ Item {
                 id: emitter2
                 particle: smokeParticle
                 scale: Qt.vector3d(0.1, 0.1, 0.1)
-                shape: ShapeSphere3D {}
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                }
                 particleRotationVariation: Qt.vector3d(20, 20, 180)
                 particleRotationVelocityVariation: Qt.vector3d(0, 0, 100)
                 velocity: TargetDirection3D {
@@ -277,7 +280,9 @@ Item {
                 id: emitter3
                 particle: starParticle
                 scale: Qt.vector3d(0.1, 0.1, 0.1)
-                shape: ShapeSphere3D {}
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                }
                 particleScale: 2.0
                 particleScaleVariation: 1.0
                 particleEndScale: 4.0

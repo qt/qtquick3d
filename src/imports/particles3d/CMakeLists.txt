@@ -27,10 +27,7 @@ qt_internal_add_qml_module(qtquick3dparticles3dplugin
         qquick3dparticlepointrotator.cpp qquick3dparticlepointrotator_p.h
         qquick3dparticlerandomizer_p.h
         qquick3dparticleshape.cpp qquick3dparticleshape_p.h
-        qquick3dparticleshapecube.cpp qquick3dparticleshapecube_p.h
-        qquick3dparticleshapecylinder.cpp qquick3dparticleshapecylinder_p.h
         qquick3dparticleshapenode.cpp qquick3dparticleshapenode_p.h
-        qquick3dparticleshapesphere.cpp qquick3dparticleshapesphere_p.h
         qquick3dparticlespriteparticle.cpp qquick3dparticlespriteparticle_p.h
         qquick3dparticlesystem.cpp qquick3dparticlesystem_p.h
         qquick3dparticlesystemlogging.cpp qquick3dparticlesystemlogging_p.h

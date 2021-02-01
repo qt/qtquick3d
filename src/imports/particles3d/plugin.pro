@@ -13,10 +13,7 @@ SOURCES += \
     qquick3dparticleemitter.cpp \
     qquick3dparticlemodelparticle.cpp \
     qquick3dparticleshape.cpp \
-    qquick3dparticleshapecube.cpp \
-    qquick3dparticleshapecylinder.cpp \
     qquick3dparticleshapenode.cpp \
-    qquick3dparticleshapesphere.cpp \
     qquick3dparticleattractor.cpp \
     qquick3dparticlegravity.cpp \
     qquick3dparticlepointrotator.cpp \
@@ -36,10 +33,7 @@ HEADERS += \
     qquick3dparticleemitter_p.h \
     qquick3dparticlemodelparticle_p.h \
     qquick3dparticleshape_p.h \
-    qquick3dparticleshapecube_p.h \
-    qquick3dparticleshapecylinder_p.h \
     qquick3dparticleshapenode_p.h \
-    qquick3dparticleshapesphere_p.h \
     qquick3dparticleaffector_p.h \
     qquick3dparticleattractor_p.h \
     qquick3dparticlegravity_p.h \

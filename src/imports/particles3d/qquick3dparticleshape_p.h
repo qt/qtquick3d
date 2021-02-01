@@ -52,26 +52,31 @@ class QQuick3DParticleShape : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
+    Q_PROPERTY(ShapeType type READ type WRITE setType NOTIFY typeChanged)
 
-    QML_NAMED_ELEMENT(Shape3D)
-    QML_UNCREATABLE("Shape3D is abstract")
+    QML_NAMED_ELEMENT(ParticleShape3D)
     Q_INTERFACES(QQmlParserStatus)
 
 public:
+    enum ShapeType
+    {
+        Cube = 0,
+        Sphere,
+        Cylinder
+    };
+    Q_ENUM(ShapeType)
+
     QQuick3DParticleShape(QObject *parent = nullptr);
 
     bool fill() const;
+    ShapeType type() const;
 
     // Returns random point inside this shape
-    virtual const QVector3D randomPosition() = 0;
-    // Returns random point inside this shape, in scene coordinates
-    virtual const QVector3D randomScenePosition();
-    // This is needed by affectors
-    // Should be fast as called 1 time per particle, so cache things if needed.
-    virtual bool containsPoint(const QVector3D &point) = 0;
+    QVector3D randomPosition() const;
 
 public Q_SLOTS:
     void setFill(bool fill);
+    void setType(ShapeType type);
 
 protected:
     // From QQmlParserStatus
@@ -80,10 +85,16 @@ protected:
 
 Q_SIGNALS:
     void fillChanged();
+    void typeChanged();
 
-protected:
+private:
+    QVector3D randomPositionCube() const;
+    QVector3D randomPositionSphere() const;
+    QVector3D randomPositionCylinder() const;
+
     QQuick3DNode *m_parentNode = nullptr;
     bool m_fill = false;
+    ShapeType m_type = ShapeType::Cube;
 };
 
 QT_END_NAMESPACE

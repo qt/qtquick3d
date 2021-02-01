@@ -143,7 +143,8 @@ Item {
                 system: psystem
                 position: emittingSphere.position
                 particle: particleRed
-                shape: ShapeSphere3D {
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
                     fill: true
                 }
                 emitRate: 500
@@ -155,7 +156,8 @@ Item {
                 system: psystem
                 position: emittingSphere.position
                 particle: particleGreen
-                shape: ShapeSphere3D {
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
                     fill: true
                 }
                 emitRate: 200
@@ -214,7 +216,8 @@ Item {
                 shapeNode: ShapeNode3D {
                     id: targetNode
                     position: targetSphere.position
-                    shape: ShapeSphere3D {
+                    shape: ParticleShape3D {
+                        type: ParticleShape3D.Sphere
                         fill: false
                     }
                 }

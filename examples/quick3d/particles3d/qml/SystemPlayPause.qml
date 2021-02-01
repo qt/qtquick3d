@@ -171,7 +171,8 @@ Item {
                 particleEndScale: 0.4
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
-                shape: ShapeSphere3D {
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
                     fill: false
                 }
                 velocity: TargetDirection3D {

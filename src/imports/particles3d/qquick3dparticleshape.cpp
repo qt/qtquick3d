@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dparticleshape_p.h"
+#include "qquick3dparticlerandomizer_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -51,6 +52,20 @@ void QQuick3DParticleShape::setFill(bool fill)
     Q_EMIT fillChanged();
 }
 
+QQuick3DParticleShape::ShapeType QQuick3DParticleShape::type() const
+{
+    return m_type;
+}
+
+void QQuick3DParticleShape::setType(QQuick3DParticleShape::ShapeType type)
+{
+    if (m_type == type)
+        return;
+
+    m_type = type;
+    Q_EMIT typeChanged();
+}
+
 void QQuick3DParticleShape::componentComplete()
 {
     m_parentNode = qobject_cast<QQuick3DNode*>(parent());
@@ -59,12 +74,84 @@ void QQuick3DParticleShape::componentComplete()
     }
 }
 
-const QVector3D QQuick3DParticleShape::randomScenePosition()
+QVector3D QQuick3DParticleShape::randomPosition() const
 {
     if (!m_parentNode)
         return QVector3D();
 
-    return m_parentNode->scenePosition() + randomPosition();
+    switch (m_type) {
+    case QQuick3DParticleShape::ShapeType::Cube:
+        return randomPositionCube();
+    case QQuick3DParticleShape::ShapeType::Sphere:
+        return randomPositionSphere();
+    case QQuick3DParticleShape::ShapeType::Cylinder:
+        return randomPositionCylinder();
+    default:
+        Q_ASSERT(false);
+    }
+    return QVector3D();
+}
+
+QVector3D QQuick3DParticleShape::randomPositionCube() const
+{
+    QVector3D s = m_parentNode->sceneScale() * 50.0f;
+    float x = s.x() - (QPRand::get() * s.x() * 2.0f);
+    float y = s.y() - (QPRand::get() * s.y() * 2.0f);
+    float z = s.z() - (QPRand::get() * s.z() * 2.0f);
+    if (!m_fill) {
+        // Random 0..5 for cube sides
+        int side = int(QPRand::get() * 6);
+        if (side == 0)
+            x = -s.x();
+        else if (side == 1)
+            x = s.x();
+        else if (side == 2)
+            y = -s.y();
+        else if (side == 3)
+            y = s.y();
+        else if (side == 4)
+            z = -s.z();
+        else
+            z = s.z();
+    }
+    QMatrix4x4 mat;
+    mat.rotate(m_parentNode->rotation());
+    return mat.mapVector(QVector3D(x, y, z));
+}
+
+QVector3D QQuick3DParticleShape::randomPositionSphere() const
+{
+    QVector3D scale = m_parentNode->sceneScale();
+    float theta = QPRand::get() * float(M_PI) * 2.0f;
+    float v = QPRand::get();
+    float phi = acos((2.0f * v) - 1.0f);
+    float r = m_fill ? pow(QPRand::get(), 1.0f / 3.0f) : 1.0f;
+    float x = r * sin(phi) * cos(theta);
+    float y = r * sin(phi) * sin(theta);
+    float z = r * cos(phi);
+    QVector3D pos(x, y, z);
+    pos *= (scale * 50.0f);
+    QMatrix4x4 mat;
+    mat.rotate(m_parentNode->rotation());
+    return mat.mapVector(pos);
+}
+
+QVector3D QQuick3DParticleShape::randomPositionCylinder() const
+{
+    QVector3D scale = m_parentNode->sceneScale();
+    float y = (scale.y() * 50.0f) - (QPRand::get() * scale.y() * 100.0f);
+    float r = 1.0f;
+    if (m_fill)
+        r = sqrt(QPRand::get());
+    float theta = QPRand::get() * float(M_PI) * 2.0f;
+    float x = r * cos(theta);
+    float z = r * sin(theta);
+    x = x * (scale.x() * 50.0f);
+    z = z * (scale.z() * 50.0f);
+    QVector3D pos(x, y, z);
+    QMatrix4x4 mat;
+    mat.rotate(m_parentNode->rotation());
+    return mat.mapVector(pos);
 }
 
 QT_END_NAMESPACE

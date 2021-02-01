@@ -143,7 +143,9 @@ Item {
                 particle: snowParticle
                 position: Qt.vector3d(0, 1000,-200)
                 scale: Qt.vector3d(20.0, 0.1, 10.0)
-                shape: ShapeCube3D {}
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Cube
+                }
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(50, 50, 50);
                 particleScale: 2.0

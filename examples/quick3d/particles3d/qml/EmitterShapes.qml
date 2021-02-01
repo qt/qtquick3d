@@ -87,27 +87,14 @@ Item {
                     easing.type: Easing.InOutQuad
                 }
             }
-            position: Qt.vector3d(0, 300 + cameraAnim * 300, 600 - cameraAnim * 600)
-            eulerRotation: Qt.vector3d(-20 - cameraAnim * 70, 0, 0)
+            position: Qt.vector3d(0, 400 + cameraAnim * 400, 800 - cameraAnim * 800)
+            eulerRotation: Qt.vector3d(-30 - cameraAnim * 60, 0, 0)
         }
 
         PointLight {
             position: Qt.vector3d(0, 400, 0)
             brightness: 10
             ambientColor: Qt.rgba(0.3, 0.3, 0.3, 1.0)
-        }
-
-        // Model shared between particles
-        Component {
-            id: particleComponent
-            Model {
-                source: "#Sphere"
-                scale: Qt.vector3d(0.05, 0.05, 0.05)
-                eulerRotation: Qt.vector3d(20,-20,20)
-                materials: DefaultMaterial {
-                    lighting: DefaultMaterial.NoLighting
-                }
-            }
         }
 
         ParticleSystem3D {
@@ -124,21 +111,27 @@ Item {
             }
 
             // Particles
-            ModelParticle3D {
+            SpriteParticle3D {
                 id: particleRed
-                delegate: particleComponent
+                sprite: Texture {
+                    source: "images/dot.png"
+                }
                 maxAmount: 4000
                 color: "#ff0000"
             }
-            ModelParticle3D {
+            SpriteParticle3D {
                 id: particleGreen
-                delegate: particleComponent
+                sprite: Texture {
+                    source: "images/dot.png"
+                }
                 maxAmount: 4000
                 color: "#00ff00"
             }
-            ModelParticle3D {
+            SpriteParticle3D {
                 id: particleWhite
-                delegate: particleComponent
+                sprite: Texture {
+                    source: "images/dot.png"
+                }
                 maxAmount: 4000
                 color: "#ffffff"
             }
@@ -148,14 +141,15 @@ Item {
                 particle: particleRed
                 position: Qt.vector3d(-300, 0, 0)
                 scale: Qt.vector3d(2.0, 2.0, 3.0)
-                shape: ShapeCube3D {
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Cube
                     fill: mainWindow.fill
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
                 Model {
                     source: "#Cube"
-                    opacity: 0.2
+                    opacity: 0.4
                     materials: DefaultMaterial {
                     }
                 }
@@ -164,14 +158,15 @@ Item {
                 particle: particleGreen
                 position: Qt.vector3d(0, 0, 0)
                 scale: Qt.vector3d(2.0, 2.0, 3.0)
-                shape: ShapeSphere3D {
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
                     fill: mainWindow.fill
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
                 Model {
                     source: "#Sphere"
-                    opacity: 0.2
+                    opacity: 0.4
                     materials: DefaultMaterial {
                     }
                 }
@@ -180,14 +175,15 @@ Item {
                 particle: particleWhite
                 position: Qt.vector3d(300, 0, 0)
                 scale: Qt.vector3d(2.0, 2.0, 3.0)
-                shape: ShapeCylinder3D {
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Cylinder
                     fill: mainWindow.fill
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
                 Model {
                     source: "#Cylinder"
-                    opacity: 0.2
+                    opacity: 0.4
                     materials: DefaultMaterial {
                     }
                 }
