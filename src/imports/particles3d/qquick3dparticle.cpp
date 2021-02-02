@@ -180,7 +180,7 @@ void QQuick3DParticle::updateBurstIndex(int amount) {
 }
 
 int QQuick3DParticle::nextCurrentIndex() {
-    m_currentIndex = (m_currentIndex < m_maxAmount - 1) ? ++m_currentIndex : m_lastBurstIndex;
+    m_currentIndex = (m_currentIndex < m_maxAmount - 1) ? m_currentIndex + 1 : m_lastBurstIndex;
     return m_currentIndex;
 }
 

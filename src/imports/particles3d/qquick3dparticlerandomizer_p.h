@@ -117,7 +117,7 @@ public:
 
     // Return float 0.0 - 1.0 from random list
     inline static float get() {
-        s_index = (s_index < s_size - 1) ? ++s_index : 0;
+        s_index = (s_index < s_size - 1) ? s_index + 1 : 0;
         return s_randomList.at(s_index);
     }
 
