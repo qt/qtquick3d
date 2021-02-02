@@ -100,10 +100,10 @@ bool QSSGRenderNode::calculateGlobalVariables()
                 globalTransform = localTransform;
             }
             if (instanceRoot) {
-                //### technically O(n^2) -- we could cache localInstanceTransform if every node in the tree is guaranteed to have the same instance root
                 globalInstanceTransform = instanceRoot->globalInstanceTransform;
-                localInstanceTransform = localTransform;
-                auto *p = parent;
+                //### technically O(n^2) -- we could cache localInstanceTransform if every node in the tree is guaranteed to have the same instance root
+                localInstanceTransform = {};
+                auto *p = this;
                 while (p) {
                     localInstanceTransform = p->localTransform * localInstanceTransform;
                     if (p == instanceRoot)
@@ -111,8 +111,16 @@ bool QSSGRenderNode::calculateGlobalVariables()
                     p = p->parent;
                 }
             } else {
+                // By default, we do magic: translation is applied to the global transform, while scale/rotation is local
+
                 localInstanceTransform = localTransform;
-                globalInstanceTransform = parent->globalTransform; //ignore IgnoreParentTransform since it does not seem to be set anywhere(??)
+                auto &localInstanceMatrix =  *reinterpret_cast<float (*)[4][4]>(localInstanceTransform.data());
+                QVector3D localPos{localInstanceMatrix[3][0], localInstanceMatrix[3][1], localInstanceMatrix[3][2]};
+                localInstanceMatrix[3][0] = 0;
+                localInstanceMatrix[3][1] = 0;
+                localInstanceMatrix[3][2] = 0;
+                globalInstanceTransform = parent->globalTransform;
+                globalInstanceTransform.translate(localPos);
             }
 
             flags.setFlag(Flag::GloballyActive, (flags.testFlag(Flag::Active) && parent->flags.testFlag(Flag::GloballyActive)));
