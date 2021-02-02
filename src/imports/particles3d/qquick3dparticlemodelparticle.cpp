@@ -121,10 +121,23 @@ void QQuick3DParticleModelParticle::setHasTransparency(bool transparent)
         m_instanceTable->setHasTransparency(transparent);
 }
 
+static void setInstancing(QQuick3DNode *node, QQuick3DInstancing *instanceTable)
+{
+    auto *asModel = qobject_cast<QQuick3DModel *>(node);
+    if (asModel)
+        asModel->setInstancing(instanceTable);
+    const auto children = node->childItems();
+    for (auto *child : children) {
+        auto *childNode = qobject_cast<QQuick3DNode *>(child);
+        if (childNode)
+            setInstancing(childNode, instanceTable);
+    }
+}
+
 void QQuick3DParticleModelParticle::regenerate()
 {
-    delete m_3dModel;
-    m_3dModel = nullptr;
+    delete m_node;
+    m_node = nullptr;
 
     if (!isComponentComplete())
         return;
@@ -143,12 +156,12 @@ void QQuick3DParticleModelParticle::regenerate()
 
     auto *obj = m_delegate->create(m_delegate->creationContext());
 
-    m_3dModel = qobject_cast<QQuick3DModel *>(obj);
-    if (m_3dModel) {
+    m_node = qobject_cast<QQuick3DNode *>(obj);
+    if (m_node) {
+        setInstancing(m_node, m_instanceTable);
         auto *particleSystem = system();
-        m_3dModel->setInstancing(m_instanceTable);
-        m_3dModel->setParent(particleSystem);
-        m_3dModel->setParentItem(particleSystem);
+        m_node->setParent(particleSystem);
+        m_node->setParentItem(particleSystem);
     } else {
         delete obj;
     }
