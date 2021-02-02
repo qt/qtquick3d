@@ -101,7 +101,7 @@ private:
 
     QQuick3DParticleSystem* m_system = nullptr;
     QPointer<QQmlComponent> m_delegate;
-    QPointer<QQuick3DModel> m_3dModel;
+    QPointer<QQuick3DNode> m_node;
     QQuick3DParticleInstanceTable *m_instanceTable = nullptr;
 
     QVector3D m_initialScale;
