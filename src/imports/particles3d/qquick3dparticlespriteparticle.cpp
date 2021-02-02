@@ -113,7 +113,7 @@ void QQuick3DParticleSpriteParticle::setSprite(QQuick3DTexture *sprite)
     if (m_sprite == sprite)
         return;
 
-    auto *sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager;
+    auto sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager;
     QQuick3DObjectPrivate::updatePropertyListener(sprite, m_sprite, sceneManager,
                                                   QByteArrayLiteral("sprite"), m_connections,
                                                   [this](QQuick3DObject *n) {
