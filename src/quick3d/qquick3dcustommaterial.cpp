@@ -346,22 +346,22 @@ QT_BEGIN_NAMESPACE
 
     \li MORPH_POSITION\e{n} -> vec3, the \e{n}th morph target position in the vertex
     shader. \e{n}'s range is from 0 to 7. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_ATTR_MORPH_POSITION\e{n})}
+    data. For safety, the user can check \b {defined(QT_MORPH_IN_POSITION\e{n})}
     before use it.
 
     \li MORPH_NORMAL\e{n} -> vec3, the \e{n}th morph target normal in the vertex
     shader. \e{n}'s range is from 0 to 4. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_ATTR_MORPH_NORMAL\e{n})}
+    data. For safety, the user can check \b {defined(QT_MORPH_IN_NORMAL\e{n})}
     before use it.
 
     \li MORPH_TANGENT\e{n} -> vec3, the \e{n}th morph target tangent in the vertex
     shader. \e{n}'s range is from 0 to 1. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_ATTR_MORPH_TANGENT\e{n})}
+    data. For safety, the user can check \b {defined(QT_MORPH_IN_TANGENT\e{n})}
     before use it.
 
     \li MORPH_BINORMAL\e{n} -> vec3, the \e{n}th morph target binormal in the vertex
     shader. \e{n}'s range is from 0 to 1. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_ATTR_MORPH_BINORMAL\e{n})}
+    data. For safety, the user can check \b {defined(QT_MORPH_IN_BINORMAL\e{n})}
     before use it.
 
     \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix.
