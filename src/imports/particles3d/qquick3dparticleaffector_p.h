@@ -58,7 +58,7 @@ class QQuick3DParticleAffector : public QObject, public QQmlParserStatus
     // When set, affect only these particles. If not set, affects all particles.
     // TODO: Should this be particle or emitter? Currently we don't know which emitter launched particle,
     // that would need data addition.
-    Q_PROPERTY(QQmlListProperty<QQuick3DNode> particles READ particles)
+    Q_PROPERTY(QQmlListProperty<QQuick3DParticle> particles READ particles)
     // TODO: Is startTime & endTime worth the API?
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
     Q_PROPERTY(int endTime READ endTime WRITE setEndTime NOTIFY endTimeChanged)
@@ -75,12 +75,12 @@ public:
     int endTime() const;
 
     // Particles list handling
-    QQmlListProperty<QQuick3DNode> particles();
-    void appendParticle(QQuick3DNode*);
+    QQmlListProperty<QQuick3DParticle> particles();
+    void appendParticle(QQuick3DParticle *);
     qsizetype particleCount() const;
-    QQuick3DNode *particle(qsizetype) const;
+    QQuick3DParticle *particle(qsizetype) const;
     void clearParticles();
-    void replaceParticle(qsizetype, QQuick3DNode*);
+    void replaceParticle(qsizetype, QQuick3DParticle *);
     void removeLastParticle();
 
 public Q_SLOTS:
@@ -105,19 +105,20 @@ Q_SIGNALS:
     void endTimeChanged();
 
 protected:
-    QQuick3DParticleSystem* m_system = nullptr;
+    QQuick3DParticleSystem *m_system = nullptr;
 
     // By default starts immediately and never ends
     int m_startTime = 0;
     int m_endTime = AFFECTOR_MAX_TIME;
 
-    static void appendParticle(QQmlListProperty<QQuick3DNode>*, QQuick3DNode*);
-    static qsizetype particleCount(QQmlListProperty<QQuick3DNode>*);
-    static QQuick3DNode* particle(QQmlListProperty<QQuick3DNode>*, qsizetype);
-    static void clearParticles(QQmlListProperty<QQuick3DNode>*);
-    static void replaceParticle(QQmlListProperty<QQuick3DNode>*, qsizetype, QQuick3DNode*);
-    static void removeLastParticle(QQmlListProperty<QQuick3DNode>*);
-    QList<QQuick3DNode *> m_particles;
+    static void appendParticle(QQmlListProperty<QQuick3DParticle> *, QQuick3DParticle *);
+    static qsizetype particleCount(QQmlListProperty<QQuick3DParticle> *);
+    static QQuick3DParticle *particle(QQmlListProperty<QQuick3DParticle> *, qsizetype);
+    static void clearParticles(QQmlListProperty<QQuick3DParticle> *);
+    static void replaceParticle(QQmlListProperty<QQuick3DParticle> *, qsizetype, QQuick3DParticle *);
+    static void removeLastParticle(QQmlListProperty<QQuick3DParticle> *);
+    QList<QQuick3DParticle *> m_particles;
+    QMap<QQuick3DParticle *, QMetaObject::Connection> m_connections;
 };
 
 QT_END_NAMESPACE

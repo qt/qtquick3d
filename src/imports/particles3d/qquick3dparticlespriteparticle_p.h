@@ -104,11 +104,8 @@ Q_SIGNALS:
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
-    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void reset() override;
-
     void componentComplete() override;
-    void handleMaxAmountChanged(int amount);
     void setParticleData(int particleIndex,
                          const QVector3D &position,
                          const QVector3D &rotation,
@@ -118,6 +115,9 @@ protected:
     {
         markAllDirty();
         update();
+        if (m_particleUpdateNode) {
+            m_particleUpdateNode->update();
+        }
     }
 
 private:
@@ -133,10 +133,27 @@ private:
         float age = 0.0f;
     };
 
-    void updateSceneManager(QQuick3DSceneManager *window);
-    void updateParticleBuffer();
+    class ParticleUpdateNode : public QQuick3DNode
+    {
+    public:
+        ParticleUpdateNode(QQuick3DNode *parent = nullptr)
+            : QQuick3DNode(parent)
+        {
+        }
+        QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+        QQuick3DParticleSpriteParticle *m_spriteParticle = nullptr;
+    };
+    friend class ParticleUpdateNode;
 
+    void updateParticleBuffer(QSSGRenderGraphObject *node);
+    QSSGRenderGraphObject *updateParticleNode(QSSGRenderGraphObject *node);
+    void updateSceneManager(QQuick3DSceneManager *window);
+    void handleMaxAmountChanged(int amount);
+    void handleSystemChanged(QQuick3DParticleSystem *system);
+
+    QVector<SpriteParticleData> m_spriteParticleData;
     QHash<QByteArray, QMetaObject::Connection> m_connections;
+    ParticleUpdateNode *m_particleUpdateNode = nullptr;
     Lighting m_lighting = NoLighting;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
@@ -146,7 +163,6 @@ private:
     bool m_receivesShadows = false;
     bool m_bufferUpdated = false;
     bool m_dirty = true;
-    QVector<SpriteParticleData> m_spriteParticleData;
 };
 
 QT_END_NAMESPACE

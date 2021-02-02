@@ -38,6 +38,8 @@ QQuick3DParticleAffector::QQuick3DParticleAffector(QObject *parent)
 
 QQuick3DParticleAffector::~QQuick3DParticleAffector()
 {
+    for (auto connection : qAsConst(m_connections))
+        QObject::disconnect(connection);
     if (m_system)
         m_system->unRegisterParticleAffector(this);
 }
@@ -130,7 +132,7 @@ float QQuick3DParticleAffector::particleTime(float time)
 
 // Particles
 
-QQmlListProperty<QQuick3DNode> QQuick3DParticleAffector::particles()
+QQmlListProperty<QQuick3DParticle> QQuick3DParticleAffector::particles()
 {
     return {this, this,
              &QQuick3DParticleAffector::appendParticle,
@@ -141,8 +143,14 @@ QQmlListProperty<QQuick3DNode> QQuick3DParticleAffector::particles()
              &QQuick3DParticleAffector::removeLastParticle};
 }
 
-void QQuick3DParticleAffector::appendParticle(QQuick3DNode* n) {
+void QQuick3DParticleAffector::appendParticle(QQuick3DParticle *n) {
     m_particles.append(n);
+    m_connections.insert(n, QObject::connect(n, &QObject::destroyed, [this](QObject *obj) {
+        QQuick3DParticle *particle = qobject_cast<QQuick3DParticle *>(obj);
+        m_particles.removeAll(particle);
+        QObject::disconnect(m_connections[particle]);
+        m_connections.remove(particle);
+    }));
 }
 
 qsizetype QQuick3DParticleAffector::particleCount() const
@@ -150,7 +158,7 @@ qsizetype QQuick3DParticleAffector::particleCount() const
     return m_particles.count();
 }
 
-QQuick3DNode *QQuick3DParticleAffector::particle(qsizetype index) const
+QQuick3DParticle *QQuick3DParticleAffector::particle(qsizetype index) const
 {
     return m_particles.at(index);
 }
@@ -159,41 +167,53 @@ void QQuick3DParticleAffector::clearParticles() {
     m_particles.clear();
 }
 
-void QQuick3DParticleAffector::replaceParticle(qsizetype index, QQuick3DNode *n)
+void QQuick3DParticleAffector::replaceParticle(qsizetype index, QQuick3DParticle *n)
 {
+    QQuick3DParticle *remove = m_particles[index];
+    QObject::disconnect(m_connections[remove]);
+    m_connections.remove(remove);
     m_particles[index] = n;
+    m_connections.insert(n, QObject::connect(n, &QObject::destroyed, [this](QObject *obj) {
+        QQuick3DParticle *particle = qobject_cast<QQuick3DParticle *>(obj);
+        m_particles.removeAll(particle);
+        QObject::disconnect(m_connections[particle]);
+        m_connections.remove(particle);
+    }));
 }
 
 void QQuick3DParticleAffector::removeLastParticle()
 {
+    QQuick3DParticle *last = m_particles.last();
+    QObject::disconnect(m_connections[last]);
+    m_connections.remove(last);
     m_particles.removeLast();
 }
 
 // Particles - static
-void QQuick3DParticleAffector::appendParticle(QQmlListProperty<QQuick3DNode>* list, QQuick3DNode* p) {
-    reinterpret_cast< QQuick3DParticleAffector* >(list->data)->appendParticle(p);
+void QQuick3DParticleAffector::appendParticle(QQmlListProperty<QQuick3DParticle> *list, QQuick3DParticle *p) {
+    reinterpret_cast<QQuick3DParticleAffector *>(list->data)->appendParticle(p);
 }
 
-void QQuick3DParticleAffector::clearParticles(QQmlListProperty<QQuick3DNode>* list) {
-    reinterpret_cast< QQuick3DParticleAffector* >(list->data)->clearParticles();
+void QQuick3DParticleAffector::clearParticles(QQmlListProperty<QQuick3DParticle> *list) {
+    reinterpret_cast<QQuick3DParticleAffector *>(list->data)->clearParticles();
 }
 
-void QQuick3DParticleAffector::replaceParticle(QQmlListProperty<QQuick3DNode> *list, qsizetype i, QQuick3DNode *p)
+void QQuick3DParticleAffector::replaceParticle(QQmlListProperty<QQuick3DParticle> *list, qsizetype i, QQuick3DParticle *p)
 {
-    reinterpret_cast< QQuick3DParticleAffector* >(list->data)->replaceParticle(i, p);
+    reinterpret_cast<QQuick3DParticleAffector *>(list->data)->replaceParticle(i, p);
 }
 
-void QQuick3DParticleAffector::removeLastParticle(QQmlListProperty<QQuick3DNode> *list)
+void QQuick3DParticleAffector::removeLastParticle(QQmlListProperty<QQuick3DParticle> *list)
 {
-    reinterpret_cast< QQuick3DParticleAffector* >(list->data)->removeLastParticle();
+    reinterpret_cast<QQuick3DParticleAffector *>(list->data)->removeLastParticle();
 }
 
-QQuick3DNode* QQuick3DParticleAffector::particle(QQmlListProperty<QQuick3DNode>* list, qsizetype i) {
-    return reinterpret_cast< QQuick3DParticleAffector* >(list->data)->particle(i);
+QQuick3DParticle *QQuick3DParticleAffector::particle(QQmlListProperty<QQuick3DParticle> *list, qsizetype i) {
+    return reinterpret_cast<QQuick3DParticleAffector *>(list->data)->particle(i);
 }
 
-qsizetype QQuick3DParticleAffector::particleCount(QQmlListProperty<QQuick3DNode>* list) {
-    return reinterpret_cast< QQuick3DParticleAffector* >(list->data)->particleCount();
+qsizetype QQuick3DParticleAffector::particleCount(QQmlListProperty<QQuick3DParticle> *list) {
+    return reinterpret_cast<QQuick3DParticleAffector *>(list->data)->particleCount();
 }
 
 QT_END_NAMESPACE

@@ -50,7 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticle : public QQuick3DNode
+class QQuick3DParticle : public QQuick3DObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
@@ -68,7 +68,7 @@ class QQuick3DParticle : public QQuick3DNode
     QML_UNCREATABLE("Particle3D is abstract")
 
 public:
-    QQuick3DParticle(QQuick3DNode *parent = nullptr);
+    QQuick3DParticle(QQuick3DObject *parent = nullptr);
     ~QQuick3DParticle() override;
 
     enum FadeType
@@ -117,6 +117,10 @@ protected:
     void updateBurstIndex(int amount);
     // This will return the next available index
     int nextCurrentIndex();
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override
+    {
+        return node;
+    }
 
     QList<QQuick3DParticleData> m_particleData;
 
