@@ -47,6 +47,8 @@
 
 #include "qquick3dobjectchangelistener_p.h"
 
+#include "qquick3dscenemanager_p.h"
+
 #include <private/qobject_p.h>
 #include <private/qquickstate_p.h>
 #include <private/qqmlnotifier_p.h>
@@ -234,7 +236,7 @@ public:
 
     void setCulled(bool);
 
-    QQuick3DSceneManager *sceneManager = nullptr;
+    QPointer<QQuick3DSceneManager> sceneManager;
     int sceneRefCount;
 
     QQuick3DObject *parentItem;

@@ -1052,7 +1052,7 @@ void QQuick3DObjectPrivate::derefSceneManager()
 
     dirty(Window);
 
-    itemChange(QQuick3DObject::ItemSceneChange, sceneManager);
+    itemChange(QQuick3DObject::ItemSceneChange, sceneManager.data());
 }
 
 void QQuick3DObjectPrivate::updateSubFocusItem(QQuick3DObject *scope, bool focus)
