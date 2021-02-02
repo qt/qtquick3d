@@ -39,15 +39,20 @@ QT_BEGIN_NAMESPACE
 QQuick3DParticleSpriteParticle::QQuick3DParticleSpriteParticle(QQuick3DNode *parent)
     : QQuick3DParticle(parent)
 {
-    QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
+    m_connections.insert("maxAmount", QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
         handleMaxAmountChanged(m_maxAmount);
-    });
+    }));
+    m_connections.insert("system", QObject::connect(this, &QQuick3DParticle::systemChanged, [this]() {
+       handleSystemChanged(system());
+    }));
 }
 
 QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 {
     for (auto connection : qAsConst(m_connections))
         QObject::disconnect(connection);
+    m_particleUpdateNode->m_spriteParticle = nullptr;
+    delete m_particleUpdateNode;
 }
 
 QQuick3DParticleSpriteParticle::Lighting QQuick3DParticleSpriteParticle::lighting() const
@@ -194,17 +199,25 @@ static QSSGRenderParticles::ParticleLighting mapLighting(QQuick3DParticleSpriteP
     }
 }
 
-QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateSpatialNode(QSSGRenderGraphObject *node)
+QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::ParticleUpdateNode::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    if (m_spriteParticle) {
+        node = m_spriteParticle->updateParticleNode(node);
+        QQuick3DNode::updateSpatialNode(node);
+    }
+    return node;
+}
+
+QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
         markAllDirty();
         node = new QSSGRenderParticles();
     }
 
-    QQuick3DNode::updateSpatialNode(node);
     auto particles = static_cast<QSSGRenderParticles *>(node);
 
-    updateParticleBuffer();
+    updateParticleBuffer(particles);
 
     if (!m_dirty)
         return particles;
@@ -240,12 +253,20 @@ void QQuick3DParticleSpriteParticle::handleMaxAmountChanged(int amount)
     m_spriteParticleData.fill({});
 }
 
+void QQuick3DParticleSpriteParticle::handleSystemChanged(QQuick3DParticleSystem *system)
+{
+    if (m_particleUpdateNode)
+        delete m_particleUpdateNode;
+    m_particleUpdateNode = new ParticleUpdateNode(system);
+    m_particleUpdateNode->m_spriteParticle = this;
+}
+
 void QQuick3DParticleSpriteParticle::componentComplete()
 {
     if (!system() && qobject_cast<QQuick3DParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QQuick3DParticleSystem*>(parentItem()));
 
-    QQuick3DNode::componentComplete();
+    QQuick3DParticle::componentComplete();
 }
 
 void QQuick3DParticleSpriteParticle::reset()
@@ -263,10 +284,10 @@ void QQuick3DParticleSpriteParticle::setParticleData(int particleIndex,
     dst = {position, rotation, color, size, age};
 }
 
-void QQuick3DParticleSpriteParticle::updateParticleBuffer()
+void QQuick3DParticleSpriteParticle::updateParticleBuffer(QSSGRenderGraphObject *spatialNode)
 {
     const auto &particles = m_spriteParticleData;
-    QSSGRenderParticles *node = static_cast<QSSGRenderParticles *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+    QSSGRenderParticles *node = static_cast<QSSGRenderParticles *>(spatialNode);
     if (!node)
         return;
     const int particleCount = particles.size();

@@ -132,11 +132,12 @@ void QQuick3DParticleModelParticle::regenerate()
 
     auto *obj = m_delegate->create(m_delegate->creationContext());
 
-    m_3dModel = qobject_cast<QQuick3DModel*>(obj);
+    m_3dModel = qobject_cast<QQuick3DModel *>(obj);
     if (m_3dModel) {
+        auto *particleSystem = system();
         m_3dModel->setInstancing(m_instanceTable);
-        m_3dModel->setParent(this);
-        m_3dModel->setParentItem(this);
+        m_3dModel->setParent(particleSystem);
+        m_3dModel->setParentItem(particleSystem);
     } else {
         delete obj;
     }
@@ -147,7 +148,7 @@ void QQuick3DParticleModelParticle::componentComplete()
     if (!system() && qobject_cast<QQuick3DParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QQuick3DParticleSystem*>(parentItem()));
 
-    QQuick3DNode::componentComplete();
+    QQuick3DParticle::componentComplete();
     regenerate();
 }
 

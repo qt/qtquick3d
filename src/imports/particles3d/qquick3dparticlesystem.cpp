@@ -67,6 +67,21 @@ QQuick3DParticleSystem::~QQuick3DParticleSystem()
 {
     if (m_animation)
         m_animation->stop();
+    for (auto connection : qAsConst(m_connections))
+        QObject::disconnect(connection);
+    // purposeful copy
+    const auto particles = m_particles;
+    const auto emitters = m_emitters;
+    const auto trailEmitters = m_trailEmitters;
+    const auto affectors = m_affectors;
+    for (auto *particle : particles)
+        particle->setSystem(nullptr);
+    for (auto *emitter : emitters)
+        emitter->setSystem(nullptr);
+    for (auto *emitter : trailEmitters)
+        emitter->setSystem(nullptr);
+    for (auto *affector : affectors)
+        affector->setSystem(nullptr);
 }
 
 bool QQuick3DParticleSystem::isRunning() const
@@ -249,13 +264,14 @@ void QQuick3DParticleSystem::unRegisterParticleEmitter(QQuick3DParticleEmitter* 
 void QQuick3DParticleSystem::registerParticleAffector(QQuick3DParticleAffector* a)
 {
     m_affectors << a;
-    connect(a, &QQuick3DParticleAffector::update, this, &QQuick3DParticleSystem::refresh);
+    m_connections.insert(a, connect(a, &QQuick3DParticleAffector::update, this, &QQuick3DParticleSystem::refresh));
 }
 
 void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector* a)
 {
+    QObject::disconnect(m_connections[a]);
+    m_connections.remove(a);
     m_affectors.removeAll(a);
-    disconnect(a, &QQuick3DParticleAffector::update, this, nullptr);
 }
 
 void QQuick3DParticleSystem::updateCurrentTime(int currentTime)

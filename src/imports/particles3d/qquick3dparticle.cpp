@@ -31,8 +31,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuick3DParticle::QQuick3DParticle(QQuick3DNode *parent)
-    : QQuick3DNode(parent)
+QQuick3DParticle::QQuick3DParticle(QQuick3DObject *parent)
+    : QQuick3DObject(parent)
     , m_color(255, 255, 255, 255)
     , m_colorVariation(0, 0, 0, 0)
 {

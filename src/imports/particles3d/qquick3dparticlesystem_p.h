@@ -161,6 +161,7 @@ private:
     QList<QQuick3DParticleEmitter *> m_emitters;
     QList<QQuick3DParticleTrailEmitter *> m_trailEmitters;
     QList<QQuick3DParticleAffector *> m_affectors;
+    QMap<QQuick3DParticleAffector *, QMetaObject::Connection> m_connections;
 
     int m_startTime = 0;
     int m_time = 0;
