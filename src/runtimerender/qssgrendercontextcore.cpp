@@ -43,9 +43,15 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
+#include <QtGui/qwindow.h>
+
 #include <QtCore/qthread.h>
 
 QT_BEGIN_NAMESPACE
+
+using Binding = QPair<const QWindow *, QSSGRenderContextInterface *>;
+using Bindings = QVarLengthArray<Binding, 32>;
+Q_GLOBAL_STATIC(Bindings, g_windowReg)
 
 static bool loadPregenratedShaders()
 {
@@ -62,6 +68,18 @@ void QSSGRenderContextInterface::init(const QString &inApplicationDirectory)
     m_customMaterialSystem->setRenderContextInterface(this);
     if (loadPregenratedShaders())
         m_shaderLibraryManager->loadPregeneratedShaderInfo();
+}
+
+QSSGRenderContextInterface *QSSGRenderContextInterface::renderContextForWindow(const QWindow &window)
+{
+    auto it = g_windowReg->cbegin();
+    const auto end = g_windowReg->cend();
+    for (; it != end; ++it) {
+        if (it->first == &window)
+            break;
+    }
+
+    return (it != end) ? it->second : nullptr;
 }
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
@@ -105,7 +123,19 @@ static const QSSGRef<QSSGShaderLibraryManager> &q3ds_shaderLibraryManager()
     return shaderLibraryManager;
 }
 
-QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory)
+template <typename T>
+static void removeIf(Bindings &list, const T &pred)
+{
+    auto it = list.begin();
+    const auto end = list.end();
+    it = std::remove_if(it, end, pred);
+    if (it != end)
+        list.erase(it, end);
+}
+
+QSSGRenderContextInterface::QSSGRenderContextInterface(QWindow *window,
+                                                       const QSSGRef<QSSGRhiContext> &ctx,
+                                                       const QString &inApplicationDirectory)
     : m_rhiContext(ctx)
     , m_inputStreamFactory(q3ds_inputStreamFactory())
     , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
@@ -117,11 +147,18 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {
     init(inApplicationDirectory);
+    if (window) {
+        g_windowReg->append({ window, this });
+        QObject::connect(window, &QWindow::destroyed, [&](QObject *o){
+            removeIf(*g_windowReg, [o](const Binding &b) { return (b.first == o); });
+        });
+    }
 }
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
     m_renderer->releaseResources();
+    removeIf(*g_windowReg, [this](const Binding &b) { return (b.second == this); });
 }
 
 const QSSGRef<QSSGRenderer> &QSSGRenderContextInterface::renderer() const { return m_renderer; }

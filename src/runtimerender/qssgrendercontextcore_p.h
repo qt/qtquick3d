@@ -91,10 +91,13 @@ private:
     void init(const QString &inApplicationDirectory);
 
 public:
+    static QSSGRenderContextInterface *renderContextForWindow(const QWindow &window);
 
     // The commonly used version (from QQuick3DSceneRenderer). There is one
     // rendercontext per QQuickWindow (and so scenegraph render thread).
-    QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx, const QString &inApplicationDirectory);
+    QSSGRenderContextInterface(QWindow *window,
+                               const QSSGRef<QSSGRhiContext> &ctx,
+                               const QString &inApplicationDirectory);
 
     // This overload must only be used in special cases, e.g. by the genshaders tool.
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
@@ -184,15 +187,6 @@ public:
     // return value (false if nothing's been done due to pending "frames")
     bool endFrame(bool allowRecursion = true);
 
-    template <typename Func>
-    QMetaObject::Connection connectOnDestroyed(const Func &func)
-    {
-        return QObject::connect(&m_destroyObject, &QObject::destroyed, [&, func](){
-            func(this);
-        });
-    }
-private:
-    QObject m_destroyObject;
 };
 QT_END_NAMESPACE
 
