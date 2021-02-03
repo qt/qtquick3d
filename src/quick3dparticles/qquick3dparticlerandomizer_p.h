@@ -95,7 +95,32 @@ public:
         AttractorDurationV,
         AttractorPosVX,
         AttractorPosVY,
-        AttractorPosVZ
+        AttractorPosVZ,
+        DeterministicSeparator, // Note: Enums before this must always be
+                                // deterministic based on the particle index
+        LifeSpanV, // Emitter
+        ScaleV,
+        RotXV,
+        RotYV,
+        RotZV,
+        RotXVV,
+        RotYVV,
+        RotZVV,
+        ColorRV,
+        ColorGV,
+        ColorBV,
+        ColorAV,
+        TDirPosXV, // TargetDirection
+        TDirPosYV,
+        TDirPosZV,
+        TDirMagV,
+        VDirXV, // VectorDirection
+        VDirYV,
+        VDirZV,
+        Shape1, // Shape
+        Shape2,
+        Shape3,
+        Shape4,
     };
 
     static void init(quint32 seed, int size = 65536) {
@@ -108,14 +133,21 @@ public:
         }
     }
 
+    static void setDeterministic(bool deterministic) {
+        s_deterministic = deterministic;
+    }
+
     // Return float 0.0 - 1.0
     // With the same input values, returns always the same output.
     inline static float get(int particleIndex, UserType user = Default) {
+        if (!s_deterministic && user > DeterministicSeparator)
+            return get();
         int i = (particleIndex + user) % s_size;
         return s_randomList.at(i);
     }
 
     // Return float 0.0 - 1.0 from random list
+    // Note: Not deterministic between runs
     inline static float get() {
         s_index = (s_index < s_size - 1) ? s_index + 1 : 0;
         return s_randomList.at(s_index);
@@ -125,6 +157,7 @@ private:
     static QRandomGenerator s_generator;
     static int s_size;
     static int s_index;
+    static bool s_deterministic;
     static QList<float> s_randomList;
 
 };

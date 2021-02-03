@@ -111,6 +111,8 @@ Item {
         ParticleSystem3D {
             id: psystem
 
+            randomizeSeed: checkBoxRandomize.checked
+
             // Particles
             ModelParticle3D {
                 id: particleSpark
@@ -218,6 +220,53 @@ Item {
             }
         }
     }
+
+    Rectangle {
+        anchors.fill: settingsArea
+        anchors.margins: -10
+        color: "#e0e0e0"
+        border.color: "#000000"
+        border.width: 1
+        opacity: 0.8
+        MouseArea {
+            anchors.fill: parent
+            onPressed: {}
+        }
+    }
+
+    Column {
+        id: settingsArea
+        anchors.top: parent.top
+        anchors.topMargin: 20
+        anchors.right: parent.right
+        anchors.rightMargin: 20
+        Text {
+            color: "#222840"
+            font.pointSize: 12
+            text: "ParticleSystem seed: " + psystem.seed
+        }
+        CustomCheckBox {
+            id: checkBoxRandomize
+            text: "Randomize seed:"
+            checked: true
+        }
+        Text {
+            color: "#222840"
+            font.pointSize: 12
+            text: "Custom seed:"
+            opacity: psystem.randomizeSeed ? 0.4 : 1.0
+        }
+        CustomSlider {
+            id: sliderTimelineTime
+            sliderValue: 0
+            sliderEnabled: !psystem.randomizeSeed
+            fromValue: 0
+            toValue: 99
+            sliderStepSize: 1
+            onSliderValueChanged: psystem.setSeed(sliderValue);
+        }
+    }
+
     LoggingView {
         anchors.bottom: parent.bottom
         particleSystems: [psystem]
