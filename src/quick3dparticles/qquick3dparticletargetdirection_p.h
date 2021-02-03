@@ -90,7 +90,7 @@ Q_SIGNALS:
     void magnitudeChangedVariation();
 
 private:
-    QVector3D sample(const QVector3D &from) override;
+    QVector3D sample(const QQuick3DParticleData &d) override;
     QVector3D m_position;
     QVector3D m_positionVariation;
     bool m_normalized = false;

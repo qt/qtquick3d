@@ -79,10 +79,14 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystem : public QQuick3DNode
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     // Start from some later time than 0ms. This will "warm up" the system.
     // If startTime is set to 2000 and animating from 0 to 1000, actually animation goes 2000-3000ms.
-    // TODO: Should this be in emitter instead?
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
     // Manually animate the time. When using this, you usually want to set running to false.
     Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
+    // When true, every run of particlesystem is random. When false, particles are deterministic based
+    // on the seed value. Default value true.
+    Q_PROPERTY(bool randomizeSeed READ randomizeSeed WRITE setRandomizeSeed NOTIFY randomizeSeedChanged)
+    // Seed used for randomization when randomizeSeed is false. Don't modify during the animation.
+    Q_PROPERTY(int seed READ seed WRITE setSeed NOTIFY seedChanged)
     // Set this to true if you want system to collect loggingData.
     // Note: This has some performance impact, so should not be enabled in releases.
     Q_PROPERTY(bool logging READ logging WRITE setLogging NOTIFY loggingChanged)
@@ -98,6 +102,8 @@ public:
     bool isPaused() const;
     int startTime() const;
     int time() const;
+    bool randomizeSeed() const;
+    int seed() const;
     // Return the total amount of particles
     int particleCount() const;
     bool logging() const;
@@ -118,6 +124,8 @@ public Q_SLOTS:
     void setPaused(bool arg);
     void setStartTime(int startTime);
     void setTime(int time);
+    void setRandomizeSeed(bool randomize);
+    void setSeed(int seed);
     void setLogging(bool logging);
 
 private Q_SLOTS:
@@ -131,6 +139,8 @@ Q_SIGNALS:
     void pausedChanged();
     void timeChanged();
     void startTimeChanged();
+    void randomizeSeedChanged();
+    void seedChanged();
     void loggingChanged();
     void loggingDataChanged();
 
@@ -140,6 +150,7 @@ private:
     void reset();
     void updateLoggingData();
     void resetLoggingVariables();
+    void doSeedRandomization();
 
 private:
     friend class QQuick3DParticleEmitter;
@@ -172,6 +183,8 @@ private:
     int m_particlesMax = 0;
     int m_particlesUsed = 0;
     int m_updates = 0;
+    bool m_randomizeSeed = true;
+    int m_seed = 0;
     bool m_logging;
     QQuick3DParticleSystemLogging *m_loggingData = nullptr;
 

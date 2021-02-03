@@ -104,16 +104,15 @@ void QQuick3DParticleTargetDirection::setMagnitudeVariation(float magnitudeVaria
     Q_EMIT magnitudeChangedVariation();
 }
 
-QVector3D QQuick3DParticleTargetDirection::sample(const QVector3D &from)
+QVector3D QQuick3DParticleTargetDirection::sample(const QQuick3DParticleData &d)
 {
-    QVector3D ret = m_position - from;
-    // TODO: Pseudorandom so end result is predictable?
-    ret.setX(ret.x() - m_positionVariation.x() + QPRand::get() * m_positionVariation.x() * 2);
-    ret.setY(ret.y() - m_positionVariation.y() + QPRand::get() * m_positionVariation.y() * 2);
-    ret.setZ(ret.z() - m_positionVariation.z() + QPRand::get() * m_positionVariation.z() * 2);
+    QVector3D ret = m_position - d.startPosition;
+    ret.setX(ret.x() - m_positionVariation.x() + QPRand::get(d.index, QPRand::TDirPosXV) * m_positionVariation.x() * 2.0f);
+    ret.setY(ret.y() - m_positionVariation.y() + QPRand::get(d.index, QPRand::TDirPosYV) * m_positionVariation.y() * 2.0f);
+    ret.setZ(ret.z() - m_positionVariation.z() + QPRand::get(d.index, QPRand::TDirPosZV) * m_positionVariation.z() * 2.0f);
     if (m_normalized)
         ret.normalize();
-    ret *= (m_magnitude - m_magnitudeVariation + QPRand::get() * m_magnitudeVariation * 2);
+    ret *= (m_magnitude - m_magnitudeVariation + QPRand::get(d.index, QPRand::TDirMagV) * m_magnitudeVariation * 2.0f);
     return ret;
 }
 

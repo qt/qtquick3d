@@ -58,6 +58,7 @@ Item {
     property alias fromValue: slider.from
     property alias toValue: slider.to
     property alias sliderEnabled: slider.enabled
+    property alias sliderStepSize: slider.stepSize
     readonly property bool highlight: slider.hovered || slider.pressed
 
     width: 260

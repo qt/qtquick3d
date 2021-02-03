@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
 
 int QPRand::s_index = 0;
 int QPRand::s_size = 0;
+bool QPRand::s_deterministic = false;
 QRandomGenerator QPRand::s_generator;
 QList<float> QPRand::s_randomList;
 
@@ -55,8 +56,7 @@ QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     , m_logging(false)
     , m_loggingData(new QQuick3DParticleSystemLogging(this))
 {
-    // TODO: Handling of seed
-    QPRand::init(1234);
+    QPRand::init(m_seed);
 
     connect(m_loggingData, &QQuick3DParticleSystemLogging::loggingIntervalChanged, [this]() {
         m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
@@ -104,23 +104,37 @@ int QQuick3DParticleSystem::time() const
     return m_time;
 }
 
+bool QQuick3DParticleSystem::randomizeSeed() const
+{
+    return m_randomizeSeed;
+}
+
+int QQuick3DParticleSystem::seed() const
+{
+    return m_seed;
+}
+
 void QQuick3DParticleSystem::setRunning(bool arg)
 {
     if (m_running != arg) {
         m_running = arg;
         Q_EMIT runningChanged();
         setPaused(false);
-        if (m_animation)
-            m_running ? m_animation->start() : m_animation->stop();
 
         if (m_running) {
-            for (auto emitter : qAsConst(m_emitters)) {
+            for (auto emitter : qAsConst(m_emitters))
                 emitter->reset();
-            }
-            for (auto particle : qAsConst(m_particles)) {
+            for (auto emitter : qAsConst(m_trailEmitters))
+                emitter->reset();
+            for (auto particle : qAsConst(m_particles))
                 particle->reset();
-            }
         }
+
+        if (!m_running && m_randomizeSeed)
+            doSeedRandomization();
+
+        if (m_animation)
+            m_running ? m_animation->start() : m_animation->stop();
     }
 }
 
@@ -154,6 +168,30 @@ void QQuick3DParticleSystem::setTime(int time)
     Q_EMIT timeChanged();
 }
 
+void QQuick3DParticleSystem::setRandomizeSeed(bool randomize)
+{
+    if (m_randomizeSeed == randomize)
+        return;
+
+    m_randomizeSeed = randomize;
+    // When set to true, random values are recalculated with a random seed
+    // and random values will become independent of particle index when possible.
+    if (m_randomizeSeed)
+        doSeedRandomization();
+    QPRand::setDeterministic(!m_randomizeSeed);
+    Q_EMIT randomizeSeedChanged();
+}
+
+void QQuick3DParticleSystem::setSeed(int seed)
+{
+    if (m_seed == seed)
+        return;
+
+    m_seed = seed;
+    QPRand::init(m_seed);
+    Q_EMIT seedChanged();
+}
+
 void QQuick3DParticleSystem::componentComplete()
 {
     QQuick3DNode::componentComplete();
@@ -162,6 +200,9 @@ void QQuick3DParticleSystem::componentComplete()
 
     connect(&m_loggingTimer, &QTimer::timeout, this, &QQuick3DParticleSystem::updateLoggingData);
     m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
+
+    if (m_randomizeSeed)
+        doSeedRandomization();
 
     reset();//restarts animation as well
 }
@@ -513,6 +554,11 @@ void QQuick3DParticleSystem::resetLoggingVariables()
     m_particlesUsed = 0;
     m_updates = 0;
     m_timeAnimation = 0;
+}
+
+void QQuick3DParticleSystem::doSeedRandomization()
+{
+    setSeed(QRandomGenerator::global()->bounded(INT32_MAX));
 }
 
 QT_END_NAMESPACE

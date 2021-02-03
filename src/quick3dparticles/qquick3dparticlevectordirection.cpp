@@ -65,14 +65,12 @@ void QQuick3DParticleVectorDirection::setDirectionVariation(const QVector3D &dir
     Q_EMIT directionVariationChanged();
 }
 
-QVector3D QQuick3DParticleVectorDirection::sample(const QVector3D &from)
+QVector3D QQuick3DParticleVectorDirection::sample(const QQuick3DParticleData &d)
 {
-    Q_UNUSED(from)
     QVector3D ret;
-    // TODO: Pseudorandom so end result is predictable?
-    ret.setX(m_direction.x() - m_directionVariation.x() + QPRand::get() * m_directionVariation.x() * 2);
-    ret.setY(m_direction.y() - m_directionVariation.y() + QPRand::get() * m_directionVariation.y() * 2);
-    ret.setZ(m_direction.z() - m_directionVariation.z() + QPRand::get() * m_directionVariation.z() * 2);
+    ret.setX(m_direction.x() - m_directionVariation.x() + QPRand::get(d.index, QPRand::VDirXV) * m_directionVariation.x() * 2.0f);
+    ret.setY(m_direction.y() - m_directionVariation.y() + QPRand::get(d.index, QPRand::VDirYV) * m_directionVariation.y() * 2.0f);
+    ret.setZ(m_direction.z() - m_directionVariation.z() + QPRand::get(d.index, QPRand::VDirZV) * m_directionVariation.z() * 2.0f);
     return ret;
 }
 

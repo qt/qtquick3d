@@ -68,7 +68,7 @@ Q_SIGNALS:
     void directionVariationChanged();
 
 private:
-    QVector3D sample(const QVector3D &from) override;
+    QVector3D sample(const QQuick3DParticleData &d) override;
     QVector3D m_direction;
     QVector3D m_directionVariation;
 };

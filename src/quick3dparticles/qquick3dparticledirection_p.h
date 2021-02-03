@@ -44,6 +44,7 @@
 #include <QObject>
 #include <QVector3D>
 #include <QtQml/qqml.h>
+#include "qquick3dparticledata_p.h"
 
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
@@ -57,7 +58,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDirection : public QObject
 
 public:
     QQuick3DParticleDirection(QObject *parent = nullptr);
-    virtual QVector3D sample(const QVector3D &from) = 0;
+    virtual QVector3D sample(const QQuick3DParticleData &d) = 0;
 };
 
 QT_END_NAMESPACE

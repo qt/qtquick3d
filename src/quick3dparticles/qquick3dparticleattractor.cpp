@@ -153,7 +153,7 @@ void QQuick3DParticleAttractor::updateShapePositions()
 
     m_shapePositionList.reserve(pCount);
     for (int i = 0; i < pCount; i++)
-        m_shapePositionList << m_shapeNode->shape()->randomPosition();
+        m_shapePositionList << m_shapeNode->shape()->randomPosition(i);
 
     m_shapeDirty = false;
 }

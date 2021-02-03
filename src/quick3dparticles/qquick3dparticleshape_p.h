@@ -73,7 +73,7 @@ public:
     ShapeType type() const;
 
     // Returns random point inside this shape
-    QVector3D randomPosition() const;
+    QVector3D randomPosition(int particleIndex) const;
 
 public Q_SLOTS:
     void setFill(bool fill);
@@ -89,9 +89,9 @@ Q_SIGNALS:
     void typeChanged();
 
 private:
-    QVector3D randomPositionCube() const;
-    QVector3D randomPositionSphere() const;
-    QVector3D randomPositionCylinder() const;
+    QVector3D randomPositionCube(int particleIndex) const;
+    QVector3D randomPositionSphere(int particleIndex) const;
+    QVector3D randomPositionCylinder(int particleIndex) const;
 
     QQuick3DNode *m_parentNode = nullptr;
     bool m_fill = false;
