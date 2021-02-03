@@ -27,6 +27,7 @@
 **
 ****************************************************************************/
 
+#include <QtQuick3D/private/qquick3dquaternionutils_p.h>
 #include "qquick3dparticlesystem_p.h"
 #include "qquick3dparticleemitter_p.h"
 #include "qquick3dparticletrailemitter_p.h"
@@ -298,6 +299,10 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         QQuick3DParticleModelParticle *modelParticle = qobject_cast<QQuick3DParticleModelParticle *>(particle);
         QQuick3DParticleSpriteParticle *spriteParticle = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
 
+        QVector3D targetPosition;
+        if (modelParticle && particle->target())
+            targetPosition = particle->target()->position();
+
         // Collect possible trail emits
         QVector<TrailEmits> trailEmits;
         for (auto emitter : qAsConst(m_trailEmitters)) {
@@ -360,6 +365,17 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
                 // If affector is set to affect only particular particles, check these are included
                 if (affector->m_particles.isEmpty() || affector->m_particles.contains(particle))
                     affector->affectParticle(*d, &currentData, timeS);
+            }
+
+            // Add a base rotation if alignment requested
+            if (modelParticle) {
+                if (particle->m_alignMode == QQuick3DParticle::AlignTowardsTarget) {
+                    QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(targetPosition, currentData.position);
+                    currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
+                } else if (particle->m_alignMode == QQuick3DParticle::AlignTowardsStartVelocity) {
+                    QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(d->startVelocity, QVector3D());
+                    currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
+                }
             }
 
 /*

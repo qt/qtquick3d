@@ -64,6 +64,8 @@ class QQuick3DParticle : public QQuick3DObject
     Q_PROPERTY(FadeType fadeOutEffect READ fadeOutEffect WRITE setFadeOutEffect NOTIFY fadeOutEffectChanged)
     Q_PROPERTY(int fadeInDuration READ fadeInDuration WRITE setFadeInDuration NOTIFY fadeInDurationChanged)
     Q_PROPERTY(int fadeOutDuration READ fadeOutDuration WRITE setFadeOutDuration NOTIFY fadeOutDurationChanged)
+    Q_PROPERTY(AlignMode alignMode READ alignMode WRITE setAlignMode NOTIFY alignModeChanged)
+    Q_PROPERTY(QQuick3DNode *target READ target WRITE setTarget NOTIFY targetChanged)
     QML_NAMED_ELEMENT(Particle3D)
     QML_UNCREATABLE("Particle3D is abstract")
 
@@ -79,6 +81,14 @@ public:
     };
     Q_ENUM(FadeType)
 
+    enum AlignMode
+    {
+        AlignDefault,
+        AlignTowardsTarget,
+        AlignTowardsStartVelocity
+    };
+    Q_ENUM(AlignMode)
+
     QQuick3DParticleSystem* system() const;
     int maxAmount() const;
     QColor color() const;
@@ -87,6 +97,8 @@ public:
     FadeType fadeOutEffect() const;
     int fadeInDuration() const;
     int fadeOutDuration() const;
+    AlignMode alignMode() const;
+    QQuick3DNode *target() const;
 
     float opacity() const;
     void resetColor();
@@ -100,6 +112,8 @@ public Q_SLOTS:
     void setFadeOutEffect(FadeType fadeOutEffect);
     void setFadeInDuration(int fadeInDuration);
     void setFadeOutDuration(int fadeOutDuration);
+    void setAlignMode(AlignMode alignMode);
+    void setTarget(QQuick3DNode *target);
 
 Q_SIGNALS:
     void systemChanged();
@@ -110,6 +124,8 @@ Q_SIGNALS:
     void fadeOutEffectChanged();
     void fadeInDurationChanged();
     void fadeOutDurationChanged();
+    void alignModeChanged();
+    void targetChanged();
 
 protected:
     virtual void reset() = 0;
@@ -127,6 +143,8 @@ protected:
     int m_maxAmount = 0;
     int m_currentIndex = 0;
     int m_lastBurstIndex = 0;
+    AlignMode m_alignMode = AlignDefault;
+    QQuick3DNode *m_target = nullptr;
 
 private:
     friend class QQuick3DParticleSystem;
