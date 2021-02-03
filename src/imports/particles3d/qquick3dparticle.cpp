@@ -175,6 +175,34 @@ void QQuick3DParticle::setFadeOutDuration(int fadeOutDuration)
     Q_EMIT fadeOutDurationChanged();
 }
 
+QQuick3DParticle::AlignMode QQuick3DParticle::alignMode() const
+{
+    return m_alignMode;
+}
+
+QQuick3DNode *QQuick3DParticle::target() const
+{
+    return m_target;
+}
+
+void QQuick3DParticle::setAlignMode(AlignMode alignMode)
+{
+    if (m_alignMode == alignMode)
+        return;
+
+    m_alignMode = alignMode;
+    Q_EMIT alignModeChanged();
+}
+
+void QQuick3DParticle::setTarget(QQuick3DNode *target)
+{
+    if (m_target == target)
+        return;
+
+    m_target = target;
+    Q_EMIT targetChanged();
+}
+
 void QQuick3DParticle::updateBurstIndex(int amount) {
     m_lastBurstIndex += amount;
 }
