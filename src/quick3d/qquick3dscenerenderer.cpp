@@ -113,7 +113,7 @@ void SGFramebufferObjectNode::render()
         renderPending = false;
 
         if (renderer->m_sgContext->rhiContext()->isValid()) {
-            QRhiTexture *rhiTexture = renderer->renderToRhiTexture();
+            QRhiTexture *rhiTexture = renderer->renderToRhiTexture(window);
             bool needsNewWrapper = false;
             if (!texture() || (texture()->textureSize() != renderer->surfaceSize()
                                || texture()->rhiTexture() != rhiTexture))
@@ -154,113 +154,10 @@ void SGFramebufferObjectNode::handleScreenChange()
     }
 }
 
-namespace WindowBindings {
-struct Binding
+
+QQuick3DSceneRenderer::QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInterface> &rci)
+    : m_sgContext(rci)
 {
-    QMetaObject::Connection m_connection;
-    const QWindow *m_window = nullptr;
-    QSSGRenderContextInterface *m_rci = nullptr;
-};
-
-using Bindings = QVarLengthArray<Binding, 32>;
-Q_GLOBAL_STATIC(Bindings, g_windowReg)
-
-static QSSGRenderContextInterface *getRci(const QWindow &window)
-{
-    const auto begin = g_windowReg->cbegin();
-    const auto end = g_windowReg->cend();
-    const auto foundIt = std::find_if(begin, end, [&window](const Binding &v) {
-        return (v.m_window == &window);
-    });
-
-    return (foundIt != end) ? foundIt->m_rci : nullptr;
-}
-
-static void unbindAll(QSSGRenderContextInterface *rci)
-{
-    const auto begin = g_windowReg->begin();
-    const auto end = g_windowReg->end();
-    const auto removed = std::remove_if(begin, end, [rci](const Binding &p) {
-        return (p.m_rci == rci);
-    });
-    auto current = removed;
-    while (current != g_windowReg->end()) {
-        QObject::disconnect(current->m_connection);
-        current++;
-    }
-    g_windowReg->erase(removed);
-}
-
-static void unbind(const QWindow &window)
-{
-    const auto begin = g_windowReg->begin();
-    const auto end = g_windowReg->end();
-    g_windowReg->erase(std::remove_if(begin, end, [&window](const Binding &p) {
-        return (p.m_window == &window);
-    }));
-}
-
-static void bind(const QWindow &window, QSSGRenderContextInterface &rci)
-{
-    const auto v = getRci(window);
-    if (v == &rci) // Already bound, ok.
-        return;
-
-    if (v) { // Already bound to another window?!
-        qWarning("Render context already created for window!");
-        return;
-    }
-
-    auto con = QObject::connect(&window, &QWindow::destroyed, [](QObject *o) {
-        if (const auto w = qobject_cast<QWindow *>(o))
-            WindowBindings::unbind(*w);
-    });
-    g_windowReg->push_back({con, &window, &rci});
-}
-}
-
-
-QQuick3DSceneRenderer::QQuick3DSceneRenderer(QWindow *window)
-    : m_window(window)
-{
-    if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(window)) {
-        QSGRendererInterface *rif = qw->rendererInterface();
-        const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
-        if (isRhi) {
-            QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
-            if (!rhi)
-                qWarning("No QRhi from QQuickWindow, this cannot happen");
-
-            // The RenderContextInterface, and the objects owned by it (such
-            // as, the BufferManager) are always per-QQuickWindow, and so per
-            // scenegraph render thread. Hence the association with window.
-            // Multiple View3Ds in the same window can use the same rendering
-            // infrastructure (so e.g. the same QSSGBufferManager), but two
-            // View3D objects in different windows must not, except for certain
-            // components that do not work with and own native graphics
-            // resources (most notably, QSSGShaderLibraryManager - but this
-            // distinction is handled internally by QSSGRenderContextInterface).
-
-            if (auto v = WindowBindings::getRci(*window)) {
-                m_sgContext = QSSGRef<QSSGRenderContextInterface>(v);
-            } else {
-                QSSGRef<QSSGRhiContext> rhiContext(new QSSGRhiContext);
-                // and this is the magic point where many things internally get
-                // switched over to be QRhi-based.
-                rhiContext->initialize(rhi);
-                // Now that setRhi() has been called, we can create the context interface.
-                m_sgContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext, QString::fromLatin1("./")));
-                WindowBindings::bind(*window, *m_sgContext.data());
-                m_cleanupResourceConnection = QObject::connect(qw, &QQuickWindow::afterFrameEnd, [=](){
-                    cleanupResources();
-                });
-            }
-            m_renderContextConnection = m_sgContext->connectOnDestroyed([](QSSGRenderContextInterface *rci){
-                WindowBindings::unbindAll(rci);
-            });
-        }
-    }
-
     dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
 }
 
@@ -272,13 +169,6 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
     releaseAaDependentRhiResources();
     delete m_effectSystem;
-
-    if (m_cleanupResourceConnection)
-        QObject::disconnect(m_cleanupResourceConnection);
-
-    m_sgContext.clear();
-    if (m_renderContextConnection)
-        QObject::disconnect(m_renderContextConnection);
 }
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
@@ -336,14 +226,14 @@ static const QVector2D s_ProgressiveAABlendFactors[QSSGLayerRenderPreparationDat
 
 static const QVector2D s_TemporalAABlendFactors = { 0.5f, 0.5f };
 
-QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture()
+QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 {
     if (!m_layer)
         return nullptr;
 
     QRhiTexture *currentTexture = m_texture; // the result so far
 
-    if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(m_window)) {
+    if (qw) {
         if (m_renderStats)
             m_renderStats->startRenderPrepare();
 
@@ -570,18 +460,6 @@ void QQuick3DSceneRenderer::rhiRender()
     m_sgContext->endFrame();
 }
 
-void QQuick3DSceneRenderer::cleanupResources()
-{
-    // Pass the scene managers list of resouces marked for
-    // removal to the render context for deleation
-    // The render contect will take ownership of the nodes
-    // and clear the list
-    if (m_sceneManager)
-        m_sgContext->cleanupResources(m_sceneManager->resourceCleanupQueue);
-    if (m_importSceneManager)
-        m_sgContext->cleanupResources(m_importSceneManager->resourceCleanupQueue);
-}
-
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO)
 {
     Q_ASSERT(view3D != nullptr); // This is not an option!
@@ -595,20 +473,20 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
-    m_sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager;
-    m_sceneManager->rci = m_sgContext.data();
-    m_sceneManager->updateDirtyNodes();
-    m_sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+    if (auto sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager) {
+        sceneManager->rci = m_sgContext.data();
+        sceneManager->updateDirtyNodes();
+        sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+    }
 
     QQuick3DNode *importScene = view3D->importScene();
     if (importScene) {
-        m_importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
-        if (!m_importSceneManager->rci)
-            m_importSceneManager->rci = m_sgContext.data();
-        m_importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
-        m_importSceneManager->updateDirtyNodes();
-    } else {
-        m_importSceneManager = nullptr;
+        if (auto importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager) {
+            if (!importSceneManager->rci)
+                importSceneManager->rci = m_sgContext.data();
+            importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+            importSceneManager->updateDirtyNodes();
+        }
     }
 
     // Generate layer node
