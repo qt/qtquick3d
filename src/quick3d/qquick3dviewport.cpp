@@ -292,7 +292,41 @@ QQuick3DRenderStats *QQuick3DViewport::renderStats() const
 
 QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
 {
-    return new QQuick3DSceneRenderer(this->window());
+    QQuick3DSceneRenderer *renderer = nullptr;
+
+    if (QQuickWindow *qw = window()) {
+        QSGRendererInterface *rif = qw->rendererInterface();
+        const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
+        if (isRhi) {
+            QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
+            if (!rhi)
+                qWarning("No QRhi from QQuickWindow, this cannot happen");
+
+            // The RenderContextInterface, and the objects owned by it (such
+            // as, the BufferManager) are always per-QQuickWindow, and so per
+            // scenegraph render thread. Hence the association with window.
+            // Multiple View3Ds in the same window can use the same rendering
+            // infrastructure (so e.g. the same QSSGBufferManager), but two
+            // View3D objects in different windows must not, except for certain
+            // components that do not work with and own native graphics
+            // resources (most notably, QSSGShaderLibraryManager - but this
+            // distinction is handled internally by QSSGRenderContextInterface).
+            if (QSSGRenderContextInterface *rci = QSSGRenderContextInterface::renderContextForWindow(*qw)) {
+                renderer = new QQuick3DSceneRenderer(rci);
+            } else {
+                QSSGRef<QSSGRhiContext> rhiContext(new QSSGRhiContext);
+                // and this is the magic point where many things internally get
+                // switched over to be QRhi-based.
+                rhiContext->initialize(rhi);
+                rci = new QSSGRenderContextInterface(qw, rhiContext, QString::fromLatin1("./"));
+                renderer = new QQuick3DSceneRenderer(rci);
+            }
+
+            QObject::connect(qw, &QQuickWindow::afterFrameEnd, this, &QQuick3DViewport::cleanupResources);
+        }
+    }
+
+    return renderer;
 }
 
 bool QQuick3DViewport::isTextureProvider() const
@@ -671,6 +705,25 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 void QQuick3DViewport::invalidateSceneGraph()
 {
     m_node = nullptr;
+}
+
+void QQuick3DViewport::cleanupResources()
+{
+    // Pass the scene managers list of resouces marked for
+    // removal to the render context for deleation
+    // The render contect will take ownership of the nodes
+    // and clear the list
+    if (auto renderer = getRenderer()) {
+        const auto &rci = renderer->m_sgContext;
+        if (m_sceneRoot) {
+            const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+            rci->cleanupResources(sceneManager->resourceCleanupQueue);
+        }
+        if (m_importScene) {
+            const auto importSceneManager = QQuick3DObjectPrivate::get(m_importScene)->sceneManager;
+            rci->cleanupResources(importSceneManager->resourceCleanupQueue);
+        }
+    }
 }
 
 QQuick3DSceneRenderer *QQuick3DViewport::getRenderer() const

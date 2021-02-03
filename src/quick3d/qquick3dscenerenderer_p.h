@@ -64,14 +64,13 @@ struct QSSGRenderLayer;
 class QQuick3DSceneRenderer
 {
 public:
-    QQuick3DSceneRenderer(QWindow *window);
+    QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInterface> &rci);
     ~QQuick3DSceneRenderer();
 
 protected:
-    QRhiTexture *renderToRhiTexture();
+    QRhiTexture *renderToRhiTexture(QQuickWindow *qw);
     void rhiPrepare(const QRect &viewport, qreal displayPixelRatio);
     void rhiRender();
-    void cleanupResources();
     void synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO = true);
     void update();
     void invalidateFramebufferObject();
@@ -86,13 +85,10 @@ private:
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
     QSSGRef<QSSGRenderContextInterface> m_sgContext;
-    QQuick3DSceneManager *m_sceneManager = nullptr;
-    QQuick3DSceneManager *m_importSceneManager = nullptr;
     QSSGRenderLayer *m_layer = nullptr;
     QSize m_surfaceSize;
     SGFramebufferObjectNode *fboNode = nullptr;
     bool m_aaIsDirty = true;
-    QWindow *m_window = nullptr;
 
     // RHI
     QRhiTexture *m_texture = nullptr;
@@ -123,9 +119,6 @@ private:
     float m_ssaaMultiplier = 1.5f;
 
     bool m_prepared = false;
-
-    QMetaObject::Connection m_renderContextConnection;
-    QMetaObject::Connection m_cleanupResourceConnection;
 
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;
