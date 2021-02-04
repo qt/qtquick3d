@@ -102,7 +102,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                 pEntry->destroyRhiResources(m_context.rhiContext().data());
                 setupForRhiDepth(theManager, pEntry, width, height, rhiFormat);
             }
-        } else {
+        } else if (pEntry->m_rhiDepthCube) {
             // CUBE before and now, see if size has changed
             if (pEntry->m_rhiDepthCube->pixelSize() != QSize(width, height)) {
                 pEntry->destroyRhiResources(m_context.rhiContext().data());
