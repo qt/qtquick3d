@@ -286,8 +286,10 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             clearColor = m_backgroundColor;
         }
         cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_textureRenderTarget));
         rhiRender();
         cb->endPass();
+        QSSGRHICTX_STAT(rhiCtx, endRenderPass());
 
         const bool temporalAA = m_layer->temporalAAIsActive;
         const bool progressiveAA = m_layer->progressiveAAIsActive;

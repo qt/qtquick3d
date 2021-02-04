@@ -126,6 +126,7 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
     QRhiCommandBuffer::VertexInput vb(ps->ia.vertexBuffer->buffer(), 0);
     cb->setVertexInput(0, 1, &vb, ps->ia.indexBuffer->buffer(), ps->ia.indexBuffer->indexFormat());
     cb->drawIndexed(6);
+    QSSGRHICTX_STAT(rhiCtx, drawIndexed(6, 1));
 }
 
 void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
@@ -134,8 +135,10 @@ void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->beginPass(rt, Qt::black, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+    QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
     recordRenderQuad(rhiCtx, ps, srb, rt->renderPassDescriptor(), flags);
     cb->endPass();
+    QSSGRHICTX_STAT(rhiCtx, endRenderPass());
 }
 
 QT_END_NAMESPACE

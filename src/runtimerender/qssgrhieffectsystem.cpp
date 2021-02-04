@@ -503,7 +503,9 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         // anyway when rendering the quad.
         if (rt != target->renderTarget) {
             cb->beginPass(rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            QSSGRHICTX_STAT(m_rhiContext, beginRenderPass(rt));
             cb->endPass();
+            QSSGRHICTX_STAT(m_rhiContext, endRenderPass());
         }
     }
     m_pendingClears.clear();
