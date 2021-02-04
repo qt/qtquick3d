@@ -243,6 +243,6 @@ void GridGeometry::updateData()
     setStride(32);
     setVertexData(vertexData);
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Lines);
-    setBounds(QVector3D(-m_vertLines/2, -m_horLines/2, 0.0) * m_horStep,
-                        QVector3D(m_vertLines/2, m_horLines/2, 0.0) * m_vertStep);
+    setBounds(QVector3D(float(-m_vertLines / 2), float(-m_horLines / 2), 0.0f) * m_horStep,
+              QVector3D(float(m_vertLines / 2), float(m_horLines / 2), 0.0f) * m_vertStep);
 }
