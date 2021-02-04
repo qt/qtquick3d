@@ -254,8 +254,10 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                 rif->getResource(qw, QSGRendererInterface::RhiRedirectCommandBuffer));
             if (cb)
                 rhiCtx->setCommandBuffer(cb);
-            else
+            else {
                 qWarning("Neither swapchain nor redirected command buffer are available.");
+                return currentTexture;
+            }
         }
 
         // Graphics pipeline objects depend on the MSAA sample count, so the
