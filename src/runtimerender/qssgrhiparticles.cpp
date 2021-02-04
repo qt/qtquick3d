@@ -46,10 +46,8 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
                                                       QSSGParticlesRenderable &renderable,
                                                       QSSGRenderCamera &inCamera)
 {
-    const QSSGRef<QSSGRenderer> &generator(renderable.generator);
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
 
-    auto renderProperties = generator->getLayerGlobalRenderProperties();
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders->commonUniformIndices;
 
     const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
