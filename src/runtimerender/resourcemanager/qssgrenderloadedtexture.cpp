@@ -221,8 +221,8 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
     Q_UNUSED(flipVertical);
 
     QImage image(inPath);
-    QImage::Format targetFormat = image.format();
     const QPixelFormat pixFormat = image.pixelFormat();
+    QImage::Format targetFormat;
     if (image.colorCount()) // a palleted image
         targetFormat = QImage::Format_RGBA8888;
     else if (pixFormat.channelCount() == 1)
@@ -492,12 +492,11 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
 
 QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *textureData)
 {
-    QSSGLoadedTexture *imageData = new QSSGLoadedTexture;
     const int bytesPerPixel = textureData->format().getSizeofFormat();
     const int bitCount = bytesPerPixel * 8;
     const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
     const quint32 dataSize = quint32(textureData->size().height() * pitch);
-    imageData = new QSSGLoadedTexture;
+    QSSGLoadedTexture *imageData = new QSSGLoadedTexture;
     imageData->dataSizeInBytes = dataSize;
     // We won't modifiy the data, but that is a nasty cast...
     imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
