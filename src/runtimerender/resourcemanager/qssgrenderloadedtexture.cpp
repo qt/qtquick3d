@@ -366,7 +366,7 @@ void decodeScanlineToTexture(RGBE *scanline, int width, void *outBuf, quint32 of
     target += offset;
 
     if (inFormat == QSSGRenderTextureFormat::RGBE8) {
-        memcpy(target, scanline, size_t(4 * width));
+        memcpy(target, scanline, size_t(width) * 4);
     } else {
         float rgbaF32[4];
         for (int i = 0; i < width; ++i) {
