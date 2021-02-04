@@ -736,7 +736,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             }
 
             m_textureNeedsFlip = rhi->isYUpInFramebuffer();
-            layerSizeIsDirty = false;
             m_aaIsDirty = false;
         }
     }
