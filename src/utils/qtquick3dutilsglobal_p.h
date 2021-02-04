@@ -104,9 +104,9 @@ public:
             d->ref.ref();
     }
 
-    QSSGRef(QSSGRef<T> &&other) : d(other.take()) {}
+    QSSGRef(QSSGRef<T> &&other) noexcept : d(other.take()) {}
     template<typename X>
-    QSSGRef(QSSGRef<X> &&other) : d(other.take())
+    QSSGRef(QSSGRef<X> &&other) noexcept : d(other.take())
     {
     }
 
@@ -129,7 +129,7 @@ public:
         return *this;
     }
     template<typename X>
-    QSSGRef<T> &operator=(QSSGRef<X> &&other)
+    QSSGRef<T> &operator=(QSSGRef<X> &&other) noexcept
     {
         clear();
         d = other.take();
@@ -146,7 +146,7 @@ public:
         }
         return *this;
     }
-    QSSGRef<T> &operator=(QSSGRef<T> &&other)
+    QSSGRef<T> &operator=(QSSGRef<T> &&other) noexcept
     {
         qSwap(d, other.d);
         return *this;
