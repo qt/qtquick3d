@@ -1135,7 +1135,13 @@ public:
     template<typename T> T *newObject(const QByteArray &id)
     {
         T *obj = new T;
-        return registerObject(id, obj) ? obj : nullptr; // also sets obj->id
+        // also sets obj->id
+        if (registerObject(id, obj))
+            return obj;
+
+        // Object already exists with id, clean up
+        delete obj;
+        return nullptr;
     }
 
     GraphObject *newObject(const char *type, const QByteArray &id);
