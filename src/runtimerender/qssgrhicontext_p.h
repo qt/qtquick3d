@@ -725,6 +725,120 @@ inline bool operator!=(const QSSGRhiDummyTextureKey &a, const QSSGRhiDummyTextur
     return !(a == b);
 }
 
+#define QSSGRHICTX_STAT(ctx, f) for (bool qssgrhictxlog_enabled = QSSGRhiContextStats::isEnabled(); qssgrhictxlog_enabled; qssgrhictxlog_enabled = false) ctx->stats().f
+
+class QSSGRhiContextStats
+{
+public:
+    static bool isEnabled()
+    {
+        static bool enabled = qgetenv("QSG_RENDERER_DEBUG").contains(QByteArrayLiteral("render"));
+        return enabled;
+    }
+
+    void start(const void *key)
+    {
+        renderPasses.clear();
+        externalRenderPass = {};
+        currentRenderPassIndex = -1;
+        rendererPtr = key;
+    }
+
+    void stop()
+    {
+        const int rpCount = renderPasses.count();
+        qDebug("%d render passes in 3D renderer %p", rpCount, rendererPtr);
+        for (int i = 0; i < rpCount; ++i) {
+            const RenderPassInfo &rp(renderPasses[i]);
+            qDebug("Render pass %d: target size %dx%d pixels",
+                   i, rp.pixelSize.width(), rp.pixelSize.height());
+            printRenderPass(rp);
+        }
+        if (externalRenderPass.indexedDraws.callCount || externalRenderPass.indexedDraws.instancedCallCount
+                || externalRenderPass.draws.callCount || externalRenderPass.draws.instancedCallCount)
+        {
+            qDebug("Within external render passes:");
+            printRenderPass(externalRenderPass);
+        }
+    }
+
+    void beginRenderPass(QRhiTextureRenderTarget *rt)
+    {
+        renderPasses.append({ rt->pixelSize(), {}, {} });
+        currentRenderPassIndex = renderPasses.count() - 1;
+    }
+
+    void endRenderPass()
+    {
+        currentRenderPassIndex = -1;
+    }
+
+    void drawIndexed(quint32 indexCount, quint32 instanceCount)
+    {
+        RenderPassInfo &rp(currentRenderPassIndex >= 0 ? renderPasses[currentRenderPassIndex] : externalRenderPass);
+        if (instanceCount > 1) {
+            rp.indexedDraws.instancedCallCount += 1;
+            rp.indexedDraws.instancedIndexCount += indexCount;
+            rp.indexedDraws.instanceCount += instanceCount;
+        } else {
+            rp.indexedDraws.callCount += 1;
+            rp.indexedDraws.indexCount += indexCount;
+        }
+    }
+
+    void draw(quint32 vertexCount, quint32 instanceCount)
+    {
+        RenderPassInfo &rp(currentRenderPassIndex >= 0 ? renderPasses[currentRenderPassIndex] : externalRenderPass);
+        if (instanceCount > 1) {
+            rp.draws.instancedCallCount += 1;
+            rp.draws.instancedVertexCount += vertexCount;
+            rp.draws.instanceCount += instanceCount;
+        } else {
+            rp.draws.callCount += 1;
+            rp.draws.vertexCount += vertexCount;
+        }
+    }
+
+private:
+    struct IndexedDrawInfo {
+        quint32 callCount = 0;
+        quint32 instancedCallCount = 0;
+        quint32 indexCount = 0;
+        quint32 instancedIndexCount = 0;
+        quint32 instanceCount = 0;
+    };
+    struct DrawInfo {
+        quint32 callCount = 0;
+        quint32 instancedCallCount = 0;
+        quint32 vertexCount = 0;
+        quint32 instancedVertexCount = 0;
+        quint32 instanceCount = 0;
+    };
+    struct RenderPassInfo {
+        QSize pixelSize;
+        IndexedDrawInfo indexedDraws;
+        DrawInfo draws;
+    };
+    QVector<RenderPassInfo> renderPasses;
+    RenderPassInfo externalRenderPass;
+    int currentRenderPassIndex = -1;
+    const void *rendererPtr = nullptr;
+
+    void printRenderPass(const RenderPassInfo &rp)
+    {
+        qDebug("%u indexed draw calls with %u indices in total, "
+               "%u non-indexed draw calls with %u vertices in total",
+               rp.indexedDraws.callCount, rp.indexedDraws.indexCount,
+               rp.draws.callCount, rp.draws.vertexCount);
+        if (rp.indexedDraws.instancedCallCount || rp.draws.instancedCallCount) {
+            qDebug("%u instanced indexed draw calls with %u indices and %u instances in total, "
+                   "%u instanced non-indexed draw calls with %u indices and %u instances in total",
+                   rp.indexedDraws.instancedCallCount, rp.indexedDraws.instancedIndexCount, rp.indexedDraws.instanceCount,
+                   rp.draws.instancedCallCount, rp.draws.instancedVertexCount, rp.draws.instanceCount);
+        }
+    }
+};
+
 struct QSSGRenderParticles;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
@@ -801,6 +915,8 @@ public:
         return m_particleData[particles];
     }
 
+    QSSGRhiContextStats &stats() { return m_stats; }
+
 private:
     QRhi *m_rhi = nullptr;
     QRhiRenderPassDescriptor *m_mainRpDesc = nullptr;
@@ -817,6 +933,7 @@ private:
     QHash<QSSGRhiDummyTextureKey, QRhiTexture *> m_dummyTextures;
     QHash<QSSGRenderInstanceTable *, QSSGRhiInstanceBufferData> m_instanceBuffers;
     QHash<const QSSGRenderParticles *, QSSGRhiParticleData> m_particleData;
+    QSSGRhiContextStats m_stats;
 };
 
 inline QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op)

@@ -556,9 +556,11 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     if (indexBuffer) {
         cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable.subset.rhi.ia.indexBuffer->indexFormat());
         cb->drawIndexed(renderable.subset.count, instances, renderable.subset.offset);
+        QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable.subset.count, instances));
     } else {
         cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
         cb->draw(renderable.subset.count, instances, renderable.subset.offset);
+        QSSGRHICTX_STAT(rhiCtx, draw(renderable.subset.count, instances));
     }
 }
 

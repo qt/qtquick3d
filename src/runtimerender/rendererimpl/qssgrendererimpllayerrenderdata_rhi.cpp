@@ -608,9 +608,11 @@ static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
         if (indexBuffer) {
             cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.ia.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
+            QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.count, 1));
         } else {
             cb->setVertexInput(0, 1, &vb);
             cb->draw(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
+            QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable->subset.count, 1));
         }
     }
 }
@@ -950,9 +952,11 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
             if (indexBuffer) {
                 cb->setVertexInput(0, 1, &vb, indexBuffer, 0, renderable->subset.rhi.ia.indexBuffer->indexFormat());
                 cb->drawIndexed(renderable->subset.count, 1, renderable->subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.count, 1));
             } else {
                 cb->setVertexInput(0, 1, &vb);
                 cb->draw(renderable->subset.count, 1, renderable->subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, draw(renderable->subset.count, 1));
             }
         }
     }
@@ -1113,8 +1117,10 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
             QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[0];
             cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
             rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0);
             cb->endPass();
+            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
 
             rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true);
         } else {
@@ -1164,8 +1170,10 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 }
                 QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+                QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
                 rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, face);
                 cb->endPass();
+                QSSGRHICTX_STAT(rhiCtx, endRenderPass());
             }
 
             rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, false);
@@ -1218,7 +1226,9 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         // just clear and stop there
         cb->beginPass(inData.m_rhiAoTexture.rt, Qt::white, { 1.0f, 0 });
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(inData.m_rhiAoTexture.rt));
         cb->endPass();
+        QSSGRHICTX_STAT(rhiCtx, endRenderPass());
         return;
     }
 
@@ -1436,6 +1446,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 {
                     bool needsSetVieport = true;
                     cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+                    QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_rhiDepthTexture.rt));
                     // NB! We do not pass sortedTransparentObjects in the 4th
                     // argument to stay compatible with the 5.15 code base,
                     // which also does not include semi-transparent objects in
@@ -1445,6 +1456,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     // both for depth and color.
                     rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, &needsSetVieport);
                     cb->endPass();
+                    QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 } else {
                     m_rhiDepthTexture.reset();
                 }
@@ -1585,6 +1597,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
                 cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+                QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_rhiScreenTexture.rt));
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);
@@ -1594,6 +1607,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     rub->generateMips(m_rhiScreenTexture.texture);
                 }
                 cb->endPass(rub);
+                QSSGRHICTX_STAT(rhiCtx, endRenderPass());
             }
             cb->debugMarkEnd();
         } else {
@@ -1686,9 +1700,11 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         if (indexBuffer) {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.ia.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
+            QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable.subset.count, instances));
         } else {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
             cb->draw(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
+            QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable.subset.count, instances));
         }
     } else if (object.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));

@@ -540,6 +540,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
 
     for (int face = 0; face < 6; ++face) {
         cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        QSSGRHICTX_STAT(context, beginRenderPass(renderTargets[face]));
 
         // Execute render pass
         cb->setGraphicsPipeline(envMapPipeline);
@@ -549,7 +550,9 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         cb->setShaderResources(envMapSrb, 1, &dynamicOffset);
 
         cb->draw(36);
+        QSSGRHICTX_STAT(context, draw(36, 1));
         cb->endPass();
+        QSSGRHICTX_STAT(context, endRenderPass());
     }
     cb->debugMarkEnd();
 
@@ -709,6 +712,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
         for (int face = 0; face < 6; ++face) {
             cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            QSSGRHICTX_STAT(context, beginRenderPass(renderTargetsMap[mipLevel][face]));
             if (mipLevel < mipmapCount - 1) {
                 // Specular pre-filtered Environment Map levels
                 cb->setGraphicsPipeline(prefilterPipeline);
@@ -730,7 +734,9 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
                 cb->setShaderResources(irradianceSrb, 1, dynamicOffsets.constData());
             }
             cb->draw(36);
+            QSSGRHICTX_STAT(context, draw(36, 1));
             cb->endPass();
+            QSSGRHICTX_STAT(context, endRenderPass());
         }
     }
     cb->debugMarkEnd();

@@ -258,6 +258,7 @@ void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     }
     // draw triangle strip with 2 triangles N times
     cb->draw(4, renderable.particles.m_particleBuffer.particleCount());
+    QSSGRHICTX_STAT(rhiCtx, draw(4, renderable.particles.m_particleBuffer.particleCount()));
 }
 
 QT_END_NAMESPACE

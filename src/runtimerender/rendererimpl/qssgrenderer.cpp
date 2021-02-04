@@ -235,6 +235,8 @@ void QSSGRenderer::beginFrame()
     for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
+
+    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), start(this));
 }
 
 void QSSGRenderer::endFrame()
@@ -247,6 +249,8 @@ void QSSGRenderer::endFrame()
             static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
     }
     m_materialClearDirty.clear();
+
+    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), stop());
 }
 
 inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
