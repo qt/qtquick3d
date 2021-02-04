@@ -51,7 +51,17 @@ void QQuick3DParticleTrailEmitter::setFollow(QQuick3DParticleModelParticle *foll
 
 void QQuick3DParticleTrailEmitter::burst(int count)
 {
-    m_burstAmount += count;
+    if (!m_system)
+        return;
+    QQuick3DParticleEmitBurstData burst;
+    burst.time = m_system->timeInt;
+    burst.amount = count;
+    m_bursts << burst;
+}
+
+bool QQuick3DParticleTrailEmitter::hasBursts() const
+{
+    return !m_bursts.isEmpty();
 }
 
 // Called to emit set of particles
@@ -63,9 +73,6 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
     if (!m_enabled)
         return;
 
-    if (!d)
-        return;
-
     QVector3D centerPos = d->position;
 
     for (auto particle : qAsConst(m_system->m_particles)) {
@@ -74,13 +81,26 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
             for (int i = 0; i < emitAmount; i++) {
                 // Distribute evenly between previous and current time, important especially
                 // when time has jumped a lot (like a starttime).
-                float startTime = (m_prevEmitTime / 1000.0) + (float(1+i) / emitAmount) * ((m_system->timeInt - m_prevEmitTime) / 1000.0);
+                float startTime = (m_prevEmitTime / 1000.0f) + (float(1 + i) / emitAmount) * ((m_system->timeInt - m_prevEmitTime) / 1000.0f);
                 emitParticle(particle, startTime, centerPos);
+            }
+            // Emit bursts, if any
+            for (auto burst : qAsConst(m_bursts)) {
+                int burstAmount = std::min(burst.amount, int(particle->maxAmount()));
+                float burstTime = float(burst.time / 1000.0f);
+                for (int i = 0; i < burstAmount; i++)
+                    emitParticle(particle, burstTime, centerPos);
             }
         }
     }
 
     m_prevEmitTime = m_system->timeInt;
+}
+
+void QQuick3DParticleTrailEmitter::clearBursts()
+{
+    // After bursts have been emitted, clear the list
+    m_bursts.clear();
 }
 
 QT_END_NAMESPACE

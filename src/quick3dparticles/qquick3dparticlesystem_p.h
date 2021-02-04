@@ -192,8 +192,8 @@ private:
     QPRand m_rand;
 
     struct TrailEmits {
-        QQuick3DParticleTrailEmitter *emitter;
-        int amount;
+        QQuick3DParticleTrailEmitter *emitter = nullptr;
+        int amount = 0;
     };
 
 };

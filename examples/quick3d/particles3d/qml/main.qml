@@ -120,6 +120,11 @@ Window {
             name: "Fire (colorTable)"
             file: "Fire.qml"
         }
+        ListElement {
+            group: "ParticleSystem"
+            name: "TrailEmitterBurst"
+            file: "TrailEmitterBurst.qml"
+        }
     }
 
     Component {

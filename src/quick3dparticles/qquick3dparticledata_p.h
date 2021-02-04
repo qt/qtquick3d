@@ -98,6 +98,14 @@ struct QQuick3DParticleData
     // Size: 12+12+3+3+4+4+4+4+4+4+4 = 58 bytes
 };
 
+// Data structure for storing bursts
+struct QQuick3DParticleEmitBurstData {
+    int amount = 0;
+    int time = 0;
+    int duration = 0;
+    QVector3D position;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQUICK3DPARTICLEDATA_H

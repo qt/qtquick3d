@@ -108,8 +108,14 @@ public:
     QVector3D particleRotationVelocity() const;
     QVector3D particleRotationVelocityVariation() const;
 
-    // Emit count amount of particles immediately
+    // TODO: Proper API documentation
+    // Emit \a count amount of particles immediately
     Q_INVOKABLE virtual void burst(int count);
+    // Emit \a count amount of particles, distributed during \a duration.
+    Q_INVOKABLE virtual void burst(int count, int duration);
+    // Emit \a count amount of particles, distributed during \a duration.
+    // The particles are emitted as if the Emitter was at \a position but all other properties are the same.
+    Q_INVOKABLE virtual void burst(int count, int duration, const QVector3D &position);
 
 public Q_SLOTS:
     void setEnabled(bool enabled);
@@ -157,6 +163,7 @@ protected:
     void generateEmitBursts();
     void emitParticle(QQuick3DParticle *particle, float startTime, const QVector3D &centerPos);
     void emitParticles();
+    void emitParticlesBurst(const QQuick3DParticleEmitBurstData &burst);
     int getEmitAmount();
 
     void reset();
@@ -169,7 +176,6 @@ protected:
     float m_particleScale = 1.0;
     float m_particleEndScale = -1.0;
     float m_particleScaleVariation = 0.0;
-    int m_burstAmount = 0;
     int m_lifeSpan = 1000;
     int m_lifeSpanVariation = 0;
     float m_unemittedF = 0;
