@@ -292,10 +292,9 @@ QSSGMeshBVHBuilder::Axis QSSGMeshBVHBuilder::getLongestDimension(const QSSGBound
         axis = Axis::Y;
         largestDistance = delta.y();
     }
-    if (delta.z() > largestDistance) {
+    if (delta.z() > largestDistance)
         axis = Axis::Z;
-        largestDistance = delta.z();
-    }
+
     return axis;
 }
 
