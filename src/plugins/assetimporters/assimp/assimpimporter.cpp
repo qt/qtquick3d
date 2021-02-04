@@ -1818,9 +1818,6 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
            << QStringLiteral("source: \"")
            << targetFileName << QStringLiteral("\"\n");
 
-    if (m_gltfMode) {
-        result = material->Get(AI_MATKEY_GLTF_TEXTURE_TEXCOORD(textureType, index), uvIndex);
-    }
     if (uvIndex > 0) {
         // Quick3D supports 2 tex coords.
         // According to gltf's khronos default implementation,
