@@ -423,7 +423,6 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
                                          QSSGRhiDrawCallDataKey::Selector ubufSel)
 {
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
-    const QSSGRenderGraphObject *material = nullptr;
 
     ShaderFeatureSetList featureSet;
     featureSet.append({ QSSGShaderDefines::DepthPass, true });
@@ -433,7 +432,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         const void *layerNode = &layerData.layer;
         const void *modelNode = &subsetRenderable.modelContext.model;
-        dcd = &rhiCtx->drawCallData({ layerNode, modelNode, material, 0, ubufSel });
+        dcd = &rhiCtx->drawCallData({ layerNode, modelNode, &subsetRenderable.material, 0, ubufSel });
     }
 
     if (obj->renderableFlags.isDefaultMaterialMeshSubset()) {
@@ -446,7 +445,6 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *layerData.camera, nullptr, nullptr);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-            material = &subsetRenderable.material;
         } else {
             return false;
         }
@@ -463,7 +461,6 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
             customMaterialSystem.updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
                                                                  layerData, *layerData.camera, nullptr, nullptr);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-            material = &subsetRenderable.material;
         } else {
             return false;
         }
