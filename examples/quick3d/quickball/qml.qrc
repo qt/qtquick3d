@@ -10,5 +10,6 @@
         <file>images/qt_logo.jpg</file>
         <file>images/qt_logo_n.jpg</file>
         <file>images/quickball.png</file>
+        <file>images/particle.png</file>
     </qresource>
 </RCC>
