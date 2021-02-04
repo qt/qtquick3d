@@ -1559,7 +1559,7 @@ void QSSGLayerRenderData::rhiPrepare()
             item2D->m_renderer->setDeviceRect(deviceRect);
             item2D->m_renderer->setRenderTarget(renderTarget);
             item2D->m_renderer->setCommandBuffer(rhiCtx->commandBuffer());
-            item2D->m_renderer->setRenderPassDescriptor(rhiCtx->mainRenderPassDescriptor());
+            item2D->m_renderer->setExternalRenderPassDescriptor(rhiCtx->mainRenderPassDescriptor());
             item2D->m_renderer->prepareSceneInline();
         }
 
