@@ -69,27 +69,25 @@ class QQuick3DParticleInstanceTable : public QQuick3DInstancing
 {
 public:
     QQuick3DParticleInstanceTable() {}
-    void clear() { m_instances[1 - current].clear(); }
-    void commit() { current = 1 - current; markDirty(); }
+    void clear() { m_instances.clear(); }
+    void commit() { markDirty(); }
     void addInstance(const QVector3D &position,
                      const QVector3D &scale, const QVector3D &eulerRotation,
                                              const QColor &color) {
         auto entry = calculateTableEntry(position, scale, eulerRotation, color);
-        m_instances[1 - current] << entry;
+        m_instances.append(reinterpret_cast<char *>(&entry), sizeof(InstanceTableEntry));
     }
 protected:
     QByteArray getInstanceBuffer(int *instanceCount) override
     {
         if (instanceCount)
-            *instanceCount = m_instances[current].count();
+            *instanceCount = m_instances.count() / sizeof(InstanceTableEntry);
 
-        return QByteArray::fromRawData(reinterpret_cast<const char*>(m_instances[current].constData()),
-                                       m_instances[current].size() * sizeof(InstanceTableEntry));
+        return m_instances;
     }
 
 private:
-    QVector<InstanceTableEntry> m_instances[2];
-    int current = 0;
+    QByteArray m_instances;
 };
 
 QQuick3DInstancing *QQuick3DParticleModelParticle::instanceTable() const
