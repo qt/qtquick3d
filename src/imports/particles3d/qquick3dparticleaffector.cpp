@@ -110,6 +110,7 @@ void QQuick3DParticleAffector::componentComplete()
 // Returns true if particle is currently alive
 bool QQuick3DParticleAffector::shouldAffect(const QQuick3DParticleData &sd, float time)
 {
+    Q_UNUSED(sd);
     if (time < 0.0f)
         return false;
 
