@@ -140,7 +140,7 @@ protected:
     QList<QQuick3DParticleData> m_particleData;
 
     int m_maxAmount = 0;
-    int m_currentIndex = 0;
+    int m_currentIndex = -1;
     int m_lastBurstIndex = 0;
     AlignMode m_alignMode = AlignDefault;
     QQuick3DNode *m_target = nullptr;

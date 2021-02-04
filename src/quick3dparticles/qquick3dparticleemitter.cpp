@@ -292,13 +292,28 @@ void QQuick3DParticleEmitter::reset()
 {
     m_prevEmitTime = 0;
     m_unemittedF = 0.0f;
-    m_burstAmount = 0;
 }
 
 void QQuick3DParticleEmitter::burst(int count)
 {
-    m_burstAmount += count;
-    emitParticles();
+    burst(count, 0, QVector3D());
+}
+
+void QQuick3DParticleEmitter::burst(int count, int duration)
+{
+    burst(count, duration, QVector3D());
+}
+
+void QQuick3DParticleEmitter::burst(int count, int duration, const QVector3D &position)
+{
+    if (!m_system)
+        return;
+    QQuick3DParticleEmitBurstData burst;
+    burst.time = m_system->timeInt;
+    burst.amount = count;
+    burst.duration = duration;
+    burst.position = position;
+    emitParticlesBurst(burst);
 }
 
 void QQuick3DParticleEmitter::generateEmitBursts()
@@ -306,32 +321,35 @@ void QQuick3DParticleEmitter::generateEmitBursts()
     if (!m_system)
         return;
 
-    for (auto particle : qAsConst(m_system->m_particles)) {
-        if (particle != m_particle)
-            continue;
+    if (!m_particle || m_particle->m_system != m_system)
+        return;
 
-        // Generating burst causes all particle data reseting
-        // as bursts take first particles in the list.
-        particle->reset();
+    if (m_emitBursts.isEmpty()) {
+        m_burstGenerated = true;
+        return;
+    }
 
-        // TODO: In trail emitter case centerPos should be calculated
-        // taking into account each particle position at emitburst time
-        QVector3D centerPos = position();
+    // Generating burst causes all particle data reseting
+    // as bursts take first particles in the list.
+    m_particle->reset();
 
-        for (auto emitBurst : qAsConst(m_emitBursts)) {
-            int emitAmount = emitBurst->amount();
-            if (emitAmount <= 0)
-                return;
-            // Distribute start times between burst time and time+duration.
-            float startTime = (emitBurst->time() / 1000.0);
-            float timeStep = (emitBurst->duration() / 1000.0) / emitAmount;
-            for (int i = 0; i < emitAmount; i++) {
-                emitParticle(particle, startTime, centerPos);
-                startTime += timeStep;
-            }
-            // Increase burst index (for statically allocated particles)
-            particle->updateBurstIndex(emitBurst->amount());
+    // TODO: In trail emitter case centerPos should be calculated
+    // taking into account each particle position at emitburst time
+    QVector3D centerPos = position();
+
+    for (auto emitBurst : qAsConst(m_emitBursts)) {
+        int emitAmount = emitBurst->amount();
+        if (emitAmount <= 0)
+            return;
+        // Distribute start times between burst time and time+duration.
+        float startTime = float(emitBurst->time() / 1000.0f);
+        float timeStep = float(emitBurst->duration() / 1000.0f) / emitAmount;
+        for (int i = 0; i < emitAmount; i++) {
+            emitParticle(m_particle, startTime, centerPos);
+            startTime += timeStep;
         }
+        // Increase burst index (for statically allocated particles)
+        m_particle->updateBurstIndex(emitBurst->amount());
     }
     m_burstGenerated = true;
 }
@@ -410,11 +428,11 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         // Particle data rotations are in char vec3 to save memory, consider if this is worth it.
         // max value 127*127 = 16129 degrees/second
         float sign;
-        sign = rotVelX < 0 ? -1.0f : 1.0f;
+        sign = rotVelX < 0.0f ? -1.0f : 1.0f;
         rotVelX = std::max(-127.0f, std::min(127.0f, sign * std::sqrt(abs(rotVelX))));
-        sign = rotVelY < 0 ? -1.0f : 1.0f;
+        sign = rotVelY < 0.0f ? -1.0f : 1.0f;
         rotVelY = std::max(-127.0f, std::min(127.0f, sign * std::sqrt(abs(rotVelY))));
-        sign = rotVelZ < 0 ? -1.0f : 1.0f;
+        sign = rotVelZ < 0.0f ? -1.0f : 1.0f;
         rotVelZ = std::max(-127.0f, std::min(127.0f, sign * std::sqrt(abs(rotVelZ))));
         d->startRotationVelocity = { char(rotVelX), char(rotVelY), char(rotVelZ) };
     }
@@ -437,20 +455,11 @@ int QQuick3DParticleEmitter::getEmitAmount()
     if (!m_enabled)
         return 0;
 
+    if (m_emitRate <= 0)
+        return 0;
+
     float timeChange = m_system->timeInt - m_prevEmitTime;
-
-    float emitAmountF = timeChange / (1000.0 / m_emitRate);
-
-    if (m_burstAmount > 0) {
-        if (emitAmountF < 1.0f) {
-            // If currently only emitting burst, don't distribute particles
-            // between previous emit time as that can be long time ago.
-            m_prevEmitTime = m_system->timeInt;
-        }
-        emitAmountF += m_burstAmount;
-        m_burstAmount = 0;
-    }
-
+    float emitAmountF = timeChange / (1000.0f / m_emitRate);
     int emitAmount = floorf(emitAmountF);
     // Store the partly unemitted particles
     if (emitAmount > 0)
@@ -465,6 +474,27 @@ int QQuick3DParticleEmitter::getEmitAmount()
     return emitAmount;
 }
 
+void QQuick3DParticleEmitter::emitParticlesBurst(const QQuick3DParticleEmitBurstData &burst)
+{
+    if (!m_system)
+        return;
+
+    if (!m_enabled)
+        return;
+
+    if (!m_particle || m_particle->m_system != m_system)
+        return;
+
+    QVector3D centerPos = position() + burst.position;
+
+    int emitAmount = std::min(burst.amount, int(m_particle->maxAmount()));
+    for (int i = 0; i < emitAmount; i++) {
+        // Distribute evenly between time and time+duration.
+        float startTime = (burst.time / 1000.0f) + (float(1 + i) / emitAmount) * ((burst.duration) / 1000.0f);
+        emitParticle(m_particle, startTime, centerPos);
+    }
+}
+
 // Called to emit set of particles
 void QQuick3DParticleEmitter::emitParticles()
 {
@@ -472,6 +502,9 @@ void QQuick3DParticleEmitter::emitParticles()
         return;
 
     if (!m_enabled)
+        return;
+
+    if (!m_particle || m_particle->m_system != m_system)
         return;
 
     // If bursts have changed, generate them first in the beginning
@@ -486,16 +519,12 @@ void QQuick3DParticleEmitter::emitParticles()
 
     QVector3D centerPos = position();
 
-    for (auto particle : qAsConst(m_system->m_particles)) {
-        if (particle == m_particle) {
-            emitAmount = std::min(emitAmount, int(particle->maxAmount()));
-            for (int i = 0; i < emitAmount; i++) {
-                // Distribute evenly between previous and current time, important especially
-                // when time has jumped a lot (like a starttime).
-                float startTime = (m_prevEmitTime / 1000.0) + (float(1+i) / emitAmount) * ((m_system->timeInt - m_prevEmitTime) / 1000.0);
-                emitParticle(particle, startTime, centerPos);
-            }
-        }
+    emitAmount = std::min(emitAmount, int(m_particle->maxAmount()));
+    for (int i = 0; i < emitAmount; i++) {
+        // Distribute evenly between previous and current time, important especially
+        // when time has jumped a lot (like a starttime).
+        float startTime = (m_prevEmitTime / 1000.0) + (float(1+i) / emitAmount) * ((m_system->timeInt - m_prevEmitTime) / 1000.0);
+        emitParticle(m_particle, startTime, centerPos);
     }
 
     m_prevEmitTime = m_system->timeInt;

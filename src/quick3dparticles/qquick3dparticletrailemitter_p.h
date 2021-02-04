@@ -45,6 +45,7 @@
 #include <QtQuick3DParticles/private/qquick3dparticlemodelparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 #include <QQmlEngine>
+#include <QList>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,7 +60,8 @@ public:
 
     QQuick3DParticleModelParticle * follow() const;
 
-    // Emit count amount of particles immediately
+    // Emit \a count amount of particles immediately
+    // Note: TrailEmitter3D doesn't support other bursting methods.
     Q_INVOKABLE void burst(int count) override;
 
 public Q_SLOTS:
@@ -68,12 +70,15 @@ public Q_SLOTS:
 protected:
     friend class QQuick3DParticleSystem;
     void emitTrailParticles(QQuick3DParticleDataCurrent *d, int emitAmount);
+    bool hasBursts() const;
+    void clearBursts();
 
 Q_SIGNALS:
     void followChanged();
 
 private:
     QQuick3DParticleModelParticle *m_follow = nullptr;
+    QList<QQuick3DParticleEmitBurstData> m_bursts;
 
 };
 

@@ -342,7 +342,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         for (auto emitter : qAsConst(m_trailEmitters)) {
             if (emitter->follow() == particle) {
                 int emitAmount = emitter->getEmitAmount();
-                if (emitAmount > 0) {
+                if (emitAmount > 0 || emitter->hasBursts()) {
                     TrailEmits e;
                     e.emitter = emitter;
                     e.amount = emitAmount;
@@ -473,11 +473,8 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
                 semiTransparent = true;
 
             // Emit new particles from trails
-            if (!trailEmits.empty()) {
-                for (auto trailEmit : qAsConst(trailEmits)) {
-                    trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
-                }
-            }
+            for (auto trailEmit : qAsConst(trailEmits))
+                trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
         }
         if (modelParticle) {
             modelParticle->setHasTransparency(semiTransparent);
@@ -486,6 +483,11 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         if (spriteParticle)
             spriteParticle->commitParticles();
     }
+
+    // Clear bursts from trailemitters
+    for (auto emitter : qAsConst(m_trailEmitters))
+        emitter->clearBursts();
+
     m_timeAnimation += m_perfTimer.nsecsElapsed();
 }
 

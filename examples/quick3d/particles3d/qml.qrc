@@ -23,5 +23,7 @@
         <file>qml/images/icon_logging.png</file>
         <file>qml/images/icon_interval.png</file>
         <file>qml/images/dot.png</file>
+        <file>qml/TrailEmitterBurst.qml</file>
+        <file>qml/images/star2.png</file>
     </qresource>
 </RCC>
