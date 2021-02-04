@@ -300,7 +300,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         QQuick3DParticleSpriteParticle *spriteParticle = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
 
         QVector3D targetPosition;
-        if (modelParticle && particle->target())
+        if (particle->target())
             targetPosition = particle->target()->position();
 
         // Collect possible trail emits
@@ -368,7 +368,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             }
 
             // Add a base rotation if alignment requested
-            if (modelParticle) {
+            if (!spriteParticle || !spriteParticle->m_billboard) {
                 if (particle->m_alignMode == QQuick3DParticle::AlignTowardsTarget) {
                     QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(targetPosition, currentData.position);
                     currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
@@ -377,7 +377,6 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
                     currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
                 }
             }
-
 /*
             // Clip, this should be always last, when position doesn't change anymore
             QVector3D clipCenter(10,10,10);

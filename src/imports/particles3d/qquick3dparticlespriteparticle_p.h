@@ -60,6 +60,7 @@ class QQuick3DParticleSpriteParticle : public QQuick3DParticle
     Q_PROPERTY(int spriteImages READ spriteImages WRITE setSpriteImages NOTIFY spriteImagesChanged)
     Q_PROPERTY(bool blendImages READ blendImages WRITE setBlendImages NOTIFY blendImagesChanged)
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
+    Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
 
@@ -82,6 +83,7 @@ public:
     int spriteImages() const;
     bool blendImages() const;
     bool receivesShadows() const;
+    bool billboard() const;
     float particleScale() const;
 
 public Q_SLOTS:
@@ -91,6 +93,7 @@ public Q_SLOTS:
     void setSpriteImages(int imageCount);
     void setBlendImages(bool blend);
     void setReceivesShadows(bool receive);
+    void setBillboard(bool billboard);
     void setParticleScale(float scale);
 
 Q_SIGNALS:
@@ -100,6 +103,7 @@ Q_SIGNALS:
     void spriteImagesChanged();
     void blendImagesChanged();
     void receivesShadowsChanged();
+    void billboardChanged();
     void particleScaleChanged();
 
 protected:
@@ -161,6 +165,7 @@ private:
     int m_spriteImageCount = SingleImage;
     bool m_blendImages = false;
     bool m_receivesShadows = false;
+    bool m_billboard = false;
     bool m_bufferUpdated = false;
     bool m_dirty = true;
 };

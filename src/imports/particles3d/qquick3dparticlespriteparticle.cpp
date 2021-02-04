@@ -85,6 +85,11 @@ bool QQuick3DParticleSpriteParticle::receivesShadows() const
     return m_receivesShadows;
 }
 
+bool QQuick3DParticleSpriteParticle::billboard() const
+{
+    return m_billboard;
+}
+
 float QQuick3DParticleSpriteParticle::particleScale() const
 {
     return m_particleScale;
@@ -150,6 +155,15 @@ void QQuick3DParticleSpriteParticle::setReceivesShadows(bool receive)
     m_receivesShadows = receive;
     m_dirty = true;
     Q_EMIT receivesShadowsChanged();
+}
+
+void QQuick3DParticleSpriteParticle::setBillboard(bool billboard)
+{
+    if (m_billboard == billboard)
+        return;
+    m_billboard = billboard;
+    m_dirty = true;
+    Q_EMIT billboardChanged();
 }
 
 void QQuick3DParticleSpriteParticle::setParticleScale(float scale)
@@ -235,6 +249,7 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
     particles->m_lighting = mapLighting(m_lighting);
     particles->m_blendMode = mapBlendMode(m_blendMode);
     particles->m_diffuseColor = color::sRGBToLinear(color());
+    particles->m_billboard = m_billboard;
     // TODO: Disabled for now
     //particles->m_receiveShadows = m_receivesShadows;
 

@@ -106,6 +106,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     QSSGRenderImage *m_sprite = nullptr;
     int m_spriteImageCount = 1;
     bool m_blendImages = true;
+    bool m_billboard = true;
 
     QSSGRenderParticles();
     ~QSSGRenderParticles() = default;

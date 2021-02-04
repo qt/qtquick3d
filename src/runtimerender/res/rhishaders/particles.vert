@@ -10,6 +10,7 @@ layout(std140, binding = 0) uniform buf {
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
     uint qt_countPerSlice;
+    float qt_billboard;
 } ubuf;
 
 layout(binding = 2) uniform sampler2D qt_particleTexture;
@@ -94,9 +95,11 @@ void main()
     Particle p = qt_loadParticle(particleIndex);
     mat3 rotMat = qt_fromEulerRotation(p.rotation);
     vec4 worldPos = ubuf.qt_modelMatrix * vec4(p.position, 1.0);
-    vec4 viewPos = ubuf.qt_viewMatrix * worldPos;
-    vec3 offset = p.size * vec3(corner - vec2(0.5), 0.0);
-    viewPos.xyz += rotMat * offset;
+    vec4 viewPos = worldPos;
+    vec3 offset = (p.size * vec3(corner - vec2(0.5), 0.0));
+    viewPos.xyz += offset * rotMat * (1.0 - ubuf.qt_billboard);
+    viewPos = ubuf.qt_viewMatrix * viewPos;
+    viewPos.xyz += rotMat * offset * ubuf.qt_billboard;
     texcoord = corner;
     color = p.color;
     gl_Position = ubuf.qt_projectionMatrix * viewPos;
