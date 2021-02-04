@@ -10,6 +10,7 @@ layout(std140, binding = 0) uniform buf {
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
     uint qt_countPerSlice;
+    float qt_billboard;
 } ubuf;
 
 

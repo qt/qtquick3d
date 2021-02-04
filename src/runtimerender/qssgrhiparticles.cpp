@@ -82,6 +82,9 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
 
     QVector4D spriteConfig(imageCount, ooImageCount, gradient, blendImages);
     shaders->setUniform(ubufData, "qt_spriteConfig", &spriteConfig, 4 * sizeof(float));
+
+    const float billboard = renderable.particles.m_billboard ? 1.0f : 0.0f;
+    shaders->setUniform(ubufData, "qt_billboard", &billboard, 1 * sizeof(float));
 }
 
 
