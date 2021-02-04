@@ -46,6 +46,7 @@ set(qml_resource_files
     "images/qt_logo_n.jpg"
     "images/quickball.png"
     "images/sky.jpg"
+    "images/particle.png"
     "main.qml"
 )
 

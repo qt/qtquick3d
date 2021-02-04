@@ -51,6 +51,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick.Particles
+import QtQuick3D.Particles3D
 
 Window {
     id: mainWindow
@@ -325,7 +326,7 @@ Window {
             function addTargets(items) {
                 items.forEach(function (item) {
                     let instance = targetComponent.createObject(
-                            targetsNode, { "x": item.x, "y": item.y, "z": item.z, "points": item.points});
+                            targetsNode, { "x": item.x, "startPosY": item.y, "z": item.z, "points": item.points});
                     targets.push(instance);
                 });
                 currentTargets = targets.length;
@@ -342,21 +343,6 @@ Window {
                     targets.pop().destroy();
                 currentTargets = targets.length;
             }
-            SequentialAnimation on y {
-                running: gameOn
-                loops: Animation.Infinite
-                NumberAnimation {
-                    from: 0
-                    to: 150
-                    duration: 3000
-                    easing.type: Easing.InOutQuad
-                }
-                NumberAnimation {
-                    to: 0
-                    duration: 1500
-                    easing.type: Easing.InOutQuad
-                }
-            }
         }
         //! [targets node]
 
@@ -368,11 +354,33 @@ Window {
 
                 property int points: 0
                 property real hide: 0
+                property real startPosY: 0
+                property real posY: 0
+                property real pointsOpacity: 0
 
                 function hit() {
                     targetsNode.removeTarget(this);
                     score += points;
                     hitAnimation.start();
+                    var burstPos = targetNode.mapPositionToScene(Qt.vector3d(0, 0, 0));
+                    hitParticleEmitter.burst(100, 200, burstPos);
+                }
+
+                y: startPosY + posY
+                SequentialAnimation on posY {
+                    running: gameOn && !hitAnimation.running
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: 0
+                        to: 150
+                        duration: 3000
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        to: 0
+                        duration: 1500
+                        easing.type: Easing.InOutQuad
+                    }
                 }
 
                 SequentialAnimation {
@@ -384,6 +392,20 @@ Window {
                         duration: 800
                         easing.type: Easing.InOutQuad
                     }
+                    NumberAnimation {
+                        target: targetNode
+                        property: "pointsOpacity"
+                        to: 1
+                        duration: 1000
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        target: targetNode
+                        property: "pointsOpacity"
+                        to: 0
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
                     ScriptAction {
                         script: targetNode.destroy();
                     }
@@ -392,11 +414,11 @@ Window {
                 Model {
                     id: targetModel
 
-                    readonly property real targetScale: (1 + hide * 2) * (targetSize / 100)
+                    readonly property real targetScale: (1 + hide) * (targetSize / 100)
 
                     source: "#Cube"
                     scale: Qt.vector3d(targetScale, targetScale, targetScale)
-                    opacity: 1 - hide * 2
+                    opacity: 0.99 - hide * 2
                     materials: DefaultMaterial {
                         diffuseMap: Texture {
                             source: "images/qt_logo.jpg"
@@ -415,8 +437,8 @@ Window {
                 }
                 Text {
                     anchors.centerIn: parent
-                    scale: 1 + hide * 2
-                    opacity: 3 - 3 * hide;
+                    scale: 1 + pointsOpacity
+                    opacity: pointsOpacity
                     text: targetNode.points
                     font.pixelSize: 60 * px
                     color: "#808000"
@@ -492,6 +514,40 @@ Window {
             }
         }
         //! [sky model]
+
+        //! [hit particles]
+        ParticleSystem3D {
+            id: psystem
+            SpriteParticle3D {
+                id: sprite
+                sprite: Texture {
+                    source: "images/particle.png"
+                }
+                color: Qt.rgba(1.0, 1.0, 0.0, 1.0)
+                colorVariation: Qt.vector4d(0.4, 0.6, 0.0, 0.0)
+                unifiedColorVariation: true
+                maxAmount: 200
+            }
+            ParticleEmitter3D {
+                id: hitParticleEmitter
+                particle: sprite
+                particleScale: 4.0
+                particleScaleVariation: 2.0
+                particleRotationVariation: Qt.vector3d(0, 0, 180)
+                particleRotationVelocityVariation: Qt.vector3d(0, 0, 250)
+                velocity: VectorDirection3D {
+                    direction: Qt.vector3d(0, 300, 0)
+                    directionVariation: Qt.vector3d(200, 150, 100)
+                }
+                lifeSpan: 800
+                lifeSpanVariation: 200
+                depthBias: 100
+            }
+            Gravity3D {
+                magnitude: 600
+            }
+        }
+        //! [hit particles]
     }
 
     // Game time counter

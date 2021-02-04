@@ -109,9 +109,9 @@
     Targets are nodes with a cube model and a text element for showing points.
     Similarly to the ball model, we use \l {DefaultMaterial::diffuseMap} {diffuseMap}
     and \l {DefaultMaterial::normalMap} {normalMap} textures to create cubes with
-    a Qt logo. When the hit is detected, we animate the \c hide property which
-    removes the cube and shows points gained from this target. Once the animation is
-    finished, we will dynamically remove the target node.
+    a Qt logo. When the hit is detected, we sequentially animate the cube away and
+    show the points gained from this target. Once the animation is finished, we will
+    dynamically remove the target node.
 
     \snippet quickball/main.qml target component
 
@@ -131,6 +131,16 @@
     When we combine the above ground and sky models we get a 3D world like this:
 
     \image quickball-world.png
+
+    Finally we add some sparkles for the targets, this time using the
+    \l {Qt Quick 3D Particles3D QML Types (Technology Preview)}{QtQuick3D.Particles3D}
+    module. \l ParticleSystem3D contains a \l SpriteParticle3D and we allocate \c 200
+    or them, which is enough for two simultaneous \c 100 particle bursts.
+    \l ParticleEmitter3D defines the emitting properties for the particles like scale,
+    rotation, velocity and lifeSpan. We also add \l Gravity3D affector to drag the
+    particles down with a suitable magnitude.
+
+    \snippet quickball/main.qml hit particles
 
     This ends the 3D parts of our game. There are still some 2D Qt Quick
     elements to show the time, scores, start button etc. which are important
