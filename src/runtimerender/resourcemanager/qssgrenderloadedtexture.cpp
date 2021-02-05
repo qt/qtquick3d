@@ -222,7 +222,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
 
     QImage image(inPath);
     const QPixelFormat pixFormat = image.pixelFormat();
-    QImage::Format targetFormat;
+    QImage::Format targetFormat = QImage::Format_RGBA8888_Premultiplied;
     if (image.colorCount()) // a palleted image
         targetFormat = QImage::Format_RGBA8888;
     else if (pixFormat.channelCount() == 1)
@@ -231,8 +231,6 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
         targetFormat = QImage::Format_RGBX8888;
     else if (pixFormat.premultiplied() == QPixelFormat::NotPremultiplied)
         targetFormat = QImage::Format_RGBA8888;
-    else
-        targetFormat = QImage::Format_RGBA8888_Premultiplied;
 
     image.convertTo(targetFormat); // convert to a format mappable to QRhiTexture::Format
     image.mirror(); // Flip vertically to the conventional Y-up orientation
