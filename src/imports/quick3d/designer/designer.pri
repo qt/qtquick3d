@@ -85,9 +85,18 @@ AUX_QML_FILES += \
     $$PWD/images/group.png \
     $$PWD/images/group@2x.png \
     $$PWD/images/group16.png \
-    $$PWD/images/light.png \
-    $$PWD/images/light@2x.png \
-    $$PWD/images/light16.png \
+    $$PWD/images/lightarea.png \
+    $$PWD/images/lightarea@2x.png \
+    $$PWD/images/lightarea16.png \
+    $$PWD/images/lightdirectional.png \
+    $$PWD/images/lightdirectional@2x.png \
+    $$PWD/images/lightdirectional16.png \
+    $$PWD/images/lightpoint.png \
+    $$PWD/images/lightpoint@2x.png \
+    $$PWD/images/lightpoint16.png \
+    $$PWD/images/lightspot.png \
+    $$PWD/images/lightspot@2x.png \
+    $$PWD/images/lightspot16.png \
     $$PWD/images/material.png \
     $$PWD/images/material@2x.png \
     $$PWD/images/material16.png \
