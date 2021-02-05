@@ -129,9 +129,15 @@ if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unc
             designer/images/group.png
             designer/images/group16.png
             designer/images/group@2x.png
-            designer/images/light.png
-            designer/images/light16.png
-            designer/images/light@2x.png
+            designer/images/lightdirectional.png
+            designer/images/lightdirectional16.png
+            designer/images/lightdirectional@2x.png
+            designer/images/lightpoint.png
+            designer/images/lightpoint16.png
+            designer/images/lightpoint@2x.png
+            designer/images/lightspot.png
+            designer/images/lightspot16.png
+            designer/images/lightspot@2x.png
             designer/images/material.png
             designer/images/material16.png
             designer/images/material@2x.png
