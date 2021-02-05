@@ -83,6 +83,10 @@ void QSSGShaderMaterialAdapter::setCustomPropertyUniforms(char *,
 {
 }
 
+bool QSSGShaderMaterialAdapter::usesSharedVariables()
+{
+    return false;
+}
 
 
 
@@ -380,6 +384,11 @@ void QSSGShaderCustomMaterialAdapter::setCustomPropertyUniforms(char *ubufData,
     context.customMaterialSystem()->applyRhiShaderPropertyValues(ubufData, m_material, shaderPipeline);
 }
 
+bool QSSGShaderCustomMaterialAdapter::usesSharedVariables()
+{
+    return m_material.m_usesSharedVariables;
+}
+
 namespace {
 
 // Custom material shader substitution table.
@@ -466,7 +475,10 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "MORPH_TANGENT1", "attr_ttan1"},
     { "MORPH_BINORMAL0", "attr_tbinorm0"},
     { "MORPH_BINORMAL1", "attr_tbinorm1"},
-    { "MORPH_WEIGHTS", "qt_morphWeights"}
+    { "MORPH_WEIGHTS", "qt_morphWeights"},
+
+    // custom variables
+    { "SHARED_VARS", "struct QT_SHARED_VARS"}
 };
 
 // Functions that, if present, get an argument list injected.
@@ -663,6 +675,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesInverseProjectionMatrix;
                 else if (trimmedId == QByteArrayLiteral("VAR_COLOR"))
                     md.flags |= QSSGCustomShaderMetaData::UsesVarColor;
+                else if (trimmedId == QByteArrayLiteral("SHARED_VARS"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesSharedVars;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {

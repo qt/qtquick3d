@@ -60,47 +60,53 @@ QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgram
     m_hasMorphing = morphWeights.size() > 0;
 }
 
-static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)())
+static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)(), bool usesShared = false, bool isSharedInout = false)
 {
     const int argKeyLen = int(strlen(argKey));
     const int argKeyPos = snippet.indexOf(argKey);
-    if (argKeyPos >= 0)
-        snippet = snippet.left(argKeyPos) + argListFunc() + snippet.mid(argKeyPos + argKeyLen);
+    if (argKeyPos >= 0) {
+        if (!usesShared) {
+            snippet = snippet.left(argKeyPos) + argListFunc() + snippet.mid(argKeyPos + argKeyLen);
+        } else {
+            const char *inoutString = isSharedInout ? ", inout " : ", in ";
+            snippet = snippet.left(argKeyPos) + argListFunc() + inoutString + QByteArrayLiteral("QT_SHARED_VARS SHARED") + snippet.mid(argKeyPos + argKeyLen);
+        }
+    }
 }
 
-static inline void insertDirectionalLightProcessorArgs(QByteArray &snippet)
+static inline void insertDirectionalLightProcessorArgs(QByteArray &snippet, bool usesShared)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_DIRECTIONAL_LIGHT%*/", QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_DIRECTIONAL_LIGHT%*/", QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList, usesShared, true);
 }
 
-static inline void insertPointLightProcessorArgs(QByteArray &snippet)
+static inline void insertPointLightProcessorArgs(QByteArray &snippet, bool usesShared)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_POINT_LIGHT%*/", QSSGMaterialShaderGenerator::pointLightProcessorArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_POINT_LIGHT%*/", QSSGMaterialShaderGenerator::pointLightProcessorArgumentList, usesShared, true);
 }
 
-static inline void insertSpotLightProcessorArgs(QByteArray &snippet)
+static inline void insertSpotLightProcessorArgs(QByteArray &snippet, bool usesShared)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_SPOT_LIGHT%*/", QSSGMaterialShaderGenerator::spotLightProcessorArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_SPOT_LIGHT%*/", QSSGMaterialShaderGenerator::spotLightProcessorArgumentList, usesShared, true);
 }
 
-static inline void insertAmbientLightProcessorArgs(QByteArray &snippet)
+static inline void insertAmbientLightProcessorArgs(QByteArray &snippet, bool usesShared)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_AMBIENT_LIGHT%*/", QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_AMBIENT_LIGHT%*/", QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList, usesShared, true);
 }
 
-static inline void insertSpecularLightProcessorArgs(QByteArray &snippet)
+static inline void insertSpecularLightProcessorArgs(QByteArray &snippet, bool usesShared)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_SPECULAR_LIGHT%*/", QSSGMaterialShaderGenerator::specularLightProcessorArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_SPECULAR_LIGHT%*/", QSSGMaterialShaderGenerator::specularLightProcessorArgumentList, usesShared, true);
 }
 
-static inline void insertFragmentMainArgs(QByteArray &snippet)
+static inline void insertFragmentMainArgs(QByteArray &snippet, bool usesShared = false)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList, usesShared, true);
 }
 
-static inline void insertPostProcessorArgs(QByteArray &snippet)
+static inline void insertPostProcessorArgs(QByteArray &snippet, bool usesShared)
 {
-    insertProcessorArgs(snippet, "/*%QT_ARGS_POST_PROCESS%*/", QSSGMaterialShaderGenerator::postProcessorArgumentList);
+    insertProcessorArgs(snippet, "/*%QT_ARGS_POST_PROCESS%*/", QSSGMaterialShaderGenerator::postProcessorArgumentList, usesShared, false);
 }
 
 static inline void insertVertexMainArgs(QByteArray &snippet)
@@ -329,13 +335,14 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShade
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,
                                                                   shaderLibraryManager);
         if (!materialAdapter->isUnshaded()) {
-            insertAmbientLightProcessorArgs(snippet);
-            insertSpecularLightProcessorArgs(snippet);
-            insertSpotLightProcessorArgs(snippet);
-            insertPointLightProcessorArgs(snippet);
-            insertDirectionalLightProcessorArgs(snippet);
-            insertFragmentMainArgs(snippet);
-            insertPostProcessorArgs(snippet);
+            const bool usesShared = materialAdapter->usesSharedVariables();
+            insertAmbientLightProcessorArgs(snippet, usesShared);
+            insertSpecularLightProcessorArgs(snippet, usesShared);
+            insertSpotLightProcessorArgs(snippet, usesShared);
+            insertPointLightProcessorArgs(snippet, usesShared);
+            insertDirectionalLightProcessorArgs(snippet, usesShared);
+            insertFragmentMainArgs(snippet, usesShared);
+            insertPostProcessorArgs(snippet, usesShared);
         }
         fragment() << snippet;
     }

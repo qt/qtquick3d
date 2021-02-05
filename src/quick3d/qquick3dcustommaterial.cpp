@@ -824,6 +824,69 @@ QT_BEGIN_NAMESPACE
 
     \sa SceneEnvironment::tonemapMode
 
+    \section2 Custom variables between functions
+
+    Additional variables can be delivered from the MAIN function to the others.
+    The \c SHARED_VARS keyword can be used for defining new custom variables.
+    These user-defined variables can be accessed with SHARED.<variable name>.
+
+    For example, a shaded custom material can fetch a shared value in the MAIN
+    and use it in other functions.
+
+    \badcode
+        SHARED_VARS {
+            vec3 colorThreshold;
+        }
+        void MAIN()
+        {
+            BASE_COLOR = texture(baseColorMap, UV0);
+            SHARED.colorThreshold = texture(thresholdMap, UV0).rgb;
+        }
+        void DIRECTIONAL_LIGHT()
+        {
+            if (DIFFUSE >= SHARED.colorThreshold) {
+                DIFFUSE = SHARED.colorThreshold;
+                return;
+            }
+            DIFFUSE += LIGHT_COLOR * SHADOW_CONTRIB;
+        }
+    \endcode
+
+    \note SHARED can be written on all the functions without POST_PROCESS but it
+    is safe to write it on MAIN and read on the other functions.
+
+    \note A recommended use case to write SHARED on LIGHT functions is
+    reseting it on MAIN first and then accumulating it on each LIGHT functions.
+
+    \badcode
+        SHARED_VARS {
+            float sheenIntensity;
+            float sheenRoughness;
+            vec3 sheenColor;
+            vec3 outSheenColor;
+        }
+        void MAIN()
+        {
+            ...
+            vec4 tex = texture(uSheenMap, UV0);
+            SHARED.sheenColor = tex.rgb;
+            SHARED.sheenIntensity = tex.a;
+            SHARED.sheenRoughness = uSheenRoughness;
+            SHARED.outSheenColor = vec3(0.0);
+        }
+        void SPECULAR_LIGHT()
+        {
+            SHARED.outSheenColor += ...;
+        }
+        void POST_PROCESS()
+        {
+            COLOR_SUM = DIFFUSE + SPECULAR + EMISSIVE + SHARED.outSheenColor;
+        }
+    \endcode
+
+    \note MAIN is called before others, and POST_PROCESS after all others,
+    but that there is no guarantee for any other ordering for light processors.
+
     \section2 Additional special keywords
 
     The custom fragment shader code can freely access uniforms (such as, \c
@@ -1525,6 +1588,9 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             fragmentMeta = result.second;
 
             setCustomMaterialFlagsFromShader(customMaterial, fragmentMeta);
+
+            if (fragmentMeta.flags.testFlag(QSSGCustomShaderMetaData::UsesSharedVars))
+                customMaterial->m_usesSharedVariables = true;
         }
 
         // At this point we have snippets that look like this:
