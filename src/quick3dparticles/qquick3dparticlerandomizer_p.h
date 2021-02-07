@@ -56,17 +56,17 @@ Based on brief testing on my laptop, getting 1.000.000 random numbers:
 1) Using QRandomGenerator::global()->generateDouble()
 -> ~120ms
 
-2) Using QPRand::get(), with s_size 4096
+2) Using QPRand::get(), with m_size 4096
 -> ~8ms
 
-3) Using QPRand::get(i, j), with s_size 4096
+3) Using QPRand::get(i, j), with m_size 4096
 -> ~10ms
 
-4) Using QPRand::get(i, j), with s_size 100000
+4) Using QPRand::get(i, j), with m_size 100000
 -> ~10ms
 
 So QPRand seems fast and increasing keys amount doesn't notably affect the performance,
-just the memory usage. With more particles s_size should be relatively big to make sure
+just the memory usage. With more particles m_size should be relatively big to make sure
 particles appear random enough.
 
 Bounded usage tips:
@@ -123,42 +123,41 @@ public:
         Shape4,
     };
 
-    static void init(quint32 seed, int size = 65536) {
-        s_size = size;
-        s_generator.seed(seed);
-        s_randomList.clear();
-        s_randomList.reserve(s_size);
-        for (int i = 0; i < s_size; i++) {
-            s_randomList << float(s_generator.generateDouble());
-        }
+    void init(quint32 seed, int size = 65536) {
+        m_size = size;
+        m_generator.seed(seed);
+        m_randomList.clear();
+        m_randomList.reserve(m_size);
+        for (int i = 0; i < m_size; i++)
+            m_randomList << float(m_generator.generateDouble());
     }
 
-    static void setDeterministic(bool deterministic) {
-        s_deterministic = deterministic;
+    void setDeterministic(bool deterministic) {
+        m_deterministic = deterministic;
     }
 
     // Return float 0.0 - 1.0
     // With the same input values, returns always the same output.
-    inline static float get(int particleIndex, UserType user = Default) {
-        if (!s_deterministic && user > DeterministicSeparator)
+    inline float get(int particleIndex, UserType user = Default) {
+        if (!m_deterministic && user > DeterministicSeparator)
             return get();
-        int i = (particleIndex + user) % s_size;
-        return s_randomList.at(i);
+        int i = (particleIndex + user) % m_size;
+        return m_randomList.at(i);
     }
 
     // Return float 0.0 - 1.0 from random list
     // Note: Not deterministic between runs
-    inline static float get() {
-        s_index = (s_index < s_size - 1) ? s_index + 1 : 0;
-        return s_randomList.at(s_index);
+    inline float get() {
+        m_index = (m_index < m_size - 1) ? m_index + 1 : 0;
+        return m_randomList.at(m_index);
     }
 
 private:
-    static QRandomGenerator s_generator;
-    static int s_size;
-    static int s_index;
-    static bool s_deterministic;
-    static QList<float> s_randomList;
+    QRandomGenerator m_generator;
+    int m_size = 0;
+    int m_index = 0;
+    bool m_deterministic = false;
+    QList<float> m_randomList;
 
 };
 

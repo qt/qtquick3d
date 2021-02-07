@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuick3DParticleSystem;
+
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDirection : public QObject
 {
     Q_OBJECT
@@ -59,6 +61,12 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDirection : public QObject
 public:
     QQuick3DParticleDirection(QObject *parent = nullptr);
     virtual QVector3D sample(const QQuick3DParticleData &d) = 0;
+
+protected:
+    friend class QQuick3DParticleEmitter;
+
+    QQuick3DParticleSystem *m_system = nullptr;
+
 };
 
 QT_END_NAMESPACE
