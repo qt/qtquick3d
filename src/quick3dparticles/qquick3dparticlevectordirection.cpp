@@ -29,6 +29,7 @@
 
 #include "qquick3dparticlevectordirection_p.h"
 #include "qquick3dparticlerandomizer_p.h"
+#include "qquick3dparticlesystem_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -68,9 +69,12 @@ void QQuick3DParticleVectorDirection::setDirectionVariation(const QVector3D &dir
 QVector3D QQuick3DParticleVectorDirection::sample(const QQuick3DParticleData &d)
 {
     QVector3D ret;
-    ret.setX(m_direction.x() - m_directionVariation.x() + QPRand::get(d.index, QPRand::VDirXV) * m_directionVariation.x() * 2.0f);
-    ret.setY(m_direction.y() - m_directionVariation.y() + QPRand::get(d.index, QPRand::VDirYV) * m_directionVariation.y() * 2.0f);
-    ret.setZ(m_direction.z() - m_directionVariation.z() + QPRand::get(d.index, QPRand::VDirZV) * m_directionVariation.z() * 2.0f);
+    if (!m_system)
+        return ret;
+    auto rand = m_system->rand();
+    ret.setX(m_direction.x() - m_directionVariation.x() + rand->get(d.index, QPRand::VDirXV) * m_directionVariation.x() * 2.0f);
+    ret.setY(m_direction.y() - m_directionVariation.y() + rand->get(d.index, QPRand::VDirYV) * m_directionVariation.y() * 2.0f);
+    ret.setZ(m_direction.z() - m_directionVariation.z() + rand->get(d.index, QPRand::VDirZV) * m_directionVariation.z() * 2.0f);
     return ret;
 }
 

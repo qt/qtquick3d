@@ -137,8 +137,10 @@ void QQuick3DParticleAttractor::setHideAtEnd(bool hideAtEnd)
 void QQuick3DParticleAttractor::updateShapePositions()
 {
     m_shapePositionList.clear();
-    if (!m_shapeNode || !m_shapeNode->shape())
+    if (!m_system || !m_shapeNode || !m_shapeNode->shape())
         return;
+
+    m_shapeNode->shape()->m_system = m_system;
 
     // Get count of particles positions needed
     int pCount = 0;
@@ -163,14 +165,18 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
     if (m_shapeDirty)
         updateShapePositions();
 
+    if (!m_system)
+        return;
+    auto rand = m_system->rand();
+
     float particleTimeS = time - sd.startTime;
     if (shouldAffect(sd, particleTimeS)) {
         float at = particleTime(particleTimeS);
 
-        float duration = m_duration < 0 ? sd.lifetime : (m_duration / 1000.0);
+        float duration = m_duration < 0 ? sd.lifetime : (m_duration / 1000.0f);
         float durationVariation = m_durationVariation == 0
                 ? 0.0f
-                : (m_durationVariation / 1000.0) - 2.0f * QPRand::get(sd.index, QPRand::AttractorDurationV) * (m_durationVariation / 1000.0);
+                : (m_durationVariation / 1000.0f) - 2.0f * rand->get(sd.index, QPRand::AttractorDurationV) * (m_durationVariation / 1000.0f);
         duration = std::max(duration + durationVariation, MIN_DURATION);
         float pEnd = std::min(1.0f, std::max(0.0f, at / duration));
         // TODO: Should we support easing?
@@ -188,9 +194,9 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
             } else {
                 QVector3D pos = m_position;
                 if (!m_positionVariation.isNull()) {
-                    pos.setX(pos.x() + m_positionVariation.x() - 2.0f * QPRand::get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
-                    pos.setY(pos.y() + m_positionVariation.y() - 2.0f * QPRand::get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
-                    pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * QPRand::get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
+                    pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
+                    pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
+                    pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
                 }
                 d->position =  (pStart * d->position) + (pEnd * pos);
             }

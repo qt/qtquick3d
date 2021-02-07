@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuick3DParticleSystem;
+
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
@@ -89,6 +91,10 @@ Q_SIGNALS:
     void typeChanged();
 
 private:
+    // These need access to m_system
+    friend class QQuick3DParticleEmitter;
+    friend class QQuick3DParticleAttractor;
+
     QVector3D randomPositionCube(int particleIndex) const;
     QVector3D randomPositionSphere(int particleIndex) const;
     QVector3D randomPositionCylinder(int particleIndex) const;
@@ -96,6 +102,7 @@ private:
     QQuick3DNode *m_parentNode = nullptr;
     bool m_fill = false;
     ShapeType m_type = ShapeType::Cube;
+    QQuick3DParticleSystem *m_system = nullptr;
 };
 
 QT_END_NAMESPACE

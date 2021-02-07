@@ -29,6 +29,7 @@
 
 #include "qquick3dparticletargetdirection_p.h"
 #include "qquick3dparticlerandomizer_p.h"
+#include "qquick3dparticlesystem_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -107,12 +108,16 @@ void QQuick3DParticleTargetDirection::setMagnitudeVariation(float magnitudeVaria
 QVector3D QQuick3DParticleTargetDirection::sample(const QQuick3DParticleData &d)
 {
     QVector3D ret = m_position - d.startPosition;
-    ret.setX(ret.x() - m_positionVariation.x() + QPRand::get(d.index, QPRand::TDirPosXV) * m_positionVariation.x() * 2.0f);
-    ret.setY(ret.y() - m_positionVariation.y() + QPRand::get(d.index, QPRand::TDirPosYV) * m_positionVariation.y() * 2.0f);
-    ret.setZ(ret.z() - m_positionVariation.z() + QPRand::get(d.index, QPRand::TDirPosZV) * m_positionVariation.z() * 2.0f);
+    if (!m_system)
+        return ret;
+    auto rand = m_system->rand();
+
+    ret.setX(ret.x() - m_positionVariation.x() + rand->get(d.index, QPRand::TDirPosXV) * m_positionVariation.x() * 2.0f);
+    ret.setY(ret.y() - m_positionVariation.y() + rand->get(d.index, QPRand::TDirPosYV) * m_positionVariation.y() * 2.0f);
+    ret.setZ(ret.z() - m_positionVariation.z() + rand->get(d.index, QPRand::TDirPosZV) * m_positionVariation.z() * 2.0f);
     if (m_normalized)
         ret.normalize();
-    ret *= (m_magnitude - m_magnitudeVariation + QPRand::get(d.index, QPRand::TDirMagV) * m_magnitudeVariation * 2.0f);
+    ret *= (m_magnitude - m_magnitudeVariation + rand->get(d.index, QPRand::TDirMagV) * m_magnitudeVariation * 2.0f);
     return ret;
 }
 

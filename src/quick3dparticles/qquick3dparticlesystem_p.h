@@ -47,7 +47,7 @@
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dloader_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlesystemlogging_p.h>
-
+#include <QtQuick3DParticles/private/qquick3dparticlerandomizer_p.h>
 #include <QElapsedTimer>
 #include <QVector>
 #include <QList>
@@ -119,6 +119,8 @@ public:
 
     void updateCurrentTime(int currentTime);
 
+    QPRand *rand();
+
 public Q_SLOTS:
     void setRunning(bool arg);
     void setPaused(bool arg);
@@ -187,6 +189,7 @@ private:
     int m_seed = 0;
     bool m_logging;
     QQuick3DParticleSystemLogging *m_loggingData = nullptr;
+    QPRand m_rand;
 
     struct TrailEmits {
         QQuick3DParticleTrailEmitter *emitter;

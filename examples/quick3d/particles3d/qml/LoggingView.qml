@@ -55,7 +55,7 @@ Item {
     property var particleSystems
     property bool loggingEnabled: false
     property bool intervalInstant: false
-    property real itemWidth: (width - loggingButton.width - intervalButton.width) / 5
+    property real itemWidth: (width - loggingButton.width - intervalButton.width) / 6
 
     width: parent.width
     height: tableContent.height + 10
@@ -125,6 +125,12 @@ Item {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                text: modelData.seed
+            }
+            Text {
+                width: itemWidth
+                horizontalAlignment: Text.AlignHCenter
+                color: "#ffffff"
                 text: modelData.loggingData.updates
             }
             Text {
@@ -160,6 +166,12 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         visible: loggingEnabled
         Row {
+            Text {
+                width: itemWidth
+                horizontalAlignment: Text.AlignHCenter
+                color: "#ffffff"
+                text: qsTr("SEED")
+            }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
