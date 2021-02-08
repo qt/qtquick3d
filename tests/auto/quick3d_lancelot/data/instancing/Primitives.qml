@@ -111,6 +111,7 @@ Rectangle {
         Model {
             id: rectangle
             instancing: manualInstancing
+            instanceRoot: rectangle
             position: Qt.vector3d(-409.906, 211.328, 0)
             source: "#Rectangle"
 
@@ -131,6 +132,7 @@ Rectangle {
         Model {
             id: sphere
             instancing: manualInstancing
+            instanceRoot: sphere
             position: Qt.vector3d(-404.139, 0, 0)
             source: "#Sphere"
 
@@ -151,6 +153,7 @@ Rectangle {
         Model {
             id: cube
             instancing: manualInstancing
+            instanceRoot: cube
             position: Qt.vector3d(8.66024, 170.318, 0)
             source: "#Cube"
 
@@ -171,6 +174,7 @@ Rectangle {
         Model {
             id: cylinder
             instancing: manualInstancing
+            instanceRoot: cylinder
             position: Qt.vector3d(0, -152.968, 0)
             source: "#Cylinder"
 
@@ -191,6 +195,7 @@ Rectangle {
         Model {
             id: cone
             instancing: manualInstancing
+            instanceRoot: cone
             position: Qt.vector3d(349.224, 0, 0)
             source: "#Cone"
 
