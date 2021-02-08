@@ -33,7 +33,6 @@
 
 QT_BEGIN_NAMESPACE
 
-
 /*!
     \qmltype InstanceRange
     \inherits Object3D
@@ -211,7 +210,7 @@ void QQuick3DRandomInstancing::setRandomSeed(int randomSeed)
         return;
 
     m_randomSeed = randomSeed;
-    emit randomSeedChanged(m_randomSeed);
+    emit randomSeedChanged();
     m_dirty = true;
     markDirty();
 }
@@ -224,7 +223,7 @@ void QQuick3DRandomInstancing::setPosition(QQuick3DInstanceRange *position)
     if (m_position)
         disconnect(m_position,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_position = position;
-    emit positionChanged(m_position);
+    emit positionChanged();
     m_dirty = true;
     markDirty();
     if (m_position) {
@@ -241,7 +240,7 @@ void QQuick3DRandomInstancing::setScale(QQuick3DInstanceRange *scale)
     if (m_scale)
         disconnect(m_scale,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_scale = scale;
-    emit scaleChanged(m_scale);
+    emit scaleChanged();
     m_dirty = true;
     markDirty();
     if (m_scale) {
@@ -258,7 +257,7 @@ void QQuick3DRandomInstancing::setRotation(QQuick3DInstanceRange *rotation)
     if (m_rotation)
         disconnect(m_rotation,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_rotation = rotation;
-    emit rotationChanged(m_rotation);
+    emit rotationChanged();
     m_dirty = true;
     markDirty();
     if (m_rotation) {
@@ -275,7 +274,7 @@ void QQuick3DRandomInstancing::setColor(QQuick3DInstanceRange *color)
     if (m_color)
         disconnect(m_color,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_color = color;
-    emit colorChanged(m_color);
+    emit colorChanged();
     m_dirty = true;
     markDirty();
     if (m_color) {
@@ -293,7 +292,7 @@ void QQuick3DRandomInstancing::setCustomData(QQuick3DInstanceRange *customData)
     if (m_customData)
         disconnect(m_customData,  &QQuick3DInstanceRange::changed, this, &QQuick3DRandomInstancing::handleChange);
     m_customData = customData;
-    emit customDataChanged(m_customData);
+    emit customDataChanged();
     m_dirty = true;
     markDirty();
     if (m_customData) {
@@ -399,7 +398,7 @@ void QQuick3DInstanceRange::setFrom(QVariant from)
         return;
 
     m_from = from;
-    emit fromChanged(m_from);
+    emit fromChanged();
     emit changed();
 }
 
@@ -409,7 +408,7 @@ void QQuick3DInstanceRange::setTo(QVariant to)
         return;
 
     m_to = to;
-    emit toChanged(m_to);
+    emit toChanged();
     emit changed();
 }
 
@@ -419,7 +418,7 @@ void QQuick3DInstanceRange::setProportional(bool proportional)
         return;
 
     m_proportional = proportional;
-    emit proportionalChanged(m_proportional);
+    emit proportionalChanged();
     emit changed();
 }
 

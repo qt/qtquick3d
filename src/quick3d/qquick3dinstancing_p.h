@@ -112,12 +112,12 @@ public Q_SLOTS:
     void setCustomData(QVector4D customData);
 
 Q_SIGNALS:
-    void positionChanged(QVector3D position);
-    void scaleChanged(QVector3D scale);
-    void eulerRotationChanged(QVector3D eulerRotation);
-    void rotationChanged(QQuaternion rotation);
-    void colorChanged(QColor color);
-    void customDataChanged(QVector4D customData);
+    void positionChanged();
+    void scaleChanged();
+    void eulerRotationChanged();
+    void rotationChanged();
+    void colorChanged();
+    void customDataChanged();
     void changed();
 
 protected:

@@ -157,8 +157,8 @@ Q_SIGNALS:
     void skeletonChanged();
     void inverseBindPosesChanged();
     void boundsChanged();
-    void instancingChanged(QQuick3DInstancing *instancing);
-    void instanceRootChanged(QQuick3DNode *instanceRoot);
+    void instancingChanged();
+    void instanceRootChanged();
     void morphTargetsChanged();
 
 protected:
