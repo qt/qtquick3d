@@ -67,7 +67,7 @@ QQuick3DParticleSystem::~QQuick3DParticleSystem()
 {
     if (m_animation)
         m_animation->stop();
-    for (auto connection : qAsConst(m_connections))
+    for (const auto &connection : qAsConst(m_connections))
         QObject::disconnect(connection);
     // purposeful copy
     const auto particles = m_particles;

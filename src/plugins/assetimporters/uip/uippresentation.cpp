@@ -1277,7 +1277,7 @@ void Image::writeQmlProperties(const PropertyChangeList &changeList, QTextStream
 {
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("sourcepath")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") <<  QSSGQmlUtilities::sanitizeQmlSourcePath(m_sourcePath) << Qt::endl;
@@ -1443,7 +1443,7 @@ void Node::writeQmlProperties(const PropertyChangeList &changeList, QTextStream 
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
     const float handednessAdjustment = (m_orientation == Node::LeftHanded) ? -1.0f : 1.0f;
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("position")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("position.x"), m_position.x(), true);
@@ -1737,7 +1737,7 @@ void LayerNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
 
     // TODO: Layer -> Item Anchors (requires a differnt type of change)
 
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("progressiveaa")) {
             outputAAModeAndQuality(output, tabLevel + 1, QStringLiteral("environment.progressiveaa"));
@@ -1890,7 +1890,7 @@ void CameraNode::writeQmlProperties(const PropertyChangeList &changeList, QTextS
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
 
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("clipnear")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("clipnear"), m_clipNear);
@@ -2008,7 +2008,7 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
 
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("lightdiffuse")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
@@ -2114,7 +2114,7 @@ void ModelNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
 
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("source")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("source: ") << QSSGQmlUtilities::sanitizeQmlSourcePath(m_mesh_unresolved) << Qt::endl;
@@ -2325,7 +2325,7 @@ void TextNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInRo
 void TextNode::writeQmlProperties(const PropertyChangeList &changeList, QTextStream &output, int tabLevel)
 {
     applyPropertyChanges(changeList);
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("textstring")) {
             m_text.prepend('"');
@@ -2511,7 +2511,7 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
     // apply the changes so the values are translated
     applyPropertyChanges(changeList);
 
-    for (auto change : changeList) {
+    for (const auto &change : changeList) {
         QString targetProperty = change.nameStr();
         if (targetProperty == QStringLiteral("shaderlighting")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("shaderlighting"), shaderLightingToString(m_shaderLighting));

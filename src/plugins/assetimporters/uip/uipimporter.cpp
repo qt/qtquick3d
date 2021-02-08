@@ -146,7 +146,7 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
     if (sourceFile.endsWith(QStringLiteral(".uia"), Qt::CaseInsensitive)) {
         auto uia = m_uiaParser.parse(sourceFile);
         uiaComponentName = uia.initialPresentationId;
-        for (auto presentation : uia.presentations) {
+        for (const auto &presentation : uia.presentations) {
             if (presentation.type == UiaParser::Uia::Presentation::Qml) {
                 m_hasQMLSubPresentations = true;
                 QFileInfo qmlFile(source.absolutePath() + QDir::separator() + presentation.source);
@@ -156,7 +156,7 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
             }
         }
 
-        for (auto presentation : uia.presentations) {
+        for (const auto &presentation : uia.presentations) {
             if (presentation.type == UiaParser::Uia::Presentation::Uip) {
                 // UIP
                 auto uip = m_uipParser.parse(source.absolutePath() + QDir::separator()
@@ -169,7 +169,7 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
         if (m_hasQMLSubPresentations) {
             // If there is any QML in the project at all, we have to copy the entire
             // qml folder over
-            for (QDir dir : m_qmlDirs)
+            for (const QDir &dir : m_qmlDirs)
                 copyRecursively(dir.absolutePath(), m_exportPath.absolutePath() + QDir::separator() + QStringLiteral("qml"));
         }
 
@@ -181,7 +181,7 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
     QString errorString;
 
     // Copy any resource files to export directory
-    for (auto file : m_resourcesList) {
+    for (const auto &file : m_resourcesList) {
         QFileInfo sourceFile(source.absolutePath() + QDir::separator() + file);
         if (!sourceFile.exists()) {
             // Try again after stripping the parent directory
@@ -484,9 +484,9 @@ QVector<AnimationTrack> combineAnimationTracks(const QVector<AnimationTrack> &ma
     // We can't have animations that target the same object and property,
     // so slides overwrite master animations
     QVector<AnimationTrack> animations;
-    for (auto masterAnimation : master) {
+    for (const auto &masterAnimation : master) {
         bool skip = false;
-        for (auto slideAnimation : slide) {
+        for (const auto &slideAnimation : slide) {
             if (masterAnimation.m_target == slideAnimation.m_target &&
                     masterAnimation.m_property == slideAnimation.m_property) {
                 skip = true;
@@ -588,7 +588,7 @@ void UipImporter::generateAnimationTimeLine(QTextStream &output, int tabLevel, U
         // Create a list of KeyframeGroups
         KeyframeGroupGenerator generator(m_fps);
 
-        for (auto animation : animations)
+        for (const auto &animation : animations)
             generator.addAnimation(animation);
 
         generator.generateKeyframeGroups(output, tabLevel + 1);
@@ -905,7 +905,8 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
     // Generate actual files from the buffers we created
     if (m_createIndividualLayers) {
         // Create a file for each component buffer
-        for (auto targetName : layerComponentsMap.keys()) {
+        const auto &keys = layerComponentsMap.keys();
+        for (const auto &targetName : keys) {
             QString targetFileName = targetName + QStringLiteral(".qml");
             QFile targetFile(targetFileName);
             if (!targetFile.open(QIODevice::WriteOnly)) {
@@ -981,7 +982,7 @@ QString UipImporter::processUipPresentation(UipPresentation *presentation, const
     }
 
     // Cleanup
-    for (auto buffer : layerComponentsMap.values())
+    for (const auto &buffer : qAsConst(layerComponentsMap))
         delete buffer;
 
     return errorString;

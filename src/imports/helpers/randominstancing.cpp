@@ -29,6 +29,7 @@
 
 #include "randominstancing_p.h"
 #include <QRandomGenerator>
+#include <QObject>
 
 QT_BEGIN_NAMESPACE
 

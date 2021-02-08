@@ -38,7 +38,7 @@ QQuick3DParticleAffector::QQuick3DParticleAffector(QObject *parent)
 
 QQuick3DParticleAffector::~QQuick3DParticleAffector()
 {
-    for (auto connection : qAsConst(m_connections))
+    for (const auto &connection : qAsConst(m_connections))
         QObject::disconnect(connection);
     if (m_system)
         m_system->unRegisterParticleAffector(this);

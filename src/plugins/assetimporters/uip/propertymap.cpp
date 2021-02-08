@@ -276,7 +276,7 @@ PropertyMap::PropertyMap()
 
 PropertyMap::~PropertyMap()
 {
-    for (auto proprtyMap : m_properties.values())
+    for (const auto &proprtyMap : qAsConst(m_properties))
         delete proprtyMap;
 }
 

@@ -195,7 +195,8 @@ bool connect(QByteArray *msg, bool *error)
     // Merge the platform info set by the program with the protocols default info
     PlatformInfo clientInfo = customInfo;
     PlatformInfo defaultInfo = PlatformInfo::localHostInfo();
-    for (QString key : defaultInfo.keys()) {
+    const auto &defaultInfoKeys = defaultInfo.keys();
+    for (const QString &key : defaultInfoKeys) {
         if (!clientInfo.contains(key))
             clientInfo.insert(key, defaultInfo.value(key));
     }

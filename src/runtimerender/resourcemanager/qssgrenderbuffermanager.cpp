@@ -1175,7 +1175,8 @@ void QSSGBufferManager::removeImageReference(const QSSGRenderPath &sourcePath, c
 void QSSGBufferManager::cleanupUnreferencedBuffers()
 {
     // Release all images who are not referenced
-    for (const auto &imagePath : imageRefMap.keys()) {
+    const auto &imageRefMapKeys = imageRefMap.keys();
+    for (const auto &imagePath : imageRefMapKeys) {
         if (imageRefMap[imagePath].count() > 0)
             continue;
         releaseImage(imagePath);
@@ -1183,7 +1184,8 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
     }
 
     // Release all meshes who are not referenced
-    for (const auto &meshPath : modelRefMap.keys()) {
+    const auto &modelRefMapKeys = modelRefMap.keys();
+    for (const auto &meshPath : modelRefMapKeys) {
         if (modelRefMap[meshPath].count() > 0)
             continue;
         releaseMesh(meshPath);
