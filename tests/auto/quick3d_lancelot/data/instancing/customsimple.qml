@@ -99,77 +99,84 @@ Rectangle {
 
         // just vertex, just fragment, both
 
-        Model {
-            source: "#Sphere"
-            instancing: manualInstancing
-            scale: Qt.vector3d(2, 2, 2)
-            x: -200
-            materials: [
+        Node {
+            id: rootNode
+            Model {
+                source: "#Sphere"
+                instancing: manualInstancing
+                instanceRoot: rootNode
+                scale: Qt.vector3d(2, 2, 2)
+                x: -200
+                materials: [
                 CustomMaterial {
                     property alias time: v3d.time
                     property alias amplitude: v3d.amplitude
                     vertexShader: "customsimple.vert"
                 }
-            ]
-        }
+                ]
+            }
 
-        Model {
-            source: "#Sphere"
-            instancing: manualInstancing
-            scale: Qt.vector3d(2, 2, 2)
-            materials: [
+            Model {
+                source: "#Sphere"
+                instancing: manualInstancing
+                instanceRoot: rootNode
+                scale: Qt.vector3d(2, 2, 2)
+                materials: [
                 CustomMaterial {
                     fragmentShader: "customsimple.frag"
                 }
-            ]
-        }
+                ]
+            }
 
-        Model {
-            source: "#Sphere"
-            instancing: manualInstancing
-            scale: Qt.vector3d(2, 2, 2)
-            x: 200
-            materials: [
+            Model {
+                source: "#Sphere"
+                instancing: manualInstancing
+                instanceRoot: rootNode
+                scale: Qt.vector3d(2, 2, 2)
+                x: 200
+                materials: [
                 CustomMaterial {
                     property alias time: v3d.time
                     property alias amplitude: v3d.amplitude
                     vertexShader: "customsimple.vert"
                     fragmentShader: "customsimple.frag"
                 }
-            ]
-        }
+                ]
+            }
 
-        // Vertex shaders variant that do not override POSITION value
-        Model {
-            source: "#Sphere"
-            instancing: manualInstancing
-            scale: Qt.vector3d(2, 2, 2)
-            x: -200
-            y: -200
-            materials: [
+            // Vertex shaders variant that do not override POSITION value
+            Model {
+                source: "#Sphere"
+                instancing: manualInstancing
+                instanceRoot: rootNode
+                scale: Qt.vector3d(2, 2, 2)
+                x: -200
+                y: -200
+                materials: [
                 CustomMaterial {
                     property alias time: v3d.time
                     property alias amplitude: v3d.amplitude
                     vertexShader: "customsimple_no_position.vert"
                 }
-            ]
-        }
+                ]
+            }
 
-        Model {
-            source: "#Sphere"
-            instancing: manualInstancing
-            scale: Qt.vector3d(2, 2, 2)
-            x: 200
-            y: -200
-            materials: [
+            Model {
+                source: "#Sphere"
+                instancing: manualInstancing
+                instanceRoot: rootNode
+                scale: Qt.vector3d(2, 2, 2)
+                x: 200
+                y: -200
+                materials: [
                 CustomMaterial {
                     property alias time: v3d.time
                     property alias amplitude: v3d.amplitude
                     vertexShader: "customsimple_no_position.vert"
                     fragmentShader: "customsimple.frag"
                 }
-            ]
+                ]
+            }
         }
-
     }
 }

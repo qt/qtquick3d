@@ -101,7 +101,7 @@ Rectangle {
             source: "../shared/models/suzanne.mesh"
             instancing: manualInstancing
             scale: Qt.vector3d(80, 80, 80)
-            x: -300
+            x: -150
             materials: [
                 CustomMaterial {
                     property vector4d offset: Qt.vector4d(100, 200, 300, 400)
@@ -137,7 +137,7 @@ Rectangle {
             source: "../shared/models/suzanne.mesh"
             instancing: manualInstancing
             scale: Qt.vector3d(80, 80, 80)
-            x: 300
+            x: 150
             materials: [
                 CustomMaterial {
                     property vector4d offset: Qt.vector4d(400, 100, 200, 300)
