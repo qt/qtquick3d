@@ -367,24 +367,6 @@ void QSSGRenderer::endLayerRender()
     m_currentLayer = nullptr;
 }
 
-//void QSSGRenderer::prepareImageForIbl(QSSGRenderImage &inImage)
-//{
-//    if (inImage.m_textureData.m_texture && inImage.m_textureData.m_texture->numMipmaps() < 1)
-//        inImage.m_textureData.m_texture->generateMipmaps();
-//}
-
-QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGLayerRenderData &inLayerRenderData,
-                                                                const QVector2D &inMouseCoords,
-                                                                const QVector2D &inViewportDimensions,
-                                                                bool forceImageIntersect) const
-{
-    if (inLayerRenderData.layerPrepResult.hasValue()) {
-        const auto viewport = inLayerRenderData.layerPrepResult->viewport();
-        return QSSGLayerRenderHelper::layerMouseCoords(viewport, inMouseCoords, inViewportDimensions, forceImageIntersect);
-    }
-    return QSSGEmpty();
-}
-
 bool QSSGRenderer::rendererRequestsFrames() const
 {
     return m_progressiveAARenderRequest;
@@ -642,16 +624,6 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
 const QSSGRef<QSSGProgramGenerator> &QSSGRenderer::getProgramGenerator()
 {
     return m_contextInterface->shaderProgramGenerator();
-}
-
-QSSGOption<QVector2D> QSSGRenderer::getLayerMouseCoords(QSSGRenderLayer &inLayer,
-                                                                const QVector2D &inMouseCoords,
-                                                                const QVector2D &inViewportDimensions,
-                                                                bool forceImageIntersect) const
-{
-    QSSGLayerRenderData *theData = const_cast<QSSGRenderer &>(*this).getOrCreateLayerRenderData(inLayer);
-    Q_ASSERT(theData);
-    return getLayerMouseCoords(*theData, inMouseCoords, inViewportDimensions, forceImageIntersect);
 }
 
 QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
