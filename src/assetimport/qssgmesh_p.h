@@ -320,7 +320,8 @@ struct Q_QUICK3DASSETIMPORT_EXPORT MeshInternal
 
         Mesh::Subset toMeshSubset() const {
             Mesh::Subset subset;
-            subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(rawNameUtf16.constData()));
+            if (nameLength > 0)
+                subset.name = QString::fromUtf16(reinterpret_cast<const char16_t *>(rawNameUtf16.constData()), nameLength - 1);
             subset.bounds.min = bounds.min;
             subset.bounds.max = bounds.max;
             subset.count = count;
