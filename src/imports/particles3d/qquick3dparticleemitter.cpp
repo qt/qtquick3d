@@ -41,8 +41,10 @@ QQuick3DParticleEmitter::QQuick3DParticleEmitter(QQuick3DNode *parent)
 
 QQuick3DParticleEmitter::~QQuick3DParticleEmitter()
 {
+    qDeleteAll(m_emitBursts);
+    m_emitBursts.clear();
     if (m_system)
-        m_system->registerParticleEmitter(this);
+        m_system->unRegisterParticleEmitter(this);
 }
 
 bool QQuick3DParticleEmitter::enabled() const
