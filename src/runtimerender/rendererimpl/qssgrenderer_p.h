@@ -227,22 +227,12 @@ public:
 
     const QSSGRef<QSSGProgramGenerator> &getProgramGenerator();
 
-    // Get the mouse coordinates as they relate to a given layer
-    QSSGOption<QVector2D> getLayerMouseCoords(QSSGRenderLayer &inLayer,
-                                                const QVector2D &inMouseCoords,
-                                                const QVector2D &inViewportDimensions,
-                                                bool forceImageIntersect = false) const;
-
     // Returns true if the renderer expects new frame to be rendered
     // Happens when progressive AA is enabled
     bool rendererRequestsFrames() const;
 
     static const QSSGRenderGraphObject *getPickObject(QSSGRenderableObject &inRenderableObject);
 protected:
-    QSSGOption<QVector2D> getLayerMouseCoords(QSSGLayerRenderData &inLayer,
-                                                const QVector2D &inMouseCoords,
-                                                const QVector2D &inViewportDimensions,
-                                                bool forceImageIntersect = false) const;
     QSSGPickResultProcessResult processPickResultList(bool inPickEverything);
     // If the mouse y coordinates need to be flipped we expect that to happen before entry into
     // this function
