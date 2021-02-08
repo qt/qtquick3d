@@ -74,8 +74,8 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void instanceNodeDirty();
-    void instanceCountOverrideChanged(int instanceCountOverride);
-    void hasTransparencyChanged(bool hasTransparency);
+    void instanceCountOverrideChanged();
+    void hasTransparencyChanged();
 
 protected:
     virtual QByteArray getInstanceBuffer(int *instanceCount) = 0;

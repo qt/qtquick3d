@@ -78,9 +78,9 @@ public Q_SLOTS:
     void setProportional(bool proportional);
 
 Q_SIGNALS:
-    void fromChanged(QVariant from);
-    void toChanged(QVariant to);
-    void proportionalChanged(bool proportional);
+    void fromChanged();
+    void toChanged();
+    void proportionalChanged();
     void changed();
 
 protected:
@@ -163,13 +163,13 @@ public Q_SLOTS:
     void setCustomData(QQuick3DInstanceRange *customData);
 
 Q_SIGNALS:
-    void instanceCountChanged(int instanceCount);
-    void randomSeedChanged(int randomSeed);
-    void positionChanged(QQuick3DInstanceRange *position);
-    void scaleChanged(QQuick3DInstanceRange *scale);
-    void rotationChanged(QQuick3DInstanceRange *rotation);
-    void colorChanged(QQuick3DInstanceRange *color);
-    void customDataChanged(QQuick3DInstanceRange *customData);
+    void instanceCountChanged();
+    void randomSeedChanged();
+    void positionChanged();
+    void scaleChanged();
+    void rotationChanged();
+    void colorChanged();
+    void customDataChanged();
 
 private Q_SLOTS:
     void handleChange();

@@ -145,7 +145,7 @@ void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
 
     d->m_instanceCountOverride = instanceCountOverride;
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
-    emit instanceCountOverrideChanged(d->m_instanceCountOverride);
+    emit instanceCountOverrideChanged();
 }
 
 void QQuick3DInstancing::setHasTransparency(bool hasTransparency)
@@ -156,7 +156,7 @@ void QQuick3DInstancing::setHasTransparency(bool hasTransparency)
 
     d->m_hasTransparency = hasTransparency;
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
-    emit hasTransparencyChanged(d->m_hasTransparency);
+    emit hasTransparencyChanged();
 }
 
 void QQuick3DInstancing::markDirty()
@@ -450,7 +450,7 @@ void QQuick3DInstanceListEntry::setPosition(QVector3D position)
         return;
 
     m_position = position;
-    emit positionChanged(m_position);
+    emit positionChanged();
     emit changed();
 }
 
@@ -467,7 +467,7 @@ void QQuick3DInstanceListEntry::setScale(QVector3D scale)
         return;
 
     m_scale = scale;
-    emit scaleChanged(m_scale);
+    emit scaleChanged();
     emit changed();
 }
 
@@ -485,7 +485,7 @@ void QQuick3DInstanceListEntry::setEulerRotation(QVector3D eulerRotation)
         return;
     m_eulerRotation = eulerRotation;
     m_useEulerRotation = true;
-    emit eulerRotationChanged(m_eulerRotation);
+    emit eulerRotationChanged();
     emit changed();
 }
 
@@ -503,7 +503,7 @@ void QQuick3DInstanceListEntry::setRotation(QQuaternion rotation)
 
     m_rotation = rotation;
     m_useEulerRotation = false;
-    emit rotationChanged(m_rotation);
+    emit rotationChanged();
     emit changed();
 }
 
@@ -520,7 +520,7 @@ void QQuick3DInstanceListEntry::setColor(QColor color)
         return;
 
     m_color = color;
-    emit colorChanged(m_color);
+    emit colorChanged();
     emit changed();
 }
 
@@ -538,7 +538,7 @@ void QQuick3DInstanceListEntry::setCustomData(QVector4D customData)
         return;
 
     m_customData = customData;
-    emit customDataChanged(m_customData);
+    emit customDataChanged();
     emit changed();
 }
 
