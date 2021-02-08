@@ -42,8 +42,8 @@ KeyframeGroupGenerator::KeyframeGroupGenerator(float fps)
 
 KeyframeGroupGenerator::~KeyframeGroupGenerator()
 {
-    for (auto keyframeGroupMap : m_targetKeyframeMap.values())
-        for (auto keyframeGroup : keyframeGroupMap.values())
+    for (const auto &keyframeGroupMap : qAsConst(m_targetKeyframeMap))
+        for (auto keyframeGroup : qAsConst(keyframeGroupMap))
             delete keyframeGroup;
 }
 
@@ -86,8 +86,8 @@ void KeyframeGroupGenerator::addAnimation(const AnimationTrack &animation)
 
 void KeyframeGroupGenerator::generateKeyframeGroups(QTextStream &output, int tabLevel)
 {
-    for (auto groupMaps : m_targetKeyframeMap.values())
-        for (auto keyframeGroup : groupMaps.values())
+    for (const auto &groupMaps : qAsConst(m_targetKeyframeMap))
+        for (const auto &keyframeGroup : qAsConst(groupMaps))
             keyframeGroup->generateKeyframeGroupQml(output, tabLevel);
 }
 

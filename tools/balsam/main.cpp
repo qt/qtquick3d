@@ -46,7 +46,7 @@ public:
 
     }
     ~OptionsManager() {
-        qDeleteAll(m_optionsMap.values());
+        qDeleteAll(m_optionsMap);
         m_optionsMap.clear();
     }
     void generateCommandLineOptions(const QVariantMap &optionsMap)
@@ -105,7 +105,7 @@ public:
         return optionsObject.toVariantMap();
     }
     void registerOptions(QCommandLineParser &parser) {
-        for (const auto &cmdLineOption : m_optionsMap.values())
+        for (const auto &cmdLineOption : qAsConst(m_optionsMap))
             parser.addOption(*cmdLineOption);
     }
 
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 
     // Get Plugin options
     auto pluginOptions = assetImporter.getAllOptions();
-    for (const auto &options : pluginOptions.values())
+    for (const auto &options : qAsConst(pluginOptions))
         optionsManager.generateCommandLineOptions(options);
 
     optionsManager.registerOptions(cmdLineParser);

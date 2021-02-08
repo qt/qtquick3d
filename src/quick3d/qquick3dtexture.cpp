@@ -123,7 +123,7 @@ QQuick3DTexture::~QQuick3DTexture()
         sourcePrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
 
-    for (const auto &connection : m_connections.values())
+    for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
 }
 
