@@ -137,51 +137,47 @@ void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQui
         return;
     auto rand = m_system->rand();
 
-    float particleTimeS = time - sd.startTime;
-    if (shouldAffect(sd, particleTimeS)) {
-        float at = particleTime(particleTimeS);
-        // Smooth 1 sec start to full wandering
-        // Required to respect particle emitter start position
-        // TODO: API?
-        float smooth = std::min(1.0f, sqrtf(at));
-        const float pi2 = float(M_PI * 2);
-        // Global
-        if (!qFuzzyIsNull(m_globalAmount.x()) && !qFuzzyIsNull(m_globalPace.x()))
-            d->position.setX(d->position.x() + smooth * sinf(at * pi2 * m_globalPace.x()) * m_globalAmount.x());
-        if (!qFuzzyIsNull(m_globalAmount.y()) && !qFuzzyIsNull(m_globalPace.y()))
-            d->position.setY(d->position.y() + smooth * sinf(at * pi2 * m_globalPace.y()) * m_globalAmount.y());
-        if (!qFuzzyIsNull(m_globalAmount.z()) && !qFuzzyIsNull(m_globalPace.z()))
-            d->position.setZ(d->position.z() + smooth * sinf(at * pi2 * m_globalPace.z()) * m_globalAmount.z());
+    // Smooth 1 sec start to full wandering
+    // Required to respect particle emitter start position
+    // TODO: API?
+    float smooth = std::min(1.0f, sqrtf(time));
+    const float pi2 = float(M_PI * 2);
+    // Global
+    if (!qFuzzyIsNull(m_globalAmount.x()) && !qFuzzyIsNull(m_globalPace.x()))
+        d->position.setX(d->position.x() + smooth * sinf(time * pi2 * m_globalPace.x()) * m_globalAmount.x());
+    if (!qFuzzyIsNull(m_globalAmount.y()) && !qFuzzyIsNull(m_globalPace.y()))
+        d->position.setY(d->position.y() + smooth * sinf(time * pi2 * m_globalPace.y()) * m_globalAmount.y());
+    if (!qFuzzyIsNull(m_globalAmount.z()) && !qFuzzyIsNull(m_globalPace.z()))
+        d->position.setZ(d->position.z() + smooth * sinf(time * pi2 * m_globalPace.z()) * m_globalAmount.z());
 
-        // Unique
-        // Rather simple to only use a single sin operation per direction
-        if (!qFuzzyIsNull(m_uniqueAmount.x()) && !qFuzzyIsNull(m_uniquePace.x())) {
-            // Values between  1.0 +/- variation
-            float paceVariation = 1.0f + m_uniquePaceVariation - 2.0f * rand->get(sd.index, QPRand::WanderXPV) * m_uniquePaceVariation;
-            float amountVariation = 1.0f + m_uniqueAmountVariation - 2.0f * rand->get(sd.index, QPRand::WanderXAV) * m_uniqueAmountVariation;
-            float startPace = rand->get(sd.index, QPRand::WanderXPS) * pi2;
-            float pace = startPace + paceVariation * at * pi2 * m_uniquePace.x();
-            float amount = amountVariation * m_uniqueAmount.x();
-            d->position.setX(d->position.x() + smooth * sinf(pace) * amount);
-        }
-        if (!qFuzzyIsNull(m_uniqueAmount.y()) && !qFuzzyIsNull(m_uniquePace.y())) {
-            // Values between  1.0 +/- variation
-            float paceVariation = 1.0f + m_uniquePaceVariation - 2.0f * rand->get(sd.index, QPRand::WanderYPV) * m_uniquePaceVariation;
-            float amountVariation = 1.0f + m_uniqueAmountVariation - 2.0f * rand->get(sd.index, QPRand::WanderYAV) * m_uniqueAmountVariation;
-            float startPace = rand->get(sd.index, QPRand::WanderYPS) * pi2;
-            float pace = startPace + paceVariation * at * pi2 * m_uniquePace.y();
-            float amount = amountVariation * m_uniqueAmount.y();
-            d->position.setY(d->position.y() + smooth * sinf(pace) * amount);
-        }
-        if (!qFuzzyIsNull(m_uniqueAmount.z()) && !qFuzzyIsNull(m_uniquePace.z())) {
-            // Values between  1.0 +/- variation
-            float paceVariation = 1.0f + m_uniquePaceVariation - 2.0f * rand->get(sd.index, QPRand::WanderZPV) * m_uniquePaceVariation;
-            float amountVariation = 1.0f + m_uniqueAmountVariation - 2.0f * rand->get(sd.index, QPRand::WanderZAV) * m_uniqueAmountVariation;
-            float startPace = rand->get(sd.index, QPRand::WanderZPS) * pi2;
-            float pace = startPace + paceVariation * at * pi2 * m_uniquePace.z();
-            float amount = amountVariation * m_uniqueAmount.z();
-            d->position.setZ(d->position.z() + smooth * sinf(pace) * amount);
-        }
+    // Unique
+    // Rather simple to only use a single sin operation per direction
+    if (!qFuzzyIsNull(m_uniqueAmount.x()) && !qFuzzyIsNull(m_uniquePace.x())) {
+        // Values between  1.0 +/- variation
+        float paceVariation = 1.0f + m_uniquePaceVariation - 2.0f * rand->get(sd.index, QPRand::WanderXPV) * m_uniquePaceVariation;
+        float amountVariation = 1.0f + m_uniqueAmountVariation - 2.0f * rand->get(sd.index, QPRand::WanderXAV) * m_uniqueAmountVariation;
+        float startPace = rand->get(sd.index, QPRand::WanderXPS) * pi2;
+        float pace = startPace + paceVariation * time * pi2 * m_uniquePace.x();
+        float amount = amountVariation * m_uniqueAmount.x();
+        d->position.setX(d->position.x() + smooth * sinf(pace) * amount);
+    }
+    if (!qFuzzyIsNull(m_uniqueAmount.y()) && !qFuzzyIsNull(m_uniquePace.y())) {
+        // Values between  1.0 +/- variation
+        float paceVariation = 1.0f + m_uniquePaceVariation - 2.0f * rand->get(sd.index, QPRand::WanderYPV) * m_uniquePaceVariation;
+        float amountVariation = 1.0f + m_uniqueAmountVariation - 2.0f * rand->get(sd.index, QPRand::WanderYAV) * m_uniqueAmountVariation;
+        float startPace = rand->get(sd.index, QPRand::WanderYPS) * pi2;
+        float pace = startPace + paceVariation * time * pi2 * m_uniquePace.y();
+        float amount = amountVariation * m_uniqueAmount.y();
+        d->position.setY(d->position.y() + smooth * sinf(pace) * amount);
+    }
+    if (!qFuzzyIsNull(m_uniqueAmount.z()) && !qFuzzyIsNull(m_uniquePace.z())) {
+        // Values between  1.0 +/- variation
+        float paceVariation = 1.0f + m_uniquePaceVariation - 2.0f * rand->get(sd.index, QPRand::WanderZPV) * m_uniquePaceVariation;
+        float amountVariation = 1.0f + m_uniqueAmountVariation - 2.0f * rand->get(sd.index, QPRand::WanderZAV) * m_uniqueAmountVariation;
+        float startPace = rand->get(sd.index, QPRand::WanderZPS) * pi2;
+        float pace = startPace + paceVariation * time * pi2 * m_uniquePace.z();
+        float amount = amountVariation * m_uniqueAmount.z();
+        d->position.setZ(d->position.z() + smooth * sinf(pace) * amount);
     }
 }
 

@@ -162,44 +162,39 @@ void QQuick3DParticleAttractor::updateShapePositions()
 
 void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
+    if (!m_system)
+        return;
+
     if (m_shapeDirty)
         updateShapePositions();
 
-    if (!m_system)
-        return;
     auto rand = m_system->rand();
+    float duration = m_duration < 0 ? sd.lifetime : (m_duration / 1000.0f);
+    float durationVariation = m_durationVariation == 0
+            ? 0.0f
+            : (m_durationVariation / 1000.0f) - 2.0f * rand->get(sd.index, QPRand::AttractorDurationV) * (m_durationVariation / 1000.0f);
+    duration = std::max(duration + durationVariation, MIN_DURATION);
+    float pEnd = std::min(1.0f, std::max(0.0f, time / duration));
+    // TODO: Should we support easing?
+    //pEnd = easeInOutQuad(pEnd);
 
-    float particleTimeS = time - sd.startTime;
-    if (shouldAffect(sd, particleTimeS)) {
-        float at = particleTime(particleTimeS);
+    if (m_hideAtEnd && pEnd >= 1.0f)
+        d->color.a = 0;
 
-        float duration = m_duration < 0 ? sd.lifetime : (m_duration / 1000.0f);
-        float durationVariation = m_durationVariation == 0
-                ? 0.0f
-                : (m_durationVariation / 1000.0f) - 2.0f * rand->get(sd.index, QPRand::AttractorDurationV) * (m_durationVariation / 1000.0f);
-        duration = std::max(duration + durationVariation, MIN_DURATION);
-        float pEnd = std::min(1.0f, std::max(0.0f, at / duration));
-        // TODO: Should we support easing?
-        //pEnd = easeInOutQuad(pEnd);
-
-        if (m_hideAtEnd && pEnd >= 1.0f)
-            d->color.a = 0;
-
-        float pStart = 1.0f - pEnd;
-        if (m_shapeNode) {
-            d->position = (pStart * d->position) + (pEnd * (m_shapeNode->scenePosition() + m_shapePositionList[sd.index]));
+    float pStart = 1.0f - pEnd;
+    if (m_shapeNode) {
+        d->position = (pStart * d->position) + (pEnd * (m_shapeNode->scenePosition() + m_shapePositionList[sd.index]));
+    } else {
+        if (m_positionVariation.isNull()) {
+            d->position =  (pStart * d->position) + (pEnd * m_position);
         } else {
-            if (m_positionVariation.isNull()) {
-                d->position =  (pStart * d->position) + (pEnd * m_position);
-            } else {
-                QVector3D pos = m_position;
-                if (!m_positionVariation.isNull()) {
-                    pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
-                    pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
-                    pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
-                }
-                d->position =  (pStart * d->position) + (pEnd * pos);
+            QVector3D pos = m_position;
+            if (!m_positionVariation.isNull()) {
+                pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
+                pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
+                pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
             }
+            d->position =  (pStart * d->position) + (pEnd * pos);
         }
     }
 }
