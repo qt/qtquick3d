@@ -77,7 +77,7 @@ public:
 
 public Q_SLOTS:
     void setWeight(float castsShadows);
-    void setAttributes(MorphTargetAttributes attributes);
+    void setAttributes(QQuick3DMorphTarget::MorphTargetAttributes attributes);
 Q_SIGNALS:
     void weightChanged();
     void attributesChanged();

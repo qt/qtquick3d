@@ -87,8 +87,8 @@ public:
     float particleScale() const;
 
 public Q_SLOTS:
-    void setLighting(Lighting lighting);
-    void setBlendMode(BlendMode blendMode);
+    void setLighting(QQuick3DParticleSpriteParticle::Lighting lighting);
+    void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
     void setSprite(QQuick3DTexture *sprite);
     void setSpriteImages(int imageCount);
     void setBlendImages(bool blend);

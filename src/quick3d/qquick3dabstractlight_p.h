@@ -95,7 +95,7 @@ public Q_SLOTS:
     void setCastsShadow(bool castsShadow);
     void setShadowBias(float shadowBias);
     void setShadowFactor(float shadowFactor);
-    void setShadowMapQuality(QSSGShadowMapQuality shadowMapQuality);
+    void setShadowMapQuality(QQuick3DAbstractLight::QSSGShadowMapQuality shadowMapQuality);
     void setShadowMapFar(float shadowMapFar);
     void setShadowFilter(float shadowFilter);
 

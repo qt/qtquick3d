@@ -150,8 +150,8 @@ public:
     float lineWidth() const;
 
 public Q_SLOTS:
-    void setLighting(Lighting lighting);
-    void setBlendMode(BlendMode blendMode);
+    void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
+    void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
     void setBaseColor(QColor baseColor);
     void setBaseColorMap(QQuick3DTexture *baseColorMap);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
@@ -170,18 +170,18 @@ public Q_SLOTS:
     void setNormalStrength(float normalStrength);
     void setOcclusionMap(QQuick3DTexture *occlusionMap);
     void setOcclusionAmount(float occlusionAmount);
-    void setAlphaMode(AlphaMode alphaMode);
+    void setAlphaMode(QQuick3DPrincipledMaterial::AlphaMode alphaMode);
     void setAlphaCutoff(float alphaCutoff);
-    Q_REVISION(1, 1) void setMetalnessChannel(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setRoughnessChannel(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setOpacityChannel(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setOcclusionChannel(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setMetalnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setRoughnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setOpacityChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setOcclusionChannel(QQuick3DMaterial::TextureChannelMapping channel);
     void setPointSize(float size);
     void setLineWidth(float width);
 
 Q_SIGNALS:
-    void lightingChanged(Lighting lighting);
-    void blendModeChanged(BlendMode blendMode);
+    void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
+    void blendModeChanged(QQuick3DPrincipledMaterial::BlendMode blendMode);
     void baseColorChanged(QColor baseColor);
     void baseColorMapChanged(QQuick3DTexture *baseColorMap);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
@@ -200,12 +200,12 @@ Q_SIGNALS:
     void normalStrengthChanged(float normalStrength);
     void occlusionMapChanged(QQuick3DTexture *occlusionMap);
     void occlusionAmountChanged(float occlusionAmount);
-    void alphaModeChanged(AlphaMode alphaMode);
+    void alphaModeChanged(QQuick3DPrincipledMaterial::AlphaMode alphaMode);
     void alphaCutoffChanged(float alphaCutoff);
-    Q_REVISION(1, 1) void metalnessChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void roughnessChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void opacityChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void occlusionChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void metalnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void roughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void opacityChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void occlusionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     void pointSizeChanged();
     void lineWidthChanged();
 

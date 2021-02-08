@@ -116,7 +116,7 @@ public:
     QVector3D sceneScale() const;
     QMatrix4x4 sceneTransform() const;
 
-    Q_INVOKABLE void rotate(qreal degrees, const QVector3D &axis, TransformSpace space);
+    Q_INVOKABLE void rotate(qreal degrees, const QVector3D &axis, QQuick3DNode::TransformSpace space);
 
     Q_INVOKABLE QVector3D mapPositionToScene(const QVector3D &localPosition) const;
     Q_INVOKABLE QVector3D mapPositionFromScene(const QVector3D &scenePosition) const;

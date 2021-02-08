@@ -75,7 +75,7 @@ public Q_SLOTS:
     void setClipNear(float clipNear);
     void setClipFar(float clipFar);
     void setFieldOfView(float fieldOfView);
-    void setFieldOfViewOrientation(FieldOfViewOrientation fieldOfViewOrientation);
+    void setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation fieldOfViewOrientation);
 
 Q_SIGNALS:
     void clipNearChanged();

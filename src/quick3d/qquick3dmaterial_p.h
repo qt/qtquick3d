@@ -92,16 +92,14 @@ public Q_SLOTS:
     void setLightmapRadiosity(QQuick3DTexture *lightmapRadiosity);
     void setLightmapShadow(QQuick3DTexture *lightmapShadow);
     void setLightProbe(QQuick3DTexture *lightProbe);
-
-    void setCullMode(CullMode cullMode);
+    void setCullMode(QQuick3DMaterial::CullMode cullMode);
 
 Q_SIGNALS:
     void lightmapIndirectChanged(QQuick3DTexture *lightmapIndirect);
     void lightmapRadiosityChanged(QQuick3DTexture *lightmapRadiosity);
     void lightmapShadowChanged(QQuick3DTexture *lightmapShadow);
     void lightProbeChanged(QQuick3DTexture *lightProbe);
-
-    void cullModeChanged(CullMode cullMode);
+    void cullModeChanged(QQuick3DMaterial::CullMode cullMode);
 
 protected:
     explicit QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);

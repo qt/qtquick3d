@@ -108,8 +108,8 @@ public Q_SLOTS:
     void setMaxAmount(int maxAmount);
     void setColor(QColor color);
     void setColorVariation(QVector4D colorVariation);
-    void setFadeInEffect(FadeType fadeInEffect);
-    void setFadeOutEffect(FadeType fadeOutEffect);
+    void setFadeInEffect(QQuick3DParticle::FadeType fadeInEffect);
+    void setFadeOutEffect(QQuick3DParticle::FadeType fadeOutEffect);
     void setFadeInDuration(int fadeInDuration);
     void setFadeOutDuration(int fadeOutDuration);
     void setAlignMode(AlignMode alignMode);
