@@ -9,7 +9,6 @@ layout(std140, binding = 0) uniform buf {
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
-    float qt_opacity;
     int qt_countPerSlice;
 } ubuf;
 
@@ -56,6 +55,5 @@ vec4 qt_readSprite()
 
 void main()
 {
-    vec4 col = color * qt_readSprite();
-    fragColor = vec4(col.rgb, col.a * ubuf.qt_opacity);
+    fragColor = color * qt_readSprite();
 }
