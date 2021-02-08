@@ -45,11 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Maximum time particles can be set to live.
-// More than this means unlimited.
-static const int PARTICLE_MAX_TIME = 99999;
-static const int AFFECTOR_MAX_TIME = PARTICLE_MAX_TIME+1;
-
 struct Color4ub {
     uchar r = 255;
     uchar g = 255;

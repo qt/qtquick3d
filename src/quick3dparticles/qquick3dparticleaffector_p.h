@@ -59,9 +59,9 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QObject, publi
     // TODO: Should this be particle or emitter? Currently we don't know which emitter launched particle,
     // that would need data addition.
     Q_PROPERTY(QQmlListProperty<QQuick3DParticle> particles READ particles)
-    // TODO: Is startTime & endTime worth the API?
-    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
-    Q_PROPERTY(int endTime READ endTime WRITE setEndTime NOTIFY endTimeChanged)
+    // When affector is not enabled, it doesn't do anything to particles.
+    // Default value true
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     QML_NAMED_ELEMENT(Affector3D)
     QML_UNCREATABLE("Affector3D is abstract")
     Q_INTERFACES(QQmlParserStatus)
@@ -71,8 +71,7 @@ public:
     ~QQuick3DParticleAffector() override;
 
     QQuick3DParticleSystem* system() const;
-    int startTime() const;
-    int endTime() const;
+    bool enabled() const;
 
     // Particles list handling
     QQmlListProperty<QQuick3DParticle> particles();
@@ -85,8 +84,7 @@ public:
 
 public Q_SLOTS:
     void setSystem(QQuick3DParticleSystem* system);
-    void setStartTime(int startTime);
-    void setEndTime(int endTime);
+    void setEnabled(bool enabled);
 
 protected:
     friend class QQuick3DParticleSystem;
@@ -95,21 +93,15 @@ protected:
     void classBegin() override {}
 
     virtual void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) = 0;
-    virtual bool shouldAffect(const QQuick3DParticleData &sd, float time);
-    float particleTime(float time);
 
 Q_SIGNALS:
     void update();
     void systemChanged();
-    void startTimeChanged();
-    void endTimeChanged();
+    void enabledChanged();
 
 protected:
     QQuick3DParticleSystem *m_system = nullptr;
-
-    // By default starts immediately and never ends
-    int m_startTime = 0;
-    int m_endTime = AFFECTOR_MAX_TIME;
+    bool m_enabled = true;
 
     static void appendParticle(QQmlListProperty<QQuick3DParticle> *, QQuick3DParticle *);
     static qsizetype particleCount(QQmlListProperty<QQuick3DParticle> *);

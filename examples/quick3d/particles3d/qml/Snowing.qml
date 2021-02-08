@@ -141,10 +141,10 @@ Item {
             ParticleEmitter3D {
                 id: emitter
                 particle: snowParticle
-                position: Qt.vector3d(0, 1000,-200)
-                scale: Qt.vector3d(20.0, 0.1, 10.0)
+                position: Qt.vector3d(0, 1000, -350)
+                scale: Qt.vector3d(15.0, 0.0, 15.0)
                 shape: ParticleShape3D {
-                    type: ParticleShape3D.Cube
+                    type: ParticleShape3D.Sphere
                 }
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(50, 50, 50);
@@ -157,6 +157,7 @@ Item {
                 lifeSpan: 15000
             }
             Wander3D {
+                enabled: checkBoxWanderEnabled.checked
                 globalAmount: Qt.vector3d(sliderWanderGlobalAmount.sliderValue, 0, sliderWanderGlobalAmount.sliderValue)
                 globalPace: Qt.vector3d(sliderWanderGlobalPace.sliderValue, 0, sliderWanderGlobalPace.sliderValue)
                 uniqueAmount: Qt.vector3d(sliderWanderUniqueAmount.sliderValue, 0, sliderWanderUniqueAmount.sliderValue)
@@ -165,7 +166,8 @@ Item {
                 uniquePaceVariation: sliderWanderUniquePaceVariation.sliderValue
             }
             PointRotator3D {
-                pivotPoint: Qt.vector3d(0, 0, 0)
+                enabled: checkBoxRotatorEnabled.checked
+                pivotPoint: Qt.vector3d(0, 0, -350)
                 direction: Qt.vector3d(0, 1, 0)
                 magnitude: sliderRotatorMagnitude.sliderValue
             }
@@ -230,6 +232,11 @@ Item {
             sliderValue: 0
             fromValue: -200
             toValue: 200
+        }
+        CustomCheckBox {
+            id: checkBoxWanderEnabled
+            text: "Wander: enabled"
+            checked: true
         }
         Text {
             color: "#222840"
@@ -296,6 +303,11 @@ Item {
             sliderValue: 0.5
             fromValue: 0.0
             toValue: 1.0
+        }
+        CustomCheckBox {
+            id: checkBoxRotatorEnabled
+            text: "PointRotator: enabled"
+            checked: true
         }
         Text {
             color: "#222840"

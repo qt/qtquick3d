@@ -65,70 +65,25 @@ void QQuick3DParticleAffector::setSystem(QQuick3DParticleSystem* system)
     update();
 }
 
-int QQuick3DParticleAffector::startTime() const
+bool QQuick3DParticleAffector::enabled() const
 {
-    return m_startTime;
+    return m_enabled;
 }
 
-void QQuick3DParticleAffector::setStartTime(int startTime)
+void QQuick3DParticleAffector::setEnabled(bool enabled)
 {
-    if (m_startTime == startTime)
+    if (m_enabled == enabled)
         return;
 
-    m_startTime = startTime;
-    Q_EMIT startTimeChanged();
-
-    // endTime must always be >= starttime
-    if (m_startTime > m_endTime)
-        setEndTime(m_startTime);
-}
-
-int QQuick3DParticleAffector::endTime() const
-{
-    return m_endTime;
-}
-
-void QQuick3DParticleAffector::setEndTime(int endTime)
-{
-    if (m_endTime == endTime)
-        return;
-
-    m_endTime = endTime;
-    Q_EMIT endTimeChanged();
-
-    // endTime must always be >= starttime
-    if (m_endTime < m_startTime)
-        setStartTime(m_endTime);
+    m_enabled = enabled;
+    Q_EMIT enabledChanged();
+    update();
 }
 
 void QQuick3DParticleAffector::componentComplete()
 {
     if (!m_system && qobject_cast<QQuick3DParticleSystem*>(parent()))
         setSystem(qobject_cast<QQuick3DParticleSystem*>(parent()));
-}
-
-// Returns true if particle is currently alive
-bool QQuick3DParticleAffector::shouldAffect(const QQuick3DParticleData &sd, float time)
-{
-    Q_UNUSED(sd);
-    if (time < 0.0f)
-        return false;
-
-    int timeMs = time * 1000.0;
-
-    if (m_startTime > timeMs)
-        return false;
-
-    return true;
-}
-
-// Returns current particle time local to this affector
-// If affector endTime has been reached, return time at the end
-float QQuick3DParticleAffector::particleTime(float time)
-{
-    float at = time - (m_startTime / 1000.0);
-    at = std::min(at, float((m_endTime - m_startTime) / 1000.0));
-    return at;
 }
 
 // Particles

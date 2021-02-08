@@ -397,8 +397,8 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             // Affectors
             for (auto affector : qAsConst(m_affectors)) {
                 // If affector is set to affect only particular particles, check these are included
-                if (affector->m_particles.isEmpty() || affector->m_particles.contains(particle))
-                    affector->affectParticle(*d, &currentData, timeS);
+                if (affector->m_enabled && (affector->m_particles.isEmpty() || affector->m_particles.contains(particle)))
+                    affector->affectParticle(*d, &currentData, particleTimeS);
             }
 
             // Add a base rotation if alignment requested
