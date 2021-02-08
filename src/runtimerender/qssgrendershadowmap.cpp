@@ -73,12 +73,13 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                                             ShadowMapModes mode)
 {
     const QSSGRef<QSSGResourceManager> &theManager(m_context.resourceManager());
-    QRhi *rhi = m_context.rhiContext()->isValid()
-            ? m_context.rhiContext()->rhi()
-            : nullptr;
+    QRhi *rhi = m_context.rhiContext()->rhi();
+    // Bail out if there is no QRhi, since we can't add entries without it
+    if (!rhi)
+        return;
 
     QRhiTexture::Format rhiFormat = QRhiTexture::R16F;
-    if (rhi && !rhi->isTextureFormatSupported(rhiFormat))
+    if (!rhi->isTextureFormatSupported(rhiFormat))
         rhiFormat = QRhiTexture::R16;
 
     // This function is called once per shadow casting light on every layer
