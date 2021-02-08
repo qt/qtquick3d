@@ -153,12 +153,12 @@ public:
 
 
 public Q_SLOTS:
-    void setAntialiasingMode(QQuick3DEnvironmentAAModeValues antialiasingMode);
-    void setAntialiasingQuality(QQuick3DEnvironmentAAQualityValues antialiasingQuality);
+    void setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode);
+    void setAntialiasingQuality(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues antialiasingQuality);
     void setTemporalAAEnabled(bool temporalAAEnabled);
     void setTemporalAAStrength(float strength);
 
-    void setBackgroundMode(QQuick3DEnvironmentBackgroundTypes backgroundMode);
+    void setBackgroundMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes backgroundMode);
     void setClearColor(const QColor &clearColor);
 
     void setAoStrength(float aoStrength);
@@ -176,7 +176,7 @@ public Q_SLOTS:
     void setDepthTestEnabled(bool depthTestEnabled);
     void setDepthPrePassEnabled(bool depthPrePassEnabled);
 
-    void setTonemapMode(QQuick3DEnvironmentTonemapModes tonemapMode);
+    void setTonemapMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes tonemapMode);
 
 Q_SIGNALS:
     void antialiasingModeChanged();

@@ -83,11 +83,11 @@ public:
 
 public Q_SLOTS:
     void setLightProbe(QQuick3DTexture *lightProbe);
-    void setCullMode(CullMode cullMode);
+    void setCullMode(QQuick3DMaterial::CullMode cullMode);
 
 Q_SIGNALS:
     void lightProbeChanged(QQuick3DTexture *lightProbe);
-    void cullModeChanged(CullMode cullMode);
+    void cullModeChanged(QQuick3DMaterial::CullMode cullMode);
 
 protected:
     explicit QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);

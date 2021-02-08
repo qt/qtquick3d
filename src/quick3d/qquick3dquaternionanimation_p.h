@@ -105,7 +105,7 @@ public:
     void setToZRotation(float f);
 
 Q_SIGNALS:
-    void typeChanged(Type type);
+    void typeChanged(QQuick3DQuaternionAnimation::Type type);
     void fromXRotationChanged(float value);
     void fromYRotationChanged(float value);
     void fromZRotationChanged(float value);

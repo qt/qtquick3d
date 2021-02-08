@@ -145,8 +145,8 @@ public:
 
 public Q_SLOTS:
 
-    void setLighting(Lighting lighting);
-    void setBlendMode(BlendMode blendMode);
+    void setLighting(QQuick3DDefaultMaterial::Lighting lighting);
+    void setBlendMode(QQuick3DDefaultMaterial::BlendMode blendMode);
     void setDiffuseColor(QColor diffuseColor);
     void setDiffuseMap(QQuick3DTexture *diffuseMap);
     void setEmissiveFactor(float emissiveFactor);
@@ -155,7 +155,7 @@ public Q_SLOTS:
     void setEmissiveColor(QColor emissiveColor);
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
     void setSpecularMap(QQuick3DTexture *specularMap);
-    void setSpecularModel(SpecularModel specularModel);
+    void setSpecularModel(QQuick3DDefaultMaterial::SpecularModel specularModel);
     void setSpecularTint(QColor specularTint);
     void setIndexOfRefraction(float indexOfRefraction);
     void setFresnelPower(float fresnelPower);
@@ -173,16 +173,16 @@ public Q_SLOTS:
     void setDiffuseLightWrap(float diffuseLightWrap);
     void setVertexColorsEnabled(bool vertexColorsEnabled);
 
-    Q_REVISION(1, 1) void setRoughnessChannel(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setOpacityChannel(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setTranslucencyChannel(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setRoughnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setOpacityChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void setTranslucencyChannel(QQuick3DMaterial::TextureChannelMapping channel);
 
     void setPointSize(float size);
     void setLineWidth(float width);
 
 Q_SIGNALS:
-    void lightingChanged(Lighting lighting);
-    void blendModeChanged(BlendMode blendMode);
+    void lightingChanged(QQuick3DDefaultMaterial::Lighting lighting);
+    void blendModeChanged(QQuick3DDefaultMaterial::BlendMode blendMode);
     void diffuseColorChanged(QColor diffuseColor);
     void diffuseMapChanged(QQuick3DTexture *diffuseMap);
     void emissiveFactorChanged(float emissiveFactor);
@@ -190,7 +190,7 @@ Q_SIGNALS:
     void emissiveColorChanged(QColor emissiveColor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
     void specularMapChanged(QQuick3DTexture *specularMap);
-    void specularModelChanged(SpecularModel specularModel);
+    void specularModelChanged(QQuick3DDefaultMaterial::SpecularModel specularModel);
     void specularTintChanged(QColor specularTint);
     void indexOfRefractionChanged(float indexOfRefraction);
     void fresnelPowerChanged(float fresnelPower);
@@ -206,9 +206,9 @@ Q_SIGNALS:
     void translucentFalloffChanged(float translucentFalloff);
     void diffuseLightWrapChanged(float diffuseLightWrap);
     void vertexColorsEnabledChanged(bool vertexColorsEnabled);
-    Q_REVISION(1, 1) void roughnessChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void opacityChannelChanged(TextureChannelMapping channel);
-    Q_REVISION(1, 1) void translucencyChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(1, 1) void roughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void opacityChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(1, 1) void translucencyChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     void pointSizeChanged();
     void lineWidthChanged();
 

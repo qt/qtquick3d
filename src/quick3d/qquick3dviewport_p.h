@@ -120,7 +120,7 @@ public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);
     void setEnvironment(QQuick3DSceneEnvironment * environment);
     void setImportScene(QQuick3DNode *inScene);
-    void setRenderMode(RenderMode renderMode);
+    void setRenderMode(QQuick3DViewport::RenderMode renderMode);
     void cleanupDirectRenderer();
 
 private Q_SLOTS:

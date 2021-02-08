@@ -105,11 +105,11 @@ public:
     float lineWidth() const;
 
 public Q_SLOTS:
-    void setShadingMode(ShadingMode mode);
+    void setShadingMode(QQuick3DCustomMaterial::ShadingMode mode);
     void setVertexShader(const QUrl &url);
     void setFragmentShader(const QUrl &url);
-    void setSrcBlend(BlendMode mode);
-    void setDstBlend(BlendMode mode);
+    void setSrcBlend(QQuick3DCustomMaterial::BlendMode mode);
+    void setDstBlend(QQuick3DCustomMaterial::BlendMode mode);
     void setAlwaysDirty(bool alwaysDirty);
     void setLineWidth(float width);
 

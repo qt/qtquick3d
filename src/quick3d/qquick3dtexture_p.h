@@ -134,9 +134,9 @@ public Q_SLOTS:
     void setSourceItem(QQuickItem *sourceItem);
     void setScaleU(float scaleU);
     void setScaleV(float scaleV);
-    void setMappingMode(MappingMode mappingMode);
-    void setHorizontalTiling(TilingMode tilingModeHorizontal);
-    void setVerticalTiling(TilingMode tilingModeVertical);
+    void setMappingMode(QQuick3DTexture::MappingMode mappingMode);
+    void setHorizontalTiling(QQuick3DTexture::TilingMode tilingModeHorizontal);
+    void setVerticalTiling(QQuick3DTexture::TilingMode tilingModeVertical);
     void setRotationUV(float rotationUV);
     void setPositionU(float positionU);
     void setPositionV(float positionV);
@@ -144,9 +144,9 @@ public Q_SLOTS:
     void setPivotV(float pivotV);
     void setFlipV(bool flipV);
     void setIndexUV(int indexUV);
-    void setMagFilter(Filter magFilter);
-    void setMinFilter(Filter minFilter);
-    void setMipFilter(Filter mipFilter);
+    void setMagFilter(QQuick3DTexture::Filter magFilter);
+    void setMinFilter(QQuick3DTexture::Filter minFilter);
+    void setMipFilter(QQuick3DTexture::Filter mipFilter);
     void setTextureData(QQuick3DTextureData * textureData);
     void setGenerateMipmaps(bool generateMipmaps);
 

@@ -76,7 +76,7 @@ public:
 
 public Q_SLOTS:
     void setFill(bool fill);
-    void setType(ShapeType type);
+    void setType(QQuick3DParticleShape::ShapeType type);
 
 protected:
     // From QQmlParserStatus
