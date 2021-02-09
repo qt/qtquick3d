@@ -413,6 +413,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
     principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
+    principledMaterial->insert(QStringLiteral("occlusionAmount"), 1.0f);
 
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 

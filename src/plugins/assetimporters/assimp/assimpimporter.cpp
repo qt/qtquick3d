@@ -1530,9 +1530,16 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         QString bumpMapImage = generateImage(material, aiTextureType_HEIGHT, 0, tabLevel + 1);
         if (!bumpMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("bumpMap: ") << bumpMapImage;
-
         // bumpAmount AI_MATKEY_BUMPSCALING
-
+        ai_real bumpAmount;
+        result = material->Get(AI_MATKEY_BUMPSCALING, bumpAmount);
+        if (result == aiReturn_SUCCESS) {
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                     tabLevel + 1,
+                                                     QSSGQmlUtilities::PropertyMap::DefaultMaterial,
+                                                     QStringLiteral("bumpAmount"),
+                                                     bumpAmount);
+        }
         // normalMap aiTextureType_NORMALS 0
         QString normalMapImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
         if (!normalMapImage.isNull())
@@ -1597,8 +1604,18 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 
         {
             QString normalTextureImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
-            if (!normalTextureImage.isNull())
+            if (!normalTextureImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("normalMap: ") << normalTextureImage << QStringLiteral("\n");
+                ai_real normalScale;
+                result = material->Get(AI_MATKEY_GLTF_TEXTURE_SCALE(aiTextureType_NORMALS, 0), normalScale);
+                if (result == aiReturn_SUCCESS) {
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("normalStrength"),
+                                                             normalScale);
+                }
+            }
         }
 
         // Occlusion Textures are not implimented (yet)
@@ -1607,6 +1624,15 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             if (!occlusionTextureImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionMap: ") << occlusionTextureImage << QStringLiteral("\n");
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("occlusionChannel: Material.R\n");
+                ai_real occlusionAmount;
+                result = material->Get(AI_MATKEY_GLTF_TEXTURE_STRENGTH(aiTextureType_LIGHTMAP, 0), occlusionAmount);
+                if (result == aiReturn_SUCCESS) {
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("occlusionAmount"),
+                                                             occlusionAmount);
+                }
             }
         }
 
