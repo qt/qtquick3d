@@ -98,6 +98,11 @@ static inline void insertFragmentMainArgs(QByteArray &snippet)
     insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList);
 }
 
+static inline void insertPostProcessorArgs(QByteArray &snippet)
+{
+    insertProcessorArgs(snippet, "/*%QT_ARGS_POST_PROCESS%*/", QSSGMaterialShaderGenerator::postProcessorArgumentList);
+}
+
 static inline void insertVertexMainArgs(QByteArray &snippet)
 {
     insertProcessorArgs(snippet, "/*%QT_ARGS_MAIN%*/", QSSGMaterialShaderGenerator::vertexMainArgumentList);
@@ -330,6 +335,7 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShade
             insertPointLightProcessorArgs(snippet);
             insertDirectionalLightProcessorArgs(snippet);
             insertFragmentMainArgs(snippet);
+            insertPostProcessorArgs(snippet);
         }
         fragment() << snippet;
     }

@@ -551,7 +551,7 @@ QT_BEGIN_NAMESPACE
     \li vec2 \c UV0 - The first set of texture coordinates from the vertex shader.
     This property is readonly in the fragment shader.
 
-    \li vec2 \c UV1 - The second set of texture coordinates in the vertex shader.
+    \li vec2 \c UV1 - The second set of texture coordinates from the vertex shader.
     This property is readonly in the fragment shader.
 
     \endlist
@@ -782,7 +782,47 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
+    \li \c{void POST_PROCESS()} When present, this function is called at the
+    end of the fragment pipeline. The task of the function is to finalize
+    \c COLOR_SUM with final diffuse, specular and emissive terms. Unlike
+    \c FRAGCOLOR for a unshaded material, \c COLOR_SUM will be automatically
+    tonemapped before written to the framebuffer. For debugging purposes it is
+    sometimes useful to output a value that should not be treated as a color.
+    To avoid the tonemapping distorting this value it can be disabled by
+    setting the \l {SceneEnvironment::tonemapMode}{tonemapMode} property
+    to \c TonemapModeNone
+
+    The function can write to the following special variables:
+
+    \list
+    \li vec4 \c COLOR_SUM the output from the fragment shader. The default value
+    is vec4(DIFFUSE.rgb + SPECULAR + EMISSIVE, DIFFUSE.a)
     \endlist
+
+    The function can read the following special variables.
+
+    \list
+    \li vec4 \c DIFFUSE The final diffuse term of the fragment pipeline.
+    \li vec3 \c SPECULAR The final specular term of the fragment pipeline.
+    \li vec3 \c EMISSIVE The final emissive term of the fragment pipeline.
+    \li vec2 \c UV0 - The first set of texture coordinates from the vertex shader.
+    \li vec2 \c UV1 - The second set of texture coordinates from the vertex shader.
+    \endlist
+
+    \badcode
+        void POST_PROCESS()
+        {
+            float center_x = textureSize(SCREEN_TEXTURE, 0).x * 0.5;
+            if (gl_FragCoord.x > center_x)
+                COLOR_SUM = DIFFUSE;
+            else
+                COLOR_SUM = vec4(EMISSIVE, DIFFUSE.a);
+        }
+    \endcode
+
+    \endlist
+
+    \sa SceneEnvironment::tonemapMode
 
     \section2 Additional special keywords
 

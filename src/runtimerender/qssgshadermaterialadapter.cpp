@@ -417,6 +417,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     { "AMBIENT_LIGHT", "qt_ambientLightProcessor" },
     { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
     { "MAIN", "qt_customMain" },
+    { "POST_PROCESS", "qt_customPostProcessor" },
 
     // textures
     { "SCREEN_TEXTURE", "qt_screenTexture" },
@@ -475,7 +476,8 @@ static std::vector<QByteArray> qssg_func_injectarg_tab = {
     "SPOT_LIGHT",
     "AMBIENT_LIGHT",
     "SPECULAR_LIGHT",
-    "MAIN"
+    "MAIN",
+    "POST_PROCESS"
 };
 
 // This is based on the Qt Quick shader rewriter (with fixes)

@@ -389,6 +389,11 @@ const char *QSSGMaterialShaderGenerator::shadedFragmentMainArgumentList()
     return "inout vec4 BASE_COLOR, inout vec3 EMISSIVE_COLOR, inout float METALNESS, inout float ROUGHNESS, inout float SPECULAR_AMOUNT, inout float FRESNEL_POWER, inout vec3 NORMAL, inout vec3 TANGENT, inout vec3 BINORMAL, in vec2 UV0, in vec2 UV1, in vec3 VIEW_VECTOR";
 }
 
+const char *QSSGMaterialShaderGenerator::postProcessorArgumentList()
+{
+    return "inout vec4 COLOR_SUM, in vec4 DIFFUSE, in vec3 SPECULAR, in vec3 EMISSIVE, in vec2 UV0, in vec2 UV1";
+}
+
 const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
 {
     return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout ivec4 JOINTS, inout vec4 WEIGHTS, inout vec4 COLOR";
@@ -646,8 +651,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                               " qt_varTexCoord0, qt_varTexCoord1, qt_view_vector);\n";
         }
         fragmentShader << "    vec4 qt_diffuseColor = qt_customBaseColor * qt_vertColor;\n";
+        fragmentShader << "    vec3 qt_global_emission = qt_customEmissiveColor;\n";
     } else {
         fragmentShader << "    vec4 qt_diffuseColor = qt_material_base_color * qt_vertColor;\n";
+        fragmentShader << "    vec3 qt_global_emission = qt_material_emissive_color;\n";
     }
 
     if (isDepthPass)
@@ -694,9 +701,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addFunction("sampleNormalTexture");
             fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", normalStrength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
         }
-
-        if (hasEmissiveMap)
-            fragmentShader.append("    vec3 qt_global_emission = qt_material_emissive_color;");
 
         fragmentShader.append("    vec3 tmp_light_color;");
     }
@@ -1053,17 +1057,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // multiplied by the alpha from the material color and/or the vertex colors.
         fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * qt_aoFactor, qt_objectOpacity * qt_diffuseColor.a);\n";
 
-        if (!hasEmissiveMap) {
-            if (hasCustomFrag) {
-                // Cannot have a (built-in) emissive map with a custom
-                // material, but it can provide a custom value for the emissive
-                // color in MAIN. Otherwise the default vec3(0.0) will cause
-                // this to do nothing effectively.
-                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_customEmissiveColor;\n";
-            } else {
-                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_material_emissive_color;\n";
-            }
-        }
+        if (!hasEmissiveMap)
+            fragmentShader << "    qt_global_emission *= qt_diffuseColor.rgb;\n";
 
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
@@ -1140,20 +1135,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
             fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * qt_ao, qt_material_properties3.x);\n";
+            fragmentShader << "    qt_global_emission = mix(qt_global_emission, qt_global_emission * qt_ao, qt_material_properties3.x);\n";
         }
 
         if (materialAdapter->isPrincipled()) {
             fragmentShader << "    global_diffuse_light.rgb *= 1.0 - qt_metalnessAmount;\n";
         }
 
-        if (hasEmissiveMap)
-            fragmentShader.append("    global_diffuse_light.rgb += qt_global_emission.rgb;");
+        fragmentShader << "    vec4 qt_color_sum = vec4(global_diffuse_light.rgb + global_specular_light + qt_global_emission, global_diffuse_light.a);\n";
+        if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_customPostProcessor"))) {
+            // COLOR_SUM, DIFFUSE, SPECULAR, EMISSIVE, UV0, UV1
+            fragmentShader << "    qt_customPostProcessor(qt_color_sum, global_diffuse_light, global_specular_light, qt_global_emission, qt_varTexCoord0, qt_varTexCoord1);\n";
+        }
 
         Q_ASSERT(!isDepthPass && !isOrthoShadowPass && !isCubeShadowPass);
         fragmentShader.addInclude("tonemapping.glsllib");
-        fragmentShader.append("    fragOutput = vec4(qt_tonemap(global_diffuse_light.rgb + global_specular_light.rgb), global_diffuse_light.a);");
-
-
+        fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
 
 #if 0
         // ### Debug Code for viewing various parts of the shading process
