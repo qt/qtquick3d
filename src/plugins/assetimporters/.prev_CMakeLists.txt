@@ -1,7 +1,0 @@
-# Generated from assetimporters.pro.
-
-add_subdirectory(uip)
-add_subdirectory(iblbaker)
-if(QT_FEATURE_quick3d_assimp)
-    add_subdirectory(assimp)
-endif()
