@@ -1913,6 +1913,13 @@ QString aiTilingMode(int tilingMode) {
 }
 }
 
+#define AI_GLTF_FILTER_NEAREST                  0x2600
+#define AI_GLTF_FILTER_LINEAR                   0x2601
+#define AI_GLTF_FILTER_NEAREST_MIPMAP_NEAREST   0x2700
+#define AI_GLTF_FILTER_LINEAR_MIPMAP_NEAREST    0x2701
+#define AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR    0x2702
+#define AI_GLTF_FILTER_LINEAR_MIPMAP_LINEAR     0x2703
+
 QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel)
 {
     // Figure out if there is actually something to generate
@@ -2090,8 +2097,66 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     //int textureFlags;
     //material->Get(AI_MATKEY_TEXFLAGS(textureType, index), textureFlags);
 
+    bool isMipmapGenerated = false;
+    const QString texLinear = QStringLiteral("Texture.Linear");
+    const QString texNearest = QStringLiteral("Texture.Nearest");
+    const QString texNone = QStringLiteral("Texture.None");
+    if (m_gltfMode) {
+        // magFilter
+        unsigned int filterValue;
+        result = material->Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), filterValue);
+        if (result == aiReturn_SUCCESS) {
+            QString filterStr = texLinear;
+            if (filterValue == AI_GLTF_FILTER_NEAREST)
+                filterStr = texNearest;
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                     tabLevel + 1,
+                                                     QSSGQmlUtilities::PropertyMap::Texture,
+                                                     QStringLiteral("magFilter"),
+                                                     filterStr);
+        }
+        // minFilter
+        result = material->Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), filterValue);
+        if (result == aiReturn_SUCCESS) {
+            QString minFilterStr = texLinear;
+            QString mipFilterStr = texNone;
+            if (filterValue == AI_GLTF_FILTER_NEAREST) {
+                minFilterStr = texNearest;
+            } else if (filterValue == AI_GLTF_FILTER_NEAREST_MIPMAP_NEAREST) {
+                minFilterStr = texNearest;
+                mipFilterStr = texNearest;
+            } else if (filterValue == AI_GLTF_FILTER_LINEAR_MIPMAP_NEAREST) {
+                mipFilterStr = texNearest;
+            } else if (filterValue == AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR) {
+                minFilterStr = texNearest;
+                mipFilterStr = texLinear;
+            } else if (filterValue == AI_GLTF_FILTER_LINEAR_MIPMAP_LINEAR) {
+                mipFilterStr = texLinear;
+            }
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                     tabLevel + 1,
+                                                     QSSGQmlUtilities::PropertyMap::Texture,
+                                                     QStringLiteral("minFilter"),
+                                                     minFilterStr);
+            // mipFilter
+            if (mipFilterStr != texNone) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::Texture,
+                                                         QStringLiteral("generateMipmaps"),
+                                                         true);
+                isMipmapGenerated = true;
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::Texture,
+                                                         QStringLiteral("mipFilter"),
+                                                         mipFilterStr);
+            }
+        }
+    }
+
     // Always generate and use mipmaps for imported assets
-    if (m_forceMipMapGeneration) {
+    if (m_forceMipMapGeneration && !isMipmapGenerated) {
         QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                  tabLevel + 1,
                                                  QSSGQmlUtilities::PropertyMap::Texture,
