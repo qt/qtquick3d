@@ -34,6 +34,10 @@
 #endif
 #include <QtQuick/qquickwindow.h>
 
+#include <QtCore/qloggingcategory.h>
+
+Q_LOGGING_CATEGORY(lcQuick3D, "qt.quick3d.general")
+
 /*!
     \class QQuick3D
     \inmodule QtQuick3D
@@ -101,7 +105,7 @@ static QSurfaceFormat findIdealGLVersion(int samples)
     QOpenGLContext ctx;
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
-        qDebug("Requesting OpenGL 4.3 core context succeeded");
+        qCDebug(lcQuick3D, "Requesting OpenGL 4.3 core context succeeded");
         return ctx.format();
     }
     if (multisampling) {
@@ -109,7 +113,7 @@ static QSurfaceFormat findIdealGLVersion(int samples)
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(4, 3)) {
-            qDebug("Requesting OpenGL 4.3 core context succeeded without multisampling");
+            qCDebug(lcQuick3D, "Requesting OpenGL 4.3 core context succeeded without multisampling");
             return ctx.format();
         }
     }
@@ -119,7 +123,7 @@ static QSurfaceFormat findIdealGLVersion(int samples)
     fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
-        qDebug("Requesting OpenGL 3.3 core context succeeded");
+        qCDebug(lcQuick3D, "Requesting OpenGL 3.3 core context succeeded");
         return ctx.format();
     }
     if (multisampling) {
@@ -127,7 +131,7 @@ static QSurfaceFormat findIdealGLVersion(int samples)
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 3)) {
-            qDebug("Requesting OpenGL 3.3 core context succeeded without multisampling");
+            qCDebug(lcQuick3D, "Requesting OpenGL 3.3 core context succeeded without multisampling");
             return ctx.format();
         }
     }
@@ -139,19 +143,19 @@ static QSurfaceFormat findIdealGLVersion(int samples)
     fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
-        qDebug("Requesting OpenGL 3.0 context succeeded");
+        qCDebug(lcQuick3D, "Requesting OpenGL 3.0 context succeeded");
         return ctx.format();
     }
     if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
-            qDebug("Requesting OpenGL 3.0 context succeeded without multisampling");
+            qCDebug(lcQuick3D, "Requesting OpenGL 3.0 context succeeded without multisampling");
             return ctx.format();
         }
     }
 
-    qDebug("Unable to find ideal GL version.");
+    qCWarning(lcQuick3D, "Unable to find ideal GL version.");
     return fmt;
 }
 
@@ -173,16 +177,16 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     // the 3.1 context request even though they only support and return a 3.0
     // context. This is against the spec since 3.0 is obviously not backwards
     // compatible with 3.1, but hey...
-    qDebug("Testing OpenGL ES 3.1");
+    qCDebug(lcQuick3D, "Testing OpenGL ES 3.1");
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
-        qDebug("Requesting OpenGL ES 3.1 context succeeded");
+        qCDebug(lcQuick3D, "Requesting OpenGL ES 3.1 context succeeded");
         return ctx.format();
     }
     if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 1)) {
-            qDebug("Requesting OpenGL ES 3.1 context succeeded without multisampling");
+            qCDebug(lcQuick3D, "Requesting OpenGL ES 3.1 context succeeded without multisampling");
             return ctx.format();
         }
     }
@@ -191,16 +195,16 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     fmt.setVersion(3, 0);
     fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
-    qDebug("Testing OpenGL ES 3.0");
+    qCDebug(lcQuick3D, "Testing OpenGL ES 3.0");
     if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
-        qDebug("Requesting OpenGL ES 3.0 context succeeded");
+        qCDebug(lcQuick3D, "Requesting OpenGL ES 3.0 context succeeded");
         return ctx.format();
     }
     if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create() && ctx.format().version() >= qMakePair(3, 0)) {
-            qDebug("Requesting OpenGL ES 3.0 context succeeded without multisampling");
+            qCDebug(lcQuick3D, "Requesting OpenGL ES 3.0 context succeeded without multisampling");
             return ctx.format();
         }
     }
@@ -209,21 +213,21 @@ static QSurfaceFormat findIdealGLESVersion(int samples)
     fmt.setVersion(2, 0);
     fmt.setSamples(multisampling ? samples : defaultSamples);
     ctx.setFormat(fmt);
-    qDebug("Testing OpenGL ES 2.0");
+    qCDebug(lcQuick3D, "Testing OpenGL ES 2.0");
     if (ctx.create()) {
-        qDebug("Requesting OpenGL ES 2.0 context succeeded");
+        qCDebug(lcQuick3D, "Requesting OpenGL ES 2.0 context succeeded");
         return fmt;
     }
     if (multisampling) {
         fmt.setSamples(defaultSamples);
         ctx.setFormat(fmt);
         if (ctx.create()) {
-            qDebug("Requesting OpenGL ES 2.0 context succeeded without multisampling");
+            qCDebug(lcQuick3D, "Requesting OpenGL ES 2.0 context succeeded without multisampling");
             return fmt;
         }
     }
 
-    qDebug("Unable to find ideal GLES version.");
+    qCWarning(lcQuick3D, "Unable to find ideal GLES version.");
     return fmt;
 }
 #endif // #if QT_CONFIG(opengl)
