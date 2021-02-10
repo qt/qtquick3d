@@ -1391,7 +1391,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         if (customMaterial->incompleteBuildTimeObject) { // This object came from the shadergen tool
             const auto names = dynamicPropertyNames();
-            QVector<QByteArray> textureNames;
             for (const auto &name : names) {
                 QVariant propValue = property(name.constData());
                 QMetaType propType = propValue.metaType();
