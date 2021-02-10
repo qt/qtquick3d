@@ -67,6 +67,32 @@ static const char *getShortFilename(const char *filename)
     return lastSlash ? lastSlash + 1 : filename;
 }
 
+static int textureNameToInt(const char *filename)
+{
+    if (!filename || *filename == '\0' || *filename != '*')
+        return -1;
+    bool ok = false;
+    const uint number = QVariant(filename + 1).toUInt(&ok);
+    return ok ? int(number) : -1;
+}
+
+// Returns the full path of the texture file in the 'maps' directory
+static QString getEmbeddedTexturePath(const char *filename, QString fallback)
+{
+    QString imageName;
+
+    const int asInt = textureNameToInt(filename);
+    if (asInt != -1) {
+        // Embedded texture is a number of the form '*123'
+        imageName = QString::number(asInt);
+    } else {
+        // Embedded texture is a filename, strip the stem
+        imageName = getShortFilename(filename);
+    }
+
+    return QStringLiteral("maps/") + imageName + QStringLiteral(".png");
+}
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 // QTextStream functions are moved to a namespace in Qt6
 using Qt::endl;
@@ -223,7 +249,9 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     for (uint i = 0; i < m_scene->mNumTextures; ++i) {
         aiTexture *texture = m_scene->mTextures[i];
         QImage image;
-        QString imageName;
+
+        // Note: if texture->mFilename is not set the texture could still be referenced by its index so we use that as a fallback.
+        const QString imagePath = getEmbeddedTexturePath(texture->mFilename.C_Str(), QString::number(i));
 
         if (texture->mHeight == 0) {
             // compressed format, try to load with Image Loader
@@ -236,23 +264,18 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
                 qWarning() << imageReader.errorString();
                 continue;
             }
-
-            // Check if the embedded texture is referenced by filename, if so we create a file with that filename which we can reference later
-            const char *filename = texture->mFilename.C_Str();
-
-            if (filename && *filename != '\0' && *filename != '*')
-                imageName = getShortFilename(filename);
-            else
-                imageName = QString::number(i);
-
         } else {
             // Raw format, just convert data to QImage
             image = QImage(reinterpret_cast<uchar *>(texture->pcData), texture->mWidth, texture->mHeight, QImage::Format_RGBA8888);
-            imageName = QString::number(i);
         }
 
-        const QString saveFileName = savePath.absolutePath() + QStringLiteral("/maps/") + imageName + QStringLiteral(".png");
+        const QString saveFileName = savePath.absolutePath() + "/" + imagePath;
         image.save(saveFileName);
+
+        // Note: We need to store both the index and the imagePath since the texture can be referenced later either by index or by filename.
+        m_embeddedTextureSources.insert(i, imagePath);
+        if (generatedFiles)
+            generatedFiles->push_back(saveFileName);
     }
 
     // Check for Cameras
@@ -396,8 +419,10 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         processNode(m_scene->mRootNode, output);
 
         targetFile.close();
-        if (generatedFiles)
+        if (generatedFiles) {
             *generatedFiles += targetFileName;
+            generatedFiles->append(m_generatedFiles);
+        }
     }
 
     return errorString;
@@ -1910,25 +1935,20 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (texturePath.length == 0)
         return QString();
     QString textureName = QString::fromUtf8(texturePath.C_Str());
+    const QString embeddedTexturePath = getEmbeddedTexturePath(texturePath.C_Str(), "");
+
     // Replace Windows separator to Unix separator
     // so that assets including Windows relative path can be converted on Unix.
     textureName.replace("\\","/");
     QString targetFileName;
-    const QString namedTextureFileName = QStringLiteral("maps/") + getShortFilename(textureName.toLatin1().constData())
-            + QStringLiteral(".png");
+
+    const int texId = textureNameToInt(texturePath.C_Str());
 
     // Is this an embedded texture or a file
-    if (textureName.startsWith("*")) {
-        // Embedded Texture (already exists)
-        textureName.remove(0, 1);
-        aiTexture *texture = m_scene->mTextures[textureName.toInt()];
-        const char *filename = texture->mFilename.C_Str();
-        if (filename && *filename != '\0' && *filename != '*')
-            textureName = getShortFilename(filename);
-        targetFileName =  QStringLiteral("maps/") + textureName + QStringLiteral(".png");
-    } else if (QFileInfo::exists(namedTextureFileName)) {
-        // This is an embedded texture, referenced by name in maps/ folder
-        targetFileName = namedTextureFileName;
+    if (m_embeddedTextureSources.contains(texId)) {
+        targetFileName = m_embeddedTextureSources.value(texId);
+    } else if (m_embeddedTextureSources.key(embeddedTexturePath, -1) != -1) {
+        targetFileName = embeddedTexturePath;
     } else {
         // File Reference (needs to be copied into component)
         // Check that this file exists
