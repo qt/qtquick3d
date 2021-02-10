@@ -1814,7 +1814,7 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
         if (filename && *filename != '\0' && *filename != '*')
             textureName = getShortFilename(filename);
         targetFileName =  QStringLiteral("maps/") + textureName + QStringLiteral(".png");
-    } else if (QFileInfo(namedTextureFileName).exists()) {
+    } else if (QFileInfo::exists(namedTextureFileName)) {
         // This is an embedded texture, referenced by name in maps/ folder
         targetFileName = namedTextureFileName;
     } else {
