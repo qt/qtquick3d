@@ -149,6 +149,8 @@ private:
     QDir m_savePath;
     QFileInfo m_sourceFile;
     QStringList m_generatedFiles;
+    QMap<int, QString> m_embeddedTextureSources; // id -> destination path
+
     bool m_gltfMode = false;
     bool m_gltfUsed = false;
     bool m_binaryKeyframes = false;
