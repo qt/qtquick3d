@@ -998,10 +998,10 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
     QByteArray targetBinormalData[8];
     QVector<SubsetEntryData> subsetData;
     quint32 baseIndex = 0;
-    QSSGMesh::Mesh::ComponentType indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt16;
-    // 0xFFFF is the primitive restart value, bump to uint32 already at that to avoid confusion
-    if (totalVertices >= std::numeric_limits<quint16>::max())
-        indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
+
+    // Always use 32-bit indices. Metal has a requirement of 4 byte alignment
+    // for index buffer offsets, and we cannot risk hitting that.
+    const QSSGMesh::Mesh::ComponentType indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
 
     const quint32 float32ByteSize = QSSGMesh::MeshInternal::byteSizeForComponentType(QSSGMesh::Mesh::ComponentType::Float32);
     for (const auto *mesh : meshes) {
