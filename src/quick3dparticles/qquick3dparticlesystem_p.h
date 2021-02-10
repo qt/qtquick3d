@@ -77,20 +77,11 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystem : public QQuick3DNode
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
-    // Start from some later time than 0ms. This will "warm up" the system.
-    // If startTime is set to 2000 and animating from 0 to 1000, actually animation goes 2000-3000ms.
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
-    // Manually animate the time. When using this, you usually want to set running to false.
     Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
-    // When true, every run of particlesystem is random. When false, particles are deterministic based
-    // on the seed value. Default value true.
     Q_PROPERTY(bool randomizeSeed READ randomizeSeed WRITE setRandomizeSeed NOTIFY randomizeSeedChanged)
-    // Seed used for randomization when randomizeSeed is false. Don't modify during the animation.
     Q_PROPERTY(int seed READ seed WRITE setSeed NOTIFY seedChanged)
-    // Set this to true if you want system to collect loggingData.
-    // Note: This has some performance impact, so should not be enabled in releases.
     Q_PROPERTY(bool logging READ logging WRITE setLogging NOTIFY loggingChanged)
-    // Logging data. Available only when when logging is set to true.
     Q_PROPERTY(QQuick3DParticleSystemLogging *loggingData READ loggingData NOTIFY loggingDataChanged)
     QML_NAMED_ELEMENT(ParticleSystem3D)
 

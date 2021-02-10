@@ -34,14 +34,16 @@ qhp.QtQuick3D.subprojects.classes.sortPages  = true
 depends += qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickcontrols qtshadertools qtquicktimeline
 
 headerdirs  += .. \
-               ../../../quick3d/
+               ../../../quick3d/ \
+               ../../../quick3dparticles/
 
 headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/randominstancing_p.h
 
 sourcedirs  += .. \
                src \
-               ../../../quick3d/
+               ../../../quick3d/ \
+               ../../../quick3dparticles/
 
 sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/randominstancing.cpp

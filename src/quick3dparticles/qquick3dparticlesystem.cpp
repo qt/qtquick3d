@@ -39,6 +39,45 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype ParticleSystem3D
+    \inherits Node
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief A system which includes particle, emitter, and affector types.
+
+    This element is the root of the particle system, which handles the system timing and groups all
+    the other related elements like particles, emitters, and affectors together. To group the system
+    elements, they either need to be direct children of the ParticleSystem3D like this:
+
+    \qml,
+    ParticleSystem3D {
+        ParticleEmitter3D {
+            ...
+        }
+        SpriteParticle3D {
+            ...
+        }
+    }
+    \endqml
+
+    Or if the system elements are not direct children, they need to use \c system property to point
+    which ParticleSystem3D they belong to. Like this:
+
+    \qml
+    ParticleSystem3D {
+        id: psystem
+    }
+    ParticleEmitter3D {
+        system: psystem
+        ...
+    }
+    SpriteParticle3D {
+        system: psystem
+        ...
+    }
+    \endqml
+*/
+
 QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     : QQuick3DNode(parent)
     , m_running(true)
@@ -76,33 +115,146 @@ QQuick3DParticleSystem::~QQuick3DParticleSystem()
         affector->setSystem(nullptr);
 }
 
+/*!
+    \qmlproperty bool ParticleSystem3D::running
+
+    This property defines if system is currently running. If running is set to \c false,
+    the particle system will stop the simulation. All particles will be destroyed when
+    the system is set to running again.
+
+    Running should be set to \c false when manually modifying/animating the \l {ParticleSystem3D::time}{time} property.
+
+    The default value is \c true.
+*/
 bool QQuick3DParticleSystem::isRunning() const
 {
     return m_running;
 }
+
+/*!
+    \qmlproperty bool ParticleSystem3D::paused
+
+    This property defines if system is currently paused. If paused is set to \c true, the
+    particle system will not advance the simulation. When paused is set to \c false again,
+    the simulation will resume from the same point where it was paused.
+
+    The default value is \c false.
+*/
 bool QQuick3DParticleSystem::isPaused() const
 {
     return m_paused;
 }
 
+/*!
+    \qmlproperty int ParticleSystem3D::startTime
+
+    This property defines time in milliseconds where the system starts. This can be useful
+    to warm up the system so that a set of particles has already been emitted. If for example
+    \l startTime is set to 2000 and system \l time is animating from 0 to 1000, actually
+    animation shows particles from 2000 to 3000ms.
+
+    The default value is \c 0.
+*/
 int QQuick3DParticleSystem::startTime() const
 {
     return m_startTime;
 }
 
+/*!
+    \qmlproperty int ParticleSystem3D::time
+
+    This property defines time in milliseconds for the system.
+    \note When modifying the time property, \l {ParticleSystem3D::running}{running}
+    should usually be set to \c false.
+
+    Here is an example how to manually animate the system for 3 seconds, in a loop, at half speed:
+
+    \qml
+    ParticleSystem3D {
+        running: false
+        NumberAnimation on time {
+            loops: Animation.Infinite
+            from: 0
+            to: 3000
+            duration: 6000
+        }
+    }
+    \endqml
+*/
 int QQuick3DParticleSystem::time() const
 {
     return m_time;
 }
 
+/*!
+    \qmlproperty bool ParticleSystem3D::randomizeSeed
+
+    This property defines if particle system seed should be random or user defined.
+    When \c true, a new random value for \l {ParticleSystem3D::seed}{seed} is generated every time particle
+    system is restarted.
+
+    The default value is \c true.
+
+    \note This property should not be modified during the particle animations.
+
+    \sa seed
+*/
 bool QQuick3DParticleSystem::randomizeSeed() const
 {
     return m_randomizeSeed;
 }
 
+/*!
+    \qmlproperty int ParticleSystem3D::seed
+
+    This property defines the seed value used for particles randomization. With the same seed,
+    particles effect will be identical on every run. This is useful when deterministic behavior
+    is desired over random behavior.
+
+    The default value is \c 0 when \l {ParticleSystem3D::randomizeSeed}{randomizeSeed} is set to
+    \c false, and something in between \c 1..INT32_MAX when \l {ParticleSystem3D::randomizeSeed}{randomizeSeed}
+    is set to \c true.
+
+    \note This property should not be modified during the particle animations.
+
+    \sa randomizeSeed
+*/
 int QQuick3DParticleSystem::seed() const
 {
     return m_seed;
+}
+
+/*!
+    \qmlproperty bool ParticleSystem3D::logging
+
+    Set this to true to collect \l {ParticleSystem3D::loggingData}{loggingData}.
+
+    \note This property has some performance impact, so it should not be enabled in releases.
+
+    The default value is \c false.
+
+    \sa loggingData
+*/
+bool QQuick3DParticleSystem::logging() const
+{
+    return m_logging;
+}
+
+/*!
+    \qmlproperty ParticleSystem3DLogging ParticleSystem3D::loggingData
+    \readonly
+
+    This property contains logging data which can be useful when developing and optimizing
+    the particle effects.
+
+    \note This property contains correct data only when \l {ParticleSystem3D::logging}{logging} is set
+    to \c true and particle system is running.
+
+    \sa logging
+*/
+QQuick3DParticleSystemLogging *QQuick3DParticleSystem::loggingData() const
+{
+    return m_loggingData;
 }
 
 void QQuick3DParticleSystem::setRunning(bool arg)
@@ -181,6 +333,24 @@ void QQuick3DParticleSystem::setSeed(int seed)
     m_seed = seed;
     m_rand.init(m_seed);
     Q_EMIT seedChanged();
+}
+
+void QQuick3DParticleSystem::setLogging(bool logging)
+{
+    if (m_logging == logging)
+        return;
+
+    m_logging = logging;
+
+    resetLoggingVariables();
+    m_loggingData->resetData();
+
+    if (m_logging) {
+        m_loggingTimer.start();
+    } else {
+        m_loggingTimer.stop();
+    }
+    Q_EMIT loggingChanged();
 }
 
 void QQuick3DParticleSystem::componentComplete()
@@ -489,34 +659,6 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         emitter->clearBursts();
 
     m_timeAnimation += m_perfTimer.nsecsElapsed();
-}
-
-bool QQuick3DParticleSystem::logging() const
-{
-    return m_logging;
-}
-
-void QQuick3DParticleSystem::setLogging(bool logging)
-{
-    if (m_logging == logging)
-        return;
-
-    m_logging = logging;
-
-    resetLoggingVariables();
-    m_loggingData->resetData();
-
-    if (m_logging) {
-        m_loggingTimer.start();
-    } else {
-        m_loggingTimer.stop();
-    }
-    Q_EMIT loggingChanged();
-}
-
-QQuick3DParticleSystemLogging *QQuick3DParticleSystem::loggingData() const
-{
-    return m_loggingData;
 }
 
 void QQuick3DParticleSystem::updateLoggingData()

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -26,53 +26,11 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQuick3D
-\title Qt Quick 3D QML Types
-\brief Provides the QML types to include 3D items into a Qt Quick scene.
+    \qmlmodule QtQuick3D.Particles3D
+    \title Qt Quick 3D Particles3D QML Types (Technology Preview)
+    \brief Module containing Particles for the Qt Quick 3D.
 
-This is the QML frontend for using the spatial renderer and scenegraph. For the
-time being, all 3D content goes through offscreen textures (FBO)s so that they
-can be composed into Qt Quick scenes (as a QQuickItem).
+    This module provides particles using \l{Qt Quick 3D}.
 
-Qt Quick 3D provides the following QML types:
-
-\section1 QtQuick3D QML Types
-
-Import the QtQuick3D module with the following statement:
-
-\code
-import QtQuick3D
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D
-
-\code
-import QtQuick3D.Effects
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Effects
-
-\section1 QtQuick3D.Helpers QML Types
-
-Import the QtQuick3D.Helpers module with the following statement:
-
-\code
-import QtQuick3D.Helpers
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Helpers
-
-\section1 QtQuick3D.Particles3D QML Types
-
-\note This module is still in development and is provided as a technology preview.
-
-Import the QtQuick3D.Particles3D module with the following statement:
-
-\code
-import QtQuick3D.Particles3D
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Particles3D
-
-\noautolist
+    \note This module is still in development and is provided as a technology preview.
 */
