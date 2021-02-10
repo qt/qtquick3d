@@ -14,4 +14,5 @@ qt_internal_add_tool(${target_name}
         Qt::OpenGL # special case
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
+        Qt::Quick3DIblBakerPrivate
 )

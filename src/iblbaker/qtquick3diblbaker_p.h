@@ -27,16 +27,34 @@
 **
 ****************************************************************************/
 
-#include "iblbakerassetimporterplugin.h"
-#include "iblbakerimporter.h"
+#ifndef QTQUICK3DIBLBAKERGLOBAL_H
+#define QTQUICK3DIBLBAKERGLOBAL_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-QSSGAssetImporter *IblBakerAssetImporterPlugin::create(const QString &key, const QStringList &paramList)
-{
-    Q_UNUSED(key)
-    Q_UNUSED(paramList)
-    return new IblBakerImporter();
-}
+#ifndef QT_STATIC
+#if defined(QT_BUILD_QUICK3DIBLBAKER_LIB)
+#define Q_QUICK3DIBLBAKER_EXPORT Q_DECL_EXPORT
+#else
+#define Q_QUICK3DIBLBAKER_EXPORT Q_DECL_IMPORT
+#endif
+#else
+#define Q_QUICK3DIBLBAKER_EXPORT
+#endif
 
 QT_END_NAMESPACE
+
+#endif // QTQUICK3DIBLBAKERGLOBAL_H
