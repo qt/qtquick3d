@@ -54,6 +54,7 @@ provided by the following module imports:
 \code
 import QtQuick3D.Effects
 import QtQuick3D.Helpers
+import QtQuick3D.Particles3D
 \endcode
 
 \section1 Building From Source
@@ -106,6 +107,7 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D C++ Classes}
     \li \l{Qt Quick 3D Helpers QML Types}
     \li \l{Qt Quick 3D Effects QML Types}
+    \li \l{Qt Quick 3D Particles3D QML Types (Technology Preview)}
 \endlist
 
 \section1 Examples

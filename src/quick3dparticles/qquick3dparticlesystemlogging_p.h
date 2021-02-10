@@ -66,8 +66,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystemLogging : public QObject
     Q_PROPERTY(float time READ time NOTIFY timeChanged)
     // Longer time average of total time used for emitting & animating particles.
     Q_PROPERTY(float timeAverage READ timeAverage NOTIFY timeAverageChanged)
-    QML_NAMED_ELEMENT(ParticleSystemLogging3D)
-    QML_UNCREATABLE("ParticleSystemLogging3D is abstract")
+    QML_NAMED_ELEMENT(ParticleSystem3DLogging)
+    QML_UNCREATABLE("ParticleSystem3DLogging is abstract")
 
 public:
     QQuick3DParticleSystemLogging(QObject *parent = nullptr);
@@ -100,8 +100,8 @@ private:
     int m_updates = 0;
     int m_particlesMax = 0;
     int m_particlesUsed = 0;
-    float m_time = 0;
-    float m_timeAverage = 0;
+    float m_time = 0.0f;
+    float m_timeAverage = 0.0f;
     QList<float> m_totalTimesList;
 };
 
