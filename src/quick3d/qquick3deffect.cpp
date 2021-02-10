@@ -676,13 +676,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         };
 
         // Textures
-        QByteArray textureData;
         for (const auto &property : qAsConst(textureProperties))
             processTextureProperty(*property.first, property.second);
 
         if (effectNode->incompleteBuildTimeObject) { // This object came from the shadergen tool
             const auto names = dynamicPropertyNames();
-            QVector<QByteArray> textureNames;
             for (const auto &name : names) {
                 QVariant propValue = property(name.constData());
                 QMetaType propType = propValue.metaType();
