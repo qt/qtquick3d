@@ -455,7 +455,7 @@ QObject *QQuick3DLoader::item() const
 
 void QQuick3DLoader::componentComplete()
 {
-    QQuick3DObject::componentComplete();
+    QQuick3DNode::componentComplete();
     if (active()) {
         if (m_loadingFromSource)
             createComponent();

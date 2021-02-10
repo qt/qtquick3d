@@ -301,7 +301,7 @@ void QQuick3DRepeater::componentComplete()
 {
     if (m_model && m_ownModel)
         static_cast<QQmlDelegateModel *>(m_model.data())->componentComplete();
-    QQuick3DObject::componentComplete();
+    QQuick3DNode::componentComplete();
     regenerate();
     if (m_model && m_model->count())
         emit countChanged();
