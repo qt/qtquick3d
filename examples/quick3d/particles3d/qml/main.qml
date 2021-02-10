@@ -110,6 +110,11 @@ Window {
             name: "ParticleSystem (pause, stop)"
             file: "SystemPlayPause.qml"
         }
+        ListElement {
+            group: "ParticleSystem"
+            name: "AlignedParticles"
+            file: "AlignedParticles.qml"
+        }
     }
 
     Component {

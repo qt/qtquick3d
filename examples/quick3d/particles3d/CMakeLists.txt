@@ -37,6 +37,7 @@ target_link_libraries(particles3d PUBLIC
 
 # Resources:
 set(qml_resource_files
+    "qml/AlignedParticles.qml"
     "qml/AttractorShapes.qml"
     "qml/ColorfulParticles.qml"
     "qml/CustomCheckBox.qml"
