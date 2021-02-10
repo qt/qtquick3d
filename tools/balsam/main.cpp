@@ -37,6 +37,7 @@
 #include <QtCore/QJsonObject>
 
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
+#include <QtQuick3DIblBaker/private/qssgiblbaker_p.h>
 
 #include <iostream>
 
@@ -153,13 +154,60 @@ private:
     QHash<QString, QCommandLineOption *> m_optionsMap;
 };
 
+struct BuiltinConditioners
+{
+    QSSGAssetImportManager::ImportState run(const QString &filename,
+                                            const QDir &outputPath,
+                                            QString *error);
+
+    QSSGIblBaker iblBaker;
+};
+
+QSSGAssetImportManager::ImportState BuiltinConditioners::run(const QString &filename,
+                                                             const QDir &outputPath,
+                                                             QString *error)
+{
+    QFileInfo fileInfo(filename);
+    if (!fileInfo.exists()) {
+        if (error)
+            *error = QStringLiteral("File does not exist");
+        return QSSGAssetImportManager::ImportState::IoError;
+    }
+
+    const QString extension = fileInfo.suffix().toLower();
+    QStringList generatedFiles;
+    QSSGAssetImportManager::ImportState result = QSSGAssetImportManager::ImportState::Unsupported;
+
+    if (iblBaker.inputExtensions().contains(extension)) {
+        QString errorMsg = iblBaker.import(fileInfo.absoluteFilePath(), outputPath, &generatedFiles);
+        if (errorMsg.isEmpty()) {
+            result = QSSGAssetImportManager::ImportState::Success;
+        } else {
+            *error = errorMsg;
+            result = QSSGAssetImportManager::ImportState::IoError;
+        }
+    } else {
+        if (error)
+            *error = QStringLiteral("unsupported file extension %1").arg(extension);
+    }
+
+    for (const auto &file : generatedFiles)
+        qDebug() << "generated file:" << file;
+
+    return result;
+}
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QSSGAssetImportManager assetImporter;
+    const bool canUsePlugins = !QCoreApplication::arguments().contains(QStringLiteral("--no-plugins"));
+    if (!canUsePlugins)
+        qDebug("balsam: Not loading assetimporter plugins");
+
+    QScopedPointer<QSSGAssetImportManager> assetImporter;
     OptionsManager optionsManager;
+    BuiltinConditioners builtins;
 
     // Setup command line arguments
     QCommandLineParser cmdLineParser;
@@ -167,13 +215,17 @@ int main(int argc, char *argv[])
     cmdLineParser.addPositionalArgument(QStringLiteral("sourceFilename"), QStringLiteral("Asset file to be imported"));
     QCommandLineOption outputPathOption({ "outputPath", "o" }, QStringLiteral("Sets the location to place the generated file(s). Default is the current directory"), QStringLiteral("outputPath"), QDir::currentPath());
     cmdLineParser.addOption(outputPathOption);
+    QCommandLineOption noPluginsOption(QStringLiteral("no-plugins"), QStringLiteral("Disable assetimporter plugin loading, only considers built-ins"));
+    cmdLineParser.addOption(noPluginsOption);
 
     // Get Plugin options
-    auto pluginOptions = assetImporter.getAllOptions();
-    for (const auto &options : qAsConst(pluginOptions))
-        optionsManager.generateCommandLineOptions(options);
-
-    optionsManager.registerOptions(cmdLineParser);
+    if (canUsePlugins) {
+        assetImporter.reset(new QSSGAssetImportManager);
+        auto pluginOptions = assetImporter->getAllOptions();
+        for (const auto &options : qAsConst(pluginOptions))
+            optionsManager.generateCommandLineOptions(options);
+        optionsManager.registerOptions(cmdLineParser);
+    }
 
     cmdLineParser.process(app);
 
@@ -196,10 +248,17 @@ int main(int argc, char *argv[])
     // Convert each assetFile is possible
     for (const auto &assetFileName : assetFileNames) {
         QString errorString;
-        QVariantMap options = assetImporter.getOptionsForFile(assetFileName);
-        options = optionsManager.processCommandLineOptions(cmdLineParser, options);
-        if (assetImporter.importFile(assetFileName, outputDirectory, options, &errorString)
-            != QSSGAssetImportManager::ImportState::Success) {
+        QSSGAssetImportManager::ImportState result = QSSGAssetImportManager::ImportState::Unsupported;
+        if (canUsePlugins) {
+            QVariantMap options = assetImporter->getOptionsForFile(assetFileName);
+            options = optionsManager.processCommandLineOptions(cmdLineParser, options);
+            // first try the plugin-based asset importer system
+            result = assetImporter->importFile(assetFileName, outputDirectory, options, &errorString);
+        }
+        // if the file extension is unsupported, try the builtins
+        if (result == QSSGAssetImportManager::ImportState::Unsupported)
+            result = builtins.run(assetFileName, outputDirectory, &errorString);
+        if (result != QSSGAssetImportManager::ImportState::Success) {
             std::cerr << "Failed to import file with error: " << qPrintable(errorString) << "\n";
             return 2;
         }

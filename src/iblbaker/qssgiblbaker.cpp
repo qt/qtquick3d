@@ -27,25 +27,14 @@
 **
 ****************************************************************************/
 
-#include "iblbakerimporter.h"
+#include "qssgiblbaker_p.h"
 #include <QFile>
 #include <QFileInfo>
-#include <QDir>
-#include <QDataStream>
-#include <QJsonDocument>
-#include <QJsonObject>
-
-#include <QtGlobal>
 #include <QScopeGuard>
 
-#include <QtQuick/QSGTexture>
-#include <QtQuick/private/qsgtexture_p.h>
-#include <QtQuick/private/qsgcompressedtexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-
-#include <QtShaderTools/private/qshaderbaker_p.h>
 
 #if QT_CONFIG(opengl)
 #include <QtGui/private/qrhigles2_p.h>
@@ -72,36 +61,14 @@ QT_BEGIN_NAMESPACE
 
 static constexpr QSSGRenderTextureFormat FORMAT(QSSGRenderTextureFormat::RGBA16F);
 
-const QString IblBakerImporter::name() const
+const QStringList QSSGIblBaker::inputExtensions() const
 {
-    return QStringLiteral("hdr");
+    return { QStringLiteral("hdr") };
 }
 
-const QStringList IblBakerImporter::inputExtensions() const
-{
-    QStringList extensions;
-    extensions.append("hdr");
-    return extensions;
-}
-
-const QString IblBakerImporter::outputExtension() const
+const QString QSSGIblBaker::outputExtension() const
 {
     return QStringLiteral(".ktx");
-}
-
-const QString IblBakerImporter::type() const
-{
-    return QStringLiteral("Bake");
-}
-
-const QString IblBakerImporter::typeDescription() const
-{
-    return QStringLiteral("HDR baker to ktx file");
-}
-
-const QVariantMap IblBakerImporter::importOptions() const
-{
-    return m_options;
 }
 
 namespace {
@@ -167,16 +134,20 @@ static const float cube[] = {
 
 QString renderToKTXFileInternal(const char *name, const QString &inPath, const QString &outPath, QRhi::Implementation impl, QRhiInitParams *initParams)
 {
-    qInfo() << "Using RHI backend " << name;
+    qDebug() << "Using RHI backend" << name;
 
     // Open output file
     QFile ktxOutputFile(outPath);
     if (!ktxOutputFile.open(QIODevice::WriteOnly)) {
-        return QString("Could not open file: %1").arg(outPath);
+        return QStringLiteral("Could not open file: %1").arg(outPath);
     }
-    auto cleanupCloseFile = qScopeGuard([&ktxOutputFile] { ktxOutputFile.close(); });
 
     QScopedPointer<QRhi> rhi(QRhi::create(impl, initParams, QRhi::Flags(), nullptr));
+    if (!rhi)
+        return QStringLiteral("Failed to initialize QRhi");
+
+    qDebug() << rhi->driverInfo();
+
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
 
@@ -185,11 +156,10 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     rhiContext->setCommandBuffer(cb);
 
     auto inputStreamFactory = new QSSGInputStreamFactory;
-    auto inImage = QSSGLoadedTexture::loadHdrImage(inputStreamFactory->getStreamForFile(inPath), FORMAT);
-    if (!inImage) {
-        return "Failed to load hdr file";
-    }
-    auto cleanupImage = QScopeGuard([inImage]() { delete inImage; });
+    QScopedPointer<QSSGLoadedTexture> inImage(QSSGLoadedTexture::loadHdrImage(inputStreamFactory->getStreamForFile(inPath), FORMAT));
+    if (!inImage)
+        return QStringLiteral("Failed to load hdr file");
+
     auto shaderCache = std::make_unique<QSSGShaderCache>(rhiContext, inputStreamFactory);
 
     // The objective of this method is to take the equirectangular texture
@@ -229,14 +199,14 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
                                               QRhiTexture::RenderTarget | QRhiTexture::CubeMap | QRhiTexture::MipMapped
                                                       | QRhiTexture::UsedWithGenerateMips);
     if (!envCubeMap->create()) {
-        return "Failed to create Environment Cube Map";
+        return QStringLiteral("Failed to create Environment Cube Map");
     }
     envCubeMap->deleteLater();
 
     // Create a renderbuffer the size of a the cubeMap face
     QRhiRenderBuffer *envMapRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, environmentMapSize);
     if (!envMapRenderBuffer->create()) {
-        return "Failed to create Environment Map Render Buffer";
+        return QStringLiteral("Failed to create Environment Map Render Buffer");
     }
     envMapRenderBuffer->deleteLater();
 
@@ -254,7 +224,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
             renderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();
         renderTarget->setRenderPassDescriptor(renderPassDesc);
         if (!renderTarget->create()) {
-            return "Failed to build env map render target";
+            return QStringLiteral("Failed to build env map render target");
         }
         renderTarget->deleteLater();
         renderTargets << renderTarget;
@@ -265,7 +235,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     QSize size(inImage->width, inImage->height);
     auto *sourceTexture = rhi->newTexture(QRhiTexture::RGBA16F, size, 1);
     if (!sourceTexture->create()) {
-        return "failed to create source env map texture";
+        return QStringLiteral("Failed to create source env map texture");
     }
     sourceTexture->deleteLater();
 
@@ -324,7 +294,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     envMapPipeline->setShaderResourceBindings(envMapSrb);
     envMapPipeline->setRenderPassDescriptor(renderPassDesc);
     if (!envMapPipeline->create()) {
-        return "failed to create source env map pipeline state";
+        return QStringLiteral("Failed to create source env map pipeline state");
     }
     envMapPipeline->deleteLater();
 
@@ -470,7 +440,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     prefilterPipeline->setShaderResourceBindings(preFilterSrb);
     prefilterPipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
     if (!prefilterPipeline->create()) {
-        return "failed to create pre-filter env map pipeline state";
+        return QStringLiteral("Failed to create pre-filter env map pipeline state");
     }
     prefilterPipeline->deleteLater();
 
@@ -498,7 +468,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     irradiancePipeline->setVertexInputLayout(inputLayout);
     irradiancePipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
     if (!irradiancePipeline->create()) {
-        return "failed to create irradiance env map pipeline state";
+        return QStringLiteral("Failed to create irradiance env map pipeline state");
     }
     irradiancePipeline->deleteLater();
 
@@ -661,6 +631,37 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     return {};
 }
 
+void adjustToPlatformQuirks(QRhi::Implementation &impl)
+{
+#if defined(Q_OS_WIN)
+    // Temporary Windows 7 workaround: no D3D. Just stick with OpenGL like Qt 5
+    // would. Can be removed when Win 7 support is finally dropped from Qt 6.
+    // (but as long as we have a Win 7 CI, this is mandatory)
+    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7) {
+        if (impl == QRhi::D3D11) {
+            qDebug("D3D on Windows 7 is not supported. Trying OpenGL instead.");
+            impl = QRhi::OpenGLES2;
+        }
+    }
+#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    // A macOS VM may not have Metal support at all. We have to decide at this
+    // point, it will be too late afterwards, and the only way is to see if
+    // MTLCreateSystemDefaultDevice succeeds.
+    if (impl == QRhi::Metal) {
+        QRhiMetalInitParams rhiParams;
+        QRhi *tempRhi = QRhi::create(impl, &rhiParams, {});
+        if (!tempRhi) {
+            impl = QRhi::OpenGLES2;
+            qDebug("Metal does not seem to be supported. Falling back to OpenGL.");
+        } else {
+            delete tempRhi;
+        }
+    }
+#else
+    Q_UNUSED(impl);
+#endif
+}
+
 QRhi::Implementation getRhiImplementation()
 {
     QRhi::Implementation implementation = QRhi::Implementation::Null;
@@ -693,6 +694,8 @@ QRhi::Implementation getRhiImplementation()
 #endif
     }
 
+    adjustToPlatformQuirks(implementation);
+
     return implementation;
 }
 
@@ -704,7 +707,7 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
     if (rhiImplementation == QRhi::OpenGLES2) {
         QRhiGles2InitParams params;
         params.fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
-        return renderToKTXFileInternal("OpenGL (with default QSurfaceFormat)", inPath, outPath, QRhi::OpenGLES2, &params);
+        return renderToKTXFileInternal("OpenGL", inPath, outPath, QRhi::OpenGLES2, &params);
     }
 #endif
 
@@ -714,7 +717,6 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
         vulkanInstance.create();
         QRhiVulkanInitParams params;
         params.inst = &vulkanInstance;
-        auto cleanup = qScopeGuard([&vulkanInstance] { vulkanInstance.destroy(); });
         return renderToKTXFileInternal("Vulkan", inPath, outPath, QRhi::Vulkan, &params);
     }
 #endif
@@ -733,20 +735,18 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
     }
 #endif
 
-    return "No RHI context available";
+    return QStringLiteral("No RHI backend");
 }
 
-const QString IblBakerImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
+const QString QSSGIblBaker::import(const QString &sourceFile, const QDir &savePath, QStringList *generatedFiles)
 {
-    Q_UNUSED(options);
+    qDebug() << "IBL lightprobe baker" << sourceFile;
 
     QString outFileName = savePath.absoluteFilePath(QFileInfo(sourceFile).baseName() + QStringLiteral(".ktx"));
 
-    auto result = renderToKTXFile(sourceFile, outFileName);
-
-    if (!result.isEmpty()) {
-        return result;
-    }
+    QString error = renderToKTXFile(sourceFile, outFileName);
+    if (!error.isEmpty())
+        return error;
 
     m_generatedFiles.append(outFileName);
 

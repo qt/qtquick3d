@@ -27,31 +27,37 @@
 **
 ****************************************************************************/
 
-#ifndef IBLBAKERIMPORTER_H
-#define IBLBAKERIMPORTER_H
+#ifndef QSSGIBLBAKERIMPORTER_P_H
+#define QSSGIBLBAKERIMPORTER_P_H
 
-#include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
-#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include "qtquick3diblbaker_p.h"
+#include <QDir>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-class IblBakerImporter : public QSSGAssetImporter
+class Q_QUICK3DIBLBAKER_EXPORT QSSGIblBaker
 {
 public:
-    const QString name() const override;
-    const QStringList inputExtensions() const override;
-    const QString outputExtension() const override;
-    const QString type() const override;
-    const QString typeDescription() const override;
-    const QVariantMap importOptions() const override;
-    const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles) override;
+    const QStringList inputExtensions() const;
+    const QString outputExtension() const;
+    const QString import(const QString &sourceFile, const QDir &savePath, QStringList *generatedFiles);
 
 private:
     QByteArray createBsdfMipLevel(QByteArray &previousMipLevel, uint width, uint height);
     QStringList m_generatedFiles;
-    QVariantMap m_options;
 };
 
 QT_END_NAMESPACE
 
-#endif // IBLBAKERIMPORTER_H
+#endif // QSSGIBLBAKERIMPORTER_P_H
