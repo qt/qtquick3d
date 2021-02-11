@@ -543,10 +543,10 @@ QT_BEGIN_NAMESPACE
     only changing the value of \c NORMAL will have an effect on lighting.
 
     \li vec3 \c TANGENT - The tanget that comes from the vertex shader in world
-    space.
+    space. This value is potentially adjusted for double-sidedness.
 
     \li vec3 \c BINORMAL - The binormal that comes from the vertex shader in
-    world space.
+    world space. This value is potentially adjusted for double-sidedness.
 
     \li vec2 \c UV0 - The first set of texture coordinates from the vertex shader.
     This property is readonly in the fragment shader.
@@ -800,12 +800,26 @@ QT_BEGIN_NAMESPACE
     \li vec3 \c VAR_WORLD_NORMAL - Interpolated normal transformed by \c
     NORMAL_MATRIX.
 
+    \li vec3 \c VAR_WORLD_TANGENT - Interpolated tangent transformed by \c
+    MODEL_MATRIX.
+
+    \li vec3 \c VAR_WORLD_BINORMAL - Interpolated binormal transformed by \c
+    MODEL_MATRIX
+
     \li vec3 \c NORMAL - Unlike \c VAR_WORLD_NORMAL, which is the
     interpolated normal as-is, this value is potentially adjusted for
     double-sidedness: when rendering with culling disabled, the normal will get
     inverted as necessary. Therefore lighting and other calculations are
     recommended to use \c NORMAL instead of \c VAR_WORLD_NORMAL in order
     behave correctly with all culling modes.
+
+    \li vec3 \c TANGENT - Like \c NORMAL, this value is potentially adjusted for
+    double-sidedness: when rendering with culling disabled, the tangent will get
+    inverted as necessary.
+
+    \li vec3 \c BINORMAL - Like \c NORMAL, this value is potentially adjusted for
+    double-sidedness: when rendering with culling disabled, the binormal will get
+    inverted as necessary.
 
     \li vec3 \c VAR_WORLD_POSITION - Interpolated world space vertex position
     (\c{(MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz})

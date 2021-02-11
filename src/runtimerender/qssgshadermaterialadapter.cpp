@@ -429,6 +429,8 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
     // can also calculate on its own and pass them on with VARYING but that's a
     // bit wasteful since we calculate these anyways.
     { "VAR_WORLD_NORMAL", "qt_varNormal" },
+    { "VAR_WORLD_TANGENT", "qt_varTangent" },
+    { "VAR_WORLD_BINORMAL", "qt_varBinormal" },
     { "VAR_WORLD_POSITION", "qt_varWorldPos" },
     // vertex color is always enabled for custom materials (shaded)
     { "VAR_COLOR", "qt_varColor" },
