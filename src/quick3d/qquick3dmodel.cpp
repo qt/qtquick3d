@@ -462,6 +462,7 @@ void QQuick3DModel::setInstancing(QQuick3DInstancing *instancing)
                 (m_instancing, &QQuick3DInstancing::instanceNodeDirty,
                  this, [this]{ markDirty(InstancesDirty);});
     }
+    markDirty(InstancesDirty);
     emit instancingChanged();
 }
 
