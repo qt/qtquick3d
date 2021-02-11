@@ -210,6 +210,59 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
     }
 }
 
+bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx)
+{
+    if (!modelContext.model.instancing() || instanceBuffer)
+        return instanceBuffer;
+    auto *table = modelContext.model.instanceTable;
+    QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
+    qsizetype instanceBufferSize = table->dataSize();
+    // Create or resize the instance buffer ### if (instanceData.owned)
+    bool updateInstanceBuffer = table->serial() != instanceData.serial;
+    if (instanceData.buffer && instanceData.buffer->size() < instanceBufferSize) {
+        updateInstanceBuffer = true;
+        //                    qDebug() << "Resizing instance buffer";
+        instanceData.buffer->setSize(instanceBufferSize);
+        instanceData.buffer->create();
+    }
+    if (!instanceData.buffer) {
+        //                    qDebug() << "Creating instance buffer";
+        updateInstanceBuffer = true;
+        instanceData.buffer = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
+        instanceData.buffer->create();
+    }
+    if (updateInstanceBuffer) {
+        const void *data = table->constData();
+        if (data) {
+            QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+            rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
+            rhiCtx->commandBuffer()->resourceUpdate(rub);
+            //qDebug() << "****** UPDATING INST BUFFER. Size" << instanceBufferSize;
+        } else {
+            qWarning() << "NO DATA IN INSTANCE TABLE";
+        }
+        instanceData.serial = table->serial();
+    }
+    instanceBuffer = instanceData.buffer;
+    return instanceBuffer;
+}
+
+static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipelineState *ps, QSSGRhiContext *rhiCtx)
+{
+    // TODO: non-static so it can be used from QSSGCustomMaterialSystem::rhiPrepareRenderable()?
+    const bool instancing = renderable->prepareInstancing(rhiCtx);
+    int instanceBufferBinding = 0;
+    if (instancing) {
+        // set up new bindings for instanced buffers
+        QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
+        std::copy(ps->ia.inputLayout.cbeginBindings(), ps->ia.inputLayout.cendBindings(), std::back_inserter(bindings));
+        bindings.append({ 20 * sizeof(float), QRhiVertexInputBinding::PerInstance });
+        instanceBufferBinding = bindings.count() - 1;
+        ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
+    }
+    return instanceBufferBinding;
+}
+
 static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
@@ -241,61 +294,13 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-            // Instancing
-            const bool instancing = subsetRenderable.modelContext.model.instancing();
-            if (instancing) {
-                //TODO: move buffer creation code to instance table
-                auto *table = subsetRenderable.modelContext.model.instanceTable;
-                QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
-                qsizetype instanceBufferSize = table->dataSize();
-                // Create or resize the instance buffer ### if (instanceData.owned)
-                bool updateInstanceBuffer = table->serial() != instanceData.serial;
-                if (instanceData.buffer && instanceData.buffer->size() < instanceBufferSize) {
-                    updateInstanceBuffer = true;
-//                    qDebug() << "Resizing instance buffer";
-                    instanceData.buffer->setSize(instanceBufferSize);
-                    instanceData.buffer->create();
-                }
-                if (!instanceData.buffer) {
-//                    qDebug() << "Creating instance buffer";
-                    updateInstanceBuffer = true;
-                    instanceData.buffer = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
-                    instanceData.buffer->create();
-                }
-                if (updateInstanceBuffer) {
-//                    qDebug() << "****** UPDATING INST BUFFER. Count" << instanceCount << "size" << instanceBufferSize;
-
-                    const void *data = table->constData();
-                    if (data) {
-                        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-                        rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
-                        rhiCtx->commandBuffer()->resourceUpdate(rub);
-                    } else {
-                        qWarning() << "NO DATA IN INSTANCE TABLE";
-                    }
-                    instanceData.serial = table->serial();
-                }
-                subsetRenderable.instanceBuffer = instanceData.buffer;
-            }
-
             ps->samples = samples;
 
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
             fillTargetBlend(&ps->targetBlend, subsetRenderable.defaultMaterial().blendMode);
 
             ps->ia = subsetRenderable.subset.rhi.ia;
-            int instanceBufferBinding = 0;
-            if (instancing) {
-                // Need to setup new bindings for instanced buffers
-                QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
-                std::copy(ps->ia.inputLayout.cbeginBindings(),
-                          ps->ia.inputLayout.cendBindings(),
-                          std::back_inserter(bindings));
-                bindings.append({20 * sizeof(float), QRhiVertexInputBinding::PerInstance});
-                instanceBufferBinding = bindings.count() - 1;
-                ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
-            }
-
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;
@@ -468,10 +473,11 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
     // the rest is common, only relying on QSSGSubsetRenderableBase, not the subclasses
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
-
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->ia = subsetRenderable.subset.rhi.ia;
-        ps->ia.bakeVertexInputLocations(*shaderPipeline);
+
+        int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx);
+        ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
         QSSGRhiShaderResourceBindingList bindings;
         bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd->ubuf);
@@ -601,15 +607,24 @@ static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
             *needsSetViewport = false;
         }
 
-        QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
+        QRhiCommandBuffer::VertexInput vertexBuffers[2];
+        int vertexBufferCount = 1;
+        vertexBuffers[0] = QRhiCommandBuffer::VertexInput(vertexBuffer, 0);
+        quint32 instances = 1;
+        if (subsetRenderable->modelContext.model.instancing()) {
+            instances = subsetRenderable->modelContext.model.instanceCount();
+            vertexBuffers[1] = QRhiCommandBuffer::VertexInput(subsetRenderable->instanceBuffer, 0);
+            vertexBufferCount = 2;
+        }
+
         if (indexBuffer) {
-            cb->setVertexInput(0, 1, &vb, indexBuffer, 0, subsetRenderable->subset.rhi.ia.indexBuffer->indexFormat());
-            cb->drawIndexed(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
-            QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.count, 1));
+            cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable->subset.rhi.ia.indexBuffer->indexFormat());
+            cb->drawIndexed(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
+            QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.count, instances));
         } else {
-            cb->setVertexInput(0, 1, &vb);
-            cb->draw(subsetRenderable->subset.count, 1, subsetRenderable->subset.offset);
-            QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable->subset.count, 1));
+            cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
+            cb->draw(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
+            QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable->subset.count, instances));
         }
     }
 }
@@ -894,16 +909,17 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         }
 
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
+
             ps->shaderPipeline = shaderPipeline.data();
             ps->ia = subsetRenderable.subset.rhi.ia;
-            ps->ia.bakeVertexInputLocations(*shaderPipeline);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx);
+            ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;
             bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd->ubuf);
 
             // Depth and SSAO textures, in case a custom material's shader code does something with them.
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
-
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
@@ -945,15 +961,23 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
                 needsSetViewport = false;
             }
 
-            QRhiCommandBuffer::VertexInput vb(vertexBuffer, 0);
+            QRhiCommandBuffer::VertexInput vertexBuffers[2];
+            int vertexBufferCount = 1;
+            vertexBuffers[0] = QRhiCommandBuffer::VertexInput(vertexBuffer, 0);
+            quint32 instances = 1;
+            if (renderable->modelContext.model.instancing()) {
+                instances = renderable->modelContext.model.instanceCount();
+                vertexBuffers[1] = QRhiCommandBuffer::VertexInput(renderable->instanceBuffer, 0);
+                vertexBufferCount = 2;
+            }
             if (indexBuffer) {
-                cb->setVertexInput(0, 1, &vb, indexBuffer, 0, renderable->subset.rhi.ia.indexBuffer->indexFormat());
-                cb->drawIndexed(renderable->subset.count, 1, renderable->subset.offset);
-                QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.count, 1));
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable->subset.rhi.ia.indexBuffer->indexFormat());
+                cb->drawIndexed(renderable->subset.count, instances, renderable->subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.count, instances));
             } else {
-                cb->setVertexInput(0, 1, &vb);
-                cb->draw(renderable->subset.count, 1, renderable->subset.offset);
-                QSSGRHICTX_STAT(rhiCtx, draw(renderable->subset.count, 1));
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
+                cb->draw(renderable->subset.count, instances, renderable->subset.offset);
+                QSSGRHICTX_STAT(rhiCtx, draw(renderable->subset.count, instances));
             }
         }
     }

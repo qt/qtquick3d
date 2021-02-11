@@ -217,44 +217,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, layerData, *layerData.camera, nullptr, nullptr);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-
-        // Instancing ### Duplicated logic from default material: refactor
-        const bool instancing = renderable.modelContext.model.instancing();
-        if (instancing) {
-            auto *table = renderable.modelContext.model.instanceTable;
-            QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
-            qsizetype instanceBufferSize = table->dataSize();
-            // Create or resize the instance buffer ### if (instanceData.owned)
-            bool updateInstanceBuffer = table->serial() != instanceData.serial;
-            if (instanceData.buffer && instanceData.buffer->size() < instanceBufferSize) {
-                updateInstanceBuffer = true;
-//                qDebug() << "CUSTOM MATERIAL Resizing instance buffer";
-                instanceData.buffer->setSize(instanceBufferSize);
-                instanceData.buffer->create();
-            }
-            if (!instanceData.buffer) {
-//                qDebug() << "CUSTOM MATERIAL Resizing instance buffer";
-                updateInstanceBuffer = true;
-                instanceData.buffer = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
-                instanceData.buffer->create();
-            }
-            if (updateInstanceBuffer) {
-//                qDebug() << "****** CUSTOM MATERIAL UPDATING INST BUFFER. Count" << instanceCount << "size" << instanceBufferSize;
-                const void *data = table->constData();
-                if (data) {
-                    QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-                    rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
-                    rhiCtx->commandBuffer()->resourceUpdate(rub);
-                } else {
-                    qWarning() << "NO DATA IN INSTANCE TABLE";
-                }
-                instanceData.serial = table->serial();
-            }
-            renderable.instanceBuffer = instanceData.buffer;
-        }
-
-
-
+        const bool instancing = renderable.prepareInstancing(rhiCtx);
 
         ps->samples = samples;
 
@@ -264,8 +227,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         ps->ia = renderable.subset.rhi.ia;
 
-
-        //### More copied code from default materials
+        //### Copied code from default materials
         int instanceBufferBinding = 0;
         if (instancing) {
             // Need to setup new bindings for instanced buffers
@@ -277,9 +239,6 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             instanceBufferBinding = bindings.count() - 1;
             ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
         }
-
-
-
 
         ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
