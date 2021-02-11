@@ -61,10 +61,10 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
 
     QVector2D oneOverSize = QVector2D(1.0f, 1.0f);
     auto &particleBuffer = renderable.particles.m_particleBuffer;
-    const int particlesPerSlice = particleBuffer.particlesPerSlice();
+    const quint32 particlesPerSlice = particleBuffer.particlesPerSlice();
     oneOverSize = QVector2D(1.0f / particleBuffer.size().width(), 1.0f / particleBuffer.size().height());
     shaders->setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
-    shaders->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, 1 * sizeof(int));
+    shaders->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, 1 * sizeof(quint32));
 
     // Opacity already has diffuse color alpha applied
     const QVector4D color = QVector4D(renderable.particles.m_diffuseColor.toVector3D(), renderable.opacity);

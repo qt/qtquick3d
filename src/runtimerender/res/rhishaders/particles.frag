@@ -9,7 +9,7 @@ layout(std140, binding = 0) uniform buf {
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
-    int qt_countPerSlice;
+    uint qt_countPerSlice;
 } ubuf;
 
 
