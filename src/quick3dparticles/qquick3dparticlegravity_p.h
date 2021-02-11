@@ -49,11 +49,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleGravity : public QQuick3DParticleAffector
 {
     Q_OBJECT
-    // Magnitude in position change per second. Negative magnitude accelerates opposite way from \a direction.
-    // Default value 100.
     Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    // Direction towards the gravity will affect. Values will be normalized, so the amount doesn't matter.
-    // Default value is (0.0, -1.0, 0.0) (downwards)
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
     QML_NAMED_ELEMENT(Gravity3D)
 
@@ -76,7 +72,8 @@ Q_SIGNALS:
 
 private:
     float m_magnitude = 100.0f;
-    QVector3D m_direction = {0.0, -1.0, 0.0};
+    QVector3D m_direction = {0.0f, -1.0f, 0.0f};
+    QVector3D m_directionNormalized = {0.0f, -1.0f, 0.0f};
 };
 
 QT_END_NAMESPACE

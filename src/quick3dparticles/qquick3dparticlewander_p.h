@@ -50,19 +50,11 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleWander : public QQuick3DParticleAffector
 {
     Q_OBJECT
-    // How long distance particle maximally moves. Value n means particle position changing -n .. +n.
     Q_PROPERTY(QVector3D globalAmount READ globalAmount WRITE setGlobalAmount NOTIFY globalAmountChanged)
-    // With what pace/frequency particle wandes. Value n means curves / second
     Q_PROPERTY(QVector3D globalPace READ globalPace WRITE setGlobalPace NOTIFY globalPaceChanged)
     Q_PROPERTY(QVector3D uniqueAmount READ uniqueAmount WRITE setUniqueAmount NOTIFY uniqueAmountChanged)
     Q_PROPERTY(QVector3D uniquePace READ uniquePace WRITE setUniquePace NOTIFY uniquePaceChanged)
-    // Amount variation between 0.0 - 1.0
-    // When amount variation is 0.0, every particle reaches max distance. When 0.5, every particle reaches something between 0.5-1.5 distance.
-    // Default 0.0 so no variation.
     Q_PROPERTY(float uniqueAmountVariation READ uniqueAmountVariation WRITE setUniqueAmountVariation NOTIFY uniqueAmountVariationChanged)
-    // Pace variation between 0.0 - 1.0
-    // When pace variation is 0.0, every particle wander at same frequency. When 0.5, the pace is multipled with something between 0.5 - 1.5.
-    // Default 0.0 so no variation.
     Q_PROPERTY(float uniquePaceVariation READ uniquePaceVariation WRITE setUniquePaceVariation NOTIFY uniquePaceVariationChanged)
     QML_NAMED_ELEMENT(Wander3D)
 
@@ -100,8 +92,8 @@ private:
     QVector3D m_globalPace;
     QVector3D m_uniqueAmount;
     QVector3D m_uniquePace;
-    float m_uniqueAmountVariation = 0;
-    float m_uniquePaceVariation = 0;
+    float m_uniqueAmountVariation = 0.0f;
+    float m_uniquePaceVariation = 0.0f;
 };
 
 QT_END_NAMESPACE
