@@ -561,7 +561,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
         keyValueList["QT_IBL_BAKER_VERSION"] = "1";
 
         for (auto &kv : keyValueList) {
-            quint32 keyAndValueByteSize = kv.first.size() + kv.second.size() + 2; // NB: 2x null terminator
+            quint32 keyAndValueByteSize = quint32(kv.first.size() + kv.second.size() + 2); // NB: 2x null terminator
             appendBinaryVector(keyValueData, keyAndValueByteSize);
             appendBinaryVector(keyValueData, kv.first);
             appendBinaryVector(keyValueData, kv.second);
@@ -632,7 +632,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
             QRhiReadbackResult result;
             QRhiReadbackDescription readbackDesc(texture); // null src == read from swapchain backbuffer
-            readbackDesc.setLayer(face);
+            readbackDesc.setLayer(int(face));
             readbackDesc.setLevel(mipmap_level);
 
             QRhiResourceUpdateBatch *resourceUpdates = rhi->nextResourceUpdateBatch();
