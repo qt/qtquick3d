@@ -64,6 +64,11 @@ Window {
         id: viewport
         anchors.fill: parent
 
+        environment: SceneEnvironment {
+            clearColor: "gray"
+            backgroundMode: SceneEnvironment.Color
+        }
+
         Node {
             PerspectiveCamera {
                 z: 1000
@@ -98,8 +103,16 @@ Window {
             }
         }
 
-        DirectionalLight {
-            ambientColor: "#777777"
+        SpotLight {
+            position: Qt.vector3d(0, 800, 0)
+            eulerRotation.x: -90
+            coneAngle: 60
+            color: Qt.rgba(1.0, 1.0, 0.1, 1.0)
+            brightness: 50
+            castsShadow: true
+            shadowMapQuality: Light.ShadowMapQualityHigh
+            ambientColor: "#777"
+            shadowFactor: 90
         }
 
         CustomInstancing {
@@ -113,7 +126,6 @@ Window {
                 id: transparentModel
                 source: "#Cube"
                 instancing: customInstancing
-
                 materials: DefaultMaterial {
                     diffuseColor: "lightgray"
                 }
@@ -155,7 +167,7 @@ Window {
 
         RandomInstancing {
             id: randomWithData
-            instanceCount: 350
+            instanceCount: 250
 
             position: InstanceRange {
                 from: Qt.vector3d(-500, -400, -500)
@@ -198,7 +210,8 @@ Window {
         Model {
             id: cubeModel
             source: "#Cube"
-            instancing: randomWithData //manualInstancing
+            instancing: randomWithData
+            //instancing: manualInstancing
 
             materials: DefaultMaterial {
                 diffuseColor: "white"
@@ -220,6 +233,7 @@ Window {
                 scale: Qt.vector3d(scaleFactor, scaleFactor, scaleFactor);
                 position: Qt.vector3d(-50, -50, -50)
                 materials: instancedMaterial
+
                 SequentialAnimation on scaleFactor {
                     PauseAnimation {duration: 3000}
                     NumberAnimation {from: 0.5; to: 1.5; duration: 200}
@@ -228,7 +242,32 @@ Window {
                 }
             } // sphereModel
         } // cubeModel
-    }
+
+        Model {
+            id: floor
+            source: "#Rectangle"
+            y: -500
+            scale: Qt.vector3d(15, 15, 1)
+            eulerRotation.x: -90
+            materials: [
+                DefaultMaterial {
+                    diffuseColor: "pink"
+                }
+            ]
+        }
+        TapHandler {
+            onTapped: {
+                if (cubeModel.instancing === randomWithData) {
+                    console.log("clicked: switching instance table to manualInstancing")
+                    cubeModel.instancing = manualInstancing
+                } else {
+                    console.log("clicked: switching instance table to randomWithData")
+                    cubeModel.instancing = randomWithData
+                }
+            }
+        }
+    } // View3D
+
     DebugView {
         source: viewport
         anchors.top: parent.top

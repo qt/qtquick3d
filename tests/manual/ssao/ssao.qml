@@ -262,6 +262,14 @@ Item {
                 id: customMaterialUnshaded
                 checked: false
             }
+            Label {
+                text: "Instancing"
+                color: "white"
+            }
+            CheckBox {
+                id: instancedRendering
+                checked: false
+            }
         }
     }
 
@@ -285,12 +293,43 @@ Item {
             position: Qt.vector3d(0, 200, 300)
             eulerRotation: Qt.vector3d(-30, 0, 0)
         }
+
+        InstanceList {
+            id: manualInstancing
+            instances: [
+                InstanceListEntry {
+                    position: Qt.vector3d(0, 0, 0)
+                    color: "green"
+                    scale: Qt.vector3d(0.6, 0.6, 0.6)
+                },
+                InstanceListEntry {
+                    position: Qt.vector3d(-100, 0, -100)
+                    color: "red"
+                    scale: Qt.vector3d(0.5, 0.5, 0.5)
+                },
+                InstanceListEntry {
+                    position: Qt.vector3d(100, 100, 0)
+                    scale: Qt.vector3d(0.5, 0.5, 0.5)
+                    color: "blue"
+                },
+                InstanceListEntry {
+                    position: Qt.vector3d(100, 0, 50)
+                    eulerRotation: Qt.vector3d(-10, 0, 30)
+                    color: "orange"
+                    scale: Qt.vector3d(0.3, 0.3, 0.3)
+                }
+
+            ]
+        }
+
         Model {
-            visible: !customMaterialShaded.checked && !customMaterialUnshaded.checked
+            visible:instancedRendering.checked || !customMaterialShaded.checked && !customMaterialUnshaded.checked
             source: "object1.mesh"
+            instancing: instancedRendering.checked ? manualInstancing : null
             scale: Qt.vector3d(scaleSlider.value, scaleSlider.value, scaleSlider.value)
             materials: [ DefaultMaterial {
                     cullMode: Material.NoCulling
+                    diffuseColor: "white"
                 } ]
             eulerRotation: Qt.vector3d(rotationXSlider.value, rotationYSlider.value, rotationZSlider.value)
         }
