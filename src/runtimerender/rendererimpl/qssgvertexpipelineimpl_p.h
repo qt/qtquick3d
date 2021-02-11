@@ -258,7 +258,7 @@ struct QSSGMaterialVertexPipeline
         vertex().append("    qt_varShadowWorldPos = qt_shadow_world_tmp.xyz / qt_shadow_world_tmp.w;");
     }
 
-    void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey)
+    void generateVarTangentAndBinormal(const QSSGShaderDefaultMaterialKey &inKey, bool &genTangent, bool &genBinormal)
     {
         if (setCode(GenerationFlag::TangentBinormal))
             return;
@@ -277,9 +277,11 @@ struct QSSGMaterialVertexPipeline
                 addInterpolationParameter("qt_varBinormal", "vec3");
                 doGenerateVarBinormal(inKey);
                 fragment() << "    vec3 qt_binormal = normalize(qt_varBinormal);\n";
+                genBinormal = true;
             } else {
                 fragment() << "    vec3 qt_binormal = vec3(0.0);\n";
             }
+            genTangent = true;
         } else {
             fragment() << "    vec3 qt_tangent = vec3(0.0);\n"
                        << "    vec3 qt_binormal = vec3(0.0);\n";

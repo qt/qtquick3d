@@ -618,10 +618,31 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition(inKey);
 
-        fragmentShader.append("    vec3 qt_org_normal = qt_world_normal;\n");
-        if (isDoubleSided) {
-            fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;\n");
-            fragmentShader.append("    qt_world_normal *= qt_facing;\n");
+        if (hasCustomFrag || includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal) {
+            bool genTangent = false;
+            bool genBinormal = false;
+            vertexShader.generateVarTangentAndBinormal(inKey, genTangent, genBinormal);
+            if (enableBumpNormal) {
+                // It will not be generated for CustomMaterials.
+                int id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
+                const auto &names = imageStringTable[id];
+                if (!genTangent) {
+                    fragmentShader << "    vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
+                                   << "    vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
+                    fragmentShader << "    qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
+                                   << "    qt_tangent = qt_tangent - dot(qt_world_normal, qt_tangent) * qt_world_normal;\n"
+                                   << "    qt_tangent = normalize(qt_tangent);\n";
+                }
+            }
+            if (!genBinormal)
+                fragmentShader << "    qt_binormal = cross(qt_world_normal, qt_tangent);\n";
+
+            if (isDoubleSided) {
+                fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;\n");
+                fragmentShader.append("    qt_world_normal *= qt_facing;\n");
+                fragmentShader.append("    qt_tangent *= qt_facing;");
+                fragmentShader.append("    qt_binormal *= qt_facing;");
+            }
         }
     }
 
@@ -630,7 +651,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // our purposes here. The defaults are different from a
         // PrincipledMaterial however, since this is more sensible here.
         // (because the shader has to state it to get things)
-        vertexShader.generateVarTangentAndBinormal(inKey);
+
         // These should match the defaults of PrincipledMaterial.
         fragmentShader << "    float qt_customSpecularAmount = 0.5;\n"; // overrides qt_material_properties.x
         fragmentShader << "    float qt_customSpecularRoughness = 0.0;\n"; // overrides qt_material_properties.y
@@ -682,32 +703,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         else
             fragmentShader.addFunction("diffuseReflectionBSDF");
 
-        if (hasLightmaps)
-            fragmentShader.addInclude("evalLightmaps.glsllib");
-
-        if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
-            vertexShader.generateVarTangentAndBinormal(inKey);
-
-        if (enableBumpNormal) {
-            const int id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
-            const auto &names = imageStringTable[id];
-            fragmentShader << "    if (qt_tangent == vec3(0.0)) {\n"
-                           << "        vec2 dUVdx = dFdx(" << names.imageFragCoords << ");\n"
-                           << "        vec2 dUVdy = dFdy(" << names.imageFragCoords << ");\n";
-            fragmentShader << "        qt_tangent = (dUVdy.y * dFdx(qt_varWorldPos) - dUVdx.y * dFdy(qt_varWorldPos)) / (dUVdx.x * dUVdy.y - dUVdx.y * dUVdy.x);\n"
-                           << "        qt_tangent = qt_tangent - dot(qt_org_normal, qt_tangent) * qt_org_normal;\n"
-                           << "        qt_tangent = normalize(qt_tangent);\n"
-                           << "    }\n";
-            fragmentShader << "    if (qt_binormal == vec3(0.0))\n"
-                           << "        qt_binormal = cross(qt_org_normal, qt_tangent);\n";
-        }
-
-        // apply facing factor before fetching texture
-        if (isDoubleSided && (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)) {
-            fragmentShader.append("    qt_tangent *= qt_facing;");
-            fragmentShader.append("    qt_binormal *= qt_facing;");
-        }
-
         if (bumpImage != nullptr) {
             generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, bumpImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
@@ -722,9 +717,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addFunction("sampleNormalTexture");
             fragmentShader << "    qt_world_normal = qt_sampleNormalTexture3(" << names.imageSampler << ", normalStrength, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal);\n";
         }
-
-        if (includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal)
-            fragmentShader << "    mat3 qt_tanFrame = mat3(qt_tangent, qt_binormal, qt_world_normal);\n";
 
         if (hasEmissiveMap)
             fragmentShader.append("    vec3 qt_global_emission = qt_material_emissive_color;");
@@ -1135,17 +1127,17 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
             if (materialAdapter->isPrincipled()) {
-                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_tanFrame).rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
             } else {
-                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_tanFrame).rgb;\n";
+                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_world_normal).rgb;\n";
             }
             if (specularLightingEnabled) {
                 if (materialAdapter->isPrincipled()) {
                     fragmentShader << "    global_specular_light.rgb += "
-                                   << "qt_specularTint * qt_sampleGlossyPrincipled(qt_tanFrame, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                                   << "qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
                 } else {
                     fragmentShader << "    global_specular_light.rgb += qt_specularAmount * "
-                                   << "qt_specularTint * qt_sampleGlossy(qt_tanFrame, qt_view_vector, qt_roughnessAmount).rgb;\n";
+                                   << "qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
                 }
             }
         }
