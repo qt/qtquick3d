@@ -32,6 +32,19 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Attractor3D
+    \inherits Affector3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Attracts particles towards a position or a shape.
+
+    This element attracts particles towards a position inside the 3D view. To model
+    the gravity of a massive object whose center of gravity is far away, use \l Gravity3D.
+
+    The attraction position is defined either with \l position and \l positionVariation or
+    with \l shapeNode. If both are defined, \l shapeNode is used.
+*/
+
 // Minimum duration in seconds
 const float MIN_DURATION = 0.001f;
 
@@ -43,6 +56,15 @@ QQuick3DParticleAttractor::QQuick3DParticleAttractor(QObject *parent)
 {
 }
 
+/*!
+    \qmlproperty vector3d Attractor3D::position
+
+    This property defines the position for particles attraction.
+
+    The default value is \c (0, 0, 0) (the center of particle system).
+
+    \sa positionVariation, shapeNode
+*/
 QVector3D QQuick3DParticleAttractor::position() const
 {
     return m_position;
@@ -58,6 +80,27 @@ void QQuick3DParticleAttractor::setPosition(const QVector3D &position)
     update();
 }
 
+/*!
+    \qmlproperty vector3d Attractor3D::positionVariation
+
+    This property defines the variation on attract position. It can be used to not attract
+    into a single point, but randomly towards a wider area. Here is an example how to attract
+    particles into some random point inside (50, 50, 50) cube at position (100, 0, 0) within
+    2 to 4 seconds:
+
+    \qml
+    Attractor3D {
+        position: Qt.vector3d(100, 0, 0)
+        positionVariation: Qt.vector3d(50, 50, 50)
+        duration: 3000
+        durationVariation: 1000
+    }
+    \endqml
+
+    The default value is \c (0, 0, 0) (no variation).
+
+    \sa position, shapeNode
+*/
 QVector3D QQuick3DParticleAttractor::positionVariation() const
 {
     return m_positionVariation;
@@ -73,6 +116,29 @@ void QQuick3DParticleAttractor::setPositionVariation(const QVector3D &positionVa
     update();
 }
 
+/*!
+    \qmlproperty ShapeNode3D Attractor3D::shapeNode
+
+    This property defines a \l ShapeNode3D with a \l ParticleShape3D for particles attraction.
+    Each particle will be attracted into a random position inside this shape. This is an
+    alternative for defining \l position and \l positionVariation. Here is an example how to
+    attract particles into some random point inside sphere by the end of the particles
+    \l {Particle3D::lifeSpan}{lifeSpan}:
+
+    \qml
+    Attractor3D {
+        shapeNode: ShapeNode3D {
+            position: Qt.vector3d(100, 0, 0)
+            shape: ParticleShape3D {
+                type: ParticleShape3D.Sphere
+                fill: true
+            }
+        }
+    }
+    \endqml
+
+    \sa position, positionVariation
+*/
 QQuick3DParticleShapeNode *QQuick3DParticleAttractor::shapeNode() const
 {
     return m_shapeNode;
@@ -89,6 +155,15 @@ void QQuick3DParticleAttractor::setShapeNode(QQuick3DParticleShapeNode *shapeNod
     update();
 }
 
+/*!
+    \qmlproperty int Attractor3D::duration
+
+    This property defines the duration in milliseconds how long it takes for particles to
+    reach the \l position or \l shapeNode. When the value is -1, particle lifeSpan is used
+    as the duration.
+
+    The default value is \c -1.
+*/
 int QQuick3DParticleAttractor::duration() const
 {
     return m_duration;
@@ -104,6 +179,14 @@ void QQuick3DParticleAttractor::setDuration(int duration)
     update();
 }
 
+/*!
+    \qmlproperty int Attractor3D::durationVariation
+
+    This property defines the duration variation in milliseconds. The actual duration to
+    reach attractor is between \c duration - \c durationVariation and \c duration + \c durationVariation.
+
+    The default value is \c 0 (no variation).
+*/
 int QQuick3DParticleAttractor::durationVariation() const
 {
     return m_durationVariation;
@@ -119,6 +202,13 @@ void QQuick3DParticleAttractor::setDurationVariation(int durationVariation)
     update();
 }
 
+/*!
+    \qmlproperty bool Attractor3D::hideAtEnd
+
+    This property defines if the particle should disappear when it reaches the attractor.
+
+    The default value is \c false.
+*/
 bool QQuick3DParticleAttractor::hideAtEnd() const
 {
     return m_hideAtEnd;

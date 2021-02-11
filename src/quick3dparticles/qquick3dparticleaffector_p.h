@@ -55,12 +55,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QObject, publi
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
-    // When set, affect only these particles. If not set, affects all particles.
-    // TODO: Should this be particle or emitter? Currently we don't know which emitter launched particle,
-    // that would need data addition.
     Q_PROPERTY(QQmlListProperty<QQuick3DParticle> particles READ particles)
-    // When affector is not enabled, it doesn't do anything to particles.
-    // Default value true
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     QML_NAMED_ELEMENT(Affector3D)
     QML_UNCREATABLE("Affector3D is abstract")

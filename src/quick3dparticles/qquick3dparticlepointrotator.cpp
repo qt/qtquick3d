@@ -31,12 +31,28 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype PointRotator3D
+    \inherits Affector3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Rotates particles around a pivot point.
+
+    This element rotates particles around a \l pivotPoint towards the \l direction.
+*/
+
 QQuick3DParticlePointRotator::QQuick3DParticlePointRotator(QObject *parent)
     : QQuick3DParticleAffector(parent)
 {
 }
 
-// Magnitude is degrees per second
+/*!
+    \qmlproperty float PointRotator3D::magnitude
+
+    This property defines the magnitude in degrees per second. Negative magnitude
+    rotates to the opposite way from the \l {PointRotator3D::direction}{direction}.
+
+    The default value is \c 10.0.
+*/
 float QQuick3DParticlePointRotator::magnitude() const
 {
     return m_magnitude;
@@ -52,7 +68,14 @@ void QQuick3DParticlePointRotator::setMagnitude(float magnitude)
     update();
 }
 
-// Normalized rotation direction.
+/*!
+    \qmlproperty vector3d PointRotator3D::direction
+
+    This property defines the direction for the rotation. Values will be
+    automatically normalized to a unit vector.
+
+    The default value is \c (0.0, 1.0, 0.0) (around the y-coordinate).
+*/
 QVector3D QQuick3DParticlePointRotator::direction() const
 {
     return m_direction;
@@ -64,10 +87,19 @@ void QQuick3DParticlePointRotator::setDirection(const QVector3D &direction)
         return;
 
     m_direction = direction;
+    m_directionNormalized = m_direction.normalized();
     Q_EMIT directionChanged();
     update();
 }
 
+/*!
+    \qmlproperty vector3d PointRotator3D::pivotPoint
+
+    This property defines the pivot point for the rotation. Particles are rotated
+    around this point.
+
+    The default value is \c (0, 0, 0) (the center of particle system).
+*/
 QVector3D QQuick3DParticlePointRotator::pivotPoint() const
 {
     return m_pivotPoint;
@@ -90,7 +122,7 @@ void QQuick3DParticlePointRotator::affectParticle(const QQuick3DParticleData &sd
     if (!qFuzzyIsNull(m_magnitude)) {
         QMatrix4x4 m2;
         m2.translate(m_pivotPoint);
-        m2.rotate(time * m_magnitude, m_direction);
+        m2.rotate(time * m_magnitude, m_directionNormalized);
         m2.translate(-m_pivotPoint);
         d->position = m2.map(d->position);
     }

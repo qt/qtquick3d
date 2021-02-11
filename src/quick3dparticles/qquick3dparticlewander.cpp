@@ -34,36 +34,100 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Wander3D
+    \inherits Affector3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Applies random wave curves to particles.
+
+    This element applies random wave curves to particles. Curves can combine
+    global values which are the same for all particles and unique values which
+    differ randomly.
+*/
+
 QQuick3DParticleWander::QQuick3DParticleWander(QObject *parent)
     : QQuick3DParticleAffector(parent)
 {
 }
 
+/*!
+    \qmlproperty vector3d Wander3D::globalAmount
+
+    This property defines how long distance each particle moves at the ends of curves.
+    So if the value is for example (100, 10, 0), all particles wander between (100, 10, 0)
+    and (-100, -10, 0).
+
+    The default value is \c (0.0, 0.0, 0.0).
+*/
 const QVector3D &QQuick3DParticleWander::globalAmount() const
 {
     return m_globalAmount;
 }
 
+/*!
+    \qmlproperty vector3d Wander3D::globalPace
+
+    This property defines the pace (frequency) each particle wanders in curves per second.
+
+    The default value is \c (0.0, 0.0, 0.0).
+*/
 const QVector3D &QQuick3DParticleWander::globalPace() const
 {
     return m_globalPace;
 }
 
+/*!
+    \qmlproperty vector3d Wander3D::uniqueAmount
+
+    This property defines how long distance each particle moves at the ends of curves at maximum.
+
+    The default value is \c (0.0, 0.0, 0.0).
+*/
 const QVector3D &QQuick3DParticleWander::uniqueAmount() const
 {
     return m_uniqueAmount;
 }
 
+/*!
+    \qmlproperty vector3d Wander3D::uniquePace
+
+    This property defines the unique pace (frequency) each particle wanders in curves per second.
+
+    The default value is \c (0.0, 0.0, 0.0).
+*/
 const QVector3D &QQuick3DParticleWander::uniquePace() const
 {
     return m_uniquePace;
 }
 
+/*!
+    \qmlproperty float Wander3D::uniqueAmountVariation
+
+    This property defines variation for \l uniqueAmount between 0.0 and 1.0.
+    When the amount variation is 0.0, every particle reaches maximum amount. When it's 0.5,
+    every particle reaches between 0.5 - 1.5 of the amount.
+    For example if \l uniqueAmount is (100, 50, 20) and \l uniqueAmountVariation is 0.1,
+    the particles maximum wave distances are something random between (110, 55, 22)
+    and (90, 45, 18).
+
+    The default value is \c 0.0.
+*/
 float QQuick3DParticleWander::uniqueAmountVariation() const
 {
     return m_uniqueAmountVariation;
 }
 
+/*!
+    \qmlproperty float Wander3D::uniquePaceVariation
+
+    This property defines the unique pace (frequency) variation for each particle
+    between 0.0 and 1.0. When the variation is 0.0, every particle wander at the same
+    frequency. For example if \l uniquePace is (1.0, 2.0, 4.0) and \l uniquePaceVariation
+    is 0.5, the particles wave paces are something random between (2.0, 4.0, 8.0)
+    and (0.5, 1.0, 2.0).
+
+    The default value is \c 0.0.
+*/
 float QQuick3DParticleWander::uniquePaceVariation() const
 {
     return m_uniquePaceVariation;

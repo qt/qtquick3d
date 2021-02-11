@@ -52,12 +52,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAttractor : public QQuick3DParti
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D positionVariation READ positionVariation WRITE setPositionVariation NOTIFY positionVariationChanged)
     Q_PROPERTY(QQuick3DParticleShapeNode *shapeNode READ shapeNode WRITE setShapeNode NOTIFY shapeNodeChanged)
-    // Time in ms it takes for particles to reach attractor.
-    // Default value is -1, meaning duration is as long as particles lifetime.
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
-    // Set to true if you want particles to hide when they reach the affector position
-    // Default value false
     Q_PROPERTY(bool hideAtEnd READ hideAtEnd WRITE setHideAtEnd NOTIFY hideAtEndChanged)
     QML_NAMED_ELEMENT(Attractor3D)
 

@@ -31,6 +31,19 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Affector3D
+    \inherits QtObject
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Affectors modify the attributes of particles during their lifetime.
+
+    The Affector3D is an abstract base class of affectors like \l Gravity3D, \l Wander3D, and \l PointRotator3D.
+
+    Affectors don't have position or scale. By default they affect all particles in the system, but this can be
+    limited by defining the \l particles list. If the system has multiple affectors, the order of affectors may
+    result in different outcome, as affectors are applied one after another.
+*/
+
 QQuick3DParticleAffector::QQuick3DParticleAffector(QObject *parent)
     : QObject(parent)
 {
@@ -44,6 +57,12 @@ QQuick3DParticleAffector::~QQuick3DParticleAffector()
         m_system->unRegisterParticleAffector(this);
 }
 
+/*!
+    \qmlproperty ParticleSystem3D Affector3D::system
+
+    This property defines the \l ParticleSystem3D for the affector. If system is direct parent of the affector,
+    this property does not need to be defined.
+*/
 QQuick3DParticleSystem* QQuick3DParticleAffector::system() const
 {
     return m_system;
@@ -65,6 +84,14 @@ void QQuick3DParticleAffector::setSystem(QQuick3DParticleSystem* system)
     update();
 }
 
+/*!
+    \qmlproperty bool Affector3D::enabled
+
+    If enabled is set to \c false, this affector will not alter any particles.
+    Usually this is used to conditionally turn an affector on or off.
+
+    The default value is \c true.
+*/
 bool QQuick3DParticleAffector::enabled() const
 {
     return m_enabled;
@@ -88,6 +115,12 @@ void QQuick3DParticleAffector::componentComplete()
 
 // Particles
 
+/*!
+    \qmlproperty List<Particle3D> Affector3D::particles
+
+    This list controls which logical particles will be affected.
+    When empty, all particles in the system are affected.
+*/
 QQmlListProperty<QQuick3DParticle> QQuick3DParticleAffector::particles()
 {
     return {this, this,

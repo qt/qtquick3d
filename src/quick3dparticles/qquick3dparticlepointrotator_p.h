@@ -75,8 +75,9 @@ Q_SIGNALS:
     void pivotPointChanged();
 
 private:
-    float m_magnitude = 0;
-    QVector3D m_direction;
+    float m_magnitude = 10.0f;
+    QVector3D m_direction = {0.0f, 1.0f, 0.0f};
+    QVector3D m_directionNormalized = {0.0f, 1.0f, 0.0f};
     QVector3D m_pivotPoint;
 };
 
