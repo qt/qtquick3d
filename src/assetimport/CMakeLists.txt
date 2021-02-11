@@ -10,6 +10,7 @@ qt_internal_add_module(Quick3DAssetImport
         ../3rdparty/xatlas/xatlas.cpp ../3rdparty/xatlas/xatlas.h
         qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
         qssgmesh.cpp qssgmesh_p.h
+        qssglightmapuvgenerator.cpp qssglightmapuvgenerator_p.h
         qtquick3dassetimportglobal_p.h
     DEFINES
         QT_BUILD_QUICK3DASSETIMPORT_LIB

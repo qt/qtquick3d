@@ -38,6 +38,7 @@
 #include <assimp/importerdesc.h>
 
 #include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DAssetImport/private/qssglightmapuvgenerator_p.h>
 
 #include <QtGui/QImage>
 #include <QtGui/QImageReader>
@@ -925,7 +926,6 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
     bool needsVertexColorData = false;
     unsigned uv0Components = 0;
     unsigned uv1Components = 0;
-    unsigned totalVertices = 0;
     bool needsBones = false;
 
     // GLTF should support at least 8 attributes for morphing.
@@ -951,7 +951,6 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
     QVector<float> targetWeight;
 
     for (const auto *mesh : meshes) {
-        totalVertices += mesh->mNumVertices;
         uv0Components = qMax(mesh->mNumUVComponents[0], uv0Components);
         uv1Components = qMax(mesh->mNumUVComponents[1], uv1Components);
         needsPositionData |= mesh->HasPositions();
@@ -1001,25 +1000,38 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
 
     // Always use 32-bit indices. Metal has a requirement of 4 byte alignment
     // for index buffer offsets, and we cannot risk hitting that.
-    const QSSGMesh::Mesh::ComponentType indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
+    QSSGMesh::Mesh::ComponentType indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
 
     const quint32 float32ByteSize = QSSGMesh::MeshInternal::byteSizeForComponentType(QSSGMesh::Mesh::ComponentType::Float32);
     for (const auto *mesh : meshes) {
-        // Position
-        if (mesh->HasPositions())
-            positionData += QByteArray(reinterpret_cast<char*>(mesh->mVertices),
-                                       mesh->mNumVertices * 3 * float32ByteSize);
-        else if (needsPositionData)
-            positionData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
+        // Index Buffer
+        QVector<quint32> indexes;
+        indexes.reserve(mesh->mNumFaces * 3);
 
-        // Normal
-        if (mesh->HasNormals())
-            normalData += QByteArray(reinterpret_cast<char*>(mesh->mNormals),
-                                     mesh->mNumVertices * 3 * float32ByteSize);
-        else if (needsNormalData)
-            normalData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
+        for (unsigned int faceIndex = 0;faceIndex < mesh->mNumFaces; ++faceIndex) {
+            const auto face = mesh->mFaces[faceIndex];
+            // Faces should always have 3 indicides
+            Q_ASSERT(face.mNumIndices == 3);
+            indexes.append(quint32(face.mIndices[0]) + baseIndex);
+            indexes.append(quint32(face.mIndices[1]) + baseIndex);
+            indexes.append(quint32(face.mIndices[2]) + baseIndex);
+        }
+        // Since we might be combining multiple meshes together, we also need to change the index offset
+        baseIndex = *std::max_element(indexes.constBegin(), indexes.constEnd()) + 1;
 
-        // UV0
+        QByteArray positions;
+        if (mesh->HasPositions()) {
+            positions = QByteArray::fromRawData(reinterpret_cast<const char *>(mesh->mVertices),
+                                                mesh->mNumVertices * 3 * float32ByteSize);
+        }
+
+        QByteArray normals;
+        if (mesh->HasNormals()) {
+            normals = QByteArray::fromRawData(reinterpret_cast<const char *>(mesh->mNormals),
+                                              mesh->mNumVertices * 3 * float32ByteSize);
+        }
+
+        QByteArray uv0;
         if (mesh->HasTextureCoords(0)) {
             QVector<float> uvCoords;
             uvCoords.resize(uv0Components * mesh->mNumVertices);
@@ -1031,13 +1043,78 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
                 if (uv0Components == 3)
                     uvCoords[offset + 2] = textureCoords[i].z;
             }
-            uv0Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
-        } else {
-            uv0Data += QByteArray(mesh->mNumVertices * uv0Components * float32ByteSize, '\0');
+            uv0 = QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
         }
 
-        // UV1
-        if (mesh->HasTextureCoords(1)) {
+        // UV unwrapping for lightmap
+        int outputVertexCount = mesh->mNumVertices;
+        QVector<quint32> vertexMap;
+        QByteArray lightmapUVChannel;
+        QSize lightmapSizeHint; // ### not yet stored in the QSSGMesh
+        if (m_generateLightmapUV && mesh->HasPositions()) {
+            QSSGLightmapUVGenerator uvGen;
+            const QByteArray indices = QByteArray::fromRawData(reinterpret_cast<const char *>(indexes.constData()),
+                                                               indexes.count() * sizeof(quint32));
+            QSSGLightmapUVGeneratorResult lightmapResult = uvGen.run(positions,
+                                                                     normals,
+                                                                     uv0,
+                                                                     indices,
+                                                                     QSSGMesh::Mesh::ComponentType::UnsignedInt32);
+            if (lightmapResult.isValid()) {
+                qDebug("Lightmap UV unwrap, original vertex count = %u, new vertex count = %d",
+                       mesh->mNumVertices, int(lightmapResult.vertexMap.count()));
+
+                indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
+                const quint32 *indexPtr = reinterpret_cast<const quint32 *>(lightmapResult.indexData.constData());
+                for (int i = 0, count = indexes.count(); i != count; ++i)
+                    indexes[i] = *indexPtr++;
+
+                outputVertexCount = lightmapResult.vertexMap.count();
+                vertexMap = lightmapResult.vertexMap;
+                lightmapUVChannel = lightmapResult.lightmapUVChannel;
+                lightmapSizeHint = lightmapResult.lightmapSize;
+            } else {
+                return QStringLiteral("Lightmap UV generation failed");
+            }
+        }
+
+        // From this point on, if vertexMap is non-empty, then remapping is
+        // needed for all attribute data. Also note the potential difference
+        // between outputVertexCount and mesh->mNumVertices from this point on.
+
+        if (mesh->HasPositions()) {
+            if (vertexMap.isEmpty())
+                positionData += positions;
+            else
+                positionData += QSSGLightmapUVGenerator::remap<float>(positions, vertexMap, 3);
+        } else if (needsPositionData) {
+            positionData += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
+        }
+
+        if (mesh->HasNormals()) {
+            if (vertexMap.isEmpty())
+                normalData += normals;
+            else
+                normalData += QSSGLightmapUVGenerator::remap<float>(normals, vertexMap, 3);
+        } else if (needsNormalData) {
+            normalData += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
+        }
+
+        if (mesh->HasTextureCoords(0)) {
+            if (vertexMap.isEmpty())
+                uv0Data += uv0;
+            else
+                uv0Data += QSSGLightmapUVGenerator::remap<float>(uv0, vertexMap, uv0Components);
+        } else {
+            uv0Data += QByteArray(outputVertexCount * uv0Components * float32ByteSize, '\0');
+        }
+
+        if (!lightmapUVChannel.isEmpty()) {
+            if (mesh->HasTextureCoords(1))
+                qWarning("Mesh has UV1 but lightmap UV generation was enabled, overwriting UV1");
+            uv1Data += lightmapUVChannel;
+            uv1Components = 2;
+        } else if (mesh->HasTextureCoords(1)) {
             QVector<float> uvCoords;
             uvCoords.resize(uv1Components * mesh->mNumVertices);
             for (uint i = 0; i < mesh->mNumVertices; ++i) {
@@ -1050,22 +1127,42 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
             }
             uv1Data += QByteArray(reinterpret_cast<const char*>(uvCoords.constData()), uvCoords.size() * sizeof(float));
         } else {
+            Q_ASSERT(outputVertexCount == int(mesh->mNumVertices)); // because we handled the lightmapUVChannel case above
             uv1Data += QByteArray(mesh->mNumVertices * uv1Components * float32ByteSize, '\0');
         }
 
         if (mesh->HasTangentsAndBitangents()) {
-            // Tangents
-            tangentData += QByteArray(reinterpret_cast<char*>(mesh->mTangents),
-                                      mesh->mNumVertices * 3 * float32ByteSize);
+            const QByteArray tangents = QByteArray::fromRawData(reinterpret_cast<const char *>(mesh->mTangents),
+                                                                mesh->mNumVertices * 3 * float32ByteSize);
+            if (vertexMap.isEmpty())
+                tangentData += tangents;
+            else
+                tangentData += QSSGLightmapUVGenerator::remap<float>(tangents, vertexMap, 3);
+
             // Binormals (They are actually supposed to be Bitangents despite what they are called)
-            binormalData += QByteArray(reinterpret_cast<char*>(mesh->mBitangents),
-                                       mesh->mNumVertices * 3 * float32ByteSize);
+            const QByteArray binormals = QByteArray::fromRawData(reinterpret_cast<const char*>(mesh->mBitangents),
+                                                                 mesh->mNumVertices * 3 * float32ByteSize);
+            if (vertexMap.isEmpty())
+                binormalData += binormals;
+            else
+                binormalData += QSSGLightmapUVGenerator::remap<float>(binormals, vertexMap, 3);
         } else if (needsTangentData) {
-            tangentData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
-            binormalData += QByteArray(mesh->mNumVertices * 3 * float32ByteSize, '\0');
+            tangentData += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
+            binormalData += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
         }
 
-        // ### Bones + Weights
+        if (mesh->HasVertexColors(0)) {
+            const QByteArray colors = QByteArray::fromRawData(reinterpret_cast<const char *>(mesh->mColors[0]),
+                                                              mesh->mNumVertices * 4 * float32ByteSize);
+            if (vertexMap.isEmpty())
+                vertexColorData += colors;
+            else
+                vertexColorData += QSSGLightmapUVGenerator::remap<float>(colors, vertexMap, 4);
+        } else if (needsVertexColorData) {
+            vertexColorData += QByteArray(outputVertexCount * 4 * float32ByteSize, '\0');
+        }
+
+        // Bones + Weights
         QVector<qint32> boneIndexes;
         QVector<float> fBoneIndexes;
         QVector<float> weights;
@@ -1108,68 +1205,83 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
                     }
                 }
             }
-            // Bone Indexes
-            if (m_useFloatJointIndices)
-                boneIndexData += QByteArray(reinterpret_cast<const char *>(fBoneIndexes.constData()), fBoneIndexes.size() * sizeof(float));
-            else
-                boneIndexData += QByteArray(reinterpret_cast<const char *>(boneIndexes.constData()), boneIndexes.size() * sizeof(qint32));
-            // Bone Weights
-            boneWeightData += QByteArray(reinterpret_cast<const char *>(weights.constData()), weights.size() * sizeof(float));
-        } else if (needsBones) {
-            // Bone Indexes
-            boneIndexData += QByteArray(mesh->mNumVertices * 4 * QSSGMesh::MeshInternal::byteSizeForComponentType(QSSGMesh::Mesh::ComponentType::Int32), '\0');
-            // Bone Weights
-            boneWeightData += QByteArray(mesh->mNumVertices * 4 * float32ByteSize, '\0');
-        }
 
-        // Color
-        if (mesh->HasVertexColors(0))
-            vertexColorData += QByteArray(reinterpret_cast<char*>(mesh->mColors[0]), mesh->mNumVertices * 4 * float32ByteSize);
-        else if (needsVertexColorData)
-            vertexColorData += QByteArray(mesh->mNumVertices * 4 * float32ByteSize, '\0');
+            if (m_useFloatJointIndices) {
+                const QByteArray boneIndices = QByteArray::fromRawData(reinterpret_cast<const char *>(fBoneIndexes.constData()),
+                                                                       fBoneIndexes.size() * sizeof(float));
+                if (vertexMap.isEmpty())
+                    boneIndexData += boneIndices;
+                else
+                    boneIndexData += QSSGLightmapUVGenerator::remap<float>(boneIndices, vertexMap, 4);
+            } else {
+                const QByteArray boneIndices = QByteArray::fromRawData(reinterpret_cast<const char *>(boneIndexes.constData()),
+                                                                       boneIndexes.size() * sizeof(qint32));
+                if (vertexMap.isEmpty())
+                    boneIndexData += boneIndices;
+                else
+                    boneIndexData += QSSGLightmapUVGenerator::remap<qint32>(boneIndices, vertexMap, 4);
+            }
+
+            const QByteArray boneWeights = QByteArray::fromRawData(reinterpret_cast<const char *>(weights.constData()),
+                                                                   weights.size() * sizeof(float));
+            if (vertexMap.isEmpty())
+                boneWeightData += boneWeights;
+            else
+                boneWeightData += QSSGLightmapUVGenerator::remap<float>(boneWeights, vertexMap, 4);
+        } else if (needsBones) {
+            boneIndexData += QByteArray(outputVertexCount * 4 * QSSGMesh::MeshInternal::byteSizeForComponentType(QSSGMesh::Mesh::ComponentType::Int32), '\0');
+            boneWeightData += QByteArray(outputVertexCount * 4 * float32ByteSize, '\0');
+        }
 
         for (uint i = 0; i < numMorphTargets; ++i) {
             aiAnimMesh *animMesh = nullptr;
-            if (mesh->mNumAnimMeshes > i)
+            if (i < mesh->mNumAnimMeshes) {
                 animMesh = mesh->mAnimMeshes[i];
-
+                Q_ASSERT(animMesh->mNumVertices == mesh->mNumVertices);
+            }
             if (needsTargetPosition[i]) {
-                if (animMesh && animMesh->HasPositions())
-                    targetPositionData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mVertices), animMesh->mNumVertices * 3 * float32ByteSize);
-                else
-                    targetPositionData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
+                if (animMesh && animMesh->HasPositions()) {
+                    const QByteArray targetPositions = QByteArray::fromRawData(reinterpret_cast<const char *>(animMesh->mVertices),
+                                                                              mesh->mNumVertices * 3 * float32ByteSize);
+                    if (vertexMap.isEmpty())
+                        targetPositionData[i] += targetPositions;
+                    else
+                        targetPositionData[i] += QSSGLightmapUVGenerator::remap<float>(targetPositions, vertexMap, 3);
+                 } else {
+                    targetPositionData[i] += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
+                }
             }
             if (needsTargetNormal[i]) {
-                if (animMesh && animMesh->HasNormals())
-                    targetNormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mNormals), animMesh->mNumVertices * 3 * float32ByteSize);
-                else
-                    targetNormalData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
+                if (animMesh && animMesh->HasNormals()) {
+                    const QByteArray targetNormals = QByteArray::fromRawData(reinterpret_cast<const char *>(animMesh->mNormals),
+                                                                             mesh->mNumVertices * 3 * float32ByteSize);
+                    if (vertexMap.isEmpty())
+                        targetNormalData[i] += targetNormals;
+                    else
+                        targetNormalData[i] += QSSGLightmapUVGenerator::remap<float>(targetNormals, vertexMap, 3);
+                } else {
+                    targetNormalData[i] += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
+                }
             }
             if (needsTargetTangent[i]) {
                 if (animMesh && animMesh->HasTangentsAndBitangents()) {
-                    targetTangentData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mTangents), animMesh->mNumVertices * 3 * float32ByteSize);
-                    targetBinormalData[i] += QByteArray(reinterpret_cast<char*>(animMesh->mBitangents), animMesh->mNumVertices * 3 * float32ByteSize);
+                    const QByteArray targetTangents = QByteArray::fromRawData(reinterpret_cast<const char *>(animMesh->mTangents),
+                                                                              mesh->mNumVertices * 3 * float32ByteSize);
+                    const QByteArray targetBinormals = QByteArray::fromRawData(reinterpret_cast<const char *>(animMesh->mBitangents),
+                                                                               mesh->mNumVertices * 3 * float32ByteSize);
+                    if (vertexMap.isEmpty()) {
+                        targetTangentData[i] += targetTangents;
+                        targetBinormalData[i] += targetBinormals;
+                    } else {
+                        targetTangentData[i] += QSSGLightmapUVGenerator::remap<float>(targetTangents, vertexMap, 3);
+                        targetBinormalData[i] += QSSGLightmapUVGenerator::remap<float>(targetBinormals, vertexMap, 3);
+                    }
                 } else {
-                    targetTangentData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
-                    targetBinormalData[i] += QByteArray(animMesh->mNumVertices * 3 * float32ByteSize, '\0');
+                    targetTangentData[i] += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
+                    targetBinormalData[i] += QByteArray(outputVertexCount * 3 * float32ByteSize, '\0');
                 }
             }
         }
-
-        // Index Buffer
-        QVector<quint32> indexes;
-        indexes.reserve(mesh->mNumFaces * 3);
-
-        for (unsigned int faceIndex = 0;faceIndex < mesh->mNumFaces; ++faceIndex) {
-            const auto face = mesh->mFaces[faceIndex];
-            // Faces should always have 3 indicides
-            Q_ASSERT(face.mNumIndices == 3);
-            indexes.append(quint32(face.mIndices[0]) + baseIndex);
-            indexes.append(quint32(face.mIndices[1]) + baseIndex);
-            indexes.append(quint32(face.mIndices[2]) + baseIndex);
-        }
-        // Since we might be combining multiple meshes together, we also need to change the index offset
-        baseIndex = *std::max_element(indexes.constBegin(), indexes.constEnd()) + 1;
 
         SubsetEntryData subsetEntry;
         subsetEntry.indexOffset = indexBufferData.length() / QSSGMesh::MeshInternal::byteSizeForComponentType(indexType);
@@ -2482,6 +2594,8 @@ void AssimpImporter::processOptions(const QVariantMap &options)
     m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), optionsObject);
     m_forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), optionsObject);
     m_binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), optionsObject);
+
+    m_generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), optionsObject);
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)
