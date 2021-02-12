@@ -34,6 +34,23 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype ParticleEmitter3D
+    \inherits Node
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Emitter for logical particles.
+
+    This element emits logical particles into the \l ParticleSystem3D, with the given starting attributes.
+
+    At least one emitter is required to have particles in the \l ParticleSystem3D. There are a few different
+    ways to control the emitting amount:
+    \list
+        \li Set the \l emitRate which controls how many particles per second get emitted continuously.
+        \li Add \l EmitBurst3D elements into emitBursts property to emit bursts declaratively.
+        \li Call any of the \l burst() methods to emit bursts immediately.
+    \endlist
+*/
+
 QQuick3DParticleEmitter::QQuick3DParticleEmitter(QQuick3DNode *parent)
     : QQuick3DNode(parent)
 {
@@ -47,6 +64,16 @@ QQuick3DParticleEmitter::~QQuick3DParticleEmitter()
         m_system->unRegisterParticleEmitter(this);
 }
 
+/*!
+    \qmlproperty bool ParticleEmitter3D::enabled
+
+    If enabled is set to \c false, this emitter will not emit any particles.
+    Usually this is used to conditionally turn an emitter on or off.
+    If you want to continue emitting burst, keep \l emitRate at 0 instead of
+    toggling this to \c false.
+
+    The default value is \c true.
+*/
 bool QQuick3DParticleEmitter::enabled() const
 {
     return m_enabled;
@@ -66,6 +93,13 @@ void QQuick3DParticleEmitter::setEnabled(bool enabled)
     Q_EMIT enabledChanged();
 }
 
+/*!
+    \qmlproperty Direction3D ParticleEmitter3D::velocity
+
+    This property can be used to set a starting velocity for emitted particles.
+    If velocity is not set, particles start motionless and velocity comes from
+    \l {Affector3D}{affectors} if they are used.
+*/
 QQuick3DParticleDirection *QQuick3DParticleEmitter::velocity() const
 {
     return m_velocity;
@@ -83,6 +117,12 @@ void QQuick3DParticleEmitter::setVelocity(QQuick3DParticleDirection *velocity)
     Q_EMIT velocityChanged();
 }
 
+/*!
+    \qmlproperty ParticleSystem3D ParticleEmitter3D::system
+
+    This property defines the \l ParticleSystem3D for the emitter. If system is direct parent of the emitter,
+    this property does not need to be defined.
+*/
 QQuick3DParticleSystem* QQuick3DParticleEmitter::system() const
 {
     return m_system;
@@ -109,7 +149,15 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem* system)
     Q_EMIT systemChanged();
 }
 
+/*!
+    \qmlproperty int ParticleEmitter3D::emitRate
 
+    This property defines the constant emitting rate in particles per second.
+    For example, if the emitRate is 120 and system animates at 60 frames per
+    second, 2 new particles are emitted at every frame.
+
+    The default value is \c 0.
+*/
 int QQuick3DParticleEmitter::emitRate() const
 {
     return m_emitRate;
@@ -130,6 +178,16 @@ void QQuick3DParticleEmitter::setEmitRate(int emitRate)
 }
 
 
+/*!
+    \qmlproperty float ParticleEmitter3D::particleScale
+
+    This property defines the scale multiplier of the particles at the beginning.
+    To have variation in the particle sizes, use \l particleScaleVariation.
+
+    The default value is \c 1.0.
+
+    \sa particleEndScale, particleScaleVariation
+*/
 float QQuick3DParticleEmitter::particleScale() const
 {
     return m_particleScale;
@@ -144,6 +202,19 @@ void QQuick3DParticleEmitter::setParticleScale(float particleScale)
     Q_EMIT particleScaleChanged();
 }
 
+/*!
+    \qmlproperty float ParticleEmitter3D::particleEndScale
+
+    This property defines the scale multiplier of the particles at the end
+    of particle \l lifeSpan. To have variation in the particle end sizes, use
+    \l particleScaleVariation. When the value is negative, end scale is the
+    same as the \l particleScale, so scale doesn't change during the particle
+    \l lifeSpan.
+
+    The default value is \c -1.0.
+
+    \sa particleScale, particleScaleVariation
+*/
 float QQuick3DParticleEmitter::particleEndScale() const
 {
     return m_particleEndScale;
@@ -158,6 +229,26 @@ void QQuick3DParticleEmitter::setParticleEndScale(float particleEndScale)
     Q_EMIT particleEndScaleChanged();
 }
 
+/*!
+    \qmlproperty float ParticleEmitter3D::particleScaleVariation
+
+    This property defines the scale variation of the particles. This variation
+    is used for both \l particleScale and \l particleEndScale. For example, to
+    emit particles which start at scale 0.5 - 1.5 and end at 2.5 - 3.5:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        particleScale: 1.0
+        particleEndScale: 3.0
+        particleScaleVariation: 0.5
+    }
+    \endqml
+
+    The default value is \c 0.0.
+
+    \sa particleScale, particleScaleVariation
+*/
 float QQuick3DParticleEmitter::particleScaleVariation() const
 {
     return m_particleScaleVariation;
@@ -172,6 +263,15 @@ void QQuick3DParticleEmitter::setParticleScaleVariation(float particleScaleVaria
     Q_EMIT particleScaleVariationChanged();
 }
 
+/*!
+    \qmlproperty int ParticleEmitter3D::lifeSpan
+
+    This property defines the lifespan of a single particle in milliseconds.
+
+    The default value is \c 1000.
+
+    \sa lifeSpanVariation
+*/
 int QQuick3DParticleEmitter::lifeSpan() const
 {
     return m_lifeSpan;
@@ -186,6 +286,25 @@ void QQuick3DParticleEmitter::setLifeSpan(int lifeSpan)
     Q_EMIT lifeSpanChanged();
 }
 
+/*!
+    \qmlproperty int ParticleEmitter3D::lifeSpanVariation
+
+    This property defines the lifespan variation of a single particle in milliseconds.
+
+    For example, to emit particles which will exist between 3 and 4 seconds:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        lifeSpan: 3500
+        lifeSpanVariation: 500
+    }
+    \endqml
+
+    The default value is \c 0.
+
+    \sa lifeSpan
+*/
 int QQuick3DParticleEmitter::lifeSpanVariation() const
 {
     return m_lifeSpanVariation;
@@ -200,6 +319,13 @@ void QQuick3DParticleEmitter::setLifeSpanVariation(int lifeSpanVariation)
     Q_EMIT lifeSpanVariationChanged();
 }
 
+/*!
+    \qmlproperty Particle3D ParticleEmitter3D::particle
+
+    This property defines the logical particle which this emitter emits.
+    Emitter must have a particle defined, or it doesn't emit anything.
+    Particle can be either \l SpriteParticle3D or \l ModelParticle3D.
+*/
 QQuick3DParticle *QQuick3DParticleEmitter::particle() const
 {
     return m_particle;
@@ -214,7 +340,17 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
     Q_EMIT particleChanged();
 }
 
+/*!
+    \qmlproperty ParticleShape3D ParticleEmitter3D::shape
 
+    This property defines optional shape for the emitting area. Shape is scaled,
+    positioned and rotated based on the emitter node properties. When the Shape
+    \l {ParticleShape3D::fill}{fill} property is set to false, emitting happens
+    only from the surface of the shape.
+
+    When the shape is not defined, emitting is done from the center point of the
+    emitter node.
+*/
 QQuick3DParticleShape *QQuick3DParticleEmitter::shape() const
 {
     return m_shape;
@@ -231,6 +367,14 @@ void QQuick3DParticleEmitter::setShape(QQuick3DParticleShape *shape)
     Q_EMIT shapeChanged();
 }
 
+/*!
+    \qmlproperty vector3d ParticleEmitter3D::particleRotation
+
+    This property defines the rotation of the particles in the beginning.
+    Rotation is defined as degrees in euler angles.
+
+    \sa particleRotationVariation
+*/
 QVector3D QQuick3DParticleEmitter::particleRotation() const
 {
     return m_particleRotation;
@@ -245,6 +389,23 @@ void QQuick3DParticleEmitter::setParticleRotation(const QVector3D &particleRotat
     Q_EMIT particleRotationChanged();
 }
 
+/*!
+    \qmlproperty vector3d ParticleEmitter3D::particleRotationVariation
+
+    This property defines the rotation variation of the particles in the beginning.
+    Rotation variation is defined as degrees in euler angles.
+
+    For example, to emit particles in fully random rotations:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        particleRotationVariation: Qt.vector3d(180, 180, 180)
+    }
+    \endqml
+
+    \sa particleRotation
+*/
 QVector3D QQuick3DParticleEmitter::particleRotationVariation() const
 {
     return m_particleRotationVariation;
@@ -259,6 +420,14 @@ void QQuick3DParticleEmitter::setParticleRotationVariation(const QVector3D &part
     Q_EMIT particleRotationVariationChanged();
 }
 
+/*!
+    \qmlproperty vector3d ParticleEmitter3D::particleRotationVelocity
+
+    This property defines the rotation velocity of the particles in the beginning.
+    Rotation velocity is defined as degrees per second in euler angles.
+
+    \sa particleRotationVelocityVariation
+*/
 QVector3D QQuick3DParticleEmitter::particleRotationVelocity() const
 {
     return m_particleRotationVelocity;
@@ -273,6 +442,25 @@ void QQuick3DParticleEmitter::setParticleRotationVelocity(const QVector3D &parti
     Q_EMIT particleRotationVelocityChanged();
 }
 
+/*!
+    \qmlproperty vector3d ParticleEmitter3D::particleRotationVelocityVariation
+
+    This property defines the rotation velocity variation of the particles.
+    Rotation velocity variation is defined as degrees per second in euler angles.
+
+    For example, to emit particles in random rotations which have random rotation
+    velocity between -100 and 100 degrees per second into any directions:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        particleRotationVariation: Qt.vector3d(180, 180, 180)
+        particleRotationVelocityVariation: Qt.vector3d(100, 100, 100)
+    }
+    \endqml
+
+    \sa particleRotationVelocity
+*/
 QVector3D QQuick3DParticleEmitter::particleRotationVelocityVariation() const
 {
     return m_particleRotationVelocityVariation;
@@ -294,16 +482,34 @@ void QQuick3DParticleEmitter::reset()
     m_unemittedF = 0.0f;
 }
 
+/*!
+    \qmlmethod vector3d ParticleEmitter3D::burst(int count)
+
+    This method emits \a count amount of particles from this emitter immediately.
+*/
 void QQuick3DParticleEmitter::burst(int count)
 {
     burst(count, 0, QVector3D());
 }
 
+/*!
+    \qmlmethod vector3d ParticleEmitter3D::burst(int count, int duration)
+
+    This method emits \a count amount of particles from this emitter during the
+    next \a duration milliseconds.
+*/
 void QQuick3DParticleEmitter::burst(int count, int duration)
 {
     burst(count, duration, QVector3D());
 }
 
+/*!
+    \qmlmethod vector3d ParticleEmitter3D::burst(int count, int duration, vector3d position)
+
+    This method emits \a count amount of particles from this emitter during the
+    next \a duration milliseconds. The particles are emitted as if the emitter was
+    at \a position but all other properties are the same.
+*/
 void QQuick3DParticleEmitter::burst(int count, int duration, const QVector3D &position)
 {
     if (!m_system)
@@ -539,6 +745,32 @@ void QQuick3DParticleEmitter::componentComplete()
 
 // EmitBursts - list handling
 
+/*!
+    \qmlproperty List<EmitBurst3D> ParticleEmitter3D::emitBursts
+
+    This property takes a list of \l EmitBurst3D elements, to declaratively define bursts.
+    If the burst starting time, amount, and duration are known beforehand, it is better to
+    use this property than e.g. calling \l burst() with a \l Timer.
+
+    For example, to emit 100 particles at the beginning, and 50 particles at 2 seconds:
+
+    \qml
+    ParticleEmitter3D {
+        emitBursts: [
+            EmitBurst3D {
+                time: 0
+                amount: 100
+            },
+            EmitBurst3D {
+                time: 2000
+                amount: 50
+            }
+        ]
+    }
+    \endqml
+
+    \sa burst()
+*/
 QQmlListProperty<QQuick3DParticleEmitBurst> QQuick3DParticleEmitter::emitBursts()
 {
     return {this, this,

@@ -53,14 +53,8 @@ class QQuick3DParticleEmitter;
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitBurst : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    // Time in ms when burst is emitted
     Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
-    // Amount of particles to burst at time
     Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
-    // Emitting duration in ms. Emits will be distributed evenly during this time.
-    // Default value is 0, meaning all particles will be bursted in the beginning of time.
-    // Example: time = 1000, duration = 500, amount = 80. 80 particles will be emitted
-    // between 1000 - 1500ms, meaning emit rate of 160 during that time.
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
 
     QML_NAMED_ELEMENT(EmitBurst3D)
