@@ -270,18 +270,17 @@ struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
     }
 };
 
-struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
+struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<5>
 {
     enum ImageMapBits {
         Enabled = 1 << 0,
         EnvMap = 1 << 1,
         LightProbe = 1 << 2,
-        InvertUV = 1 << 3,
-        Premultiplied = 1 << 4,
-        Identity = 1 << 5
+        Identity = 1 << 3,
+        UsesUV1 = 1 << 4
     };
 
-    explicit QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<6>(inName) {}
+    explicit QSSGShaderKeyImageMap(const char *inName = "") : QSSGShaderKeyUnsigned<5>(inName) {}
 
     bool getBitValue(ImageMapBits imageBit, QSSGDataView<quint32> inKeySet) const
     {
@@ -313,6 +312,9 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
     bool isIdentityTransform(QSSGDataView<quint32> inKeySet) const { return getBitValue(Identity, inKeySet); }
     void setIdentityTransform(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Identity, val, inKeySet); }
 
+    bool isUsingUV1(QSSGDataView<quint32> inKeySet) const { return getBitValue(UsesUV1, inKeySet); }
+    void setUsesUV1(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(UsesUV1, val, inKeySet); }
+
     void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
     {
         ioStr.append(name);
@@ -324,6 +326,8 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
         internalToString(ioStr, QByteArrayView("lightProbe"), isLightProbe(inKeySet));
         ioStr.append(';');
         internalToString(ioStr, QByteArrayView("identity"), isIdentityTransform(inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("usesUV1"), isUsingUV1(inKeySet));
         ioStr.append('}');
     }
 };
