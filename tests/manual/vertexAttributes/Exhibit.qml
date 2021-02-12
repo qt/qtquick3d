@@ -66,7 +66,7 @@ Node {
     PrincipledMaterial {
         id: material
         baseColor: "white"
-        emissiveColor: "red"
+        emissiveFactor: Qt.vector3d(1.0, 0.0, 0.0)
         baseColorMap: Texture {
             source: "maps/basemetal_small.png"
         }

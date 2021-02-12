@@ -58,9 +58,8 @@ class Q_QUICK3D_EXPORT QQuick3DDefaultMaterial : public QQuick3DMaterial
     Q_PROPERTY(QColor diffuseColor READ diffuseColor WRITE setDiffuseColor NOTIFY diffuseColorChanged)
     Q_PROPERTY(QQuick3DTexture *diffuseMap READ diffuseMap WRITE setDiffuseMap NOTIFY diffuseMapChanged)
 
-    Q_PROPERTY(float emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
+    Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
-    Q_PROPERTY(QColor emissiveColor READ emissiveColor WRITE setEmissiveColor NOTIFY emissiveColorChanged)
 
     Q_PROPERTY(QQuick3DTexture *specularReflectionMap READ specularReflectionMap WRITE setSpecularReflectionMap NOTIFY specularReflectionMapChanged)
     Q_PROPERTY(QQuick3DTexture *specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged)
@@ -114,9 +113,8 @@ public:
     BlendMode blendMode() const;
     QColor diffuseColor() const;
     QQuick3DTexture *diffuseMap() const;
-    float emissiveFactor() const;
+    QVector3D emissiveFactor() const;
     QQuick3DTexture *emissiveMap() const;
-    QColor emissiveColor() const;
     QQuick3DTexture *specularReflectionMap() const;
     QQuick3DTexture *specularMap() const;
     SpecularModel specularModel() const;
@@ -149,10 +147,9 @@ public Q_SLOTS:
     void setBlendMode(QQuick3DDefaultMaterial::BlendMode blendMode);
     void setDiffuseColor(QColor diffuseColor);
     void setDiffuseMap(QQuick3DTexture *diffuseMap);
-    void setEmissiveFactor(float emissiveFactor);
+    void setEmissiveFactor(QVector3D emissiveFactor);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
 
-    void setEmissiveColor(QColor emissiveColor);
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
     void setSpecularMap(QQuick3DTexture *specularMap);
     void setSpecularModel(QQuick3DDefaultMaterial::SpecularModel specularModel);
@@ -185,9 +182,8 @@ Q_SIGNALS:
     void blendModeChanged(QQuick3DDefaultMaterial::BlendMode blendMode);
     void diffuseColorChanged(QColor diffuseColor);
     void diffuseMapChanged(QQuick3DTexture *diffuseMap);
-    void emissiveFactorChanged(float emissiveFactor);
+    void emissiveFactorChanged(QVector3D emissiveFactor);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
-    void emissiveColorChanged(QColor emissiveColor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
     void specularMapChanged(QQuick3DTexture *specularMap);
     void specularModelChanged(QQuick3DDefaultMaterial::SpecularModel specularModel);
@@ -237,10 +233,9 @@ private:
     BlendMode m_blendMode = SourceOver;
     QColor m_diffuseColor;
     QQuick3DTexture *m_diffuseMap = nullptr;
-    float m_emissiveFactor = 0;
+    QVector3D m_emissiveFactor;
     QQuick3DTexture *m_emissiveMap = nullptr;
 
-    QColor m_emissiveColor;
     QQuick3DTexture *m_specularReflectionMap = nullptr;
     QQuick3DTexture *m_specularMap = nullptr;
     SpecularModel m_specularModel = Default;

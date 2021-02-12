@@ -100,17 +100,11 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     QCOMPARE(material.specularAmount(), node->specularAmount);
 
     const float emissiveFactor = 0.5f;
-    material.setEmissiveColor(Qt::white);
-    material.setEmissiveFactor(emissiveFactor);
+    material.setEmissiveFactor(QVector3D(emissiveFactor, emissiveFactor, emissiveFactor));
     material.setLighting(QQuick3DDefaultMaterial::FragmentLighting);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    // If != NoLighting the emissive color on the node should be emissiveColor * emissiveFactor
-    auto expectedEmissiceColor = color::sRGBToLinear(material.emissiveColor()).toVector3D() * material.emissiveFactor();
-    QCOMPARE(expectedEmissiceColor, node->emissiveColor);
-    material.setLighting(QQuick3DDefaultMaterial::NoLighting);
-    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
-    expectedEmissiceColor = color::sRGBToLinear(QColor(Qt::white)).toVector3D();
+    auto expectedEmissiceColor = material.emissiveFactor();
     QCOMPARE(expectedEmissiceColor, node->emissiveColor);
 
     const float bumpAmount = 0.3f;
@@ -129,7 +123,7 @@ void tst_QQuick3DMaterials::testDefaultProperties()
     QColor color1("#12345678");
     QVector4D color1Vec4 = color::sRGBToLinear(color1);
     material.setDiffuseColor(color1);
-    material.setEmissiveColor(color1);
+    material.setEmissiveFactor(color1Vec4.toVector3D());
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QCOMPARE(color1Vec4, node->color);
@@ -294,7 +288,7 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QColor color2("#cccccccc");
     QVector3D color2Vec3 = color::sRGBToLinear(color2).toVector3D();
     material.setBaseColor(color1);
-    material.setEmissiveColor(color2);
+    material.setEmissiveFactor(color2Vec3);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
     QCOMPARE(color1Vec4, node->color);

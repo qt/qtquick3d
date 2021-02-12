@@ -520,8 +520,10 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     \li vec3 \c EMISSIVE_COLOR - The color of self-illumination. Corresponds to
-    the \l{PrincipledMaterial::emissiveColor}{built-in materials' emissiveColor
-    property}. The default value is \c{vec3(0.0)}. When specifying the value
+    the built-in materials' emissive color which is combined by
+    \l {PrincipledMaterial::emissiveFactor}{built-in materials's emissiveFactor property}
+    and \l {PrincipledMaterial::emissiveMap}{built-in materials's emissiveMap property}.
+    The default value is \c{vec3(0.0)}. When specifying the value
     directly in shader code, not relying on uniform values exposed from \b color
     properties in QML, be aware that it is up to the shader to perform the sRGB
     to linear conversion, if needed.

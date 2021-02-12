@@ -1122,14 +1122,20 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         if (!emissiveMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("emissiveMap: ") << emissiveMapImage << QStringLiteral("\n");
 
-        // emissiveColor AI_MATKEY_COLOR_EMISSIVE
-        aiColor3D emissiveColor;
-        result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor);
+        // emissiveFactor AI_MATKEY_COLOR_EMISSIVE
+        aiColor3D emissiveFactor;
+        result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveFactor);
         if (result == aiReturn_SUCCESS) {
-            // ### set emissive color
+            QVector3D emissive = {emissiveFactor.r, emissiveFactor.g, emissiveFactor.b};
+            // ### set emissive factor
+            QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                     tabLevel + 1,
+                                                     QSSGQmlUtilities::PropertyMap::DefaultMaterial,
+                                                     QStringLiteral("emissiveFactor"),
+                                                     emissive);
         }
-        // specularReflectionMap
 
+        // specularReflectionMap
         QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
         if (!specularMapImage.isNull())
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << QStringLiteral("\n");
@@ -1287,14 +1293,15 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         }
 
         {
-            aiColor3D emissiveColorFactor;
-            result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColorFactor);
+            aiColor3D emissiveFactor;
+            result = material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveFactor);
             if (result == aiReturn_SUCCESS) {
+                QVector3D emissive = {emissiveFactor.r, emissiveFactor.g, emissiveFactor.b};
                 QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                          tabLevel + 1,
                                                          QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-                                                         QStringLiteral("emissiveColor"),
-                                                         aiColorToQColor(emissiveColorFactor));
+                                                         QStringLiteral("emissiveFactor"),
+                                                         emissive);
             }
         }
 

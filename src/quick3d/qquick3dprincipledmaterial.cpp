@@ -206,22 +206,20 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Texture PrincipledMaterial::emissiveMap
 
-    This property sets a Texture to be used to set the emissive factor for
-    different parts of the material. Using a grayscale image will not affect the
-    color of the result, while using a color image will produce glowing regions
-    with the color affected by the emissive map.
+    This property sets a RGB Texture to be used to specify the intensity of the
+    emissive color.
 */
 
 /*!
-    \qmlproperty color PrincipledMaterial::emissiveColor
+    \qmlproperty vector3d PrincipledMaterial::emissiveFactor
 
     This property determines the color of self-illumination for this material.
-    If an emissive map is set, this property is used as a factor for the RGB channels
-    of the texture.
+    If an emissive map is set, the x, y, and z components are used as factors
+    (multipliers) for the R, G and B channels of the texture, respectively.
+    The default value is (0, 0, 0) and it means no emissive contribution at all.
 
-    \note In a scene with black ambient lighting a material with a emissive factor of 0 will
-    appear black wherever the light does not shine on it; turning the emissive
-    factor to 1 will cause the material to appear as its diffuse color instead.
+    \note Setting the lightingMode to DefaultMaterial.NoLighting means emissive
+    Factor does not have an effect on the scene.
 */
 
 /*!
@@ -503,9 +501,9 @@ QQuick3DTexture *QQuick3DPrincipledMaterial::emissiveMap() const
     return m_emissiveMap;
 }
 
-QColor QQuick3DPrincipledMaterial::emissiveColor() const
+QVector3D QQuick3DPrincipledMaterial::emissiveFactor() const
 {
-    return m_emissiveColor;
+    return m_emissiveFactor;
 }
 
 QQuick3DTexture *QQuick3DPrincipledMaterial::specularReflectionMap() const
@@ -682,13 +680,13 @@ void QQuick3DPrincipledMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap)
     markDirty(EmissiveDirty);
 }
 
-void QQuick3DPrincipledMaterial::setEmissiveColor(QColor emissiveColor)
+void QQuick3DPrincipledMaterial::setEmissiveFactor(QVector3D emissiveFactor)
 {
-    if (m_emissiveColor == emissiveColor)
+    if (m_emissiveFactor == emissiveFactor)
         return;
 
-    m_emissiveColor = emissiveColor;
-    emit emissiveColorChanged(m_emissiveColor);
+    m_emissiveFactor = emissiveFactor;
+    emit emissiveFactorChanged(m_emissiveFactor);
     markDirty(EmissiveDirty);
 }
 
@@ -983,7 +981,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         else
             material->emissiveMap = m_emissiveMap->getRenderImage();
 
-        material->emissiveColor = color::sRGBToLinear(m_emissiveColor).toVector3D();
+        material->emissiveColor = m_emissiveFactor;
     }
 
     material->fresnelPower = 5.0f;

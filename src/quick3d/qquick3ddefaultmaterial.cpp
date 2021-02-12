@@ -142,31 +142,24 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlproperty real DefaultMaterial::emissiveFactor
+    \qmlproperty vector3d DefaultMaterial::emissiveFactor
 
-    This property determines the amount of self-illumination from the material.
-    In a scene with black ambient lighting, a material with an emissive factor of 0
-    will appear black wherever the light does not shine on it. Turning the emissive
-    factor to 1 will cause the material to appear in its diffuse color instead.
+    This property determines the color of self-illumination for this material.
+    If an emissive map is set, the x, y, and z components are used as factors
+    (multipliers) for the R, G and B channels of the texture, respectively.
+    The default value is (0, 0, 0) and it means no emissive contribution at all.
 
-    \note When you want a material to not be affected by lighting, instead of
-    using 100% emissiveFactor consider setting the lightingMode to
-    /c DefaultMaterial.NoLighting for a performance benefit.
+    \note Setting the lightingMode to DefaultMaterial.NoLighting means emissive
+    Factor does not have an effect on the scene.
 */
 
 /*!
     \qmlproperty Texture DefaultMaterial::emissiveMap
 
-    This property sets a Texture to be used to set the emissive factor for
-    different parts of the material. Using a grayscale image will not affect the
-    color of the result, while using a color image will produce glowing regions
-    with the color affected by the emissive map.
-*/
+    This property sets a RGB Texture to be used to specify the intensity of the
+    emissive color.
 
-/*!
-    \qmlproperty color DefaultMaterial::emissiveColor
-
-    This property determines the color of self-illumination for this material.
+    \sa emissiveFactor
 */
 
 /*!
@@ -407,7 +400,6 @@ QT_BEGIN_NAMESPACE
 QQuick3DDefaultMaterial::QQuick3DDefaultMaterial(QQuick3DObject *parent)
     : QQuick3DMaterial(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::DefaultMaterial)), parent)
     , m_diffuseColor(Qt::white)
-    , m_emissiveColor(Qt::white)
     , m_specularTint(Qt::white)
 {}
 
@@ -435,7 +427,7 @@ QQuick3DTexture *QQuick3DDefaultMaterial::diffuseMap() const
     return m_diffuseMap;
 }
 
-float QQuick3DDefaultMaterial::emissiveFactor() const
+QVector3D QQuick3DDefaultMaterial::emissiveFactor() const
 {
     return m_emissiveFactor;
 }
@@ -443,11 +435,6 @@ float QQuick3DDefaultMaterial::emissiveFactor() const
 QQuick3DTexture *QQuick3DDefaultMaterial::emissiveMap() const
 {
     return m_emissiveMap;
-}
-
-QColor QQuick3DDefaultMaterial::emissiveColor() const
-{
-    return m_emissiveColor;
 }
 
 QQuick3DTexture *QQuick3DDefaultMaterial::specularReflectionMap() const
@@ -616,10 +603,9 @@ void QQuick3DDefaultMaterial::setDiffuseMap(QQuick3DTexture *diffuseMap)
     markDirty(DiffuseDirty);
 }
 
-void QQuick3DDefaultMaterial::setEmissiveFactor(float emissiveFactor)
+void QQuick3DDefaultMaterial::setEmissiveFactor(QVector3D emissiveFactor)
 {
-    emissiveFactor = qBound(0.0f, emissiveFactor, 1.0f);
-    if (qFuzzyCompare(m_emissiveFactor, emissiveFactor))
+    if (m_emissiveFactor == emissiveFactor)
         return;
 
     m_emissiveFactor = emissiveFactor;
@@ -638,16 +624,6 @@ void QQuick3DDefaultMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap)
 
     m_emissiveMap = emissiveMap;
     emit emissiveMapChanged(m_emissiveMap);
-    markDirty(EmissiveDirty);
-}
-
-void QQuick3DDefaultMaterial::setEmissiveColor(QColor emissiveColor)
-{
-    if (m_emissiveColor == emissiveColor)
-        return;
-
-    m_emissiveColor = emissiveColor;
-    emit emissiveColorChanged(m_emissiveColor);
     markDirty(EmissiveDirty);
 }
 
@@ -952,8 +928,7 @@ QSSGRenderGraphObject *QQuick3DDefaultMaterial::updateSpatialNode(QSSGRenderGrap
         else
             material->emissiveMap = m_emissiveMap->getRenderImage();
 
-        const float emissiveFactor = (m_lighting == NoLighting) ? 1.0f : m_emissiveFactor;
-        material->emissiveColor = color::sRGBToLinear(m_emissiveColor).toVector3D() * emissiveFactor;
+        material->emissiveColor = m_emissiveFactor;
     }
 
     if (m_dirtyAttributes & SpecularDirty) {

@@ -228,8 +228,7 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("shaderlighting"), Property(QStringLiteral("lighting"), Q3DS::Enum, QStringLiteral("DefaultMaterial.FragmentLighting")));
     defaultMaterial->insert(QStringLiteral("blendmode"), Property(QStringLiteral("blendMode"), Q3DS::Enum, QStringLiteral("DefaultMaterial.SourceOver")));
     defaultMaterial->insert(QStringLiteral("diffuse"), Property(QStringLiteral("diffuseColor"), Q3DS::Color, QColor(Qt::white)));
-    defaultMaterial->insert(QStringLiteral("emissivepower"), Property(QStringLiteral("emissiveFactor"), Q3DS::Float, 0.0f));
-    defaultMaterial->insert(QStringLiteral("emissivecolor"), Property(QStringLiteral("emissiveColor"), Q3DS::Color, QColor(Qt::white)));
+    defaultMaterial->insert(QStringLiteral("emissivecolor"), Property(QStringLiteral("emissiveFactor"), Q3DS::Color, QColor(Qt::black)));
     defaultMaterial->insert(QStringLiteral("specularmodel"), Property(QStringLiteral("specularModel"), Q3DS::Enum, QStringLiteral("DefaultMaterial.Default")));
     defaultMaterial->insert(QStringLiteral("speculartint"), Property(QStringLiteral("specularTint"), Q3DS::Color, QColor(Qt::white)));
     defaultMaterial->insert(QStringLiteral("ior"), Property(QStringLiteral("indexOfRefraction"), Q3DS::Float, 0.2f));

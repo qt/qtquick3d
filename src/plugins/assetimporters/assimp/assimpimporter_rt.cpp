@@ -482,7 +482,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             aiColor3D emissiveColorFactor;
             result = source.Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColorFactor);
             if (result == aiReturn_SUCCESS)
-                QSSGSceneDesc::setProperty(target, "emissiveColor", &QQuick3DPrincipledMaterial::setEmissiveColor, aiColorToQColor(emissiveColorFactor));
+                QSSGSceneDesc::setProperty(target, "emissiveFactor", &QQuick3DPrincipledMaterial::setEmissiveFactor, QVector3D { emissiveColorFactor.r, emissiveColorFactor.g, emissiveColorFactor.b });
         }
 
         {

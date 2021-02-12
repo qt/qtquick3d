@@ -152,7 +152,7 @@ Rectangle {
                 materials: [ PrincipledMaterial {
                         baseColor: "#4080A0"
                         metalness: 0
-                        emissiveColor: "green"
+                        emissiveFactor: Qt.vector3d(0.0, 1.0, 0.0) // green
                     } ]
             }
 
@@ -164,7 +164,7 @@ Rectangle {
                 materials: [ PrincipledMaterial {
                         baseColorMap: tex_rgba
                         metalness: 0
-                        emissiveColor: "green"
+                        emissiveFactor: Qt.vector3d(0.0, 1.0, 0.0) // green
                     } ]
             }
 
@@ -176,7 +176,7 @@ Rectangle {
                 materials: [ PrincipledMaterial {
                         baseColor: "#4080A0"
                         metalness: 0
-                        emissiveColor: "yellow"
+                        emissiveFactor: Qt.vector3d(1.0, 1.0, 0.0) // yellow
                         emissiveMap: tex_rgba
                     } ]
             }

@@ -62,7 +62,7 @@
         }
         materials: [
             DefaultMaterial {
-                emissiveColor: "white"
+                diffuseColor: "white"
                 lighting: DefaultMaterial.NoLighting
             }
         ]

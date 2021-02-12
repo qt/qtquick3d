@@ -432,7 +432,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
     bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe; // always true for Custom, depends for others
-    bool hasEmissiveMap = false;
     quint32 numMorphTargets = keyProps.m_morphTargetCount.getValue(inKey);
     // Pull the bump out as
     QSSGRenderableImage *bumpImage = nullptr;
@@ -494,8 +493,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             translucencyImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Opacity) {
             opacityImage = img;
-        } else if (img->m_mapType == QSSGRenderableImage::Type::Emissive) {
-            hasEmissiveMap = true;
         }
     }
 
@@ -1088,9 +1085,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // multiplied by the alpha from the material color and/or the vertex colors.
         fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * qt_aoFactor, qt_objectOpacity * qt_diffuseColor.a);\n";
 
-        if (!hasEmissiveMap)
-            fragmentShader << "    qt_global_emission *= qt_diffuseColor.rgb;\n";
-
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
             if (materialAdapter->isPrincipled()) {
@@ -1145,7 +1139,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     break;
                 case QSSGRenderableImage::Type::Emissive:
                     fragmentShader.addInclude("tonemapping.glsllib");
-                    fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb) * qt_texture_color.a;");
+                    fragmentShader.append("    qt_global_emission *= qt_sRGBToLinear(qt_texture_color.rgb);");
                     break;
                 default:
                     Q_ASSERT(false);
@@ -1187,6 +1181,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addInclude("tonemapping.glsllib");
         fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
 
+
 #if 0
         // ### Debug Code for viewing various parts of the shading process
         fragmentShader.append("    vec3 debugOutput = vec3(0.0);\n");
@@ -1210,8 +1205,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         //fragmentShader.append("    debugOutput += global_diffuse_light.rgb;\n");
         //fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
         // Emission
-        //if (hasEmissiveMap)
-        //    fragmentShader.append("    debugOutput += qt_global_emission.rgb;\n");
+        //fragmentShader.append("    debugOutput += qt_global_emission;\n");
         // Occlusion
         //if (occlusionImage) {
         //    fragmentShader.append("    debugOtuput += vec3(qt_ao);\n");

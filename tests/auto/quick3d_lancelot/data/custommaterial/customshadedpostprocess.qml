@@ -104,7 +104,7 @@ Rectangle {
             materials: [
                 PrincipledMaterial {
                     metalness: 0.5
-                    emissiveColor: "#00ff00"
+                    emissiveFactor: Qt.vector3d(0.0, 1.0, 0.0)
                 }
             ]
         }

@@ -70,7 +70,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *roughnessMap READ roughnessMap WRITE setRoughnessMap NOTIFY roughnessMapChanged)
     Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged REVISION(1, 1))
 
-    Q_PROPERTY(QColor emissiveColor READ emissiveColor WRITE setEmissiveColor NOTIFY emissiveColorChanged)
+    Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
@@ -125,7 +125,7 @@ public:
     QColor baseColor() const;
     QQuick3DTexture *baseColorMap() const;
     QQuick3DTexture *emissiveMap() const;
-    QColor emissiveColor() const;
+    QVector3D emissiveFactor() const;
     QQuick3DTexture *specularReflectionMap() const;
     QQuick3DTexture *specularMap() const;
     float specularTint() const;
@@ -155,7 +155,7 @@ public Q_SLOTS:
     void setBaseColor(QColor baseColor);
     void setBaseColorMap(QQuick3DTexture *baseColorMap);
     void setEmissiveMap(QQuick3DTexture *emissiveMap);
-    void setEmissiveColor(QColor emissiveColor);
+    void setEmissiveFactor(QVector3D emissiveFactor);
     void setSpecularReflectionMap(QQuick3DTexture *specularReflectionMap);
     void setSpecularMap(QQuick3DTexture *specularMap);
     void setSpecularTint(float specularTint);
@@ -185,7 +185,7 @@ Q_SIGNALS:
     void baseColorChanged(QColor baseColor);
     void baseColorMapChanged(QQuick3DTexture *baseColorMap);
     void emissiveMapChanged(QQuick3DTexture *emissiveMap);
-    void emissiveColorChanged(QColor emissiveColor);
+    void emissiveFactorChanged(QVector3D emissiveFactor);
     void specularReflectionMapChanged(QQuick3DTexture *specularReflectionMap);
     void specularMapChanged(QQuick3DTexture *specularMap);
     void specularTintChanged(float specularTint);
@@ -245,9 +245,9 @@ private:
     AlphaMode m_alphaMode = Default;
     QColor m_baseColor = Qt::white;
     QQuick3DTexture *m_baseColorMap = nullptr;
+    QVector3D m_emissiveFactor;
     QQuick3DTexture *m_emissiveMap = nullptr;
 
-    QColor m_emissiveColor = Qt::black;
     QQuick3DTexture *m_specularReflectionMap = nullptr;
     QQuick3DTexture *m_specularMap = nullptr;
     QQuick3DTexture *m_roughnessMap = nullptr;

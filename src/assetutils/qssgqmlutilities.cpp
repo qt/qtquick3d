@@ -395,8 +395,7 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("lighting"), QStringLiteral("DefaultMaterial.FragmentLighting"));
     defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.SourceOver"));
     defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("emissiveFactor"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::white));
+    defaultMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
     defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
     defaultMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::white));
     defaultMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
@@ -420,7 +419,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("specularAmount"), 0.5f);
     principledMaterial->insert(QStringLiteral("specularTint"), 0.0f);
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
-    principledMaterial->insert(QStringLiteral("emissiveColor"), QColor(Qt::black));
+    principledMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
     principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
     principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
     principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);

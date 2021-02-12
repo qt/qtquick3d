@@ -2457,10 +2457,9 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
     if (!m_diffuseMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << Qt::endl;
 
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissiveFactor / 100.0f);
     if (!m_emissiveMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << Qt::endl;
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor.lighter(m_emissiveFactor));
 
     if (!m_specularReflection_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("specularReflectionMap: ") << UniqueIdMapper::instance()->queryId(m_specularReflection_unresolved) << Qt::endl;
@@ -2515,10 +2514,8 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuse"), m_diffuse);
         } else if (targetProperty == QStringLiteral("diffusemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("emissivepower")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower"), m_emissiveFactor / 100.0f);
         } else if (targetProperty == QStringLiteral("emissivecolor")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor.lighter(m_emissiveFactor));
         } else if (targetProperty == QStringLiteral("emissivemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << Qt::endl;
         } else if (targetProperty == QStringLiteral("specularreflection")) {

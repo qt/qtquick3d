@@ -79,7 +79,7 @@ Rectangle {
                 PrincipledMaterial {
                     id: material
                     baseColor: "white"
-                    emissiveColor: "blue"
+                    emissiveFactor: Qt.vector3d(0.0, 0.0, 1.0)
                     normalMap: Texture {
                         // This is not actually a normal map, but any picture will do as long as it exists
                         source: "../shared/maps/oulu_2.jpeg"
