@@ -229,7 +229,6 @@ bool QSSGShaderLibraryManager::compare(const QSSGShaderDefaultMaterialKey &key1,
 
     for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::ImageMapCount; i++) {
         COMPARE_PROP(m_imageMaps[i])
-        COMPARE_PROP(m_textureSwizzle[i])
     }
     for (int i = 0; i < QSSGShaderDefaultMaterialKeyProperties::SingleChannelImageCount; i++) {
         COMPARE_PROP(m_textureChannels[i])

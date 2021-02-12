@@ -270,113 +270,6 @@ struct QSSGShaderKeyTextureChannel : public QSSGShaderKeyUnsigned<2>
     }
 };
 
-struct QSSGShaderKeyTextureSwizzle : public QSSGShaderKeyUnsigned<5>
-{
-    enum TextureSwizzleBits {
-        noSwizzle = 1 << 0,
-        L8toR8 = 1 << 1,
-        A8toR8 = 1 << 2,
-        L8A8toRG8 = 1 << 3,
-        L16toR16 = 1 << 4
-    };
-
-    explicit QSSGShaderKeyTextureSwizzle(const char *inName = "") : QSSGShaderKeyUnsigned<5>(inName) {}
-
-    bool getBitValue(TextureSwizzleBits swizzleBit, QSSGDataView<quint32> inKeySet) const
-    {
-        return (getValue(inKeySet) & swizzleBit) ? true : false;
-    }
-
-    void setBitValue(TextureSwizzleBits swizzleBit, bool inValue, QSSGDataRef<quint32> inKeySet)
-    {
-        quint32 theValue = getValue(inKeySet);
-        quint32 mask = swizzleBit;
-        if (inValue) {
-            theValue = theValue | mask;
-        } else {
-            mask = ~mask;
-            theValue = theValue & mask;
-        }
-        setValue(inKeySet, theValue);
-    }
-
-    void setSwizzleMode(QSSGDataRef<quint32> inKeySet, QSSGRenderTextureSwizzleMode swizzleMode, bool val)
-    {
-        switch (swizzleMode) {
-        case QSSGRenderTextureSwizzleMode::NoSwizzle:
-            setBitValue(noSwizzle, val, inKeySet);
-            break;
-        case QSSGRenderTextureSwizzleMode::L8toR8:
-            setBitValue(L8toR8, val, inKeySet);
-            break;
-        case QSSGRenderTextureSwizzleMode::A8toR8:
-            setBitValue(A8toR8, val, inKeySet);
-            break;
-        case QSSGRenderTextureSwizzleMode::L8A8toRG8:
-            setBitValue(L8A8toRG8, val, inKeySet);
-            break;
-        case QSSGRenderTextureSwizzleMode::L16toR16:
-            setBitValue(L16toR16, val, inKeySet);
-            break;
-        }
-    }
-
-    bool isNoSwizzled(QSSGDataView<quint32> inKeySet) const { return getBitValue(noSwizzle, inKeySet); }
-    void setNoSwizzled(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(noSwizzle, val, inKeySet); }
-
-    bool isL8Swizzled(QSSGDataView<quint32> inKeySet) const { return getBitValue(L8toR8, inKeySet); }
-    void setL8Swizzled(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(L8toR8, val, inKeySet); }
-
-    bool isA8Swizzled(QSSGDataView<quint32> inKeySet) const { return getBitValue(A8toR8, inKeySet); }
-    void setA8Swizzled(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(A8toR8, val, inKeySet); }
-
-    bool isL8A8Swizzled(QSSGDataView<quint32> inKeySet) const { return getBitValue(L8A8toRG8, inKeySet); }
-    void setL8A8Swizzled(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(L8A8toRG8, val, inKeySet); }
-
-    bool isL16Swizzled(QSSGDataView<quint32> inKeySet) const { return getBitValue(L16toR16, inKeySet); }
-    void setL16Swizzled(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(L16toR16, val, inKeySet); }
-
-    void toString(QByteArray &ioStr, QSSGDataView<quint32> inKeySet) const
-    {
-        ioStr.append(name);
-        ioStr.append(QByteArrayView("={"));
-        internalToString(ioStr, QByteArrayView("noswizzle"), isNoSwizzled(inKeySet));
-        ioStr.append(';');
-        internalToString(ioStr, QByteArrayView("l8swizzle"), isL8Swizzled(inKeySet));
-        ioStr.append(';');
-        internalToString(ioStr, QByteArrayView("a8swizzle"), isA8Swizzled(inKeySet));
-        ioStr.append(';');
-        internalToString(ioStr, QByteArrayView("l8a8swizzle"), isL8A8Swizzled(inKeySet));
-        ioStr.append(';');
-        internalToString(ioStr, QByteArrayView("l16swizzle"), isL16Swizzled(inKeySet));
-        ioStr.append('}');
-    }
-    void fromString(const QByteArray &ioStr, QSSGDataRef<quint32> inKeySet)
-    {
-        const qsizetype nameLen = name.size();
-        const qsizetype strOffset = ioStr.indexOf(name);
-        if (strOffset >= 0) {
-            /* The key is stored as name={;;;;;} */
-            if (ioStr[strOffset + nameLen] != '=')
-                return;
-            if (ioStr[strOffset + nameLen + 1] != '{')
-                return;
-            const int codeOffsetBegin = strOffset + nameLen + 2;
-            int codeOffset = 0;
-            while (ioStr[codeOffsetBegin + codeOffset] != '}')
-                codeOffset++;
-            const QList<QByteArray> list = ioStr.mid(codeOffsetBegin, codeOffset).split(';');
-            if (list.size() != 5)
-                return;
-            setNoSwizzled(inKeySet, getBoolValue(list[0], QByteArrayView("noswizzle")));
-            setL8Swizzled(inKeySet, getBoolValue(list[1], QByteArrayView("l8swizzle")));
-            setA8Swizzled(inKeySet, getBoolValue(list[2],  QByteArrayView("a8swizzle")));
-            setL8A8Swizzled(inKeySet, getBoolValue(list[3], QByteArrayView("l8a8swizzle")));
-            setL16Swizzled(inKeySet, getBoolValue(list[4], QByteArrayView("l16swizzle")));
-        }
-    }
-};
-
 struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
 {
     enum ImageMapBits {
@@ -417,12 +310,6 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
     bool isLightProbe(QSSGDataView<quint32> inKeySet) const { return getBitValue(LightProbe, inKeySet); }
     void setLightProbe(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(LightProbe, val, inKeySet); }
 
-    bool isInvertUVMap(QSSGDataView<quint32> inKeySet) const { return getBitValue(InvertUV, inKeySet); }
-    void setInvertUVMap(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(InvertUV, val, inKeySet); }
-
-    bool isPremultiplied(QSSGDataView<quint32> inKeySet) const { return getBitValue(Premultiplied, inKeySet); }
-    void setPremultiplied(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Premultiplied, val, inKeySet); }
-
     bool isIdentityTransform(QSSGDataView<quint32> inKeySet) const { return getBitValue(Identity, inKeySet); }
     void setIdentityTransform(QSSGDataRef<quint32> inKeySet, bool val) { setBitValue(Identity, val, inKeySet); }
 
@@ -435,10 +322,6 @@ struct QSSGShaderKeyImageMap : public QSSGShaderKeyUnsigned<6>
         internalToString(ioStr, QByteArrayView("envMap"), isEnvMap(inKeySet));
         ioStr.append(';');
         internalToString(ioStr, QByteArrayView("lightProbe"), isLightProbe(inKeySet));
-        ioStr.append(';');
-        internalToString(ioStr, QByteArrayView("invertUV"), isInvertUVMap(inKeySet));
-        ioStr.append(';');
-        internalToString(ioStr, QByteArrayView("premultiplied"), isPremultiplied(inKeySet));
         ioStr.append(';');
         internalToString(ioStr, QByteArrayView("identity"), isIdentityTransform(inKeySet));
         ioStr.append('}');
@@ -681,7 +564,6 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_vertexColorsEnabled;
     QSSGShaderKeySpecularModel m_specularModel;
     QSSGShaderKeyImageMap m_imageMaps[ImageMapCount];
-    QSSGShaderKeyTextureSwizzle m_textureSwizzle[ImageMapCount];
     QSSGShaderKeyTextureChannel m_textureChannels[SingleChannelImageCount];
     QSSGShaderKeyUnsigned<16> m_boneCount;
     QSSGShaderKeyBoolean m_isDoubleSided;
@@ -799,22 +681,6 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[13].name = "occlusionMap";
         m_imageMaps[14].name = "translucencyMap";
 
-        m_textureSwizzle[0].name = "diffuseMap_swizzle";
-        m_textureSwizzle[1].name = "emissiveMap_swizzle";
-        m_textureSwizzle[2].name = "specularMap_swizzle";
-        m_textureSwizzle[3].name = "baseColorMap_swizzle";
-        m_textureSwizzle[4].name = "bumpMap_swizzle";
-        m_textureSwizzle[5].name = "specularAmountMap_swizzle";
-        m_textureSwizzle[6].name = "normalMap_swizzle";
-        m_textureSwizzle[7].name = "lightmapIndirect_swizzle";
-        m_textureSwizzle[8].name = "lightmapRadiosity_swizzle";
-        m_textureSwizzle[9].name = "lightmapShadow_swizzle";
-        m_textureSwizzle[10].name = "opacityMap_swizzle";
-        m_textureSwizzle[11].name = "roughnessMap_swizzle";
-        m_textureSwizzle[12].name = "metalnessMap_swizzle";
-        m_textureSwizzle[13].name = "occlusionMap_swizzle";
-        m_textureSwizzle[14].name = "translucencyMap_swizzle";
-
         m_textureChannels[0].name = "opacityMap_channel";
         m_textureChannels[1].name = "roughnessMap_channel";
         m_textureChannels[2].name = "metalnessMap_channel";
@@ -857,10 +723,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_vertexColorsEnabled);
         inVisitor.visit(m_specularModel);
 
-        for (quint32 idx = 0, end = ImageMapCount; idx < end; ++idx) {
+        for (quint32 idx = 0, end = ImageMapCount; idx < end; ++idx)
             inVisitor.visit(m_imageMaps[idx]);
-            inVisitor.visit(m_textureSwizzle[idx]);
-        }
 
         for (auto &textureChannel : m_textureChannels)
             inVisitor.visit(textureChannel);
