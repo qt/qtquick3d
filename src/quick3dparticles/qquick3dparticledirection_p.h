@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLETRAILEMITTER_H
-#define QQUICK3DPARTICLETRAILEMITTER_H
+#ifndef QQUICK3DPARTICLEDIRECTION_H
+#define QQUICK3DPARTICLEDIRECTION_H
 
 //
 //  W A R N I N G
@@ -41,42 +41,25 @@
 // We mean it.
 //
 
-#include "qquick3dparticleemitter_p.h"
-#include "qquick3dparticlemodelparticle_p.h"
-#include "qquick3dparticledata_p.h"
-#include <QQmlEngine>
+#include <QObject>
+#include <QVector3D>
+#include <QtQml/qqml.h>
+
+#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleTrailEmitter : public QQuick3DParticleEmitter
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDirection : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DParticleModelParticle *follow READ follow WRITE setFollow NOTIFY followChanged)
-    QML_NAMED_ELEMENT(TrailEmitter3D)
+    QML_NAMED_ELEMENT(Direction3D)
+    QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:
-    QQuick3DParticleTrailEmitter(QQuick3DNode *parent = nullptr);
-
-    QQuick3DParticleModelParticle * follow() const;
-
-    // Emit count amount of particles immediately
-    Q_INVOKABLE void burst(int count) override;
-
-public Q_SLOTS:
-    void setFollow(QQuick3DParticleModelParticle *follow);
-
-protected:
-    friend class QQuick3DParticleSystem;
-    void emitTrailParticles(QQuick3DParticleDataCurrent *d, int emitAmount);
-
-Q_SIGNALS:
-    void followChanged();
-
-private:
-    QQuick3DParticleModelParticle *m_follow = nullptr;
-
+    QQuick3DParticleDirection(QObject *parent = nullptr);
+    virtual QVector3D sample(const QVector3D &from) = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLETRAILEMITTER_H
+#endif // QQUICK3DPARTICLEDIRECTION_H

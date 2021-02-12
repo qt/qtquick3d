@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEPOINTROTATOR_H
-#define QQUICK3DPARTICLEPOINTROTATOR_H
+#ifndef QQUICK3DPARTICLESHAPE_H
+#define QQUICK3DPARTICLESHAPE_H
 
 //
 //  W A R N I N G
@@ -42,44 +42,62 @@
 //
 
 #include <QObject>
-#include "qquick3dparticleaffector_p.h"
+#include <QQmlEngine>
+#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQml/qqmlparserstatus.h>
+#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticlePointRotator : public QQuick3DParticleAffector
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
-    Q_PROPERTY(QVector3D pivotPoint READ pivotPoint WRITE setPivotPoint NOTIFY pivotPointChanged)
-    QML_NAMED_ELEMENT(PointRotator3D)
+    Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
+    Q_PROPERTY(ShapeType type READ type WRITE setType NOTIFY typeChanged)
+
+    QML_NAMED_ELEMENT(ParticleShape3D)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
-    QQuick3DParticlePointRotator(QObject *parent = nullptr);
+    enum ShapeType
+    {
+        Cube = 0,
+        Sphere,
+        Cylinder
+    };
+    Q_ENUM(ShapeType)
 
-    float magnitude() const;
-    QVector3D direction() const;
-    QVector3D pivotPoint() const;
+    QQuick3DParticleShape(QObject *parent = nullptr);
+
+    bool fill() const;
+    ShapeType type() const;
+
+    // Returns random point inside this shape
+    QVector3D randomPosition() const;
 
 public Q_SLOTS:
-    void setMagnitude(float magnitude);
-    void setDirection(const QVector3D &direction);
-    void setPivotPoint(const QVector3D &point);
+    void setFill(bool fill);
+    void setType(QQuick3DParticleShape::ShapeType type);
 
 protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
+    // From QQmlParserStatus
+    void componentComplete() override;
+    void classBegin() override {}
 
 Q_SIGNALS:
-    void magnitudeChanged();
-    void directionChanged();
-    void pivotPointChanged();
+    void fillChanged();
+    void typeChanged();
 
 private:
-    float m_magnitude = 0;
-    QVector3D m_direction;
-    QVector3D m_pivotPoint;
+    QVector3D randomPositionCube() const;
+    QVector3D randomPositionSphere() const;
+    QVector3D randomPositionCylinder() const;
+
+    QQuick3DNode *m_parentNode = nullptr;
+    bool m_fill = false;
+    ShapeType m_type = ShapeType::Cube;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEPOINTROTATOR_H
+#endif // QQUICK3DPARTICLESHAPE_H

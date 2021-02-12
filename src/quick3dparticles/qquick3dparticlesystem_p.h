@@ -41,11 +41,12 @@
 // We mean it.
 //
 
+#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dloader_p.h>
-#include "qquick3dparticlesystemlogging_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticlesystemlogging_p.h>
 
 #include <QElapsedTimer>
 #include <QVector>
@@ -71,7 +72,7 @@ class QQuick3DParticle;
 class QQuick3DParticleSystemAnimation;
 class QQuick3DParticleInstanceTable;
 
-class QQuick3DParticleSystem : public QQuick3DNode
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystem : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)

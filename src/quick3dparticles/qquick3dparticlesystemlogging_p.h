@@ -44,9 +44,11 @@
 #include <QObject>
 #include <QQmlEngine>
 
+#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleSystemLogging : public QObject
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystemLogging : public QObject
 {
     Q_OBJECT
     // The frequency in ms how often logging data is updated.

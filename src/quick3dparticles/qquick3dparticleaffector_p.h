@@ -45,13 +45,13 @@
 #include <QList>
 #include <QQmlListProperty>
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include "qquick3dparticledata_p.h"
-#include "qquick3dparticlesystem_p.h"
-#include "qquick3dparticleemitter_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticleemitter_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleAffector : public QObject, public QQmlParserStatus
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)

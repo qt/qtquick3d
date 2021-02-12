@@ -27,27 +27,25 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+#ifndef QTQUICK3DPARTICLESGLOBAL_H
+#define QTQUICK3DPARTICLESGLOBAL_H
 
-#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuick3DParticles3DPlugin : public QQmlEngineExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
-public:
-    QtQuick3DParticles3DPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
-    {
-        volatile auto registration = &qml_register_types_QtQuick3D_Particles3D;
-        Q_UNUSED(registration);
-    }
-};
+#ifndef QT_STATIC
+#if defined(QT_BUILD_QUICK3DPARTICLES_LIB)
+#define Q_QUICK3DPARTICLES_EXPORT Q_DECL_EXPORT
+#else
+#define Q_QUICK3DPARTICLES_EXPORT Q_DECL_IMPORT
+#endif
+#else
+#define Q_QUICK3DPARTICLES_EXPORT
+#endif
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+void Q_QUICK3DPARTICLES_EXPORT qml_register_types_QtQuick3D_Particles3D();
+
+#endif // QTQUICK3DPARTICLESGLOBAL_H

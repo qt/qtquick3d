@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEEMITBURST_H
-#define QQUICK3DPARTICLEEMITBURST_H
+#ifndef QQUICK3DPARTICLEGRAVITY_H
+#define QQUICK3DPARTICLEGRAVITY_H
 
 //
 //  W A R N I N G
@@ -42,59 +42,43 @@
 //
 
 #include <QObject>
-#include <QQmlEngine>
-#include "qqmlparserstatus.h"
+#include <QtQuick3DParticles/private/qquick3dparticleaffector_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleEmitter;
-
-class QQuick3DParticleEmitBurst : public QObject, public QQmlParserStatus
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleGravity : public QQuick3DParticleAffector
 {
     Q_OBJECT
-    // Time in ms when burst is emitted
-    Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
-    // Amount of particles to burst at time
-    Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
-    // Emitting duration in ms. Emits will be distributed evenly during this time.
-    // Default value is 0, meaning all particles will be bursted in the beginning of time.
-    // Example: time = 1000, duration = 500, amount = 80. 80 particles will be emitted
-    // between 1000 - 1500ms, meaning emit rate of 160 during that time.
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-
-    QML_NAMED_ELEMENT(EmitBurst3D)
-    Q_INTERFACES(QQmlParserStatus)
+    // Magnitude in position change per second. Negative magnitude accelerates opposite way from \a direction.
+    // Default value 100.
+    Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
+    // Direction towards the gravity will affect. Values will be normalized, so the amount doesn't matter.
+    // Default value is (0.0, -1.0, 0.0) (downwards)
+    Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
+    QML_NAMED_ELEMENT(Gravity3D)
 
 public:
-    QQuick3DParticleEmitBurst(QObject *parent = nullptr);
-    ~QQuick3DParticleEmitBurst() override;
+    QQuick3DParticleGravity(QObject *parent = nullptr);
 
-    int time() const;
-    int amount() const;
-    int duration() const;
+    float magnitude() const;
+    const QVector3D &direction() const;
 
 public Q_SLOTS:
-    void setTime(int time);
-    void setAmount(int amount);
-    void setDuration(int duration);
+    void setDirection(const QVector3D &direction);
+    void setMagnitude(float magnitude);
 
 protected:
-    // From QQmlParserStatus
-    void componentComplete() override;
-    void classBegin() override {}
+    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 Q_SIGNALS:
-    void timeChanged();
-    void amountChanged();
-    void durationChanged();
+    void magnitudeChanged();
+    void directionChanged();
 
 private:
-    QQuick3DParticleEmitter *m_parentEmitter = nullptr;
-    int m_time = 0;
-    int m_amount = 0;
-    int m_duration = 0;
+    float m_magnitude = 100.0f;
+    QVector3D m_direction = {0.0, -1.0, 0.0};
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEEMITBURST_H
+#endif // QQUICK3DPARTICLEGRAVITY_H
