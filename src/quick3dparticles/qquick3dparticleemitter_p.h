@@ -56,34 +56,18 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DParticleEmitBurst> emitBursts READ emitBursts)
     Q_PROPERTY(QQuick3DParticleDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
-    // Note: Currently each emitter can have only one particle
     Q_PROPERTY(QQuick3DParticle *particle READ particle WRITE setParticle NOTIFY particleChanged)
-    // When particle is not enabled, it doesn't emit. Not even bursts.
-    // Default value true
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    // Shape where particles are emitted inside. Shape is scaled, positioned and rotated based on
-    // emitter node. When Shape fill property is set to false, emitting happens only from outsides of the shape.
-    // By default, the shape is not set and emitting is done from center point of the emitter node.
     Q_PROPERTY(QQuick3DParticleShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
-    // Emitting amount in particles per second.
     Q_PROPERTY(int emitRate READ emitRate WRITE setEmitRate NOTIFY emitRateChanged)
     Q_PROPERTY(int lifeSpan READ lifeSpan WRITE setLifeSpan NOTIFY lifeSpanChanged)
     Q_PROPERTY(int lifeSpanVariation READ lifeSpanVariation WRITE setLifeSpanVariation NOTIFY lifeSpanVariationChanged)
-
-    // Multiplier for the particle scale in the beginning.
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
-    // Default value -1, meaning endScale will match to the beginning scale.
     Q_PROPERTY(float particleEndScale READ particleEndScale WRITE setParticleEndScale NOTIFY particleEndScaleChanged)
-    // Affects both start and end scales, own properties?
     Q_PROPERTY(float particleScaleVariation READ particleScaleVariation WRITE setParticleScaleVariation NOTIFY particleScaleVariationChanged)
-
-    // In degrees
     Q_PROPERTY(QVector3D particleRotation READ particleRotation WRITE setParticleRotation NOTIFY particleRotationChanged)
-    // In degrees
     Q_PROPERTY(QVector3D particleRotationVariation READ particleRotationVariation WRITE setParticleRotationVariation NOTIFY particleRotationVariationChanged)
-    // In degrees per second
     Q_PROPERTY(QVector3D particleRotationVelocity READ particleRotationVelocity WRITE setParticleRotationVelocity NOTIFY particleRotationVelocityChanged)
-    // In degrees per second
     Q_PROPERTY(QVector3D particleRotationVelocityVariation READ particleRotationVelocityVariation WRITE setParticleRotationVelocityVariation NOTIFY particleRotationVariationVelocityChanged)
     QML_NAMED_ELEMENT(ParticleEmitter3D)
 
@@ -102,19 +86,13 @@ public:
     int lifeSpanVariation() const;
     QQuick3DParticle *particle() const;
     QQuick3DParticleShape * shape() const;
-    // Rotations in degrees of euler rotation
     QVector3D particleRotation() const;
     QVector3D particleRotationVariation() const;
     QVector3D particleRotationVelocity() const;
     QVector3D particleRotationVelocityVariation() const;
 
-    // TODO: Proper API documentation
-    // Emit \a count amount of particles immediately
     Q_INVOKABLE virtual void burst(int count);
-    // Emit \a count amount of particles, distributed during \a duration.
     Q_INVOKABLE virtual void burst(int count, int duration);
-    // Emit \a count amount of particles, distributed during \a duration.
-    // The particles are emitted as if the Emitter was at \a position but all other properties are the same.
     Q_INVOKABLE virtual void burst(int count, int duration, const QVector3D &position);
 
 public Q_SLOTS:

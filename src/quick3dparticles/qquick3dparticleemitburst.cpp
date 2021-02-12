@@ -33,6 +33,36 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype EmitBurst3D
+    \inherits QtObject
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Declarative emitter bursts.
+
+    This element defines particle bursts in the \l ParticleEmitter3D.
+
+    For example, to emit 100 particles at the beginning, and 50 particles at 2 seconds,
+    so that both bursts take 200 milliseconds:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        emitBursts: [
+            EmitBurst3D {
+                time: 0
+                amount: 100
+                duration: 200
+            },
+            EmitBurst3D {
+                time: 0
+                amount: 50
+                duration: 200
+            }
+        ]
+    }
+    \endqml
+*/
+
 QQuick3DParticleEmitBurst::QQuick3DParticleEmitBurst(QObject *parent)
     : QObject(parent)
 {
@@ -45,16 +75,49 @@ QQuick3DParticleEmitBurst::~QQuick3DParticleEmitBurst()
         m_parentEmitter->unRegisterEmitBurst(this);
 }
 
+/*!
+    \qmlproperty int EmitBurst3D::time
+
+    This property defines the time in milliseconds when emitting the burst starts.
+
+    The default value is \c 0.
+*/
 int QQuick3DParticleEmitBurst::time() const
 {
     return m_time;
 }
 
+/*!
+    \qmlproperty int EmitBurst3D::amount
+
+    This property defines the amount of particles emitted during the burst.
+
+    The default value is \c 0.
+*/
 int QQuick3DParticleEmitBurst::amount() const
 {
     return m_amount;
 }
 
+/*!
+    \qmlproperty int EmitBurst3D::duration
+
+    This property defines the duration of the burst. The default value is 0,
+    meaning all particles will burst at the beginning of \l time.
+    If the duration is set, particles emitting is distributed between \c time
+    and \c time + \c duration.
+
+    For example, to have emit rate of 400 between 1000 and 1200 milliseconds:
+    \qml
+    EmitBurst3D {
+        time: 1000
+        amount: 80
+        duration: 1200
+    }
+    \endqml
+
+    The default value is \c 0.
+*/
 int QQuick3DParticleEmitBurst::duration() const
 {
     return m_duration;

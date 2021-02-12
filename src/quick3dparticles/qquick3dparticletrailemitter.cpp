@@ -31,11 +31,28 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype TrailEmitter3D
+    \inherits ParticleEmitter3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Emitter for logical particles from other particles.
+
+    TrailEmitter3D is a special emitter for emitting particles with starting positions inherited from
+    other logical particles.
+*/
+
 QQuick3DParticleTrailEmitter::QQuick3DParticleTrailEmitter(QQuick3DNode *parent)
     : QQuick3DParticleEmitter(parent)
 {
 }
 
+/*!
+    \qmlproperty Particle3D TrailEmitter3D::follow
+
+    This property defines the logical particle which this emitter follows.
+    When the TrailEmitter3D emits particles, center position of those particles
+    will become from the \l Particle3D the emitter follows.
+*/
 QQuick3DParticleModelParticle* QQuick3DParticleTrailEmitter::follow() const
 {
     return m_follow;
@@ -49,6 +66,14 @@ void QQuick3DParticleTrailEmitter::setFollow(QQuick3DParticleModelParticle *foll
     Q_EMIT followChanged();
 }
 
+/*!
+    \qmlmethod vector3d TrailEmitter3D::burst(int count)
+
+    This method emits \a count amount of particles from this emitter immediately.
+
+    \note TrailEmitter3D doesn't support other bursting methods. Position always comes
+    from the particle defined with the \l follow property.
+*/
 void QQuick3DParticleTrailEmitter::burst(int count)
 {
     if (!m_system)

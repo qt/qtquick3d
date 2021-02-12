@@ -60,8 +60,6 @@ public:
 
     QQuick3DParticleModelParticle * follow() const;
 
-    // Emit \a count amount of particles immediately
-    // Note: TrailEmitter3D doesn't support other bursting methods.
     Q_INVOKABLE void burst(int count) override;
 
 public Q_SLOTS:
