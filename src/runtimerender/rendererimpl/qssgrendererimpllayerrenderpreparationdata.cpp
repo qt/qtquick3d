@@ -419,6 +419,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         if (inImage.isImageTransformIdentity())
             theKeyProp.setIdentityTransform(inShaderKey, true);
 
+        if (inImage.m_indexUV == 1)
+            theKeyProp.setUsesUV1(inShaderKey, true);
+
         if (ioFirstImage == nullptr)
             ioFirstImage = theImage;
         else
