@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEVECTORDIRECTION_H
-#define QQUICK3DPARTICLEVECTORDIRECTION_H
+#ifndef QQUICK3DPARTICLEPOINTROTATOR_H
+#define QQUICK3DPARTICLEPOINTROTATOR_H
 
 //
 //  W A R N I N G
@@ -41,38 +41,45 @@
 // We mean it.
 //
 
-#include <QVector3D>
-#include "qquick3dparticledirection_p.h"
+#include <QObject>
+#include <QtQuick3DParticles/private/qquick3dparticleaffector_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleVectorDirection : public QQuick3DParticleDirection
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticlePointRotator : public QQuick3DParticleAffector
 {
     Q_OBJECT
+    Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
-    Q_PROPERTY(QVector3D directionVariation READ directionVariation WRITE setDirectionVariation NOTIFY directionVariationChanged)
-    QML_NAMED_ELEMENT(VectorDirection3D)
+    Q_PROPERTY(QVector3D pivotPoint READ pivotPoint WRITE setPivotPoint NOTIFY pivotPointChanged)
+    QML_NAMED_ELEMENT(PointRotator3D)
 
 public:
-    QQuick3DParticleVectorDirection(QObject *parent = nullptr);
+    QQuick3DParticlePointRotator(QObject *parent = nullptr);
 
+    float magnitude() const;
     QVector3D direction() const;
-    QVector3D directionVariation() const;
+    QVector3D pivotPoint() const;
 
 public Q_SLOTS:
+    void setMagnitude(float magnitude);
     void setDirection(const QVector3D &direction);
-    void setDirectionVariation(const QVector3D &directionVariation);
+    void setPivotPoint(const QVector3D &point);
+
+protected:
+    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 Q_SIGNALS:
+    void magnitudeChanged();
     void directionChanged();
-    void directionVariationChanged();
+    void pivotPointChanged();
 
 private:
-    QVector3D sample(const QVector3D &from) override;
+    float m_magnitude = 0;
     QVector3D m_direction;
-    QVector3D m_directionVariation;
+    QVector3D m_pivotPoint;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEVECTORDIRECTION_H
+#endif // QQUICK3DPARTICLEPOINTROTATOR_H

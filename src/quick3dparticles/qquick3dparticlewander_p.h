@@ -43,11 +43,11 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include "qquick3dparticleaffector_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticleaffector_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleWander : public QQuick3DParticleAffector
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleWander : public QQuick3DParticleAffector
 {
     Q_OBJECT
     // How long distance particle maximally moves. Value n means particle position changing -n .. +n.

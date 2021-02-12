@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLESHAPE_H
-#define QQUICK3DPARTICLESHAPE_H
+#ifndef QQUICK3DPARTICLEEMITBURST_H
+#define QQUICK3DPARTICLEEMITBURST_H
 
 //
 //  W A R N I N G
@@ -43,40 +43,41 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include <QtQuick3D/private/qquick3dnode_p.h>
-#include "qqmlparserstatus.h"
+#include <QtQml/qqmlparserstatus.h>
+#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleShape : public QObject, public QQmlParserStatus
+class QQuick3DParticleEmitter;
+
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitBurst : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
-    Q_PROPERTY(ShapeType type READ type WRITE setType NOTIFY typeChanged)
+    // Time in ms when burst is emitted
+    Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
+    // Amount of particles to burst at time
+    Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
+    // Emitting duration in ms. Emits will be distributed evenly during this time.
+    // Default value is 0, meaning all particles will be bursted in the beginning of time.
+    // Example: time = 1000, duration = 500, amount = 80. 80 particles will be emitted
+    // between 1000 - 1500ms, meaning emit rate of 160 during that time.
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
 
-    QML_NAMED_ELEMENT(ParticleShape3D)
+    QML_NAMED_ELEMENT(EmitBurst3D)
     Q_INTERFACES(QQmlParserStatus)
 
 public:
-    enum ShapeType
-    {
-        Cube = 0,
-        Sphere,
-        Cylinder
-    };
-    Q_ENUM(ShapeType)
+    QQuick3DParticleEmitBurst(QObject *parent = nullptr);
+    ~QQuick3DParticleEmitBurst() override;
 
-    QQuick3DParticleShape(QObject *parent = nullptr);
-
-    bool fill() const;
-    ShapeType type() const;
-
-    // Returns random point inside this shape
-    QVector3D randomPosition() const;
+    int time() const;
+    int amount() const;
+    int duration() const;
 
 public Q_SLOTS:
-    void setFill(bool fill);
-    void setType(QQuick3DParticleShape::ShapeType type);
+    void setTime(int time);
+    void setAmount(int amount);
+    void setDuration(int duration);
 
 protected:
     // From QQmlParserStatus
@@ -84,19 +85,17 @@ protected:
     void classBegin() override {}
 
 Q_SIGNALS:
-    void fillChanged();
-    void typeChanged();
+    void timeChanged();
+    void amountChanged();
+    void durationChanged();
 
 private:
-    QVector3D randomPositionCube() const;
-    QVector3D randomPositionSphere() const;
-    QVector3D randomPositionCylinder() const;
-
-    QQuick3DNode *m_parentNode = nullptr;
-    bool m_fill = false;
-    ShapeType m_type = ShapeType::Cube;
+    QQuick3DParticleEmitter *m_parentEmitter = nullptr;
+    int m_time = 0;
+    int m_amount = 0;
+    int m_duration = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLESHAPE_H
+#endif // QQUICK3DPARTICLEEMITBURST_H

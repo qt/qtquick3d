@@ -44,13 +44,13 @@
 #include <QColor>
 #include <QVector4D>
 
-#include "qquick3dparticle_p.h"
-#include "qquick3dparticlesystem_p.h"
-#include "qquick3dparticledata_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticle_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleSpriteParticle : public QQuick3DParticle
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3DParticle
 {
     Q_OBJECT
     Q_PROPERTY(Lighting lighting READ lighting WRITE setLighting NOTIFY lightingChanged)

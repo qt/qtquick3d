@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEATTRACTOR_H
-#define QQUICK3DPARTICLEATTRACTOR_H
+#ifndef QQUICK3DPARTICLETARGETDIRECTION_H
+#define QQUICK3DPARTICLETARGETDIRECTION_H
 
 //
 //  W A R N I N G
@@ -41,68 +41,64 @@
 // We mean it.
 //
 
-#include "qquick3dparticleaffector_p.h"
-#include "qquick3dparticleshapenode_p.h"
+#include <QVector3D>
+#include <QQmlEngine>
+
+#include <QtQuick3DParticles/private/qquick3dparticledirection_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleAttractor : public QQuick3DParticleAffector
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleTargetDirection : public QQuick3DParticleDirection
 {
     Q_OBJECT
+    // Target position.
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D positionVariation READ positionVariation WRITE setPositionVariation NOTIFY positionVariationChanged)
-    Q_PROPERTY(QQuick3DParticleShapeNode *shapeNode READ shapeNode WRITE setShapeNode NOTIFY shapeNodeChanged)
-    // Time in ms it takes for particles to reach attractor.
-    // Default value is -1, meaning duration is as long as particles lifetime.
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
-    // Set to true if you want particles to hide when they reach the affector position
-    // Default value false
-    Q_PROPERTY(bool hideAtEnd READ hideAtEnd WRITE setHideAtEnd NOTIFY hideAtEndChanged)
-    QML_NAMED_ELEMENT(Attractor3D)
+    // When set to true, direction is normalized and strength comes from magnitude & magnitudeVariation
+    // Default value false.
+    Q_PROPERTY(bool normalized READ normalized WRITE setNormalized NOTIFY normalizedChanged)
+    // Magnitude of direction. When normalized is false, this is proportional to target position.
+    // Magnitude can be also negetive to move away from the target position.
+    // Default value 1.0.
+    Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
+    // Magnitude variation of direction. When normalized is false, this is proportional to target position.
+    // Default value 0.0 (no variation).
+    Q_PROPERTY(float magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeChangedVariation)
+    QML_NAMED_ELEMENT(TargetDirection3D)
 
 public:
-    QQuick3DParticleAttractor(QObject *parent = nullptr);
+    QQuick3DParticleTargetDirection(QObject *parent = nullptr);
 
     QVector3D position() const;
-    QVector3D positionVariation() const;
-    QQuick3DParticleShapeNode *shapeNode() const;
-    int duration() const;
-    int durationVariation() const;
-    bool hideAtEnd() const;
+    void setPosition(const QVector3D &position);
+    bool normalized() const;
+    float magnitude() const;
+    float magnitudeVariation() const;
 
 public Q_SLOTS:
-    void setPosition(const QVector3D &position);
+    QVector3D positionVariation() const;
     void setPositionVariation(const QVector3D &positionVariation);
-    void setShapeNode(QQuick3DParticleShapeNode *shapeNode);
-    void setDuration(int duration);
-    void setDurationVariation(int durationVariation);
-    void setHideAtEnd(bool hideAtEnd);
-
-protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
+    void setNormalized(bool normalized);
+    void setMagnitude(float magnitude);
+    void setMagnitudeVariation(float magnitudeVariation);
 
 Q_SIGNALS:
     void positionChanged();
     void positionVariationChanged();
-    void shapeNodeChanged();
-    void durationChanged();
-    void durationVariationChanged();
-    void hideAtEndChanged();
+    void normalizedChanged();
+    void magnitudeChanged();
+    void magnitudeChangedVariation();
 
 private:
-    void updateShapePositions();
-
+    QVector3D sample(const QVector3D &from) override;
     QVector3D m_position;
-    QQuick3DParticleShapeNode *m_shapeNode = nullptr;
-    QList<QVector3D> m_shapePositionList;
-    bool m_shapeDirty = false;
-    int m_duration = -1;
-    int m_durationVariation = 0;
     QVector3D m_positionVariation;
-    bool m_hideAtEnd = false;
+    bool m_normalized = false;
+    float m_magnitude = 1.0f;
+    float m_magnitudeVariation = 0.0f;
+
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEATTRACTOR_H
+#endif // QQUICK3DPARTICLETARGETDIRECTION_H

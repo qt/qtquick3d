@@ -41,16 +41,16 @@
 // We mean it.
 //
 
-#include "qquick3dparticledirection_p.h"
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include "qquick3dparticlesystem_p.h"
-#include "qquick3dparticlemodelparticle_p.h"
-#include "qquick3dparticleshape_p.h"
-#include "qquick3dparticleemitburst_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticledirection_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlemodelparticle_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticleshape_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticleemitburst_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleEmitter : public QQuick3DNode
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)

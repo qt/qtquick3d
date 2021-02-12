@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEGRAVITY_H
-#define QQUICK3DPARTICLEGRAVITY_H
+#ifndef QQUICK3DPARTICLEVECTORDIRECTION_H
+#define QQUICK3DPARTICLEVECTORDIRECTION_H
 
 //
 //  W A R N I N G
@@ -41,44 +41,38 @@
 // We mean it.
 //
 
-#include <QObject>
-#include "qquick3dparticleaffector_p.h"
+#include <QVector3D>
+#include <QtQuick3DParticles/private/qquick3dparticledirection_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleGravity : public QQuick3DParticleAffector
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleVectorDirection : public QQuick3DParticleDirection
 {
     Q_OBJECT
-    // Magnitude in position change per second. Negative magnitude accelerates opposite way from \a direction.
-    // Default value 100.
-    Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    // Direction towards the gravity will affect. Values will be normalized, so the amount doesn't matter.
-    // Default value is (0.0, -1.0, 0.0) (downwards)
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
-    QML_NAMED_ELEMENT(Gravity3D)
+    Q_PROPERTY(QVector3D directionVariation READ directionVariation WRITE setDirectionVariation NOTIFY directionVariationChanged)
+    QML_NAMED_ELEMENT(VectorDirection3D)
 
 public:
-    QQuick3DParticleGravity(QObject *parent = nullptr);
+    QQuick3DParticleVectorDirection(QObject *parent = nullptr);
 
-    float magnitude() const;
-    const QVector3D &direction() const;
+    QVector3D direction() const;
+    QVector3D directionVariation() const;
 
 public Q_SLOTS:
     void setDirection(const QVector3D &direction);
-    void setMagnitude(float magnitude);
-
-protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
+    void setDirectionVariation(const QVector3D &directionVariation);
 
 Q_SIGNALS:
-    void magnitudeChanged();
     void directionChanged();
+    void directionVariationChanged();
 
 private:
-    float m_magnitude = 100.0f;
-    QVector3D m_direction = {0.0, -1.0, 0.0};
+    QVector3D sample(const QVector3D &from) override;
+    QVector3D m_direction;
+    QVector3D m_directionVariation;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEGRAVITY_H
+#endif // QQUICK3DPARTICLEVECTORDIRECTION_H

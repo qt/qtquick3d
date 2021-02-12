@@ -47,9 +47,9 @@
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/qquick3dinstancing.h>
 
-#include "qquick3dparticle_p.h"
-#include "qquick3dparticlesystem_p.h"
-#include "qquick3dparticledata_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticle_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,7 +57,7 @@ class QQmlInstanceModel;
 class QQmlChangeSet;
 class QQuick3DParticleInstanceTable;
 
-class QQuick3DParticleModelParticle : public QQuick3DParticle
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelParticle : public QQuick3DParticle
 {
     Q_OBJECT
 

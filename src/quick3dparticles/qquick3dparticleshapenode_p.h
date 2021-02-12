@@ -42,12 +42,12 @@
 //
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
-#include "qquick3dparticleshape_p.h"
+#include <QtQuick3DParticles/private/qquick3dparticleshape_p.h>
 #include <QQmlEngine>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleShapeNode : public QQuick3DNode
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShapeNode : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleShape *shape READ shape WRITE setShape NOTIFY shapeChanged)

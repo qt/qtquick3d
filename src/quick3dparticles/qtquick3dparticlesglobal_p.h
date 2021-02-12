@@ -27,27 +27,22 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+#ifndef QTQUICK3DPARTICLESGLOBAL_P_H
+#define QTQUICK3DPARTICLESGLOBAL_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
-QT_BEGIN_NAMESPACE
+#define Q_QUICK3DPARTICLES_PRIVATE_EXPORT Q_QUICK3DPARTICLES_EXPORT
 
-class QtQuick3DParticles3DPlugin : public QQmlEngineExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
-public:
-    QtQuick3DParticles3DPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
-    {
-        volatile auto registration = &qml_register_types_QtQuick3D_Particles3D;
-        Q_UNUSED(registration);
-    }
-};
-
-QT_END_NAMESPACE
-
-#include "plugin.moc"
+#endif // QTQUICK3DPARTICLESGLOBAL_P_H
