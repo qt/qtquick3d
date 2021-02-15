@@ -2,6 +2,7 @@
 
 #add_subdirectory(cmake) # special case
 add_subdirectory(quick3d)
+add_subdirectory(quick3d_particles)
 add_subdirectory(utils)
 add_subdirectory(tools)
 add_subdirectory(quick3d_visual)
