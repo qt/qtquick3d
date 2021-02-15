@@ -69,7 +69,7 @@ Q_SIGNALS:
 
 private:
     QVector3D sample(const QQuick3DParticleData &d) override;
-    QVector3D m_direction;
+    QVector3D m_direction = {0.0f, 100.0f, 0.0f};
     QVector3D m_directionVariation;
 };
 

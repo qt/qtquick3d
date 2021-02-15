@@ -33,16 +33,58 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype TargetDirection3D
+    \inherits Direction3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief For specifying a direction towards the target position.
+
+    This element sets emitted particle velocity towards the target position.
+
+    For example, to emit particles towards position (100, 0, 0) with
+    random magnitude between 10..20:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        velocity: TargetDirection3D {
+            position: Qt.vector3d(100, 0, 0)
+            normalized: true
+            magnitude: 15.0
+            magnitudeVariation: 5.0
+        }
+    }
+    \endqml
+*/
+
 QQuick3DParticleTargetDirection::QQuick3DParticleTargetDirection(QObject *parent)
     : QQuick3DParticleDirection(parent)
 {
 }
 
+/*!
+    \qmlproperty vector3d TargetDirection3D::position
+
+    This property defines the position for particles target.
+
+    The default value is \c (0, 0, 0) (the center of the emitter).
+
+    \sa positionVariation
+*/
 QVector3D QQuick3DParticleTargetDirection::position() const
 {
     return m_position;
 }
 
+/*!
+    \qmlproperty vector3d TargetDirection3D::positionVariation
+
+    This property defines the position variation for particles target.
+
+    The default value is \c (0, 0, 0) (no variation).
+
+    \sa position
+*/
 QVector3D QQuick3DParticleTargetDirection::positionVariation() const
 {
     return m_positionVariation;
@@ -66,6 +108,18 @@ void QQuick3DParticleTargetDirection::setPositionVariation(const QVector3D &posi
     Q_EMIT positionVariationChanged();
 }
 
+/*!
+    \qmlproperty bool TargetDirection3D::normalized
+
+    This property defines if the distance to \l position should be considered as normalized or not.
+    When this is false, distance to the \l position affects the magnitude of the particles velocity.
+    When set to true, distance is normalized and velocity amount comes only from \l magnitude and
+    \l magnitudeVariation.
+
+    The default value is \c false.
+
+    \sa magnitude, magnitudeVariation
+*/
 bool QQuick3DParticleTargetDirection::normalized() const
 {
     return m_normalized;
@@ -79,6 +133,17 @@ void QQuick3DParticleTargetDirection::setNormalized(bool normalized)
     Q_EMIT normalizedChanged();
 }
 
+/*!
+    \qmlproperty float TargetDirection3D::magnitude
+
+    This property defines the magnitude in position change per second. Negative magnitude
+    accelerates the opposite way from the \l {TargetDirection3D::position}{position}.
+    When the \l normalized is false, this is multiplied with the distance to the target position.
+
+    The default value is \c 1.0.
+
+    \sa magnitudeVariation
+*/
 float QQuick3DParticleTargetDirection::magnitude() const
 {
     return m_magnitude;
@@ -92,6 +157,16 @@ void QQuick3DParticleTargetDirection::setMagnitude(float magnitude)
     Q_EMIT magnitudeChanged();
 }
 
+/*!
+    \qmlproperty float TargetDirection3D::magnitudeVariation
+
+    This property defines the magnitude variation in position change per second.
+    When the \l normalized is false, this is multiplied with the distance to the target position.
+
+    The default value is \c 0.0.
+
+    \sa magnitude
+*/
 float QQuick3DParticleTargetDirection::magnitudeVariation() const
 {
     return m_magnitudeVariation;

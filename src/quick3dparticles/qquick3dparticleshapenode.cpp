@@ -31,12 +31,40 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype ShapeNode3D
+    \inherits Node
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Node with ParticleShape3D.
+
+    The ShapeNode3D element is a Node with ParticleShape3D. It is used when shape parent itself
+    isn't a node.
+
+    For example, to create a shapeNode of non-filled sphere:
+
+    \qml
+    ShapeNode3D {
+        position: Qt.vector3d(100, 0, 0)
+        shape: ParticleShape3D {
+            type: ParticleShape3D.Sphere
+            fill: false
+        }
+    }
+    \endqml
+*/
 QQuick3DParticleShapeNode::QQuick3DParticleShapeNode(QQuick3DNode *parent)
     : QQuick3DNode(parent)
 {
     // TODO: If parent isn't a node, should we reach for parents parent etc?
 }
 
+/*!
+    \qmlproperty ParticleShape3D ShapeNode3D::shape
+
+    This property defines the shape of the \l ShapeNode3D.
+
+    \sa ParticleShape3D
+*/
 QQuick3DParticleShape *QQuick3DParticleShapeNode::shape() const
 {
     return m_shape;

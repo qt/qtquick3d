@@ -33,12 +33,33 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype ParticleShape3D
+    \inherits QtObject
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Offers 3D shapes for emitters and affectors.
+
+    The ParticleShape3D element supports shapes like \c Cube, \c Sphere and \c Cylinder for particles needs.
+    For example, emitter can use \l {ParticleEmitter3D::shape}{shape} property to emit particles from the
+    shape area.
+
+    Shapes don't have position, scale or rotation. Instead, they use parent node for these properties.
+    When the shape parent is not a node, you can use \l ShapeNode3D.
+*/
+
 QQuick3DParticleShape::QQuick3DParticleShape(QObject *parent)
     : QObject(parent)
 {
     m_parentNode = qobject_cast<QQuick3DNode*>(parent);
 }
 
+/*!
+    \qmlproperty bool ParticleShape3D::fill
+
+    This property defines if the shape should be filled or just use the shape outlines.
+
+    The default value is \c true.
+*/
 bool QQuick3DParticleShape::fill() const
 {
     return m_fill;
@@ -52,6 +73,27 @@ void QQuick3DParticleShape::setFill(bool fill)
     m_fill = fill;
     Q_EMIT fillChanged();
 }
+
+/*!
+    \qmlproperty ShapeType ParticleShape3D::type
+
+    This property defines the type of the shape.
+
+    The default value is \c ParticleShape3D.Cube.
+*/
+
+/*!
+    \qmlproperty enumeration ParticleShape3D::ShapeType
+
+    Defines the type of the shape.
+
+    \value ParticleShape3D.Cube
+        Cube shape.
+    \value ParticleShape3D.Sphere
+        Sphere shape.
+    \value ParticleShape3D.Cylinder
+        Cylinder shape.
+*/
 
 QQuick3DParticleShape::ShapeType QQuick3DParticleShape::type() const
 {

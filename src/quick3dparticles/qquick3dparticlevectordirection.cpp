@@ -33,16 +33,58 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype VectorDirection3D
+    \inherits Direction3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief For specifying a direction towards the target direction.
+
+    This element sets emitted particle velocity towards the target direction vector.
+    The length of the direction vector is used as the velocity magnitude.
+
+    For example, to emit particles towards some random direction within
+    x: 50..150, y: -20..20, z: 0:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        velocity: VectorDirection3D {
+            direction: Qt.vector3d(100, 0, 0)
+            directionVariation: Qt.vector3d(50, 20, 0)
+        }
+    }
+    \endqml
+
+*/
+
 QQuick3DParticleVectorDirection::QQuick3DParticleVectorDirection(QObject *parent)
     : QQuick3DParticleDirection(parent)
 {
 }
 
+/*!
+    \qmlproperty vector3d VectorDirection3D::direction
+
+    This property defines the direction for particles target.
+
+    The default value is \c (0, 100, 0) (upwards on the y-axis).
+
+    \sa directionVariation
+*/
 QVector3D QQuick3DParticleVectorDirection::direction() const
 {
     return m_direction;
 }
 
+/*!
+    \qmlproperty vector3d VectorDirection3D::directionVariation
+
+    This property defines the direction variation for particles target.
+
+    The default value is \c (0, 0, 0) (no variation).
+
+    \sa direction
+*/
 QVector3D QQuick3DParticleVectorDirection::directionVariation() const
 {
     return m_directionVariation;
