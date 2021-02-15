@@ -51,18 +51,10 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleTargetDirection : public QQuick3DParticleDirection
 {
     Q_OBJECT
-    // Target position.
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D positionVariation READ positionVariation WRITE setPositionVariation NOTIFY positionVariationChanged)
-    // When set to true, direction is normalized and strength comes from magnitude & magnitudeVariation
-    // Default value false.
     Q_PROPERTY(bool normalized READ normalized WRITE setNormalized NOTIFY normalizedChanged)
-    // Magnitude of direction. When normalized is false, this is proportional to target position.
-    // Magnitude can be also negetive to move away from the target position.
-    // Default value 1.0.
     Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    // Magnitude variation of direction. When normalized is false, this is proportional to target position.
-    // Default value 0.0 (no variation).
     Q_PROPERTY(float magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeChangedVariation)
     QML_NAMED_ELEMENT(TargetDirection3D)
 
