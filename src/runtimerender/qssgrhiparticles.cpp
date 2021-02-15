@@ -83,6 +83,10 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
     QVector4D spriteConfig(imageCount, ooImageCount, gradient, blendImages);
     shaders->setUniform(ubufData, "qt_spriteConfig", &spriteConfig, 4 * sizeof(float));
 
+    const float hasColorTable = renderable.particles.m_colorTable ? 1.0f : 0.0f;
+    QVector4D colorConfig(hasColorTable, 0, 0, 0);
+    shaders->setUniform(ubufData, "qt_colorConfig", &colorConfig, 4 * sizeof(float));
+
     const float billboard = renderable.particles.m_billboard ? 1.0f : 0.0f;
     shaders->setUniform(ubufData, "qt_billboard", &billboard, 1 * sizeof(float));
 }
@@ -209,6 +213,35 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                      QRhiSampler::ClampToEdge,
                                                      QRhiSampler::ClampToEdge });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::VertexStage, texture, sampler);
+        }
+    }
+
+    samplerBinding = shaderPipeline->bindingForTexture("qt_colorTable");
+    if (samplerBinding >= 0) {
+        bool hasTexture = false;
+        if (renderable.colorTable) {
+            QRhiTexture *texture = renderable.colorTable->m_texture.m_texture;
+            if (texture) {
+                hasTexture = true;
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                         QRhiSampler::Nearest,
+                                                         QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge,
+                                                         QRhiSampler::ClampToEdge });
+                bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
+            }
+        }
+
+        if (!hasTexture) {
+            QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+            QRhiTexture *texture = rhiCtx->dummyTexture({}, rub, QSize(4, 4), Qt::white);
+            rhiCtx->commandBuffer()->resourceUpdate(rub);
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::None,
+                                                     QRhiSampler::None,
+                                                     QRhiSampler::None,
+                                                     QRhiSampler::ClampToEdge,
+                                                     QRhiSampler::ClampToEdge });
+            bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         }
     }
 
