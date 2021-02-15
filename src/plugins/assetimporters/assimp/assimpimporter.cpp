@@ -85,9 +85,12 @@ static QString getEmbeddedTexturePath(const char *filename, QString fallback)
     if (asInt != -1) {
         // Embedded texture is a number of the form '*123'
         imageName = QString::number(asInt);
-    } else {
+    } else if (filename && *filename != '\0') {
         // Embedded texture is a filename, strip the stem
         imageName = getShortFilename(filename);
+    } else {
+        // Not a number nor a filename
+        imageName = fallback;
     }
 
     return QStringLiteral("maps/") + imageName + QStringLiteral(".png");
