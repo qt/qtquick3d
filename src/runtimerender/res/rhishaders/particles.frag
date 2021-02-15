@@ -6,6 +6,7 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_projectionMatrix;
     vec4 qt_material_base_color;
     vec4 qt_spriteConfig;
+    vec4 qt_colorConfig;
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
@@ -15,12 +16,14 @@ layout(std140, binding = 0) uniform buf {
 
 
 layout(binding = 1) uniform sampler2D qt_sprite;
+layout(binding = 3) uniform sampler2D qt_colorTable;
 
 layout(location = 0) out vec4 fragColor;
 
 layout(location = 0) in vec4 color;
 layout(location = 1) in float spriteFactor;
 layout(location = 2) in vec2 texcoord;
+layout(location = 3) flat in uint instanceIndex;
 
 /*
     qt_spriteConfig
@@ -54,7 +57,20 @@ vec4 qt_readSprite()
     return ret;
 }
 
+float qt_rand(vec2 co)
+{
+    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec4 qt_readColor()
+{
+    if (ubuf.qt_colorConfig.x > 0.0) {
+        return color * texture(qt_colorTable, vec2(spriteFactor, qt_rand(vec2(instanceIndex, 0))));
+    }
+    return color;
+}
+
 void main()
 {
-    fragColor = color * qt_readSprite();
+    fragColor = qt_readColor() * qt_readSprite();
 }

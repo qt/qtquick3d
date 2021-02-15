@@ -76,12 +76,14 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                                                  const QSSGRef<QSSGRenderer> &gen,
                                                  QSSGRenderParticles &inParticles,
                                                  QSSGRenderableImage *inFirstImage,
+                                                 QSSGRenderableImage *inColorTable,
                                                  const QSSGShaderLightList &inLights,
                                                  float inOpacity)
     : QSSGRenderableObject(inFlags, inWorldCenterPt, inParticles.globalTransform, inParticles.m_particleBuffer.bounds())
     , generator(gen)
     , particles(inParticles)
     , firstImage(inFirstImage)
+    , colorTable(inColorTable)
     , lights(inLights)
     , opacity(inOpacity)
 {

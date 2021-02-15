@@ -333,6 +333,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
     const QSSGRef<QSSGRenderer> &generator;
     const QSSGRenderParticles &particles;
     QSSGRenderableImage *firstImage;
+    QSSGRenderableImage *colorTable;
     const QSSGShaderLightList &lights;
     float opacity;
 
@@ -359,6 +360,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
                             const QSSGRef<QSSGRenderer> &gen,
                             QSSGRenderParticles &inParticles,
                             QSSGRenderableImage *inFirstImage,
+                            QSSGRenderableImage *inColorTable,
                             const QSSGShaderLightList &inLights,
                             float inOpacity);
 };

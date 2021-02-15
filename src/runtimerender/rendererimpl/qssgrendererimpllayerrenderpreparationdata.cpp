@@ -1073,6 +1073,21 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
         if (texture.m_flags.hasTransparency())
             renderableFlags.setHasTransparency(true);
     }
+
+    QSSGRenderableImage *colorTable = nullptr;
+    if (inParticles.m_colorTable) {
+        const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+
+        if (inParticles.m_colorTable->clearDirty())
+            dirty = true;
+
+        const QSSGRenderImageTexture texture = inParticles.m_colorTable->updateTexture(bufferManager);
+        QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *inParticles.m_colorTable, texture);
+        colorTable = theImage;
+        if (texture.m_flags.hasTransparency())
+            renderableFlags.setHasTransparency(true);
+    }
+
     if (opacity < (1.0 - QSSG_RENDER_MINIMUM_RENDER_OPACITY))
         renderableFlags.setHasTransparency(true);
 
@@ -1083,6 +1098,7 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
                                                                               renderer,
                                                                               inParticles,
                                                                               firstImage,
+                                                                              colorTable,
                                                                               lights,
                                                                               opacity);
         if (theRenderableObject) {

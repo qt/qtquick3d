@@ -62,6 +62,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
     Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
+    Q_PROPERTY(QQuick3DTexture* colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
 
 public:
@@ -85,6 +86,7 @@ public:
     bool receivesShadows() const;
     bool billboard() const;
     float particleScale() const;
+    QQuick3DTexture *colorTable() const;
 
 public Q_SLOTS:
     void setLighting(QQuick3DParticleSpriteParticle::Lighting lighting);
@@ -95,6 +97,7 @@ public Q_SLOTS:
     void setReceivesShadows(bool receive);
     void setBillboard(bool billboard);
     void setParticleScale(float scale);
+    void setColorTable(QQuick3DTexture *colorTable);
 
 Q_SIGNALS:
     void lightingChanged();
@@ -105,6 +108,7 @@ Q_SIGNALS:
     void receivesShadowsChanged();
     void billboardChanged();
     void particleScaleChanged();
+    void colorTableChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -161,6 +165,7 @@ private:
     Lighting m_lighting = NoLighting;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
+    QQuick3DTexture *m_colorTable = nullptr;
     float m_particleScale = 5.0f;
     int m_spriteImageCount = SingleImage;
     bool m_blendImages = false;

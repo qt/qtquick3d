@@ -95,6 +95,11 @@ float QQuick3DParticleSpriteParticle::particleScale() const
     return m_particleScale;
 }
 
+QQuick3DTexture *QQuick3DParticleSpriteParticle::colorTable() const
+{
+    return m_colorTable;
+}
+
 void QQuick3DParticleSpriteParticle::setLighting(Lighting lighting)
 {
     if (m_lighting == lighting)
@@ -175,6 +180,22 @@ void QQuick3DParticleSpriteParticle::setParticleScale(float scale)
     Q_EMIT particleScaleChanged();
 }
 
+void QQuick3DParticleSpriteParticle::setColorTable(QQuick3DTexture *colorTable)
+{
+    if (m_colorTable == colorTable)
+        return;
+
+    auto sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager;
+    QQuick3DObjectPrivate::updatePropertyListener(colorTable, m_colorTable, sceneManager,
+                                                  QByteArrayLiteral("colorTable"), m_connections,
+                                                  [this](QQuick3DObject *n) {
+        setColorTable(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_colorTable = colorTable;
+    m_dirty = true;
+    Q_EMIT colorTableChanged();
+}
 
 void QQuick3DParticleSpriteParticle::itemChange(QQuick3DObject::ItemChange change,
                                           const QQuick3DObject::ItemChangeData &value)
@@ -245,6 +266,11 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
         particles->m_spriteImageCount = 1;
         particles->m_blendImages = true;
     }
+
+    if (m_colorTable)
+        particles->m_colorTable = m_colorTable->getRenderImage();
+    else
+        particles->m_colorTable = nullptr;
 
     particles->m_lighting = mapLighting(m_lighting);
     particles->m_blendMode = mapBlendMode(m_blendMode);
@@ -339,8 +365,10 @@ void QQuick3DParticleSpriteParticle::updateSceneManager(QQuick3DSceneManager *sc
     // Check all the resource value's scene manager, and update as necessary.
     if (sceneManager) {
         QQuick3DObjectPrivate::refSceneManager(m_sprite, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_colorTable, *sceneManager);
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_sprite);
+        QQuick3DObjectPrivate::derefSceneManager(m_colorTable);
     }
 }
 
