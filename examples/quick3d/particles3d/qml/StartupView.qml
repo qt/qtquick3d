@@ -110,6 +110,10 @@ Item {
             name: "TrailEmitter Burst"
             file: "TrailEmitterBurst.qml"
         }
+        ListElement {
+            name: "Animated Sprite"
+            file: "AnimatedSprite.qml"
+        }
     }
 
     View3D {
