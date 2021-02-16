@@ -36,6 +36,16 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype SpriteParticle3D
+    \inherits Particle3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Particle using a 2D sprite texture.
+
+    The SpriteParticle3D is a logical particle element that creates particles
+    from a 2D sprite texture.
+*/
+
 QQuick3DParticleSpriteParticle::QQuick3DParticleSpriteParticle(QQuick3DNode *parent)
     : QQuick3DParticle(parent)
 {
@@ -60,11 +70,48 @@ QQuick3DParticleSpriteParticle::Lighting QQuick3DParticleSpriteParticle::lightin
     return m_lighting;
 }
 
+/*!
+    \qmlproperty enumeration SpriteParticle3D::BlendMode
+
+    Defines the blending mode for the particles.
+
+    \value SpriteParticle3D.SourceOver
+        Blend particles with SourceOver mode.
+    \value SpriteParticle3D.Screen
+        Blend particles with Screen mode.
+    \value SpriteParticle3D.Multiply
+        Blend particles with Multiply mode.
+*/
+
+/*!
+    \qmlproperty BlendMode SpriteParticle3D::blendMode
+
+    This property defines the blending mode used for rendering the particles.
+
+    The default value is \c SpriteParticle3D.SourceOver.
+*/
 QQuick3DParticleSpriteParticle::BlendMode QQuick3DParticleSpriteParticle::blendMode() const
 {
     return m_blendMode;
 }
 
+/*!
+    \qmlproperty Texture SpriteParticle3D::sprite
+
+    This property defines the \l Texture used for the particles.
+
+    For example, to use "snowFlake.png" as the particles texture:
+
+    \qml
+    SpriteParticle3D {
+        id: snowParticle
+        ...
+        sprite: Texture {
+            source: "images/snowflake.png"
+        }
+    }
+    \endqml
+*/
 QQuick3DTexture *QQuick3DParticleSpriteParticle::sprite() const
 {
     return m_sprite;
@@ -85,11 +132,34 @@ bool QQuick3DParticleSpriteParticle::receivesShadows() const
     return m_receivesShadows;
 }
 
+/*!
+    \qmlproperty bool SpriteParticle3D::billboard
+
+    This property defines if the particle texture should always be aligned
+    face towards the screen.
+
+    \note When set to \c true, \l Particle3D \l {Particle3D::alignMode}{alignMode}
+    property does not have an effect.
+
+    The default value is \c false.
+*/
 bool QQuick3DParticleSpriteParticle::billboard() const
 {
     return m_billboard;
 }
 
+/*!
+    \qmlproperty float SpriteParticle3D::particleScale
+
+    This property defines the scale multiplier of the particles.
+    To adjust the particles sizes in the emitter, use \ ParticleEmitter3D
+    \l {ParticleEmitter3D::particleScale}{particleScale},
+    \l {ParticleEmitter3D::particleEndScale}{particleEndScale}, and
+    \l {ParticleEmitter3D::particleScaleVariation}{particleScaleVariation}
+    properties.
+
+    The default value is \c 5.0.
+*/
 float QQuick3DParticleSpriteParticle::particleScale() const
 {
     return m_particleScale;

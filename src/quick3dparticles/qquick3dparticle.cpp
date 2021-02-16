@@ -31,6 +31,16 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Particle3D
+    \inherits Object3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Abstract logical particle.
+
+    This element defines the common properties of the logical particles.
+    Particle3D is an abstract base class of particles, use \l ModelParticle3D or \l SpriteParticle3D instead.
+*/
+
 QQuick3DParticle::QQuick3DParticle(QQuick3DObject *parent)
     : QQuick3DObject(parent)
     , m_color(255, 255, 255, 255)
@@ -44,6 +54,12 @@ QQuick3DParticle::~QQuick3DParticle()
         m_system->unRegisterParticle(this);
 }
 
+/*!
+    \qmlproperty ParticleSystem3D Particle3D::system
+
+    This property defines the \l ParticleSystem3D for the particle. If the system is
+    direct parent of the particle, this property does not need to be defined.
+*/
 QQuick3DParticleSystem* QQuick3DParticle::system() const
 {
     return m_system;
@@ -63,6 +79,17 @@ void QQuick3DParticle::setSystem(QQuick3DParticleSystem* system)
     Q_EMIT systemChanged();
 }
 
+/*!
+    \qmlproperty int Particle3D::maxAmount
+
+    This property defines the maximum amount of particles that can exist at the same time.
+    You can use \l {ParticleSystem3DLogging::particlesUsed}{particlesUsed} for debugging how
+    efficiently the allocated particles are used. If the maxAmount is too small, particles
+    are reused before they reach the end of their \l {ParticleEmitter3D::lifeSpan}{lifeSpan}.
+    If the maxAmount is too big, unnecessary memory is allocated for the particles.
+
+    The default value is \c 100.
+*/
 int QQuick3DParticle::maxAmount() const
 {
     return m_maxAmount;
@@ -77,6 +104,13 @@ void QQuick3DParticle::setMaxAmount(int maxAmount)
     Q_EMIT maxAmountChanged();
 }
 
+/*!
+    \qmlproperty color Particle3D::color
+
+    This property defines the base color that is used for colorizing the particles.
+
+    The default value is \c "#FFFFFF" (white).
+*/
 QColor QQuick3DParticle::color() const
 {
     return m_color;
@@ -105,6 +139,26 @@ void QQuick3DParticle::resetColor()
     m_colorVariation = QVector4D(0, 0, 0, 0);
 }
 
+/*!
+    \qmlproperty vector4d Particle3D::colorVariation
+
+    This property defines the color variation that is used for colorizing the particles.
+    The values are in RGBA order and each value should be between 0.0 (no variation) and 1.0
+    (full variation).
+
+    For example, to create particles which will have translucent red colors between
+    \c #ff0000 and \c #e50000, with 40% to 60% opacity:
+
+    \qml
+    ModelParticle3D {
+        ...
+        color: "#7fff0000"
+        colorVariation: Qt.vector4d(0.1, 0.0, 0.0, 0.2)
+    }
+    \endqml
+
+    The default value is \c (0, 0, 0, 0) (no variation).
+*/
 QVector4D QQuick3DParticle::colorVariation() const
 {
     return m_colorVariation;
@@ -119,6 +173,28 @@ void QQuick3DParticle::setColorVariation(QVector4D colorVariation)
     Q_EMIT colorVariationChanged();
 }
 
+/*!
+    \qmlproperty enumeration Particle3D::FadeType
+
+    Defines the type of the fading effect.
+
+    \value Particle3D.FadeNone
+        No fading.
+    \value Particle3D.FadeOpacity
+        Fade the particle opacity from/to 0.0.
+    \value Particle3D.FadeScale
+        Fade the particle scale from/to 0.0.
+*/
+
+/*!
+    \qmlproperty FadeType Particle3D::fadeInEffect
+
+    This property defines the fading effect used when the particles appear.
+
+    The default value is \c Particle3D.FadeOpacity.
+
+    \sa fadeInDuration, fadeOutEffect
+*/
 QQuick3DParticle::FadeType QQuick3DParticle::fadeInEffect() const
 {
     return m_fadeInEffect;
@@ -133,6 +209,16 @@ void QQuick3DParticle::setFadeInEffect(FadeType fadeInEffect)
     Q_EMIT fadeInEffectChanged();
 }
 
+/*!
+    \qmlproperty FadeType Particle3D::fadeOutEffect
+
+    This property defines the fading effect used when the particles reach their
+    \l {ParticleEmitter3D::lifeSpan}{lifeSpan} and disappear.
+
+    The default value is \c Particle3D.FadeOpacity.
+
+    \sa fadeOutDuration, fadeInEffect
+*/
 QQuick3DParticle::FadeType QQuick3DParticle::fadeOutEffect() const
 {
     return m_fadeOutEffect;
@@ -147,6 +233,20 @@ void QQuick3DParticle::setFadeOutEffect(FadeType fadeOutEffect)
     Q_EMIT fadeOutEffectChanged();
 }
 
+/*!
+    \qmlproperty int Particle3D::fadeInDuration
+
+    This property defines the duration in milliseconds for the fading in effect.
+
+    \note The fading durations are part of the particles
+    \l {ParticleEmitter3D::lifeSpan}{lifeSpan}. So e.g. if \c lifeSpan is 3000,
+    \c fadeInDuration is 500 and \c fadeOutDuration is 500, the fully visible
+    time of the particle is 2000ms.
+
+    The default value is \c 250.
+
+    \sa fadeInEffect, fadeOutDuration
+*/
 int QQuick3DParticle::fadeInDuration() const
 {
     return m_fadeInDuration;
@@ -161,6 +261,15 @@ void QQuick3DParticle::setFadeInDuration(int fadeInDuration)
     Q_EMIT fadeInDurationChanged();
 }
 
+/*!
+    \qmlproperty int Particle3D::fadeOutDuration
+
+    This property defines the duration in milliseconds for the fading out effect.
+
+    The default value is \c 250.
+
+    \sa fadeOutEffect, fadeInDuration
+*/
 int QQuick3DParticle::fadeOutDuration() const
 {
     return m_fadeOutDuration;
@@ -175,11 +284,47 @@ void QQuick3DParticle::setFadeOutDuration(int fadeOutDuration)
     Q_EMIT fadeOutDurationChanged();
 }
 
+/*!
+    \qmlproperty enumeration Particle3D::AlignMode
+
+    Defines the type of the alignment.
+
+    \value Particle3D.AlignDefault
+        No alignment.
+    \value Particle3D.AlignTowardsTarget
+        Align the particles towards \l target element direction.
+    \value Particle3D.AlignTowardsStartVelocity
+        Align the particles towards their starting \l {ParticleEmitter3D::velocity}{velocity}
+        direction.
+*/
+
+/*!
+    \qmlproperty AlignMode Particle3D::alignMode
+
+    This property defines the align mode used for the particles.
+    Particle alignment means the direction that particles face.
+
+    \note When the \l SpriteParticle3D \l {SpriteParticle3D::billboard}{billboard}
+    property is set to \c true, alignMode does not have an effect.
+
+    The default value is \c Particle3D.AlignDefault.
+
+    \sa target
+*/
 QQuick3DParticle::AlignMode QQuick3DParticle::alignMode() const
 {
     return m_alignMode;
 }
 
+/*!
+    \qmlproperty Node Particle3D::target
+
+    This property defines the \l Node particles are aligned to.
+    This property has effect only when the \l alignMode is set to
+    \c Particle3D.AlignTowardsTarget.
+
+    \sa alignMode
+*/
 QQuick3DNode *QQuick3DParticle::target() const
 {
     return m_target;

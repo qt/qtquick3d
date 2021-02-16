@@ -31,9 +31,19 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype ModelParticle3D
+    \inherits Particle3D
+    \inqmlmodule QtQuick3D.Particles3D
+    \brief Particle using a Qt Quick 3D Model.
+
+    The ModelParticle3D is a logical particle element that creates particles
+    from a Qt Quick 3D \l Model component.
+*/
+
 QQuick3DParticleModelParticle::QQuick3DParticleModelParticle(QQuick3DNode *parent)
     : QQuick3DParticle(parent)
-    , m_initialScale(1.0, 1.0, 1.0)
+    , m_initialScale(1.0f, 1.0f, 1.0f)
 {
     QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
         handleMaxAmountChanged(m_maxAmount);
@@ -50,6 +60,31 @@ void QQuick3DParticleModelParticle::handleMaxAmountChanged(int maxAmount)
     }
 }
 
+/*!
+    \qmlproperty Component ModelParticle3D::delegate
+
+    The delegate provides a template defining each object instantiated by the particle.
+
+    For example, to allocate 200 red cube particles:
+
+    \qml
+    Component {
+        id: particleComponent
+        Model {
+            source: "#Cube"
+            scale: Qt.vector3d(0.2, 0.2, 0.2)
+            materials: DefaultMaterial { }
+        }
+    }
+
+    ModelParticle3D {
+        id: particleRed
+        delegate: particleComponent
+        maxAmount: 200
+        color: "#ff0000"
+    }
+    \endqml
+*/
 QQmlComponent *QQuick3DParticleModelParticle::delegate() const
 {
     return m_delegate.data();
