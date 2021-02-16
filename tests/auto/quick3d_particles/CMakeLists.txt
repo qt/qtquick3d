@@ -1,1 +1,3 @@
 add_subdirectory(qquick3dparticle)
+add_subdirectory(qquick3dparticletargetdirection)
+add_subdirectory(qquick3dparticlevectordirection)
