@@ -115,6 +115,11 @@ Window {
             name: "AlignedParticles"
             file: "AlignedParticles.qml"
         }
+        ListElement {
+            group: "ParticleSystem"
+            name: "Fire (colorTable)"
+            file: "Fire.qml"
+        }
     }
 
     Component {
