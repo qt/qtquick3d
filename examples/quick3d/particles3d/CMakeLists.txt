@@ -45,6 +45,7 @@ set(qml_resource_files
     "qml/EmitAndBurst.qml"
     "qml/EmitterShapes.qml"
     "qml/FadingInOut.qml"
+    "qml/Fire.qml"
     "qml/LoggingView.qml"
     "qml/QtLogoAnimation.qml"
     "qml/QtLogoAnimation2.qml"
@@ -60,6 +61,8 @@ set(qml_resource_files
     "qml/images/snowflake.png"
     "qml/images/star.png"
     "qml/images/dot.png"
+    "qml/images/sphere.png"
+    "qml/images/colorTable.png"
     "qml/main.qml"
 )
 
