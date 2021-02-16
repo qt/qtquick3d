@@ -38,6 +38,7 @@ target_link_libraries(particles3d PUBLIC
 # Resources:
 set(qml_resource_files
     "qml/AlignedParticles.qml"
+    "qml/AnimatedSprite.qml"
     "qml/AttractorShapes.qml"
     "qml/ColorfulParticles.qml"
     "qml/CustomCheckBox.qml"
@@ -75,6 +76,8 @@ set(qml_resource_files
     "qml/images/color_table3.png"
     "qml/images/smoke_sprite.png"
     "qml/images/dust.png"
+    "qml/images/bear_black.png"
+    "qml/images/explosion_01_strip13.png"
     "qml/main.qml"
 )
 
