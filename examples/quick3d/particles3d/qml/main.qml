@@ -125,6 +125,11 @@ Window {
             name: "TrailEmitterBurst"
             file: "TrailEmitterBurst.qml"
         }
+        ListElement {
+            group: "ParticleSystem"
+            name: "HeartTrail"
+            file: "HeartTrail.qml"
+        }
     }
 
     Component {
