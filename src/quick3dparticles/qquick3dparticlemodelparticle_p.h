@@ -60,8 +60,6 @@ class QQuick3DParticleInstanceTable;
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelParticle : public QQuick3DParticle
 {
     Q_OBJECT
-
-    // TODO: Should this be called delegate or model? In Repeater(3D) and ListView model is very different.
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(QQuick3DInstancing *instanceTable READ instanceTable NOTIFY instanceTableChanged)
 
@@ -105,7 +103,7 @@ private:
     QQuick3DParticleInstanceTable *m_instanceTable = nullptr;
 
     QVector3D m_initialScale;
-    float m_initialOpacity = 1.0;
+    float m_initialOpacity = 1.0f;
     bool m_explicitColor;
 };
 

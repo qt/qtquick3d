@@ -55,7 +55,6 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_OBJECT
     Q_PROPERTY(Lighting lighting READ lighting WRITE setLighting NOTIFY lightingChanged)
     Q_PROPERTY(BlendMode blendMode READ blendMode WRITE setBlendMode NOTIFY blendModeChanged)
-
     Q_PROPERTY(QQuick3DTexture* sprite READ sprite WRITE setSprite NOTIFY spriteChanged)
     Q_PROPERTY(int spriteImages READ spriteImages WRITE setSpriteImages NOTIFY spriteImagesChanged)
     Q_PROPERTY(bool blendImages READ blendImages WRITE setBlendImages NOTIFY blendImagesChanged)

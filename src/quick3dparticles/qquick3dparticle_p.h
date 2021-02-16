@@ -54,10 +54,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(int maxAmount READ maxAmount WRITE setMaxAmount NOTIFY maxAmountChanged)
-    // Colors are here instead of emitter as they kinda belong to particle.
-    // Users could change "snow" particle to "rock" particle in emitter without needing to adjust colors there.
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor)
-    // Color variation for red, green, blue and alpha. Between 0.0 - 1.0.
     Q_PROPERTY(QVector4D colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged)
     Q_PROPERTY(FadeType fadeInEffect READ fadeInEffect WRITE setFadeInEffect NOTIFY fadeInEffectChanged)
     Q_PROPERTY(FadeType fadeOutEffect READ fadeOutEffect WRITE setFadeOutEffect NOTIFY fadeOutEffectChanged)
@@ -139,7 +136,7 @@ protected:
 
     QList<QQuick3DParticleData> m_particleData;
 
-    int m_maxAmount = 0;
+    int m_maxAmount = 100;
     int m_currentIndex = -1;
     int m_lastBurstIndex = 0;
     AlignMode m_alignMode = AlignDefault;
