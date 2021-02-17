@@ -79,7 +79,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystem : public QQuick3DNode
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
     Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
-    Q_PROPERTY(bool randomizeSeed READ randomizeSeed WRITE setRandomizeSeed NOTIFY randomizeSeedChanged)
+    Q_PROPERTY(bool useRandomSeed READ useRandomSeed WRITE setUseRandomSeed NOTIFY useRandomSeedChanged)
     Q_PROPERTY(int seed READ seed WRITE setSeed NOTIFY seedChanged)
     Q_PROPERTY(bool logging READ logging WRITE setLogging NOTIFY loggingChanged)
     Q_PROPERTY(QQuick3DParticleSystemLogging *loggingData READ loggingData NOTIFY loggingDataChanged)
@@ -93,7 +93,7 @@ public:
     bool isPaused() const;
     int startTime() const;
     int time() const;
-    bool randomizeSeed() const;
+    bool useRandomSeed() const;
     int seed() const;
     // Return the total amount of particles
     int particleCount() const;
@@ -117,7 +117,7 @@ public Q_SLOTS:
     void setPaused(bool arg);
     void setStartTime(int startTime);
     void setTime(int time);
-    void setRandomizeSeed(bool randomize);
+    void setUseRandomSeed(bool randomize);
     void setSeed(int seed);
     void setLogging(bool logging);
 
@@ -132,7 +132,7 @@ Q_SIGNALS:
     void pausedChanged();
     void timeChanged();
     void startTimeChanged();
-    void randomizeSeedChanged();
+    void useRandomSeedChanged();
     void seedChanged();
     void loggingChanged();
     void loggingDataChanged();
@@ -176,7 +176,7 @@ private:
     int m_particlesMax = 0;
     int m_particlesUsed = 0;
     int m_updates = 0;
-    bool m_randomizeSeed = true;
+    bool m_useRandomSeed = true;
     int m_seed = 0;
     bool m_logging;
     QQuick3DParticleSystemLogging *m_loggingData = nullptr;
