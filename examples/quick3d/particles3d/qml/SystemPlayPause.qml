@@ -111,7 +111,7 @@ Item {
         ParticleSystem3D {
             id: psystem
 
-            randomizeSeed: checkBoxRandomize.checked
+            useRandomSeed: checkBoxRandomize.checked
 
             // Particles
             ModelParticle3D {
@@ -247,19 +247,19 @@ Item {
         }
         CustomCheckBox {
             id: checkBoxRandomize
-            text: "Randomize seed:"
+            text: "Use random seed"
             checked: true
         }
         Text {
             color: "#222840"
             font.pointSize: 12
             text: "Custom seed:"
-            opacity: psystem.randomizeSeed ? 0.4 : 1.0
+            opacity: psystem.useRandomSeed ? 0.4 : 1.0
         }
         CustomSlider {
             id: sliderTimelineTime
             sliderValue: 0
-            sliderEnabled: !psystem.randomizeSeed
+            sliderEnabled: !psystem.useRandomSeed
             fromValue: 0
             toValue: 99
             sliderStepSize: 1

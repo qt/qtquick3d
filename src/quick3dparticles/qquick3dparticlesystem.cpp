@@ -187,7 +187,7 @@ int QQuick3DParticleSystem::time() const
 }
 
 /*!
-    \qmlproperty bool ParticleSystem3D::randomizeSeed
+    \qmlproperty bool ParticleSystem3D::useRandomSeed
 
     This property defines if particle system seed should be random or user defined.
     When \c true, a new random value for \l {ParticleSystem3D::seed}{seed} is generated every time particle
@@ -199,9 +199,9 @@ int QQuick3DParticleSystem::time() const
 
     \sa seed
 */
-bool QQuick3DParticleSystem::randomizeSeed() const
+bool QQuick3DParticleSystem::useRandomSeed() const
 {
-    return m_randomizeSeed;
+    return m_useRandomSeed;
 }
 
 /*!
@@ -211,13 +211,13 @@ bool QQuick3DParticleSystem::randomizeSeed() const
     particles effect will be identical on every run. This is useful when deterministic behavior
     is desired over random behavior.
 
-    The default value is \c 0 when \l {ParticleSystem3D::randomizeSeed}{randomizeSeed} is set to
-    \c false, and something in between \c 1..INT32_MAX when \l {ParticleSystem3D::randomizeSeed}{randomizeSeed}
+    The default value is \c 0 when \l {ParticleSystem3D::useRandomSeed}{useRandomSeed} is set to
+    \c false, and something in between \c 1..INT32_MAX when \l {ParticleSystem3D::useRandomSeed}{useRandomSeed}
     is set to \c true.
 
     \note This property should not be modified during the particle animations.
 
-    \sa randomizeSeed
+    \sa useRandomSeed
 */
 int QQuick3DParticleSystem::seed() const
 {
@@ -273,7 +273,7 @@ void QQuick3DParticleSystem::setRunning(bool arg)
                 particle->reset();
         }
 
-        if (!m_running && m_randomizeSeed)
+        if (!m_running && m_useRandomSeed)
             doSeedRandomization();
 
         if (m_animation)
@@ -311,18 +311,18 @@ void QQuick3DParticleSystem::setTime(int time)
     Q_EMIT timeChanged();
 }
 
-void QQuick3DParticleSystem::setRandomizeSeed(bool randomize)
+void QQuick3DParticleSystem::setUseRandomSeed(bool randomize)
 {
-    if (m_randomizeSeed == randomize)
+    if (m_useRandomSeed == randomize)
         return;
 
-    m_randomizeSeed = randomize;
+    m_useRandomSeed = randomize;
     // When set to true, random values are recalculated with a random seed
     // and random values will become independent of particle index when possible.
-    if (m_randomizeSeed)
+    if (m_useRandomSeed)
         doSeedRandomization();
-    m_rand.setDeterministic(!m_randomizeSeed);
-    Q_EMIT randomizeSeedChanged();
+    m_rand.setDeterministic(!m_useRandomSeed);
+    Q_EMIT useRandomSeedChanged();
 }
 
 void QQuick3DParticleSystem::setSeed(int seed)
@@ -362,7 +362,7 @@ void QQuick3DParticleSystem::componentComplete()
     connect(&m_loggingTimer, &QTimer::timeout, this, &QQuick3DParticleSystem::updateLoggingData);
     m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
 
-    if (m_randomizeSeed)
+    if (m_useRandomSeed)
         doSeedRandomization();
     else
         m_rand.init(m_seed);
