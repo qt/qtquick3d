@@ -81,7 +81,7 @@ protected:
     QByteArray getInstanceBuffer(int *instanceCount) override
     {
         if (instanceCount)
-            *instanceCount = m_instances.count() / sizeof(InstanceTableEntry);
+            *instanceCount = int(m_instances.count() / sizeof(InstanceTableEntry));
 
         return m_instances;
     }
