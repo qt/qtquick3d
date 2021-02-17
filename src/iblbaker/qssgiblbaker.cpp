@@ -633,17 +633,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
 void adjustToPlatformQuirks(QRhi::Implementation &impl)
 {
-#if defined(Q_OS_WIN)
-    // Temporary Windows 7 workaround: no D3D. Just stick with OpenGL like Qt 5
-    // would. Can be removed when Win 7 support is finally dropped from Qt 6.
-    // (but as long as we have a Win 7 CI, this is mandatory)
-    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7) {
-        if (impl == QRhi::D3D11) {
-            qDebug("D3D on Windows 7 is not supported. Trying OpenGL instead.");
-            impl = QRhi::OpenGLES2;
-        }
-    }
-#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     // A macOS VM may not have Metal support at all. We have to decide at this
     // point, it will be too late afterwards, and the only way is to see if
     // MTLCreateSystemDefaultDevice succeeds.
