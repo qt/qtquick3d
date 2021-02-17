@@ -31,7 +31,7 @@ layout(location = 2) in vec2 texcoord;
 */
 float qt_spriteCoords(out vec2 coords[2])
 {
-    float imageOffset = ubuf.qt_spriteConfig.x * spriteFactor;
+    float imageOffset = (ubuf.qt_spriteConfig.x - ubuf.qt_spriteConfig.w) * spriteFactor;
     float factor = fract(imageOffset);
     vec2 imageOffsets = vec2(imageOffset - factor, imageOffset - factor + 1.0);
     imageOffsets = clamp(imageOffsets * ubuf.qt_spriteConfig.y, 0.0, 1.0);
