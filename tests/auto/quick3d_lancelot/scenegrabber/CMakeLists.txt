@@ -32,6 +32,12 @@ qt_internal_add_resource(qmlscenegrabber "scenegrabber"
         ${scenegrabber_resource_files}
 )
 
+qt_quick3d_internal_bake_lightprobe_hdri(qmlscenegrabber "ibl_assets"
+    PREFIX
+        "/"
+    FILES
+        "../data/shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
+)
 
 #### Keys ignored in scope 1:.:.:scenegrabber.pro:<TRUE>:
 # QML_IMPORT_NAME = "QtQuick3D.Lancelot"
