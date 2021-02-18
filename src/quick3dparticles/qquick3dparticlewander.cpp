@@ -30,6 +30,7 @@
 #include <QtCore/qmath.h>
 #include "qquick3dparticlewander_p.h"
 #include "qquick3dparticlerandomizer_p.h"
+#include "qquick3dparticleutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -207,11 +208,11 @@ void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQui
     const float pi2 = float(M_PI * 2);
     // Global
     if (!qFuzzyIsNull(m_globalAmount.x()) && !qFuzzyIsNull(m_globalPace.x()))
-        d->position.setX(d->position.x() + smooth * sinf(time * pi2 * m_globalPace.x()) * m_globalAmount.x());
+        d->position.setX(d->position.x() + smooth * QPSIN(time * pi2 * m_globalPace.x()) * m_globalAmount.x());
     if (!qFuzzyIsNull(m_globalAmount.y()) && !qFuzzyIsNull(m_globalPace.y()))
-        d->position.setY(d->position.y() + smooth * sinf(time * pi2 * m_globalPace.y()) * m_globalAmount.y());
+        d->position.setY(d->position.y() + smooth * QPSIN(time * pi2 * m_globalPace.y()) * m_globalAmount.y());
     if (!qFuzzyIsNull(m_globalAmount.z()) && !qFuzzyIsNull(m_globalPace.z()))
-        d->position.setZ(d->position.z() + smooth * sinf(time * pi2 * m_globalPace.z()) * m_globalAmount.z());
+        d->position.setZ(d->position.z() + smooth * QPSIN(time * pi2 * m_globalPace.z()) * m_globalAmount.z());
 
     // Unique
     // Rather simple to only use a single sin operation per direction
@@ -222,7 +223,7 @@ void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQui
         float startPace = rand->get(sd.index, QPRand::WanderXPS) * pi2;
         float pace = startPace + paceVariation * time * pi2 * m_uniquePace.x();
         float amount = amountVariation * m_uniqueAmount.x();
-        d->position.setX(d->position.x() + smooth * sinf(pace) * amount);
+        d->position.setX(d->position.x() + smooth * QPSIN(pace) * amount);
     }
     if (!qFuzzyIsNull(m_uniqueAmount.y()) && !qFuzzyIsNull(m_uniquePace.y())) {
         // Values between  1.0 +/- variation
@@ -231,7 +232,7 @@ void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQui
         float startPace = rand->get(sd.index, QPRand::WanderYPS) * pi2;
         float pace = startPace + paceVariation * time * pi2 * m_uniquePace.y();
         float amount = amountVariation * m_uniqueAmount.y();
-        d->position.setY(d->position.y() + smooth * sinf(pace) * amount);
+        d->position.setY(d->position.y() + smooth * QPSIN(pace) * amount);
     }
     if (!qFuzzyIsNull(m_uniqueAmount.z()) && !qFuzzyIsNull(m_uniquePace.z())) {
         // Values between  1.0 +/- variation
@@ -240,7 +241,7 @@ void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQui
         float startPace = rand->get(sd.index, QPRand::WanderZPS) * pi2;
         float pace = startPace + paceVariation * time * pi2 * m_uniquePace.z();
         float amount = amountVariation * m_uniqueAmount.z();
-        d->position.setZ(d->position.z() + smooth * sinf(pace) * amount);
+        d->position.setZ(d->position.z() + smooth * QPSIN(pace) * amount);
     }
 }
 
