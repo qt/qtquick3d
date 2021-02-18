@@ -112,7 +112,7 @@ int QQuick3DParticleSystemLogging::particlesUsed() const
 }
 
 /*!
-    \qmlproperty float ParticleSystem3DLogging::time
+    \qmlproperty real ParticleSystem3DLogging::time
     \readonly
 
     This property holds the time in milliseconds used for emitting and animating particles
@@ -124,7 +124,7 @@ float QQuick3DParticleSystemLogging::time() const
 }
 
 /*!
-    \qmlproperty float ParticleSystem3DLogging::timeAverage
+    \qmlproperty real ParticleSystem3DLogging::timeAverage
     \readonly
 
     This property holds the average time in milliseconds used for emitting and animating

@@ -48,7 +48,7 @@ QQuick3DParticleGravity::QQuick3DParticleGravity(QObject *parent)
 }
 
 /*!
-    \qmlproperty float Gravity3D::magnitude
+    \qmlproperty real Gravity3D::magnitude
 
     This property defines the magnitude in position change per second. Negative magnitude
     accelerates the opposite way from the \l {Gravity3D::direction}{direction}.
