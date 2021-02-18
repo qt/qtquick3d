@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QObject, public QQmlParserStatus
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QQuick3DNode
 {
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
@@ -59,10 +59,9 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QObject, publi
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     QML_NAMED_ELEMENT(Affector3D)
     QML_UNCREATABLE("Affector3D is abstract")
-    Q_INTERFACES(QQmlParserStatus)
 
 public:
-    QQuick3DParticleAffector(QObject *parent = nullptr);
+    QQuick3DParticleAffector(QQuick3DNode *parent = nullptr);
     ~QQuick3DParticleAffector() override;
 
     QQuick3DParticleSystem* system() const;
@@ -85,7 +84,6 @@ protected:
     friend class QQuick3DParticleSystem;
     // From QQmlParserStatus
     void componentComplete() override;
-    void classBegin() override {}
 
     virtual void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) = 0;
 

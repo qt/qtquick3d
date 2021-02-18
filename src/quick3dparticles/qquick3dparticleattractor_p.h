@@ -42,35 +42,32 @@
 //
 
 #include <QtQuick3DParticles/private/qquick3dparticleaffector_p.h>
-#include <QtQuick3DParticles/private/qquick3dparticleshapenode_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticleshape_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAttractor : public QQuick3DParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D positionVariation READ positionVariation WRITE setPositionVariation NOTIFY positionVariationChanged)
-    Q_PROPERTY(QQuick3DParticleShapeNode *shapeNode READ shapeNode WRITE setShapeNode NOTIFY shapeNodeChanged)
+    Q_PROPERTY(QQuick3DParticleShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
     Q_PROPERTY(bool hideAtEnd READ hideAtEnd WRITE setHideAtEnd NOTIFY hideAtEndChanged)
     QML_NAMED_ELEMENT(Attractor3D)
 
 public:
-    QQuick3DParticleAttractor(QObject *parent = nullptr);
+    QQuick3DParticleAttractor(QQuick3DNode *parent = nullptr);
 
-    QVector3D position() const;
     QVector3D positionVariation() const;
-    QQuick3DParticleShapeNode *shapeNode() const;
+    QQuick3DParticleShape *shape() const;
     int duration() const;
     int durationVariation() const;
     bool hideAtEnd() const;
 
 public Q_SLOTS:
-    void setPosition(const QVector3D &position);
     void setPositionVariation(const QVector3D &positionVariation);
-    void setShapeNode(QQuick3DParticleShapeNode *shapeNode);
+    void setShape(QQuick3DParticleShape *shape);
     void setDuration(int duration);
     void setDurationVariation(int durationVariation);
     void setHideAtEnd(bool hideAtEnd);
@@ -79,9 +76,8 @@ protected:
     void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 Q_SIGNALS:
-    void positionChanged();
     void positionVariationChanged();
-    void shapeNodeChanged();
+    void shapeChanged();
     void durationChanged();
     void durationVariationChanged();
     void hideAtEndChanged();
@@ -89,8 +85,7 @@ Q_SIGNALS:
 private:
     void updateShapePositions();
 
-    QVector3D m_position;
-    QQuick3DParticleShapeNode *m_shapeNode = nullptr;
+    QQuick3DParticleShape *m_shape = nullptr;
     QList<QVector3D> m_shapePositionList;
     bool m_shapeDirty = false;
     int m_duration = -1;

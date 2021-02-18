@@ -59,7 +59,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleWander : public QQuick3DParticle
     QML_NAMED_ELEMENT(Wander3D)
 
 public:
-    QQuick3DParticleWander(QObject *parent = nullptr);
+    QQuick3DParticleWander(QQuick3DNode *parent = nullptr);
 
     const QVector3D &globalAmount() const;
     const QVector3D &globalPace() const;

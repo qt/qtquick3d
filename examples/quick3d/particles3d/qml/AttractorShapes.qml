@@ -212,14 +212,11 @@ Item {
 
             Attractor3D {
                 particles: [particleGreen]
+                position: targetSphere.position
                 // Attract into a shape
-                shapeNode: ShapeNode3D {
-                    id: targetNode
-                    position: targetSphere.position
-                    shape: ParticleShape3D {
-                        type: ParticleShape3D.Sphere
-                        fill: false
-                    }
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    fill: false
                 }
                 duration: sliderDuration1.sliderValue
                 durationVariation: sliderDuration1Variation.sliderValue

@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     or inside the scene, use \l Attractor3D.
 */
 
-QQuick3DParticleGravity::QQuick3DParticleGravity(QObject *parent)
+QQuick3DParticleGravity::QQuick3DParticleGravity(QQuick3DNode *parent)
     : QQuick3DParticleAffector(parent)
 {
 }

@@ -41,43 +41,18 @@ QT_BEGIN_NAMESPACE
     This element attracts particles towards a position inside the 3D view. To model
     the gravity of a massive object whose center of gravity is far away, use \l Gravity3D.
 
-    The attraction position is defined either with \l position and \l positionVariation or
-    with \l shapeNode. If both are defined, \l shapeNode is used.
+    The attraction position is defined either with the \l {Node::position}{position} and
+    \l positionVariation or with \l shape. If both are defined, \l shape is used.
 */
 
 // Minimum duration in seconds
 const float MIN_DURATION = 0.001f;
 
-QQuick3DParticleAttractor::QQuick3DParticleAttractor(QObject *parent)
+QQuick3DParticleAttractor::QQuick3DParticleAttractor(QQuick3DNode *parent)
     : QQuick3DParticleAffector(parent)
-    , m_position(0, 0, 0)
     , m_duration(-1)
     , m_durationVariation(0)
 {
-}
-
-/*!
-    \qmlproperty vector3d Attractor3D::position
-
-    This property defines the position for particles attraction.
-
-    The default value is \c (0, 0, 0) (the center of particle system).
-
-    \sa positionVariation, shapeNode
-*/
-QVector3D QQuick3DParticleAttractor::position() const
-{
-    return m_position;
-}
-
-void QQuick3DParticleAttractor::setPosition(const QVector3D &position)
-{
-    if (m_position == position)
-        return;
-
-    m_position = position;
-    Q_EMIT positionChanged();
-    update();
 }
 
 /*!
@@ -99,7 +74,7 @@ void QQuick3DParticleAttractor::setPosition(const QVector3D &position)
 
     The default value is \c (0, 0, 0) (no variation).
 
-    \sa position, shapeNode
+    \sa {Node::position}, shape
 */
 QVector3D QQuick3DParticleAttractor::positionVariation() const
 {
@@ -117,41 +92,39 @@ void QQuick3DParticleAttractor::setPositionVariation(const QVector3D &positionVa
 }
 
 /*!
-    \qmlproperty ShapeNode3D Attractor3D::shapeNode
+    \qmlproperty ParticleShape3D Attractor3D::shape
 
-    This property defines a \l ShapeNode3D with a \l ParticleShape3D for particles attraction.
+    This property defines a \l ParticleShape3D for particles attraction.
     Each particle will be attracted into a random position inside this shape. This is an
-    alternative for defining \l position and \l positionVariation. Here is an example how to
-    attract particles into some random point inside sphere by the end of the particles
-    \l {Particle3D::lifeSpan}{lifeSpan}:
+    alternative for defining \l {Node::position}{position} and \l positionVariation. Here
+    is an example how to attract particles into some random point inside sphere by the end
+    of the particles \l {Particle3D::lifeSpan}{lifeSpan}:
 
     \qml
     Attractor3D {
-        shapeNode: ShapeNode3D {
-            position: Qt.vector3d(100, 0, 0)
-            shape: ParticleShape3D {
-                type: ParticleShape3D.Sphere
-                fill: true
-            }
+        position: Qt.vector3d(100, 0, 0)
+        shape: ParticleShape3D {
+            type: ParticleShape3D.Sphere
+            fill: true
         }
     }
     \endqml
 
-    \sa position, positionVariation
+    \sa {Node::position}, positionVariation
 */
-QQuick3DParticleShapeNode *QQuick3DParticleAttractor::shapeNode() const
+QQuick3DParticleShape *QQuick3DParticleAttractor::shape() const
 {
-    return m_shapeNode;
+    return m_shape;
 }
 
-void QQuick3DParticleAttractor::setShapeNode(QQuick3DParticleShapeNode *shapeNode)
+void QQuick3DParticleAttractor::setShape(QQuick3DParticleShape *shape)
 {
-    if (m_shapeNode == shapeNode)
+    if (m_shape == shape)
         return;
 
-    m_shapeNode = shapeNode;
+    m_shape = shape;
     m_shapeDirty = true;
-    Q_EMIT shapeNodeChanged();
+    Q_EMIT shapeChanged();
     update();
 }
 
@@ -159,7 +132,7 @@ void QQuick3DParticleAttractor::setShapeNode(QQuick3DParticleShapeNode *shapeNod
     \qmlproperty int Attractor3D::duration
 
     This property defines the duration in milliseconds how long it takes for particles to
-    reach the \l position or \l shapeNode. When the value is -1, particle lifeSpan is used
+    reach the attaction position. When the value is -1, particle lifeSpan is used
     as the duration.
 
     The default value is \c -1.
@@ -227,10 +200,10 @@ void QQuick3DParticleAttractor::setHideAtEnd(bool hideAtEnd)
 void QQuick3DParticleAttractor::updateShapePositions()
 {
     m_shapePositionList.clear();
-    if (!m_system || !m_shapeNode || !m_shapeNode->shape())
+    if (!m_system || !m_shape)
         return;
 
-    m_shapeNode->shape()->m_system = m_system;
+    m_shape->m_system = m_system;
 
     // Get count of particles positions needed
     int pCount = 0;
@@ -245,7 +218,7 @@ void QQuick3DParticleAttractor::updateShapePositions()
 
     m_shapePositionList.reserve(pCount);
     for (int i = 0; i < pCount; i++)
-        m_shapePositionList << m_shapeNode->shape()->randomPosition(i);
+        m_shapePositionList << m_shape->randomPosition(i);
 
     m_shapeDirty = false;
 }
@@ -272,13 +245,13 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
         d->color.a = 0;
 
     float pStart = 1.0f - pEnd;
-    if (m_shapeNode) {
-        d->position = (pStart * d->position) + (pEnd * (m_shapeNode->scenePosition() + m_shapePositionList[sd.index]));
+    if (m_shape) {
+        d->position = (pStart * d->position) + (pEnd * (position() + m_shapePositionList[sd.index]));
     } else {
         if (m_positionVariation.isNull()) {
-            d->position =  (pStart * d->position) + (pEnd * m_position);
+            d->position =  (pStart * d->position) + (pEnd * position());
         } else {
-            QVector3D pos = m_position;
+            QVector3D pos = position();
             if (!m_positionVariation.isNull()) {
                 pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
                 pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());

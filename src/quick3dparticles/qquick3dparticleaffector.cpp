@@ -33,19 +33,19 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Affector3D
-    \inherits QtObject
+    \inherits Node
     \inqmlmodule QtQuick3D.Particles3D
     \brief Affectors modify the attributes of particles during their lifetime.
 
     The Affector3D is an abstract base class of affectors like \l Gravity3D, \l Wander3D, and \l PointRotator3D.
 
-    Affectors don't have position or scale. By default they affect all particles in the system, but this can be
-    limited by defining the \l particles list. If the system has multiple affectors, the order of affectors may
+    By default affectors affect all particles in the system, but this can be limited by defining
+    the \l particles list. If the system has multiple affectors, the order of affectors may
     result in different outcome, as affectors are applied one after another.
 */
 
-QQuick3DParticleAffector::QQuick3DParticleAffector(QObject *parent)
-    : QObject(parent)
+QQuick3DParticleAffector::QQuick3DParticleAffector(QQuick3DNode *parent)
+    : QQuick3DNode(parent)
 {
 }
 

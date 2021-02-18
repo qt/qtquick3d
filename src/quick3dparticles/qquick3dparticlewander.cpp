@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     differ randomly.
 */
 
-QQuick3DParticleWander::QQuick3DParticleWander(QObject *parent)
+QQuick3DParticleWander::QQuick3DParticleWander(QQuick3DNode *parent)
     : QQuick3DParticleAffector(parent)
 {
 }

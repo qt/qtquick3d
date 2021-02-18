@@ -55,7 +55,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticlePointRotator : public QQuick3DPa
     QML_NAMED_ELEMENT(PointRotator3D)
 
 public:
-    QQuick3DParticlePointRotator(QObject *parent = nullptr);
+    QQuick3DParticlePointRotator(QQuick3DNode *parent = nullptr);
 
     float magnitude() const;
     QVector3D direction() const;

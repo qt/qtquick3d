@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
     This element rotates particles around a \l pivotPoint towards the \l direction.
 */
 
-QQuick3DParticlePointRotator::QQuick3DParticlePointRotator(QObject *parent)
+QQuick3DParticlePointRotator::QQuick3DParticlePointRotator(QQuick3DNode *parent)
     : QQuick3DParticleAffector(parent)
 {
 }
