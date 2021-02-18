@@ -54,7 +54,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleGravity : public QQuick3DParticl
     QML_NAMED_ELEMENT(Gravity3D)
 
 public:
-    QQuick3DParticleGravity(QObject *parent = nullptr);
+    QQuick3DParticleGravity(QQuick3DNode *parent = nullptr);
 
     float magnitude() const;
     const QVector3D &direction() const;

@@ -44,7 +44,6 @@ QT_BEGIN_NAMESPACE
     shape area.
 
     Shapes don't have position, scale or rotation. Instead, they use parent node for these properties.
-    When the shape parent is not a node, you can use \l ShapeNode3D.
 */
 
 QQuick3DParticleShape::QQuick3DParticleShape(QObject *parent)
