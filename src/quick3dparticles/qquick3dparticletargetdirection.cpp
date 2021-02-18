@@ -134,7 +134,7 @@ void QQuick3DParticleTargetDirection::setNormalized(bool normalized)
 }
 
 /*!
-    \qmlproperty float TargetDirection3D::magnitude
+    \qmlproperty real TargetDirection3D::magnitude
 
     This property defines the magnitude in position change per second. Negative magnitude
     accelerates the opposite way from the \l {TargetDirection3D::position}{position}.
@@ -158,7 +158,7 @@ void QQuick3DParticleTargetDirection::setMagnitude(float magnitude)
 }
 
 /*!
-    \qmlproperty float TargetDirection3D::magnitudeVariation
+    \qmlproperty real TargetDirection3D::magnitudeVariation
 
     This property defines the magnitude variation in position change per second.
     When the \l normalized is false, this is multiplied with the distance to the target position.

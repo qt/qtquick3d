@@ -46,7 +46,7 @@ QQuick3DParticlePointRotator::QQuick3DParticlePointRotator(QObject *parent)
 }
 
 /*!
-    \qmlproperty float PointRotator3D::magnitude
+    \qmlproperty real PointRotator3D::magnitude
 
     This property defines the magnitude in degrees per second. Negative magnitude
     rotates to the opposite way from the \l {PointRotator3D::direction}{direction}.

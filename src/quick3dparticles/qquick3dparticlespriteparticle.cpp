@@ -149,7 +149,7 @@ bool QQuick3DParticleSpriteParticle::billboard() const
 }
 
 /*!
-    \qmlproperty float SpriteParticle3D::particleScale
+    \qmlproperty real SpriteParticle3D::particleScale
 
     This property defines the scale multiplier of the particles.
     To adjust the particles sizes in the emitter, use \ ParticleEmitter3D

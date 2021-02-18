@@ -101,7 +101,7 @@ const QVector3D &QQuick3DParticleWander::uniquePace() const
 }
 
 /*!
-    \qmlproperty float Wander3D::uniqueAmountVariation
+    \qmlproperty real Wander3D::uniqueAmountVariation
 
     This property defines variation for \l uniqueAmount between 0.0 and 1.0.
     When the amount variation is 0.0, every particle reaches maximum amount. When it's 0.5,
@@ -118,7 +118,7 @@ float QQuick3DParticleWander::uniqueAmountVariation() const
 }
 
 /*!
-    \qmlproperty float Wander3D::uniquePaceVariation
+    \qmlproperty real Wander3D::uniquePaceVariation
 
     This property defines the unique pace (frequency) variation for each particle
     between 0.0 and 1.0. When the variation is 0.0, every particle wander at the same

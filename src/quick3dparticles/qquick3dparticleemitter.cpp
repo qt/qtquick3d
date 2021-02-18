@@ -179,7 +179,7 @@ void QQuick3DParticleEmitter::setEmitRate(int emitRate)
 
 
 /*!
-    \qmlproperty float ParticleEmitter3D::particleScale
+    \qmlproperty real ParticleEmitter3D::particleScale
 
     This property defines the scale multiplier of the particles at the beginning.
     To have variation in the particle sizes, use \l particleScaleVariation.
@@ -203,7 +203,7 @@ void QQuick3DParticleEmitter::setParticleScale(float particleScale)
 }
 
 /*!
-    \qmlproperty float ParticleEmitter3D::particleEndScale
+    \qmlproperty real ParticleEmitter3D::particleEndScale
 
     This property defines the scale multiplier of the particles at the end
     of particle \l lifeSpan. To have variation in the particle end sizes, use
@@ -230,7 +230,7 @@ void QQuick3DParticleEmitter::setParticleEndScale(float particleEndScale)
 }
 
 /*!
-    \qmlproperty float ParticleEmitter3D::particleScaleVariation
+    \qmlproperty real ParticleEmitter3D::particleScaleVariation
 
     This property defines the scale variation of the particles. This variation
     is used for both \l particleScale and \l particleEndScale. For example, to
