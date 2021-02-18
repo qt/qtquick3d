@@ -62,7 +62,16 @@ QT_BEGIN_NAMESPACE
     This property determines whether the components of the attribute vary proportionally or independently.
     The default value is \c true, meaning that all components are independent.
 
-    For example, the following defines a grayscale color range:
+    For example, the following defines a scaling range that preserves the aspect ratio of the model:
+    \qml
+        InstanceRange {
+            from: Qt.vector3d(1, 1, 1)
+            to: Qt.vector3d(5, 5, 5)
+            proportional: true
+        }
+    \endqml
+
+    This defines a greyscale color range:
     \qml
         InstanceRange {
             from: "black"
@@ -70,6 +79,7 @@ QT_BEGIN_NAMESPACE
             proportional: true
         }
     \endqml
+
     While the following defines a range that covers all colors
     \qml
         InstanceRange {
@@ -145,9 +155,11 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty InstanceRange RandomInstancing::color
 
-    The color property defines the color variation range for the generated instances. Thew type is \l color.
-    Set \l {InstanceRange::proportional}{InstanceRange.proportional} to \c true for monochrome colors.
+
+    The color property defines the color variation range for the generated instances. The type is \l color.
     The default value is empty, causing the color to be white.
+
+    Setting the colorModel property makes it possible to select only saturated colors, for example.
 
     \sa position, rotation, scale, customData
 */
@@ -160,6 +172,35 @@ QT_BEGIN_NAMESPACE
     The default value is empty, causing causing the generated data to be \c{[0, 0, 0, 0]}.
 
     \sa position, color, rotation, scale, customData
+*/
+/*!
+    \qmlproperty enumeration QtQuick3D::RandomInstancing::colorModel
+
+    This property controls how the color range is interpreted.
+
+    The instance colors are generated component by component within the range determined by the
+    \e from and \e to colors. The color model determines how those components are defined.
+
+    \value RandomInstancing.RGB
+        The components are red, green, blue, and alpha, according to the RGB color model.
+    \value RandomInstancing.HSV
+        The components are hue, saturation, value, and alpha, according to the \l{QColor#The HSV Color Model}{HSV Color Model}.
+    \value RandomInstancing.HSL
+        The components are hue, saturation, lightness, and alpha,, according to the \l{QColor#The HSL Color Model}{HSL Color Model}.
+
+    As an example, the following color range
+    \qml
+        color: InstanceRange {
+            from: Qt.hsva(0, 0.1, 0.8, 1)
+            to: Qt.hsva(1, 0.3, 1, 1)
+        }
+    \endqml
+    will generate a full range of pastel colors when using the \c HSV color model, but only shades of pink
+    when using the \c RGB color model.
+
+    The default value is \c RandomInstancing.RGB
+
+    \sa RandomInstancing::color
 */
 
 QQuick3DRandomInstancing::QQuick3DRandomInstancing(QQuick3DObject *parent)
@@ -278,6 +319,16 @@ void QQuick3DRandomInstancing::setCustomData(QQuick3DInstanceRange *customData)
     }
 }
 
+void QQuick3DRandomInstancing::setColorModel(QQuick3DRandomInstancing::ColorModel colorModel)
+{
+    if (m_colorModel == colorModel)
+        return;
+    m_colorModel = colorModel;
+    emit colorModelChanged();
+    m_dirty = true;
+    markDirty();
+}
+
 void QQuick3DRandomInstancing::handleChange()
 {
     m_dirty = true;
@@ -308,14 +359,37 @@ static QVector4D genRandom(const QVector4D &from, const QVector4D &to, bool prop
     return { genRandom(from.x(), to.x(), rgen), genRandom(from.y(), to.y(), rgen), genRandom(from.z(), to.z(), rgen), genRandom(from.w(), to.w(), rgen) };
 }
 
-static QColor genRandom(const QColor &from, const QColor &to, bool proportional, QRandomGenerator *rgen)
+static QColor genRandom(const QColor &from, const QColor &to, bool proportional, QQuick3DRandomInstancing::ColorModel colorModel, QRandomGenerator *rgen)
 {
     QVector4D v1, v2;
-    from.getRgbF(&v1[0], &v1[1], &v1[2], &v1[3]);
-    to.getRgbF(&v2[0], &v2[1], &v2[2], &v2[3]);
+    switch (colorModel) {
+    case QQuick3DRandomInstancing::ColorModel::HSL:
+        from.getHslF(&v1[0], &v1[1], &v1[2], &v1[3]);
+        to.getHslF(&v2[0], &v2[1], &v2[2], &v2[3]);
+        break;
+    case QQuick3DRandomInstancing::ColorModel::HSV:
+        from.getHsvF(&v1[0], &v1[1], &v1[2], &v1[3]);
+        to.getHsvF(&v2[0], &v2[1], &v2[2], &v2[3]);
+        break;
+    case QQuick3DRandomInstancing::ColorModel::RGB:
+    default:
+        from.getRgbF(&v1[0], &v1[1], &v1[2], &v1[3]);
+        to.getRgbF(&v2[0], &v2[1], &v2[2], &v2[3]);
+        break;
+    }
     QVector4D r = genRandom(v1, v2, proportional, rgen);
 
-    return QColor::fromRgbF(r[0], r[1], r[2], r[3]);
+    switch (colorModel) {
+    case QQuick3DRandomInstancing::ColorModel::HSL:
+        return QColor::fromHslF(r[0], r[1], r[2], r[3]);
+        break;
+    case QQuick3DRandomInstancing::ColorModel::HSV:
+        return QColor::fromHsvF(r[0], r[1], r[2], r[3]);
+        break;
+    case QQuick3DRandomInstancing::ColorModel::RGB:
+    default:
+        return QColor::fromRgbF(r[0], r[1], r[2], r[3]);
+    }
 }
 
 QByteArray QQuick3DRandomInstancing::getInstanceBuffer(int *instanceCount)
@@ -354,7 +428,7 @@ void QQuick3DRandomInstancing::generateInstanceTable()
         if (m_rotation) //TODO: quaternion rotation???
             eulerRotation = genRandom(m_rotation->from().value<QVector3D>(), m_rotation->to().value<QVector3D>(), m_rotation->proportional(), &rgen);
         if (m_color)
-            color = genRandom(m_color->from().value<QColor>(), m_color->to().value<QColor>(), m_color->proportional(), &rgen);
+            color = genRandom(m_color->from().value<QColor>(), m_color->to().value<QColor>(), m_color->proportional(), m_colorModel, &rgen);
         if (m_customData)
             customData = genRandom(m_customData->from().value<QVector4D>(), m_customData->to().value<QVector4D>(), m_customData->proportional(), &rgen);
 

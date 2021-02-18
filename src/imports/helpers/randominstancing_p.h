@@ -104,6 +104,7 @@ class QQuick3DRandomInstancing : public QQuick3DInstancing
     Q_PROPERTY(QQuick3DInstanceRange *scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(QQuick3DInstanceRange *rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(QQuick3DInstanceRange *color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(ColorModel colorModel READ colorModel WRITE setColorModel NOTIFY colorModelChanged)
     Q_PROPERTY(QQuick3DInstanceRange *customData READ customData WRITE setCustomData NOTIFY customDataChanged)
 
     Q_PROPERTY(int randomSeed READ randomSeed WRITE setRandomSeed NOTIFY randomSeedChanged)
@@ -112,6 +113,9 @@ class QQuick3DRandomInstancing : public QQuick3DInstancing
     QML_ADDED_IN_VERSION(6, 2)
 
 public:
+    enum class ColorModel { RGB, HSV, HSL };
+    Q_ENUM(ColorModel)
+
     explicit QQuick3DRandomInstancing(QQuick3DObject *parent = nullptr);
     ~QQuick3DRandomInstancing();
 
@@ -152,6 +156,11 @@ public:
         return m_customData;
     }
 
+    ColorModel colorModel() const
+    {
+        return m_colorModel;
+    }
+
 public Q_SLOTS:
     void setInstanceCount(int instanceCount);
     void setRandomSeed(int randomSeed);
@@ -161,6 +170,7 @@ public Q_SLOTS:
     void setRotation(QQuick3DInstanceRange *rotation);
     void setColor(QQuick3DInstanceRange *color);
     void setCustomData(QQuick3DInstanceRange *customData);
+    void setColorModel(ColorModel colorModel);
 
 Q_SIGNALS:
     void instanceCountChanged();
@@ -170,6 +180,7 @@ Q_SIGNALS:
     void rotationChanged();
     void colorChanged();
     void customDataChanged();
+    void colorModelChanged();
 
 private Q_SLOTS:
     void handleChange();
@@ -185,6 +196,7 @@ private:
     QQuick3DInstanceRange *m_rotation = nullptr;
     QQuick3DInstanceRange *m_color = nullptr;
     QQuick3DInstanceRange *m_customData = nullptr;
+    ColorModel m_colorModel;
 };
 QT_END_NAMESPACE
 #endif // RANDOMINSTANCING_P_H
