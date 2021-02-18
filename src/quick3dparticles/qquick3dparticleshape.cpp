@@ -30,6 +30,7 @@
 #include "qquick3dparticleshape_p.h"
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticlesystem_p.h"
+#include "qquick3dparticleutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -170,9 +171,9 @@ QVector3D QQuick3DParticleShape::randomPositionSphere(int particleIndex) const
     float v = rand->get(particleIndex, QPRand::Shape2);
     float phi = acos((2.0f * v) - 1.0f);
     float r = m_fill ? pow(rand->get(particleIndex, QPRand::Shape3), 1.0f / 3.0f) : 1.0f;
-    float x = r * sin(phi) * cos(theta);
-    float y = r * sin(phi) * sin(theta);
-    float z = r * cos(phi);
+    float x = r * QPSIN(phi) * QPCOS(theta);
+    float y = r * QPSIN(phi) * QPSIN(theta);
+    float z = r * QPCOS(phi);
     QVector3D pos(x, y, z);
     pos *= (scale * 50.0f);
     QMatrix4x4 mat;
@@ -189,8 +190,8 @@ QVector3D QQuick3DParticleShape::randomPositionCylinder(int particleIndex) const
     if (m_fill)
         r = sqrt(rand->get(particleIndex, QPRand::Shape2));
     float theta = rand->get(particleIndex, QPRand::Shape3) * float(M_PI) * 2.0f;
-    float x = r * cos(theta);
-    float z = r * sin(theta);
+    float x = r * QPCOS(theta);
+    float z = r * QPSIN(theta);
     x = x * (scale.x() * 50.0f);
     z = z * (scale.z() * 50.0f);
     QVector3D pos(x, y, z);
