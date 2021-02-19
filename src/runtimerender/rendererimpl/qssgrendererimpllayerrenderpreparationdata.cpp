@@ -94,7 +94,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
 {
     ++ioDFSIndex;
     inNode.dfsIndex = ioDFSIndex;
-    if (inNode.isRenderableType()) {
+    if (QSSGRenderGraphObject::isRenderable(inNode.type)) {
         collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
         if (inNode.type == QSSGRenderGraphObject::Type::Model) {
             auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
@@ -123,12 +123,10 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                     modelNode->morphAttributes[i] &= 0x3; // MorphTarget.Position | MorphTarget.Normal
             }
         }
-    } else if (inNode.type == QSSGRenderGraphObject::Type::Camera) {
+    } else if (QSSGRenderGraphObject::isCamera(inNode.type)) {
         collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
-    } else if (inNode.type == QSSGRenderGraphObject::Type::Light) {
+    } else if (QSSGRenderGraphObject::isLight(inNode.type)) {
         collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
-    } else if (inNode.type == QSSGRenderGraphObject::Type::Particles) {
-        collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
     }
 
     for (auto &theChild : inNode.children)
@@ -339,8 +337,8 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey
         int shadowMapCount = 0;
         for (int lightIdx = 0, lightEnd = lights.size(); lightIdx < lightEnd; ++lightIdx) {
             QSSGRenderLight *theLight(lights[lightIdx].light);
-            const bool isDirectional = theLight->m_lightType == QSSGRenderLight::Type::Directional;
-            const bool isSpot = theLight->m_lightType == QSSGRenderLight::Type::Spot;
+            const bool isDirectional = theLight->type == QSSGRenderLight::Type::DirectionalLight;
+            const bool isSpot = theLight->type == QSSGRenderLight::Type::SpotLight;
             const bool castsShadows = theLight->m_castShadow && receivesShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
             if (castsShadows)
                 ++shadowMapCount;
@@ -1349,7 +1347,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &inViewportDim
                         shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
 
                     quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
-                    ShadowMapModes mapMode = (shaderLight.light->m_lightType != QSSGRenderLight::Type::Directional)
+                    ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
                             ? ShadowMapModes::CUBE
                             : ShadowMapModes::VSM;
                     shadowMapManager->addShadowMapEntry(lightIdx,

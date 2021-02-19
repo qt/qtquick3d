@@ -32,6 +32,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 
+#include "qquick3dnode_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -157,6 +159,9 @@ QT_BEGIN_NAMESPACE
     The default value is 30.
 */
 
+QQuick3DSpotLight::QQuick3DSpotLight(QQuick3DNode *parent)
+    : QQuick3DAbstractLight(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::SpotLight)), parent) {}
+
 float QQuick3DSpotLight::constantFade() const
 {
     return m_constantFade;
@@ -249,11 +254,8 @@ void QQuick3DSpotLight::setInnerConeAngle(float innerConeAngle)
 
 QSSGRenderGraphObject *QQuick3DSpotLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node) {
-        node = new QSSGRenderLight();
-        QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
-        light->m_lightType = QSSGRenderLight::Type::Spot;
-    }
+    if (!node)
+        node = new QSSGRenderLight(QSSGRenderLight::Type::SpotLight);
 
     QQuick3DAbstractLight::updateSpatialNode(node);
 

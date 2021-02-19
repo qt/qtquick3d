@@ -60,7 +60,7 @@ void tst_QQuick3DDirectionalLight::testProperties()
     QVERIFY(node);
 
     // lightType
-    QCOMPARE(QSSGRenderLight::Type::Directional, node->m_lightType);
+    QCOMPARE(QSSGRenderLight::Type::DirectionalLight, node->type);
 
     const float brightness = 0.5f;
     light.setBrightness(brightness);

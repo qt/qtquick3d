@@ -123,10 +123,12 @@ QT_BEGIN_NAMESPACE
     The default value is 5.
 */
 
-QQuick3DAbstractLight::QQuick3DAbstractLight(QQuick3DNode *parent)
-    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Light)), parent)
+QQuick3DAbstractLight::QQuick3DAbstractLight(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
+    : QQuick3DNode(dd, parent)
     , m_color(Qt::white)
     , m_ambientColor(Qt::black) {}
+
+QQuick3DAbstractLight::~QQuick3DAbstractLight() {}
 
 QColor QQuick3DAbstractLight::color() const
 {

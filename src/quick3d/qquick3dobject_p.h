@@ -64,30 +64,7 @@ class Q_QUICK3D_PRIVATE_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuick3DObject)
 public:
-    enum class Type {
-        Unknown = 0,
-        Node, // Node
-        Layer, // Node
-        Light, // Node
-        Camera, // Node
-        Model, // Node
-        Joint, // Node
-        Text, // Node
-        Item2D, // Renderable? Node
-        SceneEnvironment, // Resource
-        DefaultMaterial, // Resource
-        PrincipledMaterial, // Resource
-        Image, // Resource
-        Effect, // Resource
-        CustomMaterial, // Resource
-        Geometry, // Resource
-        Skeleton, // its type is Node but it will be treated as a Resource
-        TextureData, // Resource
-        MorphTarget, // Resource
-        RenderPlugin, // Not used
-        ModelInstance, // Resource
-        LastKnownGraphObjectType,
-    };
+    using Type = QSSGRenderGraphObject::Type;
 
     using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
 
@@ -230,9 +207,6 @@ public:
     void removeFromDirtyList();
     QQuick3DObject *nextDirtyItem;
     QQuick3DObject **prevDirtyItem;
-
-    bool isResourceNode() const;
-    bool isSpatialNode() const;
 
     void setCulled(bool);
 

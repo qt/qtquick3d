@@ -36,6 +36,8 @@
 
 #include "qquick3dutils_p.h"
 
+#include "qquick3dnode_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -76,7 +78,8 @@ QT_BEGIN_NAMESPACE
 /*!
  * \internal
  */
-QQuick3DOrthographicCamera::QQuick3DOrthographicCamera() {}
+QQuick3DOrthographicCamera::QQuick3DOrthographicCamera(QQuick3DNode *parent)
+    : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::OrthographicCamera)), parent) {}
 
 /*!
     \qmlproperty real OrthographicCamera::clipNear

@@ -49,37 +49,94 @@
 
 QT_BEGIN_NAMESPACE
 
-// Types should be setup on construction.  Change the type
-// at your own risk as the type is used for RTTI purposes.
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 {
-    enum class Type : quint8
+    // Types should be setup on construction. Change the type
+    // at your own risk as the type is used for RTTI purposes.
+    // See QSSGRenderGraphObject, QQuick3DObject and QSSceneDesc (asset useage).
+
+    enum BaseType : quint16
     {
-        Unknown = 0,
-        Presentation,
-        Scene,
-        Node,
-        Layer,
-        Light,
-        Camera,
-        Model,
-        Skeleton,
-        Joint,
-        DefaultMaterial,
-        PrincipledMaterial,
-        Image,
-        Effect,
-        CustomMaterial,
-        RenderPlugin,
-        Geometry,
-        Item2D,
-        TextureData,
-        ImportScene,
-        ModelInstance,
-        MorphTarget,
-        Particles,
-        LastKnownGraphObjectType
+        Node = 0x10,
+        Light = 0x20,
+        Camera = 0x40,
+        Renderable = 0x80,
+        Resource = 0x100,
+        Material = 0x200
     };
+
+    enum class Type : quint16 {
+        Unknown = 0,
+        // Nodes
+        Node = BaseType::Node,
+        Layer, // Node
+        Joint, // Node
+        Skeleton, // Node (A resource to the model node)
+        ImportScene, // Node
+        // Light nodes
+        DirectionalLight = BaseType::Light | BaseType::Node,
+        PointLight,
+        SpotLight,
+        // Camera nodes
+        OrthographicCamera = BaseType::Camera | BaseType::Node,
+        PerspectiveCamera,
+        CustomCamera,
+        // Renderable nodes
+        Model = BaseType::Renderable | BaseType::Node, // Renderable Node
+        Item2D, // Renderable Node
+        Particles, // Renderable Node
+        // Resources
+        SceneEnvironment = BaseType::Resource, // Resource
+        Image, // Resource
+        Effect, // Resource
+        Geometry, // Resource
+        TextureData, // Resource
+        MorphTarget, // Resource
+        ModelInstance, // Resource
+        // Materials
+        DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
+        PrincipledMaterial, // Resource
+        CustomMaterial, // Resource
+    };
+
+    Q_REQUIRED_RESULT static inline constexpr bool isNodeType(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Node);
+    }
+
+    Q_REQUIRED_RESULT static inline constexpr bool isLight(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Light);
+    }
+
+    Q_REQUIRED_RESULT static inline constexpr bool isCamera(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Camera);
+    }
+
+    Q_REQUIRED_RESULT static inline constexpr bool isMaterial(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Material);
+    }
+
+    Q_REQUIRED_RESULT static inline constexpr bool isRenderable(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Renderable);
+    }
+
+    Q_REQUIRED_RESULT static inline constexpr bool isResource(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Resource);
+    }
+
+    // These require special handling, see cleanupNodes() in the scene manager.
+    Q_REQUIRED_RESULT static inline constexpr bool hasGraphicsResources(Type type) Q_DECL_NOTHROW
+    {
+        return ((type == Type::Model)
+                || (type == Type::Image)
+                || (type == Type::Geometry)
+                || (type == Type::TextureData));
+    }
 
     QAtomicInt ref;
     // Id's help debugging the object and are optionally set
@@ -91,27 +148,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 
     QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType) : type(inType) {}
     virtual ~QSSGRenderGraphObject();
-
-    inline bool isMaterialType() const Q_DECL_NOTHROW
-    {
-        return (type == Type::CustomMaterial || type == Type::DefaultMaterial || type == Type::PrincipledMaterial);
-    }
-
-    inline bool isNodeType() const Q_DECL_NOTHROW
-    {
-        return (type == Type::Node ||
-                type == Type::Layer ||
-                type == Type::Light ||
-                type == Type::Camera ||
-                type == Type::Model ||
-                type == Type::ImportScene);
-    }
-
-    inline bool isRenderableType() const Q_DECL_NOTHROW
-    {
-        return (type == Type::Model ||
-                type == Type::Item2D);
-    }
 };
 
 QT_END_NAMESPACE

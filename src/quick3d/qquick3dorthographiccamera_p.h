@@ -58,7 +58,7 @@ class Q_QUICK3D_EXPORT QQuick3DOrthographicCamera : public QQuick3DCamera
     QML_ADDED_IN_VERSION(1, 14)
 
 public:
-    QQuick3DOrthographicCamera();
+    explicit QQuick3DOrthographicCamera(QQuick3DNode *parent = nullptr);
 
     float clipNear() const;
     float clipFar() const;

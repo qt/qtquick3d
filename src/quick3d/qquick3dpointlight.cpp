@@ -32,6 +32,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 
+#include "qquick3dnode_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -170,6 +172,9 @@ QT_BEGIN_NAMESPACE
     being used to calculate light attenuation.
 */
 
+QQuick3DPointLight::QQuick3DPointLight(QQuick3DNode *parent)
+    : QQuick3DAbstractLight(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::PointLight)), parent) {}
+
 float QQuick3DPointLight::constantFade() const
 {
     return m_constantFade;
@@ -222,9 +227,7 @@ QSSGRenderGraphObject *QQuick3DPointLight::updateSpatialNode(QSSGRenderGraphObje
 {
     if (!node) {
         markAllDirty();
-        node = new QSSGRenderLight();
-        QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
-        light->m_lightType = QSSGRenderLight::Type::Point;
+        node = new QSSGRenderLight(QSSGRenderLight::Type::PointLight);
     }
 
     QQuick3DAbstractLight::updateSpatialNode(node);

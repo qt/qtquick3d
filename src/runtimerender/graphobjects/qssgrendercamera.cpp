@@ -50,8 +50,8 @@ float getAspectRatio(const QRectF &inViewport)
 
 }
 
-QSSGRenderCamera::QSSGRenderCamera()
-    : QSSGRenderNode(QSSGRenderGraphObject::Type::Camera)
+QSSGRenderCamera::QSSGRenderCamera(QSSGRenderGraphObject::Type type)
+    : QSSGRenderNode(type)
     , clipNear(10)
     , clipFar(10000)
     , fov(qDegreesToRadians(60.0f))

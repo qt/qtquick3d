@@ -50,15 +50,6 @@ struct QSSGRenderImage;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
 {
-    enum class Type : quint8
-    {
-        Unknown = 0,
-        Directional,
-        Point,
-        Spot,
-    };
-
-    Type m_lightType; // Directional
     QSSGRenderNode *m_scope;
     QVector3D m_diffuseColor; // colors are 0-1 normalized
     QVector3D m_specularColor; // colors are 0-1 normalized
@@ -82,7 +73,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_shadowFilter; // Shadow map filter step size
 
     // Defaults to directional light
-    QSSGRenderLight();
+    explicit QSSGRenderLight(Type type = Type::DirectionalLight);
 };
 QT_END_NAMESPACE
 

@@ -149,37 +149,16 @@ void QQuick3DSceneManager::updateDirtyNodes()
 void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
 {
     // Different processing for resource nodes vs hierarchical nodes
-    switch (QQuick3DObjectPrivate::get(object)->type) {
-    case QQuick3DObjectPrivate::Type::Light:
-    case QQuick3DObjectPrivate::Type::Node:
-    case QQuick3DObjectPrivate::Type::Camera:
-    case QQuick3DObjectPrivate::Type::Model:
-    case QQuick3DObjectPrivate::Type::Item2D:
-    case QQuick3DObjectPrivate::Type::Joint:
-    case QQuick3DObjectPrivate::Type::Skeleton:
-    case QQuick3DObjectPrivate::Type::Text: {
+    const auto type = QQuick3DObjectPrivate::get(object)->type;
+    if (QSSGRenderGraphObject::isNodeType(type)) {
         // handle hierarchical nodes
         QQuick3DNode *spatialNode = qobject_cast<QQuick3DNode *>(object);
         if (spatialNode)
             updateDirtySpatialNode(spatialNode);
-    } break;
-    case QQuick3DObjectPrivate::Type::SceneEnvironment:
-    case QQuick3DObjectPrivate::Type::DefaultMaterial:
-    case QQuick3DObjectPrivate::Type::PrincipledMaterial:
-    case QQuick3DObjectPrivate::Type::Image:
-    case QQuick3DObjectPrivate::Type::Effect:
-    case QQuick3DObjectPrivate::Type::CustomMaterial:
-    case QQuick3DObjectPrivate::Type::Geometry:
-    case QQuick3DObjectPrivate::Type::TextureData:
-    case QQuick3DObjectPrivate::Type::ModelInstance:
-    case QQuick3DObjectPrivate::Type::MorphTarget:
+    } else if (QSSGRenderGraphObject::isResource(type)) {
         // handle resource nodes
         updateDirtyResource(object);
-        break;
-    default:
-        // we dont need to do anything with the other nodes
-        break;
-    }
+    } // we don't need to do anything with the other nodes
 }
 
 void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
@@ -267,21 +246,9 @@ void QQuick3DSceneManager::cleanupNodes()
 {
     for (auto node : cleanupNodeList) {
         // Remove "spatial" nodes from scenegraph
-        switch (node->type) {
-        case QSSGRenderGraphObject::Type::Node:
-        case QSSGRenderGraphObject::Type::Light:
-        case QSSGRenderGraphObject::Type::Camera:
-        case QSSGRenderGraphObject::Type::Model:
-        case QSSGRenderGraphObject::Type::Item2D:
-        case QSSGRenderGraphObject::Type::Joint:
-        case QSSGRenderGraphObject::Type::Skeleton:
-        {
+        if (QSSGRenderGraphObject::isNodeType(node->type)) {
             QSSGRenderNode *spatialNode = static_cast<QSSGRenderNode *>(node);
             spatialNode->removeFromGraph();
-        }
-            break;
-        default:
-            break;
         }
 
         // Remove all nodes from the node map because they will no
@@ -291,16 +258,10 @@ void QQuick3DSceneManager::cleanupNodes()
         // Some nodes will trigger resource cleanups that need to
         // happen at a specified time (when graphics backend is active)
         // So build another queue for graphics assets marked for removal
-        switch (node->type) {
-        case QSSGRenderGraphObject::Type::Model:
-        case QSSGRenderGraphObject::Type::Image:
-        case QSSGRenderGraphObject::Type::Geometry:
-        case QSSGRenderGraphObject::Type::TextureData:
+        if (QSSGRenderGraphObject::hasGraphicsResources(node->type))
             resourceCleanupQueue.append(node);
-            break;
-        default:
+        else
             delete node;
-        }
     }
 
     // Nodes are now "cleaned up" so clear the cleanup list

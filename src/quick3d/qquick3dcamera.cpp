@@ -95,8 +95,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \internal
 */
-QQuick3DCamera::QQuick3DCamera(QQuick3DNode *parent)
-    : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::Camera)), parent) {}
+QQuick3DCamera::QQuick3DCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
+    : QQuick3DNode(dd, parent) {}
 
 /*!
     \internal

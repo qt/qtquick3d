@@ -55,7 +55,7 @@ class Q_QUICK3D_EXPORT QQuick3DCustomCamera : public QQuick3DCamera
     QML_ADDED_IN_VERSION(1, 14)
 
 public:
-    QQuick3DCustomCamera();
+    explicit QQuick3DCustomCamera(QQuick3DNode *parent = nullptr);
 
     QMatrix4x4 projection() const;
 

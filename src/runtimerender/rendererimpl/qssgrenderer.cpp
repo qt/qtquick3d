@@ -376,7 +376,7 @@ bool QSSGRenderer::rendererRequestsFrames() const
 using RenderableList = QVarLengthArray<const QSSGRenderNode *>;
 static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 {
-    if (node.isRenderableType())
+    if (QSSGRenderGraphObject::isRenderable(node.type))
         renderables.push_back(&node);
 
     for (const auto &child : node.children)

@@ -185,7 +185,7 @@ struct QSSGShaderLight
     inline bool operator < (const QSSGShaderLight &o) const
     {
         // sort by light type
-        if (light->m_lightType < o.light->m_lightType)
+        if (light->type < o.light->type)
             return true;
         // then shadow lights first
         if (shadows > o.shadows)

@@ -804,7 +804,9 @@ void QQuick3DObjectPrivate::addToDirtyList()
     if (!prevDirtyItem) {
         Q_ASSERT(!nextDirtyItem);
 
-        if (isResourceNode()) {
+        // NOTE: Skeleton node will be treated as a resources when creating/updating the backend nodes
+        // (as it's a resource to the model node).
+        if (QSSGRenderGraphObject::isResource(type) || type == QSSGRenderGraphObject::Type::Skeleton) {
             if (type == Type::Image) {
                 // Will likely need to refactor this, but images need to come before other
                 // resources
@@ -828,7 +830,7 @@ void QQuick3DObjectPrivate::addToDirtyList()
                 sceneManager->dirtyResourceList = q;
             }
         } else {
-            if (type == Type::Light) {
+            if (QSSGRenderGraphObject::isLight(type)) {
                 // needed for scoped lights second pass
                sceneManager->dirtyLightList.append(q);
             }
@@ -855,59 +857,6 @@ void QQuick3DObjectPrivate::removeFromDirtyList()
     }
     Q_ASSERT(!prevDirtyItem);
     Q_ASSERT(!nextDirtyItem);
-}
-
-bool QQuick3DObjectPrivate::isResourceNode() const
-{
-    switch (type) {
-    case Type::Layer:
-    case Type::Node:
-    case Type::Light:
-    case Type::Camera:
-    case Type::Model:
-    case Type::Text:
-    case Type::Item2D:
-    case Type::Joint:
-        return false;
-    case Type::SceneEnvironment:
-    case Type::DefaultMaterial:
-    case Type::PrincipledMaterial:
-    case Type::Image:
-    case Type::CustomMaterial:
-    case Type::Geometry:
-    case Type::Skeleton:
-    case Type::TextureData:
-    case Type::ModelInstance:
-    case Type::MorphTarget:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool QQuick3DObjectPrivate::isSpatialNode() const
-{
-    switch (type) {
-    case Type::Layer:
-    case Type::Node:
-    case Type::Light:
-    case Type::Camera:
-    case Type::Model:
-    case Type::Text:
-    case Type::Joint:
-        return true;
-    case Type::SceneEnvironment:
-    case Type::DefaultMaterial:
-    case Type::PrincipledMaterial:
-    case Type::Image:
-    case Type::CustomMaterial:
-    case Type::Geometry:
-    case Type::Skeleton:
-    case Type::TextureData:
-    case Type::MorphTarget:
-    default:
-        return false;
-    }
 }
 
 void QQuick3DObjectPrivate::setCulled(bool cull)

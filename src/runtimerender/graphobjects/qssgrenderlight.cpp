@@ -32,9 +32,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderLight::QSSGRenderLight()
-    : QSSGRenderNode(QSSGRenderGraphObject::Type::Light)
-    , m_lightType(QSSGRenderLight::Type::Directional)
+QSSGRenderLight::QSSGRenderLight(QSSGRenderGraphObject::Type type)
+    : QSSGRenderNode(type)
     , m_scope(nullptr)
     , m_diffuseColor(1, 1, 1)
     , m_specularColor(1, 1, 1)

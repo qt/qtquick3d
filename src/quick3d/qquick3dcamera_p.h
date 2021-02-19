@@ -54,8 +54,6 @@ class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
     QML_UNCREATABLE("Camera is Abstract")
     QML_ADDED_IN_VERSION(1, 14)
 public:
-    explicit QQuick3DCamera(QQuick3DNode *parent = nullptr);
-
     Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
     Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
     QVector3D mapToViewport(const QVector3D &scenePos,
@@ -84,6 +82,8 @@ Q_SIGNALS:
     void frustumCullingEnabledChanged();
 
 protected:
+    explicit QQuick3DCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
+
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     virtual bool checkSpatialNode(QSSGRenderCamera *camera) = 0;
 

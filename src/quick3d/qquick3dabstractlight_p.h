@@ -65,8 +65,7 @@ class Q_QUICK3D_EXPORT QQuick3DAbstractLight : public QQuick3DNode
     QML_UNCREATABLE("Light is Abstract")
     QML_ADDED_IN_VERSION(1, 14)
 public:
-    explicit QQuick3DAbstractLight(QQuick3DNode *parent = nullptr);
-    ~QQuick3DAbstractLight() override {}
+    ~QQuick3DAbstractLight() override;
 
     enum class QSSGShadowMapQuality {
         ShadowMapQualityLow,
@@ -112,6 +111,8 @@ Q_SIGNALS:
     void shadowFilterChanged();
 
 protected:
+    explicit QQuick3DAbstractLight(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
+
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
 

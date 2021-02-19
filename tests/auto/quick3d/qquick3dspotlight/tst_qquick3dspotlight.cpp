@@ -60,7 +60,7 @@ void tst_QQuick3DSpotLight::testProperties()
     QVERIFY(node);
 
     // lightType
-    QCOMPARE(QSSGRenderLight::Type::Spot, node->m_lightType);
+    QCOMPARE(QSSGRenderLight::Type::SpotLight, node->type);
 
     const float brightness = 0.5f;
     light.setBrightness(brightness);

@@ -288,7 +288,7 @@ static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(q
     names.lightDirection.append("direction");
     names.lightSpecularColor = lightStem;
     names.lightSpecularColor.append("specular");
-    if (inLight.m_lightType == QSSGRenderLight::Type::Point) {
+    if (inLight.type == QSSGRenderLight::Type::PointLight) {
         names.lightPos = lightStem;
         names.lightPos.append("position");
         names.lightConstantAttenuation = lightStem;
@@ -297,7 +297,7 @@ static QSSGMaterialShaderGenerator::LightVariableNames setupLightVariableNames(q
         names.lightLinearAttenuation.append("linearAttenuation");
         names.lightQuadraticAttenuation = lightStem;
         names.lightQuadraticAttenuation.append("quadraticAttenuation");
-    } else if (inLight.m_lightType == QSSGRenderLight::Type::Spot) {
+    } else if (inLight.type == QSSGRenderLight::Type::SpotLight) {
         names.lightPos = lightStem;
         names.lightPos.append("position");
         names.lightConstantAttenuation = lightStem;
@@ -327,7 +327,7 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldPosition(inKey);
         const auto names = setupShadowMapVariableNames(lightIdx);
         fragmentShader.addInclude("shadowMapping.glsllib");
-        if (inType == QSSGRenderLight::Type::Directional) {
+        if (inType == QSSGRenderLight::Type::DirectionalLight) {
             fragmentShader.addUniform(names.shadowMapStem, "sampler2D");
         } else {
             fragmentShader.addUniform(names.shadowCubeStem, "samplerCube");
@@ -335,7 +335,7 @@ static void generateShadowMapOcclusion(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addUniform(names.shadowControlStem, "vec4");
         fragmentShader.addUniform(names.shadowMatrixStem, "mat4");
 
-        if (inType != QSSGRenderLight::Type::Directional) {
+        if (inType != QSSGRenderLight::Type::DirectionalLight) {
             fragmentShader << "    qt_shadow_map_occl = qt_sampleCubemap(" << names.shadowCubeStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", " << lightVarNames.lightPos << ".xyz, qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
         } else {
             fragmentShader << "    qt_shadow_map_occl = qt_sampleOrthographic(" << names.shadowMapStem << ", " << names.shadowControlStem << ", " << names.shadowMatrixStem << ", qt_varWorldPos, vec2(1.0, " << names.shadowControlStem << ".z));\n";
@@ -896,8 +896,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             QSSGRenderLight *lightNode = shaderLight.light;
             auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode);
 
-            bool isDirectional = lightNode->m_lightType == QSSGRenderLight::Type::Directional;
-            bool isSpot = lightNode->m_lightType == QSSGRenderLight::Type::Spot;
+            const bool isDirectional = lightNode->type == QSSGRenderLight::Type::DirectionalLight;
+            const bool isSpot = lightNode->type == QSSGRenderLight::Type::SpotLight;
             bool castsShadow = enableShadowMaps && lightNode->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
             if (castsShadow)
                 ++shadowMapCount;
@@ -913,7 +913,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_lightAttenuation = 1.0;\n";
 
             if (isDirectional) {
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames, inKey);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->type, lightVarNames, inKey);
                 fragmentShader << "    tmp_light_color = " << lightVarNames.lightColor << ".rgb * (1.0 - qt_metalnessAmount);\n";
 
                 if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_directionalLightProcessor"))) {
@@ -975,7 +975,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     fragmentShader << "    if (" << lightVarNames.spotAngle << " > " << lightVarNames.lightConeAngle << ") {\n";
                 }
 
-                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->m_lightType, lightVarNames, inKey);
+                generateShadowMapOcclusion(fragmentShader, vertexShader, lightIdx, castsShadow, lightNode->type, lightVarNames, inKey);
 
                 fragmentShader.addFunction("calculatePointLightAttenuation");
 
@@ -1380,7 +1380,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 
             const auto names = setupShadowMapVariableNames(lightIdx);
 
-            if (theLight->m_lightType != QSSGRenderLight::Type::Directional) {
+            if (theLight->type != QSSGRenderLight::Type::DirectionalLight) {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowCubeStem;
                 if (receivesShadows)
@@ -1415,8 +1415,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             }
         }
 
-        if (theLight->m_lightType == QSSGRenderLight::Type::Point
-                || theLight->m_lightType == QSSGRenderLight::Type::Spot) {
+        if (theLight->type == QSSGRenderLight::Type::PointLight
+                || theLight->type == QSSGRenderLight::Type::SpotLight) {
             const QVector3D globalPos = theLight->getGlobalPos();
             lightData.position[0] = globalPos.x();
             lightData.position[1] = globalPos.y();
@@ -1426,7 +1426,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             lightData.linearAttenuation = aux::translateLinearAttenuation(theLight->m_linearFade);
             lightData.quadraticAttenuation = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
             lightData.coneAngle = 180.0f;
-            if (theLight->m_lightType == QSSGRenderLight::Type::Spot) {
+            if (theLight->type == QSSGRenderLight::Type::SpotLight) {
                 const float coneAngle = theLight->m_coneAngle;
                 const float innerConeAngle = (theLight->m_innerConeAngle > coneAngle) ?
                                                 coneAngle : theLight->m_innerConeAngle;

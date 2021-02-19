@@ -732,7 +732,7 @@ static void setupCameraForShadowMap(const QRectF &inViewport,
     inLightPos -= inLightDir * inCamera.clipNear;
     theCamera.fov = qDegreesToRadians(90.f);
 
-    if (inLight->m_lightType == QSSGRenderLight::Type::Directional) {
+    if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
         QVector3D frustumPoints[8], boundCtr, sceneCtr;
         computeFrustumBounds(inCamera, inViewport, boundCtr, frustumPoints);
 
@@ -775,11 +775,11 @@ static void setupCameraForShadowMap(const QRectF &inViewport,
         theCamera.clipFar = bounds.extents().z() * 2;
     }
 
-    theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->m_lightType == QSSGRenderLight::Type::Directional);
+    theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->type == QSSGRenderLight::Type::DirectionalLight);
     theCamera.parent = nullptr;
     theCamera.pivot = inLight->pivot;
 
-    if (inLight->m_lightType != QSSGRenderLight::Type::Point) {
+    if (inLight->type != QSSGRenderLight::Type::PointLight) {
         theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), inLightPos + inLightDir);
     } else {
         theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), QVector3D(0, 0, 0));
@@ -796,7 +796,7 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     QQuaternion rotOfs[6];
 
     Q_ASSERT(inLight != nullptr);
-    Q_ASSERT(inLight->m_lightType != QSSGRenderLight::Type::Directional);
+    Q_ASSERT(inLight->type != QSSGRenderLight::Type::DirectionalLight);
 
     const QVector3D inLightPos = inLight->getGlobalPos();
 
@@ -821,7 +821,7 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     }
 
     /*
-        if ( inLight->m_LightType == RenderLightTypes::Point ) return;
+        if ( inLight->type == RenderLightTypes::Point ) return;
 
         QVector3D viewDirs[6];
         QVector3D viewUp[6];

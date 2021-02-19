@@ -187,7 +187,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             nodes.append(node);
             layer.addChild(static_cast<QSSGRenderNode &>(*node));
             const auto &lightNode = static_cast<const QSSGRenderLight &>(*node);
-            if (lightNode.m_lightType == QSSGRenderLight::Type::Point)
+            if (lightNode.type == QSSGRenderLight::Type::PointLight)
                 shadowCubePass |= true;
             else
                 shadowMapPass |= true;

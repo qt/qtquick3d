@@ -64,7 +64,7 @@ public:
     };
     Q_ENUM(FieldOfViewOrientation)
 
-    QQuick3DPerspectiveCamera();
+    explicit QQuick3DPerspectiveCamera(QQuick3DNode *parent = nullptr);
 
     float clipNear() const;
     float clipFar() const;

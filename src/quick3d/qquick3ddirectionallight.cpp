@@ -32,6 +32,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 
+#include "qquick3dnode_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -106,13 +108,14 @@ QT_BEGIN_NAMESPACE
     \sa PointLight, SpotLight
 */
 
+QQuick3DDirectionalLight::QQuick3DDirectionalLight(QQuick3DNode *parent)
+    : QQuick3DAbstractLight(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::DirectionalLight)), parent) {}
+
 QSSGRenderGraphObject *QQuick3DDirectionalLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
         markAllDirty();
-        node = new QSSGRenderLight();
-        QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
-        light->m_lightType = QSSGRenderLight::Type::Directional;
+        node = new QSSGRenderLight(/* defaults to directional */);
     }
 
     QQuick3DAbstractLight::updateSpatialNode(node);

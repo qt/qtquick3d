@@ -58,7 +58,7 @@ class Q_QUICK3D_EXPORT QQuick3DSpotLight : public QQuick3DAbstractLight
     QML_ADDED_IN_VERSION(1, 15)
 
 public:
-    QQuick3DSpotLight() : QQuick3DAbstractLight() {}
+    explicit QQuick3DSpotLight(QQuick3DNode *parent = nullptr);
     ~QQuick3DSpotLight() override {}
 
     float constantFade() const;
