@@ -132,6 +132,8 @@ int main(int argc, char *argv[])
                                 subset.bounds.max.y() << "," <<
                                 subset.bounds.max.z() << ")";
                     qDebug() << "\t\tname:" << subset.name;
+                    if (header.hasLightmapSizeHint())
+                        qDebug() << "\t\tlightmap size hint:" << subset.lightmapSizeHint;
                 }
             }
 

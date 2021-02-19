@@ -126,6 +126,7 @@ public:
         SubsetBounds bounds;
         quint32 count = 0;
         quint32 offset = 0;
+        QSize lightmapSizeHint;
     };
 
     // can just return by value (big data is all implicitly shared)
@@ -178,6 +179,8 @@ struct Q_QUICK3DASSETIMPORT_EXPORT AssetMeshSubset // for asset importer plugins
     quint32 count = 0;
     quint32 offset = 0;
     quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max();
+    quint32 lightmapWidth = 0;
+    quint32 lightmapHeight = 0;
 };
 
 struct Q_QUICK3DASSETIMPORT_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeometry, QSSGRenderGeometry)
@@ -276,15 +279,22 @@ struct Q_QUICK3DASSETIMPORT_EXPORT MeshInternal
         // reader. So to support both with the new loader, no branching is
         // needed at all, it just needs to accept both versions.
         static const quint32 LEGACY_MESH_FILE_VERSION = 3;
-        static const quint32 FILE_VERSION = 4;
+        // Version 5 differs from 4 with the added lightmapSizeHint per subset.
+        // This needs branching in the deserializer.
+        static const quint32 FILE_VERSION = 5;
+
+        static MeshDataHeader withDefaults() {
+            return { FILE_ID, FILE_VERSION, 0, 0 };
+        }
 
         bool isValid() const {
             return fileId == FILE_ID
-                    && (fileVersion == FILE_VERSION
-                        || fileVersion == LEGACY_MESH_FILE_VERSION);
+                    && fileVersion <= FILE_VERSION
+                    && fileVersion >= LEGACY_MESH_FILE_VERSION;
         }
-        static MeshDataHeader withDefaults() {
-            return { FILE_ID, FILE_VERSION, 0, 0 };
+
+        bool hasLightmapSizeHint() const {
+            return fileVersion >= 5;
         }
     };
 
@@ -317,6 +327,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT MeshInternal
         Mesh::SubsetBounds bounds;
         quint32 offset = 0;
         quint32 count = 0;
+        QSize lightmapSizeHint;
 
         Mesh::Subset toMeshSubset() const {
             Mesh::Subset subset;
@@ -326,6 +337,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT MeshInternal
             subset.bounds.max = bounds.max;
             subset.count = count;
             subset.offset = offset;
+            subset.lightmapSizeHint = lightmapSizeHint;
             return subset;
         }
     };

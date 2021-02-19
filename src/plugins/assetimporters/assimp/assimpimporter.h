@@ -92,6 +92,8 @@ private:
         QString name;
         int indexLength;
         int indexOffset;
+        quint32 lightmapWidth;
+        quint32 lightmapHeight;
     };
 
     void writeHeader(QTextStream &output);

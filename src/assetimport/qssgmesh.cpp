@@ -52,7 +52,9 @@ static const size_t MESH_STRUCT_SIZE = 56;
 static const size_t VERTEX_BUFFER_ENTRY_STRUCT_SIZE = 16;
 
 // subset list: count, offset, minXYZ, maxXYZ, nameOffset, nameLength
-static const size_t SUBSET_STRUCT_SIZE = 40;
+static const size_t SUBSET_STRUCT_SIZE_V3_V4 = 40;
+// subset list: count, offset, minXYZ, maxXYZ, nameOffset, nameLength, lightmapSizeWidth, lightmapSizeHeight
+static const size_t SUBSET_STRUCT_SIZE_V5 = 48;
 
 MeshInternal::MultiMeshInfo MeshInternal::readFileHeader(QIODevice *device)
 {
@@ -220,8 +222,18 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                     >> subset.nameLength;
         subset.bounds.min = QVector3D(minX, minY, minZ);
         subset.bounds.max = QVector3D(maxX, maxY, maxZ);
+        if (header->hasLightmapSizeHint()) {
+            quint32 width = 0;
+            quint32 height = 0;
+            inputStream >> width >> height;
+            subset.lightmapSizeHint = QSize(width, height);
+            subsetByteSize += SUBSET_STRUCT_SIZE_V5;
+        } else {
+            subset.lightmapSizeHint = QSize(0, 0);
+            subsetByteSize += SUBSET_STRUCT_SIZE_V3_V4;
+        }
         internalSubsets.append(subset);
-        subsetByteSize += SUBSET_STRUCT_SIZE;
+
     }
     alignAmount = offsetTracker.alignedAdvance(subsetByteSize);
     if (alignAmount)
@@ -347,6 +359,8 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
         const float maxY = subset.bounds.max.y();
         const float maxZ = subset.bounds.max.z();
         const quint32 nameLength = subset.name.count() + 1;
+        const quint32 lightmapSizeHintWidth = qMax(0, subset.lightmapSizeHint.width());
+        const quint32 lightmapSizeHintHeight = qMax(0, subset.lightmapSizeHint.height());
         outputStream << subsetCount
                      << subsetOffset
                      << minX
@@ -357,7 +371,9 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
                      << maxZ;
         outputStream << quint32(0) // legacy offset
                      << nameLength;
-        subsetByteSize += SUBSET_STRUCT_SIZE;
+        outputStream << lightmapSizeHintWidth
+                     << lightmapSizeHintHeight;
+        subsetByteSize += SUBSET_STRUCT_SIZE_V5;
     }
     alignAmount = offsetTracker.alignedAdvance(subsetByteSize);
     if (alignAmount)
@@ -519,6 +535,8 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
             meshSubset.bounds.min = bounds.minimum;
             meshSubset.bounds.max = bounds.maximum;
         }
+
+        meshSubset.lightmapSizeHint = QSize(subset.lightmapWidth, subset.lightmapHeight);
 
         mesh.m_subsets.append(meshSubset);
     }

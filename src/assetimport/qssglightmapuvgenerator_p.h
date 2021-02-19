@@ -43,7 +43,6 @@
 
 #include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
 #include <QtQuick3DAssetImport/private/qssgmesh_p.h>
-#include <QtCore/qsize.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,7 +51,8 @@ struct QSSGLightmapUVGeneratorResult
     QByteArray lightmapUVChannel;
     QVector<quint32> vertexMap;
     QByteArray indexData;
-    QSize lightmapSize;
+    quint32 lightmapWidth = 0;
+    quint32 lightmapHeight = 0;
 
     bool isValid() const {
         return !lightmapUVChannel.isEmpty() && !vertexMap.isEmpty();

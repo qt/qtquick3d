@@ -105,7 +105,8 @@ QSSGLightmapUVGeneratorResult QSSGLightmapUVGenerator::run(const QByteArray &pos
         xatlas::Destroy(atlas);
         return result;
     }
-    result.lightmapSize = QSize(textureWidth, textureHeight);
+    result.lightmapWidth = textureWidth;
+    result.lightmapHeight = textureHeight;
 
     const xatlas::Mesh &output = atlas->meshes[0];
     result.lightmapUVChannel.resize(output.vertexCount * uvStride);

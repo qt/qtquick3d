@@ -1078,7 +1078,8 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
         int outputVertexCount = mesh->mNumVertices;
         QVector<quint32> vertexMap;
         QByteArray lightmapUVChannel;
-        QSize lightmapSizeHint; // ### not yet stored in the QSSGMesh
+        quint32 lightmapWidth = 0;
+        quint32 lightmapHeight = 0;
         if (m_generateLightmapUV && mesh->HasPositions()) {
             QSSGLightmapUVGenerator uvGen;
             const QByteArray indices = QByteArray::fromRawData(reinterpret_cast<const char *>(indexes.constData()),
@@ -1089,8 +1090,12 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
                                                                      indices,
                                                                      QSSGMesh::Mesh::ComponentType::UnsignedInt32);
             if (lightmapResult.isValid()) {
-                qDebug("Lightmap UV unwrap, original vertex count = %u, new vertex count = %d",
-                       mesh->mNumVertices, int(lightmapResult.vertexMap.count()));
+                qDebug("Lightmap UV unwrap, original vertex count = %u, new vertex count = %d, "
+                       "texture size hint = %ux%u",
+                       mesh->mNumVertices,
+                       int(lightmapResult.vertexMap.count()),
+                       lightmapResult.lightmapWidth,
+                       lightmapResult.lightmapHeight);
 
                 indexType = QSSGMesh::Mesh::ComponentType::UnsignedInt32;
                 const quint32 *indexPtr = reinterpret_cast<const quint32 *>(lightmapResult.indexData.constData());
@@ -1100,7 +1105,8 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
                 outputVertexCount = lightmapResult.vertexMap.count();
                 vertexMap = lightmapResult.vertexMap;
                 lightmapUVChannel = lightmapResult.lightmapUVChannel;
-                lightmapSizeHint = lightmapResult.lightmapSize;
+                lightmapWidth = lightmapResult.lightmapWidth;
+                lightmapHeight = lightmapResult.lightmapHeight;
             } else {
                 return QStringLiteral("Lightmap UV generation failed");
             }
@@ -1327,8 +1333,9 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
                                           shortIndexes.length() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
         }
 
-        // Subset
         subsetEntry.name = QString::fromUtf8(m_scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
+        subsetEntry.lightmapWidth = lightmapWidth;
+        subsetEntry.lightmapHeight = lightmapHeight;
         subsetData.append(subsetEntry);
     }
 
@@ -1449,7 +1456,9 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const QVector<ai
                            subset.name,
                            quint32(subset.indexLength),
                            quint32(subset.indexOffset),
-                           0 // the builder will calculate bounds from the position data
+                           0, // the builder will calculate bounds from the position data
+                           subset.lightmapWidth,
+                           subset.lightmapHeight
                        });
     }
 
