@@ -166,7 +166,7 @@ Item {
                 maxAmount: 250
                 color: "#00ff00"
                 alignMode: Particle3D.AlignTowardsTarget
-                target: camera
+                alignTargetPosition: camera.position
             }
 
             ModelParticle3D {

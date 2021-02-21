@@ -289,10 +289,10 @@ void QQuick3DParticle::setFadeOutDuration(int fadeOutDuration)
 
     Defines the type of the alignment.
 
-    \value Particle3D.AlignDefault
-        No alignment.
+    \value Particle3D.AlignNone
+        No alignment. Particles rotation can be defined with \l {ParticleEmitter3D::particleRotation}{particleRotation}.
     \value Particle3D.AlignTowardsTarget
-        Align the particles towards \l target element direction.
+        Align the particles towards \l alignTargetPosition direction.
     \value Particle3D.AlignTowardsStartVelocity
         Align the particles towards their starting \l {ParticleEmitter3D::velocity}{velocity}
         direction.
@@ -307,9 +307,9 @@ void QQuick3DParticle::setFadeOutDuration(int fadeOutDuration)
     \note When the \l SpriteParticle3D \l {SpriteParticle3D::billboard}{billboard}
     property is set to \c true, alignMode does not have an effect.
 
-    The default value is \c Particle3D.AlignDefault.
+    The default value is \c Particle3D.AlignNone.
 
-    \sa target
+    \sa alignTargetPosition
 */
 QQuick3DParticle::AlignMode QQuick3DParticle::alignMode() const
 {
@@ -317,17 +317,17 @@ QQuick3DParticle::AlignMode QQuick3DParticle::alignMode() const
 }
 
 /*!
-    \qmlproperty Node Particle3D::target
+    \qmlproperty vector3d Particle3D::alignTargetPosition
 
-    This property defines the \l Node particles are aligned to.
+    This property defines the position particles are aligned to.
     This property has effect only when the \l alignMode is set to
     \c Particle3D.AlignTowardsTarget.
 
     \sa alignMode
 */
-QQuick3DNode *QQuick3DParticle::target() const
+QVector3D QQuick3DParticle::alignTargetPosition() const
 {
-    return m_target;
+    return m_alignTarget;
 }
 
 void QQuick3DParticle::setAlignMode(AlignMode alignMode)
@@ -339,13 +339,13 @@ void QQuick3DParticle::setAlignMode(AlignMode alignMode)
     Q_EMIT alignModeChanged();
 }
 
-void QQuick3DParticle::setTarget(QQuick3DNode *target)
+void QQuick3DParticle::setAlignTargetPosition(const QVector3D &alignPosition)
 {
-    if (m_target == target)
+    if (m_alignTarget == alignPosition)
         return;
 
-    m_target = target;
-    Q_EMIT targetChanged();
+    m_alignTarget = alignPosition;
+    Q_EMIT alignTargetPositionChanged();
 }
 
 void QQuick3DParticle::updateBurstIndex(int amount) {
