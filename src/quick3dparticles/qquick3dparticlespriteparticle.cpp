@@ -65,11 +65,6 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
     delete m_particleUpdateNode;
 }
 
-QQuick3DParticleSpriteParticle::Lighting QQuick3DParticleSpriteParticle::lighting() const
-{
-    return m_lighting;
-}
-
 /*!
     \qmlproperty enumeration SpriteParticle3D::BlendMode
 
@@ -117,19 +112,41 @@ QQuick3DTexture *QQuick3DParticleSpriteParticle::sprite() const
     return m_sprite;
 }
 
-int QQuick3DParticleSpriteParticle::spriteImages() const
+/*!
+    \qmlproperty int SpriteParticle3D::frameCount
+
+    This property defines the amount of image frames in \l sprite. Particle animates
+    through these frames during its \l {ParticleEmitter3D::lifeSpan}{lifeSpan}.
+    The frames should be laid out horizontally in the same image file. For example,
+    \l sprite could be a \c {512x64} image, with \c frameCount of \c 8. If the particle
+    \l {ParticleEmitter3D::lifeSpan}{lifeSpan} is \c 2000, each of those images will be
+    visible for \c 250 milliseconds.
+
+    The default value is \c 1.
+
+    \sa interpolate
+*/
+int QQuick3DParticleSpriteParticle::frameCount() const
 {
-    return m_spriteImageCount;
+    return m_frameCount;
 }
 
-bool QQuick3DParticleSpriteParticle::blendImages() const
-{
-    return m_blendImages;
-}
+/*!
+    \qmlproperty bool SpriteParticle3D::interpolate
 
-bool QQuick3DParticleSpriteParticle::receivesShadows() const
+    This property defines if the sprites are interpolated (blended) between frames
+    to make the animation appear smoother.
+
+    \note This property doesn't have an effect when the sprite has only a single
+    frame (so \l frameCount is \c 1).
+
+    The default value is \c true.
+
+    \sa frameCount
+*/
+bool QQuick3DParticleSpriteParticle::interpolate() const
 {
-    return m_receivesShadows;
+    return m_interpolate;
 }
 
 /*!
@@ -165,18 +182,19 @@ float QQuick3DParticleSpriteParticle::particleScale() const
     return m_particleScale;
 }
 
+/*!
+    \qmlproperty Texture SpriteParticle3D::colorTable
+
+    This property defines the \l Texture used for coloring the particles.
+    The image can be a 1D or a 2D texture. Horizontal pixels determine the particle color over its
+    \l {ParticleEmitter3D::lifeSpan}{lifeSpan}. For example, when the particle is halfway through
+    its life, it will have the color specified halfway across the image. If the image is 2D,
+    vertical row is randomly selected for each particle. For example, a c {256 x 4} image
+    contains \c 4 different coloring options for particles.
+*/
 QQuick3DTexture *QQuick3DParticleSpriteParticle::colorTable() const
 {
     return m_colorTable;
-}
-
-void QQuick3DParticleSpriteParticle::setLighting(Lighting lighting)
-{
-    if (m_lighting == lighting)
-        return;
-    m_lighting = lighting;
-    m_dirty = true;
-    Q_EMIT lightingChanged();
 }
 
 void QQuick3DParticleSpriteParticle::setBlendMode(BlendMode blendMode)
@@ -205,31 +223,22 @@ void QQuick3DParticleSpriteParticle::setSprite(QQuick3DTexture *sprite)
     Q_EMIT spriteChanged();
 }
 
-void QQuick3DParticleSpriteParticle::setSpriteImages(int imageCount)
+void QQuick3DParticleSpriteParticle::setFrameCount(int frameCount)
 {
-    if (m_spriteImageCount == imageCount)
+    if (m_frameCount == frameCount)
         return;
-    m_spriteImageCount = imageCount;
+    m_frameCount = frameCount;
     m_dirty = true;
-    Q_EMIT spriteImagesChanged();
+    Q_EMIT frameCountChanged();
 }
 
-void QQuick3DParticleSpriteParticle::setBlendImages(bool blend)
+void QQuick3DParticleSpriteParticle::setInterpolate(bool interpolate)
 {
-    if (m_blendImages == blend)
+    if (m_interpolate == interpolate)
         return;
-    m_blendImages = blend;
+    m_interpolate = interpolate;
     m_dirty = true;
-    Q_EMIT blendImagesChanged();
-}
-
-void QQuick3DParticleSpriteParticle::setReceivesShadows(bool receive)
-{
-    if (m_receivesShadows == receive)
-        return;
-    m_receivesShadows = receive;
-    m_dirty = true;
-    Q_EMIT receivesShadowsChanged();
+    Q_EMIT interpolateChanged();
 }
 
 void QQuick3DParticleSpriteParticle::setBillboard(bool billboard)
@@ -289,21 +298,6 @@ static QSSGRenderParticles::BlendMode mapBlendMode(QQuick3DParticleSpriteParticl
     }
 }
 
-static QSSGRenderParticles::ParticleLighting mapLighting(QQuick3DParticleSpriteParticle::Lighting mode)
-{
-    switch (mode) {
-    case QQuick3DParticleSpriteParticle::NoLighting:
-        return QSSGRenderParticles::ParticleLighting::NoLighting;
-    case QQuick3DParticleSpriteParticle::VertexLighting:
-        return QSSGRenderParticles::ParticleLighting::VertexLighting;
-    case QQuick3DParticleSpriteParticle::FragmentLighting:
-        return QSSGRenderParticles::ParticleLighting::FragmentLighting;
-    default:
-        Q_ASSERT(false);
-        return QSSGRenderParticles::ParticleLighting::NoLighting;
-    }
-}
-
 QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::ParticleUpdateNode::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (m_spriteParticle) {
@@ -329,8 +323,8 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
 
     if (m_sprite) {
         particles->m_sprite = m_sprite->getRenderImage();
-        particles->m_spriteImageCount = m_spriteImageCount;
-        particles->m_blendImages = m_blendImages;
+        particles->m_spriteImageCount = m_frameCount;
+        particles->m_blendImages = m_interpolate;
     } else {
         particles->m_sprite = nullptr;
         particles->m_spriteImageCount = 1;
@@ -342,12 +336,9 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
     else
         particles->m_colorTable = nullptr;
 
-    particles->m_lighting = mapLighting(m_lighting);
     particles->m_blendMode = mapBlendMode(m_blendMode);
     particles->m_diffuseColor = color::sRGBToLinear(color());
     particles->m_billboard = m_billboard;
-    // TODO: Disabled for now
-    //particles->m_receiveShadows = m_receivesShadows;
 
     m_dirty = false;
     return particles;

@@ -53,58 +53,44 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3DParticle
 {
     Q_OBJECT
-    Q_PROPERTY(Lighting lighting READ lighting WRITE setLighting NOTIFY lightingChanged)
     Q_PROPERTY(BlendMode blendMode READ blendMode WRITE setBlendMode NOTIFY blendModeChanged)
     Q_PROPERTY(QQuick3DTexture* sprite READ sprite WRITE setSprite NOTIFY spriteChanged)
-    Q_PROPERTY(int spriteImages READ spriteImages WRITE setSpriteImages NOTIFY spriteImagesChanged)
-    Q_PROPERTY(bool blendImages READ blendImages WRITE setBlendImages NOTIFY blendImagesChanged)
-    Q_PROPERTY(bool receivesShadows READ receivesShadows WRITE setReceivesShadows NOTIFY receivesShadowsChanged)
+    Q_PROPERTY(int frameCount READ frameCount WRITE setFrameCount NOTIFY frameCountChanged)
+    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
     Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(QQuick3DTexture* colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
 
 public:
-    enum SpriteImages { Gradient = 0, SingleImage = 1 };
-    Q_ENUM(SpriteImages)
-
-    enum Lighting { NoLighting = 0, VertexLighting, FragmentLighting };
-    Q_ENUM(Lighting)
-
     enum BlendMode { SourceOver = 0, Screen, Multiply };
     Q_ENUM(BlendMode)
 
     QQuick3DParticleSpriteParticle(QQuick3DNode *parent = nullptr);
     ~QQuick3DParticleSpriteParticle() override;
 
-    Lighting lighting() const;
     BlendMode blendMode() const;
     QQuick3DTexture *sprite() const;
-    int spriteImages() const;
-    bool blendImages() const;
-    bool receivesShadows() const;
+    int frameCount() const;
+    bool interpolate() const;
     bool billboard() const;
     float particleScale() const;
     QQuick3DTexture *colorTable() const;
 
 public Q_SLOTS:
-    void setLighting(QQuick3DParticleSpriteParticle::Lighting lighting);
     void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
     void setSprite(QQuick3DTexture *sprite);
-    void setSpriteImages(int imageCount);
-    void setBlendImages(bool blend);
-    void setReceivesShadows(bool receive);
+    void setFrameCount(int frameCount);
+    void setInterpolate(bool interpolate);
     void setBillboard(bool billboard);
     void setParticleScale(float scale);
     void setColorTable(QQuick3DTexture *colorTable);
 
 Q_SIGNALS:
-    void lightingChanged();
     void blendModeChanged();
     void spriteChanged();
-    void spriteImagesChanged();
-    void blendImagesChanged();
-    void receivesShadowsChanged();
+    void frameCountChanged();
+    void interpolateChanged();
     void billboardChanged();
     void particleScaleChanged();
     void colorTableChanged();
@@ -161,14 +147,12 @@ private:
     QVector<SpriteParticleData> m_spriteParticleData;
     QHash<QByteArray, QMetaObject::Connection> m_connections;
     ParticleUpdateNode *m_particleUpdateNode = nullptr;
-    Lighting m_lighting = NoLighting;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
     QQuick3DTexture *m_colorTable = nullptr;
     float m_particleScale = 5.0f;
-    int m_spriteImageCount = SingleImage;
-    bool m_blendImages = false;
-    bool m_receivesShadows = false;
+    int m_frameCount = 1;
+    bool m_interpolate = true;
     bool m_billboard = false;
     bool m_bufferUpdated = false;
     bool m_dirty = true;

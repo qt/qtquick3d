@@ -503,10 +503,6 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         QQuick3DParticleModelParticle *modelParticle = qobject_cast<QQuick3DParticleModelParticle *>(particle);
         QQuick3DParticleSpriteParticle *spriteParticle = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
 
-        QVector3D targetPosition;
-        if (particle->target())
-            targetPosition = particle->target()->position();
-
         // Collect possible trail emits
         QVector<TrailEmits> trailEmits;
         for (auto emitter : qAsConst(m_trailEmitters)) {
@@ -574,7 +570,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             // Add a base rotation if alignment requested
             if (!spriteParticle || !spriteParticle->m_billboard) {
                 if (particle->m_alignMode == QQuick3DParticle::AlignTowardsTarget) {
-                    QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(targetPosition, currentData.position);
+                    QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(particle->alignTargetPosition(), currentData.position);
                     currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
                 } else if (particle->m_alignMode == QQuick3DParticle::AlignTowardsStartVelocity) {
                     QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(d->startVelocity, QVector3D());
