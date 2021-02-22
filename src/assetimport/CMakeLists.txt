@@ -44,3 +44,8 @@ qt_internal_extend_target(Quick3DAssetImport CONDITION (android_app OR NOT ANDRO
         qssgassetimportmanager.cpp qssgassetimportmanager_p.h
         qssgqmlutilities.cpp qssgqmlutilities_p.h
 )
+
+# Silence warnings in 3rdparty code
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set_source_files_properties(../3rdparty/xatlas/xatlas.cpp PROPERTIES COMPILE_FLAGS "-Wno-type-limits")
+endif()
