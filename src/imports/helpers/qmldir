@@ -1,9 +1,0 @@
-module QtQuick3D.Helpers
-plugin qtquick3dhelpersplugin
-classname QtQuick3DHelpersPlugin
-designersupported
-typeinfo plugins.qmltypes
-depends QtQuick3D 1.0
-AxisHelper 1.0 AxisHelper.qml
-DebugView 1.0 DebugView.qml
-WasdController 1.0 WasdController.qml
