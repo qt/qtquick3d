@@ -273,7 +273,7 @@ void QQuick3DParticleSystem::setRunning(bool arg)
                 particle->reset();
         }
 
-        if (!m_running && m_useRandomSeed)
+        if (m_componentComplete && !m_running && m_useRandomSeed)
             doSeedRandomization();
 
         if (m_animation)
