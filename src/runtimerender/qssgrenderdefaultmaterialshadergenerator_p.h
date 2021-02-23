@@ -133,6 +133,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
     static const char *specularLightProcessorArgumentList();
     static const char *shadedFragmentMainArgumentList();
     static const char *postProcessorArgumentList();
+    static const char *iblProbeProcessorArgumentList();
     static const char *vertexMainArgumentList();
     static const char *vertexInstancedMainArgumentList();
 

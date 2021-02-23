@@ -69,7 +69,8 @@ struct QSSGCustomShaderMetaData
         UsesInverseProjectionMatrix = 1 << 5,
         UsesScreenMipTexture = 1 << 6,
         UsesVarColor = 1 << 7,
-        UsesSharedVars = 1 << 8
+        UsesSharedVars = 1 << 8,
+        UsesIblOrientation = 1 << 9
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

@@ -94,6 +94,11 @@ static inline void insertAmbientLightProcessorArgs(QByteArray &snippet, bool use
     insertProcessorArgs(snippet, "/*%QT_ARGS_AMBIENT_LIGHT%*/", QSSGMaterialShaderGenerator::ambientLightProcessorArgumentList, usesShared, true);
 }
 
+static inline void insertIblProbeProcessorArgs(QByteArray &snippet, bool usesShared)
+{
+    insertProcessorArgs(snippet, "/*%QT_ARGS_IBL_PROBE%*/", QSSGMaterialShaderGenerator::iblProbeProcessorArgumentList, usesShared, true);
+}
+
 static inline void insertSpecularLightProcessorArgs(QByteArray &snippet, bool usesShared)
 {
     insertProcessorArgs(snippet, "/*%QT_ARGS_SPECULAR_LIGHT%*/", QSSGMaterialShaderGenerator::specularLightProcessorArgumentList, usesShared, true);
@@ -356,6 +361,7 @@ void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShade
         if (!materialAdapter->isUnshaded()) {
             const bool usesShared = materialAdapter->usesSharedVariables();
             insertAmbientLightProcessorArgs(snippet, usesShared);
+            insertIblProbeProcessorArgs(snippet, usesShared);
             insertSpecularLightProcessorArgs(snippet, usesShared);
             insertSpotLightProcessorArgs(snippet, usesShared);
             insertPointLightProcessorArgs(snippet, usesShared);

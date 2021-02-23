@@ -520,6 +520,9 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "FRAMEBUFFER_Y_UP", "qt_rhi_properties.x" },
     { "NDC_Y_UP", "qt_rhi_properties.y" },
     { "NEAR_CLIP_VALUE", "qt_rhi_properties.z" },
+    { "IBL_MAXMIPMAP", "qt_lightProbeProperties.y" },
+    { "IBL_HORIZON", "qt_lightProbeProperties.z" },
+    { "IBL_EXPOSE", "qt_lightProbeProperties.w" },
 
     // outputs
     { "POSITION", "gl_Position" },
@@ -537,12 +540,14 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "SPECULAR_LIGHT", "qt_specularLightProcessor" },
     { "MAIN", "qt_customMain" },
     { "POST_PROCESS", "qt_customPostProcessor" },
+    { "IBL_PROBE", "qt_iblProbeProcessor" },
 
     // textures
     { "SCREEN_TEXTURE", "qt_screenTexture" },
     { "SCREEN_MIP_TEXTURE", "qt_screenTexture" }, // same resource as SCREEN_TEXTURE under the hood
     { "DEPTH_TEXTURE", "qt_depthTexture" },
     { "AO_TEXTURE", "qt_aoTexture" },
+    { "IBL_TEXTURE", "qt_lightProbe" },
 
     // For shaded only: vertex outputs, for convenience and perf. (only those
     // that are always present when lighting is enabled) The custom vertex main
@@ -599,7 +604,8 @@ static const QByteArrayView qssg_func_injectarg_tab[] = {
     "AMBIENT_LIGHT",
     "SPECULAR_LIGHT",
     "MAIN",
-    "POST_PROCESS"
+    "POST_PROCESS",
+    "IBL_PROBE"
 };
 
 // This is based on the Qt Quick shader rewriter (with fixes)
@@ -796,6 +802,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesVarColor;
                 else if (trimmedId == QByteArrayLiteral("SHARED_VARS"))
                     md.flags |= QSSGCustomShaderMetaData::UsesSharedVars;
+                else if (trimmedId == QByteArrayLiteral("IBL_ORIENTATION"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesIblOrientation;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {

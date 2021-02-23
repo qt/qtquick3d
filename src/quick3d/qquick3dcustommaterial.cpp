@@ -822,9 +822,44 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
+    \li \c{void IBL_PROBE()} When present, this function is called for IBL
+    (Image-Based Lighting).
+    The task of the function is to add both the diffuse and the specular
+    contributions of IBL to writable special variables \c DIFFUSE and
+    \c SPECULAR.
+
+    The function can write to the following special variables:
+
+    \list
+    \li vec3 \c DIFFUSE Accumulates the diffuse light contributions, per fragment.
+    \li vec3 \c SPECULAR Accumulates the specular light contributions, per
+    frament.
     \endlist
 
-    \sa SceneEnvironment::tonemapMode
+    The function can read the following special variables.
+
+    \list
+    \li vec4 \c BASE_COLOR The base color and material alpha value.
+    \li float \c AO_FACTOR The screen space occlusion factor.
+    \li float \c SPECULAR_AMOUNT The specular amount.
+    \li float \c ROUGHNESS The final emissive term of the fragment pipeline.
+    \li vec3 \c NORMAL The normal vector in world space.
+    \li vec3 \c VIEW_VECTOR Points towards the camera.
+    \li mat3 \c IBL_ORIENTATION The orientation of the light probe. It comes
+    from \l {SceneEnvironment::probeOrientation}.
+    \endlist
+
+    \badcode
+        void IBL_PROBE()
+        {
+            vec3 smpDir = IBL_ORIENTATION * NORMAL;
+            DIFFUSE += AO_FACTOR * BASE_COLOR.rgb * textureLod(IBL_TEXTURE, smpDir, IBL_MAXMIPMAP).rgb;
+        }
+    \endcode
+
+    \endlist
+
+    \sa SceneEnvironment::tonemapMode, {Using Image-Based Lighting}
 
     \section2 Custom variables between functions
 
@@ -1004,6 +1039,27 @@ QT_BEGIN_NAMESPACE
         }
     \endcode
 
+    \li float \c IBL_EXPOSE - The amount of light emitted by the light probe.
+    It comes from \l {SceneEnvironment::probeExposure}.
+    \badcode
+        DIFFUSE += AO_FACTOR * IBL_EXPOSE * BASE_COLOR.rgb * textureLod(IBL_TEXTURE, NORMAL, IBL_MAXMIPMAP).rgb;
+    \endcode
+
+    \li float \c IBL_HORIZON - The horizontal cut-off value of reflections from
+    the lower half environment. It comes from \l {SceneEnvironment::probeHorizon}
+    {Horizon Cut-Off} but remapped to [-1, 0).
+    \badcode
+        vec3 diffuse += AO_FACTOR * IBL_EXPOSE * BASE_COLOR.rgb * textureLod(IBL_TEXTURE, NORMAL, IBL_MAXMIPMAP).rgb;
+        if (IBL_HORIZON > -1.0) {
+            float ctr = 0.5 + 0.5 * IBL_HORIZON;
+            float vertWt = smoothstep(ctr * 0.25, ctr + 0.25, NORMAL.y);
+            float wtScaled = mix(1.0, vertWt, IBL_HORIZON + 1.0);
+            diffuse *= wtScaled;
+        }
+    \endcode
+
+    \li float \c IBL_MAXMIPMAP - The maximum mipmap level of IBL_TEXTURE.
+
     \endlist
 
     \section2 Instancing
@@ -1113,6 +1169,17 @@ QT_BEGIN_NAMESPACE
         ivec2 aoSize = textureSize(AO_TEXTURE, 0);
         vec2 aoUV = (FRAGCOORD.xy) / vec2(aoSize);
         float aoFactor = texture(AO_TEXTURE, aoUV).x;
+    \endcode
+
+    \li \c IBL_TEXTURE - It will not enable any special rendering pass, but it can
+    be used when the material has \l {Material::lightProbe} or the model is in the scope of
+    \l {SceneEnvironment::lightProbe}.
+
+    \badcode
+        void IBL_PROBE()
+        {
+            DIFFUSE += AO_FACTOR * BASE_COLOR.rgb * textureLod(IBL_TEXTURE, NORMAL, IBL_MAXMIPMAP).rgb;
+        }
     \endcode
 
     \endlist
@@ -1412,6 +1479,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesVarColor))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesIblOrientation))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::IblOrientation, true);
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)

@@ -456,6 +456,11 @@ const char *QSSGMaterialShaderGenerator::postProcessorArgumentList()
     return "inout vec4 COLOR_SUM, in vec4 DIFFUSE, in vec3 SPECULAR, in vec3 EMISSIVE, in vec2 UV0, in vec2 UV1";
 }
 
+const char *QSSGMaterialShaderGenerator::iblProbeProcessorArgumentList()
+{
+    return "inout vec3 DIFFUSE, inout vec3 SPECULAR, in vec4 BASE_COLOR, in float AO_FACTOR, in float SPECULAR_AMOUNT, in float ROUGHNESS, in vec3 NORMAL, in vec3 VIEW_VECTOR, in mat3 IBL_ORIENTATION";
+}
+
 const char *QSSGMaterialShaderGenerator::vertexMainArgumentList()
 {
     return "inout vec3 VERTEX, inout vec3 NORMAL, inout vec2 UV0, inout vec2 UV1, inout vec3 TANGENT, inout vec3 BINORMAL, inout ivec4 JOINTS, inout vec4 WEIGHTS, inout vec4 COLOR";
@@ -584,6 +589,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
     const bool isCubeShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::CubeShadowPass);
     const bool isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
+    const bool hasIblOrientation = featureSet.isSet(QSSGShaderFeatures::Feature::IblOrientation);
     bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
     bool enableSSAO = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
     bool hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
@@ -743,6 +749,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    vec4 qt_diffuseColor = qt_material_base_color * qt_vertColor;\n";
         fragmentShader << "    vec3 qt_global_emission = qt_material_emissive_color;\n";
     }
+    const bool hasCustomIblProbe = hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_iblProbeProcessor"));
 
     if (isDepthPass)
         fragmentShader << "    vec4 fragOutput = vec4(0.0);\n";
@@ -1106,7 +1113,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
         }
 
-
         // Iterate through all lights
         Q_ASSERT(lights.size() < INT32_MAX);
         int shadowMapCount = 0;
@@ -1384,23 +1390,37 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         } else if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
             fragmentShader.addInclude("sampleProbe.glsllib");
-            if (materialAdapter->isPrincipled()) {
-                fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
+            if (hasCustomIblProbe) {
+                // DIFFUSE, SPECULAR, BASE_COLOR, AO_FACTOR, SPECULAR_AMOUNT, NORMAL, VIEW_VECTOR, IBL_ORIENTATION(, SHARED)
+                fragmentShader << "    vec3 qt_iblDiffuse = vec3(0.0);\n";
+                fragmentShader << "    vec3 qt_iblSpecular = vec3(0.0);\n";
+                fragmentShader << "    qt_iblProbeProcessor(qt_iblDiffuse, qt_iblSpecular, qt_customBaseColor, qt_aoFactor, qt_specularFactor, qt_roughnessAmount, qt_world_normal, qt_view_vector";
+                if (hasIblOrientation)
+                    fragmentShader << ", qt_lightProbeOrientation";
+                else
+                    fragmentShader << ", mat3(1.0)";
+                if (usesSharedVar)
+                    fragmentShader << ", qt_customShared);\n";
+                else
+                    fragmentShader << ");\n";
             } else {
-                fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_world_normal).rgb;\n";
-            }
-
-            if (specularLightingEnabled) {
                 if (materialAdapter->isPrincipled()) {
-                    fragmentShader << "    vec3 qt_iblSpecular = "
-                                   << "qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                    fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
                 } else {
-                    fragmentShader << "    vec3 qt_iblSpecular = qt_specularAmount * "
-                                   << "qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
+                    fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_world_normal).rgb;\n";
                 }
-            }
-            if (enableClearcoat) {
-                fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyPrincipled(qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
+                if (specularLightingEnabled) {
+                    if (materialAdapter->isPrincipled()) {
+                        fragmentShader << "    vec3 qt_iblSpecular = "
+                                       << "qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                    } else {
+                        fragmentShader << "    vec3 qt_iblSpecular = qt_specularAmount * "
+                                       << "qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
+                    }
+                }
+                if (enableClearcoat) {
+                    fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyPrincipled(qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
+                }
             }
 
             if (occlusionImage) {
@@ -1416,6 +1436,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    global_specular_light += qt_iblSpecular;\n";
             if (enableClearcoat)
                 fragmentShader << "    qt_global_clearcoat += qt_iblClearcoat;\n";
+        } else if (hasCustomIblProbe) {
+            // Prevent breaking the fragment code while seeking uniforms
+            fragmentShader.addUniform("qt_lightProbe", "samplerCube");
+            fragmentShader.addUniform("qt_lightProbeProperties", "vec4");
         }
 
         // This can run even without a IBL probe
@@ -1423,7 +1447,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    qt_global_transmission += qt_transmissionFactor * qt_getIBLVolumeRefraction(qt_world_normal, qt_view_vector, qt_roughnessAmount, "
                               "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, qt_material_specular.w, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance);\n";
         }
-
 
         if (hasImage) {
             bool texColorDeclared = false;
