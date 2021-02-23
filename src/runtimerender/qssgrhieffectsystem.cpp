@@ -355,8 +355,8 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                             toRhi(textureProperty.minFilterType),
                             toRhi(textureProperty.magFilterType),
                             textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
-                            toRhi(textureProperty.clampType),
-                            toRhi(textureProperty.clampType)
+                            toRhi(textureProperty.horizontalClampType),
+                            toRhi(textureProperty.verticalClampType)
                         };
                         addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
                         texAdded = true;
