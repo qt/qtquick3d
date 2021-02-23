@@ -457,8 +457,8 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                     { toRhi(textureProperty->minFilterType),
                       toRhi(textureProperty->magFilterType),
                       textureProperty->mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty->mipFilterType) : QRhiSampler::None,
-                      toRhi(textureProperty->clampType),
-                      toRhi(textureProperty->clampType) }
+                      toRhi(textureProperty->horizontalClampType),
+                      toRhi(textureProperty->verticalClampType) }
                 };
                 shaderPipeline->addExtraTexture(t);
             }

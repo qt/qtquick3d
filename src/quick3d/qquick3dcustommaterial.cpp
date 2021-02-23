@@ -1523,8 +1523,11 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 prop.mipFilterType = tex->generateMipmaps() ? (tex->mipFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
                                                                                                             : QSSGRenderTextureFilterOp::Linear)
                                                             : QSSGRenderTextureFilterOp::None;
-                prop.clampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                prop.horizontalClampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                             : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
+                                                            : QSSGRenderTextureCoordOp::MirroredRepeat;
+                prop.verticalClampType = tex->verticalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                                                            : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge) ? QSSGRenderTextureCoordOp::ClampToEdge
                                                             : QSSGRenderTextureCoordOp::MirroredRepeat;
             } else {
                 prop.texImage = nullptr;

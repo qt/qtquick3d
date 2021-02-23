@@ -667,8 +667,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             texProp.mipFilterType = tex->generateMipmaps() ? (tex->mipFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
                                                                                                            : QSSGRenderTextureFilterOp::Linear)
                                                            : QSSGRenderTextureFilterOp::None;
-            texProp.clampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+            texProp.horizontalClampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
                                                                                    : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
+                                                                                                                                              : QSSGRenderTextureCoordOp::MirroredRepeat);
+            texProp.verticalClampType = tex->verticalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                                                                                   : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                               : QSSGRenderTextureCoordOp::MirroredRepeat);
 
             uniforms.append({ QByteArrayLiteral("sampler2D"), name });

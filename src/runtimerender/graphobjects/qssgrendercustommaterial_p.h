@@ -68,7 +68,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderTextureFilterOp minFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureFilterOp magFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureFilterOp mipFilterType = QSSGRenderTextureFilterOp::Linear;
-        QSSGRenderTextureCoordOp clampType = QSSGRenderTextureCoordOp::ClampToEdge;
+        QSSGRenderTextureCoordOp horizontalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
+        QSSGRenderTextureCoordOp verticalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
     };
 
     struct Property
