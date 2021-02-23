@@ -138,6 +138,15 @@ Item {
                 color: "#ffffff"
                 billboard: true
             }
+            SpriteParticle3D {
+                id: particleBlue
+                sprite: Texture {
+                    source: "images/dot.png"
+                }
+                maxAmount: 4000
+                color: "#0000ff"
+                billboard: true
+            }
 
             // Emitters, one per particle
             ParticleEmitter3D {
@@ -187,6 +196,24 @@ Item {
                 Model {
                     source: "#Cylinder"
                     opacity: 0.4
+                    materials: DefaultMaterial {
+                    }
+                }
+            }
+            ParticleEmitter3D {
+                particle: particleBlue
+                position: Qt.vector3d(0, 0, 400)
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    extents: Qt.vector3d(100, 100, 150)
+                    fill: mainWindow.fill
+                }
+                emitRate: sliderEmitRate.sliderValue
+                lifeSpan: 2000
+                Model {
+                    source: "#Sphere"
+                    opacity: 0.4
+                    scale: Qt.vector3d(2.0, 2.0, 3.0)
                     materials: DefaultMaterial {
                     }
                 }
