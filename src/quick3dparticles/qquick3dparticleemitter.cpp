@@ -646,10 +646,20 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     // Colors
     QColor pc = particle->color();
     QVector4D pcv = particle->colorVariation();
-    uchar r = pc.red() * (1.0f - pcv.x()) + int(rand->get(particleIndex, QPRand::ColorRV) * 256) * pcv.x();
-    uchar g = pc.green() * (1.0f - pcv.y()) + int(rand->get(particleIndex, QPRand::ColorGV) * 256) * pcv.y();
-    uchar b = pc.blue() * (1.0f - pcv.z()) + int(rand->get(particleIndex, QPRand::ColorBV) * 256) * pcv.z();
-    uchar a = pc.alpha() * (1.0f - pcv.w()) + int(rand->get(particleIndex, QPRand::ColorAV) * 256) * pcv.w();
+    uchar r, g, b, a;
+    if (particle->unifiedColorVariation()) {
+        // Vary all color channels using the same random amount
+        const int randVar = int(rand->get(particleIndex, QPRand::ColorAV) * 256);
+        r = pc.red() * (1.0f - pcv.x()) + randVar * pcv.x();
+        g = pc.green() * (1.0f - pcv.y()) + randVar * pcv.y();
+        b = pc.blue() * (1.0f - pcv.z()) + randVar * pcv.z();
+        a = pc.alpha() * (1.0f - pcv.w()) + randVar * pcv.w();
+    } else {
+        r = pc.red() * (1.0f - pcv.x()) + int(rand->get(particleIndex, QPRand::ColorRV) * 256) * pcv.x();
+        g = pc.green() * (1.0f - pcv.y()) + int(rand->get(particleIndex, QPRand::ColorGV) * 256) * pcv.y();
+        b = pc.blue() * (1.0f - pcv.z()) + int(rand->get(particleIndex, QPRand::ColorBV) * 256) * pcv.z();
+        a = pc.alpha() * (1.0f - pcv.w()) + int(rand->get(particleIndex, QPRand::ColorAV) * 256) * pcv.w();
+    }
     d->startColor = {r, g, b, a};
 }
 

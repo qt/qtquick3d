@@ -137,6 +137,7 @@ Item {
                 maxAmount: 250
                 color: "#ff0000"
                 colorVariation: psystem.cVar
+                unifiedColorVariation: checkBoxUnified.checked
             }
             ModelParticle3D {
                 id: particleGreen
@@ -144,6 +145,7 @@ Item {
                 maxAmount: 250
                 color: "#00ff00"
                 colorVariation: psystem.cVar
+                unifiedColorVariation: checkBoxUnified.checked
             }
             ModelParticle3D {
                 id: particleBlue
@@ -151,6 +153,7 @@ Item {
                 maxAmount: 250
                 color: "#0000ff"
                 colorVariation: psystem.cVar
+                unifiedColorVariation: checkBoxUnified.checked
             }
             ModelParticle3D {
                 id: particleWhite
@@ -158,6 +161,7 @@ Item {
                 maxAmount: 250
                 color: "#ffffff"
                 colorVariation: psystem.cVar
+                unifiedColorVariation: checkBoxUnified.checked
             }
 
             // Emitters, one per particle
@@ -274,6 +278,11 @@ Item {
         anchors.topMargin: 20
         anchors.right: parent.right
         anchors.rightMargin: 20
+        CustomCheckBox {
+            id: checkBoxUnified
+            text: "Unified Variation"
+            checked: false
+        }
         Text {
             color: "#222840"
             font.pointSize: 12
