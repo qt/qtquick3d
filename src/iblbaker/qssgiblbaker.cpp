@@ -38,6 +38,7 @@
 
 #if QT_CONFIG(opengl)
 #include <QtGui/private/qrhigles2_p.h>
+#include <QOpenGLContext>
 #endif
 #if QT_CONFIG(vulkan)
 #include <QtGui/private/qrhivulkan_p.h>
@@ -696,6 +697,14 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
 #if QT_CONFIG(opengl)
     if (rhiImplementation == QRhi::OpenGLES2) {
         QRhiGles2InitParams params;
+        if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL) {
+            // OpenGL 3.2 or higher
+            params.format.setProfile(QSurfaceFormat::CoreProfile);
+            params.format.setVersion(3, 2);
+        } else {
+            // OpenGL ES 3.0 or higher
+            params.format.setVersion(3, 0);
+        }
         params.fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
         return renderToKTXFileInternal("OpenGL", inPath, outPath, QRhi::OpenGLES2, &params);
     }
