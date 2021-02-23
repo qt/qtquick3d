@@ -158,6 +158,8 @@ void QQuick3DParticle::resetColor()
     \endqml
 
     The default value is \c (0, 0, 0, 0) (no variation).
+
+    \sa unifiedColorVariation
 */
 QVector4D QQuick3DParticle::colorVariation() const
 {
@@ -171,6 +173,44 @@ void QQuick3DParticle::setColorVariation(QVector4D colorVariation)
 
     m_colorVariation = colorVariation;
     Q_EMIT colorVariationChanged();
+}
+
+/*!
+    \qmlproperty bool Particle3D::unifiedColorVariation
+
+    This property defines if the \l colorVariation should be applied uniformly for all
+    the color channels. This means that all variations are applied with the same
+    random amount.
+
+    For example, to create particles which will have yellow colors between
+    \c #ffff00 and \c #7f7f00, so that the values of \c R and \c G color channels are
+    always the same:
+
+    \qml
+    ModelParticle3D {
+        ...
+        color: "#ffff00"
+        colorVariation: Qt.vector4d(0.5, 0.5, 0.0, 0.0)
+        unifiedColorVariation: true
+    }
+    \endqml
+
+    The default value is \c false.
+
+    \sa colorVariation
+*/
+bool QQuick3DParticle::unifiedColorVariation() const
+{
+    return m_unifiedColorVariation;
+}
+
+void QQuick3DParticle::setUnifiedColorVariation(bool unified)
+{
+    if (m_unifiedColorVariation == unified)
+        return;
+
+    m_unifiedColorVariation = unified;
+    Q_EMIT unifiedColorVariationChanged();
 }
 
 /*!

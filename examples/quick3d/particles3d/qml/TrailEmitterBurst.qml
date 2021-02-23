@@ -112,7 +112,9 @@ Item {
                 id: particleCube
                 delegate: particleComponent
                 maxAmount: 4
-                color: "#60c060"
+                color: "#ffffff"
+                colorVariation: Qt.vector4d(0.4, 0.4, 0.4, 0.0)
+                unifiedColorVariation: true
             }
             ModelParticle3D {
                 id: particleSpark
@@ -120,8 +122,10 @@ Item {
                 maxAmount: 600
                 fadeInDuration: 200
                 fadeOutDuration: 500
-                color: "#20ff00"
-                colorVariation: Qt.vector4d(0.1, 0.5, 0.0, 0.5)
+                color: "#ffffff"
+                colorVariation: Qt.vector4d(0.4, 0.4, 0.4, 0.8)
+                unifiedColorVariation: true
+
             }
             ModelParticle3D {
                 id: particleSpark2
@@ -137,7 +141,8 @@ Item {
                 delegate: particleComponentStar
                 maxAmount: 1000
                 color: "#ffe000"
-                colorVariation: Qt.vector4d(0.1, 0.1, 0.0, 0.5)
+                colorVariation: Qt.vector4d(0.6, 0.6, 0.0, 0.6)
+                unifiedColorVariation: true
             }
 
             ParticleEmitter3D {

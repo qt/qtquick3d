@@ -56,6 +56,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
     Q_PROPERTY(int maxAmount READ maxAmount WRITE setMaxAmount NOTIFY maxAmountChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor)
     Q_PROPERTY(QVector4D colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged)
+    Q_PROPERTY(bool unifiedColorVariation READ unifiedColorVariation WRITE setUnifiedColorVariation NOTIFY unifiedColorVariationChanged)
     Q_PROPERTY(FadeType fadeInEffect READ fadeInEffect WRITE setFadeInEffect NOTIFY fadeInEffectChanged)
     Q_PROPERTY(FadeType fadeOutEffect READ fadeOutEffect WRITE setFadeOutEffect NOTIFY fadeOutEffectChanged)
     Q_PROPERTY(int fadeInDuration READ fadeInDuration WRITE setFadeInDuration NOTIFY fadeInDurationChanged)
@@ -89,6 +90,7 @@ public:
     int maxAmount() const;
     QColor color() const;
     QVector4D colorVariation() const;
+    bool unifiedColorVariation() const;
     FadeType fadeInEffect() const;
     FadeType fadeOutEffect() const;
     int fadeInDuration() const;
@@ -104,6 +106,7 @@ public Q_SLOTS:
     void setMaxAmount(int maxAmount);
     void setColor(QColor color);
     void setColorVariation(QVector4D colorVariation);
+    void setUnifiedColorVariation(bool unified);
     void setFadeInEffect(QQuick3DParticle::FadeType fadeInEffect);
     void setFadeOutEffect(QQuick3DParticle::FadeType fadeOutEffect);
     void setFadeInDuration(int fadeInDuration);
@@ -116,6 +119,7 @@ Q_SIGNALS:
     void maxAmountChanged();
     void colorChanged();
     void colorVariationChanged();
+    void unifiedColorVariationChanged();
     void fadeInEffectChanged();
     void fadeOutEffectChanged();
     void fadeInDurationChanged();
@@ -150,6 +154,7 @@ private:
 
     QColor m_color;
     QVector4D m_colorVariation;
+    bool m_unifiedColorVariation = false;
     FadeType m_fadeInEffect = FadeOpacity;
     FadeType m_fadeOutEffect = FadeOpacity;
     int m_fadeInDuration = 250;
