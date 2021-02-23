@@ -733,7 +733,7 @@ void QQuick3DParticleEmitter::emitParticles()
     if (emitAmount < 1)
             return;
 
-    QVector3D centerPos = position();
+    QVector3D centerPos = parentNode()->scenePosition() + position();
 
     emitAmount = std::min(emitAmount, int(m_particle->maxAmount()));
     for (int i = 0; i < emitAmount; i++) {
