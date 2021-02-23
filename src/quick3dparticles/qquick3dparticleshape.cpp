@@ -100,6 +100,18 @@ QQuick3DParticleShape::ShapeType QQuick3DParticleShape::type() const
     return m_type;
 }
 
+/*!
+    \qmlproperty vector3d ParticleShape3D::extents
+
+    This property defines the extents of the shape.
+
+    The default value for each axis is \c 50.
+*/
+QVector3D QQuick3DParticleShape::extents() const
+{
+    return m_extents;
+}
+
 void QQuick3DParticleShape::setType(QQuick3DParticleShape::ShapeType type)
 {
     if (m_type == type)
@@ -107,6 +119,15 @@ void QQuick3DParticleShape::setType(QQuick3DParticleShape::ShapeType type)
 
     m_type = type;
     Q_EMIT typeChanged();
+}
+
+void QQuick3DParticleShape::setExtents(QVector3D extents)
+{
+    if (m_extents == extents)
+        return;
+
+    m_extents = extents;
+    Q_EMIT extentsChanged();
 }
 
 void QQuick3DParticleShape::componentComplete()
@@ -138,7 +159,7 @@ QVector3D QQuick3DParticleShape::randomPosition(int particleIndex) const
 QVector3D QQuick3DParticleShape::randomPositionCube(int particleIndex) const
 {
     auto rand = m_system->rand();
-    QVector3D s = m_parentNode->sceneScale() * 50.0f;
+    QVector3D s = m_parentNode->sceneScale() * m_extents;
     float x = s.x() - (rand->get(particleIndex, QPRand::Shape1) * s.x() * 2.0f);
     float y = s.y() - (rand->get(particleIndex, QPRand::Shape2) * s.y() * 2.0f);
     float z = s.z() - (rand->get(particleIndex, QPRand::Shape3) * s.z() * 2.0f);
@@ -166,7 +187,7 @@ QVector3D QQuick3DParticleShape::randomPositionCube(int particleIndex) const
 QVector3D QQuick3DParticleShape::randomPositionSphere(int particleIndex) const
 {
     auto rand = m_system->rand();
-    QVector3D scale = m_parentNode->sceneScale();
+    QVector3D scale = m_parentNode->sceneScale() * m_extents;
     float theta = rand->get(particleIndex, QPRand::Shape1) * float(M_PI) * 2.0f;
     float v = rand->get(particleIndex, QPRand::Shape2);
     float phi = acos((2.0f * v) - 1.0f);
@@ -175,7 +196,7 @@ QVector3D QQuick3DParticleShape::randomPositionSphere(int particleIndex) const
     float y = r * QPSIN(phi) * QPSIN(theta);
     float z = r * QPCOS(phi);
     QVector3D pos(x, y, z);
-    pos *= (scale * 50.0f);
+    pos *= scale;
     QMatrix4x4 mat;
     mat.rotate(m_parentNode->rotation());
     return mat.mapVector(pos);
@@ -184,16 +205,16 @@ QVector3D QQuick3DParticleShape::randomPositionSphere(int particleIndex) const
 QVector3D QQuick3DParticleShape::randomPositionCylinder(int particleIndex) const
 {
     auto rand = m_system->rand();
-    QVector3D scale = m_parentNode->sceneScale();
-    float y = (scale.y() * 50.0f) - (rand->get(particleIndex, QPRand::Shape1) * scale.y() * 100.0f);
+    QVector3D scale = m_parentNode->sceneScale() * m_extents;
+    float y = scale.y() - (rand->get(particleIndex, QPRand::Shape1) * scale.y() * 2.0f);
     float r = 1.0f;
     if (m_fill)
         r = sqrt(rand->get(particleIndex, QPRand::Shape2));
     float theta = rand->get(particleIndex, QPRand::Shape3) * float(M_PI) * 2.0f;
     float x = r * QPCOS(theta);
     float z = r * QPSIN(theta);
-    x = x * (scale.x() * 50.0f);
-    z = z * (scale.z() * 50.0f);
+    x = x * scale.x();
+    z = z * scale.z();
     QVector3D pos(x, y, z);
     QMatrix4x4 mat;
     mat.rotate(m_parentNode->rotation());

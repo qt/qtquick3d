@@ -56,6 +56,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QObject, public Q
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
     Q_PROPERTY(ShapeType type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(QVector3D extents READ extents WRITE setExtents NOTIFY extentsChanged)
 
     QML_NAMED_ELEMENT(ParticleShape3D)
     Q_INTERFACES(QQmlParserStatus)
@@ -73,6 +74,7 @@ public:
 
     bool fill() const;
     ShapeType type() const;
+    QVector3D extents() const;
 
     // Returns random point inside this shape
     QVector3D randomPosition(int particleIndex) const;
@@ -80,6 +82,7 @@ public:
 public Q_SLOTS:
     void setFill(bool fill);
     void setType(QQuick3DParticleShape::ShapeType type);
+    void setExtents(QVector3D extends);
 
 protected:
     // From QQmlParserStatus
@@ -89,6 +92,7 @@ protected:
 Q_SIGNALS:
     void fillChanged();
     void typeChanged();
+    void extentsChanged();
 
 private:
     // These need access to m_system
@@ -102,6 +106,7 @@ private:
     QQuick3DNode *m_parentNode = nullptr;
     bool m_fill = true;
     ShapeType m_type = ShapeType::Cube;
+    QVector3D m_extents = QVector3D(50, 50, 50);
     QQuick3DParticleSystem *m_system = nullptr;
 };
 
