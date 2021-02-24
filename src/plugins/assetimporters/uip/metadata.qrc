@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/uipimporter">
-        <file>MetaData.xml</file>
-        <file>options.json</file>
-    </qresource>
-</RCC>
