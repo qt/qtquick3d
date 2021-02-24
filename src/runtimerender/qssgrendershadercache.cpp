@@ -247,7 +247,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QShader vertexShader = baker.bake();
     if (!vertexShader.isValid()) {
         const QString err = baker.errorMessage();
-        qWarning("Failed to compile vertex shader (%s): %s", inKey.constData(), qPrintable(err));
+        qWarning("Failed to compile vertex shader (%s):\n%s", inKey.constData(), qPrintable(err));
         valid = false;
         if (shaderDebug) {
             QFile f(QLatin1String("failedvert.txt"));
@@ -268,7 +268,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QShader fragmentShader = baker.bake();
     if (!fragmentShader.isValid()) {
         const QString err = baker.errorMessage();
-        qWarning("Failed to compile fragment shader (%s): %s", inKey.constData(), qPrintable(err));
+        qWarning("Failed to compile fragment shader (%s):\n%s", inKey.constData(), qPrintable(err));
         valid = false;
         if (shaderDebug) {
             QFile f(QLatin1String("failedfrag.txt"));
