@@ -51,20 +51,11 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystemLogging : public QObject
 {
     Q_OBJECT
-    // The frequency in ms how often logging data is updated.
-    // Default value 1000.
     Q_PROPERTY(int loggingInterval READ loggingInterval WRITE setLoggingInterval NOTIFY loggingIntervalChanged)
-    // How many times particlesystem was updated since last refresh.
-    // This is basically fps when updating logs once per second.
     Q_PROPERTY(int updates READ updates NOTIFY updatesChanged)
-    // How many particles have been allocated.
     Q_PROPERTY(int particlesMax READ particlesMax NOTIFY particlesMaxChanged)
-    // How many particles are currently used / visible.
-    // If this value doesn't ever reach particlesMax, consider allocating less particles.
     Q_PROPERTY(int particlesUsed READ particlesUsed NOTIFY particlesUsedChanged)
-    // Time in ms used for emitting and animating particles.
     Q_PROPERTY(float time READ time NOTIFY timeChanged)
-    // Longer time average of total time used for emitting & animating particles.
     Q_PROPERTY(float timeAverage READ timeAverage NOTIFY timeAverageChanged)
     QML_NAMED_ELEMENT(ParticleSystem3DLogging)
     QML_UNCREATABLE("ParticleSystem3DLogging is abstract")

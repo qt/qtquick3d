@@ -79,7 +79,6 @@ struct QQuick3DParticleData
     Vector3b startRotation;
     Vector3b startRotationVelocity;
     Color4ub startColor;
-    Color4ub endColor;
     // Seconds, system time when this particle was emitted
     float startTime;
     // Seconds, particle lifetime. >99999 means forever
@@ -90,7 +89,7 @@ struct QQuick3DParticleData
     // Index/id of the particle. Used to get unique random values.
     // Might not be necessary, check later
     int index;
-    // Size: 12+12+3+3+4+4+4+4+4+4+4 = 58 bytes
+    // Size: 12+12+3+3+4+4+4+4+4+4 = 54 bytes
 };
 
 // Data structure for storing bursts
