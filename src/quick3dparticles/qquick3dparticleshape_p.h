@@ -100,7 +100,7 @@ private:
     QVector3D randomPositionCylinder(int particleIndex) const;
 
     QQuick3DNode *m_parentNode = nullptr;
-    bool m_fill = false;
+    bool m_fill = true;
     ShapeType m_type = ShapeType::Cube;
     QQuick3DParticleSystem *m_system = nullptr;
 };

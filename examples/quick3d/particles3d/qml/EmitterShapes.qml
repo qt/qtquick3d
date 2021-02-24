@@ -118,6 +118,7 @@ Item {
                 }
                 maxAmount: 4000
                 color: "#ff0000"
+                billboard: true
             }
             SpriteParticle3D {
                 id: particleGreen
@@ -126,6 +127,7 @@ Item {
                 }
                 maxAmount: 4000
                 color: "#00ff00"
+                billboard: true
             }
             SpriteParticle3D {
                 id: particleWhite
@@ -134,6 +136,7 @@ Item {
                 }
                 maxAmount: 4000
                 color: "#ffffff"
+                billboard: true
             }
 
             // Emitters, one per particle

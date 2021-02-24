@@ -577,24 +577,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
                     currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
                 }
             }
-/*
-            // Clip, this should be always last, when position doesn't change anymore
-            QVector3D clipCenter(10,10,10);
-            float clipSize = 200;
-            if (currentData.position.distanceToPoint(clipCenter) < clipSize) {
-                //p->setVisible(true);
-                currentData.color.r = 255;
-                currentData.color.g = 0;
-                currentData.color.b = 0;
-                currentData.color.a = 255;
-            } else {
-                //p->setVisible(false);
-                currentData.color.r = 100;
-                currentData.color.g = 100;
-                currentData.color.b = 100;
-                currentData.color.a = 100;
-            }
-*/
+
             // 0.0 -> 1.0 during the particle lifetime
             float timeChange = particleTimeS / d->lifetime;
             timeChange = std::max(0.0f, std::min(1.0f, timeChange));

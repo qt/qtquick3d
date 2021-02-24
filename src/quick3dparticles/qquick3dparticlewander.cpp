@@ -26,9 +26,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#define _USE_MATH_DEFINES
-#include <math.h>
 
+#include <QtCore/qmath.h>
 #include "qquick3dparticlewander_p.h"
 #include "qquick3dparticlerandomizer_p.h"
 
