@@ -72,9 +72,9 @@ Item {
         }
 
         PointLight {
-            position: Qt.vector3d(0, 600, 400)
+            position: Qt.vector3d(200, 600, 400)
             brightness: 40
-            ambientColor: Qt.rgba(0.2, 0.2, 0.4, 1.0)
+            ambientColor: Qt.rgba(0.2, 0.2, 0.2, 1.0)
         }
 
         Model {
@@ -84,7 +84,7 @@ Item {
             eulerRotation.x: -90
             materials: [
                 DefaultMaterial {
-                    diffuseColor: Qt.rgba(0.2, 0.3, 0.2, 1.0)
+                    diffuseColor: Qt.rgba(1.0, 1.0, 1.0, 1.0)
                 }
             ]
         }
@@ -124,7 +124,7 @@ Item {
             id: psystem
 
             // Start so that the snowing is in full steam
-            startTime: 20000
+            startTime: 15000
 
             SpriteParticle3D {
                 id: snowParticle
@@ -151,7 +151,8 @@ Item {
                 particleScale: 2.0
                 particleScaleVariation: 0.5;
                 velocity: VectorDirection3D {
-                    direction: Qt.vector3d(sliderVelocityX.sliderValue, sliderVelocityY.sliderValue, 0)
+                    direction: Qt.vector3d(0, sliderVelocityY.sliderValue, 0)
+                    directionVariation: Qt.vector3d(0, sliderVelocityY.sliderValue * 0.4, 0)
                 }
                 emitRate: sliderEmitRate.sliderValue * sliderIntensity.sliderValue
                 lifeSpan: 15000
@@ -174,24 +175,8 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+    SettingsView {
+        CustomLabel {
             text: "Intensity of snowfall"
         }
         CustomSlider {
@@ -200,9 +185,7 @@ Item {
             fromValue: 1
             toValue: 20
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Emit Rate"
         }
         CustomSlider {
@@ -211,36 +194,33 @@ Item {
             fromValue: 1
             toValue: 100
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Start Velocity Y"
         }
         CustomSlider {
             id: sliderVelocityY
             sliderValue: -100
-            fromValue: -20
+            fromValue: -50
             toValue: -500
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Start Velocity X"
+        CustomLabel {
+            text: "System Rotation"
         }
         CustomSlider {
-            id: sliderVelocityX
+            id: sliderRotation
             sliderValue: 0
-            fromValue: -200
-            toValue: 200
+            fromValue: -90
+            toValue: 90
+            onSliderValueChanged: {
+                psystem.eulerRotation.z = sliderValue;
+            }
         }
         CustomCheckBox {
             id: checkBoxWanderEnabled
             text: "Wander: enabled"
             checked: true
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Wander: globalAmount"
         }
         CustomSlider {
@@ -249,9 +229,7 @@ Item {
             fromValue: 0
             toValue: 100
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Wander: globalPace"
         }
         CustomSlider {
@@ -260,9 +238,7 @@ Item {
             fromValue: 0
             toValue: 2.0
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Wander: uniqueAmount"
         }
         CustomSlider {
@@ -271,9 +247,7 @@ Item {
             fromValue: 0
             toValue: 100
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Wander: uniquePace"
         }
         CustomSlider {
@@ -282,9 +256,7 @@ Item {
             fromValue: 0
             toValue: 2.0
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Wander: uniqueAmountVariation"
         }
         CustomSlider {
@@ -293,9 +265,7 @@ Item {
             fromValue: 0.0
             toValue: 1.0
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Wander: uniquePaceVariation"
         }
         CustomSlider {
@@ -309,9 +279,7 @@ Item {
             text: "PointRotator: enabled"
             checked: true
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "PointRotator: magnitude"
         }
         CustomSlider {
@@ -321,6 +289,7 @@ Item {
             toValue: 100.0
         }
     }
+
     LoggingView {
         anchors.bottom: parent.bottom
         particleSystems: [psystem]

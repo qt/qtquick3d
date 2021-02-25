@@ -194,29 +194,13 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
+    SettingsView {
         CustomCheckBox {
             id: checkBoxFill
             text: "Fill"
             checked: true
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Particles emitRate"
         }
         CustomSlider {
@@ -226,6 +210,7 @@ Item {
             toValue: 2000
         }
     }
+
     LoggingView {
         anchors.bottom: parent.bottom
         particleSystems: [psystem]

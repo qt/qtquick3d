@@ -106,4 +106,9 @@ Item {
             }
         }
     }
+
+    LoggingView {
+        anchors.bottom: parent.bottom
+        particleSystems: [psystem]
+    }
 }

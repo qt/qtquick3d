@@ -328,25 +328,9 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Smoke emitrate:"
+    SettingsView {
+        CustomLabel {
+            text: "Smoke emitrate"
         }
         CustomSlider {
             id: sliderSmokeEmitRate
@@ -354,10 +338,8 @@ Item {
             fromValue: 0
             toValue: 100
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Smoke lifeSpan:"
+        CustomLabel {
+            text: "Smoke lifeSpan"
         }
         CustomSlider {
             id: sliderSmokeLifeSpan
@@ -365,10 +347,8 @@ Item {
             fromValue: 1000
             toValue: 5000
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Stardust emitrate:"
+        CustomLabel {
+            text: "Stardust emitrate"
         }
         CustomSlider {
             id: sliderStardustEmitRate
@@ -376,10 +356,8 @@ Item {
             fromValue: 0
             toValue: 100
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Stardust lifeSpan:"
+        CustomLabel {
+            text: "Stardust lifeSpan"
         }
         CustomSlider {
             id: sliderStardustLifeSpan
@@ -387,10 +365,8 @@ Item {
             fromValue: 1000
             toValue: 5000
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Star brightness:"
+        CustomLabel {
+            text: "Star brightness"
         }
         CustomSlider {
             id: sliderLightBrightness

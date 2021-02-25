@@ -16,14 +16,27 @@
         <file>qml/images/star.png</file>
         <file>qml/images/qt_logo.png</file>
         <file>qml/images/smoke.png</file>
-        <file>qml/QtLogoAnimation2.qml</file>
         <file>qml/images/icon_pause.png</file>
         <file>qml/images/icon_play.png</file>
         <file>qml/LoggingView.qml</file>
         <file>qml/images/icon_logging.png</file>
         <file>qml/images/icon_interval.png</file>
         <file>qml/images/dot.png</file>
+        <file>qml/images/colorTable.png</file>
+        <file>qml/images/color_table2.png</file>
+        <file>qml/images/dust.png</file>
+        <file>qml/images/icon_settings.png</file>
+        <file>qml/images/qt_logo2.png</file>
+        <file>qml/images/qt_logo2_n.png</file>
+        <file>qml/images/smoke_sprite.png</file>
+        <file>qml/images/sphere.png</file>
         <file>qml/TrailEmitterBurst.qml</file>
         <file>qml/images/star2.png</file>
+        <file>qml/AlignedParticles.qml</file>
+        <file>qml/CustomLabel.qml</file>
+        <file>qml/Fire.qml</file>
+        <file>qml/HeartTrail.qml</file>
+        <file>qml/SettingsView.qml</file>
+        <file>qml/StartupView.qml</file>
     </qresource>
 </RCC>

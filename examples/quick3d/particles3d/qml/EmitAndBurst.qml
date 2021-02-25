@@ -71,7 +71,8 @@ Item {
 
         PerspectiveCamera {
             id: camera
-            position.z: 600
+            z: 600
+            y: -20
         }
 
         PointLight {
@@ -254,5 +255,10 @@ Item {
                 }
             }
         }
+    }
+
+    LoggingView {
+        anchors.bottom: parent.bottom
+        particleSystems: [psystem]
     }
 }
