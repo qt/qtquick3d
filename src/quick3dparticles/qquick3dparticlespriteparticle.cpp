@@ -346,11 +346,11 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
 
 void QQuick3DParticleSpriteParticle::handleMaxAmountChanged(int amount)
 {
-    m_particleData.clear();
-    for (int i = 0; i < amount; i++) {
-        QQuick3DParticleData data;
-        m_particleData.append(data);
-    }
+    if (m_particleData.size() == amount)
+        return;
+
+    m_particleData.resize(amount);
+    m_particleData.fill({});
     m_spriteParticleData.resize(amount);
     m_spriteParticleData.fill({});
 }

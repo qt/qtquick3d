@@ -51,13 +51,13 @@ QQuick3DParticleModelParticle::QQuick3DParticleModelParticle(QQuick3DNode *paren
 
 }
 
-void QQuick3DParticleModelParticle::handleMaxAmountChanged(int maxAmount)
+void QQuick3DParticleModelParticle::handleMaxAmountChanged(int amount)
 {
-    m_particleData.clear();
-    for (int i = 0; i < maxAmount; i++) {
-        QQuick3DParticleData data;
-        m_particleData.append(data);
-    }
+    if (m_particleData.size() == amount)
+        return;
+
+    m_particleData.resize(amount);
+    m_particleData.fill({});
 }
 
 /*!

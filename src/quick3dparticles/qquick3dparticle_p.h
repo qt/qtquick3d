@@ -128,6 +128,9 @@ Q_SIGNALS:
     void alignTargetPositionChanged();
 
 protected:
+    // From QQmlParserStatus
+    void componentComplete() override;
+
     virtual void reset() = 0;
 
     void updateBurstIndex(int amount);

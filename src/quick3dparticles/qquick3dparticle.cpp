@@ -388,13 +388,22 @@ void QQuick3DParticle::setAlignTargetPosition(const QVector3D &alignPosition)
     Q_EMIT alignTargetPositionChanged();
 }
 
-void QQuick3DParticle::updateBurstIndex(int amount) {
+void QQuick3DParticle::updateBurstIndex(int amount)
+{
     m_lastBurstIndex += amount;
 }
 
-int QQuick3DParticle::nextCurrentIndex() {
+int QQuick3DParticle::nextCurrentIndex()
+{
     m_currentIndex = (m_currentIndex < m_maxAmount - 1) ? m_currentIndex + 1 : m_lastBurstIndex;
     return m_currentIndex;
+}
+
+void QQuick3DParticle::componentComplete()
+{
+    QQuick3DObject::componentComplete();
+    // Make sure the default amount gets initialized, even if user doesn't set it
+    Q_EMIT maxAmountChanged();
 }
 
 QT_END_NAMESPACE
