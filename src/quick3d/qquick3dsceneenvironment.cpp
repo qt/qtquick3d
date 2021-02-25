@@ -179,7 +179,7 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
         The scene will not be cleared, but instead a Skybox or Skydome will be rendered. The Skybox
         is defined using the HDRI map defined in the lightProbe property.
 
-    The default value is \c SceneEnvironment.Color
+    The default value is \c SceneEnvironment.Transparent
 
     \sa QQuickWindow::setColor(), Window::color
 */
