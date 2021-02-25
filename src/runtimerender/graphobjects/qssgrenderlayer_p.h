@@ -122,8 +122,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // render target given a specific viewport (that is also scissored if necessary).
     QString texturePath;
 
-    //SRenderPlugin *renderPlugin; // Overrides texture path if available.
-
     QSSGRenderLayer::AAMode antialiasingMode;
     QSSGRenderLayer::AAQuality antialiasingQuality;
 
