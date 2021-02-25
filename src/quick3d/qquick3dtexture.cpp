@@ -109,7 +109,15 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
-    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image)), parent) {}
+    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image)), parent)
+{
+    const QMetaObject *mo = metaObject();
+    const int updateSlotIdx = mo->indexOfSlot("update()");
+    if (updateSlotIdx >= 0)
+        m_updateSlot = mo->method(updateSlotIdx);
+    if (!m_updateSlot.isValid())
+        qWarning("QQuick3DTexture: Failed to find update() slot");
+}
 
 QQuick3DTexture::~QQuick3DTexture()
 {
@@ -867,14 +875,21 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                 imageNode->m_qsgTexture = provider->texture();
 
                 disconnect(m_textureProviderConnection);
-                m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [provider, imageNode] () {
-                    // called on the render thread, if there is one; while not
-                    // obvious, the gui thread is blocked too because one can
-                    // get here only from either the textureProvider() call
-                    // above, or from QQuickImage::updatePaintNode()
+                m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [this, provider, imageNode] () {
+                    // called on the render thread, if there is one; the gui
+                    // thread may or may not be blocked (e.g. if the source is
+                    // a View3D, that emits textureChanged() from preprocess,
+                    // so after sync, whereas an Image emits in
+                    // updatePaintNode() where gui is blocked)
+
                     imageNode->m_qsgTexture = provider->texture();
                     // the QSGTexture may be different now, go through loadRenderImage() again
                     imageNode->m_flags.setFlag(QSSGRenderImage::Flag::Dirty);
+                    // Call update() on the main thread - otherwise we could
+                    // end up in a situation where the 3D scene does not update
+                    // due to nothing else changing, even though the source
+                    // texture is now different.
+                    m_updateSlot.invoke(this, Qt::AutoConnection);
                 }, Qt::DirectConnection);
 
                 disconnect(m_textureUpdateConnection);
