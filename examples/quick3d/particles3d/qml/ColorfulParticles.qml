@@ -263,29 +263,13 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
+    SettingsView {
         CustomCheckBox {
             id: checkBoxUnified
             text: "Unified Variation"
             checked: false
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Red Variation"
         }
         CustomSlider {
@@ -294,9 +278,7 @@ Item {
             fromValue: 0.0
             toValue: 1.0
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Green Variation"
         }
         CustomSlider {
@@ -305,9 +287,7 @@ Item {
             fromValue: 0.0
             toValue: 1.0
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Blue Variation"
         }
         CustomSlider {
@@ -316,9 +296,7 @@ Item {
             fromValue: 0.0
             toValue: 1.0
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Alpha Variation"
         }
         CustomSlider {
@@ -327,5 +305,10 @@ Item {
             fromValue: 0.0
             toValue: 1.0
         }
+    }
+
+    LoggingView {
+        anchors.bottom: parent.bottom
+        particleSystems: [psystem]
     }
 }

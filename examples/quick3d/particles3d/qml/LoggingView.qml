@@ -53,12 +53,17 @@ import QtQuick3D.Particles3D
 
 Item {
     property var particleSystems
-    property bool loggingEnabled: false
+    readonly property bool loggingEnabled: rootWindow.showLoggingView
     property bool intervalInstant: false
     property real itemWidth: (width - loggingButton.width - intervalButton.width) / 6
 
     width: parent.width
-    height: tableContent.height + 10
+    height: tableContent.height + 30
+
+    Component.onCompleted: {
+        for (const psystem of particleSystems)
+            psystem.logging = rootWindow.showLoggingView;
+    }
 
     // Background
     Rectangle {
@@ -78,14 +83,15 @@ Item {
             width: 32
             height: 32
             source: "images/icon_logging.png"
-            opacity: loggingEnabled ? 1.0 : 0.2
+            opacity: loggingEnabled ? 1.0 : 0.4
+            mipmap: true
         }
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                loggingEnabled = !loggingEnabled
+                rootWindow.showLoggingView = !rootWindow.showLoggingView
                 for (const psystem of particleSystems) {
-                    psystem.logging = loggingEnabled;
+                    psystem.logging = rootWindow.showLoggingView;
                 }
             }
         }
@@ -104,16 +110,16 @@ Item {
             height: 32
             source: "images/icon_interval.png"
             opacity: intervalInstant ? 1.0 : 0.2
+            mipmap: true
         }
         MouseArea {
             anchors.fill: parent
             anchors.margins: -10
             onClicked: {
                 intervalInstant = !intervalInstant;
-                for (const psystem of particleSystems) {
-                    var interval = intervalInstant ? 0 : 1000
+                var interval = intervalInstant ? 0 : 1000;
+                for (const psystem of particleSystems)
                     psystem.loggingData.loggingInterval = interval;
-                }
             }
         }
     }

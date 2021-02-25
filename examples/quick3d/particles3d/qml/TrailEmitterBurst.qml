@@ -228,29 +228,9 @@ Item {
         text: qsTr("Click to burst!")
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-        MouseArea {
-            anchors.fill: parent
-            onPressed: {}
-        }
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Burst amount: "
+    SettingsView {
+        CustomLabel {
+            text: "Burst amount"
         }
         CustomSlider {
             id: sliderBurstAmount
@@ -258,10 +238,8 @@ Item {
             fromValue: 10
             toValue: 200
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Burst duration:"
+        CustomLabel {
+            text: "Burst duration"
         }
         CustomSlider {
             id: sliderBurstDuration
@@ -269,10 +247,8 @@ Item {
             fromValue: 0
             toValue: 1000
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Trail emitRate:"
+        CustomLabel {
+            text: "Trail emitRate"
         }
         CustomSlider {
             id: sliderEmitRate

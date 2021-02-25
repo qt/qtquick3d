@@ -68,7 +68,7 @@ Item {
                 implicitWidth: 20
                 implicitHeight: 20
                 radius: 5
-                color: checkBox.pressed ? "#222840" : "#6b7080"
+                color: checkBox.pressed ? "#d0d0d0" : "#606060"
                 border.color: "#848895"
                 Rectangle {
                     anchors.centerIn: parent
@@ -83,8 +83,8 @@ Item {
         }
         Label {
             id: propText
-            color: "#222840"
-            font.pointSize: 12
+            color: "#f0f0f0"
+            font.pointSize: 10
             Layout.minimumWidth: 150
             Layout.maximumWidth: 150
             opacity: checkBox.checked ? 1.0 : 0.5

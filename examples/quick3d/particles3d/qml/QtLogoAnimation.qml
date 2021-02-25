@@ -52,6 +52,7 @@ import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
 import QtQuick.Controls
+import QtQuick.Timeline
 
 Item {
     id: mainWindow
@@ -60,70 +61,50 @@ Item {
 
     anchors.fill: parent
 
-    NumberAnimation on cubeRotation {
-        loops: Animation.Infinite
-        from: 0
-        to: 360
-        duration: 6000
-    }
-
-    SequentialAnimation {
-        id: mainAnimation
-        running: true
-        loops: Animation.Infinite
-        ScriptAction {
-            script: {
-                // Burst at time 0
-                psystem1.time = 0;
-                emitter1.burst(2000);
+    Timeline {
+        id: timeline
+        enabled: true
+        startFrame: 0
+        endFrame: 100
+        animations: [
+            TimelineAnimation {
+                id: timelineAnimation
+                running: true
+                duration: (100 - timeline.currentFrame) * 100 //10000
+                from: timeline.currentFrame
+                to: 100
             }
-        }
-        NumberAnimation {
-            target: psystem1
-            property: "time"
-            from: 3000
-            to: 0
-            duration: 6000
-            easing.type: Easing.OutQuad
-        }
-        ScriptAction {
-            script: {
-                emitter3.burst(500);
-            }
-        }
-        PauseAnimation {
-            duration: 500
-        }
-        ScriptAction {
-            script: {
-                emitter2.burst(50);
-            }
-        }
-        ParallelAnimation {
-            NumberAnimation {
-                target: qtCube
-                property: "opacity"
-                to: 0.9
-                duration: 1000
-            }
-            NumberAnimation {
+        ]
+        keyframeGroups: [
+            KeyframeGroup {
+                target: mainWindow
+                property: "cubeRotation"
+                Keyframe { frame: 0; value: 0 }
+                Keyframe { frame: 100; value: 360 }
+            },
+            KeyframeGroup {
                 target: psystem1
                 property: "time"
-                from: 0
-                to: 3000
-                duration: 1000
-                easing.type: Easing.InQuad
+                Keyframe { frame: 0; value: 3001 }
+                Keyframe { frame: 50; value: 0; easing.type: Easing.OutQuad }
+                Keyframe { frame: 55; value: 0 }
+                Keyframe { frame: 80; value: 3001 }
+            },
+            KeyframeGroup {
+                target: psystem2
+                property: "time"
+                Keyframe { frame: 50; value: 0; easing.type: Easing.InQuad }
+                Keyframe { frame: 80; value: 5000 }
+            },
+            KeyframeGroup {
+                target: qtCube
+                property: "opacity"
+                Keyframe { frame: 60; value: 0 }
+                Keyframe { frame: 70; value: 1.0 }
+                Keyframe { frame: 90; value: 1.0 }
+                Keyframe { frame: 100; value: 0.0 }
             }
-        }
-        PauseAnimation {
-            duration: 3000
-        }
-        NumberAnimation {
-            target: qtCube
-            property: "opacity"
-            to: 0.0
-            duration: 1000
-        }
+        ]
     }
 
     View3D {
@@ -228,6 +209,12 @@ Item {
                         magnitudeVariation: 0.4
                     }
                     lifeSpan: 3000
+                    emitBursts: [
+                        EmitBurst3D {
+                            time: 0
+                            amount: 2000
+                        }
+                    ]
                 }
 
                 Wander3D {
@@ -242,7 +229,8 @@ Item {
         ParticleSystem3D {
             id: psystem2
 
-            running: true
+            // We animate this system time manually
+            running: false
 
             ModelParticle3D {
                 id: smokeParticle
@@ -259,7 +247,8 @@ Item {
                 delegate: starParticleComponent
                 maxAmount: 500
                 color: "#ffff00"
-                colorVariation: Qt.vector4d(0, 0.2, 0, 0)
+                colorVariation: Qt.vector4d(0.4, 0.6, 0, 0)
+                unifiedColorVariation: true
                 fadeInEffect: ModelParticle3D.FadeScale
                 fadeOutEffect: ModelParticle3D.FadeOpacity
                 fadeOutDuration: 2000
@@ -280,6 +269,13 @@ Item {
                     magnitudeVariation: 0.5
                 }
                 lifeSpan: 4000
+                emitBursts: [
+                    EmitBurst3D {
+                        time: 400
+                        amount: 50
+                        duration: 600
+                    }
+                ]
             }
             ParticleEmitter3D {
                 id: emitter3
@@ -298,7 +294,69 @@ Item {
                     magnitudeVariation: 150
                 }
                 lifeSpan: 2500
+                emitBursts: [
+                    EmitBurst3D {
+                        time: 1
+                        amount: 500
+                    }
+                ]
             }
         }
+    }
+    Item {
+        id: toolbar
+        anchors.left: parent.left
+        anchors.leftMargin: 20
+        anchors.right: parent.right
+        anchors.rightMargin: 20
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 20
+        height: 60
+        Rectangle {
+            anchors.fill: parent
+            color: "#ffffff"
+            radius: 4
+            opacity: 0.2
+        }
+        Image {
+            id: playButton
+            anchors.left: parent.left
+            anchors.leftMargin: 14
+            anchors.verticalCenter: parent.verticalCenter
+            height: parent.height - 10
+            width: height
+            source: timelineAnimation.running ? "images/icon_pause.png" : "images/icon_play.png"
+            MouseArea {
+                anchors.fill: parent
+                anchors.margins: -10
+                onClicked: {
+                    // If we are close to end, start from the beginning
+                    if (timeline.currentFrame >= timeline.endFrame - 1.0)
+                        timeline.currentFrame = 0;
+
+                    timelineAnimation.running = !timelineAnimation.running;
+                }
+            }
+        }
+
+        CustomSlider {
+            id: sliderTimelineTime
+            anchors.left: playButton.right
+            anchors.leftMargin: 8
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            sliderValue: timeline.currentFrame
+            sliderEnabled: !timelineAnimation.running || timelineAnimation.paused
+            fromValue: 0.0
+            toValue: 100.0
+            onSliderValueChanged: timeline.currentFrame = sliderValue;
+        }
+    }
+
+    LoggingView {
+        anchors.bottom: toolbar.top
+        anchors.bottomMargin: 8
+        particleSystems: [psystem1, psystem2]
     }
 }

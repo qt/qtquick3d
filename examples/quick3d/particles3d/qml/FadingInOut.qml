@@ -139,7 +139,7 @@ Item {
             // Emitters, one per particle
             ParticleEmitter3D {
                 particle: particleNone
-                position: Qt.vector3d(300, 150, 0)
+                position: Qt.vector3d(300, 200, 0)
                 particleScaleVariation: 0.5
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
@@ -160,7 +160,7 @@ Item {
             }
             ParticleEmitter3D {
                 particle: particleOpacity
-                position: Qt.vector3d(300, 50, 0)
+                position: Qt.vector3d(300, 100, 0)
                 particleScaleVariation: 0.5
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
@@ -181,7 +181,7 @@ Item {
             }
             ParticleEmitter3D {
                 particle: particleScale
-                position: Qt.vector3d(300, -50, 0)
+                position: Qt.vector3d(300, 0, 0)
                 particleScaleVariation: 0.5
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
@@ -202,7 +202,7 @@ Item {
             }
             ParticleEmitter3D {
                 particle: particleScaleOpacity
-                position: Qt.vector3d(300, -150, 0)
+                position: Qt.vector3d(300, -100, 0)
                 particleScaleVariation: 0.5
                 particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
@@ -224,24 +224,8 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+    SettingsView {
+        CustomLabel {
             text: "Fade In Duration (ms)"
         }
         CustomSlider {
@@ -250,9 +234,7 @@ Item {
             fromValue: 0
             toValue: 4000
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Fade Out Duration (ms)"
         }
         CustomSlider {
@@ -261,5 +243,10 @@ Item {
             fromValue: 0
             toValue: 4000
         }
+    }
+
+    LoggingView {
+        anchors.bottom: parent.bottom
+        particleSystems: [psystem]
     }
 }

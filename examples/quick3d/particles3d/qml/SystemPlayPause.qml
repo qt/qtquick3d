@@ -221,28 +221,8 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-        MouseArea {
-            anchors.fill: parent
-            onPressed: {}
-        }
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+    SettingsView {
+        CustomLabel {
             text: "ParticleSystem seed: " + psystem.seed
         }
         CustomCheckBox {
@@ -250,10 +230,8 @@ Item {
             text: "Use random seed"
             checked: true
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
-            text: "Custom seed:"
+        CustomLabel {
+            text: "Custom seed"
             opacity: psystem.useRandomSeed ? 0.4 : 1.0
         }
         CustomSlider {

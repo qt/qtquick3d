@@ -225,24 +225,8 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+    SettingsView {
+        CustomLabel {
             text: "Attractor 1: Duration"
         }
         CustomSlider {
@@ -251,9 +235,7 @@ Item {
             fromValue: 1000
             toValue: 5000
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Attractor 1: Duration Variation"
         }
         CustomSlider {
@@ -271,9 +253,7 @@ Item {
             width: 1
             height: 40
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Attractor 2: Duration"
         }
         CustomSlider {
@@ -282,9 +262,7 @@ Item {
             fromValue: 1000
             toValue: 5000
         }
-        Text {
-            color: "#222840"
-            font.pointSize: 12
+        CustomLabel {
             text: "Attractor 2: Duration Variation"
         }
         CustomSlider {
@@ -298,5 +276,10 @@ Item {
             text: "Attractor 2: Hide at end"
             checked: false
         }
+    }
+
+    LoggingView {
+        anchors.bottom: parent.bottom
+        particleSystems: [psystem]
     }
 }

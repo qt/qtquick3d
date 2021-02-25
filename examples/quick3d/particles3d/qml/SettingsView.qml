@@ -49,67 +49,66 @@
 ****************************************************************************/
 
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
 
 Item {
     id: rootItem
-    property alias sliderValue: slider.value
-    property alias fromValue: slider.from
-    property alias toValue: slider.to
-    property alias sliderEnabled: slider.enabled
-    property alias sliderStepSize: slider.stepSize
-    readonly property bool highlight: slider.hovered || slider.pressed
+    property real showState: rootWindow.showSettingsView ? 1.0 : 0.0
 
-    width: 260
-    height: rowLayout.height
+    default property alias content: settingsArea.children
 
-    MouseArea {
-        anchors.fill: parent
-        onPressed: {}
+    width: settingsArea.width
+    height: settingsArea.height
+    x: parent.width - showState * width + (1 - showState) * 30
+
+    Behavior on showState {
+        NumberAnimation {
+            duration: 800
+            easing.type: Easing.InOutQuad
+        }
     }
 
-    RowLayout {
-        id: rowLayout
-        width: parent.width
-        Slider {
-            id: slider
-            from: fromValue
-            to: toValue
-            stepSize: 0.01
-            Layout.minimumWidth: 200
-            Layout.fillWidth: true
-            background: Rectangle {
-                x: slider.leftPadding
-                y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                implicitWidth: 200
-                implicitHeight: 2
-                width: slider.availableWidth
-                height: implicitHeight
-                color: "#606060"
-                Rectangle {
-                    width: slider.visualPosition * parent.width
-                    height: parent.height
-                    color: "#41cd52"
-                }
-            }
-            handle: Rectangle {
-                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
-                y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                implicitWidth: 14
-                implicitHeight: 14
-                radius: width/2
-                color: slider.pressed ? "#ffffff" : "#d0d0d0"
-                border.color: "#d0d0d0"
+    // Background
+    Rectangle {
+        anchors.fill: settingsArea
+        anchors.margins: -10
+        color: "#80404040"
+        border.color: "#000000"
+        border.width: 1
+        opacity: 0.8
+        MouseArea {
+            anchors.fill: parent
+            onPressed: {}
+        }
+    }
+
+    Item {
+        anchors.right: parent.left
+        anchors.rightMargin: 30
+        anchors.top: parent.top
+        width: rootWindow.iconSize
+        height: width
+        opacity: showState * 0.6 + 0.4
+        visible: opacity
+        Image {
+            anchors.centerIn: parent
+            width: parent.width * 0.3
+            height: width
+            source: "images/icon_settings.png"
+            mipmap: true
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                rootWindow.showSettingsView = !rootWindow.showSettingsView;
             }
         }
-        Label {
-            id: valueText
-            text: slider.value.toFixed(2)
-            color: "#f0f0f0"
-            font.pointSize: 10
-            font.bold: true
-            Layout.minimumWidth: 60
-        }
+    }
+
+    Column {
+        id: settingsArea
+        anchors.top: parent.top
+        anchors.topMargin: 20
+        anchors.right: parent.right
+        anchors.rightMargin: 20
     }
 }
