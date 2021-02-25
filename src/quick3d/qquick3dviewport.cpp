@@ -89,6 +89,14 @@ QT_BEGIN_NAMESPACE
     graphics hardware. If this is the case, the \l renderMode property can be used to
     switch how the View3D is rendered into the window.
 
+    A View3D with the default Offscreen \l renderMode is implicitly a
+    \l{QSGTextureProvider}{texture provider} as well. This means that \l
+    ShaderEffect or \l{QtQuick3D::Texture::sourceItem}{Texture.sourceItem} can reference
+    the View3D directly as long as all items live within the same
+    \l{QQuickWindow}{window}. Like with any other \l Item, it is also possible
+    to switch the View3D, or one of its ancestors, into a texture-based
+    \l{QtQuick::Item::layer.enabled}{item layer}.
+
     \sa {Qt Quick 3D - View3D example}
 */
 
