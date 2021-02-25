@@ -229,6 +229,7 @@ private:
     QMetaObject::Connection m_textureDataConnection;
     QQuick3DTextureData *m_textureData = nullptr;
     bool m_generateMipmaps = false;
+    QMetaMethod m_updateSlot;
 };
 
 QT_END_NAMESPACE
