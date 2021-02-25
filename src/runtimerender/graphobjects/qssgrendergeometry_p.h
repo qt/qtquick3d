@@ -45,7 +45,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 #include <QtCore/qbytearray.h>
 

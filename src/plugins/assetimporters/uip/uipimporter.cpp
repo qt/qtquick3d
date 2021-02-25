@@ -34,7 +34,7 @@
 #include "datamodelparser.h"
 #include "keyframegroupgenerator.h"
 #include "uniqueidmapper.h"
-#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
+#include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 
 #include <QBuffer>
 #include <QJsonDocument>
@@ -207,6 +207,11 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
         *generatedFiles += m_generatedFiles;
 
     return errorString;
+}
+
+QQuick3DNode *UipImporter::import(QQuick3DNode &, const QSSGSceneDesc::Scene &)
+{
+    return nullptr;
 }
 
 void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabLevel, bool isInRootLevel, bool processSiblings)

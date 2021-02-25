@@ -23,6 +23,7 @@ qt_internal_add_plugin(UipAssetImporterPlugin
         Qt::Core
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
+        Qt::Quick3DAssetUtilsPrivate
 )
 
 # Resources:

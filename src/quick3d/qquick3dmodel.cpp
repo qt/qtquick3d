@@ -628,6 +628,9 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 QString QQuick3DModel::translateSource()
 {
     QString fragment;
+    // TODO:
+    if (m_source.toString().startsWith(u'?'))
+        return m_source.toString();
     if (m_source.hasFragment()) {
         // Check if this is an index, or primitive
         bool isNumber = false;

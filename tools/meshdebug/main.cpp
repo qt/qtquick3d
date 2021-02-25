@@ -32,7 +32,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QDebug>
 
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 using Qt::hex;
 

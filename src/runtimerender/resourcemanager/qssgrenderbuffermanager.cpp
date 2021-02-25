@@ -33,7 +33,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
-#include <QtQuick3DAssetImport/private/qssgmeshbvhbuilder_p.h>
+#include <QtQuick3DUtils/private/qssgmeshbvhbuilder_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
 #include <QtQuick/QSGTexture>
@@ -50,6 +50,15 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 
 QT_BEGIN_NAMESPACE
+
+struct DeferredMesh
+{
+    QSSGRenderPath path;
+    QSSGMesh::Mesh mesh;
+};
+
+using DeferredMeshes = QList<DeferredMesh>;
+Q_GLOBAL_STATIC(DeferredMeshes, g_deferredMeshes)
 
 namespace {
 struct PrimitiveEntry
@@ -84,6 +93,13 @@ QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderCont
     context = inRenderContext;
     shaderCache = inShaderContext;
     inputStreamFactory = inInputStreamFactory;
+
+    for (const auto &mesh : qAsConst(*g_deferredMeshes)) {
+        const auto ret = createRenderMesh(mesh.mesh);
+        meshMap.insert(mesh.path, ret);
+    }
+
+    g_deferredMeshes->clear();
 }
 
 QSSGBufferManager::~QSSGBufferManager()
@@ -1225,6 +1241,16 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
         releaseMesh(meshPath);
         modelRefMap.remove(meshPath);
     }
+}
+
+bool QSSGBufferManager::registerMeshData(const QSSGRenderPath &renderPath, const QSSGMesh::Mesh &meshData)
+{
+    if (!meshData.isValid())
+        return false;
+
+    g_deferredMeshes->push_back({renderPath, meshData});
+
+    return true;
 }
 
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)

@@ -52,6 +52,8 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGAssetImporter;
+class QQuick3DNode;
+namespace QSSGSceneDesc { struct Scene; }
 
 struct QSSGAssetImporterPluginInfo
 {
@@ -85,6 +87,10 @@ public:
                            const QDir &outputPath,
                            const QVariantMap &options = QVariantMap(),
                            QString *error = nullptr);
+    ImportState importFile(const QUrl &url,
+                           QSSGSceneDesc::Scene &scene,
+                           QString *error = nullptr);
+    QQuick3DNode *importScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene);
     QVariantMap getOptionsForFile(const QString &filename);
     QHash<QString, QVariantMap> getAllOptions() const;
     QHash<QString, QStringList> getSupportedExtensions() const;

@@ -40,13 +40,13 @@
 //
 // We mean it.
 //
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 #include <QtQuick3DUtils/private/qssgmeshbvh_p.h>
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DASSETIMPORT_EXPORT QSSGMeshBVHBuilder
+class Q_QUICK3DUTILS_EXPORT QSSGMeshBVHBuilder
 {
 public:
     QSSGMeshBVHBuilder(const QSSGMesh::Mesh &mesh);

@@ -31,7 +31,7 @@
 #define ASSIMPIMPORTER_H
 
 #include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
-#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
+#include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 
 #include <QtCore/QVector>
 #include <QtCore/QList>
@@ -42,6 +42,8 @@
 #include <QtCore/QSet>
 #include <QtCore/QVariant>
 #include <QtCore/QCborStreamWriter>
+
+#include "assimputils.h"
 
 #include <assimp/matrix4x4.h>
 #include <assimp/material.h>
@@ -86,25 +88,19 @@ public:
     const QVariantMap importOptions() const override;
     const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options,
                          QStringList *generatedFiles) override;
+    QString import(const QUrl &sourceFile, const QVariantMap &options, QSSGSceneDesc::Scene &scene) override;
+    QQuick3DNode *import(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene) override;
 
 private:
-    struct SubsetEntryData {
-        QString name;
-        int indexLength;
-        int indexOffset;
-        quint32 lightmapWidth;
-        quint32 lightmapHeight;
-    };
-
     void writeHeader(QTextStream &output);
     void processNode(aiNode *node, QTextStream &output, int tabLevel = 0);
     void generateModelProperties(aiNode *modelNode, QVector<bool> &visited, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel);
     void generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection = nullptr, bool skipScaling = false);
-    QString generateMeshFile(aiNode *node, QFile &file, const QVector<aiMesh *> &meshes);
+    QString generateMeshFile(aiNode *node, QFile &file, const AssimpUtils::MeshList &meshes);
     void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
-    QVector<QString> generateMorphing(aiNode *node, const QVector<aiMesh *> &meshes, QTextStream &output, int tabLevel);
+    QVector<QString> generateMorphing(aiNode *node, const AssimpUtils::MeshList &meshes, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
     void generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx);
     void generateSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
@@ -143,7 +139,7 @@ private:
 
     QHash<QString, aiNode *> m_bones;
     QHash<aiNode *, quint32> m_skeletonIdxMap;
-    QHash<QString, qint32> m_boneIdxMap;
+    AssimpUtils::BoneIndexMap m_boneIdxMap;
     QVector<QString> m_skeletonIds;
     QVector<qint32> m_numBonesInSkeleton;
     QSet<aiNode *> m_generatedBones;

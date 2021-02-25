@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,8 +27,10 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGASSETIMPORTER_H
-#define QSSGASSETIMPORTER_H
+#ifndef QSSGRTASSET_H
+#define QSSGRTASSET_H
+
+#include "qtquick3drtassetimport_p.h"
 
 //
 //  W A R N I N G
@@ -41,41 +43,23 @@
 // We mean it.
 //
 
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
-
-#include <QtCore/QVariantMap>
-#include <QtCore/QObject>
-#include <QtCore/QDir>
-#include <QtCore/QFile>
-
 QT_BEGIN_NAMESPACE
 
-class QQuick3DNode;
+class QUrl;
 
 namespace QSSGSceneDesc {
 struct Scene;
 }
 
-class Q_QUICK3DASSETIMPORT_EXPORT QSSGAssetImporter : public QObject
+class Q_QUICK3DRTASSETIMPORT_EXPORT QSSGRuntimeAssetInterface
 {
-    Q_OBJECT
 public:
-    virtual const QString name() const = 0;
-    virtual const QStringList inputExtensions() const = 0;
-    virtual const QString outputExtension() const = 0;
-    virtual const QString type() const = 0;
-    virtual const QVariantMap importOptions() const = 0;
-    virtual const QString typeDescription() const = 0;
-    virtual const QString import(const QString &sourceFile,
-                                 const QDir &savePath,
-                                 const QVariantMap &options,
-                                 QStringList *generatedFiles = nullptr) = 0;
-    virtual QString import(const QUrl &url,
-                           const QVariantMap &options,
-                           QSSGSceneDesc::Scene &scene) = 0;
-    virtual QQuick3DNode *import(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene) = 0;
+    virtual QSSGSceneDesc::Scene *load(const QUrl &url) = 0;
+
+protected:
+    virtual QStringList supportedFormats() = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSSGASSETIMPORTER_H
+#endif // QSSGRTASSET_H

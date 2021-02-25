@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSGASSETIMPORTER_H
-#define QSSGASSETIMPORTER_H
+#ifndef QTQUICK3DASSETUTILSGLOBAL_P_H
+#define QTQUICK3DASSETUTILSGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -41,41 +41,22 @@
 // We mean it.
 //
 
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
-
-#include <QtCore/QVariantMap>
-#include <QtCore/QObject>
-#include <QtCore/QDir>
-#include <QtCore/QFile>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DNode;
+#ifndef QT_STATIC
+#if defined(QT_BUILD_QUICK3DASSETUTILS_LIB)
+#define Q_QUICK3DASSETUTILS_EXPORT Q_DECL_EXPORT
+#else
+#define Q_QUICK3DASSETUTILS_EXPORT Q_DECL_IMPORT
+#endif
+#else
+#define Q_QUICK3DASSETUTILS_EXPORT
+#endif
 
-namespace QSSGSceneDesc {
-struct Scene;
-}
-
-class Q_QUICK3DASSETIMPORT_EXPORT QSSGAssetImporter : public QObject
-{
-    Q_OBJECT
-public:
-    virtual const QString name() const = 0;
-    virtual const QStringList inputExtensions() const = 0;
-    virtual const QString outputExtension() const = 0;
-    virtual const QString type() const = 0;
-    virtual const QVariantMap importOptions() const = 0;
-    virtual const QString typeDescription() const = 0;
-    virtual const QString import(const QString &sourceFile,
-                                 const QDir &savePath,
-                                 const QVariantMap &options,
-                                 QStringList *generatedFiles = nullptr) = 0;
-    virtual QString import(const QUrl &url,
-                           const QVariantMap &options,
-                           QSSGSceneDesc::Scene &scene) = 0;
-    virtual QQuick3DNode *import(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene) = 0;
-};
+#define Q_QUICK3DASSETUTILS_EXPORT_PRIVATE_EXPORT Q_QUICK3DASSETUTILS_EXPORT
 
 QT_END_NAMESPACE
 
-#endif // QSSGASSETIMPORTER_H
+#endif // QTQUICK3DASSETUTILSGLOBAL_P_H

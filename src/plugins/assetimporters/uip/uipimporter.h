@@ -55,6 +55,7 @@ public:
     const QString typeDescription() const override;
     const QVariantMap importOptions() const override;
     const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles) override;
+    QQuick3DNode *import(QQuick3DNode &, const QSSGSceneDesc::Scene &) override;
 
 private:
     QString processUipPresentation(UipPresentation *presentation, const QString &ouputFilePath);
@@ -93,6 +94,10 @@ private:
     bool m_createProjectWrapper = false;
     bool m_createIndividualLayers = false;
     float m_fps = 60.f;
+
+    // QSSGAssetImporter interface
+public:
+    QString import(const QUrl &, const QVariantMap &, QSSGSceneDesc::Scene &) override { return nullptr; }
 };
 
 QT_END_NAMESPACE

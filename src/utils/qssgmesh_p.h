@@ -41,7 +41,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
@@ -59,7 +59,7 @@ struct AssetVertexEntry;
 struct AssetMeshSubset;
 struct RuntimeMeshData;
 
-class Q_QUICK3DASSETIMPORT_EXPORT Mesh
+class Q_QUICK3DUTILS_EXPORT Mesh
 {
 public:
     enum class DrawMode {
@@ -165,7 +165,7 @@ private:
     friend struct MeshInternal;
 };
 
-struct Q_QUICK3DASSETIMPORT_EXPORT AssetVertexEntry // for asset importer plugins (Assimp, FBX)
+struct Q_QUICK3DUTILS_EXPORT AssetVertexEntry // for asset importer plugins (Assimp, FBX)
 {
     QByteArray name;
     QByteArray data;
@@ -173,7 +173,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT AssetVertexEntry // for asset importer plugin
     quint32 componentCount = 0;
 };
 
-struct Q_QUICK3DASSETIMPORT_EXPORT AssetMeshSubset // for asset importer plugins (Assimp, FBX)
+struct Q_QUICK3DUTILS_EXPORT AssetMeshSubset // for asset importer plugins (Assimp, FBX)
 {
     QString name;
     quint32 count = 0;
@@ -183,7 +183,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT AssetMeshSubset // for asset importer plugins
     quint32 lightmapHeight = 0;
 };
 
-struct Q_QUICK3DASSETIMPORT_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeometry, QSSGRenderGeometry)
+struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeometry, QSSGRenderGeometry)
 {
     struct Attribute {
         enum Semantic {
@@ -250,7 +250,7 @@ struct Q_QUICK3DASSETIMPORT_EXPORT RuntimeMeshData // for custom geometry (QQuic
     int m_stride = 0;
 };
 
-struct Q_QUICK3DASSETIMPORT_EXPORT MeshInternal
+struct Q_QUICK3DUTILS_EXPORT MeshInternal
 {
     struct MultiMeshInfo {
         quint32 fileId = 0;

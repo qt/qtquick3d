@@ -41,7 +41,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
+#include <QtQuick3DAssetUtils/private/qtquick3dassetutilsglobal_p.h>
 
 #include <QString>
 #include <QColor>
@@ -49,6 +49,10 @@
 #include <QTextStream>
 
 QT_BEGIN_NAMESPACE
+
+namespace QSSGSceneDesc {
+struct Scene;
+}
 
 namespace QSSGQmlUtilities {
 
@@ -86,15 +90,17 @@ private:
 
 };
 
-QString Q_QUICK3DASSETIMPORT_EXPORT insertTabs(int n);
-QString Q_QUICK3DASSETIMPORT_EXPORT qmlComponentName(const QString &name);
-QString Q_QUICK3DASSETIMPORT_EXPORT colorToQml(const QColor &color);
-QString Q_QUICK3DASSETIMPORT_EXPORT variantToQml(const QVariant &variant);
-QString Q_QUICK3DASSETIMPORT_EXPORT sanitizeQmlId(const QString &id);
-QString Q_QUICK3DASSETIMPORT_EXPORT sanitizeQmlSourcePath(const QString &source, bool removeParentDirectory = false);
-QString Q_QUICK3DASSETIMPORT_EXPORT stripParentDirectory(const QString &filePath);
+QString Q_QUICK3DASSETUTILS_EXPORT insertTabs(int n);
+QString Q_QUICK3DASSETUTILS_EXPORT qmlComponentName(const QString &name);
+QString Q_QUICK3DASSETUTILS_EXPORT colorToQml(const QColor &color);
+QString Q_QUICK3DASSETUTILS_EXPORT variantToQml(const QVariant &variant);
+QString Q_QUICK3DASSETUTILS_EXPORT sanitizeQmlId(const QString &id);
+QString Q_QUICK3DASSETUTILS_EXPORT sanitizeQmlSourcePath(const QString &source, bool removeParentDirectory = false);
+QString Q_QUICK3DASSETUTILS_EXPORT stripParentDirectory(const QString &filePath);
 
-void Q_QUICK3DASSETIMPORT_EXPORT writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value);
+void Q_QUICK3DASSETUTILS_EXPORT writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value);
+
+void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream);
 
 }
 

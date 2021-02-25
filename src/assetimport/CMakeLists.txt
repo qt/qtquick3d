@@ -8,8 +8,6 @@ qt_internal_add_module(Quick3DAssetImport
     PLUGIN_TYPES assetimporters
     SOURCES
         ../3rdparty/xatlas/xatlas.cpp ../3rdparty/xatlas/xatlas.h
-        qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
-        qssgmesh.cpp qssgmesh_p.h
         qssglightmapuvgenerator.cpp qssglightmapuvgenerator_p.h
         qtquick3dassetimportglobal_p.h
     DEFINES
@@ -42,7 +40,6 @@ qt_internal_extend_target(Quick3DAssetImport CONDITION (android_app OR NOT ANDRO
         qssgassetimporterfactory.cpp qssgassetimporterfactory_p.h
         qssgassetimporterplugin_p.h
         qssgassetimportmanager.cpp qssgassetimportmanager_p.h
-        qssgqmlutilities.cpp qssgqmlutilities_p.h
 )
 
 # Silence warnings in 3rdparty code

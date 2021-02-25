@@ -32,7 +32,7 @@
 #include "datamodelparser.h"
 #include "propertymap.h"
 #include "uniqueidmapper.h"
-#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
+#include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 
 QT_BEGIN_NAMESPACE
 

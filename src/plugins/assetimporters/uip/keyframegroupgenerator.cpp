@@ -29,7 +29,7 @@
 
 #include "keyframegroupgenerator.h"
 
-#include <QtQuick3DAssetImport/private/qssgqmlutilities_p.h>
+#include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 
 #include "propertymap.h"
 

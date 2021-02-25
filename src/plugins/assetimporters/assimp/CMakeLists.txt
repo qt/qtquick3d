@@ -17,12 +17,16 @@ qt_internal_add_plugin(AssimpImporterPlugin
     TYPE assetimporters
     EXCEPTIONS # special case
     SOURCES
-        assimpimporter.cpp assimpimporter.h
+        assimputils.cpp assimputils.h
+        assimpimporter.cpp assimpimporter_rt.cpp assimpimporter.h
         assimpimporterplugin.cpp assimpimporterplugin.h
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
+        Qt::Quick3DAssetUtilsPrivate
+        Qt::Quick3DPrivate
+        Qt::Quick3DRuntimeRenderPrivate
 )
 
 # Resources:

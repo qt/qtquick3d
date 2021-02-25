@@ -28,7 +28,7 @@
 ****************************************************************************/
 
 #include "qssgrhicontext_p.h"
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtCore/QVariant>

@@ -66,7 +66,6 @@ qt_internal_add_module(Quick3DRuntimeRender
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
-        Qt::Quick3DAssetImportPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
         Qt::ShaderToolsPrivate
@@ -74,11 +73,9 @@ qt_internal_add_module(Quick3DRuntimeRender
         Qt::Core
         Qt::Gui
         Qt::Quick
-        Qt::Quick3DAssetImport
         Qt::Quick3DUtils
         Qt::ShaderTools
     PRIVATE_MODULE_INTERFACE
-        Qt::Quick3DAssetImportPrivate
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
         Qt::ShaderToolsPrivate

@@ -15,6 +15,8 @@ qt_internal_add_module(Quick3DUtils
         qssgplane.cpp qssgplane_p.h
         qssgrenderbasetypes_p.h
         qssgutils.cpp qssgutils_p.h
+        qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
+        qssgmesh.cpp qssgmesh_p.h
         qtquick3dutilsglobal_p.h
     DEFINES
         QT_BUILD_QUICK3DUTILS_LIB

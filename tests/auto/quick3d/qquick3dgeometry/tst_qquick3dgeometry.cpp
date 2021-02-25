@@ -33,7 +33,7 @@
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 class tst_QQuick3DGeometry : public QObject
 {

@@ -48,9 +48,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
-#include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
-
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -153,6 +151,8 @@ public:
 
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();
     void commitBufferResourceUpdates();
+
+    static bool registerMeshData(const QSSGRenderPath &renderPath, const QSSGMesh::Mesh &meshData);
 
 private:
     bool createRhiTexture(QSSGRenderImageTexture &texture,

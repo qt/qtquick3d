@@ -11,6 +11,7 @@ qt_internal_add_test(qquick3dgeometry
         Qt::Quick3D
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
+        Qt::Quick3DUtilsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qquick3dgeometry.pro:<TRUE>:

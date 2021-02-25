@@ -42,7 +42,7 @@
 //
 
 #include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
-#include <QtQuick3DAssetImport/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 QT_BEGIN_NAMESPACE
 
