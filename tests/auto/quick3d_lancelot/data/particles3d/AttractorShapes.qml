@@ -209,13 +209,9 @@ Item {
             Attractor3D {
                 particles: [particleGreen]
                 // Attract into a shape
-                shapeNode: ShapeNode3D {
-                    id: targetNode
-                    position: targetSphere.position
-                    shape: ParticleShape3D {
-                        type: ParticleShape3D.Sphere
-                        fill: false
-                    }
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    fill: false
                 }
                 duration: 3000
                 durationVariation: 500
