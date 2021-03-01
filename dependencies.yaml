@@ -3,7 +3,7 @@ dependencies:
     ref: e14ccf05534bbc2984b15f7f255adbffc4c7f769
     required: true
   ../qtdeclarative:
-    ref: 373abd08994f69f8215d74977e74253de6ff8cef
+    ref: 75fc3d1cd4347ae6226a2baa99b861de65b62a5e
     required: true
   ../qtshadertools:
     ref: 2cdb7f95229eeec1f55c1be305b7267d14b02d39
