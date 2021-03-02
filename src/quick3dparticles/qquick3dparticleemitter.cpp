@@ -150,7 +150,7 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem* system)
 }
 
 /*!
-    \qmlproperty int ParticleEmitter3D::emitRate
+    \qmlproperty real ParticleEmitter3D::emitRate
 
     This property defines the constant emitting rate in particles per second.
     For example, if the emitRate is 120 and system animates at 60 frames per
@@ -158,14 +158,14 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem* system)
 
     The default value is \c 0.
 */
-int QQuick3DParticleEmitter::emitRate() const
+float QQuick3DParticleEmitter::emitRate() const
 {
     return m_emitRate;
 }
 
-void QQuick3DParticleEmitter::setEmitRate(int emitRate)
+void QQuick3DParticleEmitter::setEmitRate(float emitRate)
 {
-    if (m_emitRate == emitRate)
+    if (qFuzzyCompare(m_emitRate, emitRate))
         return;
 
     if (m_emitRate == 0 && m_system) {
@@ -671,21 +671,22 @@ int QQuick3DParticleEmitter::getEmitAmount()
     if (!m_enabled)
         return 0;
 
-    if (m_emitRate <= 0)
+    if (m_emitRate <= 0.0f)
         return 0;
 
     float timeChange = m_system->timeInt - m_prevEmitTime;
     float emitAmountF = timeChange / (1000.0f / m_emitRate);
     int emitAmount = floorf(emitAmountF);
     // Store the partly unemitted particles
-    if (emitAmount > 0)
+    // When emitAmount = 0, we just let the timeChange grow.
+    if (emitAmount > 0) {
         m_unemittedF += (emitAmountF - emitAmount);
-
-    // When unemitted grow to a full particle, emit it
-    // This way if emit rate is 140 emitAmounts can be e.g. 2,2,3,2,2,3 etc.
-    if (m_unemittedF >= 1.0) {
-        emitAmount += m_unemittedF;
-        m_unemittedF--;
+        // When unemitted grow to a full particle, emit it
+        // This way if emit rate is 140 emitAmounts can be e.g. 2,2,3,2,2,3 etc.
+        if (m_unemittedF >= 1.0f) {
+            emitAmount++;
+            m_unemittedF--;
+        }
     }
     return emitAmount;
 }
