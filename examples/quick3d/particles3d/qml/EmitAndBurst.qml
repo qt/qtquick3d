@@ -162,19 +162,19 @@ Item {
                         directionVariation: Qt.vector3d(20, 0, 20)
                     }
                     lifeSpan: 3000
-                    emitRate: 100
+                    emitRate: 0.1
                     SequentialAnimation on emitRate {
                         running: true
                         loops: Animation.Infinite
                         NumberAnimation {
-                            duration: 1000
+                            duration: 2000
                             easing.type: Easing.InOutQuad
                             to: 100
                         }
                         NumberAnimation {
-                            duration: 1000
+                            duration: 2000
                             easing.type: Easing.InOutQuad
-                            to: 5
+                            to: 0.1
                         }
                     }
                 }

@@ -59,7 +59,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(QQuick3DParticle *particle READ particle WRITE setParticle NOTIFY particleChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(QQuick3DParticleShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
-    Q_PROPERTY(int emitRate READ emitRate WRITE setEmitRate NOTIFY emitRateChanged)
+    Q_PROPERTY(float emitRate READ emitRate WRITE setEmitRate NOTIFY emitRateChanged)
     Q_PROPERTY(int lifeSpan READ lifeSpan WRITE setLifeSpan NOTIFY lifeSpanChanged)
     Q_PROPERTY(int lifeSpanVariation READ lifeSpanVariation WRITE setLifeSpanVariation NOTIFY lifeSpanVariationChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
@@ -78,7 +78,7 @@ public:
     bool enabled() const;
     QQuick3DParticleDirection* velocity() const;
     QQuick3DParticleSystem* system() const;
-    int emitRate() const;
+    float emitRate() const;
     float particleScale() const;
     float particleEndScale() const;
     float particleScaleVariation() const;
@@ -99,7 +99,7 @@ public Q_SLOTS:
     void setEnabled(bool enabled);
     void setVelocity(QQuick3DParticleDirection *velocity);
     void setSystem(QQuick3DParticleSystem* system);
-    void setEmitRate(int emitRate);
+    void setEmitRate(float emitRate);
     void setParticleScale(float particleScale);
     void setParticleEndScale(float particleEndScale);
     void setParticleScaleVariation(float particleScaleVariation);
@@ -148,15 +148,15 @@ protected:
 
     QQuick3DParticleDirection *m_velocity = nullptr;
     QQuick3DParticleSystem* m_system = nullptr;
-    int m_emitRate = 0;
+    float m_emitRate = 0.0f;
     // Time in ms when emitting last time happened
     int m_prevEmitTime = 0;
-    float m_particleScale = 1.0;
-    float m_particleEndScale = -1.0;
-    float m_particleScaleVariation = 0.0;
+    float m_particleScale = 1.0f;
+    float m_particleEndScale = -1.0f;
+    float m_particleScaleVariation = 0.0f;
     int m_lifeSpan = 1000;
     int m_lifeSpanVariation = 0;
-    float m_unemittedF = 0;
+    float m_unemittedF = 0.0f;
     QQuick3DParticle *m_particle = nullptr;
     QQuick3DParticleShape *m_shape = nullptr;
     QVector3D m_particleRotation;
