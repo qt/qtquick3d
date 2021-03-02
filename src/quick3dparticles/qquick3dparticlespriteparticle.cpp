@@ -61,8 +61,10 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 {
     for (const auto &connection : qAsConst(m_connections))
         QObject::disconnect(connection);
-    m_particleUpdateNode->m_spriteParticle = nullptr;
-    delete m_particleUpdateNode;
+    if (m_particleUpdateNode) {
+        m_particleUpdateNode->m_spriteParticle = nullptr;
+        delete m_particleUpdateNode;
+    }
 }
 
 /*!
