@@ -1047,7 +1047,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
                 qCDebug(lcPick) << event->type() << "created ViewportTransformHelper on" << targetDA;
             }
         } else if (event->type() != QEvent::HoverMove) {
-            qCWarning(lcPick) << subsceneRoot << "didn't want" << event;
+            qCDebug(lcPick) << subsceneRoot << "didn't want" << event;
         }
         event->setAccepted(false); // reject implicit grab and let it keep propagating
     }
