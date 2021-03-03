@@ -64,14 +64,11 @@ Window {
         id: view
         anchors.fill: parent
 
-        //! [environment]
         environment: SceneEnvironment {
             clearColor: "black"
             backgroundMode: SceneEnvironment.Color
         }
-        //! [environment]
 
-        //! [camera]
         PerspectiveCamera {
             position: Qt.vector3d(0, 0, 300)
             clipNear: 1.0
@@ -81,15 +78,12 @@ Window {
                 duration: 10 * 1000
             }
         }
-        //! [camera]
 
-        //! [light]
         DirectionalLight {
             eulerRotation.x: -30
             eulerRotation.y: -70
             ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
         }
-        //! [light]
 
         //! [randomInstancing]
         RandomInstancing {

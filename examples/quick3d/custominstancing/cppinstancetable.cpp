@@ -130,13 +130,11 @@ static QVector<float> generateNoiseTable(int dimension, int randomSeed)
 
 CppInstanceTable::CppInstanceTable(QQuick3DObject *parent) : QQuick3DInstancing(parent)
 {
-    m_generator = new QRandomGenerator;
     m_randomSeed = QRandomGenerator::global()->generate();
 }
 
 CppInstanceTable::~CppInstanceTable()
 {
-    delete m_generator;
 }
 
 int CppInstanceTable::gridSize() const
@@ -160,7 +158,7 @@ void CppInstanceTable::setGridSize(int gridSize)
         return;
 
     m_gridSize = gridSize;
-    emit gridSizeChanged(m_gridSize);
+    emit gridSizeChanged();
     markDirty();
     m_dirty = true;
 }
@@ -171,7 +169,7 @@ void CppInstanceTable::setGridSpacing(float gridSpacing)
         return;
 
     m_gridSpacing = gridSpacing;
-    emit gridSpacingChanged(m_gridSpacing);
+    emit gridSpacingChanged();
     markDirty();
     m_dirty = true;
 }
@@ -182,63 +180,92 @@ void CppInstanceTable::setRandomSeed(int randomSeed)
         return;
 
     m_randomSeed = randomSeed;
-    emit randomSeedChanged(m_randomSeed);
+    emit randomSeedChanged();
     markDirty();
     m_dirty = true;
 }
 
+class BlockTable
+{
+public:
+    BlockTable(int dimension, int randomSeed) : gridSize(dimension), seaLevel(gridSize / 8)
+    {
+        noiseTable = generateNoiseTable(gridSize, randomSeed);
+        lowestBlock.resize(gridSize * gridSize);
+
+        for (int i = 0; i < gridSize; ++i) {
+            for (int j = 0; j < gridSize; ++j) {
+                // optimization: skip blocks that are obscured by neighbours
+                int lowestVisible;
+                if (i == 0 || j == 0 || i == gridSize - 1 || j == gridSize - 1) {
+                    lowestVisible = 0;
+                } else {
+                    lowestVisible = terrainHeight(i, j);
+                    lowestVisible = qMin(lowestVisible, terrainHeight(i - 1, j));
+                    lowestVisible = qMin(lowestVisible, terrainHeight(i, j - 1));
+                    lowestVisible = qMin(lowestVisible, terrainHeight(i + 1, j));
+                    lowestVisible = qMin(lowestVisible, terrainHeight(i, j + 1));
+                    lowestVisible = qMax(lowestVisible, seaLevel);
+                }
+                lowestBlock[idx(i, j)] = lowestVisible;
+            }
+        }
+    }
+
+    QColor getBlockColor(int i, int j, int k) const
+    {
+        const int maxHeight = gridSize / 2;
+        int snowLine = maxHeight * 4 / 5 - QRandomGenerator::global()->bounded(maxHeight / 5);
+        int treeLine = maxHeight * 3 / 5 - QRandomGenerator::global()->bounded(maxHeight / 5);
+        if (k > terrainHeight(i, j)) {
+            return Qt::blue;
+        } else if (k > snowLine) {
+            return Qt::white;
+        } else if (k > treeLine) {
+            return Qt::darkGray;
+        } else {
+            return QColor::fromHsvF(k * 0.7 / maxHeight, 0.7, 0.5, 1.0);
+        }
+    }
+    bool isWaterSurface(int i, int j, int k) const { return k == seaLevel && k > terrainHeight(i, j); }
+    int lowestVisible(int i, int j) { return lowestBlock[idx(i, j)]; }
+    int highestBlock(int i, int j) { return qMax(seaLevel, terrainHeight(i, j)); }
+
+private:
+    int idx(int i, int j) const { return i + j * gridSize; }
+    int terrainHeight(int i, int j) const
+    {
+        const int maxHeight = gridSize / 2;
+        return maxHeight * noiseTable[idx(i, j)];
+    }
+
+    QVector<float> noiseTable;
+    QVector<int> lowestBlock;
+    int gridSize;
+    int seaLevel;
+};
+
+//! [getInstanceBuffer]
 QByteArray CppInstanceTable::getInstanceBuffer(int *instanceCount)
 {
     if (m_dirty) {
-        m_generator->seed(m_randomSeed);
-        const int maxHeight = m_gridSize/2;
-
-        auto noiseMap = generateNoiseTable(m_gridSize, m_randomSeed);
-        int seaLevel = maxHeight / 4;
-
+        BlockTable blocks(m_gridSize, m_randomSeed);
         m_instanceData.resize(0);
 
-        auto getHeight = [&noiseMap, maxHeight, this](int x, int y) -> int { return maxHeight * noiseMap[x + y*m_gridSize]; };
+        auto idxToPos = [this](int i) -> float { return m_gridSpacing * (i - m_gridSize / 2); };
+
         int instanceNumber = 0;
-        for (int blockX = 0; blockX < m_gridSize; ++blockX) {
-            float xPos = m_gridSpacing * (blockX - m_gridSize/2);
-            for (int blockY = 0; blockY < m_gridSize; ++blockY) {
-                float zPos = m_gridSpacing * (blockY - m_gridSize/2);
-                int terrainHeight = getHeight(blockX, blockY);
-                int snowLine = maxHeight*4/5 - QRandomGenerator::global()->bounded(maxHeight/5);
-                int treeLine = maxHeight*3/5 - QRandomGenerator::global()->bounded(maxHeight/5);
-
-                // optimization: skip blocks that are obscured by neighbours
-                int lowestVisible;
-                if (blockX == 0 || blockY == 0 || blockX == m_gridSize - 1 || blockY == m_gridSize - 1) {
-                    lowestVisible = 0;
-                } else if (terrainHeight <= seaLevel) {
-                    lowestVisible = seaLevel;
-                } else {
-                    lowestVisible = qMin(terrainHeight, getHeight(blockX-1, blockY));
-                    lowestVisible = qMin(lowestVisible, getHeight(blockX, blockY-1));
-                    lowestVisible = qMin(lowestVisible, getHeight(blockX+1, blockY));
-                    lowestVisible = qMin(lowestVisible, getHeight(blockX, blockY+1));
-                    lowestVisible = qMax(lowestVisible, seaLevel);
-                }
-
-                for (int blockZ = lowestVisible; blockZ <= qMax(terrainHeight, seaLevel); ++blockZ) {
-                    float yPos = m_gridSpacing * (blockZ - m_gridSize/2);
-
-                    float waterAnimation = 0.0;
-                    QColor color;
-                    if (blockZ > terrainHeight) {
-                        color = Qt::blue;
-                        if (blockZ == seaLevel)
-                            waterAnimation = 1.0;
-                    } else if (blockZ > snowLine) {
-                        color = Qt::white;
-                    } else if ( blockZ > treeLine) {
-                        color = Qt::darkGray;
-                    } else {
-                        color = QColor::fromHsvF(blockZ*0.7/maxHeight, 0.7, 0.5, 1.0);
-                    }
-                    auto entry = calculateTableEntry({xPos,yPos,zPos}, {1.0, 1.0, 1.0}, {}, color, {waterAnimation,0,0,0});
+        for (int i = 0; i < m_gridSize; ++i) {
+            float xPos = idxToPos(i);
+            for (int j = 0; j < m_gridSize; ++j) {
+                float zPos = idxToPos(j);
+                int lowest = blocks.lowestVisible(i, j);
+                int highest = blocks.highestBlock(i, j);
+                for (int k = lowest; k <= highest; ++k) {
+                    float yPos = idxToPos(k);
+                    QColor color = blocks.getBlockColor(i, j, k);
+                    float waterAnimation = blocks.isWaterSurface(i, j, k) ? 1.0 : 0.0;
+                    auto entry = calculateTableEntry({ xPos, yPos, zPos }, { 1.0, 1.0, 1.0 }, {}, color, { waterAnimation, 0, 0, 0 });
                     m_instanceData.append(reinterpret_cast<const char *>(&entry), sizeof(entry));
                     instanceNumber++;
                 }
@@ -252,3 +279,4 @@ QByteArray CppInstanceTable::getInstanceBuffer(int *instanceCount)
 
     return m_instanceData;
 }
+//! [getInstanceBuffer]

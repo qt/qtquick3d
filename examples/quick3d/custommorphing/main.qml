@@ -99,6 +99,7 @@ Window {
             specularAmount: 0.6
         }
 
+        //! [target]
         MorphTarget {
             id: morphtarget
             attributes: MorphTarget.Position | MorphTarget.Normal
@@ -110,14 +111,15 @@ Window {
                 loops: Animation.Infinite
             }
         }
+        //! [target]
 
+        //! [model]
         Model {
             y: -1
-            geometry: MorphGeometry {
-                id: geometry
-            }
+            geometry: MorphGeometry {}
             morphTargets: [ morphtarget ]
             materials: material
         }
+        //! [model]
     }
 }

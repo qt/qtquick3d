@@ -69,121 +69,93 @@ Window {
 
         Node {
             id: cameraNode
-            state: "START"
             PerspectiveCamera {
+                property vector3d basePos: Qt.vector3d(0, 0, 750)
+                property vector3d halfZoomPos: Qt.vector3d(0, -300, 400)
+                property vector3d zoomPos: Qt.vector3d(0, -300, 100)
+                property vector3d otherZoomPos: Qt.vector3d(-200, -300, 400)
                 id: camera
-                position: Qt.vector3d(0, 0, 650)
+                position: basePos
                 eulerRotation.x: -20
             }
-            // This would have been easier with a TimelineAnimation, but using
-            // states and transitions avoids adding a dependency.
-            property int zoomDuration: 4000
-            property int rotationDuration: 7500
-            SequentialAnimation {
-                running: true
-                PauseAnimation { duration: 1000 }
-                ScriptAction { script: cameraNode.state = "ROTATED90" }
-                PauseAnimation { duration: cameraNode.rotationDuration }
-                ScriptAction { script: cameraNode.state = "HALF ZOOMED IN" }
-                PauseAnimation { duration: cameraNode.zoomDuration }
-                ScriptAction { script: cameraNode.state = "ZOOMED IN" }
-                PauseAnimation { duration: cameraNode.zoomDuration + 1500 }
-                ScriptAction { script: cameraNode.state = "ROTATED90"}
-                PauseAnimation { duration: cameraNode.zoomDuration }
+        }
 
-                ScriptAction { script: cameraNode.state = "ROTATED180"}
-                PauseAnimation { duration: cameraNode.rotationDuration }
-                ScriptAction { script: cameraNode.state = "HALF ZOOMED IN" }
-                PauseAnimation { duration: cameraNode.zoomDuration }
-                ScriptAction { script: cameraNode.state = "ZOOMED IN" }
-                PauseAnimation { duration: cameraNode.zoomDuration + 1000 }
-                ScriptAction { script: cameraNode.state = "ROTATED180"}
-                PauseAnimation { duration: cameraNode.zoomDuration + 500}
+        property int zoomDuration: 4000
+        property int rotationDuration: 7000
 
-                ScriptAction { script: cameraNode.state = "ROTATED360"}
-                PauseAnimation { duration: cameraNode.rotationDuration }
-                ScriptAction { script: cameraNode.state = "DIFFERENT ZOOM" }
-                PauseAnimation { duration: cameraNode.zoomDuration + 1000 }
-                ScriptAction { script: cameraNode.state = "ROTATED360"}
-                PauseAnimation { duration: cameraNode.zoomDuration + 500}
-                ScriptAction {
-                    script: {
-                        cameraTransition.enabled = false;
-                        cameraNode.state = "START";
-                        cameraTransition.enabled = true;
-                    }
-                }
-                PauseAnimation { duration: 100 }
-                loops: -1
-            }
-            transitions: Transition {
-                id: cameraTransition
-                NumberAnimation { target: camera; properties: "z"; duration: cameraNode.zoomDuration }
-                NumberAnimation { target: camera; properties: "y"; duration: cameraNode.zoomDuration }
-                NumberAnimation { target: camera; properties: "x"; duration: cameraNode.zoomDuration }
-                NumberAnimation { target: cameraNode; properties: "eulerRotation.y"; duration: cameraNode.rotationDuration }
+        SequentialAnimation {
+            running: true
+            PauseAnimation { duration: 1000 }
+            NumberAnimation {
+                from: 0; to: 90
+                target: cameraNode; property: "eulerRotation.y"
+                duration: view.rotationDuration
             }
 
-            states:[
-                State {
-                    name: "START"
-                    PropertyChanges {
-                        target: cameraNode
-                        restoreEntryValues: false
-                        eulerRotation.y: 0
-                    }
-                },
-                State {
-                    name: "ROTATED90"
-                    PropertyChanges {
-                        target: cameraNode
-                        restoreEntryValues: false
-                        eulerRotation.y: 90
-                    }
-                },
-                State {
-                    name: "ROTATED180"
-                    PropertyChanges {
-                        target: cameraNode
-                        restoreEntryValues: false
-                        eulerRotation.y: 180
-                    }
-                },
-                State {
-                    name: "ROTATED360"
-                    PropertyChanges {
-                        target: cameraNode
-                        restoreEntryValues: false
-                        eulerRotation.y: 360
-                    }
-                },
-                State {
-                    name: "HALF ZOOMED IN"
-                    PropertyChanges {
-                        target: camera
-                        z: 400
-                        y: -300
-                    }
-                },
-                State {
-                    name: "ZOOMED IN"
-                    PropertyChanges {
-                        target: camera
-                        z: 100
-                        y: -300
-                    }
-                },
-                State {
-                    name: "DIFFERENT ZOOM"
-                    PropertyChanges {
-                        target: camera
-                        z: 400
-                        y: -300
-                        x: -200
-                    }
-                }
+            PauseAnimation { duration: 500 }
+            Vector3dAnimation {
+                from: camera.basePos; to: camera.halfZoomPos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+            Vector3dAnimation {
+                from: camera.halfZoomPos; to: camera.zoomPos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+            PauseAnimation { duration: 1000 }
+            Vector3dAnimation {
+                from: camera.zoomPos; to: camera.basePos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
 
-            ]
+            PauseAnimation { duration: 500 }
+            NumberAnimation {
+                from: 90; to: 180
+                target: cameraNode; property: "eulerRotation.y"
+                duration: view.rotationDuration
+            }
+
+            PauseAnimation { duration: 500 }
+            Vector3dAnimation {
+                from: camera.basePos; to: camera.halfZoomPos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+            Vector3dAnimation {
+                from: camera.halfZoomPos; to: camera.zoomPos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+            PauseAnimation { duration: 1000 }
+            Vector3dAnimation {
+                from: camera.zoomPos; to: camera.basePos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+
+            PauseAnimation { duration: 500 }
+            NumberAnimation {
+                from: 180; to: 360
+                target: cameraNode; property: "eulerRotation.y"
+                duration: view.rotationDuration
+            }
+
+            PauseAnimation { duration: 500 }
+            Vector3dAnimation {
+                from: camera.basePos; to: camera.otherZoomPos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+            PauseAnimation { duration: 1000 }
+            Vector3dAnimation {
+                from: camera.otherZoomPos; to: camera.basePos
+                target: camera; property: "position"
+                duration: view.zoomDuration
+            }
+
+            loops: Animation.Infinite
         }
 
         DirectionalLight {
@@ -193,6 +165,7 @@ Window {
             ambientColor: "#7f7f7f"
         }
 
+        //! [material]
         CustomMaterial {
             id: cubeMaterial
             property real uTime: 0
@@ -205,11 +178,13 @@ Window {
             vertexShader: "cubeMaterial.vert"
             fragmentShader: "cubeMaterial.frag"
         }
+        //! [material]
 
+        //! [model]
         Model {
             id: instancedCube
             property real cubeSize: 15
-            scale: Qt.vector3d(cubeSize/100, cubeSize/100, cubeSize/100);
+            scale: Qt.vector3d(cubeSize/100, cubeSize/100, cubeSize/100)
             source: "#Cube"
             instancing: CppInstanceTable {
                 gridSize: 65
@@ -218,5 +193,6 @@ Window {
             }
             materials: cubeMaterial
         }
+        //! [model]
     }
 }
