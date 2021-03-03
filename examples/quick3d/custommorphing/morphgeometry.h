@@ -57,19 +57,25 @@
 #include <QVector3D>
 #include <QtCore/QList>
 
+//! [class definition]
 class MorphGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(MorphGeometry)
+    Q_PROPERTY(int gridSize READ gridSize WRITE setGridSize NOTIFY gridSizeChanged)
 
 public:
     MorphGeometry(QQuick3DObject *parent = nullptr);
 
-protected:
-    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    int gridSize() { return m_gridSize; }
+    void setGridSize(int gridSize);
+
+signals:
+    void gridSizeChanged();
 
 private:
     void calculateGeometry();
+    void updateData();
 
     QList<QVector3D> m_positions;
     QList<QVector3D> m_normals;
@@ -79,10 +85,11 @@ private:
 
     QList<quint32> m_indexes;
 
-    bool m_geometryDirty = true;
-
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
+
+    int m_gridSize = 50;
 };
+//! [class definition]
 
 #endif // MORPHGEOMETRY_H

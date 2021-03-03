@@ -68,27 +68,26 @@ Window {
         RowLayout {
             width: parent.width
             spacing: 10
+//! [sliders]
             Label { text: "Mouth:" }
             RealSlider {
-                id: slider0
-                value: 0
-                from: 0
-                to: 1
+                id: mouthSlider
+                from: 0.0
+                to: 1.0
             }
             Label { text: "Ears and eyebrows:" }
             RealSlider {
-                id: slider1
-                value: 0
-                from: 0
-                to: 1
+                id: earSlider
+                from: 0.0
+                to: 1.0
             }
             Label { text: "Cubify:" }
             RealSlider {
-                id: slider2
-                value: 0
-                from: 0
-                to: 1
+                id: cubeSlider
+                from: 0.0
+                to: 1.0
             }
+//! [sliders]
         }
         z:1
     }
@@ -116,44 +115,42 @@ Window {
             ambientColor: Qt.rgba(0.3, 0.3, 0.3, 1.0)
         }
 
+//! [morphtargets]
         MorphTarget {
             id: morphtarget0
-            weight: slider0.value
+            weight: mouthSlider.value
             attributes: MorphTarget.Position | MorphTarget.Normal
         }
-
         MorphTarget {
             id: morphtarget1
-            weight: slider1.value
+            weight: earSlider.value
             attributes: MorphTarget.Position | MorphTarget.Normal
         }
         MorphTarget {
             id: morphtarget2
-            weight: slider2.value
+            weight: cubeSlider.value
             attributes: MorphTarget.Position | MorphTarget.Normal
         }
+//! [morphtargets]
 
+//! [model]
         Model {
             source: "suzanne.mesh"
-
             morphTargets: [
                 morphtarget0,
                 morphtarget1,
                 morphtarget2
             ]
-
             materials: PrincipledMaterial {
-                    baseColor: "#41cd52"
-                    metalness: 0.0
-                    roughness: 0.1
-                    opacity: 1.0
-                }
+                baseColor: "#41cd52"
+                roughness: 0.1
+            }
             SequentialAnimation on eulerRotation.y {
-                NumberAnimation { from: 0; to: 45; duration: 5000 }
+                NumberAnimation { from: -45; to: 45; duration: 10000 }
                 NumberAnimation { from: 45; to: -45; duration: 10000 }
-                NumberAnimation { from: -45; to: 0; duration: 5000 }
                 loops: Animation.Infinite
             }
         }
+//! [model]
     }
 }

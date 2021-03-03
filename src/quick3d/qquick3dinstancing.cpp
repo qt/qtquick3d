@@ -42,18 +42,12 @@ QT_BEGIN_NAMESPACE
 
     \preliminary
 
-    Instancing allows duplicating a model with variations. In contrast to
-    using a Repeater3D, the model and its graphics resources are only allocated
-    once. The rendering of the duplicated instances is done at a low level by the GPU,
-    with a single draw call. Depending on the complexity of the model, this can give a
-    performance improvement of several orders of magnitude.
+    \l {Instanced Rendering}{Instanced rendering} allows duplicating a model with variations.
 
-    In practice, instancing is done by defining a table that specifies how each instance
-    is modified relative to the base model. The table has an entry for each index, containing a
-    transform matrix, a color, and generic data for use by custom materials.
-
-    To use instancing, set its \l{Model::instancing}{instancing} property to reference an
-    Instancing object.
+    The Instancing type defines a table that specifies how each instance is modified relative to the
+    base model. The table has an entry for each index, containing a transform matrix, a color, and
+    generic data for use by custom materials. To use instancing, set a model's
+    \l{Model::instancing}{instancing} property to reference an Instancing object.
 
     An application can define an Instancing object in C++ by subclassing QQuick3DInstancing,
     or it can use one of the pre-defined QML types: InstanceList or RandomInstancing.
@@ -73,6 +67,9 @@ QT_BEGIN_NAMESPACE
     rendering the model. This property only makes a difference if the model is opaque: If the model has a
     transparent \l{Model::materials}{material}, or an \l{Node::opacity}{opacity} less than one, the
     alpha value from the table will be used regardless.
+
+    \note Enabling alpha blending may cause rendering issues when instances overlap. See the
+    \l{Alpha-blending and instancing}{alpha blending and instancing} documentation for details.
 */
 
 /*!
@@ -88,9 +85,6 @@ QT_BEGIN_NAMESPACE
     for a Model in the Qt Quick 3D scene.
 
     This class is abstract: To use it, create a subclass and implement \l getInstanceBuffer().
-    The subclass is then exposed to QML by registering it to the type
-    system. The \l{Model::instancing}{instancing} property of a Model can then be
-    set to reference an object of the registered type.
 */
 
 /*!
@@ -315,9 +309,11 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFr
     }
     \endqml
 
-    Each InstanceListEntry is an object that can have property bindings and animations. This gives great flexibility, but also
-    causes memory overhead. Therefore, it is not recommended to use InstanceList for procedurally generated tables containing thousands
-    (or millions) of instances.
+    Each InstanceListEntry is an object that can have property bindings and animations. This gives
+    great flexibility, but also causes memory overhead. Therefore, it is not recommended to use
+    InstanceList for procedurally generated tables containing thousands (or millions) of
+    instances. Also, any property change to an entry will cause the entire instance table to be
+    recalculated and uploaded to the GPU.
 
     \sa RandomInstancing, QQuick3DInstancing
 */
@@ -429,8 +425,11 @@ void QQuick3DInstanceList::generateInstanceData()
     \preliminary
 
     The InstanceListEntry QML type is used to specify one instance in an instance list.
-*/
 
+    All the properties can have bindings and animation. Changing a property will cause the entire
+    instance table to be recalculated and uploaded to the GPU, so this can be expensive for instance
+    lists with many members.
+*/
 
 QQuick3DInstanceListEntry::QQuick3DInstanceListEntry(QQuick3DObject *parent)
     : QQuick3DObject(parent)

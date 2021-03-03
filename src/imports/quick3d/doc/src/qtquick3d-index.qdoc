@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019-2020 The Qt Company Ltd.
+** Copyright (C) 2019-2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -99,6 +99,8 @@ under the following permissive licenses:
     \li \l{Programmable Materials, Effects, Geometry, and Texture data}
     \li \l{Shadergen Tool}{Build-time materials}
     \li \l{Vertex Skinning}{Skeletal Animation}
+    \li \l{Morphing Animation}{Morphing Animation}
+    \li \l{Instanced Rendering}{Instanced Rendering} \e{(Technology Preview)}
 \endlist
 
 \section1 Reference

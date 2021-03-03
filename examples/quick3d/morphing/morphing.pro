@@ -10,7 +10,8 @@ RESOURCES += \
     qml.qrc
 
 OTHER_FILES += \
-    main.qml
+    main.qml \
+    RealSlider.qml
 
 OTHER_FILES += \
     doc/src/*.*
