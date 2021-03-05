@@ -146,7 +146,8 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     if (!m_renderer) {
         m_renderer = rc->createRenderer(QSGRendererInterface::RenderMode3D);
         connect(window, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidated()), Qt::DirectConnection);
-        connect(m_renderer, &QSGAbstractRenderer::sceneGraphChanged, this, &QQuick3DObject::update, Qt::QueuedConnection);
+        // direct connection when rendering is on the main thread, queued with the threaded render loop
+        connect(m_renderer, &QSGAbstractRenderer::sceneGraphChanged, this, &QQuick3DObject::update);
     }
     m_renderer->setRootNode(m_rootNode);
     m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
