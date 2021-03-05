@@ -99,19 +99,26 @@ bool QSSGRenderNode::calculateGlobalVariables()
             } else {
                 globalTransform = localTransform;
             }
-            if (instanceRoot) {
+            if (this == instanceRoot) {
+                globalInstanceTransform = parent->globalTransform;
+                localInstanceTransform = localTransform;
+            } else if (instanceRoot) {
                 globalInstanceTransform = instanceRoot->globalInstanceTransform;
-                //### technically O(n^2) -- we could cache localInstanceTransform if every node in the tree is guaranteed to have the same instance root
-                localInstanceTransform = {};
-                auto *p = this;
+                //### technically O(n^2) -- we could cache localInstanceTransform if every node in the
+                // tree is guaranteed to have the same instance root. That would require an API change.
+                localInstanceTransform = localTransform;
+                auto *p = parent;
                 while (p) {
-                    localInstanceTransform = p->localTransform * localInstanceTransform;
-                    if (p == instanceRoot)
+                    if (p == instanceRoot) {
+                        localInstanceTransform = p->localInstanceTransform * localInstanceTransform;
                         break;
+                    }
+                    localInstanceTransform = p->localTransform * localInstanceTransform;
                     p = p->parent;
                 }
             } else {
-                // By default, we do magic: translation is applied to the global transform, while scale/rotation is local
+                // By default, we do magic: translation is applied to the global instance transform,
+                // while scale/rotation is local
 
                 localInstanceTransform = localTransform;
                 auto &localInstanceMatrix =  *reinterpret_cast<float (*)[4][4]>(localInstanceTransform.data());
