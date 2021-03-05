@@ -194,8 +194,8 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
             QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
             QRhiTexture *texture = rhiCtx->dummyTexture({}, rub, QSize(4, 4), Qt::white);
             rhiCtx->commandBuffer()->resourceUpdate(rub);
-            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::None,
-                                                     QRhiSampler::None,
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                     QRhiSampler::Nearest,
                                                      QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge,
                                                      QRhiSampler::ClampToEdge });
@@ -236,8 +236,8 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
             QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
             QRhiTexture *texture = rhiCtx->dummyTexture({}, rub, QSize(4, 4), Qt::white);
             rhiCtx->commandBuffer()->resourceUpdate(rub);
-            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::None,
-                                                     QRhiSampler::None,
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                     QRhiSampler::Nearest,
                                                      QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge,
                                                      QRhiSampler::ClampToEdge });
