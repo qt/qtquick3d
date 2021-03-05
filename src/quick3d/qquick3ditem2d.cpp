@@ -48,7 +48,7 @@ QQuick3DItem2D::QQuick3DItem2D(QQuickItem *item, QQuick3DNode *parent)
 {
     m_contentItem = new QQuickItem();
     m_contentItem->setObjectName(QLatin1String("parent of ") + item->objectName()); // for debugging
-    m_contentItem->setSize(item->size());
+    // No size is set for m_contentItem. This is intentional, otherwise item2d anchoring breaks.
     QQuickItemPrivate::get(m_contentItem)->ensureSubsceneDeliveryAgent();
     QQmlEngine::setObjectOwnership(m_contentItem, QQmlEngine::CppOwnership);
 
