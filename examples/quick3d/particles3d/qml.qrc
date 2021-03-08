@@ -38,5 +38,6 @@
         <file>qml/HeartTrail.qml</file>
         <file>qml/SettingsView.qml</file>
         <file>qml/StartupView.qml</file>
+        <file>qml/images/color_table3.png</file>
     </qresource>
 </RCC>
