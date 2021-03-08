@@ -166,7 +166,7 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
     Only the Offscreen mode (rendering into a texture) supports all clearing
     modes. With the Underlay mode, use \l{QQuickWindow::setColor()} or
     \l[QtQuick]{Window::color}{Window.color} to control the clear color for
-    the Qt Quick scene. Skybox is handled differently, as it implies drawing
+    the Qt Quick scene. SkyBox is handled differently, as it implies drawing
     actual geometry, so that works identically across all render modes.
 
     \value SceneEnvironment.Transparent
@@ -175,8 +175,8 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
     \value SceneEnvironment.Color
         The scene is cleared with the color specified by the clearColor property.
         This mode has no effect when the View3D is using a renderMode of Underlay or Overlay.
-    \value SceneEnvironment.Skybox
-        The scene will not be cleared, but instead a Skybox or Skydome will be rendered. The Skybox
+    \value SceneEnvironment.SkyBox
+        The scene will not be cleared, but instead a SkyBox or Skydome will be rendered. The SkyBox
         is defined using the HDRI map defined in the lightProbe property.
 
     The default value is \c SceneEnvironment.Transparent
