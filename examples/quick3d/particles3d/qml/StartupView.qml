@@ -103,7 +103,7 @@ Item {
             file: "AlignedParticles.qml"
         }
         ListElement {
-            name: "Fire Flame"
+            name: "Fire And Smoke"
             file: "Fire.qml"
         }
         ListElement {

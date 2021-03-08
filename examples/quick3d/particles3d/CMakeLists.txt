@@ -72,6 +72,7 @@ set(qml_resource_files
     "qml/images/sphere.png"
     "qml/images/colorTable.png"
     "qml/images/color_table2.png"
+    "qml/images/color_table3.png"
     "qml/images/smoke_sprite.png"
     "qml/images/dust.png"
     "qml/main.qml"
