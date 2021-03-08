@@ -110,6 +110,9 @@ public:
     Q_INVOKABLE QVector3D mapTo3DScene(const QVector3D &viewPos) const;
 
     Q_INVOKABLE QQuick3DPickResult pick(float x, float y) const;
+    Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> pickAll(float x, float y) const;
+    Q_REVISION(6, 2) Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
+    Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -144,6 +147,7 @@ private:
     void setupDirectRenderer(RenderMode mode);
     bool checkIsVisible() const;
     bool internalPick(QPointerEvent *event) const;
+    QQuick3DPickResult processPickResult(const QSSGRenderPickResult &pickResult) const;
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;

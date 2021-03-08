@@ -72,7 +72,7 @@ class QSSGRhiQuadRenderer;
 struct QSSGRenderPickResult
 {
     const QSSGRenderGraphObject *m_hitObject = nullptr;
-    float m_cameraDistanceSq = std::numeric_limits<float>::max();
+    float m_distanceSq = std::numeric_limits<float>::max();
     // The local coordinates in X,Y UV space where the hit occurred
     QVector2D m_localUVCoords;
     // The position in world coordinates
@@ -172,24 +172,14 @@ public:
     void beginFrame();
     void endFrame();
 
-    QSSGRenderPickResult pick(QSSGRenderLayer &inLayer,
-                                const QVector2D &inViewportDimensions,
-                                const QVector2D &inMouseCoords,
-                                bool inPickEverything = false);
-    QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
-                                  const QSSGRef<QSSGBufferManager> &bufferManager,
-                                  const QVector2D &inViewportDimensions,
-                                  const QVector2D &inMouseCoords);
-    QSSGRenderPickResult syncPickOne(const QSSGRenderLayer &layer,
-                                     const QSSGRef<QSSGBufferManager> &bufferManager,
-                                     const QVector2D &inViewportDimensions,
-                                     const QVector2D &inMouseCoords,
-                                     QSSGRenderNode *target);
-
     PickResultList syncPickAll(const QSSGRenderLayer &layer,
                                const QSSGRef<QSSGBufferManager> &bufferManager,
-                               const QVector2D &inViewportDimensions,
-                               const QVector2D &inMouseCoords);
+                               const QSSGRenderRay &ray);
+
+    QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
+                                  const QSSGRef<QSSGBufferManager> &bufferManager,
+                                  const QSSGRenderRay &ray,
+                                  QSSGRenderNode *target = nullptr);
 
 
     // Return the relative hit position, in UV space, of a mouse pick against this object.
@@ -248,17 +238,9 @@ public:
     static const QSSGRenderGraphObject *getPickObject(QSSGRenderableObject &inRenderableObject);
 protected:
     QSSGPickResultProcessResult processPickResultList(bool inPickEverything);
-    // If the mouse y coordinates need to be flipped we expect that to happen before entry into
-    // this function
-    void getLayerHitObjectList(QSSGLayerRenderData &inLayer,
-                               const QVector2D &inViewportDimensions,
-                               const QVector2D &inMouseCoords,
-                               bool inPickEverything,
-                               TPickResultArray &outIntersectionResult);
     static void getLayerHitObjectList(const QSSGRenderLayer &layer,
                                       const QSSGRef<QSSGBufferManager> &bufferManager,
-                                      const QVector2D &inViewportDimensions,
-                                      const QVector2D &inMouseCoords,
+                                      const QSSGRenderRay &ray,
                                       bool inPickEverything,
                                       PickResultList &outIntersectionResult);
     static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,

@@ -64,7 +64,7 @@ struct QSSGRenderLayer;
  *	I am using language level access control on this object because it needs specific
  *	interface design that will enable future modifications.
  */
-struct Q_AUTOTEST_EXPORT QSSGLayerRenderHelper
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderHelper
 {
 private:
     QSSGRenderLayer *m_layer = nullptr;

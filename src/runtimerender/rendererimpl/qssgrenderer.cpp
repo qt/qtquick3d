@@ -90,7 +90,7 @@ void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
 }
 
 bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer,
-                                               const QSize &surfaceSize)
+                                         const QSize &surfaceSize)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
     Q_ASSERT(theRenderData);
@@ -254,9 +254,56 @@ void QSSGRenderer::endFrame()
     QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), stop());
 }
 
+QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer,
+                                                       const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                       const QSSGRenderRay &ray)
+{
+    PickResultList pickResults;
+    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+        getLayerHitObjectList(layer, bufferManager, ray, false, pickResults);
+        // Things are rendered in a particular order and we need to respect that ordering.
+        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+            return lhs.m_distanceSq < rhs.m_distanceSq;
+        });
+    }
+    return pickResults;
+}
+
+QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
+                                            const QSSGRef<QSSGBufferManager> &bufferManager,
+                                            const QSSGRenderRay &ray,
+                                            QSSGRenderNode *target)
+{
+    static const auto processResults = [](PickResultList &pickResults) {
+        if (pickResults.empty())
+            return QSSGPickResultProcessResult();
+        // Things are rendered in a particular order and we need to respect that ordering.
+        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+            return lhs.m_distanceSq < rhs.m_distanceSq;
+        });
+        return QSSGPickResultProcessResult{ pickResults.at(0), true };
+    };
+
+    PickResultList pickResults;
+    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+        if (target) {
+            // Pick against only one target
+            intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
+            return processResults(pickResults);
+        } else {
+            getLayerHitObjectList(layer, bufferManager, ray, false, pickResults);
+            QSSGPickResultProcessResult retval = processResults(pickResults);
+            if (retval.m_wasPickConsumed)
+                return retval;
+        }
+    }
+
+    return QSSGPickResultProcessResult();
+}
+
 inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
 {
-    return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
+    return lhs.m_distanceSq < rhs.m_distanceSq;
 }
 
 QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEverything)
@@ -284,86 +331,6 @@ QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEvery
     m_lastPickResults.clear();
     QSSGPickResultProcessResult thePickResult(thePickResults[0]);
     return thePickResult;
-}
-
-QSSGRenderPickResult QSSGRenderer::pick(QSSGRenderLayer &inLayer,
-                                        const QVector2D &inViewportDimensions,
-                                        const QVector2D &inMouseCoords,
-                                        bool inPickEverything)
-{
-    m_lastPickResults.clear();
-
-    if (inLayer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        if (auto renderData = inLayer.renderData) {
-            m_lastPickResults.clear();
-            getLayerHitObjectList(*renderData, inViewportDimensions, inMouseCoords, inPickEverything, m_lastPickResults);
-            QSSGPickResultProcessResult retval(processPickResultList(inPickEverything));
-            if (retval.m_wasPickConsumed)
-                return retval;
-        }
-    }
-
-    return QSSGRenderPickResult();
-}
-
-QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
-                                            const QSSGRef<QSSGBufferManager> &bufferManager,
-                                            const QVector2D &inViewportDimensions,
-                                            const QVector2D &inMouseCoords)
-{
-    using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
-    static const auto processResults = [](PickResultList &pickResults) {
-        if (pickResults.empty())
-            return QSSGPickResultProcessResult();
-        // Things are rendered in a particular order and we need to respect that ordering.
-        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
-            return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
-        });
-        return QSSGPickResultProcessResult{ pickResults.at(0), true };
-    };
-
-    PickResultList pickResults;
-    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        getLayerHitObjectList(layer, bufferManager, inViewportDimensions, inMouseCoords, false, pickResults);
-        QSSGPickResultProcessResult retval = processResults(pickResults);
-        if (retval.m_wasPickConsumed)
-            return retval;
-    }
-
-    return QSSGPickResultProcessResult();
-}
-
-QSSGRenderPickResult QSSGRenderer::syncPickOne(const QSSGRenderLayer &layer, const QSSGRef<QSSGBufferManager> &bufferManager, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords, QSSGRenderNode *target)
-{
-    // This function assumes the layer was rendered to the scene itself. There is another
-    // function for completely offscreen layers that don't get rendered to the scene.
-    const bool wasRenderToTarget(layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    PickResultList pickResults;
-    if (wasRenderToTarget && layer.renderedCamera != nullptr) {
-        const auto camera = layer.renderedCamera;
-        const auto viewport = QRectF(QPointF(), QSizeF(qreal(inViewportDimensions.x()), qreal(inViewportDimensions.y())));
-        const QSSGOption<QSSGRenderRay> hitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inMouseCoords, inViewportDimensions, false);
-        if (hitRay.hasValue())
-            intersectRayWithSubsetRenderable(bufferManager, *hitRay, *target, pickResults);
-    }
-    // There can only be 0 or 1 results in this case
-    if (pickResults.isEmpty())
-        return QSSGRenderPickResult();
-    else
-        return pickResults.at(0);
-}
-
-
-QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer, const QSSGRef<QSSGBufferManager> &bufferManager, const QVector2D &inViewportDimensions, const QVector2D &inMouseCoords)
-{
-    PickResultList pickResults;
-    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        getLayerHitObjectList(layer, bufferManager, inViewportDimensions, inMouseCoords, false, pickResults);
-        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
-            return lhs.m_cameraDistanceSq < rhs.m_cameraDistanceSq;
-        });
-    }
-    return pickResults;
 }
 
 QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
@@ -406,40 +373,6 @@ bool QSSGRenderer::rendererRequestsFrames() const
     return m_progressiveAARenderRequest;
 }
 
-void QSSGRenderer::getLayerHitObjectList(QSSGLayerRenderData &inLayerRenderData,
-                                               const QVector2D &inViewportDimensions,
-                                               const QVector2D &inPresCoords,
-                                               bool inPickEverything,
-                                               TPickResultArray &outIntersectionResult)
-{
-    // This function assumes the layer was rendered to the scene itself. There is another
-    // function for completely offscreen layers that don't get rendered to the scene.
-    bool wasRenderToTarget(inLayerRenderData.layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (wasRenderToTarget && inLayerRenderData.camera != nullptr) {
-        QSSGOption<QSSGRenderRay> theHitRay;
-        if (inLayerRenderData.layerPrepResult.hasValue()) {
-            const auto camera = inLayerRenderData.layerPrepResult->camera();
-            const auto viewport = inLayerRenderData.layerPrepResult->viewport();
-            theHitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
-        }
-
-        if (theHitRay.hasValue()) {
-            // Scale the mouse coords to change them into the camera's numerical space.
-            QSSGRenderRay thePickRay = *theHitRay;
-            for (int idx = inLayerRenderData.opaqueObjects.size(), end = 0; idx > end; --idx) {
-                QSSGRenderableObject *theRenderableObject = inLayerRenderData.opaqueObjects.at(idx - 1).obj;
-                if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
-                    intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
-            }
-            for (int idx = inLayerRenderData.transparentObjects.size(), end = 0; idx > end; --idx) {
-                QSSGRenderableObject *theRenderableObject = inLayerRenderData.transparentObjects.at(idx - 1).obj;
-                if (inPickEverything || theRenderableObject->renderableFlags.isPickable())
-                    intersectRayWithSubsetRenderable(thePickRay, *theRenderableObject, outIntersectionResult);
-            }
-        }
-    }
-}
-
 using RenderableList = QVarLengthArray<const QSSGRenderNode *>;
 static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 {
@@ -451,40 +384,26 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 }
 
 void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
-                                             const QSSGRef<QSSGBufferManager> &bufferManager,
-                                             const QVector2D &inViewportDimensions,
-                                             const QVector2D &inPresCoords,
-                                             bool inPickEverything,
-                                             PickResultList &outIntersectionResult)
+                                         const QSSGRef<QSSGBufferManager> &bufferManager,
+                                         const QSSGRenderRay &ray,
+                                         bool inPickEverything,
+                                         PickResultList &outIntersectionResult)
 {
+    RenderableList renderables;
+    for (const auto &childNode : layer.children)
+        dfs(childNode, renderables);
 
-    // This function assumes the layer was rendered to the scene itself. There is another
-    // function for completely offscreen layers that don't get rendered to the scene.
-    const bool wasRenderToTarget(layer.flags.testFlag(QSSGRenderLayer::Flag::LayerRenderToTarget));
-    if (wasRenderToTarget && layer.renderedCamera != nullptr) {
-        const auto camera = layer.renderedCamera;
-        // TODO: Need to make sure we get the right Viewport rect here.
-        const auto viewport = QRectF(QPointF(), QSizeF(qreal(inViewportDimensions.x()), qreal(inViewportDimensions.y())));
-        const QSSGOption<QSSGRenderRay> hitRay = QSSGLayerRenderHelper::pickRay(*camera, viewport, inPresCoords, inViewportDimensions, false);
-        if (hitRay.hasValue()) {
-            // Scale the mouse coords to change them into the camera's numerical space.
-            RenderableList renderables;
-            for (const auto &childNode : layer.children)
-                dfs(childNode, renderables);
-
-            for (int idx = renderables.size(), end = 0; idx > end; --idx) {
-                const auto &pickableObject = renderables.at(idx - 1);
-                if (inPickEverything || pickableObject->flags.testFlag(QSSGRenderNode::Flag::LocallyPickable))
-                    intersectRayWithSubsetRenderable(bufferManager, *hitRay, *pickableObject, outIntersectionResult);
-            }
-        }
+    for (int idx = renderables.size() - 1; idx >= 0; --idx) {
+        const auto &pickableObject = renderables.at(idx);
+        if (inPickEverything || pickableObject->flags.testFlag(QSSGRenderNode::Flag::LocallyPickable))
+            intersectRayWithSubsetRenderable(bufferManager, ray, *pickableObject, outIntersectionResult);
     }
 }
 
 void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
-                                                        const QSSGRenderRay &inRay,
-                                                        const QSSGRenderNode &node,
-                                                        QSSGRenderer::PickResultList &outIntersectionResultList)
+                                                    const QSSGRenderRay &inRay,
+                                                    const QSSGRenderNode &node,
+                                                    QSSGRenderer::PickResultList &outIntersectionResultList)
 {
     // Item2D's requires special handling
     if (node.type == QSSGRenderGraphObject::Type::Item2D) {
@@ -566,16 +485,16 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
         return;
 
     outIntersectionResultList.push_back(
-                                QSSGRenderPickResult(model,
-                                                     intersectionResult.rayLengthSquared,
-                                                     intersectionResult.relXY,
-                                                     intersectionResult.scenePosition,
-                                                     resultSubset));
+                QSSGRenderPickResult(model,
+                                     intersectionResult.rayLengthSquared,
+                                     intersectionResult.relXY,
+                                     intersectionResult.scenePosition,
+                                     resultSubset));
 }
 
 void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
-                                                        QSSGRenderableObject &inRenderableObject,
-                                                        TPickResultArray &outIntersectionResultList)
+                                                    QSSGRenderableObject &inRenderableObject,
+                                                    TPickResultArray &outIntersectionResultList)
 {
     QSSGRenderRay::IntersectionResult intersectionResult = QSSGRenderRay::intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds, inRay);
     if (!intersectionResult.intersects)
@@ -587,10 +506,10 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
 
     if (thePickObject != nullptr) {
         outIntersectionResultList.push_back(
-                                    QSSGRenderPickResult(*thePickObject,
-                                                         intersectionResult.rayLengthSquared,
-                                                         intersectionResult.relXY,
-                                                         intersectionResult.scenePosition));
+                    QSSGRenderPickResult(*thePickObject,
+                                         intersectionResult.rayLengthSquared,
+                                         intersectionResult.relXY,
+                                         intersectionResult.scenePosition));
     }
 }
 
@@ -707,7 +626,7 @@ QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObj
                                            const QVector3D &scenePosition,
                                            int subset)
     : m_hitObject(&inHitObject)
-    , m_cameraDistanceSq(inCameraDistance)
+    , m_distanceSq(inCameraDistance)
     , m_localUVCoords(inLocalUVCoords)
     , m_scenePosition(scenePosition)
     , m_subset(subset)

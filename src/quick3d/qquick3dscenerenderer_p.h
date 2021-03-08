@@ -76,10 +76,12 @@ protected:
     void update();
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
-    QSSGRenderPickResult pick(const QPointF &pos);
-    QSSGRenderPickResult syncPick(const QPointF &pos);
-    QSSGRenderPickResult syncPickOne(const QPointF &pos, QSSGRenderNode *node);
-    PickResultList syncPickAll(const QPointF &pos);
+
+    QSSGOption<QSSGRenderRay> getRayFromViewportPos(const QPointF &pos);
+    QSSGRenderPickResult syncPick(const QSSGRenderRay &ray);
+    QSSGRenderPickResult syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node);
+    PickResultList syncPickAll(const QSSGRenderRay &ray);
+
     QQuick3DRenderStats *renderStats();
 
 private:

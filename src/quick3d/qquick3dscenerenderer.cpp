@@ -760,47 +760,51 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
         fboNode->invalidatePending = true;
 }
 
-QSSGRenderPickResult QQuick3DSceneRenderer::pick(const QPointF &pos)
+QSSGOption<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
 {
-    if (!m_layer)
-        return QSSGRenderPickResult();
+    if (!m_layer || !m_layer->renderedCamera)
+        return QSSGOption<QSSGRenderRay>();
 
-    return m_sgContext->renderer()->pick(*m_layer, QVector2D(m_surfaceSize.width(), m_surfaceSize.height()), QVector2D(float(pos.x()), float(pos.y())));
+    const QVector2D viewportSize(m_surfaceSize.width(), m_surfaceSize.height());
+    const QVector2D position(float(pos.x()), float(pos.y()));
+    const QRectF viewportRect(QPointF{}, QSizeF(m_surfaceSize));
+
+    return QSSGLayerRenderHelper::pickRay(*m_layer->renderedCamera,
+                                          viewportRect,
+                                          position,
+                                          viewportSize,
+                                          false);
 }
 
-QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QPointF &pos)
+QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
 {
     if (!m_layer)
         return QSSGRenderPickResult();
 
     return m_sgContext->renderer()->syncPick(*m_layer,
                                              m_sgContext->bufferManager(),
-                                             QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
-                                             QVector2D(float(pos.x()), float(pos.y())));
+                                             ray);
 }
 
-QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QPointF &pos, QSSGRenderNode *node)
+QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node)
 {
     if (!m_layer)
         return QSSGRenderPickResult();
 
-    return m_sgContext->renderer()->syncPickOne(*m_layer,
-                                                m_sgContext->bufferManager(),
-                                                QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
-                                                QVector2D(float(pos.x()), float(pos.y())),
-                                                node);
-
+    return m_sgContext->renderer()->syncPick(*m_layer,
+                                             m_sgContext->bufferManager(),
+                                             ray,
+                                             node);
 }
 
-QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const QPointF &pos)
+QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const QSSGRenderRay &ray)
 {
     if (!m_layer)
         return QQuick3DSceneRenderer::PickResultList();
 
     return m_sgContext->renderer()->syncPickAll(*m_layer,
                                                 m_sgContext->bufferManager(),
-                                                QVector2D(m_surfaceSize.width(), m_surfaceSize.height()),
-                                                QVector2D(float(pos.x()), float(pos.y())));
+                                                ray);
 }
 
 QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()

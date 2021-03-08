@@ -78,15 +78,20 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         assuming that targetItem is mapped onto sceneParentNode.
     */
     QPointF map(const QPointF &viewportPoint) override {
-        auto pickResult = renderer->syncPickOne(viewportPoint * dpr, sceneParentNode);
-        auto ret = pickResult.m_localUVCoords.toPointF();
-        if (!uvCoordsArePixels)
-            ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
-                          targetItem->y() - ret.y() * targetItem->height() + targetItem->height());
+        QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(viewportPoint * dpr);
+        if (rayResult.hasValue()) {
+            auto pickResult = renderer->syncPickOne(rayResult.getValue(), sceneParentNode);
+            auto ret = pickResult.m_localUVCoords.toPointF();
+            if (!uvCoordsArePixels) {
+                ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
+                              targetItem->y() - ret.y() * targetItem->height() + targetItem->height());
+            }
 
-        qCDebug(lcEv) << viewportPoint << "->" << ret << "@" << pickResult.m_scenePosition
-                      << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_cameraDistanceSq);
-        return ret;
+            qCDebug(lcEv) << viewportPoint << "->" << ret << "@" << pickResult.m_scenePosition
+                          << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq);
+            return ret;
+        }
+        return QPointF();
     }
 
     QQuick3DSceneRenderer *renderer = nullptr;
@@ -756,43 +761,111 @@ QVector3D QQuick3DViewport::mapTo3DScene(const QVector3D &viewPos) const
     and return information about the nearest intersection with an object in the scene.
 
     This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
-
-    \note For an object with a custom \l Geometry, intersections will be approximated based on its bounding
-    box.
 */
 QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 {
-    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
-                           qreal(y) * window()->effectiveDevicePixelRatio());
-    // Some non-thread safe stuff to do input
-    // First need to get a handle to the renderer
-
     QQuick3DSceneRenderer *renderer = getRenderer();
     if (!renderer)
         return QQuick3DPickResult();
 
-    auto pickResult = renderer->syncPick(position);
-    if (!pickResult.m_hitObject)
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
+                           qreal(y) * window()->effectiveDevicePixelRatio());
+    QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
+    if (!rayResult.hasValue())
         return QQuick3DPickResult();
 
-    auto backendObject = pickResult.m_hitObject;
-    const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-    QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
+    return processPickResult(renderer->syncPick(rayResult.getValue()));
 
-    // FIXME : for the case of consecutive importScenes
-    if (!frontendObject && m_importScene) {
-        const auto importSceneManager = QQuick3DObjectPrivate::get(m_importScene)->sceneManager;
-        frontendObject = importSceneManager->lookUpNode(backendObject);
-    }
+}
 
-    QQuick3DModel *model = qobject_cast<QQuick3DModel*>(frontendObject);
-    if (!model)
+/*!
+    \qmlmethod List<PickResult> View3D::pickAll(float x, float y)
+
+    This method will "shoot" a ray into the scene from view coordinates \a x and \a y
+    and return a list of information about intersections with objects in the scene.
+    The returned list is sorted by distance from the camera with the nearest
+    intersections appearing first and the furthest appearing last.
+
+    This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
+
+    \since 6.2
+*/
+QList<QQuick3DPickResult> QQuick3DViewport::pickAll(float x, float y) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return QList<QQuick3DPickResult>();
+
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
+                           qreal(y) * window()->effectiveDevicePixelRatio());
+    QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
+    if (!rayResult.hasValue())
+        return QList<QQuick3DPickResult>();
+
+    const auto resultList = renderer->syncPickAll(rayResult.getValue());
+    QList<QQuick3DPickResult> processedResultList;
+    processedResultList.reserve(resultList.size());
+    for (const auto &result : resultList)
+        processedResultList.append(processPickResult(result));
+
+    return processedResultList;
+}
+
+/*!
+    \qmlmethod PickResult View3D::rayPick(vector3d origin, vector3d direction)
+
+    This method will "shoot" a ray into the scene starting at \a origin and in
+    \a direction and return information about the nearest intersection with an
+    object in the scene.
+
+    This can, for instance, be called with the position and forward vector of
+    any object in a scene to see what object is in front of an item. This
+    makes it possible to do picking from any point in the scene.
+
+    \since 6.2
+*/
+QQuick3DPickResult QQuick3DViewport::rayPick(const QVector3D &origin, const QVector3D &direction) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
         return QQuick3DPickResult();
 
-    return QQuick3DPickResult(model,
-                              ::sqrtf(pickResult.m_cameraDistanceSq),
-                              pickResult.m_localUVCoords,
-                              pickResult.m_scenePosition);
+    const QSSGRenderRay ray(origin, direction);
+
+    return processPickResult(renderer->syncPick(ray));
+}
+
+/*!
+    \qmlmethod List<PickResult> View3D::rayPickAll(vector3d origin, vector3d direction)
+
+    This method will "shoot" a ray into the scene starting at \a origin and in
+    \a direction and return a list of information about the nearest intersections with
+    objects in the scene.
+    The list is presorted by distance from the origin along the direction
+    vector with the nearest intersections appearing first and the furthest
+    appearing last.
+
+    This can, for instance, be called with the position and forward vector of
+    any object in a scene to see what objects are in front of an item. This
+    makes it possible to do picking from any point in the scene.
+
+    \since 6.2
+*/
+QList<QQuick3DPickResult> QQuick3DViewport::rayPickAll(const QVector3D &origin, const QVector3D &direction) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return QList<QQuick3DPickResult>();
+
+    const QSSGRenderRay ray(origin, direction);
+
+    const auto resultList = renderer->syncPickAll(ray);
+    QList<QQuick3DPickResult> processedResultList;
+    processedResultList.reserve(resultList.size());
+    for (const auto &result : resultList)
+        processedResultList.append(processPickResult(result));
+
+    return processedResultList;
 }
 
 void QQuick3DViewport::invalidateSceneGraph()
@@ -902,7 +975,10 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
     for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
         auto eventPoint = QMutableEventPoint::from(event->point(pointIndex));
         const QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
-        QQuick3DSceneRenderer::PickResultList pickResults = renderer->syncPickAll(realPosition);
+        QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(realPosition);
+        QQuick3DSceneRenderer::PickResultList pickResults;
+        if (rayResult.hasValue())
+            pickResults = renderer->syncPickAll(rayResult.getValue());
         qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
         if (pickResults.isEmpty())
             continue; // next eventPoint
@@ -996,7 +1072,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
                 subscene.eventPointScenePositions[pointIndex] = subscenePosition;
             }
             qCDebug(lcPick) << "pick result:" << frontendObject << "@" << pickResult.m_scenePosition
-                            << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_cameraDistanceSq)
+                            << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq)
                             << "scene" << subscenePosition << subsceneRootItem;
         } // for pick results from each QEventPoint
     } // for each QEventPoint
@@ -1056,6 +1132,31 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
     }
 
     return ret;
+}
+
+QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResult &pickResult) const
+{
+    if (!pickResult.m_hitObject)
+        return QQuick3DPickResult();
+
+    auto backendObject = pickResult.m_hitObject;
+    const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+    QQuick3DObject *frontendObject = sceneManager->lookUpNode(backendObject);
+
+    // FIXME : for the case of consecutive importScenes
+    if (!frontendObject && m_importScene) {
+        const auto importSceneManager = QQuick3DObjectPrivate::get(m_importScene)->sceneManager;
+        frontendObject = importSceneManager->lookUpNode(backendObject);
+    }
+
+    QQuick3DModel *model = qobject_cast<QQuick3DModel *>(frontendObject);
+    if (!model)
+        return QQuick3DPickResult();
+
+    return QQuick3DPickResult(model,
+                              ::sqrtf(pickResult.m_distanceSq),
+                              pickResult.m_localUVCoords,
+                              pickResult.m_scenePosition);
 }
 
 QT_END_NAMESPACE

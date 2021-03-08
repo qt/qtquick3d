@@ -73,8 +73,9 @@ QQuick3DModel *QQuick3DPickResult::objectHit() const
     \qmlproperty float PickResult::distance
     \readonly
 
-    This property holds the distance between the camera and the hit position
-    i.e. the length of the ray.
+    This property holds the distance between the pick origin and the hit position
+    i.e. the length of the ray. In the case of using viewport coordinates for
+    picking the pick origin will be the active camera's position.
 */
 float QQuick3DPickResult::distance() const
 {
