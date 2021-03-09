@@ -52,6 +52,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleWander : public QQuick3DParticle
     Q_OBJECT
     Q_PROPERTY(QVector3D globalAmount READ globalAmount WRITE setGlobalAmount NOTIFY globalAmountChanged)
     Q_PROPERTY(QVector3D globalPace READ globalPace WRITE setGlobalPace NOTIFY globalPaceChanged)
+    Q_PROPERTY(QVector3D globalPaceStart READ globalPaceStart WRITE setGlobalPaceStart NOTIFY globalPaceStartChanged)
     Q_PROPERTY(QVector3D uniqueAmount READ uniqueAmount WRITE setUniqueAmount NOTIFY uniqueAmountChanged)
     Q_PROPERTY(QVector3D uniquePace READ uniquePace WRITE setUniquePace NOTIFY uniquePaceChanged)
     Q_PROPERTY(float uniqueAmountVariation READ uniqueAmountVariation WRITE setUniqueAmountVariation NOTIFY uniqueAmountVariationChanged)
@@ -63,6 +64,7 @@ public:
 
     const QVector3D &globalAmount() const;
     const QVector3D &globalPace() const;
+    const QVector3D &globalPaceStart() const;
     const QVector3D &uniqueAmount() const;
     const QVector3D &uniquePace() const;
     float uniqueAmountVariation() const;
@@ -71,6 +73,7 @@ public:
 public Q_SLOTS:
     void setGlobalAmount(const QVector3D &globalAmount);
     void setGlobalPace(const QVector3D &globalPace);
+    void setGlobalPaceStart(const QVector3D &globalPaceStart);
     void setUniqueAmount(const QVector3D &uniqueAmount);
     void setUniquePace(const QVector3D &uniquePace);
     void setUniqueAmountVariation(float uniqueAmountVariation);
@@ -82,6 +85,7 @@ protected:
 Q_SIGNALS:
     void globalAmountChanged();
     void globalPaceChanged();
+    void globalPaceStartChanged();
     void uniqueAmountChanged();
     void uniquePaceChanged();
     void uniqueAmountVariationChanged();
@@ -90,6 +94,7 @@ Q_SIGNALS:
 private:
     QVector3D m_globalAmount;
     QVector3D m_globalPace;
+    QVector3D m_globalPaceStart;
     QVector3D m_uniqueAmount;
     QVector3D m_uniquePace;
     float m_uniqueAmountVariation = 0.0f;
