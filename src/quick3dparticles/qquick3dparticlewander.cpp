@@ -77,6 +77,28 @@ const QVector3D &QQuick3DParticleWander::globalPace() const
 }
 
 /*!
+    \qmlproperty vector3d Wander3D::globalPaceStart
+
+    This property defines the starting point for the pace (frequency). The meaningful range
+    is between 0 .. 2 * PI. For example, to animate the x-coordinate of the pace start:
+
+    \qml
+    PropertyAnimation on globalPaceStart {
+        loops: Animation.Infinite
+        duration: 2000
+        from: Qt.vector3d(0, 0, 0)
+        to: Qt.vector3d(Math.PI * 2, 0, 0)
+    }
+    \endqml
+
+    The default value is \c (0.0, 0.0, 0.0).
+*/
+const QVector3D &QQuick3DParticleWander::globalPaceStart() const
+{
+    return m_globalPaceStart;
+}
+
+/*!
     \qmlproperty vector3d Wander3D::uniqueAmount
 
     This property defines how long distance each particle moves at the ends of curves at maximum.
@@ -153,6 +175,16 @@ void QQuick3DParticleWander::setGlobalPace(const QVector3D &globalPace)
     update();
 }
 
+void QQuick3DParticleWander::setGlobalPaceStart(const QVector3D &globalPaceStart)
+{
+    if (m_globalPaceStart == globalPaceStart)
+        return;
+
+    m_globalPaceStart = globalPaceStart;
+    Q_EMIT globalPaceStartChanged();
+    update();
+}
+
 void QQuick3DParticleWander::setUniqueAmount(const QVector3D &uniqueAmount)
 {
     if (m_uniqueAmount == uniqueAmount)
@@ -208,11 +240,11 @@ void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQui
     const float pi2 = float(M_PI * 2);
     // Global
     if (!qFuzzyIsNull(m_globalAmount.x()) && !qFuzzyIsNull(m_globalPace.x()))
-        d->position.setX(d->position.x() + smooth * QPSIN(time * pi2 * m_globalPace.x()) * m_globalAmount.x());
+        d->position.setX(d->position.x() + smooth * QPSIN(m_globalPaceStart.x() + time * pi2 * m_globalPace.x()) * m_globalAmount.x());
     if (!qFuzzyIsNull(m_globalAmount.y()) && !qFuzzyIsNull(m_globalPace.y()))
-        d->position.setY(d->position.y() + smooth * QPSIN(time * pi2 * m_globalPace.y()) * m_globalAmount.y());
+        d->position.setY(d->position.y() + smooth * QPSIN(m_globalPaceStart.y() + time * pi2 * m_globalPace.y()) * m_globalAmount.y());
     if (!qFuzzyIsNull(m_globalAmount.z()) && !qFuzzyIsNull(m_globalPace.z()))
-        d->position.setZ(d->position.z() + smooth * QPSIN(time * pi2 * m_globalPace.z()) * m_globalAmount.z());
+        d->position.setZ(d->position.z() + smooth * QPSIN(m_globalPaceStart.z() + time * pi2 * m_globalPace.z()) * m_globalAmount.z());
 
     // Unique
     // Rather simple to only use a single sin operation per direction
