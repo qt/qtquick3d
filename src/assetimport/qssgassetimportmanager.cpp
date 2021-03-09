@@ -141,4 +141,22 @@ QHash<QString, QStringList> QSSGAssetImportManager::getSupportedExtensions() con
     return extensionMap;
 }
 
+QList<QSSGAssetImporterPluginInfo> QSSGAssetImportManager::getImporterPluginInfos() const
+{
+    QList<QSSGAssetImporterPluginInfo> output;
+
+    for (const QSSGAssetImporter *importer : m_assetImporters) {
+        QSSGAssetImporterPluginInfo plugin;
+        plugin.name = importer->name();
+        plugin.inputExtensions = importer->inputExtensions();
+        plugin.outputExtension = importer->outputExtension();
+        plugin.type = importer->type();
+        plugin.importOptions = importer->importOptions();
+        plugin.typeDescription = importer->typeDescription();
+        output.push_back(plugin);
+    }
+
+    return output;
+}
+
 QT_END_NAMESPACE

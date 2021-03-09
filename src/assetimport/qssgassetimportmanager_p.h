@@ -53,6 +53,16 @@ QT_BEGIN_NAMESPACE
 
 class QSSGAssetImporter;
 
+struct QSSGAssetImporterPluginInfo
+{
+    QString name;
+    QStringList inputExtensions;
+    QString outputExtension;
+    QString type;
+    QVariantMap importOptions;
+    QString typeDescription;
+};
+
 class Q_QUICK3DASSETIMPORT_EXPORT QSSGAssetImportManager : public QObject
 {
     Q_OBJECT
@@ -78,6 +88,7 @@ public:
     QVariantMap getOptionsForFile(const QString &filename);
     QHash<QString, QVariantMap> getAllOptions() const;
     QHash<QString, QStringList> getSupportedExtensions() const;
+    QList<QSSGAssetImporterPluginInfo> getImporterPluginInfos() const;
 
 private:
     QVector<QSSGAssetImporter *> m_assetImporters;
