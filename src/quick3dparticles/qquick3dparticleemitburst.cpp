@@ -136,7 +136,10 @@ void QQuick3DParticleEmitBurst::setAmount(int amount)
 {
     if (m_amount == amount)
         return;
-
+    if (amount < 0) {
+        qWarning () << "EmitBurst3D: Amount must be positive.";
+        return;
+    }
     m_amount = amount;
     Q_EMIT amountChanged();
 }
@@ -145,7 +148,10 @@ void QQuick3DParticleEmitBurst::setDuration(int duration)
 {
     if (m_duration == duration)
         return;
-
+    if (duration < 0) {
+        qWarning () << "EmitBurst3D: Duration must be positive.";
+        return;
+    }
     m_duration = duration;
     Q_EMIT durationChanged();
 }
