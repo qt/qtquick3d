@@ -10,7 +10,7 @@ qt_internal_add_qml_module(qtquick3dparticles3dplugin
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick3DParticles3DPlugin
     DEPENDENCIES
-        QtQuick3D/6.1
+        QtQuick3D/auto
     SKIP_TYPE_REGISTRATION
     SOURCES
         plugin.cpp

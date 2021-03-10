@@ -57,8 +57,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystemLogging : public QObject
     Q_PROPERTY(int particlesUsed READ particlesUsed NOTIFY particlesUsedChanged)
     Q_PROPERTY(float time READ time NOTIFY timeChanged)
     Q_PROPERTY(float timeAverage READ timeAverage NOTIFY timeAverageChanged)
-    QML_NAMED_ELEMENT(ParticleSystem3DLogging)
-    QML_UNCREATABLE("ParticleSystem3DLogging is abstract")
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleSystemLogging(QObject *parent = nullptr);

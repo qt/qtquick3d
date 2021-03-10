@@ -59,6 +59,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QQuick3DNode
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     QML_NAMED_ELEMENT(Affector3D)
     QML_UNCREATABLE("Affector3D is abstract")
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleAffector(QQuick3DNode *parent = nullptr);

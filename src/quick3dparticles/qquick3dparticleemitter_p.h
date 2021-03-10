@@ -70,6 +70,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(QVector3D particleRotationVelocity READ particleRotationVelocity WRITE setParticleRotationVelocity NOTIFY particleRotationVelocityChanged)
     Q_PROPERTY(QVector3D particleRotationVelocityVariation READ particleRotationVelocityVariation WRITE setParticleRotationVelocityVariation NOTIFY particleRotationVariationVelocityChanged)
     QML_NAMED_ELEMENT(ParticleEmitter3D)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleEmitter(QQuick3DNode *parent = nullptr);

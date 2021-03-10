@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEGRAVITY_H
-#define QQUICK3DPARTICLEGRAVITY_H
+#ifndef QQUICK3DPARTICLEFOREIGN_P_H
+#define QQUICK3DPARTICLEFOREIGN_P_H
 
 //
 //  W A R N I N G
@@ -41,42 +41,21 @@
 // We mean it.
 //
 
-#include <QObject>
-#include <QtQuick3DParticles/private/qquick3dparticleaffector_p.h>
+// This is required so that Quick3D types are seen at compile time to
+// generate code for types inheriting from them.
+
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleGravity : public QQuick3DParticleAffector
+struct QQuick3DNodeForeign
 {
-    Q_OBJECT
-    Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
-    QML_NAMED_ELEMENT(Gravity3D)
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuick3DNode)
     QML_ADDED_IN_VERSION(6, 1)
-
-public:
-    QQuick3DParticleGravity(QQuick3DNode *parent = nullptr);
-
-    float magnitude() const;
-    const QVector3D &direction() const;
-
-public Q_SLOTS:
-    void setDirection(const QVector3D &direction);
-    void setMagnitude(float magnitude);
-
-protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
-
-Q_SIGNALS:
-    void magnitudeChanged();
-    void directionChanged();
-
-private:
-    float m_magnitude = 100.0f;
-    QVector3D m_direction = {0.0f, -1.0f, 0.0f};
-    QVector3D m_directionNormalized = {0.0f, -1.0f, 0.0f};
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEGRAVITY_H
+#endif // QQUICK3DPARTICLEFOREIGN_P_H

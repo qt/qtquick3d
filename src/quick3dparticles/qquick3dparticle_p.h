@@ -65,6 +65,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
     Q_PROPERTY(QVector3D alignTargetPosition READ alignTargetPosition WRITE setAlignTargetPosition NOTIFY alignTargetPositionChanged)
     QML_NAMED_ELEMENT(Particle3D)
     QML_UNCREATABLE("Particle3D is abstract")
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticle(QQuick3DObject *parent = nullptr);
