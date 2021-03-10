@@ -42,7 +42,7 @@
 //
 
 #include <QtQuick3DParticles/private/qquick3dparticleemitter_p.h>
-#include <QtQuick3DParticles/private/qquick3dparticlemodelparticle_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 #include <QQmlEngine>
 #include <QList>
@@ -52,19 +52,19 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleTrailEmitter : public QQuick3DParticleEmitter
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DParticleModelParticle *follow READ follow WRITE setFollow NOTIFY followChanged)
+    Q_PROPERTY(QQuick3DParticle *follow READ follow WRITE setFollow NOTIFY followChanged)
     QML_NAMED_ELEMENT(TrailEmitter3D)
     QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleTrailEmitter(QQuick3DNode *parent = nullptr);
 
-    QQuick3DParticleModelParticle * follow() const;
+    QQuick3DParticle *follow() const;
 
     Q_INVOKABLE void burst(int count) override;
 
 public Q_SLOTS:
-    void setFollow(QQuick3DParticleModelParticle *follow);
+    void setFollow(QQuick3DParticle *follow);
 
 protected:
     friend class QQuick3DParticleSystem;
@@ -76,7 +76,7 @@ Q_SIGNALS:
     void followChanged();
 
 private:
-    QQuick3DParticleModelParticle *m_follow = nullptr;
+    QQuick3DParticle *m_follow = nullptr;
     QList<QQuick3DParticleEmitBurstData> m_bursts;
 
 };
