@@ -55,8 +55,8 @@ class QQuick3DParticleSystem;
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDirection : public QObject
 {
     Q_OBJECT
-    QML_NAMED_ELEMENT(Direction3D)
-    QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleDirection(QObject *parent = nullptr);

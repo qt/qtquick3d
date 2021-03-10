@@ -61,6 +61,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(QQuick3DTexture* colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     enum BlendMode { SourceOver = 0, Screen, Multiply };

@@ -58,6 +58,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleWander : public QQuick3DParticle
     Q_PROPERTY(float uniqueAmountVariation READ uniqueAmountVariation WRITE setUniqueAmountVariation NOTIFY uniqueAmountVariationChanged)
     Q_PROPERTY(float uniquePaceVariation READ uniquePaceVariation WRITE setUniquePaceVariation NOTIFY uniquePaceVariationChanged)
     QML_NAMED_ELEMENT(Wander3D)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleWander(QQuick3DNode *parent = nullptr);

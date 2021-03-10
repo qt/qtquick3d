@@ -55,6 +55,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAttractor : public QQuick3DParti
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
     Q_PROPERTY(bool hideAtEnd READ hideAtEnd WRITE setHideAtEnd NOTIFY hideAtEndChanged)
     QML_NAMED_ELEMENT(Attractor3D)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleAttractor(QQuick3DNode *parent = nullptr);

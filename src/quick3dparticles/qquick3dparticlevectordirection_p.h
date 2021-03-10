@@ -52,6 +52,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleVectorDirection : public QQuick3
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
     Q_PROPERTY(QVector3D directionVariation READ directionVariation WRITE setDirectionVariation NOTIFY directionVariationChanged)
     QML_NAMED_ELEMENT(VectorDirection3D)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleVectorDirection(QObject *parent = nullptr);

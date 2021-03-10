@@ -53,6 +53,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticlePointRotator : public QQuick3DPa
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
     Q_PROPERTY(QVector3D pivotPoint READ pivotPoint WRITE setPivotPoint NOTIFY pivotPointChanged)
     QML_NAMED_ELEMENT(PointRotator3D)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticlePointRotator(QQuick3DNode *parent = nullptr);

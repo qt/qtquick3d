@@ -59,6 +59,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitBurst : public QObject, publ
 
     QML_NAMED_ELEMENT(EmitBurst3D)
     Q_INTERFACES(QQmlParserStatus)
+    QML_ADDED_IN_VERSION(6, 1)
 
 public:
     QQuick3DParticleEmitBurst(QObject *parent = nullptr);
