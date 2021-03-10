@@ -53,11 +53,12 @@ QQuick3DParticleTrailEmitter::QQuick3DParticleTrailEmitter(QQuick3DNode *parent)
     When the TrailEmitter3D emits particles, center position of those particles
     will become from the \l Particle3D the emitter follows.
 */
-QQuick3DParticleModelParticle* QQuick3DParticleTrailEmitter::follow() const
+QQuick3DParticle *QQuick3DParticleTrailEmitter::follow() const
 {
     return m_follow;
 }
-void QQuick3DParticleTrailEmitter::setFollow(QQuick3DParticleModelParticle *follow)
+
+void QQuick3DParticleTrailEmitter::setFollow(QQuick3DParticle *follow)
 {
     if (m_follow == follow)
         return;
