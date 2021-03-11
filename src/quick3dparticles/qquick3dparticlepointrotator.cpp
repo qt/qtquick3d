@@ -119,6 +119,7 @@ void QQuick3DParticlePointRotator::affectParticle(const QQuick3DParticleData &sd
 {
     // Rotate based on the current position
     // Note that this means order of PointRotator element compared to other affectors matters
+    Q_UNUSED(sd);
     if (!qFuzzyIsNull(m_magnitude)) {
         QMatrix4x4 m2;
         m2.translate(m_pivotPoint);
