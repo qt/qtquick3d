@@ -96,6 +96,7 @@ void QQuick3DParticleGravity::setDirection(const QVector3D &direction)
 
 void QQuick3DParticleGravity::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
+    Q_UNUSED(sd);
     float velocity = 0.5f * m_magnitude * (time * time);
     d->position += velocity * m_directionNormalized;
 }
