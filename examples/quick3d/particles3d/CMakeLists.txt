@@ -56,6 +56,7 @@ set(qml_resource_files
     "qml/SystemPlayPause.qml"
     "qml/TrailEmitterBurst.qml"
     "qml/HeartTrail.qml"
+    "qml/OceanSpider.qml"
     "qml/images/arrow_icon.png"
     "qml/images/icon_interval.png"
     "qml/images/icon_logging.png"
@@ -78,6 +79,7 @@ set(qml_resource_files
     "qml/images/dust.png"
     "qml/images/bear_black.png"
     "qml/images/explosion_01_strip13.png"
+    "qml/images/leather_n.png"
     "qml/main.qml"
 )
 

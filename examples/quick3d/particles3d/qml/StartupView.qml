@@ -114,6 +114,10 @@ Item {
             name: "Animated Sprite"
             file: "AnimatedSprite.qml"
         }
+        ListElement {
+            name: "Giant Ocean Spider"
+            file: "OceanSpider.qml"
+        }
     }
 
     View3D {
