@@ -39,5 +39,7 @@
         <file>qml/SettingsView.qml</file>
         <file>qml/StartupView.qml</file>
         <file>qml/images/color_table3.png</file>
+        <file>qml/OceanSpider.qml</file>
+        <file>qml/images/leather_n.png</file>
     </qresource>
 </RCC>
