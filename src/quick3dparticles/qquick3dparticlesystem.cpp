@@ -84,7 +84,8 @@ QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     , m_paused(false)
     , m_initialized(false)
     , m_componentComplete(false)
-    , m_animation(nullptr)
+    , m_animation(new QQuick3DParticleSystemAnimation(this))
+    , m_updateAnimation(new QQuick3DParticleSystemUpdate(this))
     , m_logging(false)
     , m_loggingData(new QQuick3DParticleSystemLogging(this))
 {
@@ -96,8 +97,9 @@ QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
 
 QQuick3DParticleSystem::~QQuick3DParticleSystem()
 {
-    if (m_animation)
-        m_animation->stop();
+    m_animation->stop();
+    m_updateAnimation->stop();
+
     for (const auto &connection : qAsConst(m_connections))
         QObject::disconnect(connection);
     // purposeful copy
@@ -276,15 +278,14 @@ void QQuick3DParticleSystem::setRunning(bool arg)
         if (m_componentComplete && !m_running && m_useRandomSeed)
             doSeedRandomization();
 
-        if (m_animation)
-            m_running ? m_animation->start() : m_animation->stop();
+        m_running ? m_animation->start() : m_animation->stop();
     }
 }
 
 void QQuick3DParticleSystem::setPaused(bool arg) {
     if (m_paused != arg) {
         m_paused = arg;
-        if (m_animation && m_animation->state() != QAbstractAnimation::Stopped)
+        if (m_animation->state() != QAbstractAnimation::Stopped)
             m_paused ? m_animation->pause() : m_animation->resume();
         Q_EMIT pausedChanged();
     }
@@ -304,9 +305,9 @@ void QQuick3DParticleSystem::setTime(int time)
     if (m_time == time)
         return;
 
+    // Update the time and mark the system dirty
     m_time = time;
-
-    updateCurrentTime(m_time + m_startTime);
+    m_updateAnimation->setDirty(true);
 
     Q_EMIT timeChanged();
 }
@@ -357,7 +358,7 @@ void QQuick3DParticleSystem::componentComplete()
 {
     QQuick3DNode::componentComplete();
     m_componentComplete = true;
-    m_animation = new QQuick3DParticleSystemAnimation(this);
+    m_updateAnimation->start();
 
     connect(&m_loggingTimer, &QTimer::timeout, this, &QQuick3DParticleSystem::updateLoggingData);
     m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
@@ -375,26 +376,29 @@ void QQuick3DParticleSystem::reset()
     if (!m_componentComplete)
         return;
 
-    timeInt = 0;
+    m_time = 0;
 
-    // TODO: Reset particles & emitters
-
-    if (m_animation) {
-        //reset restarts animation (if running)
-        if ((m_animation->state() == QAbstractAnimation::Running))
-            m_animation->stop();
-        if (m_running)
-            m_animation->start();
-        if (m_paused)
-            m_animation->pause();
-    }
+    // Reset restarts the animation (if running)
+    if ((m_animation->state() == QAbstractAnimation::Running))
+        m_animation->stop();
+    if (m_running)
+        m_animation->start();
+    if (m_paused)
+        m_animation->pause();
 
     m_initialized = true;
 }
 
 void QQuick3DParticleSystem::refresh() {
-    // Call with the same time
-    updateCurrentTime(timeInt);
+    // If the system isn't running, force refreshing by calling update
+    // with the current time
+    if (!m_running)
+        updateCurrentTime(m_time);
+}
+
+void QQuick3DParticleSystem::markDirty() {
+    // Mark the system dirty so things are updated at the next frame.
+    m_updateAnimation->setDirty(true);
 }
 
 int QQuick3DParticleSystem::particleCount() const
@@ -469,7 +473,7 @@ void QQuick3DParticleSystem::unRegisterParticleEmitter(QQuick3DParticleEmitter* 
 void QQuick3DParticleSystem::registerParticleAffector(QQuick3DParticleAffector* a)
 {
     m_affectors << a;
-    m_connections.insert(a, connect(a, &QQuick3DParticleAffector::update, this, &QQuick3DParticleSystem::refresh));
+    m_connections.insert(a, connect(a, &QQuick3DParticleAffector::update, this, &QQuick3DParticleSystem::markDirty));
 }
 
 void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector* a)
@@ -484,8 +488,8 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     if (!m_initialized)
         return;
 
-    timeInt = currentTime;
-    float timeS = float(timeInt / 1000.0);
+    m_time = currentTime;
+    float timeS = float(m_time / 1000.0);
 
     m_particlesMax = 0;
     m_particlesUsed = 0;
@@ -638,6 +642,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         emitter->clearBursts();
 
     m_timeAnimation += m_perfTimer.nsecsElapsed();
+    m_updateAnimation->setDirty(false);
 }
 
 void QQuick3DParticleSystem::updateLoggingData()

@@ -86,7 +86,7 @@ void QQuick3DParticleEmitter::setEnabled(bool enabled)
     if (enabled && m_system) {
         // When enabling, we need to reset the
         // previous emit time as it might be a long time ago.
-        m_prevEmitTime = m_system->timeInt;
+        m_prevEmitTime = m_system->time();
     }
 
     m_enabled = enabled;
@@ -171,7 +171,7 @@ void QQuick3DParticleEmitter::setEmitRate(float emitRate)
     if (m_emitRate == 0 && m_system) {
         // When changing emit rate from 0 we need to reset
         // previous emit time as it may be long time ago
-        m_prevEmitTime = m_system->timeInt;
+        m_prevEmitTime = m_system->time();
     }
     m_emitRate = emitRate;
     Q_EMIT emitRateChanged();
@@ -515,7 +515,7 @@ void QQuick3DParticleEmitter::burst(int count, int duration, const QVector3D &po
     if (!m_system)
         return;
     QQuick3DParticleEmitBurstData burst;
-    burst.time = m_system->timeInt;
+    burst.time = m_system->time();
     burst.amount = count;
     burst.duration = duration;
     burst.position = position;
@@ -674,7 +674,7 @@ int QQuick3DParticleEmitter::getEmitAmount()
     if (m_emitRate <= 0.0f)
         return 0;
 
-    float timeChange = m_system->timeInt - m_prevEmitTime;
+    float timeChange = m_system->time() - m_prevEmitTime;
     float emitAmountF = timeChange / (1000.0f / m_emitRate);
     int emitAmount = floorf(emitAmountF);
     // Store the partly unemitted particles
@@ -734,17 +734,18 @@ void QQuick3DParticleEmitter::emitParticles()
     if (emitAmount < 1)
             return;
 
+    const int systemTime = m_system->time();
     QVector3D centerPos = position();
 
     emitAmount = std::min(emitAmount, int(m_particle->maxAmount()));
     for (int i = 0; i < emitAmount; i++) {
         // Distribute evenly between previous and current time, important especially
         // when time has jumped a lot (like a starttime).
-        float startTime = (m_prevEmitTime / 1000.0) + (float(1+i) / emitAmount) * ((m_system->timeInt - m_prevEmitTime) / 1000.0);
+        float startTime = (m_prevEmitTime / 1000.0) + (float(1+i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0);
         emitParticle(m_particle, startTime, centerPos);
     }
 
-    m_prevEmitTime = m_system->timeInt;
+    m_prevEmitTime = systemTime;
 }
 
 void QQuick3DParticleEmitter::componentComplete()

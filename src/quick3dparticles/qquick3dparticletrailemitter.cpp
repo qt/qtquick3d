@@ -80,7 +80,7 @@ void QQuick3DParticleTrailEmitter::burst(int count)
     if (!m_system)
         return;
     QQuick3DParticleEmitBurstData burst;
-    burst.time = m_system->timeInt;
+    burst.time = m_system->time();
     burst.amount = count;
     m_bursts << burst;
 }
@@ -99,6 +99,7 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
     if (!m_enabled)
         return;
 
+    const int systemTime = m_system->time();
     QVector3D centerPos = d->position;
 
     for (auto particle : qAsConst(m_system->m_particles)) {
@@ -107,7 +108,7 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
             for (int i = 0; i < emitAmount; i++) {
                 // Distribute evenly between previous and current time, important especially
                 // when time has jumped a lot (like a starttime).
-                float startTime = (m_prevEmitTime / 1000.0f) + (float(1 + i) / emitAmount) * ((m_system->timeInt - m_prevEmitTime) / 1000.0f);
+                float startTime = (m_prevEmitTime / 1000.0f) + (float(1 + i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0f);
                 emitParticle(particle, startTime, centerPos);
             }
             // Emit bursts, if any
@@ -120,7 +121,7 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
         }
     }
 
-    m_prevEmitTime = m_system->timeInt;
+    m_prevEmitTime = systemTime;
 }
 
 void QQuick3DParticleTrailEmitter::clearBursts()
