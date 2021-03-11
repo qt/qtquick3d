@@ -608,8 +608,15 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     }
 
     // Velocity
-    if (m_velocity)
+    if (m_velocity) {
         d->startVelocity = m_velocity->sample(*d);
+        QQuaternion rot = rotation();
+        if (!rot.isNull()) {
+            QMatrix4x4 m;
+            m.rotate(rot);
+            d->startVelocity = m.map(d->startVelocity);
+        }
+    }
 
     // Rotation
     if (!m_particleRotation.isNull() || !m_particleRotationVariation.isNull()) {
