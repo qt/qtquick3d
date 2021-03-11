@@ -159,7 +159,7 @@ QVector3D QQuick3DParticleShape::randomPosition(int particleIndex) const
 QVector3D QQuick3DParticleShape::randomPositionCube(int particleIndex) const
 {
     auto rand = m_system->rand();
-    QVector3D s = m_parentNode->sceneScale() * m_extents;
+    QVector3D s = m_parentNode->scale() * m_extents;
     float x = s.x() - (rand->get(particleIndex, QPRand::Shape1) * s.x() * 2.0f);
     float y = s.y() - (rand->get(particleIndex, QPRand::Shape2) * s.y() * 2.0f);
     float z = s.z() - (rand->get(particleIndex, QPRand::Shape3) * s.z() * 2.0f);
@@ -187,7 +187,7 @@ QVector3D QQuick3DParticleShape::randomPositionCube(int particleIndex) const
 QVector3D QQuick3DParticleShape::randomPositionSphere(int particleIndex) const
 {
     auto rand = m_system->rand();
-    QVector3D scale = m_parentNode->sceneScale() * m_extents;
+    QVector3D scale = m_parentNode->scale() * m_extents;
     float theta = rand->get(particleIndex, QPRand::Shape1) * float(M_PI) * 2.0f;
     float v = rand->get(particleIndex, QPRand::Shape2);
     float phi = acos((2.0f * v) - 1.0f);
@@ -205,7 +205,7 @@ QVector3D QQuick3DParticleShape::randomPositionSphere(int particleIndex) const
 QVector3D QQuick3DParticleShape::randomPositionCylinder(int particleIndex) const
 {
     auto rand = m_system->rand();
-    QVector3D scale = m_parentNode->sceneScale() * m_extents;
+    QVector3D scale = m_parentNode->scale() * m_extents;
     float y = scale.y() - (rand->get(particleIndex, QPRand::Shape1) * scale.y() * 2.0f);
     float r = 1.0f;
     if (m_fill)
