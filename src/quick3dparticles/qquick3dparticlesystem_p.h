@@ -70,6 +70,7 @@ struct QQuick3DParticleData;
 
 class QQuick3DParticle;
 class QQuick3DParticleSystemAnimation;
+class QQuick3DParticleSystemUpdate;
 class QQuick3DParticleInstanceTable;
 
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystem : public QQuick3DNode
@@ -124,6 +125,7 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void refresh();
+    void markDirty();
 
 protected:
     void componentComplete() override;
@@ -149,17 +151,17 @@ private:
 private:
     friend class QQuick3DParticleEmitter;
     friend class QQuick3DParticleTrailEmitter;
+    friend class QQuick3DParticleSystemUpdate;
 
     bool m_running;
     bool m_paused;
     bool m_initialized;
     bool m_componentComplete;
+    // This animation runs the system, progressing time with pause, continue etc.
     QQuick3DParticleSystemAnimation* m_animation = nullptr;
-
-    // Current time in ms
-    int timeInt = 0;
-    // Time in ms when update last time happened
-    int m_prevTimeInt = 0;
+    // This animation handles system dirty updates and runs always.
+    // It makes sure that updates are done in sync with other animations and only once per frame.
+    QQuick3DParticleSystemUpdate *m_updateAnimation = nullptr;
 
     QList<QQuick3DParticleModelParticle *> m_modelParticles;
     QList<QQuick3DParticleSpriteParticle *> m_spriteParticles;
@@ -170,6 +172,7 @@ private:
     QMap<QQuick3DParticleAffector *, QMetaObject::Connection> m_connections;
 
     int m_startTime = 0;
+    // Current time in ms
     int m_time = 0;
     QElapsedTimer m_perfTimer;
     QTimer m_loggingTimer;
@@ -210,6 +213,37 @@ protected:
 
 private:
     QQuick3DParticleSystem* m_system;
+};
+
+class QQuick3DParticleSystemUpdate : public QAbstractAnimation
+{
+    Q_OBJECT
+public:
+    QQuick3DParticleSystemUpdate(QQuick3DParticleSystem* system)
+        : QAbstractAnimation(static_cast<QObject*>(system)), m_system(system)
+    { }
+
+    void setDirty(bool dirty)
+    {
+        m_dirty = dirty;
+    }
+
+protected:
+    void updateCurrentTime(int t) override
+    {
+        Q_UNUSED(t);
+        if (m_dirty)
+            m_system->refresh();
+    }
+
+    int duration() const override
+    {
+        return -1;
+    }
+
+private:
+    QQuick3DParticleSystem* m_system;
+    bool m_dirty = false;
 };
 
 QT_END_NAMESPACE
