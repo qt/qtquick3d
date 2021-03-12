@@ -159,6 +159,7 @@ Item {
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
+                depthBias: depthBias.sliderValue
                 Model {
                     source: "#Cube"
                     opacity: 0.4
@@ -176,6 +177,7 @@ Item {
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
+                depthBias: depthBias.sliderValue
                 Model {
                     source: "#Sphere"
                     opacity: 0.4
@@ -193,6 +195,7 @@ Item {
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
+                depthBias: depthBias.sliderValue
                 Model {
                     source: "#Cylinder"
                     opacity: 0.4
@@ -210,6 +213,7 @@ Item {
                 }
                 emitRate: sliderEmitRate.sliderValue
                 lifeSpan: 2000
+                depthBias: depthBias.sliderValue
                 Model {
                     source: "#Sphere"
                     opacity: 0.4
@@ -235,6 +239,15 @@ Item {
             sliderValue: 1000
             fromValue: 0
             toValue: 2000
+        }
+        CustomLabel {
+            text: "Particle depthBias"
+        }
+        CustomSlider {
+            id: depthBias
+            sliderValue: 10
+            fromValue: -20
+            toValue: 20
         }
     }
 

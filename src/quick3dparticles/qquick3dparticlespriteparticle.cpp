@@ -341,6 +341,7 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
     particles->m_blendMode = mapBlendMode(m_blendMode);
     particles->m_diffuseColor = color::sRGBToLinear(color());
     particles->m_billboard = m_billboard;
+    particles->m_depthBias = depthBias();
 
     m_dirty = false;
     return particles;

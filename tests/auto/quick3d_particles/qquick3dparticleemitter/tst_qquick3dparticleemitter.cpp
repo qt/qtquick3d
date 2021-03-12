@@ -65,6 +65,7 @@ void tst_QQuick3DParticleEmitter::testInitialization()
     QVERIFY(qFuzzyCompare(emitter->particleRotationVariation(), QVector3D()));
     QVERIFY(qFuzzyCompare(emitter->particleRotationVelocity(), QVector3D()));
     QVERIFY(qFuzzyCompare(emitter->particleRotationVelocityVariation(), QVector3D()));
+    QVERIFY(qFuzzyCompare(emitter->depthBias(), 0.0f));
 
     delete emitter;
 }
@@ -131,6 +132,12 @@ void tst_QQuick3DParticleEmitter::testEmitter()
     const QVector3D velocityVariation(0.1f, 0.3f, 0.4f);
     emitter->setParticleRotationVelocityVariation(velocityVariation);
     QVERIFY(qFuzzyCompare(emitter->particleRotationVelocityVariation(), velocityVariation));
+
+    emitter->setDepthBias(10.0f);
+    QVERIFY(qFuzzyCompare(emitter->depthBias(), 10.0f));
+
+    emitter->setDepthBias(-10.0f);
+    QVERIFY(qFuzzyCompare(emitter->depthBias(), -10.0f));
 
     delete system;
 }

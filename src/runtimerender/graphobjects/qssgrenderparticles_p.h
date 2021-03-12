@@ -105,6 +105,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     QVector4D m_diffuseColor{1.0f, 1.0f, 1.0f, 1.0f};
     QSSGRenderImage *m_sprite = nullptr;
     int m_spriteImageCount = 1;
+    float m_depthBias = 0.0f;
     bool m_blendImages = true;
     bool m_billboard = true;
     QSSGRenderImage *m_colorTable = nullptr;

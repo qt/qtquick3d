@@ -205,6 +205,12 @@ QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
     return *cameraDirection;
 }
 
+static inline float signedSquare(float val)
+{
+    const float sign = (val >= 0.0f) ? 1.0f : -1.0f;
+    return sign * val * val;
+}
+
 // Per-frame cache of renderable objects post-sort.
 const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOpaqueRenderableObjects(bool performSort)
 {
@@ -218,7 +224,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getOp
         for (int idx = 0, end = renderedOpaqueObjects.size(); idx < end; ++idx) {
             QSSGRenderableObjectHandle &theInfo = renderedOpaqueObjects[idx];
             const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
-            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection);
+            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection) + signedSquare(theInfo.obj->depthBias);
         }
 
         static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
@@ -250,7 +256,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
         for (quint32 idx = 0, end = renderedTransparentObjects.size(); idx < end; ++idx) {
             QSSGRenderableObjectHandle &theInfo = renderedTransparentObjects[idx];
             const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
-            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection);
+            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection) + signedSquare(theInfo.obj->depthBias);
         }
 
         static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {

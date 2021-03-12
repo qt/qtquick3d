@@ -113,6 +113,11 @@ protected:
             m_particleUpdateNode->update();
         }
     }
+    void setDepthBias(float bias) override
+    {
+        QQuick3DParticle::setDepthBias(bias);
+        m_dirty = true;
+    }
 
 private:
     friend class QQuick3DParticleSystem;

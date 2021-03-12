@@ -149,6 +149,14 @@ protected:
     int m_lastBurstIndex = 0;
     AlignMode m_alignMode = AlignNone;
     QVector3D m_alignTarget;
+    virtual void setDepthBias(float bias)
+    {
+        m_depthBias = bias;
+    }
+    float depthBias() const
+    {
+        return m_depthBias;
+    }
 
 private:
     friend class QQuick3DParticleSystem;
@@ -163,6 +171,7 @@ private:
     FadeType m_fadeOutEffect = FadeOpacity;
     int m_fadeInDuration = 250;
     int m_fadeOutDuration = 250;
+    float m_depthBias = 0.0f;
 };
 
 QT_END_NAMESPACE
