@@ -52,7 +52,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                            const QSSGShaderLightList &inLights,
                                            const QSSGDataView<float> &inMorphWeights)
-    : QSSGRenderableObject(inFlags, inWorldCenterPt, inModelContext.model.globalTransform, inSubset.bounds, 0.0f)
+    : QSSGRenderableObject(inFlags, inWorldCenterPt, inModelContext.model.globalTransform, inSubset.bounds, inModelContext.model.m_depthBias)
     , generator(gen)
     , modelContext(inModelContext)
     , subset(inSubset)

@@ -85,6 +85,12 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void reset() override;
 
+    void setDepthBias(float bias) override
+    {
+        QQuick3DParticle::setDepthBias(bias);
+        if (m_node)
+            updateDepthBias(bias);
+    }
 private:
     void regenerate();
     void handleMaxAmountChanged(int amount);
@@ -97,6 +103,7 @@ private:
                      const QVector3D &eulerRotation, const QColor &color);
     void commitInstance();
     void setHasTransparency(bool transparent);
+    void updateDepthBias(float bias);
 
     QQuick3DParticleSystem *m_system = nullptr;
     QPointer<QQmlComponent> m_delegate;

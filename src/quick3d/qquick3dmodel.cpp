@@ -333,6 +333,19 @@ QQuick3DBounds3 QQuick3DModel::bounds() const
     return m_bounds;
 }
 
+/*!
+    \qmlproperty real Model::depthBias
+
+    Holds the depth bias of the model. Depth bias is added to the object distance from camera when sorting
+    objects. This can be used to force rendering order between objects close to each other, that
+    might otherwise be rendered in different order in different frames. Negative values cause the
+    sorting value to move closer to the camera while positive values move it further from the camera.
+*/
+float QQuick3DModel::depthBias() const
+{
+    return m_depthBias;
+}
+
 void QQuick3DModel::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -475,6 +488,16 @@ void QQuick3DModel::setInstanceRoot(QQuick3DNode *instanceRoot)
     emit instanceRootChanged();
 }
 
+void QQuick3DModel::setDepthBias(float bias)
+{
+    if (qFuzzyCompare(bias, m_depthBias))
+        return;
+
+    m_depthBias = bias;
+    markDirty(PropertyDirty);
+    emit depthBiasChanged();
+}
+
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
@@ -589,6 +612,9 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         modelNode->inverseBindPoses = m_inverseBindPoses.toVector();
         modelNode->skinningDirty = true;
     }
+
+    if (m_dirtyAttributes & PropertyDirty)
+        modelNode->m_depthBias = m_depthBias;
 
     m_dirtyAttributes = dirtyAttribute;
 

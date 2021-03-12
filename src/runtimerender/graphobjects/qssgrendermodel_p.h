@@ -64,6 +64,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QSSGRenderPath meshPath;
     QSSGRenderSkeleton *skeleton = nullptr;
     QVector<QMatrix4x4> inverseBindPoses;
+    float m_depthBias = 0.0f;
     bool castsShadows = true;
     bool receivesShadows = true;
     bool skinningDirty = false;

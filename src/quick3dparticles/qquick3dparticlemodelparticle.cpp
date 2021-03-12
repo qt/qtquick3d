@@ -153,17 +153,24 @@ void QQuick3DParticleModelParticle::setHasTransparency(bool transparent)
         m_instanceTable->setHasTransparency(transparent);
 }
 
-static void setInstancing(QQuick3DNode *node, QQuick3DInstancing *instanceTable)
+static void setInstancing(QQuick3DNode *node, QQuick3DInstancing *instanceTable, float bias)
 {
     auto *asModel = qobject_cast<QQuick3DModel *>(node);
-    if (asModel)
+    if (asModel) {
         asModel->setInstancing(instanceTable);
+        asModel->setDepthBias(bias);
+    }
     const auto children = node->childItems();
     for (auto *child : children) {
         auto *childNode = qobject_cast<QQuick3DNode *>(child);
         if (childNode)
-            setInstancing(childNode, instanceTable);
+            setInstancing(childNode, instanceTable, bias);
     }
+}
+
+void QQuick3DParticleModelParticle::updateDepthBias(float bias)
+{
+    setInstancing(m_node, m_instanceTable, bias);
 }
 
 void QQuick3DParticleModelParticle::regenerate()
@@ -190,7 +197,7 @@ void QQuick3DParticleModelParticle::regenerate()
 
     m_node = qobject_cast<QQuick3DNode *>(obj);
     if (m_node) {
-        setInstancing(m_node, m_instanceTable);
+        setInstancing(m_node, m_instanceTable, depthBias());
         auto *particleSystem = system();
         m_node->setParent(particleSystem);
         m_node->setParentItem(particleSystem);

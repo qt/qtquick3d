@@ -113,6 +113,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
     Q_PROPERTY(QList<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION(1, 1))
+    Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
 
     QML_NAMED_ELEMENT(Model)
     QML_ADDED_IN_VERSION(1, 14)
@@ -129,6 +130,7 @@ public:
     QQuick3DSkeleton *skeleton() const;
     QList<QMatrix4x4> inverseBindPoses() const;
     QQuick3DBounds3 bounds() const;
+    float depthBias() const;
 
     QQmlListProperty<QQuick3DMaterial> materials();
     QQmlListProperty<QQuick3DMorphTarget> morphTargets();
@@ -147,6 +149,7 @@ public Q_SLOTS:
     void setBounds(const QVector3D &min, const QVector3D &max);
     void setInstancing(QQuick3DInstancing *instancing);
     void setInstanceRoot(QQuick3DNode *instanceRoot);
+    void setDepthBias(float bias);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -160,6 +163,7 @@ Q_SIGNALS:
     void instancingChanged();
     void instanceRootChanged();
     void morphTargetsChanged();
+    void depthBiasChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -180,7 +184,8 @@ private:
         SkeletonDirty =          0x00000020,
         PoseDirty =              0x00000040,
         InstancesDirty =         0x00000080,
-        MorphTargetsDirty =      0x00000100
+        MorphTargetsDirty =      0x00000100,
+        PropertyDirty =          0x00000200,
     };
 
     QString translateSource();
@@ -216,6 +221,7 @@ private:
     QMetaObject::Connection m_geometryConnection;
     QMetaObject::Connection m_skeletonConnection;
     QMetaObject::Connection m_instancingConnection;
+    float m_depthBias = 0.0f;
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;
