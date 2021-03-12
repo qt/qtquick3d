@@ -69,6 +69,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(QVector3D particleRotationVariation READ particleRotationVariation WRITE setParticleRotationVariation NOTIFY particleRotationVariationChanged)
     Q_PROPERTY(QVector3D particleRotationVelocity READ particleRotationVelocity WRITE setParticleRotationVelocity NOTIFY particleRotationVelocityChanged)
     Q_PROPERTY(QVector3D particleRotationVelocityVariation READ particleRotationVelocityVariation WRITE setParticleRotationVelocityVariation NOTIFY particleRotationVariationVelocityChanged)
+    Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
+
     QML_NAMED_ELEMENT(ParticleEmitter3D)
     QML_ADDED_IN_VERSION(6, 1)
 
@@ -91,6 +93,7 @@ public:
     QVector3D particleRotationVariation() const;
     QVector3D particleRotationVelocity() const;
     QVector3D particleRotationVelocityVariation() const;
+    float depthBias() const;
 
     QQmlListProperty<QQuick3DParticleEmitBurst> emitBursts();
 
@@ -114,6 +117,7 @@ public Q_SLOTS:
     void setParticleRotationVariation(const QVector3D &particleRotationVariation);
     void setParticleRotationVelocity(const QVector3D &particleRotationVelocity);
     void setParticleRotationVelocityVariation(const QVector3D &particleRotationVelocityVariation);
+    void setDepthBias(float bias);
 
 Q_SIGNALS:
     void velocityChanged();
@@ -131,6 +135,7 @@ Q_SIGNALS:
     void particleRotationVelocityChanged();
     void particleRotationVariationVelocityChanged();
     void enabledChanged();
+    void depthBiasChanged();
 
 protected:
     friend class QQuick3DParticleSystem;
@@ -176,6 +181,7 @@ private:
     int m_lifeSpan = 1000;
     int m_lifeSpanVariation = 0;
     float m_unemittedF = 0.0f;
+    float m_depthBias = 0.0f;
     QQuick3DParticle *m_particle = nullptr;
     QQuick3DParticleShape *m_shape = nullptr;
     QVector3D m_particleRotation;

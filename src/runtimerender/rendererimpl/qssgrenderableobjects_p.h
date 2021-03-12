@@ -222,15 +222,18 @@ struct QSSGRenderableObject
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
+    float depthBias;
     QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
-                           const QVector3D &inWorldCenterPt,
-                           const QMatrix4x4 &inGlobalTransform,
-                           const QSSGBounds3 &inBounds)
+                         const QVector3D &inWorldCenterPt,
+                         const QMatrix4x4 &inGlobalTransform,
+                         const QSSGBounds3 &inBounds,
+                         float inDepthBias)
 
         : globalTransform(inGlobalTransform)
         , bounds(inBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
+        , depthBias(inDepthBias)
     {
     }
 };

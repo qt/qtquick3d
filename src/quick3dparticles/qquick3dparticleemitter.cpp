@@ -355,7 +355,13 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
     if (m_particle == particle)
         return;
 
+    QObject::connect(this, &QQuick3DParticleEmitter::depthBiasChanged, [this](){
+        m_particle->setDepthBias(m_depthBias);
+    });
+
     m_particle = particle;
+    if (particle)
+        particle->setDepthBias(m_depthBias);
     Q_EMIT particleChanged();
 }
 
@@ -492,6 +498,28 @@ void QQuick3DParticleEmitter::setParticleRotationVelocityVariation(const QVector
 
     m_particleRotationVelocityVariation = particleRotationVelocityVariation;
     Q_EMIT particleRotationVariationVelocityChanged();
+}
+
+/*!
+    \qmlproperty real ParticleEmitter3D::depthBias
+
+    Holds the depth bias of the emitter. Depth bias is added to the object distance from camera when sorting
+    objects. This can be used to force rendering order between objects close to each other, that
+    might otherwise be rendered in different order in different frames. Negative values cause the
+    sorting value to move closer to the camera while positive values move it further from the camera.
+*/
+float QQuick3DParticleEmitter::depthBias() const
+{
+    return m_depthBias;
+}
+
+void QQuick3DParticleEmitter::setDepthBias(float bias)
+{
+    if (qFuzzyCompare(bias, m_depthBias))
+        return;
+
+    m_depthBias = bias;
+    emit depthBiasChanged();
 }
 
 // Called to reset when system stop/continue
