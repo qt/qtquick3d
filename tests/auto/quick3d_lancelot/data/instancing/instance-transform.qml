@@ -51,7 +51,7 @@
 import QtQuick3D
 import QtQuick
 
-Window {
+Rectangle {
     width: 800
     height: 600
     visible: true
