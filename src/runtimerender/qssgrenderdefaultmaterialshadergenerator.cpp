@@ -1620,20 +1620,18 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const float materialProperties3[4] = {
         materialAdapter->occlusionAmount(),
         materialAdapter->alphaCutOff(),
-        // In D3D, Vulkan and Metal Y points down and the origin is
-        // top-left in the viewport coordinate system. OpenGL is
-        // bottom-left and Y up. This happens to match the framebuffer
-        // coordinate system with all APIs so we rely on that query.
-        // The winding order is calculated in window space so the
-        // double-sided logic in the shader needs to take this into account.
-        // (normally the correction matrix we multiply into the projection
-        // takes care of getting identical behavior regardless of the
-        // underlying API, but here it matters since we kind of take things
-        // into our own hands)
-        inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,
-        inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f
+        0.0f, // unused
+        0.0f  // unused
     };
     shaders->setUniform(ubufData, "qt_material_properties3", materialProperties3, 4 * sizeof(float), &cui.material_properties3Idx);
+
+    const float rhiProperties[4] = {
+        inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,
+        inRenderProperties.isYUpInNDC ? 1.0f : -1.0f,
+        inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f,
+        0.0f // unused
+    };
+    shaders->setUniform(ubufData, "qt_rhi_properties", rhiProperties, 4 * sizeof(float), &cui.rhiPropertiesIdx);
 
     quint32 imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {

@@ -318,6 +318,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
 void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
     fragment().addUniform("qt_material_properties", "vec4");
+    fragment().addUniform("qt_rhi_properties", "vec4");
 
     if (!skipCustomFragmentSnippet && materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment)) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Fragment,

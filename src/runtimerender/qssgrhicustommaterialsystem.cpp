@@ -130,8 +130,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                      : renderable.modelContext.modelViewProjection);
 
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
-    const bool isYUpInFramebuffer = rhiCtx->rhi()->isYUpInFramebuffer();
-    const bool isClipDepthZeroToOne = rhiCtx->rhi()->isClipDepthZeroToOne();
+    QRhi *rhi = rhiCtx->rhi();
 
     const QSSGLayerGlobalRenderProperties globalProperties =
     {
@@ -146,8 +145,9 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
         layerData.layer.probeHorizon,
         layerData.layer.probeExposure,
         layerData.layer.probeOrientation,
-        isYUpInFramebuffer,
-        isClipDepthZeroToOne
+        rhi->isYUpInFramebuffer(),
+        rhi->isYUpInNDC(),
+        rhi->isClipDepthZeroToOne()
     };
 
 

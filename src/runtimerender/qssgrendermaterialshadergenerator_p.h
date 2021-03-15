@@ -76,6 +76,7 @@ struct QSSGLayerGlobalRenderProperties
     float probeExposure;
     const QMatrix4x4 &probeOrientation;
     bool isYUpInFramebuffer;
+    bool isYUpInNDC;
     bool isClipDepthZeroToOne;
 };
 

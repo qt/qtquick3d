@@ -848,6 +848,12 @@ QT_BEGIN_NAMESPACE
     would be the typical use case for accessing the screen and depth textures),
     such an adjustment is not necessary.
 
+    \li float \c NDC_Y_UP - The value is \c 1 when the Y axis points up in
+    normalized device coordinate space, and \c{-1} when the Y axis points down.
+    Y pointing down is the case when rendering happens with Vulkan. Most
+    materials do not need to be concerned by this, but being able to branch
+    based on this can become useful in certain advanced use cases.
+
     \li float \c NEAR_CLIP_VALUE - The value is \c -1 for when the clipping plane
     range's starts at \c -1 and goes to \c 1.  This is true when using OpenGL for
     rendering. For other rendering backends the value of this property will be
