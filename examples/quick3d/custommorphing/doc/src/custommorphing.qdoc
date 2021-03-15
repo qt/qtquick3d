@@ -32,11 +32,13 @@
     \brief Demonstrates writing C++ custom geometry with a morph target.
     \image custommorphing.png
 
-    This example shows how to define a complex custom geometry in C++, containing a base shape and a morph target, with normal vectors for both.
+    This example shows how to define a complex custom geometry in C++ that contains a base shape and a
+    morph target, with normal vectors for both.
 
     \section1 Custom geometry
 
-    The main part of this example is creating a custom geometry with a morph target. We do this by subclassing QQuick3DGeometry:
+    The main part of this example is creating a custom geometry with a morph target. We do this by
+    subclassing QQuick3DGeometry:
 
     \snippet custommorphing/morphgeometry.h class definition
 
@@ -49,7 +51,7 @@
 
     The function \c calculateGeometry contains all the tedious mathematics to calculate the shapes
     and normal vectors. It is specific to this example, and the code will not be explained in
-    detail. In general: to implement smooth shading, it is necessary to calculate the normal vector
+    detail. In general: to implement smooth shading, it's necessary to calculate the normal vector
     for each vertex. Mathematically, the normal vector can be calculated from the partial
     derivatives of the function describing the plane:
 
@@ -65,7 +67,8 @@
 
     \section1 QML part
 
-    We define a morph target that corresponds to the one we created in the custom geometry, and do an animation on the weight, so it will cycle between the two shapes:
+    We define a morph target that corresponds to the one we created in the custom geometry, and do
+    an animation on the weight, so it will cycle between the two shapes:
     \snippet custommorphing/main.qml target
 
     Finally, we create a model using our custom geometry, and apply the morph target to it:
