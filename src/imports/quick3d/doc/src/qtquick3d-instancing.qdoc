@@ -40,23 +40,23 @@ OpenGL function \c glDrawElementsInstanced.)
 
 Instancing allows duplicating a model with variations. In contrast to using a \l{Repeater3D}, the
 model and its graphics resources are only allocated once. The rendering of the duplicated instances
-is done at a low level by the GPU.  Depending on the complexity of the model, this can give a
+is done at a low level by the GPU. Depending on the complexity of the model, this can give a
 performance improvement of several orders of magnitude.
 
 In practice, instancing is done by defining a table that specifies how each instance is modified
 relative to the base model.
 
-\note The instancing feature is currently in Tech Preview, and is subject to
+\note The instancing feature is in Tech Preview in Qt 6.1, and is subject to
 change. Source and binary compatibility may be broken in future releases.
+
 
 \section1 Instancing API
 
-The main principle of the instancing API is that it is explicit. It does not try to autodetect
+The main principle of the instancing API is that it is explicit: It doesn't try to autodetect
 opportunities for instancing within the existing API. Instead, each model is marked individually by
 setting its \l{Model::instancing}{instancing} property to reference an \l [QtQuick3D | QML]
 {QtQuick3D::Instancing}{Instancing} object. The same Instancing object can be used on multiple
 models at the same time.
-
 
 The Instancing object specifies a table that defines how each copy is rendered. The available modifications are:
 \list
@@ -64,7 +64,6 @@ The Instancing object specifies a table that defines how each copy is rendered. 
 \li \e{color}: a color that is blended with the model’s material
 \li \e{custom data}: data that can be used by custom materials
 \endlist
-
 
 Qt provides two QML types that inherit from Instancing:
 \list
@@ -84,16 +83,15 @@ of four floating point numbers.
 The \l{Qt Quick 3D - Custom Instanced Rendering}{custom instancing example} shows how to combine
 custom materials and an instance table implemented in C++.
 
+
 \section1 Alpha-blending and instancing
 
 Correct alpha blending requires that semi-transparent objects are rendered back-to-front. For this
 reason, QtQuick3D sorts opaque and semi-transparent objects separately, and renders them in the
 correct order. With instancing, however, the GPU will render the instances in the order specified by
-the instancing table. For performance reasons, QtQuick3D does not sort the table.
-
-This means that if semi-transparent instances overlap with each other, or with other
-semi-transparent objects, the results may look wrong. In general, the error is less visible when the
-opacity is low.
+the instancing table. For performance reasons, QtQuick3D does not sort the table. This means that if
+semi-transparent instances overlap with each other, or with other semi-transparent objects, the
+results may look wrong. In general, the error is less visible when the opacity is low.
 
 Fully opaque objects together with non-overlapping semi-transparent objects will always be rendered
 correctly, since Qt uses depth buffer testing to avoid drawing behind opaque objects. However, the
@@ -106,6 +104,7 @@ explicitly when an instance table contains semi-transparent alpha values: Set th
 \l{Instancing::hasTransparency}{hasTransparency} property to to \c true to make sure that the renderer enables alpha
 blending. This applies to all the instances: Even fully opaque instances will be rendered
 without depth testing, potentially causing visible errors.
+
 
 \section1 Transforms and instancing
 

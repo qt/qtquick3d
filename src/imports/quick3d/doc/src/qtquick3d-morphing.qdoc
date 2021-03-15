@@ -50,7 +50,7 @@ by making it a degenerate triangle with size zero.
 
 In most cases, the mesh will be created by an external tool, and imported using the \l{Balsam Asset
 Import Tool}{Balsam} asset import tool. For example, in the Blender 3D editor, morph targets are
-called shape keys.
+called "shape keys", and in Autodesk Maya they are called "blend shapes".
 
 The \l{Qt Quick 3D - Morphing Example}{morphing example} shows how to control the weights of a model
 imported from Blender.
