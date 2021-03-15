@@ -58,7 +58,7 @@ Item {
     readonly property real tentacleEmitRate: 120
     readonly property real cameraDistance: sliderCameraDistance.sliderValue
     property real cameraDistanceSmoothed: cameraDistance
-    property real tentacleWideness: 40
+    property real tentacleWideness: 0
 
     anchors.fill: parent
 
@@ -66,12 +66,12 @@ Item {
     SequentialAnimation on tentacleWideness {
         loops: Animation.Infinite
         NumberAnimation {
-            to: 80
+            to: 30
             duration: 6000
             easing.type: Easing.InOutQuad
         }
         NumberAnimation {
-            to: 30
+            to: -30
             duration: 6000
             easing.type: Easing.InOutQuad
         }
@@ -146,7 +146,7 @@ Item {
         Model {
             id: spiderBody
             source: "#Sphere"
-            scale: Qt.vector3d(0.6, 0.8, 1.2)
+            scale: Qt.vector3d(1.0, 0.6, 1.2)
 
             PrincipledMaterial {
                 id: spiderMaterial
@@ -186,6 +186,147 @@ Item {
                     easing.type: Easing.InOutQuad
                 }
             }
+
+            // System for tentacles particles
+            ParticleSystem3D {
+                id: psystemTentacles
+                SpriteParticle3D {
+                    id: tentacleParticle
+                    sprite: Texture {
+                        source: "images/dot.png"
+                    }
+                    maxAmount: 8 * tentacleEmitRate * 1.5
+                    color: "#000000"
+                    colorVariation: Qt.vector4d(0.0, 0.0, 0.0, 0.2)
+                    fadeInEffect: SpriteParticle3D.FadeNone
+                    fadeOutDuration: 800
+                    billboard: true
+                    SequentialAnimation on color {
+                        loops: Animation.Infinite
+                        ColorAnimation {
+                            to: "#202000"
+                            duration: 2000
+                        }
+                        ColorAnimation {
+                            to: "#200000"
+                            duration: 2000
+                        }
+                        ColorAnimation {
+                            to: "#000020"
+                            duration: 2000
+                        }
+                        ColorAnimation {
+                            to: "#002000"
+                            duration: 2000
+                        }
+                    }
+                    blendMode: SpriteParticle3D.Screen
+                }
+
+                // Emitters for all 8 tentacles
+                component TentacleEmitter: Node {
+                    id: tentacleNode
+                    property real movementAmount: 1.0
+                    ParticleEmitter3D {
+                        z: 55
+                        eulerRotation.x: 80 + mainWindow.tentacleWideness * tentacleNode.movementAmount
+                        system: psystemTentacles
+                        particle: tentacleParticle
+                        velocity: VectorDirection3D {
+                            direction: Qt.vector3d(0, 300, 0)
+                        }
+                        particleScale: 6.0
+                        particleEndScale: 0.5
+                        emitRate: tentacleEmitRate
+                        lifeSpan: 1500
+                    }
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 0.5 * 45
+                    movementAmount: 1.8
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 1.5 * 45
+                    movementAmount: 1.3
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 2.5 * 45
+                    movementAmount: 1.5
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 3.5 * 45
+                    movementAmount: 2.2
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 4.5 * 45
+                    movementAmount: 1.6
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 5.5 * 45
+                    movementAmount: 1.1
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 6.5 * 45
+                    movementAmount: 1.5
+                }
+                TentacleEmitter {
+                    eulerRotation.y: 7.5 * 45
+                    movementAmount: 2.1
+                }
+
+                Gravity3D {
+                    direction: Qt.vector3d(0, 1, 0)
+                    magnitude: -300
+                }
+
+                Wander3D {
+                    globalAmount: Qt.vector3d(15, 15, 15)
+                    globalPace: Qt.vector3d(1.0, 1.0, 1.0)
+                    PropertyAnimation on globalPaceStart {
+                        loops: Animation.Infinite
+                        duration: 8000
+                        from: Qt.vector3d(0, 0, 0)
+                        to: Qt.vector3d(5 * Math.PI * 2, 3 * Math.PI * 2, Math.PI * 2)
+                    }
+                }
+            }
+
+            // Emitters for dust/smoke particles
+            ParticleEmitter3D {
+                id: smokeEmitter
+                system: psystemDust
+                particle: smokeParticle
+                particleScale: 10
+                particleScaleVariation: 5
+                particleEndScale: 80
+                particleRotationVariation: Qt.vector3d(0, 0, 180)
+                particleRotationVelocityVariation: Qt.vector3d(0, 0, 40)
+                emitRate: sliderDustEmitRate.sliderValue
+                lifeSpan: 3000
+                lifeSpanVariation: 1000
+                velocity: VectorDirection3D {
+                    direction: Qt.vector3d(0, 0, 200)
+                    directionVariation: Qt.vector3d(50, 50, 50)
+                }
+            }
+            ParticleEmitter3D {
+                id: dustEmitter
+                system: psystemDust
+                particle: dustParticle
+                emitRate: sliderDustEmitRate.sliderValue * 0.5
+                lifeSpan: 3000
+                lifeSpanVariation: 1000
+                particleScale: 10.0
+                particleEndScale: 30.0
+                particleScaleVariation: 5.0
+                particleRotationVariation: Qt.vector3d(20, 20, 180)
+                particleRotationVelocityVariation: Qt.vector3d(5, 5, 50)
+                velocity: VectorDirection3D {
+                    direction: Qt.vector3d(0, 0, 100)
+                    directionVariation: Qt.vector3d(20, 20, 20)
+                }
+            }
+
         }
 
         // System for dust/smoke particles
@@ -207,24 +348,6 @@ Item {
                 blendMode: SpriteParticle3D.Screen
             }
 
-            ParticleEmitter3D {
-                id: smokeEmitter
-                particle: smokeParticle
-                position: spiderBody.position
-                particleScale: 10
-                particleScaleVariation: 5
-                particleEndScale: 80
-                particleRotationVariation: Qt.vector3d(0, 0, 180)
-                particleRotationVelocityVariation: Qt.vector3d(0, 0, 40)
-                emitRate: sliderDustEmitRate.sliderValue
-                lifeSpan: 3000
-                lifeSpanVariation: 1000
-                velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 0, 200)
-                    directionVariation: Qt.vector3d(50, 50, 50)
-                }
-            }
-
             SpriteParticle3D {
                 id: dustParticle
                 sprite: Texture {
@@ -237,24 +360,6 @@ Item {
                 fadeInDuration: 200
                 fadeOutDuration: 1500
                 blendMode: SpriteParticle3D.Screen
-            }
-
-            ParticleEmitter3D {
-                id: dustEmitter
-                particle: dustParticle
-                position: spiderBody.position
-                emitRate: sliderDustEmitRate.sliderValue * 0.5
-                lifeSpan: 3000
-                lifeSpanVariation: 1000
-                particleScale: 10.0
-                particleEndScale: 30.0
-                particleScaleVariation: 5.0
-                particleRotationVariation: Qt.vector3d(20, 20, 180)
-                particleRotationVelocityVariation: Qt.vector3d(5, 5, 50)
-                velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 0, 100)
-                    directionVariation: Qt.vector3d(20, 20, 20)
-                }
             }
         }
 
@@ -290,97 +395,6 @@ Item {
                 velocity: VectorDirection3D {
                     direction: Qt.vector3d(0, 0, 200)
                     directionVariation: Qt.vector3d(20, 20, 100)
-                }
-            }
-        }
-
-        // System for tentacles particles
-        ParticleSystem3D {
-            id: psystemTentacles
-            y: spiderBody.y - 25
-
-            SpriteParticle3D {
-                id: tentacleParticle
-                sprite: Texture {
-                    source: "images/dot.png"
-                }
-                maxAmount: 8 * tentacleEmitRate * 1.5
-                color: "#000000"
-                colorVariation: Qt.vector4d(0.0, 0.0, 0.0, 0.2)
-                fadeInEffect: SpriteParticle3D.FadeNone
-                fadeOutDuration: 800
-                billboard: true
-                SequentialAnimation on color {
-                    loops: Animation.Infinite
-                    ColorAnimation {
-                        to: "#202000"
-                        duration: 2000
-                    }
-                    ColorAnimation {
-                        to: "#200000"
-                        duration: 2000
-                    }
-                    ColorAnimation {
-                        to: "#000020"
-                        duration: 2000
-                    }
-                    ColorAnimation {
-                        to: "#002000"
-                        duration: 2000
-                    }
-                }
-                blendMode: SpriteParticle3D.Screen
-            }
-
-            // Emitters for all 8 tentacles
-            component TentacleEmitter: ParticleEmitter3D {
-                particle: tentacleParticle
-                velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 300, 0)
-                }
-                particleScale: 6.0
-                particleEndScale: 0.5
-                emitRate: tentacleEmitRate
-                lifeSpan: 1500
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 0.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 1.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 2.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 3.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 4.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 5.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 6.5 * 45, 0)
-            }
-            TentacleEmitter {
-                eulerRotation: Qt.vector3d(tentacleWideness, 7.5 * 45, 0)
-            }
-
-            Gravity3D {
-                direction: Qt.vector3d(0, 1, 0)
-                magnitude: -300
-            }
-
-            Wander3D {
-                globalAmount: Qt.vector3d(15, 15, 15)
-                globalPace: Qt.vector3d(1.0, 1.0, 1.0)
-                PropertyAnimation on globalPaceStart {
-                    loops: Animation.Infinite
-                    duration: 8000
-                    from: Qt.vector3d(0, 0, 0)
-                    to: Qt.vector3d(5 * Math.PI * 2, 3 * Math.PI * 2, Math.PI * 2)
                 }
             }
         }
