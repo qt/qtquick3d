@@ -1001,7 +1001,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                            << "qt_diffuseReflectionBSDF(qt_world_normal, -" << lightVarNames.normalizedDirection << ".xyz, tmp_light_color).rgb;\n";
                         }
                     }
-
+                    // spotFactor is multipled to qt_lightAttenuation and have an effect on the specularLight.
+                    fragmentShader << "    qt_lightAttenuation *= spotFactor;\n";
                 } else {
                     // point light
                     if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_pointLightProcessor"))) {

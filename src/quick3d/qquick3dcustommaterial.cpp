@@ -758,7 +758,7 @@ QT_BEGIN_NAMESPACE
 
     \list
     \li vec3 \c LIGHT_COLOR Specular light color.
-    \li float \c LIGHT_ATTENUATION Light attenuation. For directional lights the value is 1.0.
+    \li float \c LIGHT_ATTENUATION Light attenuation. For directional lights the value is 1.0. For spot lights the value is the same as \c {LIGHT_ATTENUATION * SPOT_FACTOR} of \c {void SPOT_LIGHT()}.
     \li float \c SHADOW_CONTRIB Shadow contribution, or 1.0 if not shadowed at all or not reciving shadows.
     \li vec3 \c FRESNEL_CONTRIB Fresnel contribution from built in Fresnel calculation.
     \li vec3 \c TO_LIGHT_DIR Vector pointing towards the light source.
