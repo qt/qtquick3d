@@ -670,12 +670,15 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
     if (!theData.cameraDirection.hasValue())
         theData.cameraDirection = theData.camera->getScalingCorrectDirection();
 
-    const bool isYUpInFramebuffer = m_contextInterface->rhiContext()->isValid()
-            ? m_contextInterface->rhiContext()->rhi()->isYUpInFramebuffer()
-            : true;
-    const bool isClipDepthZeroToOne = m_contextInterface->rhiContext()->isValid()
-            ? m_contextInterface->rhiContext()->rhi()->isClipDepthZeroToOne()
-            : true;
+    bool isYUpInFramebuffer = true;
+    bool isYUpInNDC = true;
+    bool isClipDepthZeroToOne = true;
+    if (m_contextInterface->rhiContext()->isValid()) {
+        QRhi *rhi = m_contextInterface->rhiContext()->rhi();
+        isYUpInFramebuffer = rhi->isYUpInFramebuffer();
+        isYUpInNDC = rhi->isYUpInNDC();
+        isClipDepthZeroToOne = rhi->isClipDepthZeroToOne();
+    }
 
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
@@ -689,6 +692,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               theLayer.probeExposure,
                                               theLayer.probeOrientation,
                                               isYUpInFramebuffer,
+                                              isYUpInNDC,
                                               isClipDepthZeroToOne};
 }
 
