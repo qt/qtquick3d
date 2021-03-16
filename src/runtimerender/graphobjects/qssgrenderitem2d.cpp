@@ -41,7 +41,9 @@ QSSGRenderItem2D::QSSGRenderItem2D()
     flags.setFlag(Flag::LocallyPickable, true);
 }
 
-QSSGRenderItem2D::~QSSGRenderItem2D() = default;
-
+QSSGRenderItem2D::~QSSGRenderItem2D()
+{
+    delete m_rp;
+}
 
 QT_END_NAMESPACE
