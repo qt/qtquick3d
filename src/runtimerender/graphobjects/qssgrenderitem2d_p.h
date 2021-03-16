@@ -58,6 +58,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
     float zOrder = 0;
 
     QSGRenderer *m_renderer = nullptr;
+    QRhiRenderPassDescriptor *m_rp = nullptr;
 
     QSSGRenderItem2D();
     ~QSSGRenderItem2D();

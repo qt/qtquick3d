@@ -1663,7 +1663,27 @@ void QSSGLayerRenderData::rhiPrepare()
             item2D->m_renderer->setDeviceRect(deviceRect);
             item2D->m_renderer->setRenderTarget(renderTarget);
             item2D->m_renderer->setCommandBuffer(rhiCtx->commandBuffer());
-            item2D->m_renderer->setExternalRenderPassDescriptor(rhiCtx->mainRenderPassDescriptor());
+            QRhiRenderPassDescriptor *oldRp = nullptr;
+            if (item2D->m_rp) {
+                // Changing render target, and so incompatible renderpass
+                // descriptors should be uncommon, but possible.
+                if (!item2D->m_rp->isCompatible(rhiCtx->mainRenderPassDescriptor())) {
+                    // Change to null, while the old one is purged from the Qt
+                    // Quick data structures by the
+                    // setExternalRenderPassDescriptor below, then we'll
+                    // destroy it afterwards.
+                    std::swap(item2D->m_rp, oldRp);
+                }
+            }
+            if (!item2D->m_rp) {
+                // Do not pass our object to the Qt Quick scenegraph. It may
+                // hold on to it, leading to lifetime and ownership issues.
+                // Rather, create a dedicated, compatible object.
+                item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
+                Q_ASSERT(item2D->m_rp);
+            }
+            item2D->m_renderer->setExternalRenderPassDescriptor(item2D->m_rp);
+            delete oldRp;
             item2D->m_renderer->prepareSceneInline();
         }
 
