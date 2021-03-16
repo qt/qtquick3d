@@ -318,7 +318,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         // uses blend factors of 0.5 and copies currentTexture to m_prevTempAATexture, while progAA uses blend
         // factors from a table and copies the blend result to m_prevTempAATexture
 
-        if (progressiveAA || temporalAA) {
+        if ((progressiveAA || temporalAA) && m_prevTempAATexture) {
             cb->debugMarkBegin(QByteArrayLiteral("Temporal AA"));
 
             QRhiTexture *blendResult;
