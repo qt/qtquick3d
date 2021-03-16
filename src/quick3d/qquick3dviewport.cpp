@@ -485,7 +485,10 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
 
-        if (isVisible() && isComponentComplete()) {
+        // checkIsVisible, not isVisible, because, for example, a
+        // { visible: false; layer.enabled: true } item still needs
+        // to function normally.
+        if (checkIsVisible() && isComponentComplete()) {
             n->renderer->synchronize(this, targetSize, window()->effectiveDevicePixelRatio(), false);
             updateDynamicTextures();
             n->markDirty(QSGNode::DirtyMaterial);
