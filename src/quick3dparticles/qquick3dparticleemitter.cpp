@@ -638,7 +638,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         return;
     auto rand = m_system->rand();
 
-    int particleIndex = particle->nextCurrentIndex();
+    int particleIndex = particle->nextCurrentIndex(this);
     auto d = &particle->m_particleData[particleIndex];
     *d = m_clearData; // Reset the data as it might be reused
     d->index = particleIndex;

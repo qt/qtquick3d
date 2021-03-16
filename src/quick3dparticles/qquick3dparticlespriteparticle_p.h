@@ -100,6 +100,7 @@ protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
     void reset() override;
     void componentComplete() override;
+    int nextCurrentIndex(const QQuick3DParticleEmitter *emitter) override;
     void setParticleData(int particleIndex,
                          const QVector3D &position,
                          const QVector3D &rotation,
@@ -109,14 +110,12 @@ protected:
     {
         markAllDirty();
         update();
-        if (m_particleUpdateNode) {
-            m_particleUpdateNode->update();
-        }
+        updateNodes();
     }
     void setDepthBias(float bias) override
     {
         QQuick3DParticle::setDepthBias(bias);
-        m_dirty = true;
+        markNodesDirty();
     }
 
 private:
@@ -130,6 +129,7 @@ private:
         QVector4D color;
         float size = 0.0f;
         float age = 0.0f;
+        int emitterIndex = -1;
     };
 
     class ParticleUpdateNode : public QQuick3DNode
@@ -141,27 +141,43 @@ private:
         }
         QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
         QQuick3DParticleSpriteParticle *m_spriteParticle = nullptr;
+
+        bool m_nodeDirty = true;
     };
     friend class ParticleUpdateNode;
 
-    void updateParticleBuffer(QSSGRenderGraphObject *node);
-    QSSGRenderGraphObject *updateParticleNode(QSSGRenderGraphObject *node);
+    struct PerEmitterData
+    {
+        ParticleUpdateNode *particleUpdateNode = nullptr;
+        int particleCount = 0;
+        int emitterIndex = -1;
+        const QQuick3DParticleEmitter *emitter = nullptr;
+    };
+
+    void updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
+    QSSGRenderGraphObject *updateParticleNode(const ParticleUpdateNode *updateNode, QSSGRenderGraphObject *node);
     void updateSceneManager(QQuick3DSceneManager *window);
     void handleMaxAmountChanged(int amount);
     void handleSystemChanged(QQuick3DParticleSystem *system);
+    void updateNodes();
+    void deleteNodes();
+    void markNodesDirty();
+    PerEmitterData &perEmitterData(const ParticleUpdateNode *updateNode);
+    PerEmitterData &perEmitterData(int emitterIndex);
 
     QVector<SpriteParticleData> m_spriteParticleData;
     QHash<QByteArray, QMetaObject::Connection> m_connections;
-    ParticleUpdateNode *m_particleUpdateNode = nullptr;
+    QMap<const QQuick3DParticleEmitter *, PerEmitterData> m_perEmitterData;
+    PerEmitterData n_noPerEmitterData;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
     QQuick3DTexture *m_colorTable = nullptr;
     float m_particleScale = 5.0f;
     int m_frameCount = 1;
+    int m_nextEmitterIndex = 0;
     bool m_interpolate = true;
     bool m_billboard = false;
     bool m_bufferUpdated = false;
-    bool m_dirty = true;
 };
 
 QT_END_NAMESPACE

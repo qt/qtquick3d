@@ -136,7 +136,7 @@ protected:
 
     void updateBurstIndex(int amount);
     // This will return the next available index
-    int nextCurrentIndex();
+    virtual int nextCurrentIndex(const QQuick3DParticleEmitter *emitter);
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override
     {
         return node;
