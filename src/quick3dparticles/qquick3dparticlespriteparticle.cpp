@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dparticlespriteparticle_p.h"
+#include "qquick3dparticleemitter_p.h"
 
 #include <QtQuick3D/private/qquick3dobject_p.h>
 
@@ -61,9 +62,14 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 {
     for (const auto &connection : qAsConst(m_connections))
         QObject::disconnect(connection);
-    if (m_particleUpdateNode) {
-        m_particleUpdateNode->m_spriteParticle = nullptr;
-        delete m_particleUpdateNode;
+    deleteNodes();
+}
+
+void QQuick3DParticleSpriteParticle::deleteNodes()
+{
+    for (PerEmitterData &value : m_perEmitterData) {
+        value.particleUpdateNode->m_spriteParticle = nullptr;
+        delete value.particleUpdateNode;
     }
 }
 
@@ -204,7 +210,7 @@ void QQuick3DParticleSpriteParticle::setBlendMode(BlendMode blendMode)
     if (m_blendMode == blendMode)
         return;
     m_blendMode = blendMode;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT blendModeChanged();
 }
 
@@ -221,7 +227,7 @@ void QQuick3DParticleSpriteParticle::setSprite(QQuick3DTexture *sprite)
     });
 
     m_sprite = sprite;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT spriteChanged();
 }
 
@@ -230,7 +236,7 @@ void QQuick3DParticleSpriteParticle::setFrameCount(int frameCount)
     if (m_frameCount == frameCount)
         return;
     m_frameCount = frameCount;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT frameCountChanged();
 }
 
@@ -239,7 +245,7 @@ void QQuick3DParticleSpriteParticle::setInterpolate(bool interpolate)
     if (m_interpolate == interpolate)
         return;
     m_interpolate = interpolate;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT interpolateChanged();
 }
 
@@ -248,7 +254,7 @@ void QQuick3DParticleSpriteParticle::setBillboard(bool billboard)
     if (m_billboard == billboard)
         return;
     m_billboard = billboard;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT billboardChanged();
 }
 
@@ -257,7 +263,7 @@ void QQuick3DParticleSpriteParticle::setParticleScale(float scale)
     if (qFuzzyCompare(scale, m_particleScale))
         return;
     m_particleScale = scale;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT particleScaleChanged();
 }
 
@@ -274,7 +280,7 @@ void QQuick3DParticleSpriteParticle::setColorTable(QQuick3DTexture *colorTable)
     });
 
     m_colorTable = colorTable;
-    m_dirty = true;
+    markNodesDirty();
     Q_EMIT colorTableChanged();
 }
 
@@ -303,13 +309,33 @@ static QSSGRenderParticles::BlendMode mapBlendMode(QQuick3DParticleSpriteParticl
 QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::ParticleUpdateNode::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (m_spriteParticle) {
-        node = m_spriteParticle->updateParticleNode(node);
+        node = m_spriteParticle->updateParticleNode(this, node);
         QQuick3DNode::updateSpatialNode(node);
+        m_nodeDirty = false;
     }
     return node;
 }
 
-QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRenderGraphObject *node)
+QQuick3DParticleSpriteParticle::PerEmitterData &QQuick3DParticleSpriteParticle::perEmitterData(const ParticleUpdateNode *updateNode)
+{
+    for (auto &perEmitter : m_perEmitterData) {
+        if (perEmitter.particleUpdateNode == updateNode)
+            return perEmitter;
+    }
+    return n_noPerEmitterData;
+}
+
+QQuick3DParticleSpriteParticle::PerEmitterData &QQuick3DParticleSpriteParticle::perEmitterData(int emitterIndex)
+{
+    for (auto &perEmitter : m_perEmitterData) {
+        if (perEmitter.emitterIndex == emitterIndex)
+            return perEmitter;
+    }
+    return n_noPerEmitterData;
+}
+
+QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const ParticleUpdateNode *updateNode,
+                                                                          QSSGRenderGraphObject *node)
 {
     if (!node) {
         markAllDirty();
@@ -318,9 +344,10 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
 
     auto particles = static_cast<QSSGRenderParticles *>(node);
 
-    updateParticleBuffer(particles);
+    const auto &perEmitter = perEmitterData(updateNode);
+    updateParticleBuffer(perEmitter, particles);
 
-    if (!m_dirty)
+    if (!updateNode->m_nodeDirty)
         return particles;
 
     if (m_sprite) {
@@ -341,9 +368,8 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(QSSGRe
     particles->m_blendMode = mapBlendMode(m_blendMode);
     particles->m_diffuseColor = color::sRGBToLinear(color());
     particles->m_billboard = m_billboard;
-    particles->m_depthBias = depthBias();
+    particles->m_depthBias = perEmitter.emitter->depthBias();
 
-    m_dirty = false;
     return particles;
 }
 
@@ -360,10 +386,23 @@ void QQuick3DParticleSpriteParticle::handleMaxAmountChanged(int amount)
 
 void QQuick3DParticleSpriteParticle::handleSystemChanged(QQuick3DParticleSystem *system)
 {
-    if (m_particleUpdateNode)
-        delete m_particleUpdateNode;
-    m_particleUpdateNode = new ParticleUpdateNode(system);
-    m_particleUpdateNode->m_spriteParticle = this;
+    for (PerEmitterData &value : m_perEmitterData) {
+        delete value.particleUpdateNode;
+        value.particleUpdateNode = new ParticleUpdateNode(system);
+        value.particleUpdateNode->m_spriteParticle = this;
+    }
+}
+
+void QQuick3DParticleSpriteParticle::updateNodes()
+{
+    for (const PerEmitterData &value : qAsConst(m_perEmitterData))
+        value.particleUpdateNode->update();
+}
+
+void QQuick3DParticleSpriteParticle::markNodesDirty()
+{
+    for (const PerEmitterData &value : qAsConst(m_perEmitterData))
+        value.particleUpdateNode->m_nodeDirty = true;
 }
 
 void QQuick3DParticleSpriteParticle::componentComplete()
@@ -379,6 +418,27 @@ void QQuick3DParticleSpriteParticle::reset()
 
 }
 
+int QQuick3DParticleSpriteParticle::nextCurrentIndex(const QQuick3DParticleEmitter *emitter)
+{
+    if (!m_perEmitterData.contains(emitter)) {
+        m_perEmitterData.insert(emitter, PerEmitterData());
+        auto &perEmitter = m_perEmitterData[emitter];
+        perEmitter.particleUpdateNode = new ParticleUpdateNode(system());
+        perEmitter.emitter = emitter;
+        perEmitter.particleUpdateNode->m_spriteParticle = this;
+        perEmitter.emitterIndex = m_nextEmitterIndex++;
+    }
+    auto &perEmitter = m_perEmitterData[emitter];
+    int index = QQuick3DParticle::nextCurrentIndex(emitter);
+    if (m_spriteParticleData[index].emitterIndex != perEmitter.emitterIndex) {
+        if (m_spriteParticleData[index].emitterIndex >= 0)
+            perEmitterData(m_spriteParticleData[index].emitterIndex).particleCount--;
+        perEmitter.particleCount++;
+    }
+    m_spriteParticleData[index].emitterIndex = perEmitter.emitterIndex;
+    return index;
+}
+
 void QQuick3DParticleSpriteParticle::setParticleData(int particleIndex,
                      const QVector3D &position,
                      const QVector3D &rotation,
@@ -386,16 +446,16 @@ void QQuick3DParticleSpriteParticle::setParticleData(int particleIndex,
                      float size, float age)
 {
     auto &dst = m_spriteParticleData[particleIndex];
-    dst = {position, rotation, color, size, age};
+    dst = {position, rotation, color, size, age, dst.emitterIndex};
 }
 
-void QQuick3DParticleSpriteParticle::updateParticleBuffer(QSSGRenderGraphObject *spatialNode)
+void QQuick3DParticleSpriteParticle::updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *spatialNode)
 {
     const auto &particles = m_spriteParticleData;
     QSSGRenderParticles *node = static_cast<QSSGRenderParticles *>(spatialNode);
     if (!node)
         return;
-    const int particleCount = particles.size();
+    const int particleCount = perEmitter.particleCount;
     if (node->m_particleBuffer.particleCount() != particleCount)
         node->m_particleBuffer.resize(particleCount);
 
@@ -404,19 +464,24 @@ void QQuick3DParticleSpriteParticle::updateParticleBuffer(QSSGRenderGraphObject 
     const int pps = node->m_particleBuffer.particlesPerSlice();
     const int ss = node->m_particleBuffer.sliceStride();
     const int slices = node->m_particleBuffer.sliceCount();
+    const int emitterIndex = perEmitter.emitterIndex;
     int i = 0;
     QSSGBounds3 bounds;
     for (int s = 0; s < slices; s++) {
         QSSGParticle *dp = reinterpret_cast<QSSGParticle *>(dest);
-        for (int p = 0; p < pps && i < particleCount; i++, p++) {
-            if (src->size > 0.0f)
-                bounds.include(src->position);
-            dp->position = src->position;
-            dp->rotation = src->rotation * float(M_PI / 180.0f);
-            dp->color = src->color;
-            dp->size = src->size * m_particleScale;
-            dp->age = src->age;
-            dp++;
+        for (int p = 0; p < pps && i < particleCount; ) {
+            if (src->emitterIndex == emitterIndex) {
+                if (src->size > 0.0f)
+                    bounds.include(src->position);
+                dp->position = src->position;
+                dp->rotation = src->rotation * float(M_PI / 180.0f);
+                dp->color = src->color;
+                dp->size = src->size * m_particleScale;
+                dp->age = src->age;
+                dp++;
+                p++;
+                i++;
+            }
             src++;
         }
         dest += ss;
