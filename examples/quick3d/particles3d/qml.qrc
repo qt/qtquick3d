@@ -41,5 +41,10 @@
         <file>qml/images/color_table3.png</file>
         <file>qml/OceanSpider.qml</file>
         <file>qml/images/leather_n.png</file>
+        <file>qml/Speedometer.qml</file>
+        <file>qml/meshes/meter_background.mesh</file>
+        <file>qml/meshes/meter_edge.mesh</file>
+        <file>qml/images/speedometer_labels.png</file>
+        <file>qml/images/star3.png</file>
     </qresource>
 </RCC>
