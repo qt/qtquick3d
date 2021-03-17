@@ -57,6 +57,7 @@ set(qml_resource_files
     "qml/TrailEmitterBurst.qml"
     "qml/HeartTrail.qml"
     "qml/OceanSpider.qml"
+    "qml/Speedometer.qml"
     "qml/images/arrow_icon.png"
     "qml/images/icon_interval.png"
     "qml/images/icon_logging.png"
@@ -70,6 +71,7 @@ set(qml_resource_files
     "qml/images/snowflake.png"
     "qml/images/star.png"
     "qml/images/star2.png"
+    "qml/images/star3.png"
     "qml/images/dot.png"
     "qml/images/sphere.png"
     "qml/images/colorTable.png"
@@ -80,6 +82,9 @@ set(qml_resource_files
     "qml/images/bear_black.png"
     "qml/images/explosion_01_strip13.png"
     "qml/images/leather_n.png"
+    "qml/images/speedometer_labels.png"
+    "qml/meshes/meter_background.mesh"
+    "qml/meshes/meter_edge.mesh"
     "qml/main.qml"
 )
 

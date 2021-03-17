@@ -55,13 +55,16 @@ import QtQuick3D.Particles3D
 Item {
     id: mainView
 
-    readonly property real listItemWidth: 300
+    readonly property real listItemWidth: 180
     readonly property real listItemHeight: 40
+    // Enable this when only want to list the demos
+    // Tweak the demos list as needed
+    readonly property bool showOnlyDemos: false
 
     anchors.fill: parent
 
     ListModel {
-        id: testsModel
+        id: demosModel
         ListElement {
             name: "Snowing"
             file: "Snowing.qml"
@@ -70,6 +73,26 @@ Item {
             name: "HeartTrail"
             file: "HeartTrail.qml"
         }
+        ListElement {
+            name: "Giant Ocean Spider"
+            file: "OceanSpider.qml"
+        }
+        ListElement {
+            name: "Qt Cube Burst"
+            file: "QtLogoAnimation.qml"
+        }
+        ListElement {
+            name: "Fire And Smoke"
+            file: "Fire.qml"
+        }
+        ListElement {
+            name: "Speedometer"
+            file: "Speedometer.qml"
+        }
+    }
+
+    ListModel {
+        id: testsModel
         ListElement {
             name: "Colorful Particles"
             file: "ColorfulParticles.qml"
@@ -91,10 +114,6 @@ Item {
             file: "EmitAndBurst.qml"
         }
         ListElement {
-            name: "Qt Cube Burst"
-            file: "QtLogoAnimation.qml"
-        }
-        ListElement {
             name: "ParticleSystem"
             file: "SystemPlayPause.qml"
         }
@@ -103,20 +122,12 @@ Item {
             file: "AlignedParticles.qml"
         }
         ListElement {
-            name: "Fire And Smoke"
-            file: "Fire.qml"
-        }
-        ListElement {
             name: "TrailEmitter Burst"
             file: "TrailEmitterBurst.qml"
         }
         ListElement {
             name: "Animated Sprite"
             file: "AnimatedSprite.qml"
-        }
-        ListElement {
-            name: "Giant Ocean Spider"
-            file: "OceanSpider.qml"
         }
     }
 
@@ -257,20 +268,34 @@ Item {
     }
 
     Text {
-        anchors.horizontalCenter: examplesListView.horizontalCenter
-        anchors.bottom: examplesListView.top
-        anchors.bottomMargin: 20
+        id: topLabel
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 20
         text: qsTr("Qt Quick 3D - Particles3D")
         color: "#f0f0f0"
         font.pointSize: 18
     }
 
-    ListView {
-        id: examplesListView
-        anchors.centerIn: parent
-        width: mainView.listItemWidth
-        height: count * mainView.listItemHeight
-        model: testsModel
-        delegate: listComponent
+    Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: topLabel.bottom
+        anchors.topMargin: 20
+        spacing: 20
+        ListView {
+            id: demosListView
+            width: mainView.listItemWidth
+            height: count * mainView.listItemHeight
+            model: demosModel
+            delegate: listComponent
+        }
+        ListView {
+            id: examplesListView
+            visible: !showOnlyDemos
+            width: mainView.listItemWidth
+            height: count * mainView.listItemHeight
+            model: testsModel
+            delegate: listComponent
+        }
     }
 }
