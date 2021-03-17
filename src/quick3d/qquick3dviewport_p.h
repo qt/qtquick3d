@@ -114,6 +114,8 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
     Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;
 
+    void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event);
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -145,7 +147,7 @@ private:
     void updateDynamicTextures();
     void setupDirectRenderer(RenderMode mode);
     bool checkIsVisible() const;
-    bool internalPick(QPointerEvent *event) const;
+    bool internalPick(QPointerEvent *event, const QVector3D &origin = QVector3D(), const QVector3D &direction = QVector3D()) const;
     QQuick3DPickResult processPickResult(const QSSGRenderPickResult &pickResult) const;
 
     QQuick3DCamera *m_camera = nullptr;

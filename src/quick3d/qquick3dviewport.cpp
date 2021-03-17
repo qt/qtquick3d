@@ -856,6 +856,11 @@ QList<QQuick3DPickResult> QQuick3DViewport::rayPickAll(const QVector3D &origin, 
     return processedResultList;
 }
 
+void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event)
+{
+    internalPick(event, origin, direction);
+}
+
 void QQuick3DViewport::invalidateSceneGraph()
 {
     m_node = nullptr;
@@ -945,12 +950,12 @@ bool QQuick3DViewport::checkIsVisible() const
 
 }
 
-bool QQuick3DViewport::internalPick(QPointerEvent *event) const
+bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origin, const QVector3D &direction) const
 {
     // Some non-thread-safe stuff to do input
     // First need to get a handle to the renderer
     QQuick3DSceneRenderer *renderer = getRenderer();
-    if (!renderer)
+    if (!renderer || !event)
         return false;
 
     const bool isHover = QQuickDeliveryAgentPrivate::isHoverEvent(event);
@@ -962,13 +967,20 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
     };
     QFlatMap<QQuickItem*, SubsceneInfo> visitedSubscenes;
 
+    const bool useRayPicking = !direction.isNull();
+
     for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
-        auto eventPoint = QMutableEventPoint::from(event->point(pointIndex));
-        const QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
-        QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(realPosition);
         QQuick3DSceneRenderer::PickResultList pickResults;
-        if (rayResult.hasValue())
-            pickResults = renderer->syncPickAll(rayResult.getValue());
+        auto eventPoint = QMutableEventPoint::from(event->point(pointIndex));
+        if (useRayPicking) {
+            const QSSGRenderRay ray(origin, direction);
+            pickResults = renderer->syncPickAll(ray);
+        } else {
+            const QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
+            QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(realPosition);
+            if (rayResult.hasValue())
+                pickResults = renderer->syncPickAll(rayResult.getValue());
+        }
         if (!isHover)
             qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
         if (pickResults.isEmpty()) {
@@ -1109,7 +1121,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
             da->setSceneTransform(nullptr);
         if (da->event(event)) {
             ret = true;
-            if (QQuickDeliveryAgentPrivate::anyPointGrabbed(event)) {
+            if (QQuickDeliveryAgentPrivate::anyPointGrabbed(event) && !useRayPicking) {
                 // In case any QEventPoint was grabbed, the relevant QQuickDeliveryAgent needs to know
                 // how to repeat the picking/coordinate transformation for each update,
                 // because delivery will bypass internalPick() due to the grab, and it's
