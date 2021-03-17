@@ -995,6 +995,11 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
     // derefSceneManager() decrements the reference count.
 
     Q_Q(QQuick3DObject);
+
+    // Handle the case where the view has been deleted while the object lives on.
+    if (sceneManager.isNull() && sceneRefCount == 1)
+        sceneRefCount = 0;
+
     Q_ASSERT((sceneManager != nullptr) == (sceneRefCount > 0));
     if (++sceneRefCount > 1) {
         // Sanity check. Even if there's a different scene manager the window should be the same.
