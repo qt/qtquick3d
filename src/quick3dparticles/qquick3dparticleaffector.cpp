@@ -63,12 +63,12 @@ QQuick3DParticleAffector::~QQuick3DParticleAffector()
     This property defines the \l ParticleSystem3D for the affector. If system is direct parent of the affector,
     this property does not need to be defined.
 */
-QQuick3DParticleSystem* QQuick3DParticleAffector::system() const
+QQuick3DParticleSystem *QQuick3DParticleAffector::system() const
 {
     return m_system;
 }
 
-void QQuick3DParticleAffector::setSystem(QQuick3DParticleSystem* system)
+void QQuick3DParticleAffector::setSystem(QQuick3DParticleSystem *system)
 {
     if (m_system == system)
         return;

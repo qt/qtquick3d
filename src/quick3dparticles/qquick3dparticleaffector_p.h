@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAffector : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
+    Q_PROPERTY(QQuick3DParticleSystem *system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DParticle> particles READ particles)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     QML_NAMED_ELEMENT(Affector3D)
@@ -65,7 +65,7 @@ public:
     QQuick3DParticleAffector(QQuick3DNode *parent = nullptr);
     ~QQuick3DParticleAffector() override;
 
-    QQuick3DParticleSystem* system() const;
+    QQuick3DParticleSystem *system() const;
     bool enabled() const;
 
     // Particles list handling

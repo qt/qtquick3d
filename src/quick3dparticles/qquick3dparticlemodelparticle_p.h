@@ -98,7 +98,7 @@ private:
     void commitInstance();
     void setHasTransparency(bool transparent);
 
-    QQuick3DParticleSystem* m_system = nullptr;
+    QQuick3DParticleSystem *m_system = nullptr;
     QPointer<QQmlComponent> m_delegate;
     QPointer<QQuick3DNode> m_node;
     QQuick3DParticleInstanceTable *m_instanceTable = nullptr;

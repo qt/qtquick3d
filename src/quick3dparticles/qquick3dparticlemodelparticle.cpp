@@ -48,7 +48,6 @@ QQuick3DParticleModelParticle::QQuick3DParticleModelParticle(QQuick3DNode *paren
     QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
         handleMaxAmountChanged(m_maxAmount);
     });
-
 }
 
 void QQuick3DParticleModelParticle::handleMaxAmountChanged(int amount)
@@ -202,8 +201,8 @@ void QQuick3DParticleModelParticle::regenerate()
 
 void QQuick3DParticleModelParticle::componentComplete()
 {
-    if (!system() && qobject_cast<QQuick3DParticleSystem*>(parentItem()))
-        setSystem(qobject_cast<QQuick3DParticleSystem*>(parentItem()));
+    if (!system() && qobject_cast<QQuick3DParticleSystem *>(parentItem()))
+        setSystem(qobject_cast<QQuick3DParticleSystem *>(parentItem()));
 
     QQuick3DParticle::componentComplete();
     regenerate();
@@ -212,9 +211,8 @@ void QQuick3DParticleModelParticle::componentComplete()
 void QQuick3DParticleModelParticle::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
 {
     QQuick3DObject::itemChange(change, value);
-    if (change == ItemParentHasChanged) {
+    if (change == ItemParentHasChanged)
         regenerate();
-    }
 }
 
 void QQuick3DParticleModelParticle::reset() {

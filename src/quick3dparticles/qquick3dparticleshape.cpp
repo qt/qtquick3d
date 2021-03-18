@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 QQuick3DParticleShape::QQuick3DParticleShape(QObject *parent)
     : QObject(parent)
 {
-    m_parentNode = qobject_cast<QQuick3DNode*>(parent);
+    m_parentNode = qobject_cast<QQuick3DNode *>(parent);
 }
 
 /*!
@@ -132,10 +132,9 @@ void QQuick3DParticleShape::setExtents(QVector3D extents)
 
 void QQuick3DParticleShape::componentComplete()
 {
-    m_parentNode = qobject_cast<QQuick3DNode*>(parent());
-    if (!m_parentNode) {
+    m_parentNode = qobject_cast<QQuick3DNode *>(parent());
+    if (!m_parentNode)
         qWarning() << "Shape requires parent Node to function correctly!";
-    }
 }
 
 QVector3D QQuick3DParticleShape::randomPosition(int particleIndex) const

@@ -60,12 +60,12 @@ QQuick3DParticle::~QQuick3DParticle()
     This property defines the \l ParticleSystem3D for the particle. If the system is
     direct parent of the particle, this property does not need to be defined.
 */
-QQuick3DParticleSystem* QQuick3DParticle::system() const
+QQuick3DParticleSystem *QQuick3DParticle::system() const
 {
     return m_system;
 }
 
-void QQuick3DParticle::setSystem(QQuick3DParticleSystem* system)
+void QQuick3DParticle::setSystem(QQuick3DParticleSystem *system)
 {
     if (m_system == system)
         return;
