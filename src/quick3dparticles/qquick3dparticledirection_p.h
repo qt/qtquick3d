@@ -44,9 +44,9 @@
 #include <QObject>
 #include <QVector3D>
 #include <QtQml/qqml.h>
-#include "qquick3dparticledata_p.h"
 
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+#include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 
 QT_BEGIN_NAMESPACE
 
