@@ -77,10 +77,10 @@ void QQuick3DParticleTrailEmitter::setFollow(QQuick3DParticle *follow)
 */
 void QQuick3DParticleTrailEmitter::burst(int count)
 {
-    if (!m_system)
+    if (!system())
         return;
     QQuick3DParticleEmitBurstData burst;
-    burst.time = m_system->time();
+    burst.time = system()->time();
     burst.amount = count;
     m_bursts << burst;
 }
@@ -93,13 +93,13 @@ bool QQuick3DParticleTrailEmitter::hasBursts() const
 // Called to emit set of particles
 void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurrent *d, int emitAmount)
 {
-    if (!m_system)
+    if (!system())
         return;
 
-    if (!m_enabled)
+    if (!enabled())
         return;
 
-    const int systemTime = m_system->time();
+    const int systemTime = system()->time();
     QVector3D centerPos = d->position;
 
     for (auto particle : qAsConst(m_system->m_particles)) {

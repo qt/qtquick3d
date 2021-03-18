@@ -92,6 +92,8 @@ public:
     QVector3D particleRotationVelocity() const;
     QVector3D particleRotationVelocityVariation() const;
 
+    QQmlListProperty<QQuick3DParticleEmitBurst> emitBursts();
+
     Q_INVOKABLE virtual void burst(int count);
     Q_INVOKABLE virtual void burst(int count, int duration);
     Q_INVOKABLE virtual void burst(int count, int duration, const QVector3D &position);
@@ -107,14 +109,11 @@ public Q_SLOTS:
     void setLifeSpan(int lifeSpan);
     void setLifeSpanVariation(int lifeSpanVariation);
     void setParticle(QQuick3DParticle *particle);
-    void setShape(QQuick3DParticleShape * shape);
+    void setShape(QQuick3DParticleShape *shape);
     void setParticleRotation(const QVector3D &particleRotation);
     void setParticleRotationVariation(const QVector3D &particleRotationVariation);
     void setParticleRotationVelocity(const QVector3D &particleRotationVelocity);
     void setParticleRotationVelocityVariation(const QVector3D &particleRotationVelocityVariation);
-
-protected:
-    void componentComplete() override;
 
 Q_SIGNALS:
     void velocityChanged();
@@ -136,9 +135,11 @@ Q_SIGNALS:
 protected:
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitBurst;
+    friend class QQuick3DParticleTrailEmitter;
 
-    void registerEmitBurst(QQuick3DParticleEmitBurst* emitBurst);
-    void unRegisterEmitBurst(QQuick3DParticleEmitBurst* emitBurst);
+    void componentComplete() override;
+    void registerEmitBurst(QQuick3DParticleEmitBurst *emitBurst);
+    void unRegisterEmitBurst(QQuick3DParticleEmitBurst *emitBurst);
     void generateEmitBursts();
     void emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QVector3D &centerPos);
     void emitParticles();
@@ -147,6 +148,23 @@ protected:
 
     void reset();
 
+    // EmitBursts - list handling
+    void appendEmitBurst(QQuick3DParticleEmitBurst *);
+    qsizetype emitBurstCount() const;
+    QQuick3DParticleEmitBurst *emitBurst(qsizetype) const;
+    void clearEmitBursts();
+    void replaceEmitBurst(qsizetype, QQuick3DParticleEmitBurst *);
+    void removeLastEmitBurst();
+
+    // EmitBursts - static
+    static void appendEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *, QQuick3DParticleEmitBurst *);
+    static qsizetype emitBurstCount(QQmlListProperty<QQuick3DParticleEmitBurst> *);
+    static QQuick3DParticleEmitBurst *emitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *, qsizetype);
+    static void clearEmitBursts(QQmlListProperty<QQuick3DParticleEmitBurst> *);
+    static void replaceEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *, qsizetype, QQuick3DParticleEmitBurst *);
+    static void removeLastEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *);
+
+private:
     QQuick3DParticleDirection *m_velocity = nullptr;
     QQuick3DParticleSystem *m_system = nullptr;
     float m_emitRate = 0.0f;
@@ -168,24 +186,6 @@ protected:
     const QQuick3DParticleData m_clearData = {};
     bool m_burstGenerated = false;
     QQuick3DNode *m_systemSharedParent = nullptr;
-
-protected:
-    // EmitBursts - list handling
-    QQmlListProperty<QQuick3DParticleEmitBurst> emitBursts();
-    void appendEmitBurst(QQuick3DParticleEmitBurst*);
-    qsizetype emitBurstCount() const;
-    QQuick3DParticleEmitBurst *emitBurst(qsizetype) const;
-    void clearEmitBursts();
-    void replaceEmitBurst(qsizetype, QQuick3DParticleEmitBurst*);
-    void removeLastEmitBurst();
-
-    // EmitBursts - static
-    static void appendEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst>*, QQuick3DParticleEmitBurst*);
-    static qsizetype emitBurstCount(QQmlListProperty<QQuick3DParticleEmitBurst>*);
-    static QQuick3DParticleEmitBurst* emitBurst(QQmlListProperty<QQuick3DParticleEmitBurst>*, qsizetype);
-    static void clearEmitBursts(QQmlListProperty<QQuick3DParticleEmitBurst>*);
-    static void replaceEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst>*, qsizetype, QQuick3DParticleEmitBurst*);
-    static void removeLastEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst>*);
     QList<QQuick3DParticleEmitBurst *> m_emitBursts;
 };
 

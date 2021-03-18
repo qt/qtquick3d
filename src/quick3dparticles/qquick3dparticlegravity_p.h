@@ -64,12 +64,12 @@ public Q_SLOTS:
     void setDirection(const QVector3D &direction);
     void setMagnitude(float magnitude);
 
-protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
-
 Q_SIGNALS:
     void magnitudeChanged();
     void directionChanged();
+
+protected:
+    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 private:
     float m_magnitude = 100.0f;

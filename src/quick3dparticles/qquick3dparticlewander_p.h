@@ -80,9 +80,6 @@ public Q_SLOTS:
     void setUniqueAmountVariation(float uniqueAmountVariation);
     void setUniquePaceVariation(float uniquePaceVariation);
 
-protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
-
 Q_SIGNALS:
     void globalAmountChanged();
     void globalPaceChanged();
@@ -91,6 +88,9 @@ Q_SIGNALS:
     void uniquePaceChanged();
     void uniqueAmountVariationChanged();
     void uniquePaceVariationChanged();
+
+protected:
+    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 private:
     QVector3D m_globalAmount;
