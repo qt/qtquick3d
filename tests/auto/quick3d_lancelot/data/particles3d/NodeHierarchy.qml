@@ -88,17 +88,14 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#202020"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
         }
 
         PerspectiveCamera {
-            id: camera
             position: Qt.vector3d(0, 0, 1000)
         }
 
         PointLight {
-            position: Qt.vector3d(0, 400, 300)
+            position: Qt.vector3d(200, 400, 800)
             brightness: 40
             ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
         }
@@ -115,7 +112,7 @@ Item {
         }
 
         Node {
-            y: 500
+            y: -100
             ParticleSystem3D {
                 id: psystem
                 useRandomSeed: false
@@ -124,9 +121,9 @@ Item {
                 NumberAnimation {
                     running: true
                     target: psystem
-                    property: "eulerRotation.y"
+                    property: "eulerRotation.z"
                     from: 0
-                    to: 140
+                    to: 90
                     duration: 2000
                 }
 
@@ -134,10 +131,15 @@ Item {
                 ModelParticle3D {
                     id: particleWhite
                     delegate: particleComponent
-                    maxAmount: 1200
+                    maxAmount: 250
                     color: "#ffffff"
                 }
-
+                ModelParticle3D {
+                    id: particleGreen
+                    delegate: particleComponent
+                    maxAmount: 250
+                    color: "#00ff00"
+                }
                 SpriteParticle3D {
                     id: particleBillboard
                     sprite: Texture {
@@ -148,24 +150,43 @@ Item {
                     billboard: true
                 }
 
+                // Emitter directly inside the system
+                ParticleEmitter3D {
+                    id: emitter3
+                    system: psystem
+                    particle: particleGreen
+                    x: -100
+                    particleScale: 1.0
+                    particleEndScale: 0.2
+                    particleRotationVariation: Qt.vector3d(180, 180, 180)
+                    velocity: VectorDirection3D {
+                        direction: Qt.vector3d(250, 0, 0)
+                        directionVariation: Qt.vector3d(0, 30, 0)
+                    }
+                    lifeSpan: 3000
+                    emitRate: 20
+                    Component.onCompleted: emitter3.burst(100)
+                }
+
+                // Emitter inside the system + node.
                 Node {
-                    y: -1000
-                    eulerRotation: Qt.vector3d(-90, 0, 0)
+                    y: -200
                     scale: Qt.vector3d(2, 2, 2)
                     ParticleEmitter3D {
-                        system: psystem
                         id: emitter1
+                        system: psystem
                         particle: particleWhite
-                        position: Qt.vector3d(-50, 0, 250)
+                        y: 100
+                        x: -50
                         particleScale: 0.2
                         particleEndScale: 1.0
                         particleRotationVariation: Qt.vector3d(180, 180, 180)
                         velocity: VectorDirection3D {
                             direction: Qt.vector3d(0, 200, 0)
-                            directionVariation: Qt.vector3d(20, 0, 20)
+                            directionVariation: Qt.vector3d(40, 0, 30)
                         }
                         lifeSpan: 3000
-                        emitRate: 20
+                        emitRate: 50
                         Component.onCompleted: emitter1.burst(100)
 
                         Model {
@@ -178,23 +199,23 @@ Item {
                 }
             }
 
+            // Emitter outside the system + node
             Node {
-                y: -1000
-                eulerRotation: Qt.vector3d(-90, 0, 0)
+                eulerRotation.z: -90
                 scale: Qt.vector3d(2, 2, 2)
                 ParticleEmitter3D {
-                    system: psystem
                     id: emitter2
+                    system: psystem
                     particle: particleBillboard
-                    position: Qt.vector3d(50, 0, 250)
+                    position.y: -50
+                    eulerRotation.z: -90
                     particleScale: 4
-                    particleRotationVariation: Qt.vector3d(180, 180, 180)
                     velocity: VectorDirection3D {
-                        direction: Qt.vector3d(0, 200, 0)
-                        directionVariation: Qt.vector3d(20, 0, 20)
+                        direction: Qt.vector3d(0, 100, 0)
+                        directionVariation: Qt.vector3d(20, 0, 30)
                     }
                     lifeSpan: 3000
-                    emitRate: 20
+                    emitRate: 50
                     Component.onCompleted: emitter2.burst(100)
                 }
             }
