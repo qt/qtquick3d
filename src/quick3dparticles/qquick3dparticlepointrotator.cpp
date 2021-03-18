@@ -65,7 +65,7 @@ void QQuick3DParticlePointRotator::setMagnitude(float magnitude)
 
     m_magnitude = magnitude;
     Q_EMIT magnitudeChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -89,7 +89,7 @@ void QQuick3DParticlePointRotator::setDirection(const QVector3D &direction)
     m_direction = direction;
     m_directionNormalized = m_direction.normalized();
     Q_EMIT directionChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -112,7 +112,7 @@ void QQuick3DParticlePointRotator::setPivotPoint(const QVector3D &point)
 
     m_pivotPoint = point;
     Q_EMIT pivotPointChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticlePointRotator::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)

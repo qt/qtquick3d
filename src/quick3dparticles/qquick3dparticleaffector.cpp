@@ -81,7 +81,7 @@ void QQuick3DParticleAffector::setSystem(QQuick3DParticleSystem* system)
         m_system->registerParticleAffector(this);
 
     Q_EMIT systemChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -104,7 +104,7 @@ void QQuick3DParticleAffector::setEnabled(bool enabled)
 
     m_enabled = enabled;
     Q_EMIT enabledChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleAffector::componentComplete()

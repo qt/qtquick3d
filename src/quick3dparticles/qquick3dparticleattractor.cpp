@@ -88,7 +88,7 @@ void QQuick3DParticleAttractor::setPositionVariation(const QVector3D &positionVa
 
     m_positionVariation = positionVariation;
     Q_EMIT positionVariationChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -125,7 +125,7 @@ void QQuick3DParticleAttractor::setShape(QQuick3DParticleShape *shape)
     m_shape = shape;
     m_shapeDirty = true;
     Q_EMIT shapeChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -149,7 +149,7 @@ void QQuick3DParticleAttractor::setDuration(int duration)
 
     m_duration = duration;
     Q_EMIT durationChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -172,7 +172,7 @@ void QQuick3DParticleAttractor::setDurationVariation(int durationVariation)
 
     m_durationVariation = durationVariation;
     Q_EMIT durationVariationChanged();
-    update();
+    Q_EMIT update();
 }
 
 /*!
@@ -194,7 +194,7 @@ void QQuick3DParticleAttractor::setHideAtEnd(bool hideAtEnd)
 
     m_hideAtEnd = hideAtEnd;
     Q_EMIT hideAtEndChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleAttractor::updateShapePositions()

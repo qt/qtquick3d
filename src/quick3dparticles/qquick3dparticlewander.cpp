@@ -162,7 +162,7 @@ void QQuick3DParticleWander::setGlobalAmount(const QVector3D &globalAmount)
 
     m_globalAmount = globalAmount;
     Q_EMIT globalAmountChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::setGlobalPace(const QVector3D &globalPace)
@@ -172,7 +172,7 @@ void QQuick3DParticleWander::setGlobalPace(const QVector3D &globalPace)
 
     m_globalPace = globalPace;
     Q_EMIT globalPaceChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::setGlobalPaceStart(const QVector3D &globalPaceStart)
@@ -182,7 +182,7 @@ void QQuick3DParticleWander::setGlobalPaceStart(const QVector3D &globalPaceStart
 
     m_globalPaceStart = globalPaceStart;
     Q_EMIT globalPaceStartChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::setUniqueAmount(const QVector3D &uniqueAmount)
@@ -192,7 +192,7 @@ void QQuick3DParticleWander::setUniqueAmount(const QVector3D &uniqueAmount)
 
     m_uniqueAmount = uniqueAmount;
     Q_EMIT uniqueAmountChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::setUniquePace(const QVector3D &uniquePace)
@@ -202,7 +202,7 @@ void QQuick3DParticleWander::setUniquePace(const QVector3D &uniquePace)
 
     m_uniquePace = uniquePace;
     Q_EMIT uniquePaceChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::setUniqueAmountVariation(float uniqueAmountVariation)
@@ -213,7 +213,7 @@ void QQuick3DParticleWander::setUniqueAmountVariation(float uniqueAmountVariatio
     uniqueAmountVariation = std::max(0.0f, std::min(1.0f, uniqueAmountVariation));
     m_uniqueAmountVariation = uniqueAmountVariation;
     Q_EMIT uniqueAmountVariationChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::setUniquePaceVariation(float uniquePaceVariation)
@@ -224,7 +224,7 @@ void QQuick3DParticleWander::setUniquePaceVariation(float uniquePaceVariation)
     uniquePaceVariation = std::max(0.0f, std::min(1.0f, uniquePaceVariation));
     m_uniquePaceVariation = uniquePaceVariation;
     Q_EMIT uniquePaceVariationChanged();
-    update();
+    Q_EMIT update();
 }
 
 void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
