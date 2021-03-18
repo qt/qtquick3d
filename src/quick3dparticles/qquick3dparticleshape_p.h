@@ -85,15 +85,15 @@ public Q_SLOTS:
     void setType(QQuick3DParticleShape::ShapeType type);
     void setExtents(QVector3D extends);
 
-protected:
-    // From QQmlParserStatus
-    void componentComplete() override;
-    void classBegin() override {}
-
 Q_SIGNALS:
     void fillChanged();
     void typeChanged();
     void extentsChanged();
+
+protected:
+    // From QQmlParserStatus
+    void componentComplete() override;
+    void classBegin() override {}
 
 private:
     // These need access to m_system

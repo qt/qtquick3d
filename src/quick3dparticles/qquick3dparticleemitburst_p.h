@@ -74,15 +74,15 @@ public Q_SLOTS:
     void setAmount(int amount);
     void setDuration(int duration);
 
-protected:
-    // From QQmlParserStatus
-    void componentComplete() override;
-    void classBegin() override {}
-
 Q_SIGNALS:
     void timeChanged();
     void amountChanged();
     void durationChanged();
+
+protected:
+    // From QQmlParserStatus
+    void componentComplete() override;
+    void classBegin() override {}
 
 private:
     QQuick3DParticleEmitter *m_parentEmitter = nullptr;

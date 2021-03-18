@@ -123,13 +123,6 @@ public Q_SLOTS:
     void setSeed(int seed);
     void setLogging(bool logging);
 
-private Q_SLOTS:
-    void refresh();
-    void markDirty();
-
-protected:
-    void componentComplete() override;
-
 Q_SIGNALS:
     void runningChanged();
     void pausedChanged();
@@ -140,6 +133,9 @@ Q_SIGNALS:
     void loggingChanged();
     void loggingDataChanged();
 
+protected:
+    void componentComplete() override;
+
 private:
     void registerParticleModel(QQuick3DParticleModelParticle* m);
     void registerParticleSprite(QQuick3DParticleSpriteParticle* m);
@@ -147,6 +143,8 @@ private:
     void updateLoggingData();
     void resetLoggingVariables();
     void doSeedRandomization();
+    void refresh();
+    void markDirty();
 
 private:
     friend class QQuick3DParticleEmitter;

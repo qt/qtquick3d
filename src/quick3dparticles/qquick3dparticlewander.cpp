@@ -229,9 +229,9 @@ void QQuick3DParticleWander::setUniquePaceVariation(float uniquePaceVariation)
 
 void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
-    if (!m_system)
+    if (!system())
         return;
-    auto rand = m_system->rand();
+    auto rand = system()->rand();
 
     // Smooth 1 sec start to full wandering
     // Required to respect particle emitter start position

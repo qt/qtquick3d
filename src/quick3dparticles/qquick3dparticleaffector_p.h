@@ -78,15 +78,8 @@ public:
     void removeLastParticle();
 
 public Q_SLOTS:
-    void setSystem(QQuick3DParticleSystem* system);
+    void setSystem(QQuick3DParticleSystem *system);
     void setEnabled(bool enabled);
-
-protected:
-    friend class QQuick3DParticleSystem;
-    // From QQmlParserStatus
-    void componentComplete() override;
-
-    virtual void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) = 0;
 
 Q_SIGNALS:
     void update();
@@ -94,8 +87,14 @@ Q_SIGNALS:
     void enabledChanged();
 
 protected:
-    QQuick3DParticleSystem *m_system = nullptr;
-    bool m_enabled = true;
+    QList<QQuick3DParticle *> m_particles;
+
+private:
+    friend class QQuick3DParticleSystem;
+    // From QQmlParserStatus
+    void componentComplete() override;
+
+    virtual void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) = 0;
 
     static void appendParticle(QQmlListProperty<QQuick3DParticle> *, QQuick3DParticle *);
     static qsizetype particleCount(QQmlListProperty<QQuick3DParticle> *);
@@ -103,7 +102,9 @@ protected:
     static void clearParticles(QQmlListProperty<QQuick3DParticle> *);
     static void replaceParticle(QQmlListProperty<QQuick3DParticle> *, qsizetype, QQuick3DParticle *);
     static void removeLastParticle(QQmlListProperty<QQuick3DParticle> *);
-    QList<QQuick3DParticle *> m_particles;
+
+    QQuick3DParticleSystem *m_system = nullptr;
+    bool m_enabled = true;
     QMap<QQuick3DParticle *, QMetaObject::Connection> m_connections;
 };
 

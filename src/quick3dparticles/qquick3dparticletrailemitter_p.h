@@ -66,14 +66,14 @@ public:
 public Q_SLOTS:
     void setFollow(QQuick3DParticle *follow);
 
+Q_SIGNALS:
+    void followChanged();
+
 protected:
     friend class QQuick3DParticleSystem;
     void emitTrailParticles(QQuick3DParticleDataCurrent *d, int emitAmount);
     bool hasBursts() const;
     void clearBursts();
-
-Q_SIGNALS:
-    void followChanged();
 
 private:
     QQuick3DParticle *m_follow = nullptr;

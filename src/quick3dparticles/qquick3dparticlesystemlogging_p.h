@@ -85,7 +85,6 @@ private:
     void updateTimes(qint64 time);
     void resetData();
 
-private:
     friend class QQuick3DParticleSystem;
     int m_loggingInterval = 1000;
     int m_updates = 0;

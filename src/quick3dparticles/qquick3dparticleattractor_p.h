@@ -73,15 +73,15 @@ public Q_SLOTS:
     void setDurationVariation(int durationVariation);
     void setHideAtEnd(bool hideAtEnd);
 
-protected:
-    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
-
 Q_SIGNALS:
     void positionVariationChanged();
     void shapeChanged();
     void durationChanged();
     void durationVariationChanged();
     void hideAtEndChanged();
+
+protected:
+    void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 private:
     void updateShapePositions();

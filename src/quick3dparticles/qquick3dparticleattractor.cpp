@@ -200,10 +200,10 @@ void QQuick3DParticleAttractor::setHideAtEnd(bool hideAtEnd)
 void QQuick3DParticleAttractor::updateShapePositions()
 {
     m_shapePositionList.clear();
-    if (!m_system || !m_shape)
+    if (!system() || !m_shape)
         return;
 
-    m_shape->m_system = m_system;
+    m_shape->m_system = system();
 
     // Get count of particles positions needed
     int pCount = 0;
@@ -213,7 +213,7 @@ void QQuick3DParticleAttractor::updateShapePositions()
             pCount += pp->maxAmount();
         }
     } else {
-        pCount = m_system->particleCount();
+        pCount = system()->particleCount();
     }
 
     m_shapePositionList.reserve(pCount);
@@ -225,13 +225,13 @@ void QQuick3DParticleAttractor::updateShapePositions()
 
 void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
-    if (!m_system)
+    if (!system())
         return;
 
     if (m_shapeDirty)
         updateShapePositions();
 
-    auto rand = m_system->rand();
+    auto rand = system()->rand();
     float duration = m_duration < 0 ? sd.lifetime : (m_duration / 1000.0f);
     float durationVariation = m_durationVariation == 0
             ? 0.0f
