@@ -115,8 +115,8 @@ public:
     QPRand *rand();
 
 public Q_SLOTS:
-    void setRunning(bool arg);
-    void setPaused(bool arg);
+    void setRunning(bool running);
+    void setPaused(bool paused);
     void setStartTime(int startTime);
     void setTime(int time);
     void setUseRandomSeed(bool randomize);
@@ -158,7 +158,7 @@ private:
     bool m_initialized;
     bool m_componentComplete;
     // This animation runs the system, progressing time with pause, continue etc.
-    QQuick3DParticleSystemAnimation* m_animation = nullptr;
+    QQuick3DParticleSystemAnimation *m_animation = nullptr;
     // This animation handles system dirty updates and runs always.
     // It makes sure that updates are done in sync with other animations and only once per frame.
     QQuick3DParticleSystemUpdate *m_updateAnimation = nullptr;
@@ -190,15 +190,14 @@ private:
         QQuick3DParticleTrailEmitter *emitter = nullptr;
         int amount = 0;
     };
-
 };
 
 class QQuick3DParticleSystemAnimation : public QAbstractAnimation
 {
     Q_OBJECT
 public:
-    QQuick3DParticleSystemAnimation(QQuick3DParticleSystem* system)
-        : QAbstractAnimation(static_cast<QObject*>(system)), m_system(system)
+    QQuick3DParticleSystemAnimation(QQuick3DParticleSystem *system)
+        : QAbstractAnimation(static_cast<QObject *>(system)), m_system(system)
     { }
 protected:
     void updateCurrentTime(int t) override
@@ -212,15 +211,15 @@ protected:
     }
 
 private:
-    QQuick3DParticleSystem* m_system;
+    QQuick3DParticleSystem *m_system;
 };
 
 class QQuick3DParticleSystemUpdate : public QAbstractAnimation
 {
     Q_OBJECT
 public:
-    QQuick3DParticleSystemUpdate(QQuick3DParticleSystem* system)
-        : QAbstractAnimation(static_cast<QObject*>(system)), m_system(system)
+    QQuick3DParticleSystemUpdate(QQuick3DParticleSystem *system)
+        : QAbstractAnimation(static_cast<QObject *>(system)), m_system(system)
     { }
 
     void setDirty(bool dirty)
@@ -242,7 +241,7 @@ protected:
     }
 
 private:
-    QQuick3DParticleSystem* m_system;
+    QQuick3DParticleSystem *m_system;
     bool m_dirty = false;
 };
 

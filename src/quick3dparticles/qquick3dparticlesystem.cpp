@@ -92,7 +92,6 @@ QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     connect(m_loggingData, &QQuick3DParticleSystemLogging::loggingIntervalChanged, [this]() {
         m_loggingTimer.setInterval(m_loggingData->m_loggingInterval);
     });
-
 }
 
 QQuick3DParticleSystem::~QQuick3DParticleSystem()
@@ -259,10 +258,10 @@ QQuick3DParticleSystemLogging *QQuick3DParticleSystem::loggingData() const
     return m_loggingData;
 }
 
-void QQuick3DParticleSystem::setRunning(bool arg)
+void QQuick3DParticleSystem::setRunning(bool running)
 {
-    if (m_running != arg) {
-        m_running = arg;
+    if (m_running != running) {
+        m_running = running;
         Q_EMIT runningChanged();
         setPaused(false);
 
@@ -282,9 +281,10 @@ void QQuick3DParticleSystem::setRunning(bool arg)
     }
 }
 
-void QQuick3DParticleSystem::setPaused(bool arg) {
-    if (m_paused != arg) {
-        m_paused = arg;
+void QQuick3DParticleSystem::setPaused(bool paused)
+{
+    if (m_paused != paused) {
+        m_paused = paused;
         if (m_animation->state() != QAbstractAnimation::Stopped)
             m_paused ? m_animation->pause() : m_animation->resume();
         Q_EMIT pausedChanged();
@@ -346,11 +346,11 @@ void QQuick3DParticleSystem::setLogging(bool logging)
     resetLoggingVariables();
     m_loggingData->resetData();
 
-    if (m_logging) {
+    if (m_logging)
         m_loggingTimer.start();
-    } else {
+    else
         m_loggingTimer.stop();
-    }
+
     Q_EMIT loggingChanged();
 }
 
@@ -368,7 +368,7 @@ void QQuick3DParticleSystem::componentComplete()
     else
         m_rand.init(m_seed);
 
-    reset();//restarts animation as well
+    reset(); //restarts animation as well
 }
 
 void QQuick3DParticleSystem::reset()
@@ -379,7 +379,7 @@ void QQuick3DParticleSystem::reset()
     m_time = 0;
 
     // Reset restarts the animation (if running)
-    if ((m_animation->state() == QAbstractAnimation::Running))
+    if (m_animation->state() == QAbstractAnimation::Running)
         m_animation->stop();
     if (m_running)
         m_animation->start();
@@ -389,14 +389,16 @@ void QQuick3DParticleSystem::reset()
     m_initialized = true;
 }
 
-void QQuick3DParticleSystem::refresh() {
+void QQuick3DParticleSystem::refresh()
+{
     // If the system isn't running, force refreshing by calling update
     // with the current time
     if (!m_running)
         updateCurrentTime(m_time);
 }
 
-void QQuick3DParticleSystem::markDirty() {
+void QQuick3DParticleSystem::markDirty()
+{
     // Mark the system dirty so things are updated at the next frame.
     m_updateAnimation->setDirty(true);
 }
@@ -404,9 +406,8 @@ void QQuick3DParticleSystem::markDirty() {
 int QQuick3DParticleSystem::particleCount() const
 {
     int pCount = 0;
-    for (auto particle : qAsConst(m_particles)) {
+    for (auto particle : qAsConst(m_particles))
         pCount += particle->maxAmount();
-    }
     return pCount;
 }
 
@@ -424,13 +425,13 @@ void QQuick3DParticleSystem::registerParticle(QQuick3DParticle *particle)
     }
 }
 
-void QQuick3DParticleSystem::registerParticleModel(QQuick3DParticleModelParticle* m)
+void QQuick3DParticleSystem::registerParticleModel(QQuick3DParticleModelParticle *m)
 {
     m_modelParticles << m;
     m_particles << m;
 }
 
-void QQuick3DParticleSystem::registerParticleSprite(QQuick3DParticleSpriteParticle* m)
+void QQuick3DParticleSystem::registerParticleSprite(QQuick3DParticleSpriteParticle *m)
 {
     m_spriteParticles << m;
     m_particles << m;
@@ -452,31 +453,31 @@ void QQuick3DParticleSystem::unRegisterParticle(QQuick3DParticle *particle)
     }
 }
 
-void QQuick3DParticleSystem::registerParticleEmitter(QQuick3DParticleEmitter* e)
+void QQuick3DParticleSystem::registerParticleEmitter(QQuick3DParticleEmitter *e)
 {
-    auto te = qobject_cast<QQuick3DParticleTrailEmitter*>(e);
+    auto te = qobject_cast<QQuick3DParticleTrailEmitter *>(e);
     if (te)
         m_trailEmitters << te;
     else
         m_emitters << e;
 }
 
-void QQuick3DParticleSystem::unRegisterParticleEmitter(QQuick3DParticleEmitter* e)
+void QQuick3DParticleSystem::unRegisterParticleEmitter(QQuick3DParticleEmitter *e)
 {
-    auto te = qobject_cast<QQuick3DParticleTrailEmitter*>(e);
+    auto te = qobject_cast<QQuick3DParticleTrailEmitter *>(e);
     if (te)
         m_trailEmitters.removeAll(te);
     else
         m_emitters.removeAll(e);
 }
 
-void QQuick3DParticleSystem::registerParticleAffector(QQuick3DParticleAffector* a)
+void QQuick3DParticleSystem::registerParticleAffector(QQuick3DParticleAffector *a)
 {
     m_affectors << a;
     m_connections.insert(a, connect(a, &QQuick3DParticleAffector::update, this, &QQuick3DParticleSystem::markDirty));
 }
 
-void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector* a)
+void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector *a)
 {
     QObject::disconnect(m_connections[a]);
     m_connections.remove(a);
@@ -498,9 +499,8 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     m_perfTimer.restart();
 
     // Emit new particles
-    for (auto emitter : qAsConst(m_emitters)) {
+    for (auto emitter : qAsConst(m_emitters))
         emitter->emitParticles();
-    }
 
     // Animate current particles
     for (auto particle : qAsConst(m_particles)) {
@@ -586,9 +586,9 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             float timeChange = particleTimeS / d->lifetime;
             timeChange = std::max(0.0f, std::min(1.0f, timeChange));
             // Scale from initial to endScale
-            if (modelParticle)
+            if (modelParticle) {
                 currentData.scale = modelParticle->m_initialScale * d->endSize * (timeChange) + modelParticle->m_initialScale * d->startSize * (1.0 - timeChange);
-            else {
+            } else {
                 float scale = d->endSize * (timeChange) + d->startSize * (1.0 - timeChange);
                 currentData.scale = QVector3D(scale, scale, scale);
             }
@@ -677,7 +677,8 @@ void QQuick3DParticleSystem::resetLoggingVariables()
     m_timeAnimation = 0;
 }
 
-QPRand *QQuick3DParticleSystem::rand() {
+QPRand *QQuick3DParticleSystem::rand()
+{
     return &m_rand;
 }
 

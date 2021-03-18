@@ -54,12 +54,12 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
 {
     Q_OBJECT
     Q_PROPERTY(BlendMode blendMode READ blendMode WRITE setBlendMode NOTIFY blendModeChanged)
-    Q_PROPERTY(QQuick3DTexture* sprite READ sprite WRITE setSprite NOTIFY spriteChanged)
+    Q_PROPERTY(QQuick3DTexture *sprite READ sprite WRITE setSprite NOTIFY spriteChanged)
     Q_PROPERTY(int frameCount READ frameCount WRITE setFrameCount NOTIFY frameCountChanged)
     Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
     Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
-    Q_PROPERTY(QQuick3DTexture* colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
+    Q_PROPERTY(QQuick3DTexture *colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
     QML_ADDED_IN_VERSION(6, 1)
 

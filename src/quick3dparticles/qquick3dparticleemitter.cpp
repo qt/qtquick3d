@@ -123,12 +123,12 @@ void QQuick3DParticleEmitter::setVelocity(QQuick3DParticleDirection *velocity)
     This property defines the \l ParticleSystem3D for the emitter. If system is direct parent of the emitter,
     this property does not need to be defined.
 */
-QQuick3DParticleSystem* QQuick3DParticleEmitter::system() const
+QQuick3DParticleSystem *QQuick3DParticleEmitter::system() const
 {
     return m_system;
 }
 
-void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem* system)
+void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem *system)
 {
     if (m_system == system)
         return;
@@ -770,7 +770,7 @@ void QQuick3DParticleEmitter::emitParticles()
 
     // With lower emitRates, let timeChange grow until at least 1 particle is emitted
     if (emitAmount < 1)
-            return;
+        return;
 
     const int systemTime = m_system->time();
     QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
@@ -789,8 +789,8 @@ void QQuick3DParticleEmitter::emitParticles()
 
 void QQuick3DParticleEmitter::componentComplete()
 {
-    if (!m_system && qobject_cast<QQuick3DParticleSystem*>(parentItem()))
-        setSystem(qobject_cast<QQuick3DParticleSystem*>(parentItem()));
+    if (!m_system && qobject_cast<QQuick3DParticleSystem *>(parentItem()))
+        setSystem(qobject_cast<QQuick3DParticleSystem *>(parentItem()));
     QQuick3DNode::componentComplete();
 }
 
@@ -862,30 +862,30 @@ void QQuick3DParticleEmitter::removeLastEmitBurst()
 }
 
 // EmitBursts - static
-void QQuick3DParticleEmitter::appendEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst>* list, QQuick3DParticleEmitBurst* p) {
-    reinterpret_cast< QQuick3DParticleEmitter* >(list->data)->appendEmitBurst(p);
+void QQuick3DParticleEmitter::appendEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *list, QQuick3DParticleEmitBurst *p) {
+    reinterpret_cast< QQuick3DParticleEmitter *>(list->data)->appendEmitBurst(p);
 }
 
-void QQuick3DParticleEmitter::clearEmitBursts(QQmlListProperty<QQuick3DParticleEmitBurst>* list) {
-    reinterpret_cast< QQuick3DParticleEmitter* >(list->data)->clearEmitBursts();
+void QQuick3DParticleEmitter::clearEmitBursts(QQmlListProperty<QQuick3DParticleEmitBurst> *list) {
+    reinterpret_cast< QQuick3DParticleEmitter *>(list->data)->clearEmitBursts();
 }
 
 void QQuick3DParticleEmitter::replaceEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *list, qsizetype i, QQuick3DParticleEmitBurst *p)
 {
-    reinterpret_cast< QQuick3DParticleEmitter* >(list->data)->replaceEmitBurst(i, p);
+    reinterpret_cast< QQuick3DParticleEmitter *>(list->data)->replaceEmitBurst(i, p);
 }
 
 void QQuick3DParticleEmitter::removeLastEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *list)
 {
-    reinterpret_cast< QQuick3DParticleEmitter* >(list->data)->removeLastEmitBurst();
+    reinterpret_cast< QQuick3DParticleEmitter *>(list->data)->removeLastEmitBurst();
 }
 
-QQuick3DParticleEmitBurst* QQuick3DParticleEmitter::emitBurst(QQmlListProperty<QQuick3DParticleEmitBurst>* list, qsizetype i) {
-    return reinterpret_cast< QQuick3DParticleEmitter* >(list->data)->emitBurst(i);
+QQuick3DParticleEmitBurst* QQuick3DParticleEmitter::emitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *list, qsizetype i) {
+    return reinterpret_cast< QQuick3DParticleEmitter *>(list->data)->emitBurst(i);
 }
 
-qsizetype QQuick3DParticleEmitter::emitBurstCount(QQmlListProperty<QQuick3DParticleEmitBurst>* list) {
-    return reinterpret_cast< QQuick3DParticleEmitter* >(list->data)->emitBurstCount();
+qsizetype QQuick3DParticleEmitter::emitBurstCount(QQmlListProperty<QQuick3DParticleEmitBurst> *list) {
+    return reinterpret_cast< QQuick3DParticleEmitter *>(list->data)->emitBurstCount();
 }
 
 QT_END_NAMESPACE

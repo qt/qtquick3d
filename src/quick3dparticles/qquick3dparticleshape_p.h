@@ -43,8 +43,8 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQuick3D/private/qquick3dnode_p.h>
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
 QT_BEGIN_NAMESPACE

@@ -124,6 +124,7 @@ bool QQuick3DParticleTargetDirection::normalized() const
 {
     return m_normalized;
 }
+
 void QQuick3DParticleTargetDirection::setNormalized(bool normalized)
 {
     if (m_normalized == normalized)
@@ -148,6 +149,7 @@ float QQuick3DParticleTargetDirection::magnitude() const
 {
     return m_magnitude;
 }
+
 void QQuick3DParticleTargetDirection::setMagnitude(float magnitude)
 {
     if (qFuzzyCompare(m_magnitude, magnitude))
@@ -171,6 +173,7 @@ float QQuick3DParticleTargetDirection::magnitudeVariation() const
 {
     return m_magnitudeVariation;
 }
+
 void QQuick3DParticleTargetDirection::setMagnitudeVariation(float magnitudeVariation)
 {
     if (qFuzzyCompare(m_magnitudeVariation, magnitudeVariation))

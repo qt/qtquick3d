@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
+    Q_PROPERTY(QQuick3DParticleSystem *system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DParticleEmitBurst> emitBursts READ emitBursts)
     Q_PROPERTY(QQuick3DParticleDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
     Q_PROPERTY(QQuick3DParticle *particle READ particle WRITE setParticle NOTIFY particleChanged)
@@ -77,8 +77,8 @@ public:
     ~QQuick3DParticleEmitter() override;
 
     bool enabled() const;
-    QQuick3DParticleDirection* velocity() const;
-    QQuick3DParticleSystem* system() const;
+    QQuick3DParticleDirection *velocity() const;
+    QQuick3DParticleSystem *system() const;
     float emitRate() const;
     float particleScale() const;
     float particleEndScale() const;
@@ -86,7 +86,7 @@ public:
     int lifeSpan() const;
     int lifeSpanVariation() const;
     QQuick3DParticle *particle() const;
-    QQuick3DParticleShape * shape() const;
+    QQuick3DParticleShape *shape() const;
     QVector3D particleRotation() const;
     QVector3D particleRotationVariation() const;
     QVector3D particleRotationVelocity() const;
@@ -99,7 +99,7 @@ public:
 public Q_SLOTS:
     void setEnabled(bool enabled);
     void setVelocity(QQuick3DParticleDirection *velocity);
-    void setSystem(QQuick3DParticleSystem* system);
+    void setSystem(QQuick3DParticleSystem *system);
     void setEmitRate(float emitRate);
     void setParticleScale(float particleScale);
     void setParticleEndScale(float particleEndScale);
@@ -148,7 +148,7 @@ protected:
     void reset();
 
     QQuick3DParticleDirection *m_velocity = nullptr;
-    QQuick3DParticleSystem* m_system = nullptr;
+    QQuick3DParticleSystem *m_system = nullptr;
     float m_emitRate = 0.0f;
     // Time in ms when emitting last time happened
     int m_prevEmitTime = 0;

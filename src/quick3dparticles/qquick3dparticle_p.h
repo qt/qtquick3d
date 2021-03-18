@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
+    Q_PROPERTY(QQuick3DParticleSystem *system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(int maxAmount READ maxAmount WRITE setMaxAmount NOTIFY maxAmountChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor)
     Q_PROPERTY(QVector4D colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged)
@@ -87,7 +87,7 @@ public:
     };
     Q_ENUM(AlignMode)
 
-    QQuick3DParticleSystem* system() const;
+    QQuick3DParticleSystem *system() const;
     int maxAmount() const;
     QColor color() const;
     QVector4D colorVariation() const;
@@ -103,7 +103,7 @@ public:
     void resetColor();
 
 public Q_SLOTS:
-    void setSystem(QQuick3DParticleSystem* system);
+    void setSystem(QQuick3DParticleSystem *system);
     void setMaxAmount(int maxAmount);
     void setColor(QColor color);
     void setColorVariation(QVector4D colorVariation);
@@ -154,7 +154,7 @@ private:
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitter;
 
-    QQuick3DParticleSystem* m_system = nullptr;
+    QQuick3DParticleSystem *m_system = nullptr;
 
     QColor m_color;
     QVector4D m_colorVariation;

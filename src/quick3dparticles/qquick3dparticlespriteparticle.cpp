@@ -367,8 +367,8 @@ void QQuick3DParticleSpriteParticle::handleSystemChanged(QQuick3DParticleSystem 
 
 void QQuick3DParticleSpriteParticle::componentComplete()
 {
-    if (!system() && qobject_cast<QQuick3DParticleSystem*>(parentItem()))
-        setSystem(qobject_cast<QQuick3DParticleSystem*>(parentItem()));
+    if (!system() && qobject_cast<QQuick3DParticleSystem *>(parentItem()))
+        setSystem(qobject_cast<QQuick3DParticleSystem *>(parentItem()));
 
     QQuick3DParticle::componentComplete();
 }

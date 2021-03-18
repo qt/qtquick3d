@@ -66,7 +66,6 @@ protected:
     friend class QQuick3DParticleEmitter;
 
     QQuick3DParticleSystem *m_system = nullptr;
-
 };
 
 QT_END_NAMESPACE
