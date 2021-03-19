@@ -104,6 +104,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *translucencyMap = nullptr;
     QSSGRenderImage *metalnessMap = nullptr;
     QSSGRenderImage *occlusionMap = nullptr;
+    QSSGRenderImage *heightMap = nullptr;
 
     // Note that most default values here are irrelevant as the material
     // (Default or Principled) will write its own defaults or actual values
@@ -122,6 +123,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float translucentFalloff = 0.0f; // 0 - ??
     float occlusionAmount = 1.0f; // 0 - 1
     float alphaCutoff = 0.5f; // 0 - 1
+    float heightAmount = 0.0f; // 0 - 1
+    int minHeightSamples = 8;
+    int maxHeightSamples = 32;
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::FragmentLighting;
@@ -135,6 +139,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping translucencyChannel = TextureChannelMapping::A;
     TextureChannelMapping metalnessChannel = TextureChannelMapping::R;
     TextureChannelMapping occlusionChannel = TextureChannelMapping::R;
+    TextureChannelMapping heightChannel = TextureChannelMapping::R;
     float pointSize = 1.0f;
     float lineWidth = 1.0f;
 

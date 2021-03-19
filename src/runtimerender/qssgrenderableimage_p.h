@@ -71,7 +71,8 @@ struct QSSGRenderableImage
         Roughness,
         BaseColor,
         Metalness,
-        Occlusion
+        Occlusion,
+        Height
     };
     const QSSGRenderImage &m_imageNode;
     QSSGRenderImageTexture m_texture;

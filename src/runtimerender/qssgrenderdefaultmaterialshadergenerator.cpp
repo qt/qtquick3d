@@ -74,6 +74,7 @@ DefineImageStrings(Roughness);
 DefineImageStrings(BaseColor);
 DefineImageStrings(Metalness);
 DefineImageStrings(Occlusion);
+DefineImageStrings(Height);
 
 struct ImageStringSet
 {
@@ -102,7 +103,8 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(Roughness),
     DefineImageStringTableEntry(BaseColor),
     DefineImageStringTableEntry(Metalness),
-    DefineImageStringTableEntry(Occlusion)
+    DefineImageStringTableEntry(Occlusion),
+    DefineImageStringTableEntry(Height)
 };
 
 const int TEXCOORD_VAR_LEN = 16;
@@ -471,6 +473,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     QSSGRenderableImage *translucencyImage = nullptr;
     // opacity map
     QSSGRenderableImage *opacityImage = nullptr;
+    // height map
+    QSSGRenderableImage *heightImage = nullptr;
 
     QSSGRenderableImage *baseImage = nullptr;
 
@@ -518,6 +522,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             translucencyImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Opacity) {
             opacityImage = img;
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Height) {
+            heightImage = img;
         }
     }
 
@@ -527,6 +533,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool isOrthoShadowPass = false;
     bool isCubeShadowPass = false;
     bool enableBumpNormal = normalImage || bumpImage;
+    bool enableParallaxMapping = heightImage != nullptr;
     specularLightingEnabled |= specularAmountImage != nullptr;
 
     for (qint32 idx = 0; idx < featureSet.size(); ++idx) {
@@ -607,6 +614,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     fragmentShader.addUniform("qt_material_properties", "vec4");
     fragmentShader.addUniform("qt_material_properties2", "vec4");
     fragmentShader.addUniform("qt_material_properties3", "vec4");
+    if (enableParallaxMapping)
+        fragmentShader.addUniform("qt_material_properties4", "vec4");
 
     if (vertexColorsEnabled)
         vertexShader.generateVertexColor(inKey);
@@ -716,15 +725,28 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         else
             fragmentShader.addFunction("diffuseReflectionBSDF");
 
+        if (enableParallaxMapping) {
+            // Adjust UV coordinates to account for parallaxMapping before
+            // reading any other texture.
+            const bool hasIdentityMap = identityImages.contains(heightImage);
+            if (hasIdentityMap)
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *heightImage, imageFragCoords, heightImage->m_imageNode.m_indexUV);
+            else
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *heightImage, true, heightImage->m_imageNode.m_indexUV);
+            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Height)];
+            fragmentShader.addInclude("parallaxMapping.glsllib");
+            fragmentShader << "    qt_texCoord0 = qt_parallaxMapping(" << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ", " << names.imageSampler <<", qt_tangent, qt_binormal, qt_world_normal, qt_varWorldPos, qt_cameraPosition, qt_material_properties4.x, qt_material_properties4.y, qt_material_properties4.z);\n";
+        }
+
         if (bumpImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, false, bumpImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, enableParallaxMapping, bumpImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
             fragmentShader.addUniform(names.imageSamplerSize, "vec2");
             fragmentShader.append("    float bumpAmount = qt_material_properties2.y;\n");
             fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
             fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal, " << names.imageSamplerSize << ");\n";
         } else if (normalImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, false, normalImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, enableParallaxMapping, normalImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
             fragmentShader.append("    float normalStrength = qt_material_properties2.y;\n");
             fragmentShader.addFunction("sampleNormalTexture");
@@ -751,7 +773,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIdentityMap)
             generateImageUVSampler(vertexShader, fragmentShader, inKey, *baseImage, imageFragCoords, baseImage->m_imageNode.m_indexUV);
         else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage, false, baseImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage, enableParallaxMapping, baseImage->m_imageNode.m_indexUV);
 
         // NOTE: The base image hande is used for both the diffuse map and the base color map, so we can't hard-code the type here...
         const auto &names = imageStringTable[int(baseImage->m_mapType)];
@@ -781,7 +803,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIdentityMap)
             generateImageUVSampler(vertexShader, fragmentShader, inKey, *opacityImage, imageFragCoords, opacityImage->m_imageNode.m_indexUV);
         else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, false, opacityImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, enableParallaxMapping, opacityImage->m_imageNode.m_indexUV);
 
         const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Opacity)];
         const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
@@ -815,7 +837,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *metalnessImage, imageFragCoords, metalnessImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, false, metalnessImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, enableParallaxMapping, metalnessImage->m_imageNode.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Metalness)];
             fragmentShader << "    float qt_sampledMetalness = texture2D(" << names.imageSampler << ", "
@@ -847,7 +869,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *specularAmountImage, imageFragCoords, specularAmountImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, false, specularAmountImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, enableParallaxMapping, specularAmountImage->m_imageNode.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap)];
             // TODO: This might need to be colorspace corrected to linear
@@ -862,7 +884,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *translucencyImage, imageFragCoords);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *translucencyImage, false);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *translucencyImage, enableParallaxMapping);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Translucency)];
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::TranslucencyChannel];
@@ -892,7 +914,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords, roughnessImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, false, roughnessImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, enableParallaxMapping, roughnessImage->m_imageNode.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
             fragmentShader << "    qt_roughnessAmount *= texture2D(" << names.imageSampler << ", "
@@ -1150,7 +1172,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 if (hasIdentityMap)
                     generateImageUVSampler(vertexShader, fragmentShader, inKey, *image, imageFragCoords, image->m_imageNode.m_indexUV);
                 else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, false, image->m_imageNode.m_indexUV);
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, enableParallaxMapping, image->m_imageNode.m_indexUV);
 
                 const auto &names = imageStringTable[int(image->m_mapType)];
                 fragmentShader << "    qt_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler
@@ -1180,7 +1202,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, false, occlusionImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
             fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
@@ -1586,6 +1608,14 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         0.0f  // unused
     };
     shaders->setUniform(ubufData, "qt_material_properties3", materialProperties3, 4 * sizeof(float), &cui.material_properties3Idx);
+
+    const float materialProperties4[4] = {
+        materialAdapter->heightAmount(),
+        materialAdapter->minHeightSamples(),
+        materialAdapter->maxHeightSamples(),
+        0.0f  // unused
+    };
+    shaders->setUniform(ubufData, "qt_material_properties4", materialProperties4, 4 * sizeof(float), &cui.material_properties4Idx);
 
     const float rhiProperties[4] = {
         inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,

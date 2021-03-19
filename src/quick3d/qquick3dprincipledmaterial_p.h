@@ -92,6 +92,12 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(float pointSize READ pointSize WRITE setPointSize NOTIFY pointSizeChanged)
     Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth NOTIFY lineWidthChanged)
 
+    Q_PROPERTY(QQuick3DTexture *heightMap READ heightMap WRITE setHeightMap NOTIFY heightMapChanged)
+    Q_PROPERTY(TextureChannelMapping heightChannel READ heightChannel WRITE setHeightChannel NOTIFY heightChannelChanged)
+    Q_PROPERTY(float heightAmount READ heightAmount WRITE setHeightAmount NOTIFY heightAmountChanged)
+    Q_PROPERTY(int minHeightMapSamples READ minHeightMapSamples WRITE setMinHeightMapSamples NOTIFY minHeightMapSamplesChanged)
+    Q_PROPERTY(int maxHeightMapSamples READ maxHeightMapSamples WRITE setMaxHeightMapSamples NOTIFY maxHeightMapSamplesChanged)
+
     QML_NAMED_ELEMENT(PrincipledMaterial)
     QML_ADDED_IN_VERSION(1, 14)
 
@@ -148,6 +154,11 @@ public:
     Q_REVISION(1, 1) TextureChannelMapping occlusionChannel() const;
     float pointSize() const;
     float lineWidth() const;
+    Q_REVISION(6, 2) QQuick3DTexture *heightMap() const;
+    Q_REVISION(6, 2) TextureChannelMapping heightChannel() const;
+    Q_REVISION(6, 2) float heightAmount() const;
+    Q_REVISION(6, 2) int minHeightMapSamples() const;
+    Q_REVISION(6, 2) int maxHeightMapSamples() const;
 
 public Q_SLOTS:
     void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -178,6 +189,11 @@ public Q_SLOTS:
     Q_REVISION(1, 1) void setOcclusionChannel(QQuick3DMaterial::TextureChannelMapping channel);
     void setPointSize(float size);
     void setLineWidth(float width);
+    Q_REVISION(6, 2) void setHeightMap(QQuick3DTexture *heightMap);
+    Q_REVISION(6, 2) void setHeightChannel(TextureChannelMapping channel);
+    Q_REVISION(6, 2) void setHeightAmount(float heightAmount);
+    Q_REVISION(6, 2) void setMinHeightMapSamples(int samples);
+    Q_REVISION(6, 2) void setMaxHeightMapSamples(int samples);
 
 Q_SIGNALS:
     void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -208,6 +224,11 @@ Q_SIGNALS:
     Q_REVISION(1, 1) void occlusionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     void pointSizeChanged();
     void lineWidthChanged();
+    Q_REVISION(6, 2) void heightMapChanged(QQuick3DTexture *heightMap);
+    Q_REVISION(6, 2) void heightChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(6, 2) void heightAmountChanged(float heightAmount);
+    Q_REVISION(6, 2) void minHeightMapSamplesChanged(int samples);
+    Q_REVISION(6, 2) void maxHeightMapSamplesChanged(int samples);
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -229,7 +250,8 @@ private:
         OcclusionDirty = 0x00000200,
         AlphaModeDirty = 0x00000400,
         PointSizeDirty = 0x00000800,
-        LineWidthDirty = 0x00001000
+        LineWidthDirty = 0x00001000,
+        HeightDirty = 0x00002000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -254,7 +276,7 @@ private:
     QQuick3DTexture *m_opacityMap = nullptr;
     QQuick3DTexture *m_normalMap = nullptr;
     QQuick3DTexture *m_metalnessMap = nullptr;
-    QQuick3DTexture* m_occlusionMap = nullptr;
+    QQuick3DTexture *m_occlusionMap = nullptr;
     float m_specularTint = 0.0f;
     float m_specularAmount = 0.5f;
     float m_roughness = 0.0f;
@@ -269,6 +291,11 @@ private:
     TextureChannelMapping m_occlusionChannel = QQuick3DMaterial::R;
     float m_pointSize = 1.0f;
     float m_lineWidth = 1.0f;
+    QQuick3DTexture *m_heightMap = nullptr;
+    TextureChannelMapping m_heightChannel = QQuick3DMaterial::R;
+    float m_heightAmount = 0.0f;
+    int m_minHeightMapSamples = 8;
+    int m_maxHeightMapSamples = 32;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

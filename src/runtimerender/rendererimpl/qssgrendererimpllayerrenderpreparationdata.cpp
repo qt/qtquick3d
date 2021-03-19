@@ -461,6 +461,8 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             case QSSGShaderDefaultMaterialKeyProperties::TranslucencyMap:
                 value = inMaterial->translucencyChannel;
                 break;
+            case QSSGShaderDefaultMaterialKeyProperties::HeightMap:
+                value = inMaterial->heightChannel;
             default:
                 break;
             }
@@ -615,6 +617,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
             CHECK_IMAGE_AND_PREPARE(theMaterial->occlusionMap,
                                     QSSGRenderableImage::Type::Occlusion,
                                     QSSGShaderDefaultMaterialKeyProperties::OcclusionMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->heightMap,
+                                    QSSGRenderableImage::Type::Height,
+                                    QSSGShaderDefaultMaterialKeyProperties::HeightMap);
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGRenderableImage::Type::Diffuse,

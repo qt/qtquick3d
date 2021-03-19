@@ -80,6 +80,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual float alphaCutOff() = 0;
     virtual float pointSize() = 0;
     virtual float lineWidth() = 0;
+    virtual float heightAmount() = 0;
+    virtual float minHeightSamples() = 0;
+    virtual float maxHeightSamples() = 0;
 
     virtual bool isUnshaded();
     virtual bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type);
@@ -122,6 +125,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     float alphaCutOff() override;
     float pointSize() override;
     float lineWidth() override;
+    float heightAmount() override;
+    float minHeightSamples() override;
+    float maxHeightSamples() override;
 
 private:
     const QSSGRenderDefaultMaterial &m_material;
@@ -155,6 +161,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     float alphaCutOff() override;
     float pointSize() override;
     float lineWidth() override;
+    float heightAmount() override;
+    float minHeightSamples() override;
+    float maxHeightSamples() override;
 
     bool isUnshaded() override;
     bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type) override;

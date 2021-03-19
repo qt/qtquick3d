@@ -466,6 +466,72 @@ QT_BEGIN_NAMESPACE
     profile contexts.
 */
 
+/*!
+    \qmlproperty Texture PrincipledMaterial::heightMap
+
+    This property defines a texture used to determine the height the texture
+    will be displaced when rendered through the use of Parallax Mapping. Values
+    are expected to be linear from 0.0 to 1.0, where 0.0 means no displacement
+    and 1.0 means means maximum displacement.
+
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::heightChannel
+
+    This property defines the texture channel used to read the height value
+    from heightMap. The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::heightAmount
+
+    This property contains the factor used to modify the values from the
+    \l heightMap texture. The value should be between 0.0 to 1.0. The default
+    value is 0.0 which means that height displacement will be disabled, even
+    if a height map set.
+*/
+
+/*!
+    \qmlproperty int PrincipledMaterial::minHeightMapSamples
+
+    This property defines the minimum number of samples used for performing
+    Parallex Occlusion Mapping using the \l heightMap. The minHeightMapSamples
+    value is the number of samples of the heightMap are used when looking directly
+    at a surface (when the camera view is perpendicular to the fragment).
+    The default value is 8.
+
+    The actual number of samples used for each fragment will be between
+    \l minHeightMapSamples and \l maxHeightMapSamples depending on the angle of
+    the camera relative to the surface being rendered.
+
+    \note This value should only be adjusted to fine tune materials using a
+    \l heightMap in the case undesired artifacts are present.
+*/
+
+/*!
+    \qmlproperty int PrincipledMaterial::maxHeightMapSamples
+
+    This property defines the maximum number of samples used for performing
+    Parallex Occlusion Mapping using the \l heightMap. The maxHeightMapSamples
+    value is the number of samples of the heightMap are used when looking
+    parallel to a surface.
+    The default value is 32.
+
+    The actual number of samples used for each fragment will be between
+    \l minHeightMapSamples and \l maxHeightMapSamples depending on the angle of
+    the camera relative to the surface being rendered.
+
+    \note This value should only be adjusted to fine tune materials using a
+    \l heightMap in the case undesired artifacts are present.
+*/
+
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
 QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
@@ -614,6 +680,31 @@ float QQuick3DPrincipledMaterial::pointSize() const
 float QQuick3DPrincipledMaterial::lineWidth() const
 {
     return m_lineWidth;
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::heightMap() const
+{
+    return m_heightMap;
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::heightChannel() const
+{
+    return m_heightChannel;
+}
+
+float QQuick3DPrincipledMaterial::heightAmount() const
+{
+    return m_heightAmount;
+}
+
+int QQuick3DPrincipledMaterial::minHeightMapSamples() const
+{
+    return m_minHeightMapSamples;
+}
+
+int QQuick3DPrincipledMaterial::maxHeightMapSamples() const
+{
+    return m_maxHeightMapSamples;
 }
 
 void QQuick3DPrincipledMaterial::markAllDirty()
@@ -942,6 +1033,60 @@ void QQuick3DPrincipledMaterial::setLineWidth(float width)
     markDirty(LineWidthDirty);
 }
 
+void QQuick3DPrincipledMaterial::setHeightMap(QQuick3DTexture *heightMap)
+{
+    if (m_heightMap == heightMap)
+        return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(heightMap, m_heightMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("heightMap"), m_connections, [this](QQuick3DObject *n) {
+        setHeightMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
+    m_heightMap = heightMap;
+    emit heightMapChanged(m_heightMap);
+    markDirty(HeightDirty);
+}
+
+void QQuick3DPrincipledMaterial::setHeightChannel(QQuick3DMaterial::TextureChannelMapping channel)
+{
+    if (m_heightChannel == channel)
+        return;
+
+    m_heightChannel = channel;
+    emit heightChannelChanged(m_heightChannel);
+    markDirty(HeightDirty);
+}
+
+void QQuick3DPrincipledMaterial::setHeightAmount(float heightAmount)
+{
+    if (m_heightAmount == heightAmount)
+        return;
+
+    m_heightAmount = heightAmount;
+    emit heightAmountChanged(m_heightAmount);
+    markDirty(HeightDirty);
+}
+
+void QQuick3DPrincipledMaterial::setMinHeightMapSamples(int samples)
+{
+    if (m_minHeightMapSamples == samples)
+        return;
+
+    m_minHeightMapSamples = samples;
+    emit minHeightMapSamplesChanged(samples);
+    markDirty(HeightDirty);
+}
+
+void QQuick3DPrincipledMaterial::setMaxHeightMapSamples(int samples)
+{
+    if (m_maxHeightMapSamples == samples)
+        return;
+
+    m_maxHeightMapSamples = samples;
+    emit maxHeightMapSamplesChanged(samples);
+    markDirty(HeightDirty);
+}
+
 QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     static const auto channelMapping = [](TextureChannelMapping mapping) {
@@ -1063,6 +1208,17 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
 
     if (m_dirtyAttributes & LineWidthDirty)
         material->lineWidth = m_lineWidth;
+
+    if (m_dirtyAttributes & HeightDirty) {
+        if (!m_heightMap)
+            material->heightMap = nullptr;
+        else
+            material->heightMap = m_heightMap->getRenderImage();
+        material->heightAmount = m_heightAmount;
+        material->minHeightSamples = m_minHeightMapSamples;
+        material->maxHeightSamples = m_maxHeightMapSamples;
+        material->heightChannel = channelMapping(m_heightChannel);
+    }
 
     m_dirtyAttributes = 0;
 

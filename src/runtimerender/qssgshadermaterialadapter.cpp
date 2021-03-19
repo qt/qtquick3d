@@ -210,6 +210,21 @@ float QSSGShaderDefaultMaterialAdapter::lineWidth()
     return m_material.lineWidth;
 }
 
+float QSSGShaderDefaultMaterialAdapter::heightAmount()
+{
+    return m_material.heightAmount;
+}
+
+float QSSGShaderDefaultMaterialAdapter::minHeightSamples()
+{
+    return m_material.minHeightSamples;
+}
+
+float QSSGShaderDefaultMaterialAdapter::maxHeightSamples()
+{
+    return m_material.maxHeightSamples;
+}
+
 
 
 QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRenderCustomMaterial &material)
@@ -343,6 +358,21 @@ float QSSGShaderCustomMaterialAdapter::pointSize()
 float QSSGShaderCustomMaterialAdapter::lineWidth()
 {
     return m_material.m_lineWidth;
+}
+
+float QSSGShaderCustomMaterialAdapter::heightAmount()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::minHeightSamples()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::maxHeightSamples()
+{
+    return 0.0f;
 }
 
 bool QSSGShaderCustomMaterialAdapter::isUnshaded()

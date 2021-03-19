@@ -522,7 +522,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         LightCount = QSSG_MAX_NUM_LIGHTS,
     };
     enum {
-        SingleChannelImageCount = 5,
+        SingleChannelImageCount = 6,
     };
     enum ImageMapNames {
         DiffuseMap = 0,
@@ -538,6 +538,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         MetalnessMap,
         OcclusionMap,
         TranslucencyMap,
+        HeightMap,
 
         ImageMapCount,
         SingleChannelImagesFirst = OpacityMap
@@ -548,6 +549,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         MetalnessChannel,
         OcclusionChannel,
         TranslucencyChannel,
+        HeightChannel
     };
     enum {
         MorphTargetCount = 8,
@@ -678,12 +680,14 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[9].name = "metalnessMap";
         m_imageMaps[10].name = "occlusionMap";
         m_imageMaps[11].name = "translucencyMap";
+        m_imageMaps[12].name = "heightMap";
 
         m_textureChannels[0].name = "opacityMap_channel";
         m_textureChannels[1].name = "roughnessMap_channel";
         m_textureChannels[2].name = "metalnessMap_channel";
         m_textureChannels[3].name = "occlusionMap_channel";
         m_textureChannels[4].name = "translucencyMap_channel";
+        m_textureChannels[5].name = "heightMap_channel";
 
         m_morphTargetAttributes[0].name = "morphTarget0Attributes";
         m_morphTargetAttributes[1].name = "morphTarget1Attributes";
