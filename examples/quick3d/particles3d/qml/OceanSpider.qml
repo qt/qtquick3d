@@ -104,8 +104,8 @@ Item {
 
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
+            antialiasingMode: settings.antialiasingMode
+            antialiasingQuality: settings.antialiasingQuality
         }
 
         // Camera rotating the spider

@@ -67,6 +67,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#000000"
             backgroundMode: SceneEnvironment.Color
+            antialiasingMode: settings.antialiasingMode
+            antialiasingQuality: settings.antialiasingQuality
         }
 
         PerspectiveCamera {

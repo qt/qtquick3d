@@ -53,7 +53,7 @@ import QtQuick3D.Particles3D
 
 Item {
     property var particleSystems
-    readonly property bool loggingEnabled: rootWindow.showLoggingView
+    readonly property bool loggingEnabled: settings.showLoggingView
     property bool intervalInstant: false
     property real itemWidth: (width - loggingButton.width - intervalButton.width) / 6
 
@@ -62,7 +62,7 @@ Item {
 
     Component.onCompleted: {
         for (const psystem of particleSystems)
-            psystem.logging = rootWindow.showLoggingView;
+            psystem.logging = settings.showLoggingView;
     }
 
     // Background
@@ -89,9 +89,9 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                rootWindow.showLoggingView = !rootWindow.showLoggingView
+                settings.showLoggingView = !settings.showLoggingView
                 for (const psystem of particleSystems) {
-                    psystem.logging = rootWindow.showLoggingView;
+                    psystem.logging = settings.showLoggingView;
                 }
             }
         }

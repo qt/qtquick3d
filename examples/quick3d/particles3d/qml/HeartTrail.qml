@@ -64,8 +64,8 @@ Item {
         environment: SceneEnvironment {
             clearColor: "#000000"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
+            antialiasingMode: settings.antialiasingMode
+            antialiasingQuality: settings.antialiasingQuality
         }
 
         // Particles light

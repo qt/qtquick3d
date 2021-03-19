@@ -55,8 +55,15 @@ import QtQuick3D.Particles3D
 Window {
     id: rootWindow
 
-    property bool showSettingsView: true
-    property bool showLoggingView: false
+    QtObject {
+        id: settings
+        // Antialiasing mode & quality used in all examples.
+        property var antialiasingMode: SceneEnvironment.NoAA
+        property var antialiasingQuality: SceneEnvironment.High
+        // Toggle default visibility of these views
+        property bool showSettingsView: true
+        property bool showLoggingView: false
+    }
 
     readonly property real iconSize: 16 + Math.max(width, height) * 0.05
 

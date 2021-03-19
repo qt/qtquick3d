@@ -52,7 +52,7 @@ import QtQuick
 
 Item {
     id: rootItem
-    property real showState: rootWindow.showSettingsView ? 1.0 : 0.0
+    property real showState: settings.showSettingsView ? 1.0 : 0.0
 
     default property alias content: settingsArea.children
 
@@ -99,7 +99,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                rootWindow.showSettingsView = !rootWindow.showSettingsView;
+                settings.showSettingsView = !settings.showSettingsView;
             }
         }
     }
