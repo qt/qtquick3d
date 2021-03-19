@@ -55,6 +55,8 @@ import QtQuick3D.Particles3D
 Window {
     id: rootWindow
 
+    readonly property url startupView: "StartupView.qml"
+
     QtObject {
         id: settings
         // Antialiasing mode & quality used in all examples.
@@ -63,6 +65,11 @@ Window {
         // Toggle default visibility of these views
         property bool showSettingsView: true
         property bool showLoggingView: false
+        // Fonts in pointSizes
+        // These are used mostly on examples in 3D side
+        property real fontSizeLarge: 16
+        // These are used mostly on settings
+        property real fontSizeSmall: 10
     }
 
     readonly property real iconSize: 16 + Math.max(width, height) * 0.05
@@ -76,7 +83,7 @@ Window {
     Loader {
         id: loader
         anchors.fill: parent
-        source: "StartupView.qml"
+        source: startupView
     }
 
     Item {
@@ -85,7 +92,7 @@ Window {
         anchors.top: parent.top
         width: rootWindow.iconSize
         height: width
-        opacity: loader.source !== ""
+        opacity: loader.source !== startupView
         visible: opacity
         Behavior on opacity {
             NumberAnimation {
@@ -103,7 +110,7 @@ Window {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                loader.source = "StartupView.qml";
+                loader.source = startupView;
             }
         }
     }

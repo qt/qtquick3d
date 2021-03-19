@@ -55,8 +55,6 @@ import QtQuick3D.Particles3D
 Item {
     id: mainWindow
 
-    property real fontSize: width * 0.012
-
     anchors.fill: parent
 
     View3D {
@@ -107,19 +105,15 @@ Item {
         ParticleSystem3D {
             id: psystem
 
-            SequentialAnimation {
+            SequentialAnimation on eulerRotation.y {
                 running: true
                 loops: Animation.Infinite
                 NumberAnimation {
-                    target: psystem
-                    property: "eulerRotation.y"
                     to: 180
                     duration: 5000
                     easing.type: Easing.InOutCirc
                 }
                 NumberAnimation {
-                    target: psystem
-                    property: "eulerRotation.y"
                     to: 0
                     duration: 5000
                     easing.type: Easing.InOutCirc
@@ -176,13 +170,13 @@ Item {
                     directionVariation: Qt.vector3d(30, 30, 30)
                 }
                 emitRate: 100
-                lifeSpan: 4000
+                lifeSpan: 2500
                 Node {
                     x: 20
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "RED"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -204,7 +198,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "GREEN"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -226,7 +220,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "BLUE"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -248,7 +242,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "WHITE"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }

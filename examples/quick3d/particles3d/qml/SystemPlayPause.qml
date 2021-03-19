@@ -202,26 +202,30 @@ Item {
         }
     }
 
-    Row {
-        y: 10
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 10
-        Button {
-            text: psystem.running ? qsTr("Stop") : qsTr("Start")
-            onClicked: {
-                psystem.running = !psystem.running;
-            }
-        }
-        Button {
-            text: psystem.paused ? qsTr("Continue") : qsTr("Pause")
-            enabled: psystem.running
-            onClicked: {
-                psystem.paused = !psystem.paused;
-            }
-        }
-    }
-
     SettingsView {
+        Row {
+            spacing: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            Button {
+                text: psystem.running ? qsTr("Stop") : qsTr("Start")
+                font.pointSize: settings.fontSizeSmall
+                onClicked: {
+                    psystem.running = !psystem.running;
+                }
+            }
+            Button {
+                text: psystem.paused ? qsTr("Continue") : qsTr("Pause")
+                font.pointSize: settings.fontSizeSmall
+                enabled: psystem.running
+                onClicked: {
+                    psystem.paused = !psystem.paused;
+                }
+            }
+        }
+        Item {
+            width: 1
+            height: 40
+        }
         CustomLabel {
             text: "ParticleSystem seed: " + psystem.seed
         }

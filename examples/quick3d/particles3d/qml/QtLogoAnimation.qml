@@ -100,8 +100,8 @@ Item {
                 target: qtCube
                 property: "opacity"
                 Keyframe { frame: 60; value: 0 }
-                Keyframe { frame: 70; value: 1.0 }
-                Keyframe { frame: 90; value: 1.0 }
+                Keyframe { frame: 70; value: 0.99 }
+                Keyframe { frame: 90; value: 0.99 }
                 Keyframe { frame: 100; value: 0.0 }
             }
         ]
@@ -235,9 +235,9 @@ Item {
             ModelParticle3D {
                 id: smokeParticle
                 delegate: smokeParticleComponent
-                maxAmount: 50
+                maxAmount: 20
                 color: "#ffffff"
-                colorVariation: Qt.vector4d(0, 0, 0, 0.6)
+                colorVariation: Qt.vector4d(0, 0, 0, 0.5)
                 fadeInEffect: ModelParticle3D.FadeScale
                 fadeOutEffect: ModelParticle3D.FadeOpacity
                 fadeOutDuration: 2000
@@ -245,9 +245,9 @@ Item {
             ModelParticle3D {
                 id: starParticle
                 delegate: starParticleComponent
-                maxAmount: 500
+                maxAmount: 50
                 color: "#ffff00"
-                colorVariation: Qt.vector4d(0.4, 0.6, 0, 0)
+                colorVariation: Qt.vector4d(0.4, 0.6, 0, 0.1)
                 unifiedColorVariation: true
                 fadeInEffect: ModelParticle3D.FadeScale
                 fadeOutEffect: ModelParticle3D.FadeOpacity
@@ -272,7 +272,7 @@ Item {
                 emitBursts: [
                     EmitBurst3D {
                         time: 400
-                        amount: 50
+                        amount: 20
                         duration: 600
                     }
                 ]
@@ -297,7 +297,7 @@ Item {
                 emitBursts: [
                     EmitBurst3D {
                         time: 1
-                        amount: 500
+                        amount: 50
                     }
                 ]
             }

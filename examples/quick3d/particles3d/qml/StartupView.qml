@@ -254,6 +254,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 color: "#f0f0f0"
+                font.pointSize: settings.fontSizeSmall
                 text: name
             }
             MouseArea {
@@ -274,7 +275,7 @@ Item {
         anchors.topMargin: 20
         text: qsTr("Qt Quick 3D - Particles3D")
         color: "#f0f0f0"
-        font.pointSize: 18
+        font.pointSize: settings.fontSizeLarge
     }
 
     Row {

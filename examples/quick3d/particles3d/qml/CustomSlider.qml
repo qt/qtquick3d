@@ -107,7 +107,7 @@ Item {
             id: valueText
             text: slider.value.toFixed(2)
             color: "#f0f0f0"
-            font.pointSize: 10
+            font.pointSize: settings.fontSizeSmall
             font.bold: true
             Layout.minimumWidth: 60
         }

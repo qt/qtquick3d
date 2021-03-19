@@ -131,36 +131,42 @@ Item {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: modelData.seed
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: modelData.loggingData.updates
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: modelData.loggingData.particlesMax
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: modelData.loggingData.particlesUsed
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: modelData.loggingData.time.toFixed(4)
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: modelData.loggingData.timeAverage.toFixed(4)
             }
         }
@@ -176,36 +182,42 @@ Item {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: qsTr("SEED")
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: qsTr("UPDATES")
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                text: qsTr("PARTICLES MAX")
+                font.pointSize: settings.fontSizeSmall
+                text: qsTr("P. MAX")
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
-                text: qsTr("PARTICLES USED")
+                font.pointSize: settings.fontSizeSmall
+                text: qsTr("P. USED")
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: qsTr("TIME")
             }
             Text {
                 width: itemWidth
                 horizontalAlignment: Text.AlignHCenter
                 color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
                 text: qsTr("TIME AVG.")
             }
         }

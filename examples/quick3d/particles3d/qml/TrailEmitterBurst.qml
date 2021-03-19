@@ -95,7 +95,6 @@ Item {
             Model {
                 source: "#Rectangle"
                 scale: Qt.vector3d(0.1, 0.1, 0.0)
-                opacity: 0.5
                 materials: DefaultMaterial {
                     diffuseMap: Texture {
                         source: "images/star2.png"
@@ -133,15 +132,16 @@ Item {
                 maxAmount: 1000
                 fadeInDuration: 200
                 fadeOutDuration: 500
-                color: "#ff2000"
-                colorVariation: Qt.vector4d(0.5, 0.1, 0.0, 0.5)
+                color: "#ff6060"
+                colorVariation: Qt.vector4d(0.5, 0.2, 0.2, 0.5)
+                unifiedColorVariation: true
             }
             ModelParticle3D {
                 id: particleStar
                 delegate: particleComponentStar
                 maxAmount: 1000
-                color: "#ffe000"
-                colorVariation: Qt.vector4d(0.6, 0.6, 0.0, 0.6)
+                color: "#ffee60"
+                colorVariation: Qt.vector4d(0.6, 0.6, 0.2, 0.5)
                 unifiedColorVariation: true
             }
 
@@ -165,7 +165,7 @@ Item {
                 follow: particleCube
                 particleScale: 1.5
                 particleScaleVariation: 0.5
-                particleRotationVariation: Qt.vector3d(0, 0, 180)
+                particleRotationVariation: Qt.vector3d(20, 20, 180)
                 particleRotationVelocityVariation: Qt.vector3d(100, 100, 100);
                 velocity: VectorDirection3D {
                     directionVariation: Qt.vector3d(20, 20, 20)
@@ -180,7 +180,7 @@ Item {
                 follow: particleCube
                 particleScale: 2.5
                 particleScaleVariation: 0.5
-                particleRotationVariation: Qt.vector3d(0, 0, 180)
+                particleRotationVariation: Qt.vector3d(20, 20, 180)
                 particleRotationVelocityVariation: Qt.vector3d(100, 100, 100);
                 velocity: VectorDirection3D {
                     directionVariation: Qt.vector3d(100, 100, 100)
@@ -223,7 +223,7 @@ Item {
 
     Text {
         anchors.centerIn: parent
-        font.pointSize: 20
+        font.pointSize: settings.fontSizeLarge
         color: "#ffffff"
         text: qsTr("Click to burst!")
     }

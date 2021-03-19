@@ -52,5 +52,5 @@ import QtQuick
 
 Text {
     color: "#f0f0f0"
-    font.pointSize: 10
+    font.pointSize: settings.fontSizeSmall
 }

@@ -84,7 +84,7 @@ Item {
         Label {
             id: propText
             color: "#f0f0f0"
-            font.pointSize: 10
+            font.pointSize: settings.fontSizeSmall
             Layout.minimumWidth: 150
             Layout.maximumWidth: 150
             opacity: checkBox.checked ? 1.0 : 0.5

@@ -147,6 +147,7 @@ Item {
                 id: emitter
                 particle: snowParticle
                 position: Qt.vector3d(0, 1000, -350)
+                depthBias: -100
                 scale: Qt.vector3d(15.0, 0.0, 15.0)
                 shape: ParticleShape3D {
                     type: ParticleShape3D.Sphere
