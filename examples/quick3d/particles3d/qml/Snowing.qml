@@ -120,12 +120,15 @@ Item {
             }
         }
 
+        //! [particle system]
         ParticleSystem3D {
             id: psystem
 
             // Start so that the snowing is in full steam
             startTime: 15000
+            //! [particle system]
 
+            //! [sprite particle]
             SpriteParticle3D {
                 id: snowParticle
                 sprite: Texture {
@@ -137,7 +140,9 @@ Item {
                 fadeInDuration: 1000
                 fadeOutDuration: 1000
             }
+            //! [sprite particle]
 
+            //! [particle emitter]
             ParticleEmitter3D {
                 id: emitter
                 particle: snowParticle
@@ -157,6 +162,9 @@ Item {
                 emitRate: sliderEmitRate.sliderValue * sliderIntensity.sliderValue
                 lifeSpan: 15000
             }
+            //! [particle emitter]
+
+            //! [particle affectors]
             Wander3D {
                 enabled: checkBoxWanderEnabled.checked
                 globalAmount: Qt.vector3d(sliderWanderGlobalAmount.sliderValue, 0, sliderWanderGlobalAmount.sliderValue)
@@ -172,6 +180,7 @@ Item {
                 direction: Qt.vector3d(0, 1, 0)
                 magnitude: sliderRotatorMagnitude.sliderValue
             }
+            //! [particle affectors]
         }
     }
 
