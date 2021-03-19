@@ -16,7 +16,7 @@ project(QtQuick3D
 set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core)
-find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Quick Network)
+find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Concurrent Network Quick Widgets)
 
 # TODO: Fix warnings and remove this
 set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
