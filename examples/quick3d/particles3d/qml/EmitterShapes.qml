@@ -55,7 +55,6 @@ import QtQuick3D.Particles3D
 Item {
     id: mainWindow
 
-    property real fontSize: width * 0.12
     property bool fill: checkBoxFill.checked
 
     anchors.fill: parent
@@ -100,11 +99,9 @@ Item {
         ParticleSystem3D {
             id: psystem
 
-            NumberAnimation {
+            NumberAnimation on eulerRotation.y {
                 running: true
                 loops: Animation.Infinite
-                target: psystem
-                property: "eulerRotation.y"
                 from: 0
                 to: 360
                 duration: 12000
@@ -112,45 +109,18 @@ Item {
 
             // Particles
             SpriteParticle3D {
-                id: particleRed
-                sprite: Texture {
-                    source: "images/dot.png"
-                }
-                maxAmount: 4000
-                color: "#ff0000"
-                billboard: true
-            }
-            SpriteParticle3D {
-                id: particleGreen
-                sprite: Texture {
-                    source: "images/dot.png"
-                }
-                maxAmount: 4000
-                color: "#00ff00"
-                billboard: true
-            }
-            SpriteParticle3D {
                 id: particleWhite
                 sprite: Texture {
                     source: "images/dot.png"
                 }
-                maxAmount: 4000
+                maxAmount: 4000 * 3
                 color: "#ffffff"
-                billboard: true
-            }
-            SpriteParticle3D {
-                id: particleBlue
-                sprite: Texture {
-                    source: "images/dot.png"
-                }
-                maxAmount: 4000
-                color: "#0000ff"
                 billboard: true
             }
 
             // Emitters, one per particle
             ParticleEmitter3D {
-                particle: particleRed
+                particle: particleWhite
                 position: Qt.vector3d(-300, 0, 0)
                 scale: Qt.vector3d(2.0, 2.0, 3.0)
                 shape: ParticleShape3D {
@@ -168,7 +138,7 @@ Item {
                 }
             }
             ParticleEmitter3D {
-                particle: particleGreen
+                particle: particleWhite
                 position: Qt.vector3d(0, 0, 0)
                 scale: Qt.vector3d(2.0, 2.0, 3.0)
                 shape: ParticleShape3D {
@@ -203,25 +173,6 @@ Item {
                     }
                 }
             }
-            ParticleEmitter3D {
-                particle: particleBlue
-                position: Qt.vector3d(0, 0, 400)
-                shape: ParticleShape3D {
-                    type: ParticleShape3D.Sphere
-                    extents: Qt.vector3d(100, 100, 150)
-                    fill: mainWindow.fill
-                }
-                emitRate: sliderEmitRate.sliderValue
-                lifeSpan: 2000
-                depthBias: depthBias.sliderValue
-                Model {
-                    source: "#Sphere"
-                    opacity: 0.4
-                    scale: Qt.vector3d(2.0, 2.0, 3.0)
-                    materials: DefaultMaterial {
-                    }
-                }
-            }
         }
     }
 
@@ -229,7 +180,7 @@ Item {
         CustomCheckBox {
             id: checkBoxFill
             text: "Fill"
-            checked: true
+            checked: false
         }
         CustomLabel {
             text: "Particles emitRate"
@@ -245,7 +196,7 @@ Item {
         }
         CustomSlider {
             id: depthBias
-            sliderValue: 10
+            sliderValue: -20
             fromValue: -20
             toValue: 20
         }

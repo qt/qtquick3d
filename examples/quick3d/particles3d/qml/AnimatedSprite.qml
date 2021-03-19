@@ -55,8 +55,6 @@ import QtQuick3D.Particles3D
 Item {
     id: mainWindow
 
-    property real fontSize: width * 0.012
-
     anchors.fill: parent
 
     View3D {
@@ -83,7 +81,7 @@ Item {
                 sprite: Texture {
                     source: "images/bear_black.png"
                 }
-                maxAmount: 20
+                maxAmount: 4
                 frameCount: 13
                 interpolate: false
                 billboard: true
@@ -95,7 +93,7 @@ Item {
                 sprite: Texture {
                     source: "images/explosion_01_strip13.png"
                 }
-                maxAmount: 24
+                maxAmount: 26
                 frameCount: 13
                 interpolate: true
                 billboard: true
@@ -117,12 +115,12 @@ Item {
                 scale: Qt.vector3d(2.0, 2.0, 8.0)
             }
             Node {
-                y: -200
+                y: -100
                 x: -200
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Animated"
-                    font.pointSize: mainWindow.fontSize
+                    font.pointSize: settings.fontSizeLarge
                     color: "#ffffff"
                 }
             }
@@ -141,16 +139,20 @@ Item {
                 lifeSpan: 2000
                 lifeSpanVariation: 200
                 Node {
-                    y: -200
+                    y: -100
                     x: -100
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Animated + interpolated"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
             }
         }
+    }
+    LoggingView {
+        anchors.bottom: parent.bottom
+        particleSystems: [psystem]
     }
 }

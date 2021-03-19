@@ -78,12 +78,12 @@ Item {
                 loops: Animation.Infinite
                 NumberAnimation {
                     to: 1.2
-                    duration: 380
+                    duration: 1200
                     easing.type: Easing.OutElastic
                 }
                 NumberAnimation {
                     to: 1.0
-                    duration: 590
+                    duration: 1600
                     easing.type: Easing.OutElastic
                 }
             }
@@ -291,7 +291,7 @@ Item {
                 }
             }
 
-            PropertyAnimation {
+            Vector3dAnimation {
                 running: true
                 loops: Animation.Infinite
                 target: psystemStar

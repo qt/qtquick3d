@@ -145,7 +145,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Enabling\nEmitter"
-                        font.pointSize: 20
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -184,7 +184,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Animated\nemitRate"
-                        font.pointSize: 20
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -216,7 +216,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Burst"
-                        font.pointSize: 20
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -249,7 +249,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: "Emit and\nBurst"
-                        font.pointSize: 20
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }

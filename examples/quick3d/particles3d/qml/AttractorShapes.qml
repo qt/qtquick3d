@@ -55,8 +55,6 @@ import QtQuick3D.Particles3D
 Item {
     id: mainWindow
 
-    property real fontSize: width * 0.12
-
     anchors.fill: parent
 
     View3D {
@@ -154,6 +152,7 @@ Item {
                 }
                 emitRate: 200
                 lifeSpan: 2000
+                depthBias: 10
             }
         }
 

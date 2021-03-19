@@ -55,8 +55,6 @@ import QtQuick3D.Particles3D
 Item {
     id: mainWindow
 
-    property real fontSize: width * 0.012
-
     anchors.fill: parent
 
     View3D {
@@ -153,7 +151,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "NONE"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -174,7 +172,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "OPACITY"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -195,7 +193,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "SCALE"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
@@ -216,7 +214,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "SCALE -> OPACITY"
-                        font.pointSize: mainWindow.fontSize
+                        font.pointSize: settings.fontSizeLarge
                         color: "#ffffff"
                     }
                 }
