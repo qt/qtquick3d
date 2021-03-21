@@ -1784,7 +1784,7 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     aiString texturePath;
     aiTextureMapping textureMapping = aiTextureMapping::aiTextureMapping_OTHER;
     uint uvIndex = 0;
-    aiTextureMapMode modes[2];
+    aiTextureMapMode modes[3];
     aiReturn result = material->GetTexture(textureType, index,
                                            &texturePath,
                                            &textureMapping,
