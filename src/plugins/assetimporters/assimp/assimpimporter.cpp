@@ -1949,7 +1949,6 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     if (result != aiReturn_SUCCESS)
         return QString();
 
-    material->Get(AI_MATKEY_TEXTURE(textureType, index), texturePath);
     // If there is no texture, then there is nothing to generate
     if (texturePath.length == 0)
         return QString();
