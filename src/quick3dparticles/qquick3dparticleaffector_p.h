@@ -88,6 +88,7 @@ Q_SIGNALS:
 
 protected:
     QList<QQuick3DParticle *> m_particles;
+    QQuick3DNode *m_systemSharedParent = nullptr;
 
 private:
     friend class QQuick3DParticleSystem;

@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dparticleutils_p.h"
+#include <QtQuick3D/private/qquick3dnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -289,5 +290,35 @@ const float qt_quick3d_sine_table[QT_QUICK3D_SINE_TABLE_SIZE] = {
     float(-0.049067674327418091),
     float(-0.024541228522912448)
 };
+
+QQuick3DNode *getSharedParentNode(QQuick3DNode *node, QQuick3DNode *system) {
+    QQuick3DNode *systemSharedParent = nullptr;
+    if (node && system) {
+        QVector<QQuick3DNode *> parents;
+        QQuick3DNode *parent = node->parentNode();
+        while (parent) {
+            parents.append(parent);
+            parent = parent->parentNode();
+        }
+
+        parent = system;
+        while (parent) {
+            if (parents.contains(parent)) {
+                systemSharedParent = parent;
+                break;
+            }
+            parent = parent->parentNode();
+        }
+    }
+    return systemSharedParent;
+}
+
+QMatrix4x4 calculateParticleTransform(const QQuick3DNode *parent, const QQuick3DNode *systemSharedParent)
+{
+    QMatrix4x4 transform = parent->sceneTransform();
+    if (systemSharedParent)
+        transform = systemSharedParent->sceneTransform().inverted() * transform;
+    return transform;
+}
 
 QT_END_NAMESPACE

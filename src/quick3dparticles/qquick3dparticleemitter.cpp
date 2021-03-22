@@ -31,6 +31,7 @@
 #include "qquick3dparticlemodelparticle_p.h"
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticleshape_p.h"
+#include "qquick3dparticleutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -146,24 +147,7 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem *system)
     if (m_velocity)
         m_velocity->m_system = m_system;
 
-    QVector<QQuick3DNode *> parents;
-    m_systemSharedParent = nullptr;
-    if (m_system) {
-        QQuick3DNode *parent = parentNode();
-        while (parent) {
-            parents.append(parent);
-            parent = parent->parentNode();
-        }
-
-        parent = m_system;
-        while (parent) {
-            if (parents.contains(parent)) {
-                m_systemSharedParent = parent;
-                break;
-            }
-            parent = parent->parentNode();
-        }
-    }
+    m_systemSharedParent = getSharedParentNode(this, m_system);
 
     Q_EMIT systemChanged();
 }
@@ -569,14 +553,6 @@ void QQuick3DParticleEmitter::burst(int count, int duration, const QVector3D &po
     emitParticlesBurst(burst);
 }
 
-QMatrix4x4 calculateParticleTransform(const QQuick3DNode *parent, const QQuick3DNode *systemSharedParent)
-{
-    QMatrix4x4 transform = parent->sceneTransform();
-    if (systemSharedParent)
-        transform = systemSharedParent->sceneTransform().inverted() * transform;
-    return transform;
-}
-
 void QQuick3DParticleEmitter::generateEmitBursts()
 {
     if (!m_system)
@@ -667,7 +643,9 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
 
     // Velocity
     if (m_velocity) {
-        QMatrix4x4 rotationTransform = transform;
+        // Rotate velocity based on parent node rotation and emitter rotation
+        QMatrix4x4 rotationTransform;
+        rotationTransform.rotate(QQuaternion::fromRotationMatrix(transform.normalMatrix()));
         rotationTransform.rotate(rotation());
         d->startVelocity = rotationTransform.map(m_velocity->sample(*d));
     }

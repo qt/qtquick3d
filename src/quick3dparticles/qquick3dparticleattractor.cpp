@@ -29,6 +29,7 @@
 
 #include "qquick3dparticleattractor_p.h"
 #include "qquick3dparticlerandomizer_p.h"
+#include "qquick3dparticleutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -241,25 +242,23 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
     // TODO: Should we support easing?
     //pEnd = easeInOutQuad(pEnd);
 
-    if (m_hideAtEnd && pEnd >= 1.0f)
+    if (m_hideAtEnd && pEnd >= 1.0f) {
         d->color.a = 0;
+        return;
+    }
 
     float pStart = 1.0f - pEnd;
-    if (m_shape) {
-        d->position = (pStart * d->position) + (pEnd * (position() + m_shapePositionList[sd.index]));
-    } else {
-        if (m_positionVariation.isNull()) {
-            d->position =  (pStart * d->position) + (pEnd * position());
-        } else {
-            QVector3D pos = position();
-            if (!m_positionVariation.isNull()) {
-                pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
-                pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
-                pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
-            }
-            d->position =  (pStart * d->position) + (pEnd * pos);
-        }
+    QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    QVector3D pos = transform.map(position());
+
+    if (m_shape)
+        pos += m_shapePositionList[sd.index];
+    if (!m_positionVariation.isNull()) {
+        pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
+        pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
+        pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
     }
+    d->position = (pStart * d->position) + (pEnd * pos);
 }
 
 QT_END_NAMESPACE
