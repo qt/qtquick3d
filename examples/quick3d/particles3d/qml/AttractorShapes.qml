@@ -85,11 +85,120 @@ Item {
             id: particleComponent
             Model {
                 source: "#Cube"
-                scale: Qt.vector3d(0.15, 0.02, 0.02)
-                eulerRotation: Qt.vector3d(20,-20,20)
+                scale: Qt.vector3d(0.02, 0.02, 0.15)
                 materials: DefaultMaterial {
                     lighting: DefaultMaterial.NoLighting
                 }
+            }
+        }
+
+        Model {
+            id: emittingSphere
+            source: "#Sphere"
+            scale: Qt.vector3d(0.5, 0.5, 0.5)
+            materials: DefaultMaterial {
+                opacity: 0.4
+            }
+
+            position: Qt.vector3d(-200, 100, 0)
+            SequentialAnimation on x {
+                running: true
+                loops: Animation.Infinite
+                NumberAnimation {
+                    to: -100
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    to: -200
+                    duration: 2000
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
+            // Emitters, one per particle
+            ParticleEmitter3D {
+                system: psystem
+                particle: particleRed
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    fill: true
+                }
+                emitRate: 200
+                lifeSpan: 2000
+            }
+
+            ParticleEmitter3D {
+                id: emitter2
+                system: psystem
+                particle: particleGreen
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    fill: true
+                }
+                emitRate: 200
+                lifeSpan: 5000
+                velocity: VectorDirection3D {
+                    direction: Qt.vector3d(200, 200, 0)
+                    directionVariation: Qt.vector3d(50, 50, 50)
+                }
+                particleRotationVelocityVariation: Qt.vector3d(500.0, 500.0, 500.0)
+            }
+
+            ParticleEmitter3D {
+                system: psystem
+                particle: particleWhite
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    fill: true
+                }
+                emitRate: 200
+                lifeSpan: 2000
+            }
+        }
+
+        Model {
+            id: targetSphere
+            source: "#Sphere"
+            materials: DefaultMaterial {
+                opacity: 0.2
+            }
+            y: -200
+            SequentialAnimation on x {
+                running: true
+                loops: Animation.Infinite
+                NumberAnimation {
+                    to: 200
+                    duration: 3500
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    to: 0
+                    duration: 3500
+                    easing.type: Easing.InOutQuad
+                }
+            }
+            Attractor3D {
+                system: psystem
+                particles: [particleRed]
+                // Attract into a position
+                positionVariation: Qt.vector3d(10, 10, 10)
+                duration: sliderDuration2.sliderValue
+                durationVariation: sliderDuration2Variation.sliderValue
+                hideAtEnd: checkBoxHide2.checked
+            }
+
+            Attractor3D {
+                system: psystem
+                particles: [particleGreen]
+                // Attract into a shape
+                shape: ParticleShape3D {
+                    type: ParticleShape3D.Sphere
+                    fill: false
+                }
+                duration: sliderDuration1.sliderValue
+                durationVariation: sliderDuration1Variation.sliderValue
+                hideAtEnd: checkBoxHide1.checked
             }
         }
 
@@ -100,96 +209,36 @@ Item {
             ModelParticle3D {
                 id: particleRed
                 delegate: particleComponent
-                maxAmount: 1000
+                maxAmount: 400
                 color: "#ff0000"
-                colorVariation: Qt.vector4d(0, 0, 0, 0.8)
+                colorVariation: Qt.vector4d(0, 0, 0, 0.5)
+                alignMode: Particle3D.AlignTowardsTarget
+                alignTargetPosition: targetSphere.position
             }
             ModelParticle3D {
                 id: particleGreen
                 delegate: particleComponent
                 maxAmount: 1000
                 color: "#00ff00"
-                colorVariation: Qt.vector4d(0, 0, 0, 0.8)
+                colorVariation: Qt.vector4d(0, 0, 0, 0.5)
+            }
+            SpriteParticle3D {
+                id: particleWhite
+                sprite: Texture {
+                    source: "images/dot.png"
+                }
+                maxAmount: 400
+                color: "#ffffff"
+                colorVariation: Qt.vector4d(0, 0, 0, 0.5)
             }
 
-            Model {
-                id: emittingSphere
-                source: "#Sphere"
-                scale: Qt.vector3d(2.0, 2.0, 2.0)
-                materials: DefaultMaterial {
-                    opacity: 0.2
-                }
-
-                position.x: -300
-                position.y: -200
-                SequentialAnimation on position.y {
-                    running: true
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: 100
-                        duration: 2000
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        to: -200
-                        duration: 2000
-                        easing.type: Easing.InOutQuad
-                    }
-                }
-            }
-
-            // Emitters, one per particle
-            ParticleEmitter3D {
-                system: psystem
-                position: emittingSphere.position
-                particle: particleRed
-                shape: ParticleShape3D {
-                    type: ParticleShape3D.Sphere
-                    fill: true
-                }
-                emitRate: 500
-                lifeSpan: 2000
-            }
-
-            ParticleEmitter3D {
-                id: emitter2
-                system: psystem
-                position: emittingSphere.position
-                particle: particleGreen
-                shape: ParticleShape3D {
-                    type: ParticleShape3D.Sphere
-                    fill: true
-                }
-                emitRate: 200
-                lifeSpan: 5000
-                velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 400, 0)
-                    directionVariation: Qt.vector3d(50, 50, 50)
-                }
-                particleRotationVelocityVariation: Qt.vector3d(500.0, 500.0, 500.0)
-            }
-
-            Model {
-                id: targetSphere
-                source: "#Sphere"
-                materials: DefaultMaterial {
-                    opacity: 0.2
-                }
-                position.y: -200
-                SequentialAnimation on position.x {
-                    running: true
-                    loops: Animation.Infinite
-                    NumberAnimation {
-                        to: 200
-                        duration: 3500
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        to: 0
-                        duration: 3500
-                        easing.type: Easing.InOutQuad
-                    }
-                }
+            // Attractor inside ParticleSystem
+            Attractor3D {
+                particles: [particleWhite]
+                // Attract into a position
+                position: Qt.vector3d(-100, -250, 0)
+                positionVariation: Qt.vector3d(100, 10, 10)
+                duration: 1500
             }
 
             Wander3D {
@@ -198,29 +247,6 @@ Item {
                 uniquePace: Qt.vector3d(1, 1, 1)
                 uniqueAmountVariation: 8
                 uniquePaceVariation: 0.8
-            }
-
-            Attractor3D {
-                particles: [particleRed]
-                // Attract into a position
-                position: targetSphere.position
-                positionVariation: Qt.vector3d(10, 10, 10)
-                duration: sliderDuration2.sliderValue
-                durationVariation: sliderDuration2Variation.sliderValue
-                hideAtEnd: checkBoxHide2.checked
-            }
-
-            Attractor3D {
-                particles: [particleGreen]
-                position: targetSphere.position
-                // Attract into a shape
-                shape: ParticleShape3D {
-                    type: ParticleShape3D.Sphere
-                    fill: false
-                }
-                duration: sliderDuration1.sliderValue
-                durationVariation: sliderDuration1Variation.sliderValue
-                hideAtEnd: checkBoxHide1.checked
             }
         }
     }

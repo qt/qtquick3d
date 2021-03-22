@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dparticleaffector_p.h"
+#include "qquick3dparticleutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -79,6 +80,8 @@ void QQuick3DParticleAffector::setSystem(QQuick3DParticleSystem *system)
     m_system = system;
     if (m_system)
         m_system->registerParticleAffector(this);
+
+    m_systemSharedParent = getSharedParentNode(this, m_system);
 
     Q_EMIT systemChanged();
     Q_EMIT update();

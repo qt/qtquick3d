@@ -42,7 +42,10 @@
 //
 
 #include <qmath.h>
+#include <qmatrix4x4.h>
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+
+class QQuick3DNode;
 
 QT_BEGIN_NAMESPACE
 
@@ -94,6 +97,9 @@ inline float qLookupCos(float x)
     ci &= QT_QUICK3D_SINE_TABLE_SIZE - 1;
     return qt_quick3d_sine_table[si] - (qt_quick3d_sine_table[ci] + 0.5f * qt_quick3d_sine_table[si] * d) * d;
 }
+
+QQuick3DNode *getSharedParentNode(QQuick3DNode *node, QQuick3DNode *system);
+QMatrix4x4 calculateParticleTransform(const QQuick3DNode *parent, const QQuick3DNode *systemSharedParent);
 
 QT_END_NAMESPACE
 
