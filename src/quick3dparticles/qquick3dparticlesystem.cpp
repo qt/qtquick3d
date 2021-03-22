@@ -559,10 +559,9 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             // Initial rotation from start velocity
             Vector3b rot = d->startRotation;
             const float step = 360.0f / 127.0f;
-            currentData.rotation = QVector3D(rot.x * step, rot.y * step, rot.z * step);
-            currentData.rotation.setX(currentData.rotation.x() + abs(d->startRotationVelocity.x) * d->startRotationVelocity.x * particleTimeS);
-            currentData.rotation.setY(currentData.rotation.y() + abs(d->startRotationVelocity.y) * d->startRotationVelocity.y * particleTimeS);
-            currentData.rotation.setZ(currentData.rotation.z() + abs(d->startRotationVelocity.z) * d->startRotationVelocity.z * particleTimeS);
+            currentData.rotation.setX(rot.x * step + abs(d->startRotationVelocity.x) * d->startRotationVelocity.x * particleTimeS);
+            currentData.rotation.setY(rot.y * step + abs(d->startRotationVelocity.y) * d->startRotationVelocity.y * particleTimeS);
+            currentData.rotation.setZ(rot.z * step + abs(d->startRotationVelocity.z) * d->startRotationVelocity.z * particleTimeS);
 
             // Affectors
             for (auto affector : qAsConst(m_affectors)) {

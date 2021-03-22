@@ -653,7 +653,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     // Rotation
     if (!m_particleRotation.isNull() || !m_particleRotationVariation.isNull()) {
         Vector3b rot;
-        const float step = 127.0f / 360.0f; // +/- 360-degrees as char (-127..127)
+        const float step = 127.0f / 360.0f; // +/- 360-degrees as qint8 (-127..127)
         rot.x = m_particleRotation.x() * step;
         rot.y = m_particleRotation.y() * step;
         rot.z = m_particleRotation.z() * step;
@@ -670,7 +670,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         rotVelX += (m_particleRotationVelocityVariation.x() - 2.0f * rand->get(particleIndex, QPRand::RotXVV) * m_particleRotationVelocityVariation.x());
         rotVelY += (m_particleRotationVelocityVariation.y() - 2.0f * rand->get(particleIndex, QPRand::RotYVV) * m_particleRotationVelocityVariation.y());
         rotVelZ += (m_particleRotationVelocityVariation.z() - 2.0f * rand->get(particleIndex, QPRand::RotZVV) * m_particleRotationVelocityVariation.z());
-        // Particle data rotations are in char vec3 to save memory, consider if this is worth it.
+        // Particle data rotations are in qint8 vec3 to save memory.
         // max value 127*127 = 16129 degrees/second
         float sign;
         sign = rotVelX < 0.0f ? -1.0f : 1.0f;
@@ -679,7 +679,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         rotVelY = std::max(-127.0f, std::min(127.0f, sign * std::sqrt(abs(rotVelY))));
         sign = rotVelZ < 0.0f ? -1.0f : 1.0f;
         rotVelZ = std::max(-127.0f, std::min(127.0f, sign * std::sqrt(abs(rotVelZ))));
-        d->startRotationVelocity = { char(rotVelX), char(rotVelY), char(rotVelZ) };
+        d->startRotationVelocity = { qint8(rotVelX), qint8(rotVelY), qint8(rotVelZ) };
     }
 
     // Colors
