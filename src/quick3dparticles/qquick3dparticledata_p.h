@@ -53,9 +53,9 @@ struct Color4ub {
 };
 
 struct Vector3b {
-    char x = 0;
-    char y = 0;
-    char z = 0;
+    qint8 x = 0;
+    qint8 y = 0;
+    qint8 z = 0;
 };
 
 // Current particle data, only used for currently modified data, so one per system
@@ -74,8 +74,8 @@ struct QQuick3DParticleData
 {
     QVector3D startPosition;
     QVector3D startVelocity;
-    // Would this be worth it in memory consumption vs. performance vs. accuracy?
-    // These would need to be actually char and not uchar as rotations can go either direction.
+    // Use Vector3b to reduce the memory usage, rotations work with less accuracy.
+    // These need to be qint8 and not quint8 as rotations can go either direction.
     Vector3b startRotation;
     Vector3b startRotationVelocity;
     Color4ub startColor;
