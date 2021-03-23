@@ -502,6 +502,12 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     for (auto emitter : qAsConst(m_emitters))
         emitter->emitParticles();
 
+    // Prepare Affectors
+    for (auto affector : qAsConst(m_affectors)) {
+        if (affector->m_enabled)
+            affector->prepareToAffect();
+    }
+
     // Animate current particles
     for (auto particle : qAsConst(m_particles)) {
         QQuick3DParticleModelParticle *modelParticle = qobject_cast<QQuick3DParticleModelParticle *>(particle);

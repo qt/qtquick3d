@@ -73,6 +73,7 @@ Q_SIGNALS:
     void pivotPointChanged();
 
 protected:
+    void prepareToAffect() override;
     void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 private:
@@ -80,6 +81,7 @@ private:
     QVector3D m_direction = {0.0f, 1.0f, 0.0f};
     QVector3D m_directionNormalized = {0.0f, 1.0f, 0.0f};
     QVector3D m_pivotPoint;
+    QMatrix4x4 m_rotationMatrix;
 };
 
 QT_END_NAMESPACE

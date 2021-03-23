@@ -116,6 +116,10 @@ void QQuick3DParticleAffector::componentComplete()
         setSystem(qobject_cast<QQuick3DParticleSystem*>(parent()));
 }
 
+void QQuick3DParticleAffector::prepareToAffect()
+{
+}
+
 // Particles
 
 /*!

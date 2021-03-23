@@ -115,17 +115,22 @@ void QQuick3DParticlePointRotator::setPivotPoint(const QVector3D &point)
     Q_EMIT update();
 }
 
+void QQuick3DParticlePointRotator::prepareToAffect()
+{
+    m_rotationMatrix.setToIdentity();
+    m_rotationMatrix.translate(m_pivotPoint);
+}
+
 void QQuick3DParticlePointRotator::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
     // Rotate based on the current position
     // Note that this means order of PointRotator element compared to other affectors matters
     Q_UNUSED(sd);
     if (!qFuzzyIsNull(m_magnitude)) {
-        QMatrix4x4 m2;
-        m2.translate(m_pivotPoint);
-        m2.rotate(time * m_magnitude, m_directionNormalized);
-        m2.translate(-m_pivotPoint);
-        d->position = m2.map(d->position);
+        QMatrix4x4 rot = m_rotationMatrix;
+        rot.rotate(time * m_magnitude, m_directionNormalized);
+        rot.translate(-m_pivotPoint);
+        d->position = rot.map(d->position);
     }
 }
 
