@@ -224,13 +224,19 @@ void QQuick3DParticleAttractor::updateShapePositions()
     m_shapeDirty = false;
 }
 
+void QQuick3DParticleAttractor::prepareToAffect()
+{
+    if (m_shapeDirty)
+        updateShapePositions();
+
+    QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    m_centerPos = transform.map(position());
+}
+
 void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
     if (!system())
         return;
-
-    if (m_shapeDirty)
-        updateShapePositions();
 
     auto rand = system()->rand();
     float duration = m_duration < 0 ? sd.lifetime : (m_duration / 1000.0f);
@@ -248,8 +254,7 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
     }
 
     float pStart = 1.0f - pEnd;
-    QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
-    QVector3D pos = transform.map(position());
+    QVector3D pos = m_centerPos;
 
     if (m_shape)
         pos += m_shapePositionList[sd.index];

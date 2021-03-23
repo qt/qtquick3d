@@ -95,6 +95,9 @@ private:
     // From QQmlParserStatus
     void componentComplete() override;
 
+    // Called once per frame for all the enabled affectors.
+    virtual void prepareToAffect();
+    // Called for each living particle attached to the attractor.
     virtual void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) = 0;
 
     static void appendParticle(QQmlListProperty<QQuick3DParticle> *, QQuick3DParticle *);

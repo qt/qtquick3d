@@ -81,6 +81,7 @@ Q_SIGNALS:
     void hideAtEndChanged();
 
 protected:
+    void prepareToAffect() override;
     void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
 
 private:
@@ -88,6 +89,7 @@ private:
 
     QQuick3DParticleShape *m_shape = nullptr;
     QList<QVector3D> m_shapePositionList;
+    QVector3D m_centerPos;
     bool m_shapeDirty = false;
     int m_duration = -1;
     int m_durationVariation = 0;
