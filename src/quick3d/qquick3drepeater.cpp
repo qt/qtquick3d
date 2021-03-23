@@ -184,7 +184,7 @@ void QQuick3DRepeater::setModel(const QVariant &m)
 
 /*!
     \qmlproperty Component QtQuick3D::Repeater3D::delegate
-    \default
+    \qmldefault
 
     The delegate provides a template defining each object instantiated by the repeater.
 

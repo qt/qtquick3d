@@ -339,7 +339,7 @@ void QQuick3DObjectPrivate::init(QQuick3DObject *parent)
 
 /*!
     \qmlproperty list<Object> QtQuick3D::Object3D::data
-    \default
+    \qmldefault
 
     The data property allows you to freely mix Object3D children and resources
     in an object. If you assign a Object3D to the data list it becomes a child
