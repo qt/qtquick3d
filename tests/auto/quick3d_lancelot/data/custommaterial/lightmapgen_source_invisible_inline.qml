@@ -108,7 +108,7 @@ Rectangle {
             scale: Qt.vector3d(20, 20, 20)
             materials: CustomMaterial {
                 shadingMode: CustomMaterial.Unshaded
-                vertexShader: "lightmapgen_use.vert" // not the _layer version, the original one is what we need here
+                vertexShader: "lightmapgen_use_inline.vert"
                 fragmentShader: "lightmapgen_use.frag"
                 property TextureInput tex: TextureInput {
                     texture: Texture {

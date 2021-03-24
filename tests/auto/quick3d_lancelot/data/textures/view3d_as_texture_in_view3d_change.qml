@@ -52,6 +52,8 @@ import QtQuick3D
 import QtQuick
 
 Item {
+    id: root
+    property int api: GraphicsInfo.api
     width: 800
     height: 400
 
@@ -104,6 +106,10 @@ Item {
                 lighting: DefaultMaterial.NoLighting
                 diffuseMap: Texture {
                     sourceItem: src
+                    // To get identical results on-screen with all graphics APIs.
+                    // The other View3D renders into a texture as-is, and texture have Y up in OpenGL.
+                    // There is nothing that would correct for this, so apply a V coordinate flip when using the texture.
+                    flipV: root.api === GraphicsInfo.OpenGL
                 }
             }
         }

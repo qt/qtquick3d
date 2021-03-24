@@ -49,12 +49,21 @@
 ****************************************************************************/
 
 import QtQuick3D
+import QtQuick3D.Effects
 import QtQuick
 
 Rectangle {
+    id: root
+    property int api: GraphicsInfo.api
     width: 800
     height: 800
     color: Qt.rgba(0, 0, 0, 1)
+
+    Flip {
+        id: vFlipEffect
+        flipHorizontally: false
+        flipVertically: true
+    }
 
     View3D {
         id: lightmapSource
@@ -65,6 +74,11 @@ Rectangle {
         environment: SceneEnvironment {
             clearColor: "transparent"
             backgroundMode: SceneEnvironment.Color
+
+            // To get identical results on-screen with all graphics APIs. This (and the
+            // corresponding V flip in the other view) would _not_ be needed at all if we
+            // didn't want to visualize the lightmap on screen.
+            effects: root.api === GraphicsInfo.OpenGL ? [ vFlipEffect ] : []
         }
 
         DirectionalLight {
