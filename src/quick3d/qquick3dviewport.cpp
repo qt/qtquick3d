@@ -1005,7 +1005,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
             if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Item2D) {
                 // Item2D
                 auto item2D = qobject_cast<QQuick3DItem2D *>(frontendObject);
-                subsceneRootItem = item2D->contentItem();
+                if (item2D)
+                    subsceneRootItem = item2D->contentItem();
                 // In this case the "UV" coordinates are in pixels in the subscene root item, so we can just use them.
                 subscenePosition = pickResult.m_localUVCoords.toPointF();
             } else if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Model) {
