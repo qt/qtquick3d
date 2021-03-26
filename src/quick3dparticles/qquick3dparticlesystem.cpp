@@ -427,13 +427,11 @@ void QQuick3DParticleSystem::registerParticle(QQuick3DParticle *particle)
 
 void QQuick3DParticleSystem::registerParticleModel(QQuick3DParticleModelParticle *m)
 {
-    m_modelParticles << m;
     m_particles << m;
 }
 
 void QQuick3DParticleSystem::registerParticleSprite(QQuick3DParticleSpriteParticle *m)
 {
-    m_spriteParticles << m;
     m_particles << m;
 }
 
@@ -441,13 +439,11 @@ void QQuick3DParticleSystem::unRegisterParticle(QQuick3DParticle *particle)
 {
     auto *model = qobject_cast<QQuick3DParticleModelParticle *>(particle);
     if (model) {
-        m_modelParticles.removeAll(particle);
         m_particles.removeAll(particle);
         return;
     }
     auto *sprite = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
     if (sprite) {
-        m_spriteParticles.removeAll(particle);
         m_particles.removeAll(particle);
         return;
     }
@@ -490,7 +486,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         return;
 
     m_time = currentTime;
-    float timeS = float(m_time / 1000.0);
+    const float timeS = float(m_time / 1000.0f);
 
     m_particlesMax = 0;
     m_particlesUsed = 0;
@@ -510,8 +506,6 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
     // Animate current particles
     for (auto particle : qAsConst(m_particles)) {
-        QQuick3DParticleModelParticle *modelParticle = qobject_cast<QQuick3DParticleModelParticle *>(particle);
-        QQuick3DParticleSpriteParticle *spriteParticle = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
 
         // Collect possible trail emits
         QVector<TrailEmits> trailEmits;
@@ -526,120 +520,19 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
                 }
             }
         }
-        int c = particle->maxAmount();
 
-        m_particlesMax += c;
+        m_particlesMax += particle->maxAmount();
 
-        bool semiTransparent = false;
-        if (modelParticle)
-            modelParticle->clearInstanceTable();
-        for (int i = 0; i < c; i++) {
-            auto d = &particle->m_particleData[i];
-
-            float particleTimeEnd = d->startTime + d->lifetime;
-
-            if (timeS < d->startTime || timeS > particleTimeEnd) {
-                // Particle not alive currently
-                if (spriteParticle) {
-                    spriteParticle->setParticleData(i, {}, {},
-                                                    {},
-                                                    0.0f, 0.0f);
-                }
-                continue;
-            } else {
-                // Required currently so that particles come back after moving time backwards
-                // visibility is determined by the contents of the instancing table
-                m_particlesUsed++;
-            }
-
-            float particleTimeS = timeS - d->startTime;
-            float particleTimeLeftS = d->lifetime - particleTimeS;
-
-            QQuick3DParticleDataCurrent currentData;
-            currentData.position = d->startPosition;
-            currentData.color = d->startColor;
-
-            // Initial position from start velocity
-            currentData.position += d->startVelocity * particleTimeS;
-
-            // Initial rotation from start velocity
-            Vector3b rot = d->startRotation;
-            const float step = 360.0f / 127.0f;
-            currentData.rotation.setX(rot.x * step + abs(d->startRotationVelocity.x) * d->startRotationVelocity.x * particleTimeS);
-            currentData.rotation.setY(rot.y * step + abs(d->startRotationVelocity.y) * d->startRotationVelocity.y * particleTimeS);
-            currentData.rotation.setZ(rot.z * step + abs(d->startRotationVelocity.z) * d->startRotationVelocity.z * particleTimeS);
-
-            // Affectors
-            for (auto affector : qAsConst(m_affectors)) {
-                // If affector is set to affect only particular particles, check these are included
-                if (affector->m_enabled && (affector->m_particles.isEmpty() || affector->m_particles.contains(particle)))
-                    affector->affectParticle(*d, &currentData, particleTimeS);
-            }
-
-            // Add a base rotation if alignment requested
-            if (!spriteParticle || !spriteParticle->m_billboard) {
-                if (particle->m_alignMode == QQuick3DParticle::AlignTowardsTarget) {
-                    QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(particle->alignTargetPosition(), currentData.position);
-                    currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
-                } else if (particle->m_alignMode == QQuick3DParticle::AlignTowardsStartVelocity) {
-                    QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(d->startVelocity, QVector3D());
-                    currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
-                }
-            }
-
-            // 0.0 -> 1.0 during the particle lifetime
-            float timeChange = particleTimeS / d->lifetime;
-            timeChange = std::max(0.0f, std::min(1.0f, timeChange));
-            // Scale from initial to endScale
-            if (modelParticle) {
-                currentData.scale = modelParticle->m_initialScale * d->endSize * (timeChange) + modelParticle->m_initialScale * d->startSize * (1.0 - timeChange);
-            } else {
-                float scale = d->endSize * (timeChange) + d->startSize * (1.0 - timeChange);
-                currentData.scale = QVector3D(scale, scale, scale);
-            }
-
-            // Fade in & out
-            float fadeInS = particle->m_fadeInDuration / 1000.0;
-            float fadeOutS = particle->m_fadeOutDuration / 1000.0;
-            if (particleTimeS < fadeInS) {
-                // 0.0 -> 1.0 during the particle fadein
-                float fadeIn = particleTimeS / fadeInS;
-                if (particle->m_fadeInEffect == QQuick3DParticleModelParticle::FadeOpacity)
-                    currentData.color.a *= fadeIn;
-                else if (particle->m_fadeInEffect == QQuick3DParticleModelParticle::FadeScale)
-                    currentData.scale *= fadeIn;
-            }
-            if (particleTimeLeftS < fadeOutS) {
-                // 1.0 -> 0.0 during the particle fadeout
-                float fadeOut = particleTimeLeftS / fadeOutS;
-                if (particle->m_fadeOutEffect == QQuick3DParticleModelParticle::FadeOpacity)
-                    currentData.color.a *= fadeOut;
-                else if (particle->m_fadeOutEffect == QQuick3DParticleModelParticle::FadeScale)
-                    currentData.scale *= fadeOut;
-            }
-
-            QColor color(currentData.color.r, currentData.color.g, currentData.color.b, currentData.color.a);
-            // Set current particle properties
-            if (modelParticle)
-                modelParticle->addInstance(currentData.position, currentData.scale, currentData.rotation, color);
-            if (spriteParticle) {
-                spriteParticle->setParticleData(i, currentData.position, currentData.rotation,
-                                                QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()),
-                                                currentData.scale.x(), timeChange);
-            }
-            if (currentData.color.a != 255)
-                semiTransparent = true;
-
-            // Emit new particles from trails
-            for (auto trailEmit : qAsConst(trailEmits))
-                trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+        QQuick3DParticleSpriteParticle *spriteParticle = qobject_cast<QQuick3DParticleSpriteParticle *>(particle);
+        if (spriteParticle) {
+            processSpriteParticle(spriteParticle, trailEmits, timeS);
+            continue;
         }
+        QQuick3DParticleModelParticle *modelParticle = qobject_cast<QQuick3DParticleModelParticle *>(particle);
         if (modelParticle) {
-            modelParticle->setHasTransparency(semiTransparent);
-            modelParticle->commitInstance();
+            processModelParticle(modelParticle, trailEmits, timeS);
+            continue;
         }
-        if (spriteParticle)
-            spriteParticle->commitParticles();
     }
 
     // Clear bursts from trailemitters
@@ -648,6 +541,176 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
     m_timeAnimation += m_perfTimer.nsecsElapsed();
     m_updateAnimation->setDirty(false);
+}
+
+void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS)
+{
+    bool semiTransparent = false;
+    modelParticle->clearInstanceTable();
+
+    const int c = modelParticle->maxAmount();
+
+    for (int i = 0; i < c; i++) {
+        const auto d = &modelParticle->m_particleData.at(i);
+
+        const float particleTimeEnd = d->startTime + d->lifetime;
+
+        if (timeS < d->startTime || timeS > particleTimeEnd) {
+            // Particle not alive currently
+            continue;
+        }
+
+        const float particleTimeS = timeS - d->startTime;
+        QQuick3DParticleDataCurrent currentData;
+
+        // Process features shared for both model & sprite particles
+        processParticleCommon(currentData, d, particleTimeS);
+
+        // Add a base rotation if alignment requested
+        processParticleAlignment(currentData, modelParticle, d);
+
+        // 0.0 -> 1.0 during the particle lifetime
+        const float timeChange = std::max(0.0f, std::min(1.0f, particleTimeS / d->lifetime));
+
+        // Scale from initial to endScale
+        currentData.scale = modelParticle->m_initialScale * (d->endSize * timeChange + d->startSize * (1.0f - timeChange));
+
+        // Fade in & out
+        const float particleTimeLeftS = d->lifetime - particleTimeS;
+        processParticleFadeInOut(currentData, modelParticle, particleTimeS, particleTimeLeftS);
+
+        // Affectors
+        for (auto affector : qAsConst(m_affectors)) {
+            // If affector is set to affect only particular particles, check these are included
+            if (affector->m_enabled && (affector->m_particles.isEmpty() || affector->m_particles.contains(modelParticle)))
+                affector->affectParticle(*d, &currentData, particleTimeS);
+        }
+
+        // Emit new particles from trails
+        for (auto trailEmit : qAsConst(trailEmits))
+            trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+
+        const QColor color(currentData.color.r, currentData.color.g, currentData.color.b, currentData.color.a);
+        // Set current particle properties
+        modelParticle->addInstance(currentData.position, currentData.scale, currentData.rotation, color);
+
+        if (currentData.color.a != 255)
+            semiTransparent = true;
+    }
+    modelParticle->setHasTransparency(semiTransparent);
+    modelParticle->commitInstance();
+}
+
+void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticle *spriteParticle, const QVector<TrailEmits> &trailEmits, float timeS)
+{
+    const int c = spriteParticle->maxAmount();
+
+    for (int i = 0; i < c; i++) {
+        const auto d = &spriteParticle->m_particleData.at(i);
+
+        const float particleTimeEnd = d->startTime + d->lifetime;
+
+        if (timeS < d->startTime || timeS > particleTimeEnd) {
+            // Particle not alive currently
+            spriteParticle->setParticleData(i, {}, {},
+                                            {}, 0.0f, 0.0f);
+            continue;
+        }
+
+        const float particleTimeS = timeS - d->startTime;
+        QQuick3DParticleDataCurrent currentData;
+
+        // Process features shared for both model & sprite particles
+        processParticleCommon(currentData, d, particleTimeS);
+
+        // Add a base rotation if alignment requested
+        if (!spriteParticle->m_billboard)
+            processParticleAlignment(currentData, spriteParticle, d);
+
+        // 0.0 -> 1.0 during the particle lifetime
+        const float timeChange = std::max(0.0f, std::min(1.0f, particleTimeS / d->lifetime));
+
+        // Scale from initial to endScale
+        const float scale = d->endSize * timeChange + d->startSize * (1.0f - timeChange);
+        currentData.scale = QVector3D(scale, scale, scale);
+
+        // Fade in & out
+        const float particleTimeLeftS = d->lifetime - particleTimeS;
+        processParticleFadeInOut(currentData, spriteParticle, particleTimeS, particleTimeLeftS);
+
+        // Affectors
+        for (auto affector : qAsConst(m_affectors)) {
+            // If affector is set to affect only particular particles, check these are included
+            if (affector->m_enabled && (affector->m_particles.isEmpty() || affector->m_particles.contains(spriteParticle)))
+                affector->affectParticle(*d, &currentData, particleTimeS);
+        }
+
+        // Emit new particles from trails
+        for (auto trailEmit : qAsConst(trailEmits))
+            trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+
+        // Set current particle properties
+        const QVector4D color(float(currentData.color.r) / 255.0f,
+                              float(currentData.color.g) / 255.0f,
+                              float(currentData.color.b) / 255.0f,
+                              float(currentData.color.a) / 255.0f);
+        spriteParticle->setParticleData(i, currentData.position, currentData.rotation,
+                                        color, currentData.scale.x(), timeChange);
+    }
+    spriteParticle->commitParticles();
+}
+
+void QQuick3DParticleSystem::processParticleCommon(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticleData *d, float particleTimeS)
+{
+    m_particlesUsed++;
+
+    currentData.position = d->startPosition;
+
+    // Initial color from start color
+    currentData.color = d->startColor;
+
+    // Initial position from start velocity
+    currentData.position += d->startVelocity * particleTimeS;
+
+    // Initial rotation from start velocity
+    const float step = 360.0f / 127.0f;
+    currentData.rotation = QVector3D(
+                d->startRotation.x * step + abs(d->startRotationVelocity.x) * d->startRotationVelocity.x * particleTimeS,
+                d->startRotation.y * step + abs(d->startRotationVelocity.y) * d->startRotationVelocity.y * particleTimeS,
+                d->startRotation.z * step + abs(d->startRotationVelocity.z) * d->startRotationVelocity.z * particleTimeS);
+}
+
+void QQuick3DParticleSystem::processParticleFadeInOut(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, float particleTimeS, float particleTimeLeftS)
+{
+    const float fadeInS = particle->m_fadeInDuration / 1000.0f;
+    const float fadeOutS = particle->m_fadeOutDuration / 1000.0f;
+    if (particleTimeS < fadeInS) {
+        // 0.0 -> 1.0 during the particle fadein
+        const float fadeIn = particleTimeS / fadeInS;
+        if (particle->m_fadeInEffect == QQuick3DParticleModelParticle::FadeOpacity)
+            currentData.color.a *= fadeIn;
+        else if (particle->m_fadeInEffect == QQuick3DParticleModelParticle::FadeScale)
+            currentData.scale *= fadeIn;
+    }
+    if (particleTimeLeftS < fadeOutS) {
+        // 1.0 -> 0.0 during the particle fadeout
+        const float fadeOut = particleTimeLeftS / fadeOutS;
+        if (particle->m_fadeOutEffect == QQuick3DParticleModelParticle::FadeOpacity)
+            currentData.color.a *= fadeOut;
+        else if (particle->m_fadeOutEffect == QQuick3DParticleModelParticle::FadeScale)
+            currentData.scale *= fadeOut;
+    }
+}
+
+void QQuick3DParticleSystem::processParticleAlignment(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, const QQuick3DParticleData *d)
+{
+    if (particle->m_alignMode == QQuick3DParticle::AlignTowardsTarget) {
+        QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(particle->alignTargetPosition(), currentData.position);
+        currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
+    } else if (particle->m_alignMode == QQuick3DParticle::AlignTowardsStartVelocity) {
+        QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(d->startVelocity, QVector3D());
+        currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
+    }
 }
 
 void QQuick3DParticleSystem::updateLoggingData()
