@@ -48,6 +48,7 @@
 #include <QtQuick3D/private/qquick3dloader_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlesystemlogging_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlerandomizer_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 #include <QElapsedTimer>
 #include <QVector>
 #include <QList>
@@ -66,7 +67,6 @@ class QQuick3DParticleEmitter;
 class QQuick3DParticleTrailEmitter;
 class QQuick3DParticleAffector;
 class QQuick3DParticleStatelessAffector;
-struct QQuick3DParticleData;
 
 class QQuick3DParticle;
 class QQuick3DParticleSystemAnimation;
@@ -114,6 +114,11 @@ public:
 
     QPRand *rand();
 
+    struct TrailEmits {
+        QQuick3DParticleTrailEmitter *emitter = nullptr;
+        int amount = 0;
+    };
+
 public Q_SLOTS:
     void setRunning(bool running);
     void setPaused(bool paused);
@@ -145,6 +150,12 @@ private:
     void doSeedRandomization();
     void refresh();
     void markDirty();
+    void processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS);
+    void processSpriteParticle(QQuick3DParticleSpriteParticle *spriteParticle, const QVector<TrailEmits> &trailEmits, float timeS);
+    void processParticleCommon(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticleData *d, float particleTimeS);
+    void processParticleFadeInOut(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, float particleTimeS, float particleTimeLeftS);
+    void processParticleAlignment(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, const QQuick3DParticleData *d);
+
 
 private:
     friend class QQuick3DParticleEmitter;
@@ -161,8 +172,6 @@ private:
     // It makes sure that updates are done in sync with other animations and only once per frame.
     QQuick3DParticleSystemUpdate *m_updateAnimation = nullptr;
 
-    QList<QQuick3DParticleModelParticle *> m_modelParticles;
-    QList<QQuick3DParticleSpriteParticle *> m_spriteParticles;
     QList<QQuick3DParticle *> m_particles;
     QList<QQuick3DParticleEmitter *> m_emitters;
     QList<QQuick3DParticleTrailEmitter *> m_trailEmitters;
@@ -184,10 +193,6 @@ private:
     QQuick3DParticleSystemLogging *m_loggingData = nullptr;
     QPRand m_rand;
 
-    struct TrailEmits {
-        QQuick3DParticleTrailEmitter *emitter = nullptr;
-        int amount = 0;
-    };
 };
 
 class QQuick3DParticleSystemAnimation : public QAbstractAnimation
