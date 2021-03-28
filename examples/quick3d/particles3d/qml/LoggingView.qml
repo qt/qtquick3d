@@ -56,7 +56,7 @@ Frame {
     property var particleSystems
     readonly property bool loggingEnabled: settings.showLoggingView
     property bool intervalInstant: false
-    property real itemWidth: (width - loggingButton.width - intervalButton.width) / 6
+    property real itemWidth: (width - loggingButton.width - intervalButton.width) / 7
 
     width: parent.width
     height: tableContent.height + 30
@@ -160,6 +160,13 @@ Frame {
                 font.pointSize: settings.fontSizeSmall
                 text: modelData.loggingData.timeAverage.toFixed(4)
             }
+            Text {
+                width: itemWidth
+                horizontalAlignment: Text.AlignHCenter
+                color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
+                text: modelData.loggingData.timeDeviation.toFixed(4)
+            }
         }
     }
 
@@ -210,6 +217,13 @@ Frame {
                 color: "#ffffff"
                 font.pointSize: settings.fontSizeSmall
                 text: qsTr("TIME AVG.")
+            }
+            Text {
+                width: itemWidth
+                horizontalAlignment: Text.AlignHCenter
+                color: "#ffffff"
+                font.pointSize: settings.fontSizeSmall
+                text: qsTr("TIME DEV.")
             }
         }
         Repeater {

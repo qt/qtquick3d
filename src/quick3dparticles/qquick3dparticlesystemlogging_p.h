@@ -57,6 +57,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystemLogging : public QObject
     Q_PROPERTY(int particlesUsed READ particlesUsed NOTIFY particlesUsedChanged)
     Q_PROPERTY(float time READ time NOTIFY timeChanged)
     Q_PROPERTY(float timeAverage READ timeAverage NOTIFY timeAverageChanged)
+    Q_PROPERTY(float timeDeviation  READ timeDeviation NOTIFY timeDeviationChanged REVISION(6, 3))
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -69,6 +70,7 @@ public:
     int particlesUsed() const;
     float time() const;
     float timeAverage() const;
+    Q_REVISION(6, 3) float timeDeviation() const;
 
 public Q_SLOTS:
     void setLoggingInterval(int interval);
@@ -80,6 +82,7 @@ Q_SIGNALS:
     void particlesUsedChanged();
     void timeChanged();
     void timeAverageChanged();
+    Q_REVISION(6, 3) void timeDeviationChanged();
 
 private:
     void updateTimes(qint64 time);
@@ -92,6 +95,7 @@ private:
     int m_particlesUsed = 0;
     float m_time = 0.0f;
     float m_timeAverage = 0.0f;
+    float m_timeDeviation = 0.0f;
     QList<float> m_totalTimesList;
 };
 

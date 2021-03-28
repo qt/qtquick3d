@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dparticlesystemlogging_p.h"
+#include <float.h> // FLT_MAX
 
 QT_BEGIN_NAMESPACE
 
@@ -129,33 +130,70 @@ float QQuick3DParticleSystemLogging::time() const
     \readonly
 
     This property holds the average time in milliseconds used for emitting and animating
-    particles in each frame. Average is calculated from the past 100 logging updates.
-    So when \l loggingInterval is 1000, this represents an average \l time in past 100 seconds.
-    This can be used for measuring the performance of current particle system.
+    particles in each frame. Average is calculated from the middle 50% of the past
+    max 100 logging updates. So when \l loggingInterval is 1000, this represents an
+    average \l time in past 100 seconds. This can be used for measuring the performance
+    of current particle system.
 */
 float QQuick3DParticleSystemLogging::timeAverage() const
 {
     return m_timeAverage;
 }
 
+/*!
+    \qmlproperty real ParticleSystem3DLogging::timeDeviation
+    \since 6.3
+    \readonly
+
+    This property holds the deviation of the average times in milliseconds.
+    The value is the difference between maximum and minimum values of middle 50%
+    of the results, also called interquartile range (IQR).
+    Bigger deviation means that the times fluctuate more so \l timeAverage
+    can be considered to be less accurate.
+*/
+float QQuick3DParticleSystemLogging::timeDeviation() const
+{
+    return m_timeDeviation;
+}
+
 void QQuick3DParticleSystemLogging::updateTimes(qint64 time)
 {
     m_time = float(time / 1000000.0) / m_updates;
 
-    // Keep max amount of times stored
     m_totalTimesList.append(m_time);
+
+    // Keep max amount of times stored and remove the oldest values
     const int MAX_TIMES = 100;
     if (m_totalTimesList.size() > MAX_TIMES)
         m_totalTimesList.removeFirst();
 
-    // Calculate average from stored times
-    double totalTime = 0;
-    for (auto time : m_totalTimesList)
-        totalTime += time;
-    m_timeAverage = float(totalTime / m_totalTimesList.size());
+    auto sortedTimes = m_totalTimesList;
+    std::sort(sortedTimes.begin(), sortedTimes.end());
 
+    // Calculate average from stored times.
+    // Only take into account the middle 50% of the values.
+    // This gives us interquartile range (IQR) and the average time among IQR.
+    if (sortedTimes.size() > 5) {
+        // Skip 25%, count 50%, so maxItem at 75%
+        const int skipAmount = roundf(0.25f * float(sortedTimes.size()));
+        const int maxItem = sortedTimes.size() - skipAmount;
+        int countAmount = 0;
+        double totalTime = 0.0;
+        float maxTime = 0.0f;
+        float minTime = FLT_MAX;
+        for (int i = skipAmount; i < maxItem; i++) {
+            const float time = sortedTimes.at(i);
+            totalTime += time;
+            minTime = std::min(minTime, time);
+            maxTime = std::max(maxTime, time);
+            countAmount++;
+        }
+        m_timeAverage = float(totalTime / countAmount);
+        m_timeDeviation = maxTime - minTime;
+        Q_EMIT timeAverageChanged();
+        Q_EMIT timeDeviationChanged();
+    }
     Q_EMIT timeChanged();
-    Q_EMIT timeAverageChanged();
 }
 
 void QQuick3DParticleSystemLogging::resetData()
@@ -165,12 +203,14 @@ void QQuick3DParticleSystemLogging::resetData()
     m_particlesUsed = 0;
     m_time = 0.0f;
     m_timeAverage = 0.0f;
+    m_timeDeviation = 0.0f;
     m_totalTimesList.clear();
     Q_EMIT updatesChanged();
     Q_EMIT particlesMaxChanged();
     Q_EMIT particlesUsedChanged();
     Q_EMIT timeChanged();
     Q_EMIT timeAverageChanged();
+    Q_EMIT timeDeviationChanged();
 }
 
 QT_END_NAMESPACE
