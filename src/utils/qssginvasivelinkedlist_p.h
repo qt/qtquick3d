@@ -165,13 +165,6 @@ struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNul
     using iterator = QSSGLinkedListIterator<T, TailOp>;
     using const_iterator = iterator;
     T *m_head = nullptr;
-    QSSGInvasiveSingleLinkedList() = default;
-    QSSGInvasiveSingleLinkedList(const List &inOther) : m_head(inOther.m_head) {}
-    List &operator=(const List &inOther)
-    {
-        m_head = inOther.m_head;
-        return *this;
-    }
 
     inline  T &front() const { return *m_head; }
 
@@ -251,15 +244,6 @@ struct QSSGInvasiveLinkedList : public QSSGInvasiveLinkListBase<T, QSSGListAcces
 
     T *m_head = nullptr;
     T *m_tail = nullptr;
-
-    QSSGInvasiveLinkedList() = default;
-    QSSGInvasiveLinkedList(const List &inOther) : m_head(inOther.m_head), m_tail(inOther.m_tail) {}
-    List &operator=(const List &inOther)
-    {
-        m_head = inOther.m_head;
-        m_tail = inOther.m_tail;
-        return *this;
-    }
 
     inline T &front() const
     {
