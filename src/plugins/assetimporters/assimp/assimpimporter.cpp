@@ -338,8 +338,12 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
                 for (uint j = 0; j < boneRootNode->mNumChildren; ++j) {
                     aiNode *cNode = boneRootNode->mChildren[j];
-                    if (isBone(cNode))
-                        generateSkeletonIdxMap(cNode, skeletonIdx, numBones);
+                    // assumes that all the Joints have children which are Joints
+                    if (!isBone(cNode)) {
+                        QString boneName = QString::fromUtf8(cNode->mName.C_Str());
+                        m_bones.insert(boneName, cNode);
+                    }
+                    generateSkeletonIdxMap(cNode, skeletonIdx, numBones);
                 }
                 m_numBonesInSkeleton.append(numBones);
             }
@@ -439,8 +443,13 @@ void AssimpImporter::generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, q
     QString boneName = QString::fromUtf8(node->mName.C_Str());
     m_boneIdxMap.insert(boneName, boneIdx++);
     for (uint i = 0; i < node->mNumChildren; ++i) {
-        if (isBone(node->mChildren[i]))
-            generateSkeletonIdxMap(node->mChildren[i], skeletonIdx, boneIdx);
+        aiNode *cNode = node->mChildren[i];
+        // assumes that all the Joints have children which are Joints
+        if (!isBone(cNode)) {
+            QString boneName = QString::fromUtf8(cNode->mName.C_Str());
+            m_bones.insert(boneName, cNode);
+        }
+        generateSkeletonIdxMap(cNode, skeletonIdx, boneIdx);
     }
 }
 
