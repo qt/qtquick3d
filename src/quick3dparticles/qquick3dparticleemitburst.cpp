@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
                 duration: 200
             },
             EmitBurst3D {
-                time: 0
+                time: 2000
                 amount: 50
                 duration: 200
             }
