@@ -251,7 +251,7 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntry(c
    \a color
    and
    \a customData
-   to the instance table format expected by the standard vertex shaders. Typical pattern:
+   to the instance table format expected by the standard vertex shaders.
 
     This is the same as calculateTableEntry(), except for using a quaternion to specify the rotation.
  */
