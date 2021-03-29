@@ -1565,11 +1565,19 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
 
         // bumpMap aiTextureType_HEIGHT 0
         QString bumpMapImage = generateImage(material, aiTextureType_HEIGHT, 0, tabLevel + 1);
-        if (!bumpMapImage.isNull())
+        if (!bumpMapImage.isNull()) {
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("bumpMap: ") << bumpMapImage;
-
-        // bumpAmount AI_MATKEY_BUMPSCALING
-
+            // bumpAmount AI_MATKEY_BUMPSCALING
+            ai_real bumpAmount;
+            result = material->Get(AI_MATKEY_BUMPSCALING, bumpAmount);
+            if (result == aiReturn_SUCCESS) {
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::DefaultMaterial,
+                                                         QStringLiteral("bumpAmount"),
+                                                         bumpAmount);
+            }
+        }
         // normalMap aiTextureType_NORMALS 0
         QString normalMapImage = generateImage(material, aiTextureType_NORMALS, 0, tabLevel + 1);
         if (!normalMapImage.isNull())
