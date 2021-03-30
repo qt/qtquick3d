@@ -980,8 +980,10 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
         if (rayResult.hasValue())
             pickResults = renderer->syncPickAll(rayResult.getValue());
         qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
-        if (pickResults.isEmpty())
+        if (pickResults.isEmpty()) {
+            eventPoint.setAccepted(false); // let it fall through the viewport to Items underneath
             continue; // next eventPoint
+        }
 
         const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
 
@@ -1132,6 +1134,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
         event->setAccepted(false); // reject implicit grab and let it keep propagating
     }
 
+    if (visitedSubscenes.isEmpty())
+        event->setAccepted(false);
     return ret;
 }
 
