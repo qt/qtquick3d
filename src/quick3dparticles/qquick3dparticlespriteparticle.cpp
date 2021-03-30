@@ -350,6 +350,9 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const 
     if (!updateNode->m_nodeDirty)
         return particles;
 
+    if (perEmitter.particleCount == 0)
+        return particles;
+
     if (m_sprite) {
         particles->m_sprite = m_sprite->getRenderImage();
         particles->m_spriteImageCount = m_frameCount;
@@ -378,6 +381,7 @@ void QQuick3DParticleSpriteParticle::handleMaxAmountChanged(int amount)
     if (m_particleData.size() == amount)
         return;
 
+    m_perEmitterData.clear();
     m_particleData.resize(amount);
     m_particleData.fill({});
     m_spriteParticleData.resize(amount);
