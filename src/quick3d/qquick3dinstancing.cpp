@@ -61,7 +61,26 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \property QQuick3DInstancing::instanceCountOverride
+
+    Set this property to limit the number of instances without regenerating or re-uploading the instance table.
+    This allows very inexpensive animation of the number of instances rendered.
+*/
+
+/*!
     \qmlproperty bool Instancing::hasTransparency
+
+    Set this property to true if the instancing table contains alpha values that should be used when
+    rendering the model. This property only makes a difference if the model is opaque: If the model has a
+    transparent \l{Model::materials}{material}, or an \l{Node::opacity}{opacity} less than one, the
+    alpha value from the table will be used regardless.
+
+    \note Enabling alpha blending may cause rendering issues when instances overlap. See the
+    \l{Alpha-blending and instancing}{alpha blending and instancing} documentation for details.
+*/
+
+/*!
+    \property QQuick3DInstancing::hasTransparency
 
     Set this property to true if the instancing table contains alpha values that should be used when
     rendering the model. This property only makes a difference if the model is opaque: If the model has a
