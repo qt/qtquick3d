@@ -44,6 +44,14 @@ static int ceilDivide(int a, int b)
 
 void QSSGParticleBuffer::resize(int particleCount)
 {
+    if (particleCount == 0) {
+        m_particlesPerSlice = 0;
+        m_particleCount = 0;
+        m_sliceStride = 0;
+        m_size = QSize();
+        m_particleBuffer.resize(0);
+        return;
+    }
     int vec4PerParticle = ceilDivide(sizeof(QSSGParticle), 16);
     int vec4s = particleCount * vec4PerParticle;
     int width = divisibleBy(sqrt(vec4s), vec4PerParticle);
