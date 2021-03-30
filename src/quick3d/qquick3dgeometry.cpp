@@ -519,6 +519,10 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
     \value JointSemantic The attribute is a joint index vector for  \l {Vertex Skinning}{skinning}. 4 components: joint index 1-4
     \value WeightSemantic The attribute is a weight vector for  \l {Vertex Skinning}{skinning}. 4 components: joint weight 1-4
     \value ColorSemantic The attribute is a vertex color vector. 4 components: \e r, \e g, \e b, and \e a
+    \value TargetPositionSemantic The attribute is a position for the first \l {Morphing Animation}{morph target}. 3 components: \e x, \e y, and \e z
+    \value TargetNormalSemantic The attribute is a normal vector for the first \l {Morphing Animation}{morph target}. 3 components: \e x, \e y, and \e z
+    \value TargetTangentSemantic The attribute is a tangent vector for the first \l {Morphing Animation}{morph target}. 3 components: \e x, \e y, and \e z
+    \value TargetBinormalSemantic The attribute is a binormal vector for the first \l {Morphing Animation}{morph target}. 3 components: \e x, \e y, and \e z
 
     In addition, \a semantic can be \c IndexSemantic. In this case the attribute does not represent an entry in the vertex
     buffer, but rather describes the index data in the index buffer. Since there is always just one index per vertex, \a offset
