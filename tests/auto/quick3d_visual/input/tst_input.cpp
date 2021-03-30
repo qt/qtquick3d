@@ -53,6 +53,8 @@ private slots:
     void singleTap2D();
     void dualTouchTap2D_data();
     void dualTouchTap2D();
+    void fallthrough_data();
+    void fallthrough();
 
 private:
     QQuickItem *find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemOrHandlerName);
@@ -242,6 +244,46 @@ void tst_Input::dualTouchTap2D()
     qCDebug(lcTests) << tapItem2->objectName() << "pressed @" << pressPos << "released @" << releasePos;
     QCOMPARE(releasePos, pressPos);
     // TODO QCOMPARE(pressPos, tapItem1->boundingRect().center());
+}
+
+void tst_Input::fallthrough_data()
+{
+    QTest::addColumn<QPoint>("pos");
+    QTest::addColumn<bool>("mouseAreaCanBlock");
+
+    QTest::newRow("click on background") << QPoint(900, 240) << false;
+    QTest::newRow("item2d") << QPoint(240, 240) << true;
+    QTest::newRow("model without 2D subscene") << QPoint(512, 240) << false;
+}
+
+void tst_Input::fallthrough()
+{
+    QFETCH(QPoint, pos);
+    QFETCH(bool, mouseAreaCanBlock);
+
+    QScopedPointer<QQuickView> view(createView(QLatin1String("interactiveContentUnder.qml"), QSize(1024, 480)));
+    QVERIFY(view);
+#ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
+    QQuickWindowPrivate::get(view.data())->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+#endif
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QQuickTapHandler *tapHandlerUnderneath = view->contentItem()->findChild<QQuickTapHandler *>();
+    QVERIFY(tapHandlerUnderneath);
+    QSignalSpy pressedChangedSpy(tapHandlerUnderneath, SIGNAL(pressedChanged()));
+
+    QTest::mouseClick(view.data(), Qt::LeftButton, Qt::NoModifier, pos);
+    QTRY_COMPARE(pressedChangedSpy.count(), 2);
+
+    if (mouseAreaCanBlock) {
+        pressedChangedSpy.clear();
+        QQuickMouseArea *mouseArea = qmlobject_cast<QQuickMouseArea *>(find2DChildIn3DNode(view.data(), "left object", "left mousearea"));
+        QVERIFY(mouseArea);
+        QSignalSpy maPressedChangedSpy(mouseArea, SIGNAL(pressedChanged()));
+        mouseArea->setEnabled(true); // accepts the mouse events
+        QTest::mouseClick(view.data(), Qt::LeftButton, Qt::NoModifier, pos);
+        QTRY_COMPARE(maPressedChangedSpy.count(), 2);
+        QCOMPARE(pressedChangedSpy.count(), 0);
+    }
 }
 
 QTEST_MAIN(tst_Input)
