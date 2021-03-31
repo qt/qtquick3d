@@ -896,127 +896,124 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
         else
             theSourceMaterialObject = inModel.materials.at(idx);
 
-        QSSGRenderSubset &theOuterSubset(theMesh->subsets[idx]);
-        {
-            QSSGRenderSubset &theSubset = theOuterSubset;
-            QSSGRenderableObjectFlags renderableFlags = renderableFlagsForModel;
-            float subsetOpacity = inModel.globalOpacity;
-            QVector3D theModelCenter(theSubset.bounds.center());
-            theModelCenter = mat44::transform(inModel.globalTransform, theModelCenter);
+        QSSGRenderSubset &theSubset = theMesh->subsets[idx];
+        QSSGRenderableObjectFlags renderableFlags = renderableFlagsForModel;
+        float subsetOpacity = inModel.globalOpacity;
+        QVector3D theModelCenter(theSubset.bounds.center());
+        theModelCenter = mat44::transform(inModel.globalTransform, theModelCenter);
 
-            if (subsetOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY && inClipFrustum.hasValue()) {
-                // Check bounding box against the clipping planes
-                QSSGBounds3 theGlobalBounds = theSubset.bounds;
-                theGlobalBounds.transform(theModelContext.model.globalTransform);
-                if (!inClipFrustum->intersectsWith(theGlobalBounds))
-                    subsetOpacity = 0.0f;
-            }
+        if (subsetOpacity >= QSSG_RENDER_MINIMUM_RENDER_OPACITY && inClipFrustum.hasValue()) {
+            // Check bounding box against the clipping planes
+            QSSGBounds3 theGlobalBounds = theSubset.bounds;
+            theGlobalBounds.transform(theModelContext.model.globalTransform);
+            if (!inClipFrustum->intersectsWith(theGlobalBounds))
+                subsetOpacity = 0.0f;
+        }
 
-            renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
-            QSSGRenderableObject *theRenderableObject = nullptr;
-            QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
+        renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
+        QSSGRenderableObject *theRenderableObject = nullptr;
+        QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
 
-            if (theMaterialObject == nullptr)
-                continue;
+        if (theMaterialObject == nullptr)
+            continue;
 
+        bool usesInstancing = theModelContext.model.instancing()
+                && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
+        if (usesInstancing && theModelContext.model.instanceTable->hasTransparency())
+            renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
+        if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+            QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
+            // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
+            // if the mesh has it.
+            theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing;
+            QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
+                    prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights));
+            QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
+            subsetOpacity = theMaterialPrepResult.opacity;
+            QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
+            subsetDirty |= theMaterialPrepResult.dirty;
+            renderableFlags = theMaterialPrepResult.renderableFlags;
+
+            // Skin
+            renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
+            renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
+                    theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+            // Instancing
+            renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
+            // Morphing
+            renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
+            for (int i = 0; i < inModel.morphAttributes.size(); ++i)
+                renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, inModel.morphAttributes[i] & morphTargetAttribs[i]);
+
+            theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
+                                                                         renderableFlags,
+                                                                         theModelCenter,
+                                                                         renderer,
+                                                                         theSubset,
+                                                                         theModelContext,
+                                                                         subsetOpacity,
+                                                                         theMaterial,
+                                                                         firstImage,
+                                                                         theGeneratedKey,
+                                                                         boneGlobals,
+                                                                         boneNormals,
+                                                                         lights,
+                                                                         morphWeights);
+            subsetDirty = subsetDirty || renderableFlags.isDirty();
+        } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
+            QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
+
+            const QSSGRef<QSSGCustomMaterialSystem> &theMaterialSystem(contextInterface.customMaterialSystem());
+            subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
+
+            QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
+                    prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, subsetDirty,
+                                                   lights, ioFlags));
+            QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
+            subsetOpacity = theMaterialPrepResult.opacity;
+            QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
+            renderableFlags = theMaterialPrepResult.renderableFlags;
+
+            // Skin
+            renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
+            renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
+                    theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
+
+            // Instancing
             bool usesInstancing = theModelContext.model.instancing()
                     && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
-            if (usesInstancing && theModelContext.model.instanceTable->hasTransparency())
-                renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+            renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
+            // Morphing
+            renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
+            // For custommaterials, it is allowed to use morph inputs without morphTargets
+            for (int i = 0; i < MAX_MORPH_TARGET; ++i)
+                renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, morphTargetAttribs[i]);
 
-            if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
-                QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
-                // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
-                // if the mesh has it.
-                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing;
-                QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights));
-                QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
-                subsetOpacity = theMaterialPrepResult.opacity;
-                QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
-                subsetDirty |= theMaterialPrepResult.dirty;
-                renderableFlags = theMaterialPrepResult.renderableFlags;
+            if (theMaterial.m_iblProbe)
+                theMaterial.m_iblProbe->clearDirty();
 
-                // Skin
-                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
-                renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
-                        theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
-                // Instancing
-                renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
-                // Morphing
-                renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
-                for (int i = 0; i < inModel.morphAttributes.size(); ++i)
-                    renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, inModel.morphAttributes[i] & morphTargetAttribs[i]);
+            theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
+                                                                         renderableFlags,
+                                                                         theModelCenter,
+                                                                         renderer,
+                                                                         theSubset,
+                                                                         theModelContext,
+                                                                         subsetOpacity,
+                                                                         theMaterial,
+                                                                         firstImage,
+                                                                         theGeneratedKey,
+                                                                         boneGlobals,
+                                                                         boneNormals,
+                                                                         lights,
+                                                                         morphWeights);
+        }
+        if (theRenderableObject) {
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
-                                                                             renderableFlags,
-                                                                             theModelCenter,
-                                                                             renderer,
-                                                                             theSubset,
-                                                                             theModelContext,
-                                                                             subsetOpacity,
-                                                                             theMaterial,
-                                                                             firstImage,
-                                                                             theGeneratedKey,
-                                                                             boneGlobals,
-                                                                             boneNormals,
-                                                                             lights,
-                                                                             morphWeights);
-                subsetDirty = subsetDirty || renderableFlags.isDirty();
-            } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
-                QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
-
-                const QSSGRef<QSSGCustomMaterialSystem> &theMaterialSystem(contextInterface.customMaterialSystem());
-                subsetDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
-
-                QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareCustomMaterialForRender(theMaterial, renderableFlags, subsetOpacity, subsetDirty,
-                                                       lights, ioFlags));
-                QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
-                subsetOpacity = theMaterialPrepResult.opacity;
-                QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
-                renderableFlags = theMaterialPrepResult.renderableFlags;
-
-                // Skin
-                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
-                renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
-                        theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
-
-                // Instancing
-                bool usesInstancing = theModelContext.model.instancing()
-                        && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
-                renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
-                // Morphing
-                renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
-                // For custommaterials, it is allowed to use morph inputs without morphTargets
-                for (int i = 0; i < MAX_MORPH_TARGET; ++i)
-                    renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, morphTargetAttribs[i]);
-
-                if (theMaterial.m_iblProbe)
-                    theMaterial.m_iblProbe->clearDirty();
-
-                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
-                                                                             renderableFlags,
-                                                                             theModelCenter,
-                                                                             renderer,
-                                                                             theSubset,
-                                                                             theModelContext,
-                                                                             subsetOpacity,
-                                                                             theMaterial,
-                                                                             firstImage,
-                                                                             theGeneratedKey,
-                                                                             boneGlobals,
-                                                                             boneNormals,
-                                                                             lights,
-                                                                             morphWeights);
-            }
-            if (theRenderableObject) {
-
-                if (theRenderableObject->renderableFlags.hasTransparency())
-                    transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
-                else
-                    opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
-            }
+            if (theRenderableObject->renderableFlags.hasTransparency())
+                transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
+            else
+                opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
         }
     }
 
