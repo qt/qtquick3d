@@ -859,13 +859,13 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
-        QSSGRenderGraphObject *theSourceMaterialObject = nullptr;
+        QSSGRenderGraphObject *theMaterialObject = nullptr;
         if (inModel.materials.isEmpty())
             break;
         if (idx + 1 > inModel.materials.count())
-            theSourceMaterialObject = inModel.materials.last();
+            theMaterialObject = inModel.materials.last();
         else
-            theSourceMaterialObject = inModel.materials.at(idx);
+            theMaterialObject = inModel.materials.at(idx);
 
         QSSGRenderSubset &theSubset = theMesh->subsets[idx];
         QSSGRenderableObjectFlags renderableFlags = renderableFlagsForModel;
@@ -883,7 +883,6 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
         renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
         QSSGRenderableObject *theRenderableObject = nullptr;
-        QSSGRenderGraphObject *theMaterialObject = theSourceMaterialObject;
 
         if (theMaterialObject == nullptr)
             continue;
