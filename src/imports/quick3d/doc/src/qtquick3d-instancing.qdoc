@@ -59,10 +59,11 @@ The Instancing object specifies a table that defines how each copy is rendered. 
 \li \e{custom data}: data that can be used by custom materials
 \endlist
 
-Qt provides two QML types that inherit from Instancing:
+Qt provides three QML types that inherit from Instancing:
 \list
 \li  \l {InstanceList} enumerates all instances and allows binding to the properties of each instance.
 \li \l {RandomInstancing} provides a way to quickly test and prototype by generating random instances within defined bounds.
+\li \l {FileInstancing} reads an instance table from an external file.
 \endlist
 
 The \l{Qt Quick 3D - Instanced Rendering Example}{instancing example} shows how to create a scene using the QML API.

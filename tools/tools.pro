@@ -5,5 +5,6 @@ TEMPLATE = subdirs
     SUBDIRS = \
         balsam \
         meshdebug \
-        shadergen
+        shadergen \
+        instancer
 }

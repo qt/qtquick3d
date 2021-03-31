@@ -30,6 +30,8 @@
 #include "qquick3dscenemanager_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderinstancetable_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QXmlStreamReader>
+#include <QtQml/QQmlFile>
 
 QT_BEGIN_NAMESPACE
 
@@ -124,7 +126,10 @@ QQuick3DInstancing::~QQuick3DInstancing()
 {
 }
 
-//### Not used or documented. Remove before Qt 6.2
+/*!
+  \internal
+  Returns the content of the instancing table for testing purposes.
+*/
 QByteArray QQuick3DInstancing::instanceBuffer(int *instanceCount)
 {
     Q_D(QQuick3DInstancing);
@@ -540,6 +545,275 @@ void QQuick3DInstanceListEntry::setCustomData(QVector4D customData)
     m_customData = customData;
     emit customDataChanged();
     emit changed();
+}
+
+/*!
+    \qmltype FileInstancing
+    \inherits Instancing
+    \inqmlmodule QtQuick3D
+    \since 6.2
+    \brief Allows reading instance tables from file.
+
+    The FileInstancing type makes it possible to read instance tables from files.
+
+    There are two supported file formats: XML, and a Qt-specific binary format. The
+    binary file format uses the same layout as the table that is uploaded to the GPU,
+    so it can be directly mapped to memory. The \l{Instancer Tool}{instancer} tool converts
+    from XML to the binary format.
+
+    This is an example of the XML file format:
+    \badcode
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <InstanceTable>
+      <Instance position="0 200 0"  scale="0.75 0.75 0.75" custom="20 20" color="#ffcf7f"/>
+      <Instance position="0 -100 0" scale="0.5 0.5 0.5" color="red"/>
+      <Instance position="0 -200 0" eulerRotation="0 0 60" color="darkred" custom="10 40 0 0"/>
+    </InstanceTable>
+    \endcode
+
+    In order to be valid, the XML file must have a top-level \c{InstanceTable} element. Each
+    instance is represented by an \c{Instance} element inside the \c{InstanceTable}. Unknown
+    elements are silently ignored.
+
+    An \c{Instance} element can have a number of attributes. \c{color} attributes are specified by the normal Qt
+    SVG color names, or by hexadecimal notation. \c{vector3d} and {vector4d} attributes are specified by
+    a string of space-separated numbers, where missing trailing numbers indicate zeroes. The following
+    attributes are supported:
+    \table
+    \header
+    \li name
+    \li type
+    \row
+    \li \c position
+    \li \c vector3d
+    \row
+    \li \c scale
+    \li \c vector3d
+    \row
+    \li \c eulerRotation
+    \li \c vector3d
+    \row
+    \li \c quaternion
+    \li \c vector4d
+    \row
+    \li \c custom
+    \li \c vector4d
+    \row
+    \li \c color
+    \li \c color
+    \endtable
+    Unknown attributes are silently ignored.
+*/
+
+/*!
+    \qmlproperty url QtQuick3D::FileInstancing::source
+
+    This property holds the location of an XML or binary file containing the instance data.
+
+    If the file name has a ".bin" extension, it is assumed to refer to a binary file.
+    Otherwise it is assumed to refer to an XML file. If an XML file \e{foo.xml} is specified, and
+    the file \e{foo.xml.bin} exists, the binary file \e{foo.xml.bin} will be loaded instead.
+*/
+static constexpr quint16 currentMajorVersion = 1;
+
+struct QQuick3DInstancingBinaryFileHeader
+{
+    char magic[4] = { 'Q', 't', 'I', 'R' };
+    const quint16 majorVersion = currentMajorVersion;
+    const quint16 minorVersion = 0;
+    const quint32 stride = sizeof(QQuick3DInstancing::InstanceTableEntry);
+    quint32 offset;
+    quint32 count;
+};
+
+static bool writeInstanceTable(QIODevice *out, const QByteArray &instanceData, int instanceCount)
+{
+    QQuick3DInstancingBinaryFileHeader header;
+
+    header.offset = sizeof(header);
+    header.count = instanceCount;
+
+    if (instanceData.size() != header.stride * instanceCount) {
+        qWarning() << "inconsistent data";
+        return false;
+    }
+
+    // Ignoring endianness: Assume we always create on little-endian, and then special-case reading if we need to.
+
+    out->write(reinterpret_cast<const char *>(&header), sizeof(header));
+    out->write(instanceData.constData(), instanceData.size());
+    return true;
+}
+
+
+bool QQuick3DFileInstancing::loadFromBinaryFile(const QString &filename)
+{
+    auto binaryFile = std::make_unique<QFile>(filename);
+    if (!binaryFile->open(QFile::ReadOnly))
+        return false;
+
+    constexpr auto headerSize = sizeof(QQuick3DInstancingBinaryFileHeader);
+    const quint64 fileSize = binaryFile->size();
+    if (fileSize < headerSize) {
+        qWarning() << "data file too small";
+        return false;
+    }
+    const char *data = reinterpret_cast<const char *>(binaryFile->map(0, fileSize));
+    const auto *header = reinterpret_cast<const QQuick3DInstancingBinaryFileHeader *>(data);
+
+    if (header->majorVersion > currentMajorVersion) {
+        qWarning() << "Version" << header->majorVersion << "is too new";
+        return false;
+    }
+
+    if (fileSize != headerSize + header->count * header->stride) {
+        qWarning() << "wrong data size";
+        return false;
+    }
+
+    delete m_dataFile;
+
+    // In order to use fromRawData safely, the file has to stay open so that the mmap stays valid
+    m_dataFile = binaryFile.release();
+
+    m_instanceData = QByteArray::fromRawData(data + header->offset, header->count * header->stride);
+    m_instanceCount = header->count;
+
+    return true;
+}
+
+bool QQuick3DFileInstancing::loadFromXmlFile(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QFile::ReadOnly))
+        return false;
+
+    bool valid = false;
+    QXmlStreamReader reader(&f);
+    int instances = 0;
+
+    //### Why is there not a QTextStream constructor that takes a QStringView
+    const auto toVector3D = [](const QStringView &str) {
+        float x, y, z;
+        QTextStream(str.toLocal8Bit()) >> x >> y >> z;
+        return QVector3D { x, y, z };
+    };
+    const auto toVector4D = [](const QStringView &str) {
+        float x, y, z, w;
+        QTextStream(str.toLocal8Bit()) >> x >> y >> z >> w;
+        return QVector4D { x, y, z, w };
+    };
+
+    QByteArray instanceData;
+
+    while (reader.readNextStartElement()) {
+
+        if (reader.name() == QLatin1String("InstanceTable")) {
+            valid = true;
+            while (reader.readNextStartElement()) {
+                if (reader.name() == QLatin1String("Instance")) {
+                    QColor color = Qt::white;
+                    QVector3D position;
+                    QVector3D eulerRotation;
+                    QQuaternion quaternion;
+                    bool useQuaternion = false;
+                    QVector4D custom;
+                    QVector3D scale { 1, 1, 1 };
+                    for (auto &attr : reader.attributes()) {
+                        if (attr.name() == QLatin1String("color")) {
+                            color = QColor(attr.value());
+                        } else if (attr.name() == QLatin1String("position")) {
+                            position = toVector3D(attr.value());
+                        } else if (attr.name() == QLatin1String("eulerRotation")) {
+                            eulerRotation = toVector3D(attr.value());
+                        } else if (attr.name() == QLatin1String("scale")) {
+                            scale = toVector3D(attr.value());
+                        } else if (attr.name() == QLatin1String("quaternion")) {
+                            quaternion = QQuaternion(toVector4D(attr.value()));
+                            useQuaternion = true;
+                        } else if (attr.name() == QLatin1String("custom")) {
+                            custom = toVector4D(attr.value());
+                        }
+                    }
+                    auto entry = useQuaternion ? calculateTableEntryFromQuaternion(position, scale, quaternion, color, custom)
+                                               : calculateTableEntry(position, scale, eulerRotation, color, custom);
+                    instanceData.append(reinterpret_cast<const char *>(&entry), sizeof(entry));
+                    instances++;
+                }
+                reader.skipCurrentElement();
+            }
+        } else {
+            reader.skipCurrentElement();
+        }
+    }
+
+    if (valid) {
+        m_instanceCount = instances;
+        m_instanceData = instanceData;
+    }
+
+    f.close();
+    return valid;
+}
+
+int QQuick3DFileInstancing::writeToBinaryFile(QIODevice *out)
+{
+    bool success = writeInstanceTable(out, m_instanceData, m_instanceCount);
+    return success ? m_instanceCount : -1;
+}
+
+bool QQuick3DFileInstancing::loadFromFile(const QUrl &source)
+{
+    const QQmlContext *context = qmlContext(this);
+
+    const QString filePath = QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(source) : source);
+
+    if (filePath.endsWith(QStringLiteral(".bin")))
+        return loadFromBinaryFile(filePath);
+
+    const QString binaryFilePath = filePath + QStringLiteral(".bin");
+
+    if (loadFromBinaryFile(binaryFilePath))
+        return true;
+
+    return loadFromXmlFile(filePath);
+}
+
+QQuick3DFileInstancing::QQuick3DFileInstancing(QQuick3DObject *parent) : QQuick3DInstancing(parent) { }
+
+QQuick3DFileInstancing::~QQuick3DFileInstancing()
+{
+    delete m_dataFile;
+}
+
+const QUrl &QQuick3DFileInstancing::source() const
+{
+    return m_source;
+}
+
+void QQuick3DFileInstancing::setSource(const QUrl &newSource)
+{
+    if (m_source == newSource)
+        return;
+    m_source = newSource;
+    m_dirty = true;
+    emit sourceChanged();
+}
+
+QByteArray QQuick3DFileInstancing::getInstanceBuffer(int *instanceCount)
+{
+    if (m_dirty) {
+        if (!loadFromFile(m_source))  {
+            qWarning() << Q_FUNC_INFO << "could not load" << m_source;
+            m_instanceData = {};
+            m_instanceCount = 0;
+        }
+        m_dirty = false;
+    }
+
+    if (instanceCount)
+        *instanceCount = m_instanceCount;
+    return m_instanceData;
 }
 
 QT_END_NAMESPACE

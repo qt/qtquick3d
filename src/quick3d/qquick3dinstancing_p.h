@@ -170,6 +170,41 @@ private:
     QList<QQuick3DInstanceListEntry *> m_instances;
 };
 
+class Q_QUICK3D_EXPORT QQuick3DFileInstancing : public QQuick3DInstancing
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(FileInstancing)
+    QML_ADDED_IN_VERSION(6, 2)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+
+public:
+    explicit QQuick3DFileInstancing(QQuick3DObject *parent = nullptr);
+    ~QQuick3DFileInstancing() override;
+
+    const QUrl &source() const;
+    void setSource(const QUrl &newSource);
+
+    bool loadFromBinaryFile(const QString &filename);
+    bool loadFromXmlFile(const QString &filename);
+    int writeToBinaryFile(QIODevice *out);
+
+signals:
+    void sourceChanged();
+
+protected:
+    QByteArray getInstanceBuffer(int *instanceCount) override;
+
+private:
+    bool loadFromFile(const QUrl &source);
+
+private:
+    int m_instanceCount = 0;
+    QByteArray m_instanceData;
+    QFile *m_dataFile = nullptr;
+    bool m_dirty = true;
+    QUrl m_source;
+};
+
 QT_END_NAMESPACE
 
 #endif

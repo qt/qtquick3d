@@ -62,8 +62,6 @@ public:
     explicit QQuick3DInstancing(QQuick3DObject *parent = nullptr);
     ~QQuick3DInstancing() override;
 
-//#### TODO: must have bounds somehow ...and later support instance picking
-
     QByteArray instanceBuffer(int *instanceCount);
     int instanceCountOverride() const;
     bool hasTransparency() const;

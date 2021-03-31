@@ -199,6 +199,11 @@ Window {
             }
         }
 
+        FileInstancing {
+            id: fileInstancing
+            source: "test.xml"
+        }
+
         CustomMaterial {
             id: instancedMaterial
             shadingMode: CustomMaterial.Shaded
@@ -257,9 +262,12 @@ Window {
         }
         TapHandler {
             onTapped: {
-                if (cubeModel.instancing === randomWithData) {
+                if (cubeModel.instancing == randomWithData) {
                     console.log("clicked: switching instance table to manualInstancing")
                     cubeModel.instancing = manualInstancing
+                } else if (cubeModel.instancing == manualInstancing) {
+                    console.log("clicked: switching instance table to fileInstancing")
+                    cubeModel.instancing = fileInstancing
                 } else {
                     console.log("clicked: switching instance table to randomWithData")
                     cubeModel.instancing = randomWithData

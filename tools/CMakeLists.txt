@@ -13,4 +13,5 @@ if((android_app OR NOT ANDROID) AND (android_app OR NOT INTEGRITY) AND (NOT ANDR
     endif()
     add_subdirectory(meshdebug)
     add_subdirectory(shadergen)
+    add_subdirectory(instancer)
 endif()
