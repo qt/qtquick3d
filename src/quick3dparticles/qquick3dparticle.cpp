@@ -88,6 +88,8 @@ void QQuick3DParticle::setSystem(QQuick3DParticleSystem *system)
     are reused before they reach the end of their \l {ParticleEmitter3D::lifeSpan}{lifeSpan}.
     If the maxAmount is too big, unnecessary memory is allocated for the particles.
 
+    \note Changing the maxAmount resets all the particles in the particle system.
+
     The default value is \c 100.
 */
 int QQuick3DParticle::maxAmount() const
@@ -404,6 +406,14 @@ void QQuick3DParticle::componentComplete()
     QQuick3DObject::componentComplete();
     // Make sure the default amount gets initialized, even if user doesn't set it
     Q_EMIT maxAmountChanged();
+}
+
+void QQuick3DParticle::reset() {
+    m_currentIndex = 0;
+    m_lastBurstIndex = 0;
+
+    // Reset all particles data
+    m_particleData.fill({});
 }
 
 QT_END_NAMESPACE

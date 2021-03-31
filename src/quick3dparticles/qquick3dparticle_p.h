@@ -132,7 +132,7 @@ protected:
     // From QQmlParserStatus
     void componentComplete() override;
 
-    virtual void reset() = 0;
+    virtual void reset();
 
     void updateBurstIndex(int amount);
     // This will return the next available index

@@ -222,14 +222,4 @@ void QQuick3DParticleModelParticle::itemChange(QQuick3DObject::ItemChange change
         regenerate();
 }
 
-void QQuick3DParticleModelParticle::reset() {
-    m_currentIndex = 0;
-    m_lastBurstIndex = 0;
-
-    // Reset all particles data
-    QQuick3DParticleData data;
-    for (int i = 0; i < m_particleData.size(); i++)
-        m_particleData[i] = data;
-}
-
 QT_END_NAMESPACE
