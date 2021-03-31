@@ -80,15 +80,15 @@ struct QQuick3DParticleData
     Vector3b startRotationVelocity;
     Color4ub startColor;
     // Seconds, system time when this particle was emitted
-    float startTime;
-    // Seconds, particle lifetime. >99999 means forever
-    float lifetime;
+    float startTime = -1.0f;
+    // Seconds, particle lifetime
+    float lifetime = 0.0f;
     // Unified scaling among axes
-    float startSize;
-    float endSize;
+    float startSize = 1.0f;
+    float endSize = 1.0f;
     // Index/id of the particle. Used to get unique random values.
     // Might not be necessary, check later
-    int index;
+    int index = 0;
     // Size: 12+12+3+3+4+4+4+4+4+4 = 54 bytes
 };
 

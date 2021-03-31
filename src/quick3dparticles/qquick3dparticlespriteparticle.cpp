@@ -381,11 +381,9 @@ void QQuick3DParticleSpriteParticle::handleMaxAmountChanged(int amount)
     if (m_particleData.size() == amount)
         return;
 
-    m_perEmitterData.clear();
+    reset();
     m_particleData.resize(amount);
-    m_particleData.fill({});
     m_spriteParticleData.resize(amount);
-    m_spriteParticleData.fill({});
 }
 
 void QQuick3DParticleSpriteParticle::handleSystemChanged(QQuick3DParticleSystem *system)
@@ -419,7 +417,11 @@ void QQuick3DParticleSpriteParticle::componentComplete()
 
 void QQuick3DParticleSpriteParticle::reset()
 {
-
+    QQuick3DParticle::reset();
+    deleteNodes();
+    m_nextEmitterIndex = 0;
+    m_perEmitterData.clear();
+    m_spriteParticleData.fill({});
 }
 
 int QQuick3DParticleSpriteParticle::nextCurrentIndex(const QQuick3DParticleEmitter *emitter)

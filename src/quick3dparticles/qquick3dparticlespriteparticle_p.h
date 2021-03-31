@@ -177,7 +177,6 @@ private:
     int m_nextEmitterIndex = 0;
     bool m_interpolate = true;
     bool m_billboard = false;
-    bool m_bufferUpdated = false;
 };
 
 QT_END_NAMESPACE
