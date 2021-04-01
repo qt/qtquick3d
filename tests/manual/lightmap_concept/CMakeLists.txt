@@ -1,4 +1,4 @@
-qt_internal_add_manual_test(lightmap
+qt_internal_add_manual_test(lightmap_concept
     GUI
     SOURCES
         main.cpp
@@ -23,7 +23,7 @@ set(qml_resource_files
     "meshes/animal.mesh"
 )
 
-qt_internal_add_resource(lightmap "qml"
+qt_internal_add_resource(lightmap_concept "qml"
     PREFIX
         "/"
     FILES
