@@ -55,7 +55,7 @@ class QSSGPerFrameAllocator
 
         enum : size_t {
             ChunkSize = 8192*2,
-            Alignment = 4,
+            Alignment = sizeof(void *),
             SlabSize = ChunkSize - sizeof(Slab *),
             MaxAlloc = ChunkSize/2 // don't go all the way up to SlabSize, or we'd almost always get a big hole
         };
@@ -69,6 +69,7 @@ class QSSGPerFrameAllocator
             quint8 data[SlabSize];
         };
         Q_STATIC_ASSERT(sizeof(Slab) == ChunkSize);
+        Q_STATIC_ASSERT(alignof(Slab) == Alignment);
 
         Slab *first = nullptr;
         Slab *current = nullptr;
