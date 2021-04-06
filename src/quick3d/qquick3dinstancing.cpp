@@ -194,6 +194,7 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
         QByteArray buffer = instanceBuffer(&count);
         //   qDebug() << "QQuick3DInstancing:updateSpatialNode setting instance buffer data" << count;
         instanceTable->setData(buffer, count);
+        d->m_instanceDataChanged = false;
     }
     instanceTable->setHasTransparency(d->m_hasTransparency);
     return node;
