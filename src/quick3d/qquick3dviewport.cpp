@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
 Q_LOGGING_CATEGORY(lcPick, "qt.quick3d.pick")
+Q_LOGGING_CATEGORY(lcHover, "qt.quick3d.hover")
 
 struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
 {
@@ -965,7 +966,9 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
     if (!renderer)
         return false;
 
-    qCDebug(lcEv) << event;
+    const bool isHover = QQuickDeliveryAgentPrivate::isHoverEvent(event);
+    if (!isHover)
+        qCDebug(lcEv) << event;
     struct SubsceneInfo {
         QQuick3DObject* obj = nullptr;
         QVarLengthArray<QPointF, 16> eventPointScenePositions;
@@ -979,7 +982,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
         QQuick3DSceneRenderer::PickResultList pickResults;
         if (rayResult.hasValue())
             pickResults = renderer->syncPickAll(rayResult.getValue());
-        qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
+        if (!isHover)
+            qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
         if (pickResults.isEmpty()) {
             eventPoint.setAccepted(false); // let it fall through the viewport to Items underneath
             continue; // next eventPoint
@@ -1074,9 +1078,14 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
                 }
                 subscene.eventPointScenePositions[pointIndex] = subscenePosition;
             }
-            qCDebug(lcPick) << "pick result:" << frontendObject << "@" << pickResult.m_scenePosition
-                            << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq)
-                            << "scene" << subscenePosition << subsceneRootItem;
+            if (isHover)
+                qCDebug(lcHover) << "hover pick result:" << frontendObject << "@" << pickResult.m_scenePosition
+                                << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq)
+                                << "scene" << subscenePosition << subsceneRootItem;
+            else
+                qCDebug(lcPick) << "pick result:" << frontendObject << "@" << pickResult.m_scenePosition
+                                << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq)
+                                << "scene" << subscenePosition << subsceneRootItem;
         } // for pick results from each QEventPoint
     } // for each QEventPoint
 
@@ -1096,7 +1105,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
         auto &subsceneInfo = subscene.second;
         Q_ASSERT(subsceneInfo.eventPointScenePositions.count() == event->pointCount());
         auto da = QQuickItemPrivate::get(subsceneRoot)->deliveryAgent();
-        qCDebug(lcPick) << "delivering to" << subsceneRoot << "via" << da << event;
+        if (!isHover)
+            qCDebug(lcPick) << "delivering to" << subsceneRoot << "via" << da << event;
 
         for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
             const auto &pt = subsceneInfo.eventPointScenePositions.at(pointIndex);
