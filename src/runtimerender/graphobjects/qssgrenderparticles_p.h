@@ -74,9 +74,20 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleAnimated
     // total 64 bytes
 };
 
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGTriangleParticle
+{
+    QVector3D position; // particle position
+    float size;
+    QVector3D rotation;
+    float age;
+    QVector4D color;
+    QVector3D center;   // center of the origin triangle
+    float fill;
+};
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
 {
-    void resize(int particleCount, bool useAnimatedParticle);
+    void resize(int particleCount, int particleSize = sizeof(QSSGParticleSimple));
     void setBounds(const QSSGBounds3& bounds);
 
     char *pointer();

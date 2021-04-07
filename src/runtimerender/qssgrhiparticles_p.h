@@ -64,6 +64,9 @@ public:
                                          char *ubufData,
                                          QSSGParticlesRenderable &renderable,
                                          QSSGRenderCamera &inCamera);
+    static void updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                               char *ubufData,
+                                               const QSSGRenderModel *model);
 
     static void rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                      QSSGRhiContext *rhiCtx,
@@ -76,6 +79,10 @@ public:
                                     QSSGParticlesRenderable &renderable,
                                     QSSGLayerRenderData &inData,
                                     bool *needsSetViewport);
+    static void prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                         QSSGRhiContext *rhiCtx,
+                                         QSSGRhiShaderResourceBindingList &bindings,
+                                         const QSSGRenderModel *model);
 };
 
 QT_END_NAMESPACE

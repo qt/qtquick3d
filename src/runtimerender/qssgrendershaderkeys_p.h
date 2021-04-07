@@ -582,6 +582,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_usesInstancing;
     QSSGShaderKeyUnsigned<4> m_morphTargetCount;
     QSSGShaderKeyVertexAttribute m_morphTargetAttributes[MorphTargetCount];
+    QSSGShaderKeyBoolean m_blendParticles;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -603,6 +604,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_usesFloatJointIndices("usesFloatJointIndices")
         , m_usesInstancing("usesInstancing")
         , m_morphTargetCount("morphTargetCount")
+        , m_blendParticles("blendParticles")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -745,6 +747,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_morphTargetCount);
         for (quint32 idx = 0, end = MorphTargetCount; idx < end; ++idx)
             inVisitor.visit(m_morphTargetAttributes[idx]);
+        inVisitor.visit(m_blendParticles);
     }
 
     struct OffsetVisitor

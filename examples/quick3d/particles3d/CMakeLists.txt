@@ -51,6 +51,7 @@ set(qml_resource_files
     "qml/Fire.qml"
     "qml/HeartTrail.qml"
     "qml/LoggingView.qml"
+    "qml/ModelBlendParticles.qml"
     "qml/OceanSpider.qml"
     "qml/QtLogoAnimation.qml"
     "qml/SettingsView.qml"
@@ -89,6 +90,8 @@ set(qml_resource_files
     "qml/main.qml"
     "qml/meshes/meter_background.mesh"
     "qml/meshes/meter_edge.mesh"
+    "qml/meshes/oldqtlogo.mesh"
+
 )
 
 qt6_add_resources(particles3d "qml"

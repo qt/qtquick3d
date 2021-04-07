@@ -484,7 +484,7 @@ void QQuick3DParticleSpriteParticle::updateParticleBuffer(const PerEmitterData &
         return;
     const int particleCount = perEmitter.particleCount;
     if (node->m_particleBuffer.particleCount() != particleCount || m_useAnimatedParticle)
-        node->m_particleBuffer.resize(particleCount, false);
+        node->m_particleBuffer.resize(particleCount, sizeof(QSSGParticleSimple));
 
     m_useAnimatedParticle = false;
     char *dest = node->m_particleBuffer.pointer();
@@ -555,7 +555,7 @@ void QQuick3DParticleSpriteParticle::updateAnimatedParticleBuffer(const PerEmitt
         return;
     const int particleCount = perEmitter.particleCount;
     if (node->m_particleBuffer.particleCount() != particleCount || !m_useAnimatedParticle)
-        node->m_particleBuffer.resize(particleCount, true);
+        node->m_particleBuffer.resize(particleCount, sizeof(QSSGParticleAnimated));
 
     m_useAnimatedParticle = true;
     char *dest = node->m_particleBuffer.pointer();

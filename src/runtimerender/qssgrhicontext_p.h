@@ -854,7 +854,7 @@ private:
     }
 };
 
-struct QSSGRenderParticles;
+struct QSSGRenderGraphObject;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
 {
@@ -925,9 +925,9 @@ public:
     {
         return m_instanceBuffers[instanceTable];
     }
-    QSSGRhiParticleData &particleData(const QSSGRenderParticles *particles)
+    QSSGRhiParticleData &particleData(const QSSGRenderGraphObject *particlesOrModel)
     {
-        return m_particleData[particles];
+        return m_particleData[particlesOrModel];
     }
 
     QSSGRhiContextStats &stats() { return m_stats; }
@@ -947,7 +947,7 @@ private:
     QSet<QRhiTexture *> m_textures;
     QHash<QSSGRhiDummyTextureKey, QRhiTexture *> m_dummyTextures;
     QHash<QSSGRenderInstanceTable *, QSSGRhiInstanceBufferData> m_instanceBuffers;
-    QHash<const QSSGRenderParticles *, QSSGRhiParticleData> m_particleData;
+    QHash<const QSSGRenderGraphObject *, QSSGRhiParticleData> m_particleData;
     QSSGRhiContextStats m_stats;
 };
 

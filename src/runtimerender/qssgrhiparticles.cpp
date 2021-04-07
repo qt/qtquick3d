@@ -81,6 +81,18 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
     shaders->setUniform(ubufData, "qt_billboard", &billboard, 1 * sizeof(float));
 }
 
+void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                                          char *ubufData,
+                                                          const QSSGRenderModel *model)
+{
+    auto &particleBuffer = *model->particleBuffer;
+    const quint32 particlesPerSlice = particleBuffer.particlesPerSlice();
+    const QVector2D oneOverSize = QVector2D(1.0f / particleBuffer.size().width(), 1.0f / particleBuffer.size().height());
+    shaderPipeline->setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
+    shaderPipeline->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, sizeof(quint32));
+    const QMatrix4x4 &particleMatrix = model->particleMatrix;
+    shaderPipeline->setUniform(ubufData, "qt_particleMatrix", &particleMatrix, 16 * sizeof(float));
+}
 
 static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend &targetBlend, QSSGRenderParticles::BlendMode mode)
 {
@@ -363,6 +375,47 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
         dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
         dcd.pipelineRpDesc = renderPassDescriptor;
         dcd.ps = *ps;
+    }
+}
+
+void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                                    QSSGRhiContext *rhiCtx,
+                                                    QSSGRhiShaderResourceBindingList &bindings,
+                                                    const QSSGRenderModel *model)
+{
+    QSSGRhiParticleData &particleData = rhiCtx->particleData(model);
+    const QSSGParticleBuffer &particleBuffer = *model->particleBuffer;
+    int particleCount = particleBuffer.particleCount();
+    if (particleData.texture == nullptr || particleData.particleCount != particleCount) {
+        QSize size(particleBuffer.size());
+        if (!particleData.texture) {
+            particleData.texture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA32F, size);
+            particleData.texture->create();
+        } else {
+            particleData.texture->setPixelSize(size);
+            particleData.texture->create();
+        }
+        particleData.particleCount = particleCount;
+    }
+
+    QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+    QRhiTextureSubresourceUploadDescription upload;
+    upload.setData(particleBuffer.data());
+    QRhiTextureUploadDescription uploadDesc(QRhiTextureUploadEntry(0, 0, upload));
+    rub->uploadTexture(particleData.texture, uploadDesc);
+    rhiCtx->commandBuffer()->resourceUpdate(rub);
+
+    int samplerBinding = shaderPipeline->bindingForTexture("qt_particleTexture");
+    if (samplerBinding >= 0) {
+        QRhiTexture *texture = particleData.texture;
+        if (samplerBinding >= 0 && texture) {
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                     QRhiSampler::Nearest,
+                                                     QRhiSampler::None,
+                                                     QRhiSampler::ClampToEdge,
+                                                     QRhiSampler::ClampToEdge });
+            bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::VertexStage, texture, sampler);
+        }
     }
 }
 

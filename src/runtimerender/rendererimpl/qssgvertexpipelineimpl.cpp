@@ -155,6 +155,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool usesInvProjectionMatrix = defaultMaterialShaderKeyProperties.m_usesInverseProjectionMatrix.getValue(inKey);
     const bool usesPointsTopology = defaultMaterialShaderKeyProperties.m_usesPointsTopology.getValue(inKey);
     const bool usesFloatJointIndices = defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.getValue(inKey);
+    const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
     usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
 
     vertexShader.addIncoming("attr_pos", "vec3");
@@ -164,6 +165,13 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addIncoming("qt_instanceTransform2", "vec4");
         vertexShader.addIncoming("qt_instanceColor", "vec4");
         vertexShader.addIncoming("qt_instanceData", "vec4");
+    }
+    if (blendParticles) {
+        vertexShader.addInclude("particles.glsllib");
+        vertexShader.addUniform("qt_particleTexture", "sampler2D");
+        vertexShader.addUniform("qt_countPerSlice", "uint");
+        vertexShader.addUniform("qt_oneOverParticleImageSize", "vec2");
+        vertexShader.addUniform("qt_particleMatrix", "mat4");
     }
 
     if (m_hasSkinning && meshHasJointsAndWeights) {
@@ -310,6 +318,9 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         if (m_hasSkinning) {
             vertexShader.append("    if (qt_vertWeights != vec4(0.0))");
             vertexShader.append("        qt_vertPosition = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * qt_vertPosition;");
+        }
+        if (blendParticles) {
+            vertexShader.append("    qt_vertPosition.xyz = qt_applyParticle(qt_vertPosition.xyz, qt_vertNormal, qt_vertColor, qt_vertNormal, qt_vertColor, qt_particleMatrix);");
         }
 
         if (!hasCustomShadedMain || !overridesPosition) {

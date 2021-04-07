@@ -93,6 +93,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         TextureData, // Resource
         MorphTarget, // Resource
         ModelInstance, // Resource
+        ModelBlendParticle, // Resource
         // Materials
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource

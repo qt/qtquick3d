@@ -54,6 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderDefaultMaterial;
+struct QSSGParticleBuffer;
 class QSSGBufferManager;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
@@ -73,6 +74,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QSSGRenderInstanceTable *instanceTable = nullptr;
     int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }
     bool instancing() const { return instanceTable;}
+
+    QSSGParticleBuffer *particleBuffer = nullptr;
+    QMatrix4x4 particleMatrix;
 
     QVector<float> morphWeights;
     QVector<quint32> morphAttributes;

@@ -331,8 +331,10 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // same scene!), this is suitable as a key to get the uniform
             // buffers that were used with the rendering of the same model in
             // the previous frame.
+            QSSGRhiShaderResourceBindingList bindings;
             const void *layerNode = &inData.layer;
             const void *modelNode = &subsetRenderable.modelContext.model;
+            const bool blendParticles = subsetRenderable.generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
             QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, modelNode,
                                                             &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
@@ -340,7 +342,12 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
+            if (blendParticles)
+                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+            if (blendParticles)
+                QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
 
             ps->samples = samples;
 
@@ -351,7 +358,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraDirection);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
-            QSSGRhiShaderResourceBindingList bindings;
+
             bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
 
             if (shaderPipeline->isLightingEnabled()) {

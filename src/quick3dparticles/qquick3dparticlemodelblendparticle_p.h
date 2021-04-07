@@ -1,0 +1,166 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef QQUICK3DMODELBLENDPARTICLE_H
+#define QQUICK3DMODELBLENDPARTICLE_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QColor>
+#include <QVector4D>
+
+#include <QtQuick3DParticles/private/qquick3dparticle_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
+#include <QtQuick3D/private/qquick3dmodel_p.h>
+#include <QtQuick3D/private/qquick3dgeometry_p.h>
+
+QT_BEGIN_NAMESPACE
+
+struct QSSGParticleBuffer;
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelBlendParticle : public QQuick3DParticle
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QQuick3DNode *endNode READ endNode WRITE setEndNode NOTIFY endNodeChanged)
+    Q_PROPERTY(ModelBlendMode modelBlendMode READ modelBlendMode WRITE setModelBlendMode NOTIFY modelBlendModeChanged)
+    Q_PROPERTY(int endTime READ endTime WRITE setEndTime NOTIFY endTimeChanged)
+    QML_NAMED_ELEMENT(ModelBlendParticle3D)
+    QML_ADDED_IN_VERSION(6, 2)
+
+public:
+    QQuick3DParticleModelBlendParticle(QQuick3DNode *parent = nullptr);
+    ~QQuick3DParticleModelBlendParticle() override;
+
+    enum ModelBlendMode
+    {
+        Explode,
+        Construct,
+        Transfer
+    };
+    Q_ENUM(ModelBlendMode)
+
+    QQmlComponent *delegate() const;
+    QQuick3DNode *endNode() const;
+    ModelBlendMode modelBlendMode() const;
+    int endTime() const;
+
+public Q_SLOTS:
+    void setDelegate(QQmlComponent *setDelegate);
+    void setEndNode(QQuick3DNode *endNode);
+    void setEndTime(int endTime);
+    void setModelBlendMode(ModelBlendMode mode);
+
+Q_SIGNALS:
+    void delegateChanged();
+    void blendFactorChanged();
+    void endNodeChanged();
+    void modelBlendModeChanged();
+    void endTimeChanged();
+
+protected:
+    void itemChange(ItemChange, const ItemChangeData &) override;
+    void reset() override;
+    bool lastParticle() const;
+    void doSetMaxAmount(int amount) override;
+    void componentComplete() override;
+    int nextCurrentIndex(const QQuick3DParticleEmitter *emitter) override;
+    void setParticleData(int particleIndex,
+                         const QVector3D &position,
+                         const QVector3D &rotation,
+                         const QVector4D &color,
+                         float size, float age);
+    QVector3D particleCenter(int particleIndex) const;
+    QVector3D particleEndPosition(int particleIndex) const;
+    QVector3D particleEndRotation(int particleIndex) const;
+    void commitParticles()
+    {
+        markAllDirty();
+        update();
+    }
+
+private:
+    friend class QQuick3DParticleSystem;
+    friend class QQuick3DParticleEmitter;
+
+    struct TriangleParticleData
+    {
+        QVector3D position;
+        QVector3D rotation;
+        QVector3D center;
+        QVector4D color;
+        float age = 0.0f;
+        float size = 1.0f;
+        int emitterIndex = -1;
+    };
+
+    struct PerEmitterData
+    {
+        int particleCount = 0;
+        int emitterIndex = -1;
+        const QQuick3DParticleEmitter *emitter = nullptr;
+    };
+
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    void updateParticleBuffer(QSSGParticleBuffer *buffer);
+    void regenerate();
+    void updateParticles();
+    PerEmitterData &perEmitterData(int emitterIndex);
+
+    QVector<TriangleParticleData> m_triangleParticleData;
+    QVector<QVector3D> m_centerData;
+    QHash<QByteArray, QMetaObject::Connection> m_connections;
+    QMap<const QQuick3DParticleEmitter *, PerEmitterData> m_perEmitterData;
+    PerEmitterData n_noPerEmitterData;
+    int m_nextEmitterIndex = 0;
+    bool m_bufferUpdated = false;
+    QQmlComponent *m_delegate = nullptr;
+    QQuick3DModel *m_model = nullptr;
+    QQuick3DGeometry *m_modelGeometry = nullptr;
+    QQuick3DNode *m_endNode = nullptr;
+    QVector3D m_endNodePosition;
+    QVector3D m_endNodeRotation;
+    QVector3D m_endNodeScale;
+    int m_particleCount = 0;
+    ModelBlendMode m_modelBlendMode = Explode;
+    int m_endTime = 0;
+};
+
+QT_END_NAMESPACE
+
+#endif

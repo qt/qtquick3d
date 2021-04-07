@@ -28,6 +28,7 @@ qt_internal_add_module(Quick3DParticles
         qquick3dparticleutils.cpp qquick3dparticleutils_p.h
         qquick3dparticleforeign_p.h
         qquick3dparticlespritesequence.cpp qquick3dparticlespritesequence_p.h
+        qquick3dparticlemodelblendparticle_p.h qquick3dparticlemodelblendparticle.cpp
     DEFINES
         QT_BUILD_QUICK3DPARTICLES_LIB
     LIBRARIES
@@ -35,6 +36,7 @@ qt_internal_add_module(Quick3DParticles
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::Quick3DRuntimeRenderPrivate
+        Qt::Quick3DAssetImportPrivate
         Qt::QuickPrivate
         Qt::Quick3DPrivate
     PUBLIC_LIBRARIES
@@ -43,12 +45,14 @@ qt_internal_add_module(Quick3DParticles
         Qt::Qml
         Qt::Quick
         Qt::Quick3DRuntimeRender
+        Qt::Quick3DAssetImport
         Qt::Quick3D
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::Quick3DRuntimeRenderPrivate
+        Qt::Quick3DAssetImportPrivate
         Qt::QuickPrivate
         Qt::Quick3DPrivate
 )

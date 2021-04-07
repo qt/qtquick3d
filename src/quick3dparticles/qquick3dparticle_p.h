@@ -150,8 +150,10 @@ Q_SIGNALS:
 protected:
     // From QQmlParserStatus
     void componentComplete() override;
+    QQuick3DParticle(QQuick3DObjectPrivate &dd, QQuick3DNode *parent = nullptr);
 
     virtual void reset();
+    virtual void doSetMaxAmount(int amount);
 
     void updateBurstIndex(int amount);
     // This will return the next available index

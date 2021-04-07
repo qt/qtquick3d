@@ -155,6 +155,7 @@ public:
     void commitBufferResourceUpdates();
 
     static bool registerMeshData(const QSSGRenderPath &renderPath, const QSSGMesh::Mesh &meshData);
+    static QString primitivePath(const QString &primitive);
 
 private:
     bool createRhiTexture(QSSGRenderImageTexture &texture,

@@ -63,6 +63,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DParticleSpriteParticle;
 class QQuick3DParticleModelParticle;
+class QQuick3DParticleModelBlendParticle;
 class QQuick3DParticleEmitter;
 class QQuick3DParticleTrailEmitter;
 class QQuick3DParticleAffector;
@@ -120,6 +121,8 @@ public:
         int amount = 0;
     };
 
+    Q_INVOKABLE void reset();
+
 public Q_SLOTS:
     void setRunning(bool running);
     void setPaused(bool paused);
@@ -145,7 +148,6 @@ protected:
 private:
     void registerParticleModel(QQuick3DParticleModelParticle* m);
     void registerParticleSprite(QQuick3DParticleSpriteParticle* m);
-    void reset();
     void updateLoggingData();
     void resetLoggingVariables();
     void doSeedRandomization();
@@ -153,6 +155,7 @@ private:
     void markDirty();
     void processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS);
     void processSpriteParticle(QQuick3DParticleSpriteParticle *spriteParticle, const QVector<TrailEmits> &trailEmits, float timeS);
+    void processModelBlendParticle(QQuick3DParticleModelBlendParticle *particle, const QVector<TrailEmits> &trailEmits, float timeS);
     void processParticleCommon(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticleData *d, float particleTimeS);
     void processParticleFadeInOut(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, float particleTimeS, float particleTimeLeftS);
     void processParticleAlignment(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, const QQuick3DParticleData *d);

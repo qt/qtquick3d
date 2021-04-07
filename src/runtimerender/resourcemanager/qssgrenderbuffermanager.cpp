@@ -886,25 +886,31 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     return true;
 }
 
-QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
+QString QSSGBufferManager::primitivePath(const QString &primitive)
 {
-    QByteArray theName = inRelativePath.toUtf8();
+    QByteArray theName = primitive.toUtf8();
     for (size_t idx = 0; idx < nPrimitives; ++idx) {
         if (primitives[idx].primitive == theName) {
             QString pathBuilder = QString::fromLatin1(primitivesDirectory);
             pathBuilder += QLatin1String(primitives[idx].file);
-            const quint32 id = 1;
-            QSharedPointer<QIODevice> device(QSSGInputUtil::getStreamForFile(pathBuilder));
-            if (device) {
-                QSSGMesh::Mesh mesh = QSSGMesh::Mesh::loadMesh(device.data(), id);
-                if (mesh.isValid())
-                    return mesh;
-            }
-
-            qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(pathBuilder));
-            return QSSGMesh::Mesh();
+            return pathBuilder;
         }
     }
+    return {};
+}
+
+QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
+{
+    QString path = primitivePath(inRelativePath);
+    const quint32 id = 1;
+    QSharedPointer<QIODevice> device(QSSGInputUtil::getStreamForFile(path));
+    if (device) {
+        QSSGMesh::Mesh mesh = QSSGMesh::Mesh::loadMesh(device.data(), id);
+        if (mesh.isValid())
+            return mesh;
+    }
+
+    qCCritical(INTERNAL_ERROR, "Unable to find mesh primitive %s", qPrintable(path));
     return QSSGMesh::Mesh();
 }
 

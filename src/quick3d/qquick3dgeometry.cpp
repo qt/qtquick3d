@@ -30,8 +30,6 @@
 #include "qquick3dgeometry_p.h"
 #include "qquick3dscenemanager_p.h"
 
-#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
-
 /*!
     \qmltype Geometry
     \inherits Object3D
@@ -696,6 +694,49 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
     }
 
     return node;
+}
+
+QQuick3DGeometry::Attribute::Semantic QQuick3DGeometryPrivate::semanticFromName(const QByteArray &name)
+{
+    static QMap<const QByteArray, QQuick3DGeometry::Attribute::Semantic> semanticMap;
+    if (semanticMap.isEmpty()) {
+        semanticMap[QSSGMesh::MeshInternal::getPositionAttrName()] = QQuick3DGeometry::Attribute::PositionSemantic;
+        semanticMap[QSSGMesh::MeshInternal::getNormalAttrName()] = QQuick3DGeometry::Attribute::NormalSemantic;
+        semanticMap[QSSGMesh::MeshInternal::getUV0AttrName()] = QQuick3DGeometry::Attribute::TexCoord0Semantic;
+        semanticMap[QSSGMesh::MeshInternal::getUV1AttrName()] = QQuick3DGeometry::Attribute::TexCoord1Semantic;
+        semanticMap[QSSGMesh::MeshInternal::getTexTanAttrName()] = QQuick3DGeometry::Attribute::TangentSemantic;
+        semanticMap[QSSGMesh::MeshInternal::getTexBinormalAttrName()] = QQuick3DGeometry::Attribute::BinormalSemantic;
+        semanticMap[QSSGMesh::MeshInternal::getColorAttrName()] = QQuick3DGeometry::Attribute::ColorSemantic;
+        semanticMap[QSSGMesh::MeshInternal::getWeightAttrName()] = QQuick3DGeometry::Attribute::WeightSemantic;
+        semanticMap[QSSGMesh::MeshInternal::getJointAttrName()] = QQuick3DGeometry::Attribute::JointSemantic;
+    }
+    return semanticMap[name];
+}
+
+QQuick3DGeometry::Attribute::ComponentType QQuick3DGeometryPrivate::toComponentType(QSSGMesh::Mesh::ComponentType ctype)
+{
+    switch (ctype) {
+    case QSSGMesh::Mesh::ComponentType::Float32:
+        return QQuick3DGeometry::Attribute::F32Type;
+    case QSSGMesh::Mesh::ComponentType::Int32:
+        return QQuick3DGeometry::Attribute::I32Type;
+    case QSSGMesh::Mesh::ComponentType::UnsignedInt16:
+        return QQuick3DGeometry::Attribute::U16Type;
+    case QSSGMesh::Mesh::ComponentType::UnsignedInt32:
+        return QQuick3DGeometry::Attribute::U32Type;
+
+    case QSSGMesh::Mesh::ComponentType::Float16:
+    case QSSGMesh::Mesh::ComponentType::Float64:
+    case QSSGMesh::Mesh::ComponentType::UnsignedInt8:
+    case QSSGMesh::Mesh::ComponentType::Int8:
+    case QSSGMesh::Mesh::ComponentType::Int16:
+    case QSSGMesh::Mesh::ComponentType::UnsignedInt64:
+    case QSSGMesh::Mesh::ComponentType::Int64:
+    default:
+        Q_ASSERT_X(0, "Incorrect datatype", "QQuick3DGeometryPrivate::toComponentType");
+        break;
+    }
+    return QQuick3DGeometry::Attribute::F32Type;
 }
 
 QT_END_NAMESPACE

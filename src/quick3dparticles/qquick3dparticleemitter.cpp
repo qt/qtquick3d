@@ -33,6 +33,7 @@
 #include "qquick3dparticleshape_p.h"
 #include "qquick3dparticleutils_p.h"
 #include "qquick3dparticlespritesequence_p.h"
+#include "qquick3dparticlemodelblendparticle_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -664,11 +665,16 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         return;
     auto rand = m_system->rand();
 
+    QQuick3DParticleModelBlendParticle *mbp = qobject_cast<QQuick3DParticleModelBlendParticle *>(particle);
+    if (mbp && mbp->lastParticle())
+        return;
+
     int particleDataIndex = particle->nextCurrentIndex(this);
     auto d = &particle->m_particleData[particleDataIndex];
     int particleIdIndex = m_system->m_particleIdIndex++;
     if (m_system->m_particleIdIndex == INT_MAX)
         m_system->m_particleIdIndex = 0;
+
     *d = m_clearData; // Reset the data as it might be reused
     d->index = particleIdIndex;
     d->startTime = startTime;
@@ -688,14 +694,16 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     d->endSize = std::max(0.0f, float(endScale + sEndVar));
 
     // Emiting area/shape
-    if (m_shape) {
-        d->startPosition = centerPos + m_shape->randomPosition(particleIdIndex);
+    if (mbp && mbp->modelBlendMode() != QQuick3DParticleModelBlendParticle::Construct) {
+        // We emit from model position unless in construct mode
+        d->startPosition = mbp->particleCenter(particleDataIndex);
     } else {
         // When shape is not set, default to node center point.
-        d->startPosition = centerPos;
+        QVector3D pos = centerPos;
+        if (m_shape)
+            pos += m_shape->randomPosition(particleIdIndex);
+        d->startPosition = transform * pos;
     }
-
-    d->startPosition = transform * d->startPosition;
 
     // Velocity
     if (m_velocity) {

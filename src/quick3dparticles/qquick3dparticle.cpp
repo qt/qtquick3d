@@ -54,6 +54,12 @@ QQuick3DParticle::QQuick3DParticle(QQuick3DObject *parent)
 {
 }
 
+QQuick3DParticle::QQuick3DParticle(QQuick3DObjectPrivate &dd, QQuick3DNode *parent)
+    : QQuick3DObject(dd, parent)
+{
+
+}
+
 QQuick3DParticle::~QQuick3DParticle()
 {
     if (m_system)
@@ -102,7 +108,12 @@ void QQuick3DParticle::setMaxAmount(int maxAmount)
     if (m_maxAmount == maxAmount)
         return;
 
-    m_maxAmount = maxAmount;
+    doSetMaxAmount(maxAmount);
+}
+
+void QQuick3DParticle::doSetMaxAmount(int amount)
+{
+    m_maxAmount = amount;
     Q_EMIT maxAmountChanged();
 }
 

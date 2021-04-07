@@ -93,6 +93,10 @@ Item {
             name: "Sorting"
             file: "Sorting.qml"
         }
+        ListElement {
+            name: "Model-Blend Particles"
+            file: "ModelBlendParticles.qml"
+        }
     }
 
     ListModel {

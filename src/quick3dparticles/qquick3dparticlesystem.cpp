@@ -36,6 +36,7 @@
 #include <private/qqmldelegatemodel_p.h>
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticlespriteparticle_p.h"
+#include "qquick3dparticlemodelblendparticle_p.h"
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
@@ -260,6 +261,26 @@ QQuick3DParticleSystemLogging *QQuick3DParticleSystem::loggingData() const
     return m_loggingData;
 }
 
+/*!
+    \qmlmethod  ParticleSystem3D::reset()
+
+    This method resets the internal state of the particle system to it's initial state.
+    This can be used when \l running property is \c false to reset the system.
+    The \l running is \c true this method does not need to be called as the system is managing
+    the internal state, but when it is \c false the system needs to be told when the system should
+    be reset.
+*/
+void QQuick3DParticleSystem::reset()
+{
+    for (auto emitter : qAsConst(m_emitters))
+        emitter->reset();
+    for (auto emitter : qAsConst(m_trailEmitters))
+        emitter->reset();
+    for (auto particle : qAsConst(m_particles))
+        particle->reset();
+    m_particleIdIndex = 0;
+}
+
 void QQuick3DParticleSystem::setRunning(bool running)
 {
     if (m_running != running) {
@@ -267,15 +288,8 @@ void QQuick3DParticleSystem::setRunning(bool running)
         Q_EMIT runningChanged();
         setPaused(false);
 
-        if (m_running) {
-            for (auto emitter : qAsConst(m_emitters))
-                emitter->reset();
-            for (auto emitter : qAsConst(m_trailEmitters))
-                emitter->reset();
-            for (auto particle : qAsConst(m_particles))
-                particle->reset();
-            m_particleIdIndex = 0;
-        }
+        if (m_running)
+            reset();
 
         if (m_componentComplete && !m_running && m_useRandomSeed)
             doSeedRandomization();
@@ -371,14 +385,6 @@ void QQuick3DParticleSystem::componentComplete()
     else
         m_rand.init(m_seed);
 
-    reset(); //restarts animation as well
-}
-
-void QQuick3DParticleSystem::reset()
-{
-    if (!m_componentComplete)
-        return;
-
     m_time = 0;
     Q_EMIT timeChanged();
 
@@ -428,6 +434,7 @@ void QQuick3DParticleSystem::registerParticle(QQuick3DParticle *particle)
         registerParticleSprite(sprite);
         return;
     }
+    m_particles << particle;
 }
 
 void QQuick3DParticleSystem::registerParticleModel(QQuick3DParticleModelParticle *m)
@@ -452,6 +459,8 @@ void QQuick3DParticleSystem::unRegisterParticle(QQuick3DParticle *particle)
         m_particles.removeAll(particle);
         return;
     }
+
+    m_particles.removeAll(particle);
 }
 
 void QQuick3DParticleSystem::registerParticleEmitter(QQuick3DParticleEmitter *e)
@@ -541,6 +550,11 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
             processModelParticle(modelParticle, trailEmits, timeS);
             continue;
         }
+        QQuick3DParticleModelBlendParticle *mbp = qobject_cast<QQuick3DParticleModelBlendParticle *>(particle);
+        if (mbp) {
+            processModelBlendParticle(mbp, trailEmits, timeS);
+            continue;
+        }
     }
 
     // Clear bursts from trailemitters
@@ -602,6 +616,92 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
         modelParticle->addInstance(currentData.position, currentData.scale, currentData.rotation, color, timeChange);
     }
     modelParticle->commitInstance();
+}
+
+static QVector3D mix(const QVector3D &a, const QVector3D &b, float f)
+{
+    return (b - a) * f + a;
+}
+
+void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlendParticle *particle, const QVector<TrailEmits> &trailEmits, float timeS)
+{
+    const int c = particle->maxAmount();
+
+    for (int i = 0; i < c; i++) {
+        const auto d = &particle->m_particleData.at(i);
+
+        const float particleTimeEnd = d->startTime + d->lifetime;
+
+        if (timeS < d->startTime || timeS > particleTimeEnd) {
+            // Particle not alive currently
+            float age = 0.0f;
+            float size = 0.0f;
+            QVector3D pos;
+            QVector3D rot;
+            if (d->startTime > 0.0f && timeS > particleTimeEnd
+                    && (particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Construct ||
+                        particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Transfer)) {
+                age = 1.0f;
+                size = 1.0f;
+                pos = particle->particleEndPosition(i);
+                rot = particle->particleEndRotation(i);
+            } else if (particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Explode ||
+                       particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Transfer) {
+                age = 0.0f;
+                size = 1.0f;
+                pos = particle->particleCenter(i);
+            }
+            particle->setParticleData(i, pos, rot, {}, size, age);
+            continue;
+        }
+
+        const float particleTimeS = timeS - d->startTime;
+        QQuick3DParticleDataCurrent currentData;
+
+        // Process features shared for both model & sprite particles
+        processParticleCommon(currentData, d, particleTimeS);
+
+        // 0.0 -> 1.0 during the particle lifetime
+        const float timeChange = std::max(0.0f, std::min(1.0f, particleTimeS / d->lifetime));
+
+        // Scale from initial to endScale
+        const float scale = d->endSize * timeChange + d->startSize * (1.0f - timeChange);
+        currentData.scale = QVector3D(scale, scale, scale);
+
+        // Fade in & out
+        const float particleTimeLeftS = d->lifetime - particleTimeS;
+        processParticleFadeInOut(currentData, particle, particleTimeS, particleTimeLeftS);
+
+        // Affectors
+        for (auto affector : qAsConst(m_affectors)) {
+            // If affector is set to affect only particular particles, check these are included
+            if (affector->m_enabled && (affector->m_particles.isEmpty() || affector->m_particles.contains(particle)))
+                affector->affectParticle(*d, &currentData, particleTimeS);
+        }
+
+        // Emit new particles from trails
+        for (auto trailEmit : qAsConst(trailEmits))
+            trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+
+        // Set current particle properties
+        const QVector4D color(float(currentData.color.r) / 255.0f,
+                              float(currentData.color.g) / 255.0f,
+                              float(currentData.color.b) / 255.0f,
+                              float(currentData.color.a) / 255.0f);
+        float endTimeS = particle->endTime() * 0.001f;
+        if ((particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Construct ||
+             particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Transfer)
+                && particleTimeLeftS < endTimeS) {
+            QVector3D endPosition = particle->particleEndPosition(i);
+            QVector3D endRotation = particle->particleEndRotation(i);
+            float factor = 1.0f - particleTimeLeftS / endTimeS;
+            currentData.position = mix(currentData.position, endPosition, factor);
+            currentData.rotation = mix(currentData.rotation, endRotation, factor);
+        }
+        particle->setParticleData(i, currentData.position, currentData.rotation,
+                                  color, currentData.scale.x(), timeChange);
+    }
+    particle->commitParticles();
 }
 
 void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticle *spriteParticle, const QVector<TrailEmits> &trailEmits, float timeS)
