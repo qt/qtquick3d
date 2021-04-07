@@ -1011,6 +1011,10 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
     auto mainDA = QQuickItemPrivate::get(window()->contentItem())->deliveryAgent();
 
 //    ViewportTransformHelper::removeAll();
+    QVarLengthArray<QPointF, 16> originalScenePositions;
+    originalScenePositions.resize(event->pointCount());
+    for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex)
+        originalScenePositions[pointIndex] = event->point(pointIndex).scenePosition();
     for (auto subscene : visitedSubscenes) {
         QQuickItem *subsceneRoot = subscene.first;
         auto &subsceneInfo = subscene.second;
@@ -1056,6 +1060,10 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
             qCDebug(lcPick) << subsceneRoot << "didn't want" << event;
         }
         event->setAccepted(false); // reject implicit grab and let it keep propagating
+    }
+    if (!visitedSubscenes.isEmpty()) {
+        for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex)
+            QMutableEventPoint::from(event->point(pointIndex)).setScenePosition(originalScenePositions.at(pointIndex));
     }
 
     if (visitedSubscenes.isEmpty())
