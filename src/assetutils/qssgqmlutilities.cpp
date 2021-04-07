@@ -592,6 +592,7 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
                                                    + QByteArray::number(quat.z()) + ')';
         }
         case QMetaType::QUrl:
+            return QString(QLatin1String("\"%1\"")).arg(asString(value));
         case QMetaType::Float:
         case QMetaType::Double:
         case QMetaType::Int:
