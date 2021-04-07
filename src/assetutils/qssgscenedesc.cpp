@@ -59,6 +59,7 @@ void QSSGSceneDesc::Scene::reset()
 {
     root = nullptr;
     resources.clear();
+    meshStorage.clear();
     allocator.reset();
 }
 

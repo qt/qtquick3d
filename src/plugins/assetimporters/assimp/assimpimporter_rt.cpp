@@ -639,24 +639,26 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     AssimpUtils::MeshList meshes;
     QVector<const aiMaterial *> materials;
 
-    quintptr id = (quintptr)&target; // TODO: Not a viabal long term solution...
-
     using It = decltype (source.mNumMeshes);
     for (It i = 0, end = source.mNumMeshes; i != end; ++i) {
         const aiMesh &mesh = *srcScene.mMeshes[source.mMeshes[i]];
         meshes.push_back(&mesh);
-        id ^= (quintptr)&mesh;
         aiMaterial *material = srcScene.mMaterials[mesh.mMaterialIndex];
         materials.push_back(material);
     }
 
     QString errorString;
     {
-        // TODO: There's a bug here when the lightmap generation is enabled...
-        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, {}, false, false, errorString);
-        const auto meshNode = targetScene->create<QSSGSceneDesc::Mesh>(meshData, id);
-        QSSGSceneDesc::addNode(target, *meshNode); // TODO: The mesh node needs to be identified as a resource...
-        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QUrl(u'?' + QString::number(id)));
+        const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(QString::fromUtf8(source.mName.C_Str()));
+        {
+            // TODO: There's a bug here when the lightmap generation is enabled...
+            auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, {}, false, false, errorString);
+            targetScene->meshStorage.push_back(qMakePair(meshSourceName, std::move(meshData)));
+        }
+        const auto idx = targetScene->meshStorage.size() - 1;
+        const auto meshNode = targetScene->create<QSSGSceneDesc::Mesh>(idx);
+        QSSGSceneDesc::addNode(target, *meshNode);
+        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QUrl(meshSourceName));
     }
 
     // materials
@@ -948,8 +950,16 @@ static void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent,
         break;
     case Node::Type::Mesh:
     {
-        const auto &mesh = static_cast<const Mesh &>(node);
-        QSSGBufferManager::registerMeshData(QSSGRenderPath(u'?' + QString::number(mesh.id)), mesh.meshData);
+        // There's no runtime object for this type, but we need to register the mesh with the
+        // buffer manager.
+        if (Q_LIKELY(node.scene)) {
+            const auto &scene = *node.scene;
+            auto &meshNode = static_cast<const Mesh &>(node);
+            const auto &meshData = scene.meshStorage.at(meshNode.idx);
+            const auto &name = meshData.first;
+            const auto &mesh = meshData.second;
+            QSSGBufferManager::registerMeshData(QSSGRenderPath(name), mesh);
+        }
     }
         break;
     }

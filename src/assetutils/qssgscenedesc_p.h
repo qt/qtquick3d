@@ -84,15 +84,19 @@ namespace QSSGSceneDesc
 
 struct Node;
 
+using MeshData = QPair<QString, QSSGMesh::Mesh>;
+
 struct Scene
 {
     using ResourceNodes = QVarLengthArray<Node *>;
+    using MeshStorage = QVector<MeshData>;
     using Allocator = QSSGPerFrameAllocator;
 
     // Root node, usually an empty 'transform' node.
     Node *root = nullptr;
     ResourceNodes resources;
     Allocator allocator;
+    MeshStorage meshStorage;
 
     template<typename T, typename... Args>
     Q_REQUIRED_RESULT inline T *create(const Args&... args)
@@ -183,13 +187,11 @@ struct Material : Node
 
 struct Mesh : Node
 {
-    explicit Mesh(QSSGMesh::Mesh mesh, quintptr ident)
+    explicit Mesh(qsizetype index)
         : Node(Node::Type::Mesh, RuntimeType::Node)
-        , meshData(std::move(mesh))
-        , id(ident)
+        , idx(index)
     {}
-    QSSGMesh::Mesh meshData;
-    quintptr id;
+    qsizetype idx; // idx to the mesh data in the mesh data storaget (see Scene).
 };
 
 struct Model : Node

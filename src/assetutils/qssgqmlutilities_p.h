@@ -54,6 +54,12 @@ namespace QSSGSceneDesc {
 struct Scene;
 }
 
+namespace QSSGMesh {
+class Mesh;
+}
+
+class QDir;
+
 namespace QSSGQmlUtilities {
 
 class PropertyMap
@@ -100,7 +106,9 @@ QString Q_QUICK3DASSETUTILS_EXPORT stripParentDirectory(const QString &filePath)
 
 void Q_QUICK3DASSETUTILS_EXPORT writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value);
 
-void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream);
+void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir);
+
+Q_REQUIRED_RESULT QString Q_QUICK3DASSETUTILS_EXPORT getMeshSourceName(const QString &name);
 
 }
 

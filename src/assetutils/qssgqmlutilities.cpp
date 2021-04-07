@@ -36,6 +36,12 @@
 #include <QQuaternion>
 #include <QDebug>
 #include <QRegularExpression>
+#include <QtCore/qdir.h>
+#include <QtCore/qfile.h>
+
+#include <QtQuick3DUtils/private/qssgmesh_p.h>
+
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -448,6 +454,7 @@ struct OutputContext
 {
     enum Type : quint8 { Header, RootNode, NodeTree, Resource };
     QTextStream &stream;
+    QDir outdir;
     quint8 indent = 0;
     Type type = NodeTree;
     quint16 scopeDepth = 0;
@@ -899,11 +906,58 @@ static void writeQml(const QSSGSceneDesc::Joint &joint, OutputContext &output)
     writeNodeProperties(joint, output);
 }
 
+static inline QString getMeshFolder() { return QStringLiteral("meshes/"); }
+static inline QString getMeshExtension() { return QStringLiteral(".mesh"); }
+
+QString getMeshSourceName(const QString &name)
+{
+    const auto meshFolder = getMeshFolder();
+    const auto extension = getMeshExtension();
+
+    const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
+    return QString(meshFolder + sanitizedName +  extension);
+}
+
+static QString outputMeshAsset(const QString &meshSourceName, const QSSGMesh::Mesh &mesh, const QDir &outdir)
+{
+    const auto meshFolder = getMeshFolder();
+
+    // If a mesh folder does not exist, then create one
+    if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder))
+        return QString(); // Error out
+
+    QFile file(outdir.path() + QDir::separator() + meshSourceName);
+    if (!file.open(QIODevice::WriteOnly))
+        return QString();
+
+    if (mesh.save(&file) == 0)
+        return QString();
+
+    return meshSourceName;
+}
+
+static void writeQml(const QSSGSceneDesc::Mesh &mesh, OutputContext &output)
+{
+    using namespace QSSGSceneDesc;
+    Q_ASSERT(mesh.nodeType == Node::Type::Mesh);
+    Q_ASSERT(mesh.scene);
+
+    const auto &scene = *mesh.scene;
+
+    Q_ASSERT(scene.meshStorage.size() > mesh.idx);
+
+    const auto &meshData = scene.meshStorage.at(mesh.idx);
+    const auto &name = meshData.first;
+    const auto &meshAsset = meshData.second;
+    const auto &outdir = output.outdir;
+    outputMeshAsset(name, meshAsset, outdir);
+}
+
 static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
 
-    const bool processNode = !node.properties.isEmpty();
+    const bool processNode = !node.properties.isEmpty() || (output.type == OutputContext::Resource);
     if (processNode) {
         QSSGQmlScopedIndent scopedIndent(output);
         switch (node.nodeType) {
@@ -937,7 +991,7 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
             writeQml(static_cast<const Material &>(node), output);
             break;
         case Node::Type::Mesh:
-            // TODO:
+            writeQml(static_cast<const Mesh &>(node), output);
             break;
         }
     }
@@ -976,11 +1030,11 @@ void writeQmlForResources(const QSSGSceneDesc::Scene::ResourceNodes &resources, 
     }
 }
 
-void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream)
+void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir)
 {
     auto root = scene.root;
     Q_ASSERT(root);
-    OutputContext output { stream, 0, OutputContext::Header };
+    OutputContext output { stream, outdir, 0, OutputContext::Header };
     writeImportHeader(output);
     output.type = OutputContext::RootNode;
     writeQml(*root, output); // Block scope will be left open!
