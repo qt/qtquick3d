@@ -628,9 +628,6 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 QString QQuick3DModel::translateSource()
 {
     QString fragment;
-    // TODO:
-    if (m_source.toString().startsWith(u'?'))
-        return m_source.toString();
     if (m_source.hasFragment()) {
         // Check if this is an index, or primitive
         bool isNumber = false;
@@ -642,7 +639,9 @@ QString QQuick3DModel::translateSource()
     }
 
     const QQmlContext *context = qmlContext(this);
-    return QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source) + fragment;
+    const auto resolvedUrl = context ? context->resolvedUrl(m_source) : m_source;
+    const auto qmlSource = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
+    return (qmlSource.isEmpty() ? m_source.toString() : qmlSource) + fragment;
 }
 
 void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)
