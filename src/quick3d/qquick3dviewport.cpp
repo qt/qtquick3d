@@ -1130,13 +1130,12 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
         }
         event->setAccepted(false); // reject implicit grab and let it keep propagating
     }
-    if (!visitedSubscenes.isEmpty()) {
+    if (visitedSubscenes.isEmpty()) {
+        event->setAccepted(false);
+    } else {
         for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex)
             QMutableEventPoint::from(event->point(pointIndex)).setScenePosition(originalScenePositions.at(pointIndex));
     }
-
-    if (visitedSubscenes.isEmpty())
-        event->setAccepted(false);
     return ret;
 }
 
