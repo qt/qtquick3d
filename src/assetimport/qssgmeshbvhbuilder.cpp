@@ -81,6 +81,10 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
     m_hasIndexBuffer = hasIndexBuffer;
     m_indexBufferData = indexBuffer;
     m_indexBufferComponentType = indexBufferType;
+    if (m_indexBufferComponentType == QSSGRenderComponentType::Integer16)
+        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger16;
+    else if (m_indexBufferComponentType == QSSGRenderComponentType::Integer32)
+        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger32;
 }
 
 QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
