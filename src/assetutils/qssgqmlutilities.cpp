@@ -450,6 +450,7 @@ struct OutputContext
     QTextStream &stream;
     quint8 indent = 0;
     Type type = NodeTree;
+    quint16 scopeDepth = 0;
 };
 
 template<QSSGSceneDesc::Material::RuntimeType T>
@@ -535,6 +536,18 @@ static QTextStream &indent(OutputContext &output)
     for (quint8 i = 0; i < output.indent; i += QSSGQmlScopedIndent::QSSG_INDENT)
         output.stream << indent();
     return output.stream;
+}
+
+static const char *blockBegin(OutputContext &output)
+{
+    ++output.scopeDepth;
+    return blockBegin();
+}
+
+static const char *blockEnd(OutputContext &output)
+{
+    output.scopeDepth = qMax(0, output.scopeDepth - 1);
+    return blockEnd();
 }
 
 static void writeImportHeader(OutputContext &output)
@@ -731,7 +744,7 @@ static void writeQml(const QSSGSceneDesc::Node &transform, OutputContext &output
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(transform.nodeType == QSSGSceneDesc::Node::Type::Transform && transform.runtimeType == QSSGSceneDesc::Node::RuntimeType::Node);
-    indent(output) << qmlElementName<QSSGSceneDesc::Node::RuntimeType::Node>() << blockBegin();
+    indent(output) << qmlElementName<QSSGSceneDesc::Node::RuntimeType::Node>() << blockBegin(output);
     writeNodeProperties(transform, output);
 }
 
@@ -740,9 +753,9 @@ static void writeQml(const QSSGSceneDesc::Material &material, OutputContext &out
     using namespace QSSGSceneDesc;
     Q_ASSERT(material.nodeType == QSSGSceneDesc::Model::Type::Material);
     if (material.runtimeType == QSSGSceneDesc::Model::RuntimeType::DefaultMaterial) {
-        indent(output) << qmlElementName<Material::RuntimeType::DefaultMaterial>() << blockBegin();
+        indent(output) << qmlElementName<Material::RuntimeType::DefaultMaterial>() << blockBegin(output);
     } else if (material.runtimeType == Model::RuntimeType::PrincipledMaterial) {
-        indent(output) << qmlElementName<Material::RuntimeType::PrincipledMaterial>() << blockBegin();
+        indent(output) << qmlElementName<Material::RuntimeType::PrincipledMaterial>() << blockBegin(output);
     } else {
         Q_UNREACHABLE();
     }
@@ -754,7 +767,7 @@ static void writeQml(const QSSGSceneDesc::Model &model, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(model.nodeType == Node::Type::Model);
-    indent(output) << qmlElementName<QSSGSceneDesc::Node::RuntimeType::Model>() << blockBegin();
+    indent(output) << qmlElementName<QSSGSceneDesc::Node::RuntimeType::Model>() << blockBegin(output);
     writeNodeProperties(model, output);
 }
 
@@ -763,9 +776,9 @@ static void writeQml(const QSSGSceneDesc::Camera &camera, OutputContext &output)
     using namespace QSSGSceneDesc;
     Q_ASSERT(camera.nodeType == Node::Type::Camera);
     if (camera.runtimeType == Camera::RuntimeType::PerspectiveCamera)
-        indent(output) << qmlElementName<Camera::RuntimeType::PerspectiveCamera>() << blockBegin();
+        indent(output) << qmlElementName<Camera::RuntimeType::PerspectiveCamera>() << blockBegin(output);
     else if (camera.runtimeType == Camera::RuntimeType::OrthographicCamera)
-        indent(output) << qmlElementName<Camera::RuntimeType::OrthographicCamera>() << blockBegin();
+        indent(output) << qmlElementName<Camera::RuntimeType::OrthographicCamera>() << blockBegin(output);
     else
         Q_UNREACHABLE();
     writeNodeProperties(camera, output);
@@ -775,7 +788,7 @@ static void writeQml(const QSSGSceneDesc::Texture &texture, OutputContext &outpu
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(texture.nodeType == Node::Type::Texture && texture.runtimeType == Node::RuntimeType::Image);
-    indent(output) << qmlElementName<Camera::RuntimeType::Image>() << blockBegin();
+    indent(output) << qmlElementName<Camera::RuntimeType::Image>() << blockBegin(output);
     writeNodeProperties(texture, output);
 }
 
@@ -794,11 +807,11 @@ static void writeQml(const QSSGSceneDesc::Light &light, OutputContext &output)
     using namespace QSSGSceneDesc;
     Q_ASSERT(light.nodeType == Node::Type::Light);
     if (light.runtimeType == Light::RuntimeType::DirectionalLight)
-        indent(output) << qmlElementName<Light::RuntimeType::DirectionalLight>() << blockBegin();
+        indent(output) << qmlElementName<Light::RuntimeType::DirectionalLight>() << blockBegin(output);
     else if (light.runtimeType == Light::RuntimeType::SpotLight)
-        indent(output) << qmlElementName<Light::RuntimeType::SpotLight>() << blockBegin();
+        indent(output) << qmlElementName<Light::RuntimeType::SpotLight>() << blockBegin(output);
     else if (light.runtimeType == Light::RuntimeType::PointLight)
-        indent(output) << qmlElementName<Light::RuntimeType::PointLight>() << blockBegin();
+        indent(output) << qmlElementName<Light::RuntimeType::PointLight>() << blockBegin(output);
     else
         Q_UNREACHABLE();
     writeNodeProperties(light, output);
@@ -808,7 +821,7 @@ static void writeQml(const QSSGSceneDesc::Skeleton &skeleton, OutputContext &out
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(skeleton.nodeType == Node::Type::Skeleton && skeleton.runtimeType == Node::RuntimeType::Skeleton);
-    indent(output) << qmlElementName<Camera::RuntimeType::Skeleton>() << blockBegin();
+    indent(output) << qmlElementName<Camera::RuntimeType::Skeleton>() << blockBegin(output);
     writeNodeProperties(skeleton, output);
 }
 
@@ -816,7 +829,7 @@ static void writeQml(const QSSGSceneDesc::Joint &joint, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(joint.nodeType == Node::Type::Joint && joint.runtimeType == Node::RuntimeType::Joint);
-    indent(output) << qmlElementName<Camera::RuntimeType::Joint>() << blockBegin();
+    indent(output) << qmlElementName<Camera::RuntimeType::Joint>() << blockBegin(output);
     writeNodeProperties(joint, output);
 }
 
@@ -868,9 +881,12 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
             writeQmlForNode(cld, output);
     }
 
-    if (processNode && output.type != OutputContext::RootNode) {
+    // Do something more convenient if this starts expending to more types...
+    // NOTE: The TextureData type is written out as a url property...
+    const bool skipBlockEnd = (node.runtimeType == Node::RuntimeType::TextureData || node.nodeType == Node::Type::Mesh);
+    if (!skipBlockEnd && processNode && output.scopeDepth != 0) {
         QSSGQmlScopedIndent scopedIndent(output);
-        indent(output) << blockEnd();
+        indent(output) << blockEnd(output);
     }
 }
 
@@ -907,7 +923,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream)
     output.type = OutputContext::NodeTree;
     writeQmlForNode(*root, output);
     // close the root
-    indent(output) << blockEnd();
+    indent(output) << blockEnd(output);
 }
 
 }
