@@ -57,6 +57,7 @@ void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &no
 
 void QSSGSceneDesc::Scene::reset()
 {
+    root = nullptr;
     resources.clear();
     allocator.reset();
 }
