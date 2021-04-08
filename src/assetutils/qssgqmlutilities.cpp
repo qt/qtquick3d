@@ -484,6 +484,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::PrincipledMaterial>();
     case RuntimeType::Image:
         return qmlElementName<RuntimeType::Image>();
+    case RuntimeType::TextureData:
+        return qmlElementName<RuntimeType::TextureData>();
     default:
         return "UNKNOWN_TYPE";
     }
@@ -563,10 +565,14 @@ QString asString(const QSSGSceneDesc::Value &value)
     return str;
 }
 
-static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Value &value, bool *ok = nullptr)
+using PropertyPair = std::pair<const char * /* name */, QString /* value */>;
+
+static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, bool *ok = nullptr)
 {
     using namespace QSSGSceneDesc;
     using RuntimeType = Node::RuntimeType;
+
+    const auto &value = property.value;
 
     if (value.dptr) {
 
@@ -577,35 +583,35 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
         switch (value.mt.id()) {
         case QMetaType::QVector2D: {
             const auto &vec2 = *reinterpret_cast<QVector2D *>(value.dptr);
-            return QLatin1String("Qt.vector2d(") + QByteArray::number(vec2.x()) + QLatin1String(", ")
-                                                 + QByteArray::number(vec2.y()) + ')';
+            return { property.name, QLatin1String("Qt.vector2d(") + QByteArray::number(vec2.x()) + QLatin1String(", ")
+                                                                  + QByteArray::number(vec2.y()) + ')' };
         }
         case QMetaType::QVector3D: {
             const auto &vec3 = *reinterpret_cast<QVector3D *>(value.dptr);
-            return QLatin1String("Qt.vector3d(") + QByteArray::number(vec3.x()) + QLatin1String(", ")
-                                                 + QByteArray::number(vec3.y()) + QLatin1String(", ")
-                                                 + QByteArray::number(vec3.z()) + ')';
+            return { property.name, QLatin1String("Qt.vector3d(") + QByteArray::number(vec3.x()) + QLatin1String(", ")
+                                                                  + QByteArray::number(vec3.y()) + QLatin1String(", ")
+                                                                  + QByteArray::number(vec3.z()) + ')' };
         }
         case QMetaType::QVector4D: {
             const auto &vec4 = *reinterpret_cast<QVector4D *>(value.dptr);
-            return QLatin1String("Qt.vector4d(") + QByteArray::number(vec4.x()) + QLatin1String(", ")
-                                                 + QByteArray::number(vec4.y()) + QLatin1String(", ")
-                                                 + QByteArray::number(vec4.z()) + QLatin1String(", ")
-                                                 + QByteArray::number(vec4.w()) + ')';
+            return { property.name, QLatin1String("Qt.vector4d(") + QByteArray::number(vec4.x()) + QLatin1String(", ")
+                                                                  + QByteArray::number(vec4.y()) + QLatin1String(", ")
+                                                                  + QByteArray::number(vec4.z()) + QLatin1String(", ")
+                                                                  + QByteArray::number(vec4.w()) + ')' };
         }
         case QMetaType::QColor: {
             const auto &color = *reinterpret_cast<QColor *>(value.dptr);
-            return colorToQml(color);
+            return { property.name, colorToQml(color) };
         }
         case QMetaType::QQuaternion: {
             const auto &quat = *reinterpret_cast<QQuaternion *>(value.dptr);
-            return QLatin1String("Qt.quaternion(") + QByteArray::number(quat.scalar()) + QLatin1String(", ")
-                                                   + QByteArray::number(quat.x()) + QLatin1String(", ")
-                                                   + QByteArray::number(quat.y()) + QLatin1String(", ")
-                                                   + QByteArray::number(quat.z()) + ')';
+            return { property.name, QLatin1String("Qt.quaternion(") + QByteArray::number(quat.scalar()) + QLatin1String(", ")
+                                                                    + QByteArray::number(quat.x()) + QLatin1String(", ")
+                                                                    + QByteArray::number(quat.y()) + QLatin1String(", ")
+                                                                    + QByteArray::number(quat.z()) + ')' };
         }
         case QMetaType::QUrl:
-            return QString(QLatin1String("\"%1\"")).arg(asString(value));
+            return { property.name, QString(QLatin1String("\"%1\"")).arg(asString(value)) };
         case QMetaType::Float:
         case QMetaType::Double:
         case QMetaType::Int:
@@ -616,7 +622,7 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
         case QMetaType::ULongLong:
             Q_FALLTHROUGH();
         case QMetaType::Bool:
-            return asString(value);
+            return { property.name, asString(value) };
         default:
             break;
         }
@@ -625,20 +631,20 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
         if (value.mt.flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
             switch (target.nodeType) {
             case QSSGSceneDesc::Node::Type::Skeleton:
-                return QLatin1String(qmlElementName<RuntimeType::Skeleton>()) + '.' + asString(value);
+                return { property.name, QLatin1String(qmlElementName<RuntimeType::Skeleton>()) + '.' + asString(value) };
                 break;
             case QSSGSceneDesc::Node::Type::Joint:
-                return QLatin1String(qmlElementName<RuntimeType::Joint>()) + '.' + asString(value);
+                return { property.name, QLatin1String(qmlElementName<RuntimeType::Joint>()) + '.' + asString(value) };
                 break;
             case QSSGSceneDesc::Node::Type::Transform:
-                return QLatin1String(qmlElementName<RuntimeType::Node>()) + '.' + asString(value);
+                return { property.name, QLatin1String(qmlElementName<RuntimeType::Node>()) + '.' + asString(value) };
                 break;
             case QSSGSceneDesc::Node::Type::Camera:
                 switch (target.runtimeType) {
                 case RuntimeType::PerspectiveCamera:
-                    return QLatin1String(qmlElementName<RuntimeType::PerspectiveCamera>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::PerspectiveCamera>()) + '.' + asString(value) };
                 case RuntimeType::OrthographicCamera:
-                    return QLatin1String(qmlElementName<RuntimeType::OrthographicCamera>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::OrthographicCamera>()) + '.' + asString(value) };
                 default:
                     Q_UNREACHABLE();
                 }
@@ -648,9 +654,9 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
             case QSSGSceneDesc::Node::Type::Texture:
                 switch (target.runtimeType) {
                 case RuntimeType::Image:
-                    return QLatin1String(qmlElementName<RuntimeType::Image>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::Image>()) + '.' + asString(value) };
                 case RuntimeType::TextureData:
-                    return QLatin1String(qmlElementName<RuntimeType::TextureData>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::TextureData>()) + '.' + asString(value) };
                 default:
                     Q_UNREACHABLE();
                 }
@@ -658,9 +664,9 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
             case QSSGSceneDesc::Node::Type::Material:
                 switch (target.runtimeType) {
                 case RuntimeType::PrincipledMaterial:
-                    return QLatin1String(qmlElementName<RuntimeType::PrincipledMaterial>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::PrincipledMaterial>()) + '.' + asString(value) };
                 case RuntimeType::DefaultMaterial:
-                    return QLatin1String(qmlElementName<RuntimeType::DefaultMaterial>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::DefaultMaterial>()) + '.' + asString(value) };
                 default:
                     Q_UNREACHABLE();
                 }
@@ -668,11 +674,11 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
             case QSSGSceneDesc::Node::Type::Light:
                 switch (target.runtimeType) {
                 case RuntimeType::DirectionalLight:
-                    return QLatin1String(qmlElementName<RuntimeType::DirectionalLight>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::DirectionalLight>()) + '.' + asString(value) };
                 case RuntimeType::SpotLight:
-                    return QLatin1String(qmlElementName<RuntimeType::SpotLight>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::SpotLight>()) + '.' + asString(value) };
                 case RuntimeType::PointLight:
-                    return QLatin1String(qmlElementName<RuntimeType::PointLight>()) + '.' + asString(value);
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::PointLight>()) + '.' + asString(value) };
                 default:
                     Q_UNREACHABLE();
                 }
@@ -700,13 +706,18 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
                 str.append(u']');
             }
 
-            return str;
+            return { property.name, str };
         }
 
         if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
             if (const auto node = reinterpret_cast<QSSGSceneDesc::Node *>(value.dptr)) {
                 Q_ASSERT(node->id != 0);
-                return getIdForNode(*node);
+                // The 'TextureData' node will have its data written out and become
+                // a source url.
+                if (node->runtimeType == RuntimeType::TextureData)
+                    return { "source", getIdForNode(*node->scene->root) + '.' + getIdForNode(*node) };
+
+                return { property.name, getIdForNode(*node) };
             }
         }
 
@@ -715,7 +726,7 @@ static QString valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc
     if (ok)
         *ok = false;
 
-    return QString();
+    return PropertyPair();
 }
 
 static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
@@ -724,7 +735,7 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
 
     QSSGQmlScopedIndent scopedIndent(output);
 
-    if (output.type == OutputContext::Resource)
+    if (output.type == OutputContext::Resource || output.type == OutputContext::RootNode)
         indent(output) << "id: " << getIdForNode(node) << "\n";
 
     const auto &properties = node.properties;
@@ -732,11 +743,10 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto end = properties.end();
     bool ok = false;
     for (; it != end; ++it) {
-        const auto ret = valueToQml(node, (*it).value, &ok);
-        if (ok)
-            indent(output) << it->name << ": " << ret << "\n";
-        else
-            indent(output) << comment() << it->name << ": " << ret << "\n";
+        const auto ret = valueToQml(node, (*it), &ok);
+        if (!ok)
+            indent(output) << comment();
+        indent(output) << ret.first << ": " << ret.second << "\n";
     }
 }
 
@@ -792,14 +802,70 @@ static void writeQml(const QSSGSceneDesc::Texture &texture, OutputContext &outpu
     writeNodeProperties(texture, output);
 }
 
+static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
+
+QString getTextureSourceName(const QString &name)
+{
+    const auto textureFolder = getTextureFolder();
+
+    const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
+    return QString(textureFolder + sanitizedName +  QLatin1String(".png"));
+}
+
+static QString outputTextureAsset(const QString &textureSourceName, const QImage &image, const QDir &outdir)
+{
+    const auto mapsFolder = getTextureFolder();
+
+    // If a maps folder does not exist, then create one
+    if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
+        return QString(); // Error out
+
+    const auto imagePath = QString(outdir.path() + QDir::separator() + textureSourceName);
+
+    if (!image.save(imagePath))
+        return QString();
+
+    return textureSourceName;
+}
+
 static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContext &output)
 {
-    // TODO: This should basically be an Image element with the texture data written out to the asset folder and
-    // the source property set appropriately
     using namespace QSSGSceneDesc;
     Q_ASSERT(textureData.nodeType == Node::Type::Texture && textureData.runtimeType == Node::RuntimeType::TextureData);
-    indent(output) << qmlElementName<Camera::RuntimeType::TextureData>() << blockBegin();
-    writeNodeProperties(textureData, output);
+
+    const auto &properties = textureData.properties;
+    auto it = properties.begin();
+    const auto end = properties.end();
+    QByteArray *texData = nullptr;
+    QSize size;
+    for (; it != end; ++it) {
+        // find the texture data property
+        if (it->value.mt == QMetaType::fromType<QByteArray>()) {
+            if (qstrncmp((*it).name, "textureData", 11) == 0)
+                texData = reinterpret_cast<QByteArray *>((*it).value.dptr);
+        } else if (it->value.mt == QMetaType::fromType<QSize>()) {
+            if (qstrncmp((*it).name, "size", 4) == 0)
+                size = *reinterpret_cast<QSize *>((*it).value.dptr);
+        }
+    }
+
+    const auto id = getIdForNode(textureData);
+    QString textureSourcePath = getTextureSourceName(id);
+
+    if (texData) {
+        const auto image = QImage((uchar *)texData->data(), size.width(), size.height(), QImage::Format::Format_RGBA8888);
+        textureSourcePath = outputTextureAsset(textureSourcePath, image, output.outdir);
+    }
+
+    static const auto writeProperty = [](const QString &type, const QString &name, const QString &value) {
+        return QString::fromLatin1("property %1 %2: %3").arg(type, name, value);
+    };
+
+    const auto type = QLatin1String("url");
+    const auto &name = id;
+    const auto value = QString(u'\"' + textureSourcePath + u'\"');
+
+    indent(output) << writeProperty(type, name, value) << '\n';
 }
 
 static void writeQml(const QSSGSceneDesc::Light &light, OutputContext &output)
