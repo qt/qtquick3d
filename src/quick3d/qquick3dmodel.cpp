@@ -656,7 +656,7 @@ void QQuick3DModel::onMaterialDestroyed(QObject *object)
 {
     bool found = false;
     for (int i = 0; i < m_materials.count(); ++i) {
-        if (m_materials[i].material == static_cast<QQuick3DMaterial *>(object)) {
+        if (m_materials[i].material == object) {
             m_materials.removeAt(i--);
             found = true;
         }
