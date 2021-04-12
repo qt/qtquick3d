@@ -1,10 +1,10 @@
 # Generated from simplescene.pro.
 
 #####################################################################
-## tst_quick3dsimplescene Test:
+## qquick3dsimplescene Test:
 #####################################################################
 
-qt_internal_add_test(tst_quick3dsimplescene
+qt_internal_add_test(tst_qquick3dsimplescene
     SOURCES
         ../shared/util.cpp ../shared/util.h
         tst_simplescene.cpp
@@ -22,12 +22,12 @@ qt_internal_add_test(tst_quick3dsimplescene
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(tst_quick3dsimplescene CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquick3dsimplescene CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_internal_extend_target(tst_quick3dsimplescene CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquick3dsimplescene CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

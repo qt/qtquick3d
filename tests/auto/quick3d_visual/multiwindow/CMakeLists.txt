@@ -1,10 +1,10 @@
 # Generated from multiwindow.pro.
 
 #####################################################################
-## tst_quick3dmultiwindow Test:
+## qquick3dmultiwindow Test:
 #####################################################################
 
-qt_internal_add_test(tst_quick3dmultiwindow
+qt_internal_add_test(tst_qquick3dmultiwindow
     SOURCES
         ../shared/util.cpp ../shared/util.h
         tst_multiwindow.cpp
@@ -22,12 +22,12 @@ qt_internal_add_test(tst_quick3dmultiwindow
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(tst_quick3dmultiwindow CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquick3dmultiwindow CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_internal_extend_target(tst_quick3dmultiwindow CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquick3dmultiwindow CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

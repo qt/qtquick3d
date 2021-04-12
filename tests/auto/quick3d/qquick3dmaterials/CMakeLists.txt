@@ -4,7 +4,7 @@
 ## qquick3dmaterials Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dmaterials
+qt_internal_add_test(tst_qquick3dmaterials
     SOURCES
         tst_qquick3dmaterials.cpp
     PUBLIC_LIBRARIES
@@ -18,7 +18,7 @@ set(qquick3dmaterials_resource_files
     "Built_with_Qt_2.png"
 )
 
-qt_internal_add_resource(qquick3dmaterials "qquick3dmaterials"
+qt_internal_add_resource(tst_qquick3dmaterials "qquick3dmaterials"
     PREFIX
         "/"
     FILES

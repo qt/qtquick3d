@@ -4,7 +4,7 @@
 ## bounds Test:
 #####################################################################
 
-qt_internal_add_test(bounds
+qt_internal_add_test(tst_qquick3dbounds
     SOURCES
         tst_bounds.cpp
     PUBLIC_LIBRARIES

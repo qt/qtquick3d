@@ -3,7 +3,7 @@
 ## qquick3dparticle Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dparticle
+qt_internal_add_test(tst_qquick3dparticle
     SOURCES
         tst_qquick3dparticle.cpp
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## qquick3dfrustumcamera Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dfrustumcamera
+qt_internal_add_test(tst_qquick3dfrustumcamera
     SOURCES
         tst_qquick3dfrustumcamera.cpp
     PUBLIC_LIBRARIES

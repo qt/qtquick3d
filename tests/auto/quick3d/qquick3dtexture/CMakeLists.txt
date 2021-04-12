@@ -4,7 +4,7 @@
 ## qquick3dtexture Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dtexture
+qt_internal_add_test(tst_qquick3dtexture
     SOURCES
         tst_qquick3dtexture.cpp
     PUBLIC_LIBRARIES

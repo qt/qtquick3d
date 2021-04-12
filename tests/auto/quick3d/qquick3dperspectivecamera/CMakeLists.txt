@@ -4,7 +4,7 @@
 ## qquick3dperspectivecamera Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dperspectivecamera
+qt_internal_add_test(tst_qquick3dperspectivecamera
     SOURCES
         tst_qquick3dperspectivecamera.cpp
     PUBLIC_LIBRARIES

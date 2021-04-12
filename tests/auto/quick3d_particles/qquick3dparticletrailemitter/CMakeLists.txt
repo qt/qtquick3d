@@ -3,7 +3,7 @@
 ## qquick3dparticletrailemitter Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dparticletrailemitter
+qt_internal_add_test(tst_qquick3dparticletrailemitter
     SOURCES
         tst_qquick3dparticletrailemitter.cpp
     PUBLIC_LIBRARIES

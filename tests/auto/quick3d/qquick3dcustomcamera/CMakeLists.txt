@@ -4,7 +4,7 @@
 ## qquick3dcustomcamera Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dcustomcamera
+qt_internal_add_test(tst_qquick3dcustomcamera
     SOURCES
         tst_qquick3dcustomcamera.cpp
     PUBLIC_LIBRARIES

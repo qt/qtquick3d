@@ -4,7 +4,7 @@
 ## qquick3dgeometry Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dgeometry
+qt_internal_add_test(tst_qquick3dgeometry
     SOURCES
         tst_qquick3dgeometry.cpp
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## shadergen Test:
 #####################################################################
 
-qt_internal_add_test(tst_shadergen # special case
+qt_internal_add_test(tst_qquick3dshadergen # special case
     SOURCES
         ../../../../tools/shadergen/parser.cpp ../../../../tools/shadergen/parser.h
         tst_shadergen.cpp
@@ -29,7 +29,7 @@ set(qml_resource_files
     "qml/instancing.qml"
 )
 
-qt_internal_add_resource(tst_shadergen "qml" # special case
+qt_internal_add_resource(tst_qquick3dshadergen "qml" # special case
     PREFIX
         "/"
     FILES

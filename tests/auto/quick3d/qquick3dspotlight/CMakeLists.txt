@@ -4,7 +4,7 @@
 ## qquick3dspotlight Test:
 #####################################################################
 
-qt_internal_add_test(qquick3dspotlight
+qt_internal_add_test(tst_qquick3dspotlight
     SOURCES
         tst_qquick3dspotlight.cpp
     PUBLIC_LIBRARIES

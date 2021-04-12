@@ -4,7 +4,7 @@
 ## assetimport Test:
 #####################################################################
 
-qt_internal_add_test(assetimport
+qt_internal_add_test(tst_qquick3dassetimport
     SOURCES
         tst_assetimport.cpp
     PUBLIC_LIBRARIES

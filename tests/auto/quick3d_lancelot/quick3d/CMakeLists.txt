@@ -1,13 +1,13 @@
 # Generated from quick3d.pro.
 
 #####################################################################
-## tst_quick3d Test:
+## tst_qquick3d Test:
 #####################################################################
 
 # Collect test data
 list(APPEND test_data "../data")
 
-qt_internal_add_test(tst_quick3d
+qt_internal_add_test(tst_qquick3d
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
         ../shared/baselineprotocol.cpp ../shared/baselineprotocol.h
@@ -25,8 +25,8 @@ qt_internal_add_test(tst_quick3d
 )
 
 # special case begin
-add_dependencies(tst_quick3d Qt6::Quick3D)
-add_dependencies(tst_quick3d qmlscenegrabber)
+add_dependencies(tst_qquick3d Qt6::Quick3D)
+add_dependencies(tst_qquick3d qmlscenegrabber)
 # special case end
 
 ## Scopes:
