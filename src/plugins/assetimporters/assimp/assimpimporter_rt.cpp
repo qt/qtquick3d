@@ -95,7 +95,7 @@ using NodeMap = QHash<const aiNode *, NodeInfo>;
 struct TextureInfo
 {
     aiTextureMapping mapping = aiTextureMapping::aiTextureMapping_UV;
-    aiTextureMapMode modes[3];
+    aiTextureMapMode modes[3] {};
     unsigned int minFilter { AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR };
     unsigned int magFilter { AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR };
     uint uvIndex { aiTextureMapping::aiTextureMapping_OTHER };
