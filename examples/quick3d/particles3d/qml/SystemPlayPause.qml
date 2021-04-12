@@ -56,9 +56,32 @@ import QtQuick.Controls
 Item {
     id: mainWindow
 
-    property int burstCount: 300
+    readonly property int burstCount: 300
+    readonly property int maxEmitterCount: 10
+    readonly property int trailEmitRate: 10
+
+    property var modelEmitters: []
+    property int modelEmittersAmount: 0
+    property var spriteEmitters: []
+    property int spriteEmittersAmount: 0
+
+    function createModelEmitter() {
+        var newObject = modelEmitterComponent.createObject(psystem);
+        modelEmitters.push(newObject);
+        modelEmittersAmount = modelEmitters.length;
+    }
+
+    function createSpriteEmitter() {
+        var newObject = spriteEmitterComponent.createObject(psystem);
+        spriteEmitters.push(newObject);
+        spriteEmittersAmount = spriteEmitters.length;
+    }
 
     anchors.fill: parent
+    Component.onCompleted: {
+        createModelEmitter();
+        createSpriteEmitter();
+    }
 
     View3D {
         id: view3D
@@ -95,15 +118,47 @@ Item {
         }
 
         Component {
-            id: particleComponentSpark
+            id: modelEmitterComponent
             Model {
-                source: "#Rectangle"
-                scale: Qt.vector3d(0.1, 0.1, 0.0)
-                opacity: 0.5
-                materials: DefaultMaterial {
-                    diffuseMap: Texture {
-                        source: "images/star.png"
+                source: "#Cylinder"
+                materials: DefaultMaterial {}
+                position: Qt.vector3d(Math.random() * 250 - 300, -150, 0)
+                scale: Qt.vector3d(0.5, 0.1, 0.5)
+                ParticleEmitter3D {
+                    system: psystem
+                    particle: particleWhite
+                    particleScaleVariation: 0.4
+                    particleRotationVariation: Qt.vector3d(180, 180, 180)
+                    particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
+                    velocity: VectorDirection3D {
+                        direction: Qt.vector3d(0, 400, 0)
+                        directionVariation: Qt.vector3d(40, 40, 0)
                     }
+                    emitRate: 2
+                    lifeSpan: 4000
+                }
+            }
+        }
+
+        Component {
+            id: spriteEmitterComponent
+            Model {
+                source: "#Cylinder"
+                materials: DefaultMaterial { diffuseColor: "#ffff00" }
+                position: Qt.vector3d(Math.random() * 250 + 50, -150, 0)
+                scale: Qt.vector3d(0.5, 0.1, 0.5)
+                ParticleEmitter3D {
+                    system: psystem
+                    particle: particleSprite
+                    particleScaleVariation: 0.4
+                    particleRotationVariation: Qt.vector3d(180, 180, 180)
+                    particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
+                    velocity: VectorDirection3D {
+                        direction: Qt.vector3d(0, 400, 0)
+                        directionVariation: Qt.vector3d(40, 40, 0)
+                    }
+                    emitRate: 2
+                    lifeSpan: 4000
                 }
             }
         }
@@ -115,18 +170,19 @@ Item {
 
             // Particles
             ModelParticle3D {
-                id: particleSpark
-                delegate: particleComponentSpark
-                maxAmount: 2000
+                id: particleTrailModel
+                delegate: particleComponent
+                maxAmount: maxEmitterCount * 8 * trailEmitRate
                 fadeInDuration: 200
                 fadeOutDuration: 500
-                color: "#ffe000"
-                colorVariation: Qt.vector4d(0.2, 0.2, 0.0, 0.5)
+                color: "#808080"
+                colorVariation: Qt.vector4d(0.2, 0.2, 0.2, 0.5)
+                unifiedColorVariation: true
             }
             ModelParticle3D {
                 id: particleWhite
                 delegate: particleComponent
-                maxAmount: 16
+                maxAmount: maxEmitterCount * 8
                 color: "#ffffff"
             }
             ModelParticle3D {
@@ -135,33 +191,53 @@ Item {
                 maxAmount: burstCount * 3
                 color: "#ff0000"
             }
-
-            // Emitters, one per particle
-            ParticleEmitter3D {
-                particle: particleWhite
-                position: Qt.vector3d(0, -150, 0)
-                particleScaleVariation: 0.6
-                particleRotationVariation: Qt.vector3d(180, 180, 180)
-                particleRotationVelocityVariation: Qt.vector3d(200, 200, 200);
-                velocity: VectorDirection3D {
-                    direction: Qt.vector3d(0, 400, 0)
-                    directionVariation: Qt.vector3d(80, 40, 20)
+            SpriteParticle3D {
+                id: particleSprite
+                sprite: Texture {
+                    source: "images/star2.png"
                 }
-                emitRate: 4
-                lifeSpan: 4000
+                maxAmount: maxEmitterCount * 8
+                color: "#ffff00"
+                particleScale: 30.0
+            }
+            SpriteParticle3D {
+                id: particleTrailSprite
+                sprite: Texture {
+                    source: "images/star2.png"
+                }
+                maxAmount: maxEmitterCount * 8 * trailEmitRate
+                fadeInDuration: 200
+                fadeOutDuration: 500
+                color: "#999900"
+                particleScale: 15.0
             }
 
+            // Emitters, one per particle
             TrailEmitter3D {
-                id: sparkEmitter
-                particle: particleSpark
+                id: modelTrailEmitter
+                particle: particleTrailModel
                 follow: particleWhite
-                particleScaleVariation: 0.5
-                particleRotationVariation: Qt.vector3d(0, 0, 180)
+                particleScale: 0.5
+                particleScaleVariation: 0.2
+                particleRotationVariation: Qt.vector3d(180, 180, 180)
                 particleRotationVelocityVariation: Qt.vector3d(100, 100, 100);
                 velocity: VectorDirection3D {
                     directionVariation: Qt.vector3d(20, 20, 20)
                 }
-                emitRate: 100
+                emitRate: trailEmitRate
+                lifeSpan: 1000
+            }
+            TrailEmitter3D {
+                id: spriteTrailEmitter
+                particle: particleTrailSprite
+                follow: particleSprite
+                particleScaleVariation: 0.2
+                particleRotationVariation: Qt.vector3d(180, 180, 180)
+                particleRotationVelocityVariation: Qt.vector3d(100, 100, 100);
+                velocity: VectorDirection3D {
+                    directionVariation: Qt.vector3d(20, 20, 20)
+                }
+                emitRate: trailEmitRate
                 lifeSpan: 1000
             }
 
@@ -188,7 +264,6 @@ Item {
             Gravity3D {
                 direction: Qt.vector3d(0, 1, 0)
                 magnitude: -200
-                particles: [particleWhite]
             }
         }
     }
@@ -247,6 +322,59 @@ Item {
             sliderStepSize: 1
             onSliderValueChanged: psystem.setSeed(sliderValue);
         }
+        Item { width: 1; height: 20 }
+        CustomLabel {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Model Emitters: " + modelEmittersAmount
+        }
+        Item { width: 1; height: 5 }
+        Row {
+            spacing: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            Button {
+                text: qsTr("Add")
+                font.pointSize: settings.fontSizeSmall
+                enabled: modelEmittersAmount < 10
+                onClicked: createModelEmitter();
+            }
+            Button {
+                text: qsTr("Remove")
+                font.pointSize: settings.fontSizeSmall
+                enabled: modelEmittersAmount > 0
+                onClicked: {
+                    let instance = modelEmitters.pop();
+                    instance.destroy();
+                    modelEmittersAmount = modelEmitters.length;
+                }
+            }
+        }
+        Item { width: 1; height: 20 }
+        CustomLabel {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Sprite Emitters: " + spriteEmittersAmount
+        }
+        Item { width: 1; height: 5 }
+        Row {
+            spacing: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            Button {
+                text: qsTr("Add")
+                font.pointSize: settings.fontSizeSmall
+                enabled: spriteEmittersAmount < 10
+                onClicked: createSpriteEmitter();
+            }
+            Button {
+                text: qsTr("Remove")
+                font.pointSize: settings.fontSizeSmall
+                enabled: spriteEmittersAmount > 0
+                onClicked: {
+                    let instance = spriteEmitters.pop();
+                    instance.destroy();
+                    spriteEmittersAmount = spriteEmitters.length;
+                }
+            }
+        }
+
     }
 
     LoggingView {
