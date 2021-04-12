@@ -81,8 +81,8 @@ void tst_QQuick3DParticle::testParticle()
     QCOMPARE(p->color(), Qt::red);
 
     QCOMPARE(p->colorVariation(), QVector4D());
-    p->setColorVariation(QVector4D(0.5, 0.5, 0.5, 0.5));
-    QVERIFY(qFuzzyCompare(p->colorVariation(), QVector4D(0.5, 0.5, 0.5, 0.5)));
+    p->setColorVariation(QVector4D(0.5f, 0.5f, 0.5f, 0.5f));
+    QVERIFY(qFuzzyCompare(p->colorVariation(), QVector4D(0.5f, 0.5f, 0.5f, 0.5f)));
 
     QCOMPARE(p->fadeInEffect(), QQuick3DParticle::FadeOpacity);
     QCOMPARE(p->fadeOutEffect(), QQuick3DParticle::FadeOpacity);
