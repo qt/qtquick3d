@@ -138,8 +138,11 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem *system)
         m_system->unRegisterParticleEmitter(this);
 
     m_system = system;
-    if (m_system)
+    if (m_system) {
         m_system->registerParticleEmitter(this);
+        // Reset prev emit time to time of the new system
+        m_prevEmitTime = m_system->time();
+    }
 
     if (m_shape)
         m_shape->m_system = m_system;
@@ -793,6 +796,11 @@ void QQuick3DParticleEmitter::componentComplete()
 {
     if (!m_system && qobject_cast<QQuick3DParticleSystem *>(parentItem()))
         setSystem(qobject_cast<QQuick3DParticleSystem *>(parentItem()));
+
+    // When dynamically creating emitters, start from the current time.
+    if (m_system)
+        m_prevEmitTime = m_system->time();
+
     QQuick3DNode::componentComplete();
 }
 
