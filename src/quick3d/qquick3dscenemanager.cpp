@@ -198,7 +198,7 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
     }
 
     if (graphNode && graphNode->parent == nullptr) {
-        QQuick3DNode *nodeParent = qobject_cast<QQuick3DNode *>(spatialNode->parent());
+        QQuick3DNode *nodeParent = qobject_cast<QQuick3DNode *>(spatialNode->parentItem());
         if (nodeParent) {
             QSSGRenderNode *parentGraphNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(nodeParent)->spatialNode);
             if (!parentGraphNode) {
