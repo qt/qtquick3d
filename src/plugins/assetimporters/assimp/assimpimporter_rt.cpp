@@ -432,11 +432,11 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             result = source.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
             if (result == aiReturn_SUCCESS) {
                 auto mode = QQuick3DPrincipledMaterial::AlphaMode::Default;
-                if (QByteArrayView(alphaMode.C_Str()) == "opaque")
+                if (QByteArrayView(alphaMode.C_Str()) == "OPAQUE")
                     mode = QQuick3DPrincipledMaterial::AlphaMode::Opaque;
-                else if (QByteArrayView(alphaMode.C_Str()) == "mask")
+                else if (QByteArrayView(alphaMode.C_Str()) == "MASK")
                     mode = QQuick3DPrincipledMaterial::AlphaMode::Mask;
-                else if (QByteArrayView(alphaMode.C_Str()) == "blend")
+                else if (QByteArrayView(alphaMode.C_Str()) == "BLEND")
                     mode = QQuick3DPrincipledMaterial::AlphaMode::Blend;
 
                 if (mode != QQuick3DPrincipledMaterial::AlphaMode::Default)
