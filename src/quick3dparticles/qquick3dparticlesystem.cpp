@@ -756,4 +756,20 @@ void QQuick3DParticleSystem::doSeedRandomization()
     setSeed(QRandomGenerator::global()->bounded(1 + (INT32_MAX - 1)));
 }
 
+bool QQuick3DParticleSystem::isShared(const QQuick3DParticle *particle) const
+{
+    int count = 0;
+    for (auto emitter : qAsConst(m_emitters)) {
+        count += emitter->particle() == particle;
+        if (count > 1)
+            return true;
+    }
+    for (auto emitter : qAsConst(m_trailEmitters)) {
+        count += emitter->particle() == particle;
+        if (count > 1)
+            return true;
+    }
+    return false;
+}
+
 QT_END_NAMESPACE

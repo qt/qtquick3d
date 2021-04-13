@@ -54,12 +54,6 @@ QQuick3DParticle::~QQuick3DParticle()
         m_system->unRegisterParticle(this);
 }
 
-/*!
-    \qmlproperty ParticleSystem3D Particle3D::system
-
-    This property defines the \l ParticleSystem3D for the particle. If the system is
-    direct parent of the particle, this property does not need to be defined.
-*/
 QQuick3DParticleSystem *QQuick3DParticle::system() const
 {
     return m_system;

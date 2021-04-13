@@ -144,6 +144,9 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem *system)
         m_prevEmitTime = m_system->time();
     }
 
+    if (m_particle)
+        m_particle->setSystem(m_system);
+
     if (m_shape)
         m_shape->m_system = m_system;
 
@@ -341,14 +344,21 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
 {
     if (m_particle == particle)
         return;
+    if (particle && particle->system() != nullptr && particle->system() != m_system) {
+        qWarning("ParticleEmitter3D: Emitter and Particle must be in the same system.");
+        return;
+    }
 
     QObject::connect(this, &QQuick3DParticleEmitter::depthBiasChanged, [this](){
         m_particle->setDepthBias(m_depthBias);
     });
-
+    if (m_particle && m_system && !m_system->isShared(m_particle))
+        m_particle->setSystem(nullptr);
     m_particle = particle;
-    if (particle)
+    if (particle) {
         particle->setDepthBias(m_depthBias);
+        particle->setSystem(system());
+    }
     Q_EMIT particleChanged();
 }
 
@@ -561,7 +571,7 @@ void QQuick3DParticleEmitter::generateEmitBursts()
     if (!m_system)
         return;
 
-    if (!m_particle || m_particle->m_system != m_system)
+    if (!m_particle)
         return;
 
     if (m_emitBursts.isEmpty()) {
@@ -741,7 +751,7 @@ void QQuick3DParticleEmitter::emitParticlesBurst(const QQuick3DParticleEmitBurst
     if (!m_enabled)
         return;
 
-    if (!m_particle || m_particle->m_system != m_system)
+    if (!m_particle)
         return;
 
     QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
@@ -764,7 +774,7 @@ void QQuick3DParticleEmitter::emitParticles()
     if (!m_enabled)
         return;
 
-    if (!m_particle || m_particle->m_system != m_system)
+    if (!m_particle)
         return;
 
     // If bursts have changed, generate them first in the beginning

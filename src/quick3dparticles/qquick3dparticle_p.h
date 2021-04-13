@@ -52,7 +52,6 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuick3DParticleSystem *system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(int maxAmount READ maxAmount WRITE setMaxAmount NOTIFY maxAmountChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor)
     Q_PROPERTY(QVector4D colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged)

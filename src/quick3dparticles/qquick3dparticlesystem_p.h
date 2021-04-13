@@ -113,6 +113,7 @@ public:
     void updateCurrentTime(int currentTime);
 
     QPRand *rand();
+    bool isShared(const QQuick3DParticle *particle) const;
 
     struct TrailEmits {
         QQuick3DParticleTrailEmitter *emitter = nullptr;
