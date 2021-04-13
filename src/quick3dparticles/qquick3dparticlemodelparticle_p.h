@@ -104,7 +104,6 @@ private:
     void setHasTransparency(bool transparent);
     void updateDepthBias(float bias);
 
-    QQuick3DParticleSystem *m_system = nullptr;
     QPointer<QQmlComponent> m_delegate;
     QPointer<QQuick3DNode> m_node;
     QQuick3DParticleInstanceTable *m_instanceTable = nullptr;
