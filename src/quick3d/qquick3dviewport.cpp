@@ -1037,11 +1037,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
                 transform->targetItem = subsceneRoot;
                 transform->dpr = window()->effectiveDevicePixelRatio();
                 transform->uvCoordsArePixels = item2Dcase;
-                auto targetDA = (da->rootItem()->parentItem() ? mainDA : da);
-//                if (QQuickDeliveryAgentPrivate::isTouchEvent(event) && !item2Dcase)
-//                    targetDA = mainDA; // possible correction, but then TransformHelper has to map to different space?
-                transform->setOnDeliveryAgent(targetDA);
-                qCDebug(lcPick) << event->type() << "created ViewportTransformHelper on" << targetDA;
+                transform->setOnDeliveryAgent(da);
+                qCDebug(lcPick) << event->type() << "created ViewportTransformHelper on" << da;
             }
         } else if (event->type() != QEvent::HoverMove) {
             qCDebug(lcPick) << subsceneRoot << "didn't want" << event;
