@@ -63,7 +63,7 @@ Window {
     color: "green"
 
     Shortcut {
-        sequence: standardKey.Quit
+        sequence: StandardKey.Quit
         onActivated: Qt.quit()
     }
 
@@ -104,6 +104,7 @@ Window {
             z: 300
             eulerRotation.y: 15
             Model {
+                objectName: "middle cube in middle stack"
                 source: "#Cube"
                 pickable: true
                 materials: DefaultMaterial {
@@ -115,6 +116,7 @@ Window {
                 }
             }
             Model {
+                objectName: "bottom cube in middle stack"
                 y: -100
                 source: "#Cube"
                 pickable: true
@@ -128,6 +130,7 @@ Window {
             }
 
             Model {
+                objectName: "top cube in middle stack"
                 y: 100
                 source: "#Cube"
                 pickable: true
@@ -150,6 +153,7 @@ Window {
             Model {
                 source: "#Cube"
                 pickable: true
+                objectName: "middle cube in right stack"
                 materials: DefaultMaterial {
                     diffuseMap: Texture {
                         sourceItem: InputDebugger {
@@ -171,6 +175,7 @@ Window {
 //                }
             }
             Model {
+                objectName: "bottom cube in right stack"
                 y: -100
                 source: "#Cube"
                 pickable: true
@@ -182,6 +187,7 @@ Window {
             }
 
             Model {
+                objectName: "top cube in right stack"
                 y: 100
                 source: "#Cube"
                 pickable: true
@@ -199,8 +205,10 @@ Window {
 
 
         Model {
+            objectName: "rotating cube"
             source: "#Cube"
             x: 50
+            z: 400
             scale: Qt.vector3d(0.2, 0.2, 0.2)
             materials: DefaultMaterial {
                 diffuseColor: "tomato"

@@ -64,23 +64,24 @@ Rectangle {
     border.width: 5
 
     MouseArea {
+        objectName: "background rgb dot controller"
         anchors.fill: parent
         cursorShape: Qt.CrossCursor
-        onPressed: {
+        onPressed: function(mouse) {
             debugLabel.text = "(" + Math.floor(mouse.x) + ", " + Math.floor(mouse.y) + ")"
             debugPoint.visible = true
             debugPoint.x = mouse.x - 10
             debugPoint.y = mouse.y - 10
             debugPoint.color = "red"
         }
-        onReleased: {
+        onReleased: function(mouse) {
             debugLabel.text = "(" + Math.floor(mouse.x) + ", " + Math.floor(mouse.y) + ")"
             debugPoint.visible = true
             debugPoint.x = mouse.x - 10
             debugPoint.y = mouse.y - 10
             debugPoint.color = "green"
         }
-        onPositionChanged: {
+        onPositionChanged: function(mouse) {
             debugLabel.text = "(" + Math.floor(mouse.x) + ", " + Math.floor(mouse.y) + ")"
             debugPoint.visible = true
             debugPoint.x = mouse.x - 10
