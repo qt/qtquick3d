@@ -42,6 +42,8 @@
 
     \image axishelper.jpg
 
+    The X axis is red, the Y axis is green, and the Z axis is blue.
+
     The example scene here has a Sphere at position \c{(0, 0, 0)} and an
     AxisHelper object. With the WasdController helper one can conveniently
     navigate the scene.
