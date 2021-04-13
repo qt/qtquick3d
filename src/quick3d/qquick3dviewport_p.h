@@ -117,7 +117,6 @@ protected:
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value) override;
 
     bool event(QEvent *) override;
-//    bool childMouseEventFilter(QQuickItem *, QEvent *event) override;
 
 public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);
@@ -156,6 +155,7 @@ private:
     RenderMode m_renderMode = Offscreen;
     QQuick3DRenderStats *m_renderStats = nullptr;
     QHash<QObject*, QMetaObject::Connection> m_connections;
+    bool m_enableInputProcessing = false;
 };
 
 QT_END_NAMESPACE

@@ -164,11 +164,12 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     Q_ASSERT(sceneManager == QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager);
     connect(sceneManager, &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);
-    setAcceptedMouseButtons(Qt::AllButtons);
-    setAcceptTouchEvents(true);
-    forceActiveFocus();
-    setAcceptHoverEvents(true);
-//    setFiltersChildMouseEvents(true);
+    if (m_enableInputProcessing) {
+        setAcceptedMouseButtons(Qt::AllButtons);
+        setAcceptTouchEvents(true);
+        forceActiveFocus();
+        setAcceptHoverEvents(true);
+    }
 }
 
 QQuick3DViewport::~QQuick3DViewport()
@@ -575,25 +576,11 @@ void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickIte
 
 bool QQuick3DViewport::event(QEvent *event)
 {
-    if (event->isPointerEvent())
+    if (m_enableInputProcessing && event->isPointerEvent())
         return internalPick(static_cast<QPointerEvent *>(event));
     else
         return QQuickItem::event(event);
 }
-
-//bool QQuick3DViewport::childMouseEventFilter(QQuickItem *item, QEvent *event)
-//{
-//    qCDebug(lcEv) << item << event;
-//    // Only Items that are direct children of this View3D should be sent events
-//    // Other items are 2D in 3D content which have to go through our picking
-//    // first so we will propagate those events manually.
-//    // Top Level Items are just regular 2D items so the default logic is fine
-//    const auto &children = childItems();
-//    for (const auto childItem : children)
-//        if (childItem == item)
-//            return false;
-//    return true;
-//}
 
 void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
 {
