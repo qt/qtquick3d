@@ -118,6 +118,7 @@ struct SceneInfo
     };
 
     const aiScene &scene;
+    QDir workingDir;
     GltfVersion ver;
     Options opt;
 };
@@ -340,10 +341,15 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                             QSSGSceneDesc::setProperty(*texData, "format", &QQuick3DTextureData::setFormat, QQuick3DTextureData::Format::RGBA8);
                             QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, texData);
                         }
+                    }
+                } else {
+                    const auto path = sceneInfo.workingDir.canonicalPath() + QDir::separator() + QString::fromUtf8(texturePath.C_Str());
+                    if (QFileInfo::exists(path)) {
+                        // NOTE: We do not know how this will be used yet, so the source path might need to adjusted
+                        // in the qml writer.
+                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QUrl(path));
                     } else {
-                        // TODO: We might need to handle this later, e.g., moving the data into the "project" folder and adjusting
-                        // the path etc. (should not be relevant for RT). But we'll need to loaded any file asset into memory...
-                        // QSSGSceneDesc::setProperty(*tex, "source", QString::fromUtf8(texturePath.C_Str()));
+                        qWarning("Unable to locate texture at %s\n", qPrintable(path));
                     }
                 }
             }
@@ -832,7 +838,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     }
 
     const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, gltfVersion, opt };
+    SceneInfo sceneInfo { *sourceScene, sourceFile.dir(), gltfVersion, opt };
 
     if (!targetScene.root) {
         auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);

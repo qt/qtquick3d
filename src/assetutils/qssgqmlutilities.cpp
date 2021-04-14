@@ -801,15 +801,52 @@ static void writeQml(const QSSGSceneDesc::Camera &camera, OutputContext &output)
     writeNodeProperties(camera, output);
 }
 
+static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
+
+static QString copyTextureAsset(const QUrl &texturePath, const QDir &outdir)
+{
+    QFileInfo fi(texturePath.toString());
+    if (!fi.exists())
+        return texturePath.toString();
+
+    const auto mapsFolder = getTextureFolder();
+
+    // If a maps folder does not exist, then create one
+    if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
+        return QString(); // Error out
+
+    const auto newfilepath = QString(mapsFolder + fi.fileName());
+    if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath))
+        return QString();
+
+    return newfilepath;
+}
+
 static void writeQml(const QSSGSceneDesc::Texture &texture, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(texture.nodeType == Node::Type::Texture && texture.runtimeType == Node::RuntimeType::Image);
+
+    // We need to adjust source url(s) as those should contain the canonical path
+    const auto &properties = texture.properties;
+    auto it = properties.begin();
+    const auto end = properties.end();
+    for (; it != end; ++it) {
+        // find the texture data property
+        if (it->value.mt == QMetaType::fromType<QUrl>()) {
+            if (qstrncmp((*it).name, "source", 6) == 0) {
+                if (auto url = reinterpret_cast<QUrl *>((*it).value.dptr)) {
+                    const auto path = url->toString();
+                    const auto newpath = copyTextureAsset(path, output.outdir);
+                    url->setPath(newpath);
+                }
+            }
+        }
+    }
+
     indent(output) << qmlElementName<Camera::RuntimeType::Image>() << blockBegin(output);
     writeNodeProperties(texture, output);
 }
-
-static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
 
 QString getTextureSourceName(const QString &name)
 {
