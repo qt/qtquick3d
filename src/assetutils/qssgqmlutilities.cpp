@@ -489,6 +489,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Node>();
     case RuntimeType::PrincipledMaterial:
         return qmlElementName<RuntimeType::PrincipledMaterial>();
+    case RuntimeType::DefaultMaterial:
+        return qmlElementName<RuntimeType::DefaultMaterial>();
     case RuntimeType::Image:
         return qmlElementName<RuntimeType::Image>();
     case RuntimeType::TextureData:

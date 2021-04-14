@@ -358,8 +358,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         return tex;
     };
 
-    const bool gltfMode = true;
-    if (gltfMode) { // GLTF Mode
+    if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
         aiReturn result;
         {
             aiColor4D baseColorFactor;
@@ -463,6 +462,56 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             if (result == aiReturn_SUCCESS && isUnlit)
                 QSSGSceneDesc::setProperty(target, "lighting", &QQuick3DPrincipledMaterial::setLighting, QQuick3DPrincipledMaterial::Lighting::NoLighting);
         }
+    } else { // Ver1
+        int shadingModel = 0;
+        aiReturn result;
+        auto material = &source;
+        result = material->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+        // lighting
+        if (result == aiReturn_SUCCESS && (shadingModel == aiShadingMode_NoShading))
+            QSSGSceneDesc::setProperty(target, "lighting", &QQuick3DDefaultMaterial::setLighting, QQuick3DDefaultMaterial::Lighting::NoLighting);
+
+        if (auto diffuseMapTexture = createTextureNode(source, aiTextureType_DIFFUSE, 0)) {
+            QSSGSceneDesc::setProperty(target, "diffuseMap", &QQuick3DDefaultMaterial::setDiffuseMap, diffuseMapTexture);
+        } else {
+            // For some reason the normal behavior is that either you have a diffuseMap[s] or a diffuse color
+            // but no a mix of both... So only set the diffuse color if none of the diffuse maps are set:
+            aiColor3D diffuseColor;
+            result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "diffuseColor", &QQuick3DDefaultMaterial::setDiffuseColor, aiColorToQColor(diffuseColor));
+        }
+
+        if (auto emissiveTexture = createTextureNode(source, aiTextureType_EMISSIVE, 0))
+            QSSGSceneDesc::setProperty(target, "emissiveMap", &QQuick3DDefaultMaterial::setEmissiveMap, emissiveTexture);
+
+        // specularReflectionMap
+        if (auto specularTexture = createTextureNode(source, aiTextureType_SPECULAR, 0))
+            QSSGSceneDesc::setProperty(target, "specularMap", &QQuick3DDefaultMaterial::setSpecularMap, specularTexture);
+
+        // opacity AI_MATKEY_OPACITY
+        ai_real opacity;
+        result = material->Get(AI_MATKEY_OPACITY, opacity);
+        if (result == aiReturn_SUCCESS)
+            QSSGSceneDesc::setProperty(target, "opacity", &QQuick3DDefaultMaterial::setOpacity, float(opacity));
+
+        // opacityMap aiTextureType_OPACITY 0
+        if (auto opacityTexture = createTextureNode(source, aiTextureType_OPACITY, 0))
+            QSSGSceneDesc::setProperty(target, "opacityMap", &QQuick3DDefaultMaterial::setOpacityMap, opacityTexture);
+
+        // bumpMap aiTextureType_HEIGHT 0
+        if (auto bumpTexture = createTextureNode(source, aiTextureType_HEIGHT, 0)) {
+            QSSGSceneDesc::setProperty(target, "bumpMap", &QQuick3DDefaultMaterial::setBumpMap, bumpTexture);
+            // bumpAmount AI_MATKEY_BUMPSCALING
+            ai_real bumpAmount;
+            result = material->Get(AI_MATKEY_BUMPSCALING, bumpAmount);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "bumpAmount", &QQuick3DDefaultMaterial::setBumpAmount, float(bumpAmount));
+        }
+
+        // normalMap aiTextureType_NORMALS 0
+        if (auto normalTexture = createTextureNode(source, aiTextureType_NORMALS, 0))
+            QSSGSceneDesc::setProperty(target, "normalMap", &QQuick3DDefaultMaterial::setNormalMap, normalTexture);
     }
 }
 
@@ -669,9 +718,11 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
     // materials
     {
+        const auto materialType = (sceneInfo.ver == SceneInfo::GltfVersion::v1) ? QSSGSceneDesc::Material::RuntimeType::DefaultMaterial
+                                                                                : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
         QVarLengthArray<QSSGSceneDesc::Material *> matList;
         for (const auto &sourceMat : qAsConst(materials)) {
-            auto targetMat = targetScene->create<QSSGSceneDesc::Material>(QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial);
+            auto targetMat = targetScene->create<QSSGSceneDesc::Material>(materialType);
             QSSGSceneDesc::addNode(target, *targetMat);
             setMaterialProperties(*targetMat, *sourceMat, sceneInfo);
             matList.push_back(targetMat);
