@@ -315,9 +315,9 @@ const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRende
  * so RENDER_FRAME_NEW() takes the RCI + T's arguments
  */
 template <typename T, typename... Args>
-inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, const Args&... args)
+Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Args&&... args)
 {
-    return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(const_cast<Args &>(args)...);
+    return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(std::forward<Args>(args)...);
 }
 
 QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey(
