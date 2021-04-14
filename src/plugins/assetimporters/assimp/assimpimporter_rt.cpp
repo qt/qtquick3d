@@ -761,11 +761,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 
     auto filePath = url.toLocalFile();
 
-    auto m_sourceFile = QFileInfo(filePath);
-    if (!m_sourceFile.exists())
+    auto sourceFile = QFileInfo(filePath);
+    if (!sourceFile.exists())
         return QLatin1String("File not found");
 
-    const auto extension = m_sourceFile.suffix().toLower();
+    const auto extension = sourceFile.suffix().toLower();
 
     if (extension != QLatin1String("gltf") && extension != QLatin1String("glb"))
         return QLatin1String("Extension \'%1\' is not supported!").arg(extension);
