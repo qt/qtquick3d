@@ -46,5 +46,8 @@
         <file>qml/meshes/meter_edge.mesh</file>
         <file>qml/images/speedometer_labels.png</file>
         <file>qml/images/star3.png</file>
+        <file>qml/AnimatedSprite.qml</file>
+        <file>qml/images/bear_black.png</file>
+        <file>qml/images/explosion_01_strip13.png</file>
     </qresource>
 </RCC>
