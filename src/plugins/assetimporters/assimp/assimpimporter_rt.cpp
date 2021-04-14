@@ -833,13 +833,12 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
         auto it = nodeMap.constFind(&source);
         const auto end = nodeMap.constEnd();
         if (it != end)
-            node = createSceneNode(*it, *it.key(), parent, sceneInfo);
+            node = createSceneNode(*it, source, parent, sceneInfo);
     }
 
-    if (!node) {
-        qWarning("No node created for %s\n", source.mName.C_Str());
-        node = &parent;
-    }
+    // For now, all the nodes are generated, even if they are empty.
+    if (!node)
+        node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Transform }, source, parent, sceneInfo);
 
     Q_ASSERT(node);
     Q_ASSERT(node->scene);

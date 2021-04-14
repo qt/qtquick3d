@@ -1061,8 +1061,10 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
     }
 
     for (const auto &cld : node.children) {
-        if (cld.id == 0 && output.type == OutputContext::NodeTree)
+        if (cld.id == 0 && output.type == OutputContext::NodeTree) {
+            QSSGQmlScopedIndent scopedIndent(output);
             writeQmlForNode(cld, output);
+        }
     }
 
     // Do something more convenient if this starts expending to more types...
@@ -1105,7 +1107,10 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     output.type = OutputContext::Resource;
     writeQmlForResources(scene.resources, output);
     output.type = OutputContext::NodeTree;
-    writeQmlForNode(*root, output);
+    for (const auto &cld : root->children) {
+        if (cld.id == 0) // If the child has an id (resource) we can skip it
+            writeQmlForNode(cld, output);
+    }
     // close the root
     indent(output) << blockEnd(output);
 }
