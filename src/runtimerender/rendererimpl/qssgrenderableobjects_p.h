@@ -361,7 +361,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
     QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
                             const QVector3D &inWorldCenterPt,
                             const QSSGRef<QSSGRenderer> &gen,
-                            QSSGRenderParticles &inParticles,
+                            const QSSGRenderParticles &inParticles,
                             QSSGRenderableImage *inFirstImage,
                             QSSGRenderableImage *inColorTable,
                             const QSSGShaderLightList &inLights,
