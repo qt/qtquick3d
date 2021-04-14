@@ -7,8 +7,8 @@
 # special case begin
 if(NOT QT_FEATURE_system_zlib)
     find_package(Qt6 COMPONENTS Zlib)
-elseif(NOT TARGET ZLIB::ZLIB)
-    qt_find_package(ZLIB PROVIDED_TARGETS ZLIB::ZLIB)
+elseif(NOT TARGET WrapZLIB::WrapZLIB)
+    qt_find_package(WrapZLIB PROVIDED_TARGETS WrapZLIB::WrapZLIB)
 endif()
 # special case end
 
@@ -333,7 +333,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION WIN32 AND (CMAKE_CROSSC
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION QT_FEATURE_system_zlib AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     LIBRARIES
-        ZLIB::ZLIB
+        WrapZLIB::WrapZLIB
 )
 
 qt_internal_extend_target(AssimpImporterPlugin CONDITION (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_assimp) AND (CMAKE_CROSSCOMPILING OR NOT QT_FEATURE_system_zlib) AND (host_build OR NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_zlib)
