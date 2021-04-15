@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquick3dparticles3dplugin
     URI "QtQuick3D.Particles3D"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick3DParticles3DPlugin
     DEPENDENCIES
