@@ -39,15 +39,17 @@ function(qt6_add_materials target resource_name)
     set(output_qrc "generated_${resource_name}.qrc")
     set(output_dir "${CMAKE_CURRENT_BINARY_DIR}/.rcc")
 
+    _qt_internal_wrap_tool_command(shadergen_command SET
+        "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::shadergen>"
+        -C "${PROJECT_SOURCE_DIR}"
+        -o "${output_dir}"
+        -r "${output_qrc}"
+        \""${arg_FILES}"\"
+    )
+
     add_custom_command(
         OUTPUT "${resource_name}"
-        ${QT_TOOL_PATH_SETUP_COMMAND}
-        COMMAND
-            ${QT_CMAKE_EXPORT_NAMESPACE}::shadergen
-            -C "${PROJECT_SOURCE_DIR}"
-            -o "${output_dir}"
-            -r "${output_qrc}"
-            \""${arg_FILES}"\"
+        ${shadergen_command}
         DEPENDS
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::shadergen>
     )
