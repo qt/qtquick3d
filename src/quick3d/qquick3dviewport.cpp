@@ -1080,7 +1080,6 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event) const
     // Maybe only some points fall inside, but QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem()
     // makes reduced-subset touch events that contain only the relevant points, when necessary.
     bool ret = false;
-    auto mainDA = QQuickItemPrivate::get(window()->contentItem())->deliveryAgent();
 
 //    ViewportTransformHelper::removeAll();
     QVarLengthArray<QPointF, 16> originalScenePositions;
