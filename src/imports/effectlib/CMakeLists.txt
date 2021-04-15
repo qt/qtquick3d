@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquick3deffectplugin
     URI "QtQuick3D.Effects"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick3DEffectPlugin
     DEPENDENCIES

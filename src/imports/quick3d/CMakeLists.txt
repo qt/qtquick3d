@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qquick3dplugin
     URI "QtQuick3D"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QQuick3DPlugin
     SKIP_TYPE_REGISTRATION

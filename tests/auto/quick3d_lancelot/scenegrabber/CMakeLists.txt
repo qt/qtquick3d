@@ -28,7 +28,7 @@ qt_internal_add_executable(qmlscenegrabber
 #####################################################################
 
 set_target_properties(qmlscenegrabber PROPERTIES
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick3D.Lancelot
 )
 

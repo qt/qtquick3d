@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquick3dhelpersplugin
     URI "QtQuick3D.Helpers"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick3DHelpersPlugin
     DEPENDENCIES
