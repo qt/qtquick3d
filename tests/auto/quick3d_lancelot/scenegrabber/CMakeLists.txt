@@ -47,7 +47,7 @@ qt_quick3d_internal_bake_lightprobe_hdri(tst_qquick3dqmlscenegrabber "ibl_assets
 #####################################################################
 
 set_target_properties(tst_qquick3dqmlscenegrabber PROPERTIES
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick3D.Lancelot
 )
 
