@@ -96,6 +96,10 @@ public:
         AttractorPosVX,
         AttractorPosVY,
         AttractorPosVZ,
+        Shape1, // Shape
+        Shape2,
+        Shape3,
+        Shape4,
         DeterministicSeparator, // Note: Enums before this must always be
                                 // deterministic based on the particle index
         LifeSpanV, // Emitter
@@ -117,10 +121,6 @@ public:
         VDirXV, // VectorDirection
         VDirYV,
         VDirZV,
-        Shape1, // Shape
-        Shape2,
-        Shape3,
-        Shape4,
     };
 
     void init(quint32 seed, int size = 65536) {

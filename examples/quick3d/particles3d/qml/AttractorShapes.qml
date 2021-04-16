@@ -198,6 +198,22 @@ Item {
                 duration: sliderDuration1.sliderValue
                 durationVariation: sliderDuration1Variation.sliderValue
                 hideAtEnd: checkBoxHide1.checked
+                useCachedPositions: false
+
+                SequentialAnimation on scale {
+                    running: true
+                    loops: Animation.Infinite
+                    Vector3dAnimation {
+                        to: Qt.vector3d(2, 2, 2)
+                        duration: 3500
+                        easing.type: Easing.InOutQuad
+                    }
+                    Vector3dAnimation {
+                        to: Qt.vector3d(0.1, 0.1, 0.1)
+                        duration: 3500
+                        easing.type: Easing.InOutQuad
+                    }
+                }
             }
         }
 

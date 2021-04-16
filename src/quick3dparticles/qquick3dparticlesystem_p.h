@@ -193,7 +193,7 @@ private:
     bool m_logging;
     QQuick3DParticleSystemLogging *m_loggingData = nullptr;
     QPRand m_rand;
-
+    int m_particleIdIndex = 0;
 };
 
 class QQuick3DParticleSystemAnimation : public QAbstractAnimation

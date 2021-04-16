@@ -54,6 +54,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAttractor : public QQuick3DParti
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
     Q_PROPERTY(bool hideAtEnd READ hideAtEnd WRITE setHideAtEnd NOTIFY hideAtEndChanged)
+    Q_PROPERTY(bool useCachedPositions READ useCachedPositions WRITE setUseCachedPositions NOTIFY useCachedPositionsChanged)
+    Q_PROPERTY(int positionsAmount READ positionsAmount WRITE setPositionsAmount NOTIFY positionsAmountChanged)
     QML_NAMED_ELEMENT(Attractor3D)
     QML_ADDED_IN_VERSION(6, 1)
 
@@ -65,6 +67,8 @@ public:
     int duration() const;
     int durationVariation() const;
     bool hideAtEnd() const;
+    bool useCachedPositions() const;
+    int positionsAmount() const;
 
 public Q_SLOTS:
     void setPositionVariation(const QVector3D &positionVariation);
@@ -72,6 +76,8 @@ public Q_SLOTS:
     void setDuration(int duration);
     void setDurationVariation(int durationVariation);
     void setHideAtEnd(bool hideAtEnd);
+    void setUseCachedPositions(bool useCachedPositions);
+    void setPositionsAmount(int positionsAmount);
 
 Q_SIGNALS:
     void positionVariationChanged();
@@ -79,6 +85,8 @@ Q_SIGNALS:
     void durationChanged();
     void durationVariationChanged();
     void hideAtEndChanged();
+    void useCachedPositionsChanged();
+    void positionsAmountChanged();
 
 protected:
     void prepareToAffect() override;
@@ -90,11 +98,14 @@ private:
     QQuick3DParticleShape *m_shape = nullptr;
     QList<QVector3D> m_shapePositionList;
     QVector3D m_centerPos;
+    QMatrix4x4 m_particleTransform;
     bool m_shapeDirty = false;
     int m_duration = -1;
     int m_durationVariation = 0;
     QVector3D m_positionVariation;
     bool m_hideAtEnd = false;
+    bool m_useCachedPositions = true;
+    int m_positionsAmount = 0;
 };
 
 QT_END_NAMESPACE

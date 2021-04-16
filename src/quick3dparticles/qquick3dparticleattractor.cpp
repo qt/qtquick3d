@@ -188,6 +188,31 @@ bool QQuick3DParticleAttractor::hideAtEnd() const
     return m_hideAtEnd;
 }
 
+/*!
+    \qmlproperty bool Attractor3D::useCachedPositions
+
+    This property defines if the attractor caches possible positions within its shape.
+    Cached positions give less random results but are better for performance.
+
+    The default value is \c true.
+*/
+bool QQuick3DParticleAttractor::useCachedPositions() const
+{
+    return m_useCachedPositions;
+}
+
+/*!
+    \qmlproperty int Attractor3D::positionsAmount
+
+    This property defines the amount of possible positions stored within the attractor shape.
+    By default the amount equals the particle count, but a lower amount can be used for a smaller cache.
+    Higher amount can be used for additional randomization.
+*/
+int QQuick3DParticleAttractor::positionsAmount() const
+{
+    return m_positionsAmount;
+}
+
 void QQuick3DParticleAttractor::setHideAtEnd(bool hideAtEnd)
 {
     if (m_hideAtEnd == hideAtEnd)
@@ -198,6 +223,26 @@ void QQuick3DParticleAttractor::setHideAtEnd(bool hideAtEnd)
     Q_EMIT update();
 }
 
+void QQuick3DParticleAttractor::setUseCachedPositions(bool useCachedPositions)
+{
+    if (m_useCachedPositions == useCachedPositions)
+        return;
+
+    m_useCachedPositions = useCachedPositions;
+    Q_EMIT useCachedPositionsChanged();
+    m_shapeDirty = true;
+}
+
+void QQuick3DParticleAttractor::setPositionsAmount(int positionsAmount)
+{
+    if (m_positionsAmount == positionsAmount)
+        return;
+
+    m_positionsAmount = positionsAmount;
+    Q_EMIT positionsAmountChanged();
+    m_shapeDirty = true;
+}
+
 void QQuick3DParticleAttractor::updateShapePositions()
 {
     m_shapePositionList.clear();
@@ -206,20 +251,29 @@ void QQuick3DParticleAttractor::updateShapePositions()
 
     m_shape->m_system = system();
 
-    // Get count of particles positions needed
-    int pCount = 0;
-    if (!m_particles.isEmpty()) {
-        for (auto p : m_particles) {
-            auto pp = qobject_cast<QQuick3DParticle *>(p);
-            pCount += pp->maxAmount();
+    if (m_useCachedPositions) {
+        // Get count of particles positions needed
+        int pCount = 0;
+        if (m_positionsAmount > 0) {
+            pCount = m_positionsAmount;
+        } else {
+            if (!m_particles.isEmpty()) {
+                for (auto p : m_particles) {
+                    auto pp = qobject_cast<QQuick3DParticle *>(p);
+                    pCount += pp->maxAmount();
+                }
+            } else {
+                pCount = system()->particleCount();
+            }
         }
-    } else {
-        pCount = system()->particleCount();
-    }
 
-    m_shapePositionList.reserve(pCount);
-    for (int i = 0; i < pCount; i++)
-        m_shapePositionList << m_shape->randomPosition(i);
+        m_shapePositionList.reserve(pCount);
+        for (int i = 0; i < pCount; i++)
+            m_shapePositionList << m_shape->randomPosition(i);
+    } else {
+        m_shapePositionList.clear();
+        m_shapePositionList.squeeze();
+    }
 
     m_shapeDirty = false;
 }
@@ -228,9 +282,8 @@ void QQuick3DParticleAttractor::prepareToAffect()
 {
     if (m_shapeDirty)
         updateShapePositions();
-
-    QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
-    m_centerPos = transform.map(position());
+    m_centerPos = position();
+    m_particleTransform = calculateParticleTransform(parentNode(), m_systemSharedParent);
 }
 
 void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
@@ -256,14 +309,20 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
     float pStart = 1.0f - pEnd;
     QVector3D pos = m_centerPos;
 
-    if (m_shape)
-        pos += m_shapePositionList[sd.index];
+    if (m_shape) {
+        if (m_useCachedPositions)
+            pos += m_shapePositionList[sd.index % m_shapePositionList.size()];
+        else
+            pos += m_shape->randomPosition(sd.index);
+    }
+
     if (!m_positionVariation.isNull()) {
         pos.setX(pos.x() + m_positionVariation.x() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVX) * m_positionVariation.x());
         pos.setY(pos.y() + m_positionVariation.y() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVY) * m_positionVariation.y());
         pos.setZ(pos.z() + m_positionVariation.z() - 2.0f * rand->get(sd.index, QPRand::AttractorPosVZ) * m_positionVariation.z());
     }
-    d->position = (pStart * d->position) + (pEnd * pos);
+
+    d->position = (pStart * d->position) + (pEnd * m_particleTransform.map(pos));
 }
 
 QT_END_NAMESPACE

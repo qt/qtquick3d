@@ -272,6 +272,7 @@ void QQuick3DParticleSystem::setRunning(bool running)
                 emitter->reset();
             for (auto particle : qAsConst(m_particles))
                 particle->reset();
+            m_particleIdIndex = 0;
         }
 
         if (m_componentComplete && !m_running && m_useRandomSeed)

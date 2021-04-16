@@ -627,26 +627,29 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         return;
     auto rand = m_system->rand();
 
-    int particleIndex = particle->nextCurrentIndex(this);
-    auto d = &particle->m_particleData[particleIndex];
+    int particleDataIndex = particle->nextCurrentIndex(this);
+    auto d = &particle->m_particleData[particleDataIndex];
+    int particleIdIndex = m_system->m_particleIdIndex++;
+    if (m_system->m_particleIdIndex == INT_MAX)
+        m_system->m_particleIdIndex = 0;
     *d = m_clearData; // Reset the data as it might be reused
-    d->index = particleIndex;
+    d->index = particleIdIndex;
     d->startTime = startTime;
 
     // Life time in seconds
     float lifeSpanMs = m_lifeSpanVariation / 1000.0f;
-    float lifeSpanVariationMs = lifeSpanMs - 2.0f * rand->get(particleIndex, QPRand::LifeSpanV) * lifeSpanMs;
+    float lifeSpanVariationMs = lifeSpanMs - 2.0f * rand->get(particleIdIndex, QPRand::LifeSpanV) * lifeSpanMs;
     d->lifetime = (m_lifeSpan / 1000.0f) + lifeSpanVariationMs;
 
     // Size
-    float sVar = m_particleScaleVariation - 2.0f * rand->get(particleIndex, QPRand::ScaleV) * m_particleScaleVariation;
+    float sVar = m_particleScaleVariation - 2.0f * rand->get(particleIdIndex, QPRand::ScaleV) * m_particleScaleVariation;
     float endScale = m_particleEndScale < 0.0f ? m_particleScale : m_particleEndScale;
     d->startSize = std::max(0.0f, float(m_particleScale + sVar));
     d->endSize = std::max(0.0f, float(endScale + sVar));
 
     // Emiting area/shape
     if (m_shape) {
-        d->startPosition = centerPos + m_shape->randomPosition(particleIndex);
+        d->startPosition = centerPos + m_shape->randomPosition(particleIdIndex);
     } else {
         // When shape is not set, default to node center point.
         d->startPosition = centerPos;
@@ -670,9 +673,9 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         rot.x = m_particleRotation.x() * step;
         rot.y = m_particleRotation.y() * step;
         rot.z = m_particleRotation.z() * step;
-        rot.x += (m_particleRotationVariation.x() - 2.0f * rand->get(particleIndex, QPRand::RotXV) * m_particleRotationVariation.x()) * step;
-        rot.y += (m_particleRotationVariation.y() - 2.0f * rand->get(particleIndex, QPRand::RotYV) * m_particleRotationVariation.y()) * step;
-        rot.z += (m_particleRotationVariation.z() - 2.0f * rand->get(particleIndex, QPRand::RotZV) * m_particleRotationVariation.z()) * step;
+        rot.x += (m_particleRotationVariation.x() - 2.0f * rand->get(particleIdIndex, QPRand::RotXV) * m_particleRotationVariation.x()) * step;
+        rot.y += (m_particleRotationVariation.y() - 2.0f * rand->get(particleIdIndex, QPRand::RotYV) * m_particleRotationVariation.y()) * step;
+        rot.z += (m_particleRotationVariation.z() - 2.0f * rand->get(particleIdIndex, QPRand::RotZV) * m_particleRotationVariation.z()) * step;
         d->startRotation = rot;
     }
     // Rotation velocity
@@ -680,9 +683,9 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         float rotVelX = m_particleRotationVelocity.x();
         float rotVelY = m_particleRotationVelocity.y();
         float rotVelZ = m_particleRotationVelocity.z();
-        rotVelX += (m_particleRotationVelocityVariation.x() - 2.0f * rand->get(particleIndex, QPRand::RotXVV) * m_particleRotationVelocityVariation.x());
-        rotVelY += (m_particleRotationVelocityVariation.y() - 2.0f * rand->get(particleIndex, QPRand::RotYVV) * m_particleRotationVelocityVariation.y());
-        rotVelZ += (m_particleRotationVelocityVariation.z() - 2.0f * rand->get(particleIndex, QPRand::RotZVV) * m_particleRotationVelocityVariation.z());
+        rotVelX += (m_particleRotationVelocityVariation.x() - 2.0f * rand->get(particleIdIndex, QPRand::RotXVV) * m_particleRotationVelocityVariation.x());
+        rotVelY += (m_particleRotationVelocityVariation.y() - 2.0f * rand->get(particleIdIndex, QPRand::RotYVV) * m_particleRotationVelocityVariation.y());
+        rotVelZ += (m_particleRotationVelocityVariation.z() - 2.0f * rand->get(particleIdIndex, QPRand::RotZVV) * m_particleRotationVelocityVariation.z());
         // Particle data rotations are in qint8 vec3 to save memory.
         // max value 127*127 = 16129 degrees/second
         float sign;
@@ -701,16 +704,16 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     uchar r, g, b, a;
     if (particle->unifiedColorVariation()) {
         // Vary all color channels using the same random amount
-        const int randVar = int(rand->get(particleIndex, QPRand::ColorAV) * 256);
+        const int randVar = int(rand->get(particleIdIndex, QPRand::ColorAV) * 256);
         r = pc.red() * (1.0f - pcv.x()) + randVar * pcv.x();
         g = pc.green() * (1.0f - pcv.y()) + randVar * pcv.y();
         b = pc.blue() * (1.0f - pcv.z()) + randVar * pcv.z();
         a = pc.alpha() * (1.0f - pcv.w()) + randVar * pcv.w();
     } else {
-        r = pc.red() * (1.0f - pcv.x()) + int(rand->get(particleIndex, QPRand::ColorRV) * 256) * pcv.x();
-        g = pc.green() * (1.0f - pcv.y()) + int(rand->get(particleIndex, QPRand::ColorGV) * 256) * pcv.y();
-        b = pc.blue() * (1.0f - pcv.z()) + int(rand->get(particleIndex, QPRand::ColorBV) * 256) * pcv.z();
-        a = pc.alpha() * (1.0f - pcv.w()) + int(rand->get(particleIndex, QPRand::ColorAV) * 256) * pcv.w();
+        r = pc.red() * (1.0f - pcv.x()) + int(rand->get(particleIdIndex, QPRand::ColorRV) * 256) * pcv.x();
+        g = pc.green() * (1.0f - pcv.y()) + int(rand->get(particleIdIndex, QPRand::ColorGV) * 256) * pcv.y();
+        b = pc.blue() * (1.0f - pcv.z()) + int(rand->get(particleIdIndex, QPRand::ColorBV) * 256) * pcv.z();
+        a = pc.alpha() * (1.0f - pcv.w()) + int(rand->get(particleIdIndex, QPRand::ColorAV) * 256) * pcv.w();
     }
     d->startColor = {r, g, b, a};
 }
