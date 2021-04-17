@@ -129,6 +129,7 @@ QQuick3DInstancing::~QQuick3DInstancing()
 {
 }
 
+//### Not used or documented. Remove before Qt 6.2
 QByteArray QQuick3DInstancing::instanceBuffer(int *instanceCount)
 {
     Q_D(QQuick3DInstancing);
@@ -157,6 +158,7 @@ void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
         return;
 
     d->m_instanceCountOverride = instanceCountOverride;
+    d->m_instanceCountOverrideChanged = true;
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
     emit instanceCountOverrideChanged();
 }
@@ -188,14 +190,21 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
         emit instanceNodeDirty();
         d->m_instanceDataChanged = true;
     }
+
+    auto effectiveInstanceCount = [d]() {
+        if (d->m_instanceCountOverride >= 0)
+            return qMin(d->m_instanceCount, d->m_instanceCountOverride);
+        return d->m_instanceCount;
+    };
     auto *instanceTable = static_cast<QSSGRenderInstanceTable *>(node);
     if (d->m_instanceDataChanged) {
-        int count;
-        QByteArray buffer = instanceBuffer(&count);
-        //   qDebug() << "QQuick3DInstancing:updateSpatialNode setting instance buffer data" << count;
-        instanceTable->setData(buffer, count);
+        QByteArray buffer = getInstanceBuffer(&d->m_instanceCount);
+        instanceTable->setData(buffer, effectiveInstanceCount());
         d->m_instanceDataChanged = false;
+    } else if (d->m_instanceCountOverrideChanged) {
+        instanceTable->setInstanceCountOverride(effectiveInstanceCount());
     }
+    d->m_instanceCountOverrideChanged = false;
     instanceTable->setHasTransparency(d->m_hasTransparency);
     return node;
 }

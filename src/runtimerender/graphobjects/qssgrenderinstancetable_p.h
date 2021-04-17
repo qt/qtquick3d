@@ -50,21 +50,13 @@ QT_BEGIN_NAMESPACE
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRenderNode
 {
-    struct InstanceTableEntry {
-        QVector4D row0;
-        QVector4D row1;
-        QVector4D row2;
-        QVector4D color;
-        QVector4D instanceData;
-    };
-
     QSSGRenderInstanceTable() : QSSGRenderNode(QSSGRenderGraphObject::Type::ModelInstance) {}
 
     int count() const { return instanceCount; }
     qsizetype dataSize() const { return table.size(); }
     const void *constData() const { return table.constData(); }
-    void resize(int count) { table.resize(count * sizeof(InstanceTableEntry)); instanceCount = count; }
     void setData(const QByteArray &data, int count) { table = data; instanceCount = count; ++instanceSerial; }
+    void setInstanceCountOverride(int count) { instanceCount = count; }
     int serial() const { return instanceSerial; }
     bool hasTransparency() { return transparency; }
     void setHasTransparency( bool t) { transparency = t; }
