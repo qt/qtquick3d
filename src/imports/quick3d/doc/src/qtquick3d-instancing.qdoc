@@ -99,6 +99,7 @@ explicitly when an instance table contains semi-transparent alpha values: Set th
 blending. This applies to all the instances: Even fully opaque instances will be rendered
 without depth testing, potentially causing visible errors.
 
+The rendering order relative to the rest of the scene can be adjusted by setting the \l{Model::depthBias}{depth bias} of the model.
 
 \section1 Transforms and instancing
 
