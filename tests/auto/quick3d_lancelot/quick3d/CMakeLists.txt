@@ -26,7 +26,7 @@ qt_internal_add_test(tst_qquick3d
 
 # special case begin
 add_dependencies(tst_qquick3d Qt6::Quick3D)
-add_dependencies(tst_qquick3d qmlscenegrabber)
+add_dependencies(tst_qquick3d qquick3d_qmlscenegrabber)
 # special case end
 
 ## Scopes:

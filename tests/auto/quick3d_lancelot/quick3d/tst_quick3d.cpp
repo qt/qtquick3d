@@ -194,7 +194,7 @@ bool tst_Quick3D::renderAndGrab(const QString& qmlFile, const QStringList& extra
 #endif
     QProcess grabber;
     grabber.setProcessChannelMode(QProcess::ForwardedErrorChannel);
-    QString cmd = QCoreApplication::applicationDirPath() + "/qmlscenegrabber";
+    QString cmd = QCoreApplication::applicationDirPath() + "/qquick3d_qmlscenegrabber";
     QStringList args = extraArgs;
 #if defined(Q_OS_WIN)
     args << "-platform" << "windows:fontengine=freetype";

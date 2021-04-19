@@ -4,7 +4,7 @@
 ## qmlscenegrabber Binary:
 #####################################################################
 
-qt_internal_add_executable(tst_qquick3dqmlscenegrabber
+qt_internal_add_executable(qquick3d_qmlscenegrabber
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
         dynamicgeometry.cpp dynamicgeometry.h
@@ -25,14 +25,14 @@ set(scenegrabber_resource_files
     "trim.ttf"
 )
 
-qt_internal_add_resource(tst_qquick3dqmlscenegrabber "scenegrabber"
+qt_internal_add_resource(qquick3d_qmlscenegrabber "scenegrabber"
     PREFIX
         "/"
     FILES
         ${scenegrabber_resource_files}
 )
 
-qt_quick3d_internal_bake_lightprobe_hdri(tst_qquick3dqmlscenegrabber "ibl_assets"
+qt_quick3d_internal_bake_lightprobe_hdri(qquick3d_qmlscenegrabber "ibl_assets"
     PREFIX
         "/"
     FILES
@@ -46,9 +46,9 @@ qt_quick3d_internal_bake_lightprobe_hdri(tst_qquick3dqmlscenegrabber "ibl_assets
 ## Scopes:
 #####################################################################
 
-set_target_properties(tst_qquick3dqmlscenegrabber PROPERTIES
+set_target_properties(qquick3d_qmlscenegrabber PROPERTIES
     QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick3D.Lancelot
 )
 
-qt6_qml_type_registration(tst_qquick3dqmlscenegrabber)
+qt6_qml_type_registration(qquick3d_qmlscenegrabber)
