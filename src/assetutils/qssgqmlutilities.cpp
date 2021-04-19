@@ -571,6 +571,8 @@ static void writeImportHeader(OutputContext &output)
                   << "import QtQuick3D\n\n";
 }
 
+static QString toQuotedString(const QString &text) { return QStringLiteral("\"%1\"").arg(text); }
+
 static inline QString getMeshFolder() { return QStringLiteral("meshes/"); }
 static inline QString getMeshExtension() { return QStringLiteral(".mesh"); }
 
@@ -779,7 +781,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
                 const auto &scene = *meshNode->scene;
                 const auto meshSourceName = outputMeshAsset(scene, *meshNode, output.outdir);
-                return { property.name, QString::fromUtf8("\"%1\"").arg(meshSourceName) };
+                return { property.name, toQuotedString(meshSourceName) };
             }
         }
 
@@ -809,7 +811,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 if (target.runtimeType == RuntimeType::Image) {
                     const auto &path = urlView->view;
                     const auto sourcePath = copyTextureAsset(path, output.outdir);
-                    return { property.name, QString::fromUtf8("\"%1\"").arg(sourcePath) };
+                    return { property.name, toQuotedString(sourcePath) };
                 }
             }
         }
@@ -953,9 +955,8 @@ static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContex
 
     const auto type = QLatin1String("url");
     const auto &name = id;
-    const auto value = QString(u'\"' + textureSourcePath + u'\"');
 
-    indent(output) << writeProperty(type, name, value) << '\n';
+    indent(output) << writeProperty(type, name, toQuotedString(textureSourcePath)) << '\n';
 }
 
 static void writeQml(const QSSGSceneDesc::Light &light, OutputContext &output)
