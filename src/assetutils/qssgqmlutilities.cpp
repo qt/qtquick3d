@@ -720,6 +720,9 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
             if (const auto node = reinterpret_cast<QSSGSceneDesc::Node *>(value.dptr)) {
+                // If this assert is triggerd it likely means that the node never got added
+                // to the scene tree (see: addNode()) or that it's a type not handled as a resource, see:
+                // writeQmlForResources()
                 Q_ASSERT(node->id != 0);
                 // The 'TextureData' node will have its data written out and become
                 // a source url.
