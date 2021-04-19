@@ -38,6 +38,10 @@
 #include <QRegularExpression>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qbuffer.h>
+
+#include <QtGui/qimage.h>
+#include <QtGui/qimagereader.h>
 
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
@@ -579,6 +583,8 @@ QString getMeshSourceName(const QByteArrayView &name)
     return QString(meshFolder + sanitizedName +  extension);
 }
 
+static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
+
 QString asString(const QSSGSceneDesc::Value &value)
 {
     QString str;
@@ -776,6 +782,37 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 return { property.name, QString::fromUtf8("\"%1\"").arg(meshSourceName) };
             }
         }
+
+        if (value.mt == QMetaType::fromType<QSSGSceneDesc::UrlView>()) {
+            //
+            static const auto copyTextureAsset = [](const QByteArrayView &texturePath, const QDir &outdir) {
+                const auto assetPath = QString::fromUtf8(texturePath);
+                QFileInfo fi(assetPath);
+                if (!fi.exists())
+                    return assetPath;
+
+                const auto mapsFolder = getTextureFolder();
+
+                // If a maps folder does not exist, then create one
+                if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
+                    return QString(); // Error out
+
+                const auto newfilepath = QString(mapsFolder + fi.fileName());
+                if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath))
+                    return QString();
+
+                return newfilepath;
+            };
+
+            if (const auto urlView = reinterpret_cast<const UrlView *>(value.dptr)) {
+                // We need to adjust source url(s) as those should contain the canonical path
+                if (target.runtimeType == RuntimeType::Image) {
+                    const auto &path = urlView->view;
+                    const auto sourcePath = copyTextureAsset(path, output.outdir);
+                    return { property.name, QString::fromUtf8("\"%1\"").arg(sourcePath) };
+                }
+            }
+        }
     }
 
     if (ok)
@@ -849,49 +886,10 @@ static void writeQml(const QSSGSceneDesc::Camera &camera, OutputContext &output)
     writeNodeProperties(camera, output);
 }
 
-static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
-
-static QString copyTextureAsset(const QUrl &texturePath, const QDir &outdir)
-{
-    QFileInfo fi(texturePath.toString());
-    if (!fi.exists())
-        return texturePath.toString();
-
-    const auto mapsFolder = getTextureFolder();
-
-    // If a maps folder does not exist, then create one
-    if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
-        return QString(); // Error out
-
-    const auto newfilepath = QString(mapsFolder + fi.fileName());
-    if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath))
-        return QString();
-
-    return newfilepath;
-}
-
 static void writeQml(const QSSGSceneDesc::Texture &texture, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(texture.nodeType == Node::Type::Texture && texture.runtimeType == Node::RuntimeType::Image);
-
-    // We need to adjust source url(s) as those should contain the canonical path
-    const auto &properties = texture.properties;
-    auto it = properties.begin();
-    const auto end = properties.end();
-    for (; it != end; ++it) {
-        // find the texture data property
-        if (it->value.mt == QMetaType::fromType<QUrl>()) {
-            if (qstrncmp((*it).name, "source", 6) == 0) {
-                if (auto url = reinterpret_cast<QUrl *>((*it).value.dptr)) {
-                    const auto path = url->toString();
-                    const auto newpath = copyTextureAsset(path, output.outdir);
-                    url->setPath(newpath);
-                }
-            }
-        }
-    }
-
     indent(output) << qmlElementName<Camera::RuntimeType::Image>() << blockBegin(output);
     writeNodeProperties(texture, output);
 }
@@ -925,28 +923,28 @@ static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContex
     using namespace QSSGSceneDesc;
     Q_ASSERT(textureData.nodeType == Node::Type::Texture && textureData.runtimeType == Node::RuntimeType::TextureData);
 
-    const auto &properties = textureData.properties;
-    auto it = properties.begin();
-    const auto end = properties.end();
-    QByteArray *texData = nullptr;
-    QSize size;
-    for (; it != end; ++it) {
-        // find the texture data property
-        if (it->value.mt == QMetaType::fromType<QByteArray>()) {
-            if (qstrncmp((*it).name, "textureData", 11) == 0)
-                texData = reinterpret_cast<QByteArray *>((*it).value.dptr);
-        } else if (it->value.mt == QMetaType::fromType<QSize>()) {
-            if (qstrncmp((*it).name, "size", 4) == 0)
-                size = *reinterpret_cast<QSize *>((*it).value.dptr);
-        }
-    }
+    const auto &texData = textureData.data;
+    const auto &size = textureData.sz;
+    const bool isCompressed = ((textureData.flgs & quint8(TextureData::Flags::Compressed)) != 0);
 
     const auto id = getIdForNode(textureData);
     QString textureSourcePath = getTextureSourceName(id);
 
-    if (texData) {
-        const auto image = QImage((uchar *)texData->data(), size.width(), size.height(), QImage::Format::Format_RGBA8888);
-        textureSourcePath = outputTextureAsset(textureSourcePath, image, output.outdir);
+    if (!texData.isEmpty()) {
+        QImage image;
+        if (isCompressed) {
+            QByteArray data = texData.toByteArray();
+            QBuffer readBuffer(&data);
+            QImageReader imageReader(&readBuffer);
+            image = imageReader.read();
+            if (image.isNull())
+                qWarning() << imageReader.errorString();
+        } else {
+            image = QImage(reinterpret_cast<const uchar *>(texData.data()), size.width(), size.height(), QImage::Format::Format_RGBA8888);
+        }
+
+        if (!image.isNull())
+            textureSourcePath = outputTextureAsset(textureSourcePath, image, output.outdir);
     }
 
     static const auto writeProperty = [](const QString &type, const QString &name, const QString &value) {

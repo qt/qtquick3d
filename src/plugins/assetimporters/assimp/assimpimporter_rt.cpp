@@ -325,45 +325,24 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                         Q_ASSERT(sourceTexture->pcData);
                         // Two cases of embedded textures, uncompress and compressed.
                         const bool isCompressed = (sourceTexture->mHeight == 0);
-                        // Create a textureData node
-                        if (isCompressed) {
-                            QByteArray data(reinterpret_cast<char *>(sourceTexture->pcData), sourceTexture->mWidth);
-                            QBuffer readBuffer(&data);
-                            QByteArray format = sourceTexture->achFormatHint;
-                            QImageReader imageReader(&readBuffer, format);
-                            const auto image = imageReader.read();
-                            if (image.isNull()) {
-                                qWarning() << imageReader.errorString();
-                            } else {
-                                const auto size = image.size();
-                                const auto bytes = image.sizeInBytes();
-                                auto texData = scene->create<QSSGSceneDesc::TextureData>();
-                                QSSGSceneDesc::addNode(*tex, *texData);
-                                QSSGSceneDesc::setProperty(*texData, "textureData", &QQuick3DTextureData::setTextureData, QByteArray(reinterpret_cast<const char *>(image.constBits()), bytes));
-                                QSSGSceneDesc::setProperty(*texData, "size", &QQuick3DTextureData::setSize, size);
-                                QSSGSceneDesc::setProperty(*texData, "format", &QQuick3DTextureData::setFormat, QQuick3DTextureData::Format::RGBA8); // TODO: Format
-                                QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, texData);
-                            }
-                        } else {
-                            // RAW
-                            auto texData = scene->create<QSSGSceneDesc::TextureData>();
-                            QSSGSceneDesc::addNode(*tex, *texData);
-                            const auto bytes = sourceTexture->mHeight * sourceTexture->mWidth;
-                            QSSGSceneDesc::setProperty(*texData, "textureData", &QQuick3DTextureData::setTextureData, QByteArray(reinterpret_cast<const char *>(sourceTexture->pcData), bytes));
-                            QSSGSceneDesc::setProperty(*texData, "size", &QQuick3DTextureData::setSize, QSize{int(sourceTexture->mWidth), int(sourceTexture->mHeight)});
-                            QSSGSceneDesc::setProperty(*texData, "format", &QQuick3DTextureData::setFormat, QQuick3DTextureData::Format::RGBA8);
-                            QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, texData);
-                        }
+
+                        // For compressed textures this is the size of the image buffer (in bytes)
+                        const qsizetype asize = (isCompressed) ? sourceTexture->mWidth : (sourceTexture->mHeight * sourceTexture->mWidth) * sizeof(aiTexel);
+                        auto *data = scene->allocator.allocate(asize);
+                        ::memcpy(data, sourceTexture->pcData, asize);
+                        const QSize size = (!isCompressed) ? QSize(int(sourceTexture->mWidth), int(sourceTexture->mHeight)) : QSize();
+                        QByteArrayView imageData { reinterpret_cast<const char *>(data), asize };
+                        const auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
+                        const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
+                        auto textureData = scene->create<QSSGSceneDesc::TextureData>(imageData, size, format, flags);
+                        QSSGSceneDesc::addNode(*tex, *textureData);
+                        QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
                     }
                 } else {
-                    const auto path = sceneInfo.workingDir.canonicalPath() + QDir::separator() + QString::fromUtf8(texturePath.C_Str());
-                    if (QFileInfo::exists(path)) {
-                        // NOTE: We do not know how this will be used yet, so the source path might need to adjusted
-                        // in the qml writer.
-                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QUrl(path));
-                    } else {
-                        qWarning("Unable to locate texture at %s\n", qPrintable(path));
-                    }
+                    const auto path = (sceneInfo.workingDir.canonicalPath() + QDir::separator() + QString::fromUtf8(texturePath.C_Str())).toUtf8();
+                    char *data = reinterpret_cast<char *>(scene->allocator.allocate(path.size() + 1));
+                    qstrncpy(data, path.constData(), path.size() + 1);
+                    QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ { QByteArrayView{data, path.size()} } });
                 }
             }
         }
@@ -955,6 +934,21 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
                 const auto url = createAndRegisterMesh(*node.scene, *meshNode);
                 v.call->set(obj, &url);
             }
+        } else if (v.value.mt == QMetaType::fromType<BufferView>()) {
+            if (const auto buffer = reinterpret_cast<const BufferView *>(v.value.dptr)) {
+                const QByteArray qbuffer = buffer->view.toByteArray();
+                v.call->set(obj, &qbuffer);
+            }
+        } else if (v.value.mt == QMetaType::fromType<UrlView>()) {
+            if (const auto url = reinterpret_cast<const UrlView *>(v.value.dptr)) {
+                const QUrl qurl(QString::fromUtf8(url->view));
+                v.call->set(obj, &qurl);
+            }
+        } else if (v.value.mt == QMetaType::fromType<StringView>()) {
+            if (const auto string = reinterpret_cast<const StringView *>(v.value.dptr)) {
+                const QString qstring(QString::fromUtf8(string->view));
+                v.call->set(obj, &qstring);
+            }
         } else {
             v.call->set(obj, v.value.dptr);
         }
@@ -969,6 +963,44 @@ GraphObjectType *createRuntimeObject(NodeType &node, QQuick3DObject &parent)
         node.obj = qobject_cast<QQuick3DObject *>(obj = new GraphObjectType);
         obj->setParent(&parent);
         obj->setParentItem(&parent);
+    }
+
+    return obj;
+}
+
+template<>
+QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::TextureData &node, QQuick3DObject &parent)
+{
+    QQuick3DTextureData *obj = qobject_cast<QQuick3DTextureData *>(node.obj);
+    if (!obj) {
+        node.obj = qobject_cast<QQuick3DObject *>(obj = new QQuick3DTextureData);
+        obj->setParent(&parent);
+        obj->setParentItem(&parent);
+
+        const auto &texData = node.data;
+        const bool isCompressed = ((node.flgs & quint8(QSSGSceneDesc::TextureData::Flags::Compressed)) != 0);
+
+        if (!texData.isEmpty()) {
+            QImage image;
+            if (isCompressed) {
+                QByteArray data = texData.toByteArray();
+                QBuffer readBuffer(&data);
+                QImageReader imageReader(&readBuffer);
+                image = imageReader.read();
+                if (image.isNull())
+                    qWarning() << imageReader.errorString();
+            } else {
+                const auto &size = node.sz;
+                image = QImage(reinterpret_cast<const uchar *>(texData.data()), size.width(), size.height(), QImage::Format::Format_RGBA8888);
+            }
+
+            if (!image.isNull()) {
+                const auto bytes = image.sizeInBytes();
+                obj->setSize(image.size());
+                obj->setFormat(QQuick3DTextureData::Format::RGBA8);
+                obj->setTextureData(QByteArray(reinterpret_cast<const char *>(image.constBits()), bytes));
+            }
+        }
     }
 
     return obj;

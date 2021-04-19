@@ -117,6 +117,13 @@ struct Value
     void *dptr;
 };
 
+struct BufferView {
+    using type = QByteArray;
+    QByteArrayView view;
+};
+struct UrlView : BufferView { using type = QUrl; };
+struct StringView : BufferView { using type = QString; };
+
 struct Property
 {
     Value value;
@@ -175,7 +182,23 @@ struct Texture : Node
 
 struct TextureData : Node
 {
-    TextureData() : Node(Node::Type::Texture, RuntimeType::TextureData) {}
+    enum class Flags : quint8
+    {
+        Compressed = 0x1
+    };
+
+    using Format = QQuick3DTextureData::Format;
+    explicit TextureData(QByteArrayView dataref, QSize size, Format format, quint8 flags = 0)
+        : Node(Node::Type::Texture, RuntimeType::TextureData)
+        , data(dataref)
+        , sz(size)
+        , fmt(format)
+        , flgs(flags)
+    {}
+    QByteArrayView data;
+    QSize sz;
+    Format fmt;
+    quint8 flgs;
 };
 
 struct Material : Node
@@ -346,7 +369,8 @@ template<typename Setter, typename Value, typename std::enable_if_t<std::is_same
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const Value &value)
 {
     Q_ASSERT(node.scene);
-    static_assert (std::is_copy_constructible_v<Value>, "Needs to be copy constructable!");
+    static_assert((std::is_copy_constructible_v<Value> && std::is_trivially_destructible_v<Value>),
+                  "Value needs to be copy constructable and trivially destructible!");
     Property *prop = node.scene->create<Property>();
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
@@ -365,6 +389,19 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value = value;
+    node.properties.push_back(*prop);
+}
+
+template<typename Setter, typename ViewValue, typename std::enable_if_t<std::is_base_of_v<QSSGSceneDesc::BufferView, ViewValue>, bool> = false>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, ViewValue view)
+{
+    Q_ASSERT(node.scene);
+    static_assert(std::is_same_v<typename ViewValue::type, typename FuncType<Setter>::Arg0Base>, "Type cannot be mapped to slot argument");
+    Property *prop = node.scene->create<Property>();
+    prop->name = name;
+    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
+    prop->value.mt = QMetaType::fromType<ViewValue>();
+    prop->value.dptr = node.scene->create<ViewValue>(std::move(view));
     node.properties.push_back(*prop);
 }
 
@@ -417,5 +454,9 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::Light)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Skeleton)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Joint)
 Q_DECLARE_METATYPE(QSSGSceneDesc::NodeList);
+
+Q_DECLARE_METATYPE(QSSGSceneDesc::BufferView)
+Q_DECLARE_METATYPE(QSSGSceneDesc::UrlView)
+Q_DECLARE_METATYPE(QSSGSceneDesc::StringView)
 
 #endif // QSSGSCENEDESCRIPTION_P_H
