@@ -108,7 +108,7 @@ void Q_QUICK3DASSETUTILS_EXPORT writeQmlPropertyHelper(QTextStream &output, int 
 
 void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir);
 
-Q_REQUIRED_RESULT QString Q_QUICK3DASSETUTILS_EXPORT getMeshSourceName(const QString &name);
+Q_REQUIRED_RESULT QString Q_QUICK3DASSETUTILS_EXPORT getMeshSourceName(const QByteArrayView &name);
 
 }
 

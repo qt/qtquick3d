@@ -84,12 +84,10 @@ namespace QSSGSceneDesc
 
 struct Node;
 
-using MeshData = QPair<QString, QSSGMesh::Mesh>;
-
 struct Scene
 {
     using ResourceNodes = QVarLengthArray<Node *>;
-    using MeshStorage = QVector<MeshData>;
+    using MeshStorage = QVector<QSSGMesh::Mesh>;
     using Allocator = QSSGPerFrameAllocator;
 
     // Root node, usually an empty 'transform' node.
@@ -187,10 +185,12 @@ struct Material : Node
 
 struct Mesh : Node
 {
-    explicit Mesh(qsizetype index)
+    explicit Mesh(QByteArrayView name, qsizetype index)
         : Node(Node::Type::Mesh, RuntimeType::Node)
+        , name(name)
         , idx(index)
     {}
+    QByteArrayView name;
     qsizetype idx; // idx to the mesh data in the mesh data storaget (see Scene).
 };
 
@@ -352,6 +352,19 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value.mt = QMetaType::fromType<Value>();
     prop->value.dptr = node.scene->create<Value>(value);
+    node.properties.push_back(*prop);
+}
+
+// Calling this will omit any type checking, so make sure the type is handled correctly
+// when it gets used later!
+template<typename Setter>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QSSGSceneDesc::Value &&value)
+{
+    Q_ASSERT(node.scene);
+    Property *prop = node.scene->create<Property>();
+    prop->name = name;
+    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
+    prop->value = value;
     node.properties.push_back(*prop);
 }
 

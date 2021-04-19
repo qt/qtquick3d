@@ -81,6 +81,19 @@ Q_REQUIRED_RESULT static inline QColor aiColorToQColor(const aiColor4D &color)
     return QColor::fromRgbF(color.r, color.g, color.b, color.a);
 }
 
+static QByteArrayView fromAiString(QSSGSceneDesc::Scene::Allocator &allocator, const aiString &string)
+{
+    const qsizetype length = string.length;
+    if (length > 0) {
+        const qsizetype asize = length + 1;
+        char *data = reinterpret_cast<char *>(allocator.allocate(asize));
+        qstrncpy(data, string.data, length + 1);
+        return QByteArrayView{data, length};
+    }
+
+    return QByteArrayView();
+}
+
 struct NodeInfo
 {
     using Type = QSSGSceneDesc::Node::Type;
@@ -704,16 +717,16 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
     QString errorString;
     {
-        const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(QString::fromUtf8(source.mName.C_Str()));
         {
             // TODO: There's a bug here when the lightmap generation is enabled...
             auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, {}, false, false, errorString);
-            targetScene->meshStorage.push_back(qMakePair(meshSourceName, std::move(meshData)));
+            targetScene->meshStorage.push_back(std::move(meshData));
         }
+
         const auto idx = targetScene->meshStorage.size() - 1;
-        const auto meshNode = targetScene->create<QSSGSceneDesc::Mesh>(idx);
+        auto meshNode = targetScene->create<QSSGSceneDesc::Mesh>(fromAiString(targetScene->allocator, source.mName), idx);
         QSSGSceneDesc::addNode(target, *meshNode);
-        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QUrl(meshSourceName));
+        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh>(), meshNode });
     }
 
     // materials
@@ -913,6 +926,14 @@ QString AssimpImporter::import(const QUrl &url, const QVariantMap &, QSSGSceneDe
     return importImp(url, {}, scene);
 }
 
+static QUrl createAndRegisterMesh(const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode)
+{
+    const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
+    const auto &meshData = scene.meshStorage.at(meshNode.idx);
+    QSSGBufferManager::registerMeshData(QSSGRenderPath(meshSourceName), meshData);
+    return meshSourceName;
+}
+
 static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
 {
     using namespace QSSGSceneDesc;
@@ -925,6 +946,14 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
             if (const auto *node = reinterpret_cast<Node *>(v.value.dptr)) {
                 Q_ASSERT(node->obj);
                 v.call->set(obj, node->obj);
+            }
+        } else if (v.value.mt == QMetaType::fromType<Mesh>()) { // Special handling for mesh nodes.
+            // Mesh nodes does not have an equivalent in the QtQuick3D scene, but is registered
+            // as a source property in the intermediate scene we therefore need to convert it to
+            // be a usable source url now.
+            if (const auto meshNode = reinterpret_cast<const Mesh *>(v.value.dptr)) {
+                const auto url = createAndRegisterMesh(*node.scene, *meshNode);
+                v.call->set(obj, &url);
             }
         } else {
             v.call->set(obj, v.value.dptr);
@@ -1006,18 +1035,8 @@ static void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent,
     }
         break;
     case Node::Type::Mesh:
-    {
         // There's no runtime object for this type, but we need to register the mesh with the
-        // buffer manager.
-        if (Q_LIKELY(node.scene)) {
-            const auto &scene = *node.scene;
-            auto &meshNode = static_cast<const Mesh &>(node);
-            const auto &meshData = scene.meshStorage.at(meshNode.idx);
-            const auto &name = meshData.first;
-            const auto &mesh = meshData.second;
-            QSSGBufferManager::registerMeshData(QSSGRenderPath(name), mesh);
-        }
-    }
+        // buffer manager (this will happen once the mesh property is processed on the model).
         break;
     }
 

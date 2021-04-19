@@ -567,6 +567,18 @@ static void writeImportHeader(OutputContext &output)
                   << "import QtQuick3D\n\n";
 }
 
+static inline QString getMeshFolder() { return QStringLiteral("meshes/"); }
+static inline QString getMeshExtension() { return QStringLiteral(".mesh"); }
+
+QString getMeshSourceName(const QByteArrayView &name)
+{
+    const auto meshFolder = getMeshFolder();
+    const auto extension = getMeshExtension();
+
+    const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(QString::fromUtf8(name));
+    return QString(meshFolder + sanitizedName +  extension);
+}
+
 QString asString(const QSSGSceneDesc::Value &value)
 {
     QString str;
@@ -576,7 +588,7 @@ QString asString(const QSSGSceneDesc::Value &value)
 
 using PropertyPair = std::pair<const char * /* name */, QString /* value */>;
 
-static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, bool *ok = nullptr)
+static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, OutputContext &output, bool *ok = nullptr)
 {
     using namespace QSSGSceneDesc;
     using RuntimeType = Node::RuntimeType;
@@ -733,6 +745,37 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
             }
         }
 
+        if (value.mt == QMetaType::fromType<QSSGSceneDesc::Mesh>()) {
+            //
+            static const auto outputMeshAsset = [](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
+                const auto meshFolder = getMeshFolder();
+                const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
+                Q_ASSERT(scene.meshStorage.size() > meshNode.idx);
+                const auto &mesh = scene.meshStorage.at(meshNode.idx);
+
+                // If a mesh folder does not exist, then create one
+                if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder))
+                    return QString(); // Error out
+
+                QFile file(outdir.path() + QDir::separator() + meshSourceName);
+                if (!file.open(QIODevice::WriteOnly))
+                    return QString();
+
+                if (mesh.save(&file) == 0)
+                    return QString();
+
+                return meshSourceName;
+            };
+
+            if (const auto meshNode = reinterpret_cast<const Mesh *>(value.dptr)) {
+                Q_ASSERT(meshNode->nodeType == Node::Type::Mesh);
+                Q_ASSERT(meshNode->scene);
+
+                const auto &scene = *meshNode->scene;
+                const auto meshSourceName = outputMeshAsset(scene, *meshNode, output.outdir);
+                return { property.name, QString::fromUtf8("\"%1\"").arg(meshSourceName) };
+            }
+        }
     }
 
     if (ok)
@@ -755,7 +798,7 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto end = properties.end();
     bool ok = false;
     for (; it != end; ++it) {
-        const auto ret = valueToQml(node, (*it), &ok);
+        const auto ret = valueToQml(node, (*it), output, &ok);
         if (!ok)
             indent(output) << comment();
         indent(output) << ret.first << ": " << ret.second << "\n";
@@ -948,53 +991,6 @@ static void writeQml(const QSSGSceneDesc::Joint &joint, OutputContext &output)
     writeNodeProperties(joint, output);
 }
 
-static inline QString getMeshFolder() { return QStringLiteral("meshes/"); }
-static inline QString getMeshExtension() { return QStringLiteral(".mesh"); }
-
-QString getMeshSourceName(const QString &name)
-{
-    const auto meshFolder = getMeshFolder();
-    const auto extension = getMeshExtension();
-
-    const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
-    return QString(meshFolder + sanitizedName +  extension);
-}
-
-static QString outputMeshAsset(const QString &meshSourceName, const QSSGMesh::Mesh &mesh, const QDir &outdir)
-{
-    const auto meshFolder = getMeshFolder();
-
-    // If a mesh folder does not exist, then create one
-    if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder))
-        return QString(); // Error out
-
-    QFile file(outdir.path() + QDir::separator() + meshSourceName);
-    if (!file.open(QIODevice::WriteOnly))
-        return QString();
-
-    if (mesh.save(&file) == 0)
-        return QString();
-
-    return meshSourceName;
-}
-
-static void writeQml(const QSSGSceneDesc::Mesh &mesh, OutputContext &output)
-{
-    using namespace QSSGSceneDesc;
-    Q_ASSERT(mesh.nodeType == Node::Type::Mesh);
-    Q_ASSERT(mesh.scene);
-
-    const auto &scene = *mesh.scene;
-
-    Q_ASSERT(scene.meshStorage.size() > mesh.idx);
-
-    const auto &meshData = scene.meshStorage.at(mesh.idx);
-    const auto &name = meshData.first;
-    const auto &meshAsset = meshData.second;
-    const auto &outdir = output.outdir;
-    outputMeshAsset(name, meshAsset, outdir);
-}
-
 static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
@@ -1033,7 +1029,7 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
             writeQml(static_cast<const Material &>(node), output);
             break;
         case Node::Type::Mesh:
-            writeQml(static_cast<const Mesh &>(node), output);
+            // Only handled as a property (see: valueToQml())
             break;
         }
     }
