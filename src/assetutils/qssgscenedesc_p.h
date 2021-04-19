@@ -99,9 +99,9 @@ struct Scene
     MeshStorage meshStorage;
 
     template<typename T, typename... Args>
-    Q_REQUIRED_RESULT inline T *create(const Args&... args)
+    Q_REQUIRED_RESULT inline T *create(Args&&... args)
     {
-        return new (allocator.allocate(sizeof (T)))T(const_cast<Args &>(args)...);
+        return new (allocator.allocate(sizeof (T)))T(std::forward<Args>(args)...);
     }
 
     void reset();
