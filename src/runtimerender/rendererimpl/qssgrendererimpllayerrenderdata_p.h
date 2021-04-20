@@ -94,7 +94,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
 
     QSSGOption<QVector3D> m_boundingRectColor;
 
-    QSize m_previousDimensions;
+    QSize m_previousOutputSize;
 
     bool m_zPrePassPossible;
 
@@ -103,7 +103,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
     virtual ~QSSGLayerRenderData() override;
 
     // Internal Call
-    void prepareForRender(const QSize &inViewportDimensions) override;
+    void prepareForRender(const QSize &outputSize) override;
     void resetForFrame() final;
 
     // RHI-only

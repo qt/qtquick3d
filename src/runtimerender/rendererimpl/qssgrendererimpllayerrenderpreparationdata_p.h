@@ -267,7 +267,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                      QSSGLayerRenderPreparationResultFlags &ioFlags);
 
-    virtual void prepareForRender(const QSize &inViewportDimensions);
+    virtual void prepareForRender(const QSize &outputSize);
     void setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue);
     const ShaderFeatureSetList &getShaderFeatureSet();
     size_t getShaderFeatureSetHash();

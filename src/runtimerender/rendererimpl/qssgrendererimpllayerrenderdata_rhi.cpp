@@ -63,9 +63,9 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     m_rhiScreenTexture.reset();
 }
 
-void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
+void QSSGLayerRenderData::prepareForRender(const QSize &outputSize)
 {
-    QSSGLayerRenderPreparationData::prepareForRender(inViewportDimensions);
+    QSSGLayerRenderPreparationData::prepareForRender(outputSize);
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
     const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
 
@@ -77,15 +77,12 @@ void QSSGLayerRenderData::prepareForRender(const QSize &inViewportDimensions)
 
     renderer->layerNeedsFrameClear(*this);
 
-    // Clean up the texture cache if layer dimensions changed
-    if (inViewportDimensions.width() != m_previousDimensions.width()
-            || inViewportDimensions.height() != m_previousDimensions.height()) {
-
-        m_previousDimensions.setWidth(inViewportDimensions.width());
-        m_previousDimensions.setHeight(inViewportDimensions.height());
-
+    // Clean up the texture cache (only used for depth-stencil buffers atm) if
+    // the layer dimensions changed. Not strictly necessary, but useful as
+    // most of these textures/renderbuffers depend on the output size.
+    if (outputSize != m_previousOutputSize) {
+        m_previousOutputSize = outputSize;
         theResourceManager->destroyFreeSizedResources();
-
     }
 }
 
