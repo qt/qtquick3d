@@ -461,7 +461,7 @@ struct OutputContext
 };
 
 template<QSSGSceneDesc::Material::RuntimeType T>
-const char *qmlElementName() { static_assert(std::is_same_v<T, T>, "Unknown type"); return nullptr; }
+const char *qmlElementName() { static_assert(!std::is_same_v<decltype(T), decltype(T)>, "Unknown type"); return nullptr; }
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Node>() { return "Node"; }
 
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::DefaultMaterial>() { return "DefaultMaterial"; }
