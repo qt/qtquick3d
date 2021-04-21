@@ -109,8 +109,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QSSGRenderImage();
     ~QSSGRenderImage();
 
-    QSSGRenderImageTexture updateTexture(const QSSGRef<QSSGBufferManager> &inBufferManager,
-                                         const QSSGBufferManager::MipMode *mipMode = nullptr);
     bool clearDirty();
     void calculateTextureTransform();
     bool isImageTransformIdentity() const;

@@ -238,8 +238,6 @@ static inline QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalForm
 
 QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 flipVertical)
 {
-    Q_UNUSED(flipVertical);
-
     QImage image(inPath);
     const QPixelFormat pixFormat = image.pixelFormat();
     QImage::Format targetFormat = QImage::Format_RGBA8888_Premultiplied;
@@ -253,7 +251,8 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
         targetFormat = QImage::Format_RGBA8888;
 
     image.convertTo(targetFormat); // convert to a format mappable to QRhiTexture::Format
-    image.mirror(); // Flip vertically to the conventional Y-up orientation
+    if (flipVertical)
+        image.mirror(); // Flip vertically to the conventional Y-up orientation
 
     QSSGLoadedTexture *retval = new QSSGLoadedTexture;
     retval->width = image.width();

@@ -99,8 +99,8 @@ QSSGBufferManager::~QSSGBufferManager()
 }
 
 QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
-                                                          bool inForceScanForTransparency,
-                                                          MipMode inMipMode)
+                                                          MipMode inMipMode,
+                                                          LoadRenderImageFlags flags)
 {
     QSSGRenderImageTexture result;
     if (image->m_qsgTexture) {
@@ -150,13 +150,14 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         } else {
             QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
             const auto &path = image->m_imagePath.path();
-            theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, true));
+            const bool flipY = flags.testFlag(LoadWithFlippedY);
+            theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, flipY));
             if (theLoadedTexture) {
                 ImageMap::iterator theImage = imageMap.find({ image->m_imagePath, inMipMode });
                 const bool notFound = theImage == imageMap.end();
                 if (notFound)
                     theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
-                const bool checkTransp = (notFound || inForceScanForTransparency);
+                const bool checkTransp = notFound;
 
                 if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), checkTransp, inMipMode))
                     theImage.value() = QSSGRenderImageTexture();

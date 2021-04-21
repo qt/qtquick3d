@@ -116,13 +116,18 @@ public:
         MipModeGenerated,
     };
 
+    enum LoadRenderImageFlag {
+        LoadWithFlippedY = 0x01
+    };
+    Q_DECLARE_FLAGS(LoadRenderImageFlags, LoadRenderImageFlag)
+
     QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
                       const QSSGRef<QSSGShaderCache> &inShaderContext);
     ~QSSGBufferManager();
 
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
-                                           bool inForceScanForTransparency = false,
-                                           MipMode inMipMode = MipModeNone);
+                                           MipMode inMipMode = MipModeNone,
+                                           LoadRenderImageFlags flags = LoadWithFlippedY);
     QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
@@ -162,6 +167,8 @@ private:
     void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
 
 inline size_t qHash(const QSSGBufferManager::ImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
 {

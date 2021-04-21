@@ -1550,9 +1550,8 @@ void QSSGLayerRenderData::rhiPrepare()
         if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-            const QSSGBufferManager::MipMode iblMipMode = QSSGBufferManager::MipModeBsdf;
-            const QSSGRenderImageTexture lightProbeTexture =
-                    layer.lightProbe->updateTexture(renderer->contextInterface()->bufferManager(), &iblMipMode);
+            const QSSGRenderImageTexture lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe,
+                                                                                                                            QSSGBufferManager::MipModeBsdf);
             layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
 
             QSSGRhiShaderResourceBindingList bindings;

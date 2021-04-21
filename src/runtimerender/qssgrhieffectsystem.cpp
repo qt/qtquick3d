@@ -349,7 +349,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                         mipMode = QSSGBufferManager::MipModeGenerated;
                     // ### would we want MipModeBsdf in some cases?
 
-                    const QSSGRenderImageTexture texture = image->updateTexture(theBufferManager, &mipMode);
+                    const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image, mipMode);
                     if (texture.m_texture) {
                         const QSSGRhiSamplerDescription desc{
                             toRhi(textureProperty.minFilterType),

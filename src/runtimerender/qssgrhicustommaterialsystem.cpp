@@ -450,7 +450,7 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                 mipMode = QSSGBufferManager::MipModeGenerated;
             // ### would we want MipModeBsdf in some cases?
 
-            const QSSGRenderImageTexture texture = image->updateTexture(theBufferManager, &mipMode);
+            const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image, mipMode);
             if (texture.m_texture) {
                 const QSSGRhiTexture t = {
                     inPropertyName,

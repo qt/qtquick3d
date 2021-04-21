@@ -42,20 +42,6 @@ QSSGRenderImage::QSSGRenderImage()
 
 QSSGRenderImage::~QSSGRenderImage() = default;
 
-
-QSSGRenderImageTexture QSSGRenderImage::updateTexture(const QSSGRef<QSSGBufferManager> &inBufferManager,
-                                                      const QSSGBufferManager::MipMode *mipMode)
-{
-    QSSGBufferManager::MipMode effectiveMipMode = QSSGBufferManager::MipModeNone;
-    if (mipMode) {
-        effectiveMipMode = *mipMode;
-    } else {
-        if (m_generateMipmaps)
-            effectiveMipMode = QSSGBufferManager::MipModeGenerated;
-    }
-    return inBufferManager->loadRenderImage(this, false, effectiveMipMode);
-}
-
 bool QSSGRenderImage::clearDirty()
 {
     const bool wasDirty = m_flags.testFlag(Flag::Dirty);

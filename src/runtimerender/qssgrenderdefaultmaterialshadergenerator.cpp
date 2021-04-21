@@ -1479,10 +1479,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     if (materialIblProbe)
         theLightProbe = materialIblProbe;
     QSSGRenderImageTexture lightProbeTexture;
-    if (theLightProbe) {
-        const QSSGBufferManager::MipMode iblMipMode = QSSGBufferManager::MipModeBsdf;
-        lightProbeTexture = theLightProbe->updateTexture(renderContext.bufferManager(), &iblMipMode);
-    }
+    if (theLightProbe)
+        lightProbeTexture = renderContext.bufferManager()->loadRenderImage(theLightProbe, QSSGBufferManager::MipModeBsdf);
     if (theLightProbe && lightProbeTexture.m_texture) {
         QSSGRenderTextureCoordOp theHorzLightProbeTilingMode = theLightProbe->m_horizontalTilingMode;
         QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;

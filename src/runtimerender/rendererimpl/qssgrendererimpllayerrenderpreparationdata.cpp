@@ -374,7 +374,8 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
     // member of the QSSGRenderImage. Conceptually this matches what we do for
     // models (QSSGRenderModel -> QSSGRenderMesh retrieved from the
     // bufferManager in each prepareModelForRender, etc.).
-    const QSSGRenderImageTexture texture = inImage.updateTexture(bufferManager);
+
+    const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(&inImage, inImage.m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
 
     if (texture.m_texture) {
         if (texture.m_flags.hasTransparency()
@@ -1040,7 +1041,8 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
         if (inParticles.m_sprite->clearDirty())
             dirty = true;
 
-        const QSSGRenderImageTexture texture = inParticles.m_sprite->updateTexture(bufferManager);
+        const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(inParticles.m_sprite,
+                                                                              inParticles.m_sprite->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
         QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *inParticles.m_sprite, texture);
         firstImage = theImage;
         if (texture.m_flags.hasTransparency())
@@ -1054,7 +1056,9 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
         if (inParticles.m_colorTable->clearDirty())
             dirty = true;
 
-        const QSSGRenderImageTexture texture = inParticles.m_colorTable->updateTexture(bufferManager);
+        const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(inParticles.m_colorTable,
+                                                                              inParticles.m_colorTable->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+
         QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *inParticles.m_colorTable, texture);
         colorTable = theImage;
         if (texture.m_flags.hasTransparency())
@@ -1221,8 +1225,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
                 if (layer.lightProbe->clearDirty())
                     wasDataDirty = true;
 
-                const QSSGBufferManager::MipMode iblMipMode = QSSGBufferManager::MipModeBsdf;
-                lightProbeTexture = layer.lightProbe->updateTexture(renderer->contextInterface()->bufferManager(), &iblMipMode);
+                lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
 
                 setShaderFeature(QSSGShaderDefines::LightProbe, true);
                 setShaderFeature(QSSGShaderDefines::IblOrientation, !layer.probeOrientation.isIdentity());
