@@ -423,21 +423,23 @@ template<typename Setter, typename NodeT, typename std::enable_if_t<std::is_same
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const QVarLengthArray<NodeT> &list)
 {
     Q_ASSERT(node.scene);
-    auto &scene = node.scene;
-    NodeList *l = scene->create<NodeList>();
-    {
-        const auto size = sizeof(Node *) * list.count();
-        l->head = reinterpret_cast<Node **>(scene->allocator.allocate(size));
-        memcpy(l->head, list.data(), size);
-        l->count = list.count();
-    }
+    if (!list.isEmpty()) {
+        auto &scene = node.scene;
+        NodeList *l = scene->create<NodeList>();
+        {
+            const auto size = sizeof(Node *) * list.count();
+            l->head = reinterpret_cast<Node **>(scene->allocator.allocate(size));
+            memcpy(l->head, list.data(), size);
+            l->count = list.count();
+        }
 
-    Property *prop = scene->create<Property>();
-    prop->name = name;
-    prop->call = scene->create<decltype(PropertyList(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<QSSGSceneDesc::NodeList *>();
-    prop->value.dptr = l;
-    node.properties.push_back(*prop);
+        Property *prop = scene->create<Property>();
+        prop->name = name;
+        prop->call = scene->create<decltype(PropertyList(setter))>(setter);
+        prop->value.mt = QMetaType::fromType<QSSGSceneDesc::NodeList *>();
+        prop->value.dptr = l;
+        node.properties.push_back(*prop);
+    }
 }
 
 } // QSSGSceneDesc
