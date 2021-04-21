@@ -130,7 +130,10 @@ struct SceneInfo
         generateMipMaps = 0x1
     };
 
+    using MaterialMap = QVarLengthArray<QPair<const aiMaterial *, QSSGSceneDesc::Material *>>;
+
     const aiScene &scene;
+    MaterialMap &materialMap;
     QDir workingDir;
     GltfVersion ver;
     Options opt;
@@ -684,14 +687,36 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     // get null target attributes. However this case might not be common.
     // These submeshes will animate with the same morphing weight!
     AssimpUtils::MeshList meshes;
-    QVector<const aiMaterial *> materials;
+
+    auto &materialMap = sceneInfo.materialMap;
+
+    QVarLengthArray<QSSGSceneDesc::Material *> matList;
+    matList.reserve(source.mNumMeshes); // Assumig there's max one material per mesh.
+
+    const auto materialType = (sceneInfo.ver == SceneInfo::GltfVersion::v1) ? QSSGSceneDesc::Material::RuntimeType::DefaultMaterial
+                                                                            : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
 
     using It = decltype (source.mNumMeshes);
     for (It i = 0, end = source.mNumMeshes; i != end; ++i) {
         const aiMesh &mesh = *srcScene.mMeshes[source.mMeshes[i]];
         meshes.push_back(&mesh);
-        aiMaterial *material = srcScene.mMaterials[mesh.mMaterialIndex];
-        materials.push_back(material);
+
+        // Get the material for the mesh
+        auto &material = materialMap[mesh.mMaterialIndex];
+        // Check if we need to create a new scene node for this material
+        auto targetMat = material.second;
+        if (targetMat == nullptr) {
+            const aiMaterial *sourceMat = material.first;
+            targetMat = targetScene->create<QSSGSceneDesc::Material>(materialType);
+            QSSGSceneDesc::addNode(target, *targetMat);
+            setMaterialProperties(*targetMat, *sourceMat, sceneInfo);
+            material.second = targetMat;
+        }
+
+        Q_ASSERT(targetMat != nullptr && material.second != nullptr);
+        // If these don't match then somethings broken...
+        Q_ASSERT(srcScene.mMaterials[mesh.mMaterialIndex] == material.first);
+        matList.push_back(targetMat);
     }
 
     QString errorString;
@@ -709,21 +734,10 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     }
 
     // materials
-    {
-        const auto materialType = (sceneInfo.ver == SceneInfo::GltfVersion::v1) ? QSSGSceneDesc::Material::RuntimeType::DefaultMaterial
-                                                                                : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
-        QVarLengthArray<QSSGSceneDesc::Material *> matList;
-        for (const auto &sourceMat : qAsConst(materials)) {
-            auto targetMat = targetScene->create<QSSGSceneDesc::Material>(materialType);
-            QSSGSceneDesc::addNode(target, *targetMat);
-            setMaterialProperties(*targetMat, *sourceMat, sceneInfo);
-            matList.push_back(targetMat);
-        }
-        // Note that we use a QVector/QList here instead of a QQmlListProperty, as that would be really inconvenient.
-        // Since we don't create any runtime objects at this point, the list also contains the node type that corresponds with the
-        // type expected to be in the list (this is ensured at compile-time).
-        QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, matList);
-    }
+    // Note that we use a QVector/QList here instead of a QQmlListProperty, as that would be really inconvenient.
+    // Since we don't create any runtime objects at this point, the list also contains the node type that corresponds with the
+    // type expected to be in the list (this is ensured at compile-time).
+    QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, matList);
 }
 
 static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
@@ -880,8 +894,16 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         // TODO: Bones and animations
     }
 
+    // We'll use these to ensure we don't re-create resources.
+    const auto materialCount = sourceScene->mNumMaterials;
+    SceneInfo::MaterialMap materials;
+    materials.reserve(materialCount);
+
+    for (qsizetype i = 0; i != materialCount; ++i)
+        materials.push_back({sourceScene->mMaterials[i], nullptr});
+
     const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, sourceFile.dir(), gltfVersion, opt };
+    SceneInfo sceneInfo { *sourceScene, materials, sourceFile.dir(), gltfVersion, opt };
 
     if (!targetScene.root) {
         auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);

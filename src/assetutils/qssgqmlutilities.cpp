@@ -990,9 +990,11 @@ static void writeQml(const QSSGSceneDesc::Joint &joint, OutputContext &output)
     writeNodeProperties(joint, output);
 }
 
-static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &output)
+static void writeQmlForResourceNode(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
+    Q_ASSERT(output.type == OutputContext::Resource);
+    Q_ASSERT(QSSGRenderGraphObject::isResource(node.runtimeType) || node.nodeType == Node::Type::Mesh || node.nodeType == Node::Type::Skeleton);
 
     const bool processNode = !node.properties.isEmpty() || (output.type == OutputContext::Resource);
     if (processNode) {
@@ -1001,6 +1003,43 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
         case QSSGSceneDesc::Node::Type::Skeleton:
             writeQml(static_cast<const Skeleton &>(node), output);
             break;
+        case Node::Type::Texture:
+            if (node.runtimeType == Node::RuntimeType::Image)
+                writeQml(static_cast<const Texture &>(node), output);
+            else if (node.runtimeType == Node::RuntimeType::TextureData)
+                writeQml(static_cast<const TextureData &>(node), output);
+            else
+                Q_UNREACHABLE();
+            break;
+        case Node::Type::Material:
+            writeQml(static_cast<const Material &>(node), output);
+            break;
+        case Node::Type::Mesh:
+            // Only handled as a property (see: valueToQml())
+            break;
+        default:
+            qWarning("Unhandled resource type \'%d\'?", int(node.runtimeType));
+            break;
+        }
+    }
+
+    // Do something more convenient if this starts expending to more types...
+    // NOTE: The TextureData type is written out as a url property...
+    const bool skipBlockEnd = (node.runtimeType == Node::RuntimeType::TextureData || node.nodeType == Node::Type::Mesh);
+    if (!skipBlockEnd && processNode && output.scopeDepth != 0) {
+        QSSGQmlScopedIndent scopedIndent(output);
+        indent(output) << blockEnd(output);
+    }
+}
+
+static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &output)
+{
+    using namespace QSSGSceneDesc;
+
+    const bool processNode = !node.properties.isEmpty() || (output.type == OutputContext::Resource);
+    if (processNode) {
+        QSSGQmlScopedIndent scopedIndent(output);
+        switch (node.nodeType) {
         case QSSGSceneDesc::Node::Type::Joint:
             writeQml(static_cast<const Joint &>(node), output);
             break;
@@ -1016,19 +1055,7 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
         case Node::Type::Model:
             writeQml(static_cast<const Model &>(node), output);
             break;
-        case Node::Type::Texture:
-            if (node.runtimeType == Node::RuntimeType::Image)
-                writeQml(static_cast<const Texture &>(node), output);
-            else if (node.runtimeType == Node::RuntimeType::TextureData)
-                writeQml(static_cast<const TextureData &>(node), output);
-            else
-                Q_UNREACHABLE();
-            break;
-        case Node::Type::Material:
-            writeQml(static_cast<const Material &>(node), output);
-            break;
-        case Node::Type::Mesh:
-            // Only handled as a property (see: valueToQml())
+        default:
             break;
         }
     }
@@ -1063,7 +1090,7 @@ void writeQmlForResources(const QSSGSceneDesc::Scene::ResourceNodes &resources, 
     for (const auto &res : qAsConst(sortedResources)) {
         Q_ASSERT(res->id == 0);
         res->id = ++id;
-        writeQmlForNode(*res, output);
+        writeQmlForResourceNode(*res, output);
     }
 }
 
