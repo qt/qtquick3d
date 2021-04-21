@@ -222,6 +222,15 @@ QQuick3DInstancing *QQuick3DModel::instancing() const
     return m_instancing;
 }
 
+/*!
+    \qmlproperty QtQuick3D::Node Model::instanceRoot
+
+    This property defines the origin of the instance’s coordinate system.
+
+    See the \l{Transforms and instancing}{overview documentation} for a detailed explanation.
+
+    \sa instancing, Instancing
+*/
 QQuick3DNode *QQuick3DModel::instanceRoot() const
 {
     return m_instanceRoot;
