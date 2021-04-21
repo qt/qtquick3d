@@ -63,7 +63,7 @@ class Q_QUICK3D_EXPORT QQuick3DInstanceListEntry : public QQuick3DObject
 {
     Q_OBJECT
 
-    //QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
     Q_PROPERTY(QVector3D position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(QVector3D scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(QVector3D eulerRotation READ eulerRotation WRITE setEulerRotation NOTIFY eulerRotationChanged)
@@ -144,7 +144,7 @@ class Q_QUICK3D_EXPORT QQuick3DInstanceList : public QQuick3DInstancing
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuick3DInstanceListEntry> instances READ instances)
     QML_NAMED_ELEMENT(InstanceList)
-    //QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     explicit QQuick3DInstanceList(QQuick3DObject *parent = nullptr);

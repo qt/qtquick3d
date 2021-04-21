@@ -46,7 +46,7 @@ class Q_QUICK3D_EXPORT QQuick3DInstancing : public QQuick3DObject
 
     QML_NAMED_ELEMENT(Instancing)
     QML_UNCREATABLE("Instancing is Abstract")
-    //QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
     Q_PROPERTY(int instanceCountOverride READ instanceCountOverride WRITE setInstanceCountOverride NOTIFY instanceCountOverrideChanged)
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
 

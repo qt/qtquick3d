@@ -38,9 +38,8 @@ QT_BEGIN_NAMESPACE
     \inherits Object3D
     \inqmlmodule QtQuick3D
     \instantiates QQuick3DInstancing
+    \since 6.2
     \brief Base type for instance tables.
-
-    \preliminary
 
     \l {Instanced Rendering}{Instanced rendering} allows duplicating a model with variations.
 
@@ -95,10 +94,8 @@ QT_BEGIN_NAMESPACE
     \class QQuick3DInstancing
     \inmodule QtQuick3D
     \inherits QQuick3DObject
-    \since 6.1
+    \since 6.2
     \brief Base class for defining instance tables.
-
-    \preliminary
 
     The QQuick3DInstancing class can be inherited to specify a custom instance table
     for a Model in the Qt Quick 3D scene.
@@ -108,8 +105,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn QByteArray QQuick3DInstancing::getInstanceBuffer(int *instanceCount)
-
-    \preliminary
 
     Implement this function to return the contents of the instance table. The number of instances should be
     returned in \a instanceCount. The subclass is responsible for caching the result if necessary.
@@ -240,8 +235,6 @@ static inline QQuick3DInstancing::InstanceTableEntry calculate(const QVector3D &
 }
 
 /*!
-    \preliminary
-
    Converts the
    \a position
    \a scale
@@ -271,8 +264,6 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntry(c
 }
 
 /*!
-    \preliminary
-
    Converts the
    \a position
    \a scale
@@ -315,8 +306,6 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFr
     \inqmlmodule QtQuick3D
     \brief Allows manually specifying instancing in QML.
 
-    \preliminary
-
     The InstanceList type makes it possible to define an instance table manually in QML.
 
     The following example creates an instance table with two items:
@@ -349,8 +338,6 @@ QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFr
 
 /*!
     \qmlproperty List<QtQuick3D::InstanceListEntry> InstanceList::instances
-
-    \preliminary
 
     This property contains the list of instance definitions. Modifying this list, or any of its elements, will cause the instance table to be updated.
 */
@@ -449,9 +436,8 @@ void QQuick3DInstanceList::generateInstanceData()
     \qmltype InstanceListEntry
     \inherits Object3D
     \inqmlmodule QtQuick3D
+    \since 6.2
     \brief Specifies an instance in an InstanceList.
-
-    \preliminary
 
     The InstanceListEntry QML type is used to specify one instance in an instance list.
 
@@ -468,8 +454,6 @@ QQuick3DInstanceListEntry::QQuick3DInstanceListEntry(QQuick3DObject *parent)
 /*!
     \qmlproperty vector3d QtQuick3D::InstanceListEntry::position
 
-    \preliminary
-
     This property specifies the position for the instance.
 */
 void QQuick3DInstanceListEntry::setPosition(QVector3D position)
@@ -485,8 +469,6 @@ void QQuick3DInstanceListEntry::setPosition(QVector3D position)
 /*!
     \qmlproperty vector3d QtQuick3D::InstanceListEntry::scale
 
-    \preliminary
-
     This property specifies the scale for the instance as a vector containing the scale factor along the x, y and z axes.
 */
 void QQuick3DInstanceListEntry::setScale(QVector3D scale)
@@ -501,8 +483,6 @@ void QQuick3DInstanceListEntry::setScale(QVector3D scale)
 
 /*!
     \qmlproperty vector3d QtQuick3D::InstanceListEntry::eulerRotation
-
-    \preliminary
 
     This property specifies the rotation for the instance as an Euler vector, that
     is a vector containing the rotation in degrees around the x, y and z axes.
@@ -520,8 +500,6 @@ void QQuick3DInstanceListEntry::setEulerRotation(QVector3D eulerRotation)
 /*!
     \qmlproperty quaternion QtQuick3D::InstanceListEntry::rotation
 
-    \preliminary
-
     This property specifies the rotation for the instance as a quaternion.
 */
 void QQuick3DInstanceListEntry::setRotation(QQuaternion rotation)
@@ -538,8 +516,6 @@ void QQuick3DInstanceListEntry::setRotation(QQuaternion rotation)
 /*!
     \qmlproperty vector3d QtQuick3D::InstanceListEntry::color
 
-    \preliminary
-
     This property specifies the color for the instance.
 */
 void QQuick3DInstanceListEntry::setColor(QColor color)
@@ -554,8 +530,6 @@ void QQuick3DInstanceListEntry::setColor(QColor color)
 
 /*!
     \qmlproperty vector3d QtQuick3D::InstanceListEntry::customData
-
-    \preliminary
 
     This property specifies the custom data for the instance. This is not used by default,
     but is made available to the vertex shader of custom materials as \c INSTANCE_DATA.

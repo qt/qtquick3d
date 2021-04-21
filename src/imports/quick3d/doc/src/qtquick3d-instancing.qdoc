@@ -30,8 +30,6 @@
 \title Instanced Rendering
 \page quick3d-instancing overview
 
-\preliminary
-
 \section1 Introduction
 
 Qt Quick 3D supports instancing of \l [QtQuick3D | QML] {Model} objects. Instancing refers to a
@@ -45,10 +43,6 @@ performance improvement of several orders of magnitude.
 
 In practice, instancing is done by defining a table that specifies how each instance is modified
 relative to the base model.
-
-\note The instancing feature is in Tech Preview in Qt 6.1, and is subject to
-change. Source and binary compatibility may be broken in future releases.
-
 
 \section1 Instancing API
 

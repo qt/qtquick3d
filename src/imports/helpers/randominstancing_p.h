@@ -49,7 +49,7 @@ class QQuick3DInstanceRange : public QQuick3DObject
 {
     Q_OBJECT
 
-    //QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
     Q_PROPERTY(QVariant from READ from WRITE setFrom NOTIFY fromChanged)
     Q_PROPERTY(QVariant to READ to WRITE setTo NOTIFY toChanged)
     Q_PROPERTY(bool proportional READ proportional WRITE setProportional NOTIFY proportionalChanged)
@@ -109,7 +109,7 @@ class QQuick3DRandomInstancing : public QQuick3DInstancing
     Q_PROPERTY(int randomSeed READ randomSeed WRITE setRandomSeed NOTIFY randomSeedChanged)
 
     QML_NAMED_ELEMENT(RandomInstancing)
-    //QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     explicit QQuick3DRandomInstancing(QQuick3DObject *parent = nullptr);

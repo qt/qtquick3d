@@ -37,9 +37,8 @@ QT_BEGIN_NAMESPACE
     \qmltype InstanceRange
     \inherits Object3D
     \inqmlmodule QtQuick3D.Helpers
+    \since 6.2
     \brief Specifies a range for RandomInstancing.
-
-    \preliminary
 
     The InstanceRange QML type is used to specify the range of variation for
     RandomInstancing attributes.
@@ -48,23 +47,17 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Variant InstanceRange::from
 
-    \preliminary
-
     This property specifies the lower bound of the range. The type needs to match the type of the attribute that this range is applied to.
 */
 
 /*!
     \qmlproperty Variant InstanceRange::to
 
-    \preliminary
-
     This property specifies the upper bound of the range. The type needs to match the type of the attribute that this range is applied to.
 */
 
 /*!
     \qmlproperty bool InstanceRange::proportional
-
-    \preliminary
 
     This property determines whether the components of the attribute vary proportionally or independently.
     The default value is \c true, meaning that all components are independent.
@@ -90,9 +83,8 @@ QT_BEGIN_NAMESPACE
     \qmltype RandomInstancing
     \inherits Instancing
     \inqmlmodule QtQuick3D.Helpers
+    \since 6.2
     \brief Generates a random instancing table.
-
-    \preliminary
 
     The RandomInstancing type provides an easy way to generate a large number of
     random instances within defined bounds. The number of instances is defined by the
@@ -105,8 +97,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int RandomInstancing::instanceCount
 
-    \preliminary
-
     The instanceCount property specifies the number of instances to generate. Changing this value will regenerate the whole table.
 
     \sa randomSeed
@@ -114,8 +104,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty int RandomInstancing::randomSeed
-
-    \preliminary
 
     This property defines the seed for the random number generator. Setting this to a value
     different from -1 guarantees that the instance table will have the same content each time it is generated.
@@ -127,19 +115,14 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty InstanceRange RandomInstancing::position
 
-    \preliminary
-
     The position property defines the geometrical bounds of the generated instances.
     The default value is empty, causing a generated position of \c{[0, 0, 0]}.
 
     \sa color, rotation, scale, customData
-
 */
 
 /*!
     \qmlproperty InstanceRange RandomInstancing::scale
-
-    \preliminary
 
     The scale property defines the scaling limits for the generated instances. The type is
     \l vector3d.
@@ -152,8 +135,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty InstanceRange RandomInstancing::rotation
 
-    \preliminary
-
     The rotation property defines the rotation range for the generated instances. The type is
     \l vector3d, corresponding to a Euler rotation vector \c{[xRotation, yRotation, zRotation]}.
     The default value is empty, causing no rotation to be applied.
@@ -164,8 +145,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty InstanceRange RandomInstancing::color
 
-    \preliminary
-
     The color property defines the color variation range for the generated instances. Thew type is \l color.
     Set \l {InstanceRange::proportional}{InstanceRange.proportional} to \c true for monochrome colors.
     The default value is empty, causing the color to be white.
@@ -175,8 +154,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty InstanceRange RandomInstancing::customData
-
-    \preliminary
 
     The customData property defines the custom data variation range for the generated instances.
     The type is \l vector4d.
@@ -384,7 +361,6 @@ void QQuick3DRandomInstancing::generateInstanceTable()
         array[i] = calculateTableEntry(pos, scale, eulerRotation, color, customData);
     }
 }
-
 
 QQuick3DInstanceRange::QQuick3DInstanceRange(QQuick3DObject *parent)
     : QQuick3DObject(parent)

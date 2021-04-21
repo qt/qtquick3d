@@ -1005,8 +1005,6 @@ QT_BEGIN_NAMESPACE
     \endlist
 
     \section2 Instancing
-    \note The instancing feature is in tech preview in Qt 6.1. \b {The API is
-    under development and subject to change.}
 
     When doing instanced rendering, some of the keywords above do not apply.
     The following keywords are only available with instancing:
