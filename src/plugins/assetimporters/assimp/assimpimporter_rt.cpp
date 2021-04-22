@@ -832,6 +832,19 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, materials);
 }
 
+static bool containsNodesOfConsequence(const aiNode &node, const NodeMap &nodeMap)
+{
+    // Any node in the nodeMap is already of interest.
+    bool knownNode = nodeMap.contains(&node)
+                     || (node.mNumMeshes > 0) /* Models */;
+
+    // Return early if we know already
+    for (qsizetype i = 0, end = node.mNumChildren; i != end && !knownNode; ++i)
+        knownNode |= containsNodesOfConsequence(*node.mChildren[i], nodeMap);
+
+    return knownNode;
+}
+
 static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
                                             const aiNode &srcNode,
                                             QSSGSceneDesc::Node &parent,
@@ -870,7 +883,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
     }
         break;
     case QSSGSceneDesc::Node::Type::Transform:
-    { // TODO: Transform nodes (see: containsNodesOfConsequence())
+    {
         node = targetScene->create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(parent, *node);
         // TODO: arguments for correction
@@ -897,10 +910,12 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
     }
 
     // For now, all the nodes are generated, even if they are empty.
-    if (!node)
+    if (!node && containsNodesOfConsequence(source, nodeMap))
         node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Transform }, source, parent, sceneInfo);
 
-    Q_ASSERT(node);
+    if (!node)
+        node = &parent;
+
     Q_ASSERT(node->scene);
 
     // Process child nodes
