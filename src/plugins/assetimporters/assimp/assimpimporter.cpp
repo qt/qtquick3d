@@ -182,8 +182,10 @@ bool fuzzyCompare(const aiVector3D &v1, const aiVector3D &v2)
 
 bool fuzzyCompare(const aiQuaternion &q1, const aiQuaternion &q2)
 {
-    return qFuzzyCompare(q1.x, q2.x) && qFuzzyCompare(q1.y, q2.y)
-        && qFuzzyCompare(q1.z, q2.z) && qFuzzyCompare(q1.w, q2.w);
+    return (qFuzzyCompare(q1.x, q2.x) && qFuzzyCompare(q1.y, q2.y)
+            && qFuzzyCompare(q1.z, q2.z) && qFuzzyCompare(q1.w, q2.w))
+        || (qFuzzyCompare(q1.x, -q2.x) && qFuzzyCompare(q1.y, -q2.y)
+            && qFuzzyCompare(q1.z, -q2.z) && qFuzzyCompare(q1.w, -q2.w));
 }
 }
 
