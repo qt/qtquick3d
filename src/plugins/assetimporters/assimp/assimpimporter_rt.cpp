@@ -131,9 +131,11 @@ struct SceneInfo
     };
 
     using MaterialMap = QVarLengthArray<QPair<const aiMaterial *, QSSGSceneDesc::Material *>>;
+    using MeshMap = QVarLengthArray<QPair<const aiMesh *, QSSGSceneDesc::Mesh *>>;
 
     const aiScene &scene;
     MaterialMap &materialMap;
+    MeshMap &meshMap;
     QDir workingDir;
     GltfVersion ver;
     Options opt;
@@ -675,34 +677,29 @@ static void setLightProperties(QSSGSceneDesc::Light &target, const aiLight &sour
 
 static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &source, const SceneInfo &sceneInfo)
 {
+    if (source.mNumMeshes == 0)
+        return;
+
     auto &targetScene = target.scene;
     const auto &srcScene = sceneInfo.scene;
     // TODO: Correction and scale
     setNodeProperties(target, source, nullptr, true);
 
-    // source
-    // Combine all the meshes referenced by this model into a single MultiMesh file
-    // For the morphing, the target mesh must have the same AnimMeshes.
-    // It means if only one mesh has a morphing animation, the other sub-meshes will
-    // get null target attributes. However this case might not be common.
-    // These submeshes will animate with the same morphing weight!
-    AssimpUtils::MeshList meshes;
-
+    auto &meshStorage = targetScene->meshStorage;
     auto &materialMap = sceneInfo.materialMap;
+    auto &meshMap = sceneInfo.meshMap;
 
-    QVarLengthArray<QSSGSceneDesc::Material *> matList;
-    matList.reserve(source.mNumMeshes); // Assumig there's max one material per mesh.
+    QVarLengthArray<QSSGSceneDesc::Material *> materials;
+    materials.reserve(source.mNumMeshes); // Assumig there's max one material per mesh.
 
     const auto materialType = (sceneInfo.ver == SceneInfo::GltfVersion::v1) ? QSSGSceneDesc::Material::RuntimeType::DefaultMaterial
                                                                             : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
 
-    using It = decltype (source.mNumMeshes);
-    for (It i = 0, end = source.mNumMeshes; i != end; ++i) {
-        const aiMesh &mesh = *srcScene.mMeshes[source.mMeshes[i]];
-        meshes.push_back(&mesh);
+    QString errorString;
 
+    const auto ensureMaterial = [&](qsizetype materialIndex) {
         // Get the material for the mesh
-        auto &material = materialMap[mesh.mMaterialIndex];
+        auto &material = materialMap[materialIndex];
         // Check if we need to create a new scene node for this material
         auto targetMat = material.second;
         if (targetMat == nullptr) {
@@ -715,29 +712,64 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
         Q_ASSERT(targetMat != nullptr && material.second != nullptr);
         // If these don't match then somethings broken...
-        Q_ASSERT(srcScene.mMaterials[mesh.mMaterialIndex] == material.first);
-        matList.push_back(targetMat);
-    }
+        Q_ASSERT(srcScene.mMaterials[materialIndex] == material.first);
+        materials.push_back(targetMat);
+    };
 
-    QString errorString;
-    {
-        {
-            // TODO: There's a bug here when the lightmap generation is enabled...
-            auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, {}, false, false, errorString);
-            targetScene->meshStorage.push_back(std::move(meshData));
+    AssimpUtils::MeshList meshes;
+    // Combine all the meshes referenced by this model into a single MultiMesh file
+    // For the morphing, the target mesh must have the same AnimMeshes.
+    // It means if only one mesh has a morphing animation, the other sub-meshes will
+    // get null target attributes. However this case might not be common.
+    // These submeshes will animate with the same morphing weight!
+    const auto combineMeshes = [&](const aiNode &source, aiMesh **sceneMeshes) {
+        for (qsizetype i = 0, end = source.mNumMeshes; i != end; ++i) {
+            const aiMesh &mesh = *sceneMeshes[source.mMeshes[i]];
+            meshes.push_back(&mesh);
+            ensureMaterial(mesh.mMaterialIndex);
         }
+    };
 
-        const auto idx = targetScene->meshStorage.size() - 1;
-        auto meshNode = targetScene->create<QSSGSceneDesc::Mesh>(fromAiString(targetScene->allocator, source.mName), idx);
+    const auto createMeshNode = [&](const aiString &name) {
+        // TODO: There's a bug here when the lightmap generation is enabled...
+        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, {}, false, false, errorString);
+        meshStorage.push_back(std::move(meshData));
+
+        const auto idx = meshStorage.size() - 1;
+        // For multimeshes we'll use the model name, but for single meshes we'll use the mesh name.
+        return targetScene->create<QSSGSceneDesc::Mesh>(fromAiString(targetScene->allocator, name), idx);
+    };
+
+    QSSGSceneDesc::Mesh *meshNode = nullptr;
+
+    const bool isMultiMesh = (source.mNumMeshes > 1);
+    if (isMultiMesh) {
+        // result is stored in 'meshes'
+        combineMeshes(source, srcScene.mMeshes);
+        Q_ASSERT(!meshes.isEmpty());
+        meshNode = createMeshNode(source.mName);
         QSSGSceneDesc::addNode(target, *meshNode);
-        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh>(), meshNode });
+    } else { // single mesh (We shouldn't be here if there are no meshes...)
+        Q_ASSERT(source.mNumMeshes == 1);
+        auto &mesh = meshMap[*source.mMeshes];
+        meshNode = mesh.second;
+        if (meshNode == nullptr) {
+            meshes = {mesh.first};
+            ensureMaterial(mesh.first->mMaterialIndex);
+            mesh.second = meshNode = createMeshNode(mesh.first->mName);
+            QSSGSceneDesc::addNode(target, *meshNode); // We only add this the first time we create it.
+        }
+        Q_ASSERT(meshNode != nullptr && mesh.second != nullptr);
     }
+
+    if (meshNode)
+        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh>(), meshNode });
 
     // materials
     // Note that we use a QVector/QList here instead of a QQmlListProperty, as that would be really inconvenient.
     // Since we don't create any runtime objects at this point, the list also contains the node type that corresponds with the
     // type expected to be in the list (this is ensured at compile-time).
-    QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, matList);
+    QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, materials);
 }
 
 static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
@@ -899,11 +931,18 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     SceneInfo::MaterialMap materials;
     materials.reserve(materialCount);
 
+    const auto meshCount = sourceScene->mNumMeshes;
+    SceneInfo::MeshMap meshes;
+    meshes.reserve(meshCount);
+
     for (qsizetype i = 0; i != materialCount; ++i)
         materials.push_back({sourceScene->mMaterials[i], nullptr});
 
+    for (qsizetype i = 0; i != meshCount; ++i)
+        meshes.push_back({sourceScene->mMeshes[i], nullptr});
+
     const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, materials, sourceFile.dir(), gltfVersion, opt };
+    SceneInfo sceneInfo { *sourceScene, materials, meshes, sourceFile.dir(), gltfVersion, opt };
 
     if (!targetScene.root) {
         auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
