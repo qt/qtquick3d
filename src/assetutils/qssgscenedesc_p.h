@@ -214,7 +214,7 @@ struct Mesh : Node
         , idx(index)
     {}
     QByteArrayView name;
-    qsizetype idx; // idx to the mesh data in the mesh data storaget (see Scene).
+    qsizetype idx; // idx to the mesh data in the mesh data storage (see Scene).
 };
 
 struct Model : Node

@@ -865,7 +865,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         return QLatin1String("Extension \'%1\' is not supported!").arg(extension);
 
     std::unique_ptr<Assimp::Importer> importer(new Assimp::Importer());
-    // Remove primatives that are not Triangles
+    // Remove primitives that are not Triangles
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
     // TODO: Right now we don't do any extra processing...
