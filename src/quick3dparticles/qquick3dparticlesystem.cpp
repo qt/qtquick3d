@@ -377,6 +377,7 @@ void QQuick3DParticleSystem::reset()
         return;
 
     m_time = 0;
+    Q_EMIT timeChanged();
 
     // Reset restarts the animation (if running)
     if (m_animation->state() == QAbstractAnimation::Running)
@@ -392,9 +393,10 @@ void QQuick3DParticleSystem::reset()
 void QQuick3DParticleSystem::refresh()
 {
     // If the system isn't running, force refreshing by calling update
-    // with the current time
-    if (!m_running)
-        updateCurrentTime(m_time);
+    // with the current time. QAbstractAnimation::setCurrentTime() implementation
+    // always calls updateCurrentTime() even if the time would remain the same.
+    if (!m_running || m_paused)
+        m_animation->setCurrentTime(m_time);
 }
 
 void QQuick3DParticleSystem::markDirty()
@@ -485,7 +487,10 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     if (!m_initialized)
         return;
 
-    m_time = currentTime;
+    if (m_time != currentTime) {
+        m_time = currentTime;
+        Q_EMIT timeChanged();
+    }
     const float timeS = float(m_time / 1000.0f);
 
     m_particlesMax = 0;

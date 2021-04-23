@@ -168,6 +168,11 @@ Item {
 
             useRandomSeed: checkBoxRandomize.checked
 
+            onTimeChanged: {
+                if (time > 9500)
+                    psystem.paused = true;
+            }
+
             // Particles
             ModelParticle3D {
                 id: particleTrailModel
@@ -299,7 +304,23 @@ Item {
         }
         Item {
             width: 1
-            height: 40
+            height: 10
+        }
+        CustomLabel {
+            text: "ParticleSystem time"
+            opacity: timeSlider.sliderEnabled ? 1.0 : 0.4
+        }
+        CustomSlider {
+            id: timeSlider
+            sliderValue: psystem.time
+            sliderEnabled: psystem.paused
+            fromValue: 0
+            toValue: 10000
+            onSliderValueChanged: psystem.setTime(sliderValue);
+        }
+        Item {
+            width: 1
+            height: 10
         }
         CustomLabel {
             text: "ParticleSystem seed: " + psystem.seed
@@ -314,7 +335,6 @@ Item {
             opacity: psystem.useRandomSeed ? 0.4 : 1.0
         }
         CustomSlider {
-            id: sliderTimelineTime
             sliderValue: 0
             sliderEnabled: !psystem.useRandomSeed
             fromValue: 0
