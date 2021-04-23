@@ -77,6 +77,7 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         Transforms viewport coordinates to 2D scene coordinates.
         Returns the point in targetItem corresponding to \a viewportPoint,
         assuming that targetItem is mapped onto sceneParentNode.
+        If it's no longer a "hit" on sceneParentNode, returns the last-good point.
     */
     QPointF map(const QPointF &viewportPoint) override {
         QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(viewportPoint * dpr);
@@ -87,10 +88,15 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
                 ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
                               targetItem->y() - ret.y() * targetItem->height() + targetItem->height());
             }
-
-            qCDebug(lcEv) << viewportPoint << "->" << ret << "@" << pickResult.m_scenePosition
+            const bool outOfModel = pickResult.m_localUVCoords.isNull();
+            qCDebug(lcEv) << viewportPoint << "->" << (outOfModel ? "OOM" : "") << ret << "@" << pickResult.m_scenePosition
                           << "UV" << pickResult.m_localUVCoords << "dist" << qSqrt(pickResult.m_distanceSq);
-            return ret;
+            if (outOfModel) {
+                return lastGoodMapping;
+            } else {
+                lastGoodMapping = ret;
+                return ret;
+            }
         }
         return QPointF();
     }
@@ -100,6 +106,7 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
     QQuickItem* targetItem = nullptr;
     qreal dpr = 1;
     bool uvCoordsArePixels = false; // if false, they are in the range 0..1
+    QPointF lastGoodMapping;
 
     static QList<QPointer<QQuickDeliveryAgent>> owners;
 };

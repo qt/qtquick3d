@@ -94,7 +94,7 @@ Node {
         pivot.x: 20
         x: 80
         y: 70
-        scale.x: 2
+        scale.x: 1.98
         scale.y: 3.5
         scale.z: 0.5
 
@@ -144,7 +144,7 @@ Node {
         objectName: "right door"
         x: -80
         y: 70
-        scale.x: 2
+        scale.x: 1.98
         scale.y: 3.5
         scale.z: 0.5
         pivot.x: -20
