@@ -254,9 +254,10 @@ static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipe
     int instanceBufferBinding = 0;
     if (instancing) {
         // set up new bindings for instanced buffers
+        const quint32 stride = renderable->modelContext.model.instanceTable->stride();
         QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
         std::copy(ps->ia.inputLayout.cbeginBindings(), ps->ia.inputLayout.cendBindings(), std::back_inserter(bindings));
-        bindings.append({ 20 * sizeof(float), QRhiVertexInputBinding::PerInstance });
+        bindings.append({ stride, QRhiVertexInputBinding::PerInstance });
         instanceBufferBinding = bindings.count() - 1;
         ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
     }

@@ -55,15 +55,17 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRender
     int count() const { return instanceCount; }
     qsizetype dataSize() const { return table.size(); }
     const void *constData() const { return table.constData(); }
-    void setData(const QByteArray &data, int count) { table = data; instanceCount = count; ++instanceSerial; }
+    void setData(const QByteArray &data, int count, int stride) { table = data; instanceCount = count; instanceStride = stride; ++instanceSerial; }
     void setInstanceCountOverride(int count) { instanceCount = count; }
     int serial() const { return instanceSerial; }
+    int stride() const { return instanceStride; }
     bool hasTransparency() { return transparency; }
     void setHasTransparency( bool t) { transparency = t; }
 
 private:
     int instanceCount = 0;
     int instanceSerial = 0;
+    uint instanceStride = 0;
     bool transparency = false;
     QByteArray table;
 };

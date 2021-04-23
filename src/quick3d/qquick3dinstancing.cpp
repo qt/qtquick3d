@@ -194,7 +194,7 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
     auto *instanceTable = static_cast<QSSGRenderInstanceTable *>(node);
     if (d->m_instanceDataChanged) {
         QByteArray buffer = getInstanceBuffer(&d->m_instanceCount);
-        instanceTable->setData(buffer, effectiveInstanceCount());
+        instanceTable->setData(buffer, effectiveInstanceCount(), sizeof(InstanceTableEntry));
         d->m_instanceDataChanged = false;
     } else if (d->m_instanceCountOverrideChanged) {
         instanceTable->setInstanceCountOverride(effectiveInstanceCount());
@@ -203,8 +203,6 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
     instanceTable->setHasTransparency(d->m_hasTransparency);
     return node;
 }
-
-//TODO: Do we need an Instancing subclass that takes a QQmlModel?
 
 static inline QQuick3DInstancing::InstanceTableEntry calculate(const QVector3D &position, const QVector3D &scale,
                                                                          const QVector3D &eulerRotation, const QColor &color,
