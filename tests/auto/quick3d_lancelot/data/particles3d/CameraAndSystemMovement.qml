@@ -55,7 +55,8 @@ import QtQuick.Timeline
 
 Item {
     id: mainWindow
-    anchors.fill: parent
+    width: 400
+    height: 400
 
     Timeline {
         id: timeline
