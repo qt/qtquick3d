@@ -767,6 +767,13 @@ void QQuick3DParticleEmitter::emitParticles()
     if (!m_particle || m_particle->m_system != m_system)
         return;
 
+    const int systemTime = m_system->time();
+
+    // Keep previous emitting time within max the life span.
+    // This way emitting is reasonable also with big time jumps.
+    const int maxLifeSpan = m_lifeSpan + m_lifeSpanVariation;
+    m_prevEmitTime = std::max(m_prevEmitTime, systemTime - maxLifeSpan);
+
     // If bursts have changed, generate them first in the beginning
     if (!m_burstGenerated)
        generateEmitBursts();
@@ -777,7 +784,6 @@ void QQuick3DParticleEmitter::emitParticles()
     if (emitAmount < 1)
         return;
 
-    const int systemTime = m_system->time();
     QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
     QVector3D centerPos = position();
 
@@ -785,7 +791,7 @@ void QQuick3DParticleEmitter::emitParticles()
     for (int i = 0; i < emitAmount; i++) {
         // Distribute evenly between previous and current time, important especially
         // when time has jumped a lot (like a starttime).
-        float startTime = (m_prevEmitTime / 1000.0) + (float(1+i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0);
+        float startTime = (m_prevEmitTime / 1000.0f) + (float(1+i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0f);
         emitParticle(m_particle, startTime, transform, centerPos);
     }
 
