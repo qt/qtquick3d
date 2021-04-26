@@ -42,11 +42,9 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
@@ -70,7 +68,6 @@ public:
 private:
     const QSSGRef<QSSGRhiContext> m_rhiContext;
 
-    const QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
     const QSSGRef<QSSGResourceManager> m_resourceManager;
@@ -88,35 +85,30 @@ private:
     QSize m_windowDimensions {800, 480};
     QColor m_sceneColor;
 
-    void init(const QString &inApplicationDirectory);
+    void init();
 
 public:
     static QSSGRenderContextInterface *renderContextForWindow(const QWindow &window);
 
     // The commonly used version (from QQuick3DSceneRenderer). There is one
     // rendercontext per QQuickWindow (and so scenegraph render thread).
-    QSSGRenderContextInterface(QWindow *window,
-                               const QSSGRef<QSSGRhiContext> &ctx,
-                               const QString &inApplicationDirectory);
+    QSSGRenderContextInterface(QWindow *window, const QSSGRef<QSSGRhiContext> &ctx);
 
     // This overload must only be used in special cases, e.g. by the genshaders tool.
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
-                               const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory,
                                const QSSGRef<QSSGBufferManager> &bufferManager,
                                const QSSGRef<QSSGResourceManager> &resourceManager,
                                const QSSGRef<QSSGRenderer> &renderer,
                                const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                const QSSGRef<QSSGShaderCache> &shaderCache,
                                const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem,
-                               const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
-                               const QString &inApplicationDirectory);
+                               const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator);
 
     ~QSSGRenderContextInterface();
     const QSSGRef<QSSGRenderer> &renderer() const;
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
     const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRhiContext> &rhiContext() const;
-    const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager() const;
     const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem() const;

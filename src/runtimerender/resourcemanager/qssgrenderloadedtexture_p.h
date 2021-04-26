@@ -43,15 +43,13 @@
 //
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
-
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 
 #include <QtGui/QImage>
 
 #include <private/qtexturefiledata_p.h>
 
 QT_BEGIN_NAMESPACE
-class QSSGInputStreamFactory;
 class QSSGRenderTextureData;
 
 struct QSSGTextureData
@@ -61,12 +59,12 @@ struct QSSGTextureData
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::Unknown;
 };
 
-
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGInputUtil
 {
-    static QSharedPointer<QIODevice> getStreamForFile(const QString &inFilename,
+public:
+    static QSharedPointer<QIODevice> getStreamForFile(const QString &inPath,
                                                       bool inQuiet = false,
-                                                      QString *outFilepath = nullptr);
+                                                      QString *outPath = nullptr);
 };
 
 
@@ -111,7 +109,6 @@ public:
 
     static QSSGLoadedTexture *load(const QString &inPath,
                                    const QSSGRenderTextureFormat &inFormat,
-                                   QSSGInputStreamFactory &inFactory,
                                    bool inFlipY = true);
     static QSSGLoadedTexture *loadQImage(const QString &inPath, qint32 flipVertical);
     static QSSGLoadedTexture *loadCompressedImage(const QString &inPath, bool inFlipY = true);

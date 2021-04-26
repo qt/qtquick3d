@@ -32,7 +32,6 @@
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
 #include <QtCore/QRegularExpression>
@@ -131,11 +130,9 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 QSSGShaderCache::~QSSGShaderCache() {}
 
 QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
-                                 const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
                                  const InitBakerFunc initBakeFn)
     : m_rhiContext(ctx)
     , m_initBaker(initBakeFn ? initBakeFn : &initBaker)
-    , m_inputStreamFactory(inInputStreamFactory)
 {
 }
 

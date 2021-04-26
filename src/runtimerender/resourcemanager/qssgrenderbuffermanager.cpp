@@ -87,12 +87,10 @@ static constexpr QSize sizeForMipLevel(int mipLevel, const QSize &baseLevelSize)
 }
 
 QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
-                                     const QSSGRef<QSSGShaderCache> &inShaderContext,
-                                     const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory)
+                                     const QSSGRef<QSSGShaderCache> &inShaderContext)
 {
     context = inRenderContext;
     shaderCache = inShaderContext;
-    inputStreamFactory = inInputStreamFactory;
 }
 
 QSSGBufferManager::~QSSGBufferManager()
@@ -152,7 +150,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         } else {
             QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
             const auto &path = image->m_imagePath.path();
-            theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, *inputStreamFactory, true));
+            theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, true));
             if (theLoadedTexture) {
                 ImageMap::iterator theImage = imageMap.find({ image->m_imagePath, inMipMode });
                 const bool notFound = theImage == imageMap.end();

@@ -74,18 +74,15 @@ void tst_renderer::initTestCase()
     rhiContext->initialize(rhi);
     rhiContext->setCommandBuffer(cb);
 
-    auto inputStreamFactory = new QSSGInputStreamFactory;
-    auto shaderCache = new QSSGShaderCache(rhiContext, inputStreamFactory);
+    auto shaderCache = new QSSGShaderCache(rhiContext);
     renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
-                                                                                       inputStreamFactory,
-                                                                                       new QSSGBufferManager(rhiContext, shaderCache, inputStreamFactory),
+                                                                                       new QSSGBufferManager(rhiContext, shaderCache),
                                                                                        new QSSGResourceManager(rhiContext),
                                                                                        new QSSGRenderer,
-                                                                                       new QSSGShaderLibraryManager(inputStreamFactory),
+                                                                                       new QSSGShaderLibraryManager,
                                                                                        shaderCache,
                                                                                        new QSSGCustomMaterialSystem,
-                                                                                       new QSSGProgramGenerator,
-                                                                                       "./"));
+                                                                                       new QSSGProgramGenerator));
     sceneManager->rci = renderContext.data();
 
     meshPath = qEnvironmentVariable("tst_mesh", "#Cube");

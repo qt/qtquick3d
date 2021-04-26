@@ -36,7 +36,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
@@ -48,7 +47,7 @@ QT_END_NAMESPACE
 
 struct GenShaders
 {
-    explicit GenShaders(const QString &sourceDir);
+    explicit GenShaders();
     ~GenShaders();
     bool process(const MaterialParser::SceneData &sceneData, QVector<QString> &qsbcFiles, const QDir &outDir,
                  bool generateMultipleLights, bool dryRun);

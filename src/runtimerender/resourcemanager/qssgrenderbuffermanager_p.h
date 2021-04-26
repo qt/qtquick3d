@@ -46,7 +46,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagetexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
@@ -94,7 +93,6 @@ private:
 
     QSSGRef<QSSGRhiContext> context;
     QSSGRef<QSSGShaderCache> shaderCache;
-    QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
     ImageMap imageMap;
     QSGImageMap qsgImageMap;
     MeshMap meshMap;
@@ -119,8 +117,7 @@ public:
     };
 
     QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
-                      const QSSGRef<QSSGShaderCache> &inShaderContext,
-                      const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory);
+                      const QSSGRef<QSSGShaderCache> &inShaderContext);
     ~QSSGBufferManager();
 
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,

@@ -84,7 +84,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     typedef QHash<QByteArray, QByteArray> TPathDataMap;
     typedef QSet<QString> TPathSet;
 
-    QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
     TPathDataMap m_expandedFiles;
     QHash<QByteArray, QSSGCustomShaderMetaData> m_metadata;
     QByteArray m_vertShader;
@@ -97,7 +96,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
 
     static QString getShaderCodeLibraryDirectory();
 
-    explicit QSSGShaderLibraryManager(const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory);
+    explicit QSSGShaderLibraryManager();
 
     ~QSSGShaderLibraryManager();
 

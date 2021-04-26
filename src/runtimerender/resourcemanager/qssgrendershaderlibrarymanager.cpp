@@ -49,10 +49,7 @@ static QByteArray includeSearch() { return QByteArrayLiteral("#include \""); };
 static QByteArray copyrightHeaderStart() { return QByteArrayLiteral("/****************************************************************************"); }
 static QByteArray copyrightHeaderEnd() { return QByteArrayLiteral("****************************************************************************/"); }
 
-QSSGShaderLibraryManager::QSSGShaderLibraryManager(const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory)
-    : m_inputStreamFactory(inputStreamFactory)
-{
-}
+QSSGShaderLibraryManager::QSSGShaderLibraryManager() {}
 
 QSSGShaderLibraryManager::~QSSGShaderLibraryManager() {}
 

@@ -29,7 +29,6 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
@@ -627,7 +626,6 @@ bool QSSGLoadedTexture::scanForTransparency() const
 
 QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
                                            const QSSGRenderTextureFormat &inFormat,
-                                           QSSGInputStreamFactory &,
                                            bool inFlipY)
 {
     if (inPath.isEmpty())

@@ -46,8 +46,6 @@
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qqsbcollection_p.h>
 
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
-
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
 #include <QtCore/QString>
@@ -58,7 +56,6 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGRhiShaderPipeline;
-class QSSGInputStreamFactory;
 class QShaderBaker;
 
 namespace QSSGShaderDefines
@@ -162,8 +159,6 @@ private:
     QSSGShaderCacheKey m_tempKey;
     const InitBakerFunc m_initBaker;
 
-    QSSGRef<QSSGInputStreamFactory> m_inputStreamFactory;
-
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
                                ShaderType shaderType,
@@ -171,7 +166,6 @@ private:
 
 public:
     QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
-                    const QSSGRef<QSSGInputStreamFactory> &inInputStreamFactory,
                     const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 

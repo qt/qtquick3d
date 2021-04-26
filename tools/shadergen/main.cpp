@@ -57,7 +57,7 @@ static int generateShaders(QVector<QString> &qsbcFiles,
     MaterialParser::SceneData sceneData;
     if (MaterialParser::parseQmlFiles(filePaths, sourceDir, sceneData, verboseOutput) == 0) {
         if (sceneData.hasData()) {
-            GenShaders genShaders(sourceDir.canonicalPath());
+            GenShaders genShaders;
             if (!genShaders.process(sceneData, qsbcFiles, outDir, multilight, dryRun))
                 return -1;
         } else if (verboseOutput) {

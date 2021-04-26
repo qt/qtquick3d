@@ -392,7 +392,7 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 // and this is the magic point where many things internally get
                 // switched over to be QRhi-based.
                 rhiContext->initialize(rhi);
-                rci = new QSSGRenderContextInterface(qw, rhiContext, QString::fromLatin1("./"));
+                rci = new QSSGRenderContextInterface(qw, rhiContext);
                 renderer = new QQuick3DSceneRenderer(rci);
             }
 

@@ -84,7 +84,7 @@ static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &fe
     return ret;
 }
 
-GenShaders::GenShaders(const QString &sourceDir)
+GenShaders::GenShaders()
 {
     sceneManager = new QQuick3DSceneManager;
 
@@ -96,18 +96,15 @@ GenShaders::GenShaders(const QString &sourceDir)
     rhiContext->initialize(rhi);
     rhiContext->setCommandBuffer(cb);
 
-    auto inputStreamFactory = new QSSGInputStreamFactory;
-    auto shaderCache = new QSSGShaderCache(rhiContext, inputStreamFactory, &initBaker);
+    auto shaderCache = new QSSGShaderCache(rhiContext, &initBaker);
     renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
-                                                                                       inputStreamFactory,
-                                                                                       new QSSGBufferManager(rhiContext, shaderCache, inputStreamFactory),
+                                                                                       new QSSGBufferManager(rhiContext, shaderCache),
                                                                                        new QSSGResourceManager(rhiContext),
                                                                                        new QSSGRenderer,
-                                                                                       new QSSGShaderLibraryManager(inputStreamFactory),
+                                                                                       new QSSGShaderLibraryManager,
                                                                                        shaderCache,
                                                                                        new QSSGCustomMaterialSystem,
-                                                                                       new QSSGProgramGenerator,
-                                                                                       sourceDir));
+                                                                                       new QSSGProgramGenerator));
     sceneManager->rci = renderContext.data();
 }
 

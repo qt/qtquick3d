@@ -32,7 +32,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinputstreamfactory_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
@@ -58,12 +57,9 @@ static bool loadPregenratedShaders()
     return qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_GENSHADERS") == 0;
 }
 
-void QSSGRenderContextInterface::init(const QString &inApplicationDirectory)
+void QSSGRenderContextInterface::init()
 {
     m_renderer->setRenderContextInterface(this);
-
-    if (!inApplicationDirectory.isEmpty())
-        m_inputStreamFactory->addSearchDirectory(inApplicationDirectory);
 
     m_customMaterialSystem->setRenderContextInterface(this);
     if (loadPregenratedShaders())
@@ -83,17 +79,14 @@ QSSGRenderContextInterface *QSSGRenderContextInterface::renderContextForWindow(c
 }
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
-                                                       const QSSGRef<QSSGInputStreamFactory> &inputStreamFactory,
                                                        const QSSGRef<QSSGBufferManager> &bufferManager,
                                                        const QSSGRef<QSSGResourceManager> &resourceManager,
                                                        const QSSGRef<QSSGRenderer> &renderer,
                                                        const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                        const QSSGRef<QSSGShaderCache> &shaderCache,
                                                        const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem,
-                                                       const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
-                                                       const QString &inApplicationDirectory)
+                                                       const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator)
     : m_rhiContext(ctx)
-    , m_inputStreamFactory(inputStreamFactory)
     , m_shaderCache(shaderCache)
     , m_bufferManager(bufferManager)
     , m_resourceManager(resourceManager)
@@ -102,15 +95,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiCont
     , m_customMaterialSystem(customMaterialSystem)
     , m_shaderProgramGenerator(shaderProgramGenerator)
 {
-    init(inApplicationDirectory);
-}
-
-static const QSSGRef<QSSGInputStreamFactory> &q3ds_inputStreamFactory()
-{
-    static QSSGRef<QSSGInputStreamFactory> inputStreamFactory;
-    if (!inputStreamFactory)
-        inputStreamFactory = new QSSGInputStreamFactory;
-    return inputStreamFactory;
+    init();
 }
 
 // The shader library is a global object, not per-QQuickWindow, hence not owned
@@ -119,24 +104,22 @@ static const QSSGRef<QSSGShaderLibraryManager> &q3ds_shaderLibraryManager()
 {
     static QSSGRef<QSSGShaderLibraryManager> shaderLibraryManager;
     if (!shaderLibraryManager)
-        shaderLibraryManager = new QSSGShaderLibraryManager(q3ds_inputStreamFactory());
+        shaderLibraryManager = new QSSGShaderLibraryManager;
     return shaderLibraryManager;
 }
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(QWindow *window,
-                                                       const QSSGRef<QSSGRhiContext> &ctx,
-                                                       const QString &inApplicationDirectory)
+                                                       const QSSGRef<QSSGRhiContext> &ctx)
     : m_rhiContext(ctx)
-    , m_inputStreamFactory(q3ds_inputStreamFactory())
-    , m_shaderCache(new QSSGShaderCache(ctx, m_inputStreamFactory))
-    , m_bufferManager(new QSSGBufferManager(ctx, m_shaderCache, m_inputStreamFactory))
+    , m_shaderCache(new QSSGShaderCache(ctx))
+    , m_bufferManager(new QSSGBufferManager(ctx, m_shaderCache))
     , m_resourceManager(new QSSGResourceManager(ctx))
     , m_renderer(new QSSGRenderer)
     , m_shaderLibraryManager(q3ds_shaderLibraryManager())
     , m_customMaterialSystem(new QSSGCustomMaterialSystem)
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
 {
-    init(inApplicationDirectory);
+    init();
     if (window) {
         g_windowReg->append({ window, this });
         QObject::connect(window, &QWindow::destroyed, [&](QObject *o){
@@ -158,8 +141,6 @@ const QSSGRef<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() co
 const QSSGRef<QSSGResourceManager> &QSSGRenderContextInterface::resourceManager() const { return m_resourceManager; }
 
 const QSSGRef<QSSGRhiContext> &QSSGRenderContextInterface::rhiContext() const { return m_rhiContext; }
-
-const QSSGRef<QSSGInputStreamFactory> &QSSGRenderContextInterface::inputStreamFactory() const { return m_inputStreamFactory; }
 
 const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const { return m_shaderCache; }
 
