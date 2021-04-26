@@ -115,6 +115,39 @@ struct TextureInfo
     aiUVTransform *transform = nullptr;
 };
 
+bool operator==(const TextureInfo &a, const TextureInfo &b)
+{
+    return (a.mapping == b.mapping)
+            && (std::memcmp(a.modes, b.modes, sizeof(a.modes)) == 0)
+            && (a.minFilter == b.minFilter)
+            && (a.magFilter == b.magFilter)
+            && (a.uvIndex == b.uvIndex)
+            && ((a.transform == b.transform) || ((a.transform && b.transform) && (std::memcmp(a.transform, b.transform, sizeof(aiUVTransform)) == 0)));
+}
+
+struct TextureEntry
+{
+    QByteArrayView name;
+    TextureInfo info;
+    QSSGSceneDesc::Texture *texture = nullptr;
+};
+
+size_t qHash(const TextureEntry &key, size_t seed)
+{
+    const auto infoKey = quintptr(key.info.mapping)
+                         ^ (quintptr(key.info.modes[0]) ^ quintptr(key.info.modes[1]) ^ quintptr(key.info.modes[2]))
+                         ^ quintptr(key.info.minFilter ^ key.info.magFilter)
+                         ^ quintptr(key.info.uvIndex)
+                         ^ quintptr(key.info.transform);
+
+    return qHash(key.name, seed) ^ qHash(infoKey, seed);
+}
+
+bool operator==(const TextureEntry &a, const TextureEntry &b)
+{
+    return (a.name == b.name) && (a.info == b.info);
+}
+
 struct SceneInfo
 {
     enum class GltfVersion : quint8
@@ -132,10 +165,14 @@ struct SceneInfo
 
     using MaterialMap = QVarLengthArray<QPair<const aiMaterial *, QSSGSceneDesc::Material *>>;
     using MeshMap = QVarLengthArray<QPair<const aiMesh *, QSSGSceneDesc::Mesh *>>;
+    using EmbeddedTextureMap = QVarLengthArray<QSSGSceneDesc::TextureData *>;
+    using TextureMap = QSet<TextureEntry>;
 
     const aiScene &scene;
     MaterialMap &materialMap;
     MeshMap &meshMap;
+    EmbeddedTextureMap &embeddedTextureMap;
+    TextureMap &textureMap;
     QDir workingDir;
     GltfVersion ver;
     Options opt;
@@ -317,37 +354,60 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                 material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), texInfo.minFilter);
                 material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), texInfo.magFilter);
 
-                // TODO: The same texture data can be referenced multiple times, so create cache the
-                // data so we don't re-create it for each texture using the same data.
-                tex = scene->create<QSSGSceneDesc::Texture>();
-                QSSGSceneDesc::addNode(target, *tex);
+                auto &textureMap = sceneInfo.textureMap;
 
-                // Two types, externally referenced or embedded
-                const bool isEmbedded = (*texturePath.C_Str() == '*');
-                setTextureProperties(*tex, texInfo, sceneInfo);
-                if (isEmbedded) {
-                    if (auto sourceTexture = srcScene.GetEmbeddedTexture(texturePath.C_Str())) {
-                        Q_ASSERT(sourceTexture->pcData);
-                        // Two cases of embedded textures, uncompress and compressed.
-                        const bool isCompressed = (sourceTexture->mHeight == 0);
-
-                        // For compressed textures this is the size of the image buffer (in bytes)
-                        const qsizetype asize = (isCompressed) ? sourceTexture->mWidth : (sourceTexture->mHeight * sourceTexture->mWidth) * sizeof(aiTexel);
-                        auto *data = scene->allocator.allocate(asize);
-                        ::memcpy(data, sourceTexture->pcData, asize);
-                        const QSize size = (!isCompressed) ? QSize(int(sourceTexture->mWidth), int(sourceTexture->mHeight)) : QSize();
-                        QByteArrayView imageData { reinterpret_cast<const char *>(data), asize };
-                        const auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
-                        const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
-                        auto textureData = scene->create<QSSGSceneDesc::TextureData>(imageData, size, format, flags);
-                        QSSGSceneDesc::addNode(*tex, *textureData);
-                        QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
-                    }
+                // Check if we already processed this texture
+                const auto it = textureMap.constFind(TextureEntry{QByteArrayView{texturePath.C_Str(), texturePath.length}, texInfo});
+                if (it != textureMap.cend()) {
+                    Q_ASSERT(it->texture);
+                    tex = it->texture;
                 } else {
-                    const auto path = (sceneInfo.workingDir.canonicalPath() + QDir::separator() + QString::fromUtf8(texturePath.C_Str())).toUtf8();
-                    char *data = reinterpret_cast<char *>(scene->allocator.allocate(path.size() + 1));
-                    qstrncpy(data, path.constData(), path.size() + 1);
-                    QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ { QByteArrayView{data, path.size()} } });
+                    // Two types, externally referenced or embedded
+                    tex = scene->create<QSSGSceneDesc::Texture>();
+                    // NOTE: We need a persistent zero terminated string!
+                    textureMap.insert(TextureEntry{fromAiString(scene->allocator, texturePath), texInfo, tex});
+
+                    QSSGSceneDesc::addNode(target, *tex);
+                    setTextureProperties(*tex, texInfo, sceneInfo); // both
+                    const bool isEmbedded = (*texturePath.C_Str() == '*');
+                    if (isEmbedded) {
+                        QSSGSceneDesc::TextureData *textureData = nullptr;
+                        auto &embeddedTextures = sceneInfo.embeddedTextureMap;
+                        const auto textureCount = embeddedTextures.count();
+                        const auto &filename = texturePath.data;
+                        const auto idx = qsizetype(std::atoi(filename + 1));
+                        if (idx >= 0 && idx < textureCount)
+                            textureData = embeddedTextures[idx];
+
+                        if (!textureData) {
+                            if (auto sourceTexture = srcScene.GetEmbeddedTexture(texturePath.C_Str())) {
+                                Q_ASSERT(sourceTexture->pcData);
+                                // Two cases of embedded textures, uncompress and compressed.
+                                const bool isCompressed = (sourceTexture->mHeight == 0);
+
+                                // For compressed textures this is the size of the image buffer (in bytes)
+                                const qsizetype asize = (isCompressed) ? sourceTexture->mWidth : (sourceTexture->mHeight * sourceTexture->mWidth) * sizeof(aiTexel);
+                                auto *data = scene->allocator.allocate(asize);
+                                ::memcpy(data, sourceTexture->pcData, asize);
+                                const QSize size = (!isCompressed) ? QSize(int(sourceTexture->mWidth), int(sourceTexture->mHeight)) : QSize();
+                                QByteArrayView imageData { reinterpret_cast<const char *>(data), asize };
+                                const auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
+                                const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
+                                textureData = scene->create<QSSGSceneDesc::TextureData>(imageData, size, format, flags);
+                                QSSGSceneDesc::addNode(*tex, *textureData);
+                                Q_ASSERT(idx >= 0 && idx < textureCount);
+                                embeddedTextures[idx] = textureData;
+                            }
+                        }
+
+                        if (textureData)
+                            QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
+                    } else {
+                        const auto path = (sceneInfo.workingDir.canonicalPath() + QDir::separator() + QString::fromUtf8(texturePath.C_Str())).toUtf8();
+                        char *data = reinterpret_cast<char *>(scene->allocator.allocate(path.size() + 1));
+                        qstrncpy(data, path.constData(), path.size() + 1);
+                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ { QByteArrayView{data, path.size()} } });
+                    }
                 }
             }
         }
@@ -934,14 +994,22 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     SceneInfo::MeshMap meshes;
     meshes.reserve(meshCount);
 
+    const auto embeddedTextureCount = sourceScene->mNumTextures;
+    SceneInfo::EmbeddedTextureMap embeddedTextures;
+
     for (qsizetype i = 0; i != materialCount; ++i)
         materials.push_back({sourceScene->mMaterials[i], nullptr});
 
     for (qsizetype i = 0; i != meshCount; ++i)
         meshes.push_back({sourceScene->mMeshes[i], nullptr});
 
+    for (qsizetype i = 0; i != embeddedTextureCount; ++i)
+        embeddedTextures.push_back(nullptr);
+
+    SceneInfo::TextureMap textureMap;
+
     const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, materials, meshes, sourceFile.dir(), gltfVersion, opt };
+    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, sourceFile.dir(), gltfVersion, opt };
 
     if (!targetScene.root) {
         auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
