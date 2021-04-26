@@ -402,7 +402,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 
         // Occlusion Textures are not implimented (yet)
         if (auto occlusionTexture = createTextureNode(source, aiTextureType_LIGHTMAP, 0)) {
-            QSSGSceneDesc::setProperty(target, "occlusionTextureImage", &QQuick3DPrincipledMaterial::setOcclusionMap, occlusionTexture);
+            QSSGSceneDesc::setProperty(target, "occlusionMap", &QQuick3DPrincipledMaterial::setOcclusionMap, occlusionTexture);
             QSSGSceneDesc::setProperty(target, "occlusionChannel", &QQuick3DPrincipledMaterial::setOcclusionChannel, QQuick3DPrincipledMaterial::TextureChannelMapping::R);
             {
                 ai_real occlusionAmount;
