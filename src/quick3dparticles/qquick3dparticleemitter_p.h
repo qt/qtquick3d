@@ -146,7 +146,7 @@ protected:
     void registerEmitBurst(QQuick3DParticleEmitBurst *emitBurst);
     void unRegisterEmitBurst(QQuick3DParticleEmitBurst *emitBurst);
     void generateEmitBursts();
-    void emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QVector3D &centerPos);
+    void emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QQuaternion &parentRotation, const QVector3D &centerPos);
     void emitParticles();
     void emitParticlesBurst(const QQuick3DParticleEmitBurstData &burst);
     int getEmitAmount();

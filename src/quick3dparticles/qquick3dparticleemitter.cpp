@@ -586,6 +586,7 @@ void QQuick3DParticleEmitter::generateEmitBursts()
     // TODO: In trail emitter case centerPos should be calculated
     // taking into account each particle position at emitburst time
     QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    QQuaternion rotation = calculateParticleRotation(parentNode(), m_systemSharedParent);
     QVector3D centerPos = position();
 
     for (auto emitBurst : qAsConst(m_emitBursts)) {
@@ -596,7 +597,7 @@ void QQuick3DParticleEmitter::generateEmitBursts()
         float startTime = float(emitBurst->time() / 1000.0f);
         float timeStep = float(emitBurst->duration() / 1000.0f) / emitAmount;
         for (int i = 0; i < emitAmount; i++) {
-            emitParticle(m_particle, startTime, transform, centerPos);
+            emitParticle(m_particle, startTime, transform, rotation, centerPos);
             startTime += timeStep;
         }
         // Increase burst index (for statically allocated particles)
@@ -621,7 +622,7 @@ void QQuick3DParticleEmitter::unRegisterEmitBurst(QQuick3DParticleEmitBurst* emi
     m_burstGenerated = false;
 }
 
-void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QVector3D &centerPos)
+void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QQuaternion &parentRotation, const QVector3D &centerPos)
 {
     if (!m_system)
         return;
@@ -660,10 +661,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     // Velocity
     if (m_velocity) {
         // Rotate velocity based on parent node rotation and emitter rotation
-        QMatrix4x4 rotationTransform;
-        rotationTransform.rotate(QQuaternion::fromRotationMatrix(transform.normalMatrix()));
-        rotationTransform.rotate(rotation());
-        d->startVelocity = rotationTransform.map(m_velocity->sample(*d));
+        d->startVelocity = parentRotation * rotation() * m_velocity->sample(*d);
     }
 
     // Rotation
@@ -758,13 +756,14 @@ void QQuick3DParticleEmitter::emitParticlesBurst(const QQuick3DParticleEmitBurst
         return;
 
     QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    QQuaternion rotation = calculateParticleRotation(parentNode(), m_systemSharedParent);
     QVector3D centerPos = position() + burst.position;
 
     int emitAmount = std::min(burst.amount, int(m_particle->maxAmount()));
     for (int i = 0; i < emitAmount; i++) {
         // Distribute evenly between time and time+duration.
         float startTime = (burst.time / 1000.0f) + (float(1 + i) / emitAmount) * ((burst.duration) / 1000.0f);
-        emitParticle(m_particle, startTime, transform, centerPos);
+        emitParticle(m_particle, startTime, transform, rotation, centerPos);
     }
 }
 
@@ -798,6 +797,7 @@ void QQuick3DParticleEmitter::emitParticles()
         return;
 
     QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    QQuaternion rotation = calculateParticleRotation(parentNode(), m_systemSharedParent);
     QVector3D centerPos = position();
 
     emitAmount = std::min(emitAmount, int(m_particle->maxAmount()));
@@ -805,7 +805,7 @@ void QQuick3DParticleEmitter::emitParticles()
         // Distribute evenly between previous and current time, important especially
         // when time has jumped a lot (like a starttime).
         float startTime = (m_prevEmitTime / 1000.0f) + (float(1+i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0f);
-        emitParticle(m_particle, startTime, transform, centerPos);
+        emitParticle(m_particle, startTime, transform, rotation, centerPos);
     }
 
     m_prevEmitTime = systemTime;

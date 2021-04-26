@@ -321,4 +321,12 @@ QMatrix4x4 calculateParticleTransform(const QQuick3DNode *parent, const QQuick3D
     return transform;
 }
 
+QQuaternion calculateParticleRotation(const QQuick3DNode *parent, const QQuick3DNode *systemSharedParent)
+{
+    QQuaternion rotation = parent->sceneRotation();
+    if (systemSharedParent)
+        rotation = systemSharedParent->sceneRotation().inverted() * rotation;
+    return rotation;
+}
+
 QT_END_NAMESPACE
