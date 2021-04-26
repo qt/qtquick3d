@@ -111,7 +111,7 @@ struct TextureInfo
     aiTextureMapMode modes[3] {};
     unsigned int minFilter { AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR };
     unsigned int magFilter { AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR };
-    uint uvIndex { aiTextureMapping::aiTextureMapping_OTHER };
+    uint uvIndex { 0 };
     aiUVTransform *transform = nullptr;
 };
 
