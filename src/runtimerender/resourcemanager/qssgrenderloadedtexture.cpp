@@ -42,6 +42,27 @@
 
 QT_BEGIN_NAMESPACE
 
+
+QSharedPointer<QIODevice> QSSGInputUtil::getStreamForFile(const QString &inPath, bool inQuiet, QString *outPath)
+{
+    QString tryPath = inPath.startsWith(QLatin1String("qrc:/")) ? inPath.mid(3) : inPath;
+    QFileInfo fi(tryPath);
+    if (!fi.exists() && fi.isNativePath())
+        fi.setFile(QLatin1String(":/") + tryPath);
+    QString filePath = fi.canonicalFilePath();
+    QFile *file = new QFile(filePath);
+    if (file->open(QIODevice::ReadOnly)) {
+        if (outPath)
+            *outPath = filePath;
+    } else {
+        if (!inQuiet)
+            qWarning("Failed to find file: %s", qPrintable(inPath));
+        delete file;
+        file = nullptr;
+    }
+    return QSharedPointer<QIODevice>(file);
+}
+
 static inline QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalFormat)
 {
     switch (internalFormat) {
@@ -606,16 +627,15 @@ bool QSSGLoadedTexture::scanForTransparency() const
 
 QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
                                            const QSSGRenderTextureFormat &inFormat,
-                                           QSSGInputStreamFactory &inFactory,
+                                           QSSGInputStreamFactory &,
                                            bool inFlipY)
 {
     if (inPath.isEmpty())
         return nullptr;
 
     QSSGLoadedTexture *theLoadedImage = nullptr;
-    QSharedPointer<QIODevice> theStream(inFactory.getStreamForFile(inPath));
     QString fileName;
-    inFactory.getPathForFile(inPath, fileName);
+    QSharedPointer<QIODevice> theStream(QSSGInputUtil::getStreamForFile(inPath, false, &fileName));
     if (theStream && inPath.size() > 3) {
         QByteArray ext = inPath.mid(inPath.lastIndexOf(QLatin1Char('.')) + 1).toLower().toUtf8();
         if (ext == "hdr") {

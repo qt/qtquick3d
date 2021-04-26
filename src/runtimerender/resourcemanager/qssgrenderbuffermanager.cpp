@@ -895,7 +895,7 @@ QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath) c
             QString pathBuilder = QString::fromLatin1(primitivesDirectory);
             pathBuilder += QLatin1String(primitives[idx].file);
             const quint32 id = 1;
-            QSharedPointer<QIODevice> device(inputStreamFactory->getStreamForFile(pathBuilder));
+            QSharedPointer<QIODevice> device(QSSGInputUtil::getStreamForFile(pathBuilder));
             if (device) {
                 QSSGMesh::Mesh mesh = QSSGMesh::Mesh::loadMesh(device.data(), id);
                 if (mesh.isValid())
@@ -1373,7 +1373,7 @@ QSSGMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath)
             pathBuilder = pathBuilder.left(poundIndex);
         }
         if (!pathBuilder.isEmpty()) {
-            QSharedPointer<QIODevice> device(inputStreamFactory->getStreamForFile(pathBuilder));
+            QSharedPointer<QIODevice> device(QSSGInputUtil::getStreamForFile(pathBuilder));
             if (device) {
                 QSSGMesh::Mesh mesh = QSSGMesh::Mesh::loadMesh(device.data(), id);
                 if (mesh.isValid())

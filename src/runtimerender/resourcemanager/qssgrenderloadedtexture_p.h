@@ -61,8 +61,16 @@ struct QSSGTextureData
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::Unknown;
 };
 
+
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGInputUtil
+{
+    static QSharedPointer<QIODevice> getStreamForFile(const QString &inFilename,
+                                                      bool inQuiet = false,
+                                                      QString *outFilepath = nullptr);
+};
+
+
 // Utility class used for loading image data from disk.
-// Supports jpg, png, and dds.
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLoadedTexture
 {
 public:

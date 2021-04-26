@@ -31,6 +31,7 @@
 #include "qssgrendershaderlibrarymanager_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderloadedtexture_p.h>
 
 #include <QXmlStreamReader>
 #include <QFileInfo>
@@ -138,12 +139,12 @@ QByteArray QSSGShaderLibraryManager::getIncludeContents(const QByteArray &inShad
         QSharedPointer<QIODevice> theStream;
         QTextStream stream(&fullPath);
         stream << defaultDir << QLatin1Char('/') << ver << QLatin1Char('/') << QString::fromLocal8Bit(inShaderPathKey);
-        theStream = m_inputStreamFactory->getStreamForFile(fullPath, true);
+        theStream = QSSGInputUtil::getStreamForFile(fullPath, true);
         if (theStream.isNull()) {
             fullPath.clear();
             QTextStream stream(&fullPath);
             stream << defaultDir << QLatin1Char('/') << QString::fromLocal8Bit(inShaderPathKey);
-            theStream = m_inputStreamFactory->getStreamForFile(fullPath, false);
+            theStream = QSSGInputUtil::getStreamForFile(fullPath, false);
         }
         if (!theStream.isNull()) {
             char readBuf[1024];

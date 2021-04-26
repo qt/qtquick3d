@@ -156,11 +156,11 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     rhiContext->initialize(rhi.get());
     rhiContext->setCommandBuffer(cb);
 
-    auto inputStreamFactory = new QSSGInputStreamFactory;
-    QScopedPointer<QSSGLoadedTexture> inImage(QSSGLoadedTexture::loadHdrImage(inputStreamFactory->getStreamForFile(inPath), FORMAT));
+    QScopedPointer<QSSGLoadedTexture> inImage(QSSGLoadedTexture::loadHdrImage(QSSGInputUtil::getStreamForFile(inPath), FORMAT));
     if (!inImage)
         return QStringLiteral("Failed to load hdr file");
 
+    auto inputStreamFactory = new QSSGInputStreamFactory;
     auto shaderCache = std::make_unique<QSSGShaderCache>(rhiContext, inputStreamFactory);
 
     // The objective of this method is to take the equirectangular texture
