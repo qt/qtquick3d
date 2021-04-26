@@ -344,7 +344,7 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
 {
     if (m_particle == particle)
         return;
-    if (particle && particle->system() != nullptr && particle->system() != m_system) {
+    if (particle && particle->system() != nullptr && m_system && particle->system() != m_system) {
         qWarning("ParticleEmitter3D: Emitter and Particle must be in the same system.");
         return;
     }
