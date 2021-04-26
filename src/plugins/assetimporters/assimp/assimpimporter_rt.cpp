@@ -403,7 +403,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                         if (textureData)
                             QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
                     } else {
-                        const auto path = (sceneInfo.workingDir.canonicalPath() + QDir::separator() + QString::fromUtf8(texturePath.C_Str())).toUtf8();
+                        const auto path = sceneInfo.workingDir.absoluteFilePath(QString::fromUtf8(texturePath.C_Str())).toUtf8();
                         char *data = reinterpret_cast<char *>(scene->allocator.allocate(path.size() + 1));
                         qstrncpy(data, path.constData(), path.size() + 1);
                         QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ { QByteArrayView{data, path.size()} } });
@@ -1084,7 +1084,7 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
             }
         } else if (v.value.mt == QMetaType::fromType<UrlView>()) {
             if (const auto url = reinterpret_cast<const UrlView *>(v.value.dptr)) {
-                const QUrl qurl(QString::fromUtf8(url->view));
+                const QUrl qurl = QUrl::fromUserInput(QString::fromUtf8(url->view));
                 v.call->set(obj, &qurl);
             }
         } else if (v.value.mt == QMetaType::fromType<StringView>()) {
