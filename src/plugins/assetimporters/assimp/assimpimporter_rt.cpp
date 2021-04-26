@@ -815,10 +815,10 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
         meshNode = mesh.second;
         if (meshNode == nullptr) {
             meshes = {mesh.first};
-            ensureMaterial(mesh.first->mMaterialIndex);
             mesh.second = meshNode = createMeshNode(mesh.first->mName);
             QSSGSceneDesc::addNode(target, *meshNode); // We only add this the first time we create it.
         }
+        ensureMaterial(mesh.first->mMaterialIndex);
         Q_ASSERT(meshNode != nullptr && mesh.second != nullptr);
     }
 
