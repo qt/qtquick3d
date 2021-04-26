@@ -100,6 +100,7 @@ inline float qLookupCos(float x)
 
 QQuick3DNode *getSharedParentNode(QQuick3DNode *node, QQuick3DNode *system);
 QMatrix4x4 calculateParticleTransform(const QQuick3DNode *parent, const QQuick3DNode *systemSharedParent);
+QQuaternion calculateParticleRotation(const QQuick3DNode *parent, const QQuick3DNode *systemSharedParent);
 
 QT_END_NAMESPACE
 

@@ -109,14 +109,14 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
                 // Distribute evenly between previous and current time, important especially
                 // when time has jumped a lot (like a starttime).
                 float startTime = (m_prevEmitTime / 1000.0f) + (float(1 + i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0f);
-                emitParticle(particle, startTime, QMatrix4x4(), centerPos);
+                emitParticle(particle, startTime, QMatrix4x4(), QQuaternion(), centerPos);
             }
             // Emit bursts, if any
             for (auto burst : qAsConst(m_bursts)) {
                 int burstAmount = std::min(burst.amount, int(particle->maxAmount()));
                 float burstTime = float(burst.time / 1000.0f);
                 for (int i = 0; i < burstAmount; i++)
-                    emitParticle(particle, burstTime, QMatrix4x4(), centerPos);
+                    emitParticle(particle, burstTime, QMatrix4x4(), QQuaternion(), centerPos);
             }
         }
     }
