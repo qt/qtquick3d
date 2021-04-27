@@ -351,8 +351,11 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                 if (material.Get(AI_MATKEY_UVTRANSFORM(textureType, index), transform) == aiReturn_SUCCESS)
                     texInfo.transform = &transform;
 
-                material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), texInfo.minFilter);
-                material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), texInfo.magFilter);
+                if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
+                    material.Get(AI_MATKEY_GLTF_TEXTURE_TEXCOORD(textureType, index), texInfo.uvIndex);
+                    material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), texInfo.minFilter);
+                    material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), texInfo.magFilter);
+                }
 
                 auto &textureMap = sceneInfo.textureMap;
 
