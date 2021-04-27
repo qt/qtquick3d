@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(Quick3D
-    GENERATE_METATYPES
     SOURCES
         qquick3d.cpp qquick3d.h
         qquick3dabstractlight.cpp qquick3dabstractlight_p.h

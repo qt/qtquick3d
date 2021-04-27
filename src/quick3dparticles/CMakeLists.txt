@@ -4,7 +4,6 @@
 #####################################################################
 
 qt_internal_add_module(Quick3DParticles
-    GENERATE_METATYPES
     SOURCES
         qtquick3dparticlesglobal.h qtquick3dparticlesglobal_p.h
         qquick3dparticle.cpp qquick3dparticle_p.h
