@@ -984,10 +984,16 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                             }
                         }, Qt::DirectConnection);
 
-                        // With every frame (even when QQuickWindow isn't dirty so doesn't render),
-                        // try to update the texture. If updateTexture() returns false, content hasn't changed.
-                        // This complements qsgDynamicTextures and QQuick3DViewport::updateDynamicTextures().
-                        m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::beforeSynchronizing,
+                        // With every frame try to update the texture. Use
+                        // afterSynchronizing like in the other branch. (why
+                        // after: a property changing something in the 2D
+                        // subtree leading to updates in the content will only
+                        // be "visible" after the (2D item) sync, not before)
+                        //
+                        // If updateTexture() returns false, content hasn't
+                        // changed. This complements qsgDynamicTextures and
+                        // QQuick3DViewport::updateDynamicTextures().
+                        m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::afterSynchronizing,
                                                             this, [this, sourceItem]()
                         {
                             // Called on the render thread with gui blocked (if there is a render thread, that is).
