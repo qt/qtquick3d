@@ -44,22 +44,71 @@ QT_BEGIN_NAMESPACE
 
 QSharedPointer<QIODevice> QSSGInputUtil::getStreamForFile(const QString &inPath, bool inQuiet, QString *outPath)
 {
+    QFile *file = nullptr;
     QString tryPath = inPath.startsWith(QLatin1String("qrc:/")) ? inPath.mid(3) : inPath;
     QFileInfo fi(tryPath);
-    if (!fi.exists() && fi.isNativePath())
-        fi.setFile(QLatin1String(":/") + tryPath);
-    QString filePath = fi.canonicalFilePath();
-    QFile *file = new QFile(filePath);
-    if (file->open(QIODevice::ReadOnly)) {
+    bool found = fi.exists();
+    if (!found && fi.isNativePath()) {
+        tryPath.prepend(QLatin1String(":/"));
+        fi.setFile(tryPath);
+        found = fi.exists();
+    }
+    if (found) {
+        QString filePath = fi.canonicalFilePath();
+        file = new QFile(filePath);
+        if (file->open(QIODevice::ReadOnly)) {
+            if (outPath)
+                *outPath = filePath;
+        } else {
+            delete file;
+            file = nullptr;
+        }
+    }
+    if (!file && !inQuiet)
+        qCWarning(WARNING, "Failed to find file: %s", qPrintable(inPath));
+    return QSharedPointer<QIODevice>(file);
+}
+
+QSharedPointer<QIODevice> QSSGInputUtil::getStreamForTextureFile(const QString &inPath, bool inQuiet,
+                                                                 QString *outPath, FileType *outFileType)
+{
+    static const QList<QByteArray> hdrFormats = QList<QByteArray>({ "hdr" });
+    static const QList<QByteArray> textureFormats = QTextureFileReader::supportedFileFormats();
+    static const QList<QByteArray> imageFormats = QImageReader::supportedImageFormats();
+    static const QList<QByteArray> allFormats = textureFormats + hdrFormats + imageFormats;
+
+    QString filePath;
+    QByteArray ext;
+    QSharedPointer<QIODevice> stream = getStreamForFile(inPath, true, &filePath);
+    if (stream) {
+        ext = QFileInfo(filePath).suffix().toLatin1().toLower();
+    } else {
+        for (const QByteArray &format : allFormats) {
+            QString tryName = inPath + QLatin1Char('.') + QLatin1String(format);
+            stream = getStreamForFile(tryName, true, &filePath);
+            if (stream) {
+                ext = format;
+                break;
+            }
+        }
+    }
+    if (stream) {
         if (outPath)
             *outPath = filePath;
-    } else {
-        if (!inQuiet)
-            qWarning("Failed to find file: %s", qPrintable(inPath));
-        delete file;
-        file = nullptr;
+        if (outFileType) {
+            FileType type = UnknownFile;
+            if (hdrFormats.contains(ext))
+                type = HdrFile;
+            else if (textureFormats.contains(ext))
+                type = TextureFile;
+            else if (imageFormats.contains(ext))
+                type = ImageFile;
+            *outFileType = type;
+        }
+    } else if (!inQuiet) {
+        qCWarning(WARNING, "Failed to find texture file for: %s", qPrintable(inPath));
     }
-    return QSharedPointer<QIODevice>(file);
+    return stream;
 }
 
 static inline QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalFormat)
@@ -239,6 +288,8 @@ static inline QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalForm
 QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 flipVertical)
 {
     QImage image(inPath);
+    if (image.isNull())
+        return nullptr;
     const QPixelFormat pixFormat = image.pixelFormat();
     QImage::Format targetFormat = QImage::Format_RGBA8888_Premultiplied;
     if (image.colorCount()) // a palleted image
@@ -632,19 +683,23 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
 
     QSSGLoadedTexture *theLoadedImage = nullptr;
     QString fileName;
-    QSharedPointer<QIODevice> theStream(QSSGInputUtil::getStreamForFile(inPath, false, &fileName));
-    if (theStream && inPath.size() > 3) {
-        QByteArray ext = inPath.mid(inPath.lastIndexOf(QLatin1Char('.')) + 1).toLower().toUtf8();
-        if (ext == "hdr") {
+    QSSGInputUtil::FileType fileType = QSSGInputUtil::UnknownFile;
+    QSharedPointer<QIODevice> theStream =
+            QSSGInputUtil::getStreamForTextureFile(inPath, true, &fileName, &fileType);
+
+    if (theStream) {
+        switch (fileType) {
+        case QSSGInputUtil::HdrFile:
             // inFormat is a suggestion that's only relevant for HDR images
             // (tells if we want want RGBA16F or RGBE-on-RGBA8)
             theLoadedImage = loadHdrImage(theStream, inFormat);
-        } else if (QTextureFileReader::supportedFileFormats().contains(ext)) {
+            break;
+        case QSSGInputUtil::TextureFile:
             theLoadedImage = loadCompressedImage(fileName, inFlipY);
-        } else if (QImageReader::supportedImageFormats().contains(ext)) {
+            break;
+        default:
             theLoadedImage = loadQImage(fileName, inFlipY);
-        } else {
-            qCWarning(INTERNAL_ERROR, "Unrecognized image extension: %s", qPrintable(inPath));
+            break;
         }
     }
     return theLoadedImage;

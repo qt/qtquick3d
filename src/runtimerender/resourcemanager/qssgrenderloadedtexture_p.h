@@ -62,9 +62,14 @@ struct QSSGTextureData
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGInputUtil
 {
 public:
+    enum FileType { UnknownFile, ImageFile, TextureFile, HdrFile };
     static QSharedPointer<QIODevice> getStreamForFile(const QString &inPath,
                                                       bool inQuiet = false,
                                                       QString *outPath = nullptr);
+    static QSharedPointer<QIODevice> getStreamForTextureFile(const QString &inPath,
+                                                             bool inQuiet = false,
+                                                             QString *outPath = nullptr,
+                                                             FileType *outFileType = nullptr);
 };
 
 
