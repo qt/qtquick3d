@@ -338,10 +338,8 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
                 for (uint j = 0; j < boneRootNode->mNumChildren; ++j) {
                     aiNode *cNode = boneRootNode->mChildren[j];
                     // assumes that all the Joints have children which are Joints
-                    if (!isBone(cNode)) {
-                        QString boneName = QString::fromUtf8(cNode->mName.C_Str());
-                        m_bones.insert(boneName, cNode);
-                    }
+                    if (!isBone(cNode))
+                        continue;
                     generateSkeletonIdxMap(cNode, skeletonIdx, numBones);
                 }
                 m_numBonesInSkeleton.append(numBones);
