@@ -95,6 +95,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
         Screen,
         Multiply
     };
+    enum class FeatureLevel : quint8
+    {
+        Simple = 0,
+        Mapped,
+        Animated
+    };
 
     Q_DISABLE_COPY(QSSGRenderParticles)
 
@@ -109,6 +115,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     bool m_blendImages = true;
     bool m_billboard = true;
     QSSGRenderImage *m_colorTable = nullptr;
+    QSSGRenderParticles::FeatureLevel m_featureLevel = FeatureLevel::Simple;
 
     QSSGRenderParticles();
     ~QSSGRenderParticles() = default;

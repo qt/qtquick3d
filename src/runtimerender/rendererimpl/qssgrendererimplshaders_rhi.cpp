@@ -129,9 +129,20 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiTexturedQuadShader()
     return getBuiltinRhiShader(QByteArrayLiteral("texturedquad"), m_texturedQuadRhiShader);
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiParticleShader()
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel)
 {
-    return getBuiltinRhiShader(QByteArrayLiteral("particlesnolight"), m_particlesNoLightingRhiShader);
+    switch (featureLevel) {
+    case QSSGRenderParticles::FeatureLevel::Simple:
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightsimple"), m_particlesNoLightingSimpleRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::Mapped:
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightmapped"), m_particlesNoLightingMappedRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::Animated:
+    default:
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader);
+        break;
+    }
 }
 
 QT_END_NAMESPACE

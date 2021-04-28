@@ -67,6 +67,13 @@ public:
     enum BlendMode { SourceOver = 0, Screen, Multiply };
     Q_ENUM(BlendMode)
 
+    enum FeatureLevel
+    {
+        Simple = 0,
+        Mapped,
+        Animated
+    };
+
     QQuick3DParticleSpriteParticle(QQuick3DNode *parent = nullptr);
     ~QQuick3DParticleSpriteParticle() override;
 
@@ -162,6 +169,8 @@ private:
     void updateNodes();
     void deleteNodes();
     void markNodesDirty();
+    // Call this whenever features which may affect the level change
+    void updateFeatureLevel();
     PerEmitterData &perEmitterData(const ParticleUpdateNode *updateNode);
     PerEmitterData &perEmitterData(int emitterIndex);
 
@@ -177,6 +186,7 @@ private:
     int m_nextEmitterIndex = 0;
     bool m_interpolate = true;
     bool m_billboard = false;
+    FeatureLevel m_featureLevel = FeatureLevel::Simple;
 };
 
 QT_END_NAMESPACE

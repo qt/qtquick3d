@@ -235,7 +235,8 @@ void QQuick3DParticleSpriteParticle::setFrameCount(int frameCount)
 {
     if (m_frameCount == frameCount)
         return;
-    m_frameCount = frameCount;
+    m_frameCount = std::max(1, frameCount);
+    updateFeatureLevel();
     markNodesDirty();
     Q_EMIT frameCountChanged();
 }
@@ -280,6 +281,7 @@ void QQuick3DParticleSpriteParticle::setColorTable(QQuick3DTexture *colorTable)
     });
 
     m_colorTable = colorTable;
+    updateFeatureLevel();
     markNodesDirty();
     Q_EMIT colorTableChanged();
 }
@@ -303,6 +305,21 @@ static QSSGRenderParticles::BlendMode mapBlendMode(QQuick3DParticleSpriteParticl
     default:
         Q_ASSERT(false);
         return QSSGRenderParticles::BlendMode::SourceOver;
+    }
+}
+
+static QSSGRenderParticles::FeatureLevel mapFeatureLevel(QQuick3DParticleSpriteParticle::FeatureLevel level)
+{
+    switch (level) {
+    case QQuick3DParticleSpriteParticle::Simple:
+        return QSSGRenderParticles::FeatureLevel::Simple;
+    case QQuick3DParticleSpriteParticle::Mapped:
+        return QSSGRenderParticles::FeatureLevel::Mapped;
+    case QQuick3DParticleSpriteParticle::Animated:
+        return QSSGRenderParticles::FeatureLevel::Animated;
+    default:
+        Q_ASSERT(false);
+        return QSSGRenderParticles::FeatureLevel::Simple;
     }
 }
 
@@ -372,6 +389,7 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const 
     particles->m_diffuseColor = color::sRGBToLinear(color());
     particles->m_billboard = m_billboard;
     particles->m_depthBias = perEmitter.emitter->depthBias();
+    particles->m_featureLevel = mapFeatureLevel(m_featureLevel);
 
     return particles;
 }
@@ -405,6 +423,18 @@ void QQuick3DParticleSpriteParticle::markNodesDirty()
 {
     for (const PerEmitterData &value : qAsConst(m_perEmitterData))
         value.particleUpdateNode->m_nodeDirty = true;
+}
+
+void QQuick3DParticleSpriteParticle::updateFeatureLevel()
+{
+    FeatureLevel featureLevel = FeatureLevel::Simple;
+    if (m_colorTable)
+        featureLevel = FeatureLevel::Mapped;
+    if (m_frameCount > 1)
+        featureLevel = FeatureLevel::Animated;
+
+    if (featureLevel != m_featureLevel)
+        m_featureLevel = featureLevel;
 }
 
 void QQuick3DParticleSpriteParticle::componentComplete()

@@ -109,7 +109,8 @@ static QSSGRef<QSSGRhiShaderPipeline> shadersForParticleMaterial(QSSGRhiGraphics
                                                                  QSSGParticlesRenderable &particleRenderable)
 {
     const QSSGRef<QSSGRenderer> &generator(particleRenderable.generator);
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiParticleShader();
+    auto featureLevel = particleRenderable.particles.m_featureLevel;
+    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiParticleShader(featureLevel);
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.data();
     return shaderPipeline;

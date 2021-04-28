@@ -6,7 +6,6 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_projectionMatrix;
     vec4 qt_material_base_color;
     vec4 qt_spriteConfig;
-    vec4 qt_colorConfig;
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
@@ -29,7 +28,7 @@ layout(location = 3) flat in uint instanceIndex;
     qt_spriteConfig
     x: number of images
     y: one over number of images
-    z: enable gradient
+    z: unused
     w: blend between images
 */
 float qt_spriteCoords(out vec2 coords[2])
@@ -46,15 +45,13 @@ float qt_spriteCoords(out vec2 coords[2])
 
 vec4 qt_readSprite()
 {
-    vec4 ret;
-    if (ubuf.qt_spriteConfig.x > 1.0) {
-        vec2 coords[2];
-        float factor = qt_spriteCoords(coords);
-        ret = mix(texture(qt_sprite, coords[0]), texture(qt_sprite, coords[1]), factor);
-    } else {
-        ret = texture(qt_sprite, vec2(mix(texcoord.x, spriteFactor, ubuf.qt_spriteConfig.z), texcoord.y));
-    }
-    return ret;
+#ifdef QSSG_PARTICLES_ENABLE_ANIMATED
+    vec2 coords[2];
+    float factor = qt_spriteCoords(coords);
+    return mix(texture(qt_sprite, coords[0]), texture(qt_sprite, coords[1]), factor);
+#else
+    return texture(qt_sprite, texcoord);
+#endif
 }
 
 float qt_rand(vec2 co)
@@ -64,10 +61,11 @@ float qt_rand(vec2 co)
 
 vec4 qt_readColor()
 {
-    if (ubuf.qt_colorConfig.x > 0.0) {
-        return color * texture(qt_colorTable, vec2(spriteFactor, qt_rand(vec2(instanceIndex, 0))));
-    }
+#ifdef QSSG_PARTICLES_ENABLE_MAPPED
+    return color * texture(qt_colorTable, vec2(spriteFactor, qt_rand(vec2(instanceIndex, 0))));
+#else
     return color;
+#endif
 }
 
 void main()

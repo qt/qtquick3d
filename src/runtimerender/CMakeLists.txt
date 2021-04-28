@@ -372,8 +372,41 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight"
         res/rhishaders/particles.vert
         res/rhishaders/particles.frag
     OUTPUTS
-        particlesnolight.vert.qsb
-        particlesnolight.frag.qsb
+        particlesnolightsimple.vert.qsb
+        particlesnolightsimple.frag.qsb
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight_mapped"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/res/rhishaders"
+    FILES
+        res/rhishaders/particles.vert
+        res/rhishaders/particles.frag
+    OUTPUTS
+        particlesnolightmapped.vert.qsb
+        particlesnolightmapped.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight_animated"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/res/rhishaders"
+    FILES
+        res/rhishaders/particles.vert
+        res/rhishaders/particles.frag
+    OUTPUTS
+        particlesnolightanimated.vert.qsb
+        particlesnolightanimated.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+        QSSG_PARTICLES_ENABLE_ANIMATED
 )
 # special case end
 

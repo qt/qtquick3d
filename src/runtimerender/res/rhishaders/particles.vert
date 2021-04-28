@@ -6,7 +6,6 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_projectionMatrix;
     vec4 qt_material_base_color;
     vec4 qt_spriteConfig;
-    vec4 qt_colorConfig;
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
     vec2 qt_cameraProps;
