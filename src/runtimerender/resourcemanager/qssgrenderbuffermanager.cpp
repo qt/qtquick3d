@@ -51,14 +51,14 @@
 
 QT_BEGIN_NAMESPACE
 
-struct DeferredMesh
+struct ImportedMesh
 {
     QSSGRenderPath path;
     QSSGMesh::Mesh mesh;
 };
 
-using DeferredMeshes = QList<DeferredMesh>;
-Q_GLOBAL_STATIC(DeferredMeshes, g_deferredMeshes)
+using ImportedMeshes = QList<ImportedMesh>;
+Q_GLOBAL_STATIC(ImportedMeshes, g_importedMeshes)
 
 namespace {
 struct PrimitiveEntry
@@ -93,13 +93,6 @@ QSSGBufferManager::QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderCont
     context = inRenderContext;
     shaderCache = inShaderContext;
     inputStreamFactory = inInputStreamFactory;
-
-    for (const auto &mesh : qAsConst(*g_deferredMeshes)) {
-        const auto ret = createRenderMesh(mesh.mesh);
-        meshMap.insert(mesh.path, ret);
-    }
-
-    g_deferredMeshes->clear();
 }
 
 QSSGBufferManager::~QSSGBufferManager()
@@ -1248,7 +1241,7 @@ bool QSSGBufferManager::registerMeshData(const QSSGRenderPath &renderPath, const
     if (!meshData.isValid())
         return false;
 
-    g_deferredMeshes->push_back({renderPath, meshData});
+    g_importedMeshes->push_back({renderPath, meshData});
 
     return true;
 }
@@ -1360,7 +1353,17 @@ QSSGMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath)
     if (inMeshPath.path().startsWith(QChar::fromLatin1('#')))
         result = loadPrimitive(inMeshPath.path());
 
-    // Attempt a load from the filesystem if this mesh isn't a primitive.
+    // check if this is an imported mesh
+    if (!result.isValid()) {
+        const auto importItr = std::find_if(g_importedMeshes->constBegin(),
+                                            g_importedMeshes->constEnd(),
+                                            [inMeshPath](const auto &mesh) { return mesh.path == inMeshPath; });
+
+        if (importItr != g_importedMeshes->constEnd())
+            result = importItr->mesh;
+    }
+
+    // Attempt a load from the filesystem otherwise.
     if (!result.isValid()) {
         QString pathBuilder = inMeshPath.path();
         int poundIndex = pathBuilder.lastIndexOf(QChar::fromLatin1('#'));
