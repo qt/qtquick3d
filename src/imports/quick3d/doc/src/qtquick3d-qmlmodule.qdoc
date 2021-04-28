@@ -62,6 +62,16 @@ import QtQuick3D.Helpers
 
 \generatelist qmltypesbymodule QtQuick3D.Helpers
 
+\section1 QtQuick3D.AssetUtils QML Types
+
+Import the QtQuick3D.AssetUtils module with the following statement:
+
+\code
+import QtQuick3D.AssetUtils
+\endcode
+
+\generatelist qmltypesbymodule QtQuick3D.AssetUtils
+
 \section1 QtQuick3D.Particles3D QML Types
 
 Import the QtQuick3D.Particles3D module with the following statement:

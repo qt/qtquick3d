@@ -31,7 +31,6 @@
 #define QSSGSCENEDESCRIPTION_P_H
 
 #include <QtQuick3DAssetUtils/private/qtquick3dassetutilsglobal_p.h>
-#include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>

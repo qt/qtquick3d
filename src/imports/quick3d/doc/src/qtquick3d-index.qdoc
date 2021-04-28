@@ -53,6 +53,7 @@ provided by the following module imports:
 
 \code
 import QtQuick3D.Effects
+import QtQuick3D.AssetUtils
 import QtQuick3D.Helpers
 import QtQuick3D.Particles3D
 \endcode
@@ -108,6 +109,7 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D QML Types}
     \li \l{Qt Quick 3D C++ Classes}
     \li \l{Qt Quick 3D Helpers QML Types}
+    \li \l{Qt Quick 3D Asset Utility QML Types}
     \li \l{Qt Quick 3D Effects QML Types}
     \li \l{Qt Quick 3D Particles3D QML Types}
 \endlist

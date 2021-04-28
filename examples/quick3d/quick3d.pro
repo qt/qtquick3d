@@ -25,4 +25,5 @@ SUBDIRS += \
     helloqtquick3d \
     morphing \
     custommorphing \
-    particles3d
+    particles3d \
+    runtimeloader

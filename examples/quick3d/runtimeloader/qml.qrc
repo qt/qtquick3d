@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>maps/OpenfootageNET_lowerAustria01-1024.hdr</file>
+    </qresource>
+</RCC>

@@ -38,7 +38,8 @@ headerdirs  += .. \
                ../../../quick3dparticles/
 
 headers += ../../helpers/gridgeometry_p.h \
-           ../../helpers/randominstancing_p.h
+           ../../helpers/randominstancing_p.h \
+           ../../assetutils/qquick3druntimeloader_p.h
 
 sourcedirs  += .. \
                src \
@@ -46,7 +47,8 @@ sourcedirs  += .. \
                ../../../quick3dparticles/
 
 sources += ../../helpers/gridgeometry.cpp \
-           ../../helpers/randominstancing.cpp
+           ../../helpers/randominstancing.cpp \
+           ../../assetutils/qquick3druntimeloader.cpp
 
 exampledirs +=  ../../../../examples/quick3d
 
