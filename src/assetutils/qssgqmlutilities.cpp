@@ -516,6 +516,10 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::PointLight>();
     case RuntimeType::SpotLight:
         return qmlElementName<RuntimeType::SpotLight>();
+    case RuntimeType::Skeleton:
+        return qmlElementName<RuntimeType::Skeleton>();
+    case RuntimeType::Joint:
+        return qmlElementName<RuntimeType::Joint>();
     default:
         return "UNKNOWN_TYPE";
     }
@@ -1020,7 +1024,7 @@ static void writeQml(const QSSGSceneDesc::Skeleton &skeleton, OutputContext &out
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(skeleton.nodeType == Node::Type::Skeleton && skeleton.runtimeType == Node::RuntimeType::Skeleton);
-    indent(output) << qmlElementName<Camera::RuntimeType::Skeleton>() << blockBegin(output);
+    indent(output) << qmlElementName<Node::RuntimeType::Skeleton>() << blockBegin(output);
     writeNodeProperties(skeleton, output);
 }
 
@@ -1028,7 +1032,7 @@ static void writeQml(const QSSGSceneDesc::Joint &joint, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(joint.nodeType == Node::Type::Joint && joint.runtimeType == Node::RuntimeType::Joint);
-    indent(output) << qmlElementName<Camera::RuntimeType::Joint>() << blockBegin(output);
+    indent(output) << qmlElementName<Node::RuntimeType::Joint>() << blockBegin(output);
     writeNodeProperties(joint, output);
 }
 
@@ -1078,11 +1082,15 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
 {
     using namespace QSSGSceneDesc;
 
-    const bool processNode = !node.properties.isEmpty() || (output.type == OutputContext::Resource);
+    const bool processNode = !(node.properties.isEmpty() && node.children.isEmpty())
+                                    || (output.type == OutputContext::Resource);
     if (processNode) {
         QSSGQmlScopedIndent scopedIndent(output);
         switch (node.nodeType) {
-        case QSSGSceneDesc::Node::Type::Joint:
+        case Node::Type::Skeleton:
+            writeQml(static_cast<const Skeleton &>(node), output);
+            break;
+        case Node::Type::Joint:
             writeQml(static_cast<const Joint &>(node), output);
             break;
         case Node::Type::Light:
