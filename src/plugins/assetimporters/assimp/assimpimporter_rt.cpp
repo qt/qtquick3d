@@ -104,6 +104,7 @@ struct NodeInfo
 Q_DECLARE_TYPEINFO(NodeInfo, Q_PRIMITIVE_TYPE);
 
 using NodeMap = QHash<const aiNode *, NodeInfo>;
+using SkeletonInfo = QPair<QSSGSceneDesc::Skeleton *, bool>;
 
 using AnimationNodeMap = QHash<QByteArrayView, QSSGSceneDesc::Node *>;
 
@@ -169,12 +170,15 @@ struct SceneInfo
     using MeshMap = QVarLengthArray<QPair<const aiMesh *, QSSGSceneDesc::Mesh *>>;
     using EmbeddedTextureMap = QVarLengthArray<QSSGSceneDesc::TextureData *>;
     using TextureMap = QSet<TextureEntry>;
+    using SkeletonMap = QHash<const aiNode *, SkeletonInfo>;
 
     const aiScene &scene;
     MaterialMap &materialMap;
     MeshMap &meshMap;
     EmbeddedTextureMap &embeddedTextureMap;
     TextureMap &textureMap;
+    SkeletonMap &skeletonMap;
+    AssimpUtils::BoneIndexMap &boneIdxMap;
     QDir workingDir;
     GltfVersion ver;
     Options opt;
@@ -749,6 +753,8 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     auto &meshStorage = targetScene->meshStorage;
     auto &materialMap = sceneInfo.materialMap;
     auto &meshMap = sceneInfo.meshMap;
+    auto &skeletonMap = sceneInfo.skeletonMap;
+    auto &boneIdxMap = sceneInfo.boneIdxMap;
 
     QVarLengthArray<QSSGSceneDesc::Material *> materials;
     materials.reserve(source.mNumMeshes); // Assumig there's max one material per mesh.
@@ -757,6 +763,8 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
                                                                             : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
 
     QString errorString;
+
+    QSSGSceneDesc::Skeleton *skeleton = nullptr;
 
     const auto ensureMaterial = [&](qsizetype materialIndex) {
         // Get the material for the mesh
@@ -786,14 +794,19 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     const auto combineMeshes = [&](const aiNode &source, aiMesh **sceneMeshes) {
         for (qsizetype i = 0, end = source.mNumMeshes; i != end; ++i) {
             const aiMesh &mesh = *sceneMeshes[source.mMeshes[i]];
-            meshes.push_back(&mesh);
             ensureMaterial(mesh.mMaterialIndex);
+            if (mesh.HasBones()) {
+                aiBone *bone = mesh.mBones[0];
+                aiNode *node = srcScene.mRootNode->FindNode(bone->mName);
+                skeleton = skeletonMap[node].first;
+            }
+            meshes.push_back(&mesh);
         }
     };
 
     const auto createMeshNode = [&](const aiString &name) {
         // TODO: There's a bug here when the lightmap generation is enabled...
-        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, {}, false, false, errorString);
+        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, boneIdxMap, false, false, errorString);
         meshStorage.push_back(std::move(meshData));
 
         const auto idx = meshStorage.size() - 1;
@@ -815,6 +828,11 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
         auto &mesh = meshMap[*source.mMeshes];
         meshNode = mesh.second;
         if (meshNode == nullptr) {
+            if (mesh.first->HasBones()) {
+                aiBone *bone = mesh.first->mBones[0];
+                aiNode *node = srcScene.mRootNode->FindNode(bone->mName);
+                skeleton = skeletonMap[node].first;
+            }
             meshes = {mesh.first};
             mesh.second = meshNode = createMeshNode(mesh.first->mName);
             QSSGSceneDesc::addNode(target, *meshNode); // We only add this the first time we create it.
@@ -825,6 +843,29 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
     if (meshNode)
         QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh>(), meshNode });
+
+    if (skeleton) {
+        QSSGSceneDesc::setProperty(target, "skeleton", &QQuick3DModel::setSkeleton, skeleton);
+        QList<QMatrix4x4> inverseBindPoses;
+        inverseBindPoses.resize(skeleton->maxIndex + 1);
+        for (const auto &mesh : qAsConst(meshes)) {
+            using It = decltype (mesh->mNumBones);
+            for (It i = 0, end = mesh->mNumBones; i != end; ++i) {
+                QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
+                const auto boneIt = boneIdxMap.constFind(boneName);
+                if (boneIt != boneIdxMap.cend()) { // All the bones should be inserted.
+                    const auto &osMat = mesh->mBones[i]->mOffsetMatrix;
+                    inverseBindPoses[*boneIt] = { osMat[0][0], osMat[0][1], osMat[0][2], osMat[0][3],
+                                                  osMat[1][0], osMat[1][1], osMat[1][2], osMat[1][3],
+                                                  osMat[2][0], osMat[2][1], osMat[2][2], osMat[2][3],
+                                                  osMat[3][0], osMat[3][1], osMat[3][2], osMat[3][3] };
+                } else {
+                    qWarning("Warning: Unidentified bone node! It is unexpected.");
+                }
+            }
+        }
+        QSSGSceneDesc::setProperty(target, "inverseBindPoses", &QQuick3DModel::setInverseBindPoses, inverseBindPoses);
+    }
 
     // materials
     // Note that we use a QVector/QList here instead of a QQmlListProperty, as that would be really inconvenient.
@@ -883,6 +924,15 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         node = target;
     }
         break;
+    case QSSGSceneDesc::Node::Type::Joint:
+    {
+        auto target = targetScene->create<QSSGSceneDesc::Joint>();
+        QSSGSceneDesc::addNode(parent, *target);
+        setNodeProperties(*target, srcNode, nullptr);
+        QSSGSceneDesc::setProperty(*target, "index", &QQuick3DJoint::setIndex, qint32(nodeInfo.index));
+        node = target;
+    }
+        break;
     case QSSGSceneDesc::Node::Type::Transform:
     {
         node = targetScene->create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
@@ -906,8 +956,25 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
     } else {
         auto it = nodeMap.constFind(&source);
         const auto end = nodeMap.constEnd();
-        if (it != end)
-            node = createSceneNode(*it, source, parent, sceneInfo);
+        if (it != end) {
+            if (it->type == QSSGSceneDesc::Node::Type::Joint) {
+                auto newParent = &parent;
+                auto &skeletonMap = sceneInfo.skeletonMap;
+                Q_ASSERT(skeletonMap.contains(&source));
+                auto skeletonInfo = skeletonMap[&source];
+                auto skeleton = skeletonInfo.first;
+                if (it->index == 0) // first node
+                    QSSGSceneDesc::addNode(parent, *skeleton);
+
+                if (skeletonInfo.second)
+                    newParent = skeleton;
+
+                node = createSceneNode(*it, source, *newParent, sceneInfo);
+                QSSGSceneDesc::setProperty(*node, "skeletonRoot", &QQuick3DJoint::setSkeletonRoot, skeleton);
+            } else {
+                node = createSceneNode(*it, source, parent, sceneInfo);
+            }
+        }
     }
 
     // For now, all the nodes are generated, even if they are empty.
@@ -941,6 +1008,26 @@ static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiVectorKey &k
 static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiQuatKey &key) {
     const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Quaternion);
     return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w }, float(key.mTime), flag };
+}
+
+// This function updates skeletonMap and index of nodeMap as joint index for a Joint hierarchy
+static void buildSkeletonMapAndBoneIndexMap(QSSGSceneDesc::Skeleton *skeleton, const aiNode &node, qint32 &index, NodeMap *nodeMap, SceneInfo::SkeletonMap *skeletonMap, AssimpUtils::BoneIndexMap *boneIdxMap)
+{
+    using It = decltype (node.mNumChildren);
+    for (It i = 0, end = node.mNumChildren; i != end; ++i) {
+        auto cNode = node.mChildren[i];
+        // Assumes that all the Joints have children which are Joints
+        // if the child is not in the nodeMap
+        auto it = nodeMap->find(cNode);
+        auto cEnd = nodeMap->end();
+        if (it == cEnd || it->type == NodeInfo::Type::Joint) {
+            nodeMap->insert(cNode, NodeInfo { size_t(index), QSSGSceneDesc::Node::Type::Joint });
+            skeletonMap->insert(cNode, qMakePair(skeleton, false));
+            auto boneName = QString::fromUtf8(cNode->mName.C_Str());
+            boneIdxMap->insert(boneName, index);
+            buildSkeletonMapAndBoneIndexMap(skeleton, *cNode, ++index, nodeMap, skeletonMap, boneIdxMap);
+        }
+    }
 }
 
 static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneDesc::Scene &targetScene)
@@ -998,13 +1085,13 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 
     // Before we can start processing the scene we start my mapping out the nodes
     // we can tell the type of.
+    const auto &srcRootNode = *sourceScene->mRootNode;
+    bool hasSkeleton = false;
     NodeMap nodeMap;
     // We need to know which nodes are animated so we can map _our_ animation data to
     // the target node (in Assimp this is string based mapping).
     AnimationNodeMap animatingNodes;
     {
-        const auto &srcRootNode = *sourceScene->mRootNode;
-
         if (sourceScene->HasLights()) {
             for (It i = 0, end = sourceScene->mNumLights; i != end; ++i) {
                 const auto &type = *sourceScene->mLights[i];
@@ -1035,6 +1122,22 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                 }
             }
         }
+
+        // Bones
+        const size_t maxId = std::numeric_limits<size_t>::max();
+        if (sourceScene->HasMeshes()) {
+            for (It i = 0, end = sourceScene->mNumMeshes; i != end; ++i) {
+                const auto &mesh = *sourceScene->mMeshes[i];
+                if (mesh.HasBones()) {
+                    hasSkeleton = true;
+                    for (It j = 0, jEnd = mesh.mNumBones; j != jEnd; ++j) {
+                        const auto &bone = *mesh.mBones[j];
+                        if (auto node = srcRootNode.FindNode(bone.mName))
+                            nodeMap[node] = { maxId, NodeInfo::Type::Joint };
+                    }
+                }
+            }
+        }
     }
 
     // We'll use these to ensure we don't re-create resources.
@@ -1059,15 +1162,52 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         embeddedTextures.push_back(nullptr);
 
     SceneInfo::TextureMap textureMap;
-
-    const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, sourceFile.dir(), gltfVersion, opt };
+    SceneInfo::SkeletonMap skeletonMap;
+    AssimpUtils::BoneIndexMap boneIdxMap;
 
     if (!targetScene.root) {
         auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(targetScene, *root);
     }
 
+    // It will store nodes which are not Joint but have Joints as children
+    if (hasSkeleton) {
+        Q_ASSERT(sourceScene->HasMeshes());
+        for (const auto &mesh : qAsConst(meshes)) {
+            if (mesh.first->HasBones()) {
+                const auto &bone = *mesh.first->mBones[0];
+                const size_t maxId = std::numeric_limits<size_t>::max();
+                auto node = srcRootNode.FindNode(bone.mName);
+                if (nodeMap[node].index != maxId) // already checked
+                    continue;
+
+                auto jointRootNode = node->mParent;
+                while (nodeMap.contains(jointRootNode))
+                    jointRootNode = jointRootNode->mParent;
+
+                // Create skeletonNode before processNode
+                // The node should exist before processNode for Model node
+                auto skeleton = targetScene.create<QSSGSceneDesc::Skeleton>();
+                qint32 bIndex = 0;
+                for (It j = 0, jEnd = jointRootNode->mNumChildren; j != jEnd; ++j) {
+                    auto cNode = jointRootNode->mChildren[j];
+                    auto it = nodeMap.find(cNode);
+                    auto cEnd = nodeMap.end();
+                    if (it == cEnd || it->type != NodeInfo::Type::Joint)
+                        continue;
+                    it->index = size_t(bIndex);
+                    auto boneName = QString::fromUtf8(cNode->mName.C_Str());
+                    boneIdxMap.insert(boneName, bIndex);
+                    skeletonMap.insert(cNode, qMakePair(skeleton, true));
+                    buildSkeletonMapAndBoneIndexMap(skeleton, *cNode, ++bIndex, &nodeMap, &skeletonMap, &boneIdxMap);
+                }
+                skeleton->maxIndex = bIndex;
+            }
+        }
+    }
+
+    const auto opt = SceneInfo::Options::None;
+    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skeletonMap, boneIdxMap, sourceFile.dir(), gltfVersion, opt };
 
     // Now lets go through the scene
     if (sourceScene->mRootNode)
@@ -1303,7 +1443,15 @@ static void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent,
     QQuick3DObject *obj = nullptr;
     switch (node.nodeType) {
     case Node::Type::Skeleton:
-        obj = createRuntimeObject<QQuick3DSkeleton>(static_cast<Skeleton &>(node), parent);
+        // NOTE: The skeleton is special as it's a resource and a node, the parent is
+        // hierarchical parent is therefore important here.
+        if (!node.obj) {// 1st Phase : 'create Resources'
+            obj = createRuntimeObject<QQuick3DSkeleton>(static_cast<Skeleton &>(node), parent);
+        } else { // 2nd Phase : setParent for the Node hierarchy.
+            obj = qobject_cast<QQuick3DSkeleton *>(node.obj);
+            obj->setParent(&parent);
+            obj->setParentItem(&parent);
+        }
         break;
     case Node::Type::Joint:
         obj = createRuntimeObject<QQuick3DJoint>(static_cast<Joint &>(node), parent);

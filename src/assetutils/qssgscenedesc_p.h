@@ -276,6 +276,12 @@ struct Skeleton : Node
 {
     using type = QQuick3DSkeleton;
     Skeleton() : Node(Node::Type::Skeleton, Node::RuntimeType::Skeleton) {}
+    // Skeleton is a virtual node, which is added for the start of the joint heirarchy.
+    // parent - joint 1     ->      parent - skeleton - joint 1
+    //        - joint 2                               - joint 2
+    //        - model 1                    - model 1
+    //        - camera 1                   - camera 1
+    size_t maxIndex = 0;
 };
 QSSG_DECLARE_NODE(Skeleton)
 
