@@ -1141,9 +1141,26 @@ QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::Tex
             }
 
             if (!image.isNull()) {
+                const QPixelFormat pixFormat = image.pixelFormat();
+                QImage::Format targetFormat = QImage::Format_RGBA8888_Premultiplied;
+                QQuick3DTextureData::Format textureFormat = QQuick3DTextureData::Format::RGBA8;
+                if (image.colorCount()) { // a palleted image
+                    targetFormat = QImage::Format_RGBA8888;
+                } else if (pixFormat.channelCount() == 1) {
+                    targetFormat = QImage::Format_Grayscale8;
+                    textureFormat = QQuick3DTextureData::Format::R8;
+                } else if (pixFormat.alphaUsage() == QPixelFormat::IgnoresAlpha) {
+                    targetFormat = QImage::Format_RGBX8888;
+                } else if (pixFormat.premultiplied() == QPixelFormat::NotPremultiplied) {
+                    targetFormat = QImage::Format_RGBA8888;
+                }
+
+                image.convertTo(targetFormat); // convert to a format mappable to QRhiTexture::Format
+                image.mirror(); // Flip vertically to the conventional Y-up orientation
+
                 const auto bytes = image.sizeInBytes();
                 obj->setSize(image.size());
-                obj->setFormat(QQuick3DTextureData::Format::RGBA8);
+                obj->setFormat(textureFormat);
                 obj->setTextureData(QByteArray(reinterpret_cast<const char *>(image.constBits()), bytes));
             }
         }
