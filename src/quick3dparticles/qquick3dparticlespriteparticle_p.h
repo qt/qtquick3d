@@ -47,6 +47,7 @@
 #include <QtQuick3DParticles/private/qquick3dparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlespritesequence_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,8 +56,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_OBJECT
     Q_PROPERTY(BlendMode blendMode READ blendMode WRITE setBlendMode NOTIFY blendModeChanged)
     Q_PROPERTY(QQuick3DTexture *sprite READ sprite WRITE setSprite NOTIFY spriteChanged)
-    Q_PROPERTY(int frameCount READ frameCount WRITE setFrameCount NOTIFY frameCountChanged)
-    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
+    Q_PROPERTY(QQuick3DParticleSpriteSequence *spriteSequence READ spriteSequence WRITE setSpriteSequence NOTIFY spriteSequenceChanged REVISION(6, 2))
     Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(QQuick3DTexture *colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
@@ -79,8 +79,7 @@ public:
 
     BlendMode blendMode() const;
     QQuick3DTexture *sprite() const;
-    int frameCount() const;
-    bool interpolate() const;
+    Q_REVISION(6, 2) QQuick3DParticleSpriteSequence *spriteSequence() const;
     bool billboard() const;
     float particleScale() const;
     QQuick3DTexture *colorTable() const;
@@ -88,8 +87,7 @@ public:
 public Q_SLOTS:
     void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
     void setSprite(QQuick3DTexture *sprite);
-    void setFrameCount(int frameCount);
-    void setInterpolate(bool interpolate);
+    Q_REVISION(6, 2) void setSpriteSequence(QQuick3DParticleSpriteSequence *spriteSequence);
     void setBillboard(bool billboard);
     void setParticleScale(float scale);
     void setColorTable(QQuick3DTexture *colorTable);
@@ -97,8 +95,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void blendModeChanged();
     void spriteChanged();
-    void frameCountChanged();
-    void interpolateChanged();
+    Q_REVISION(6, 2) void spriteSequenceChanged();
     void billboardChanged();
     void particleScaleChanged();
     void colorTableChanged();
@@ -112,7 +109,8 @@ protected:
                          const QVector3D &position,
                          const QVector3D &rotation,
                          const QVector4D &color,
-                         float size, float age);
+                         float size, float age,
+                         float animationFrame);
     void commitParticles()
     {
         markAllDirty();
@@ -128,6 +126,7 @@ protected:
 private:
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitter;
+    friend class QQuick3DParticleSpriteSequence;
 
     struct SpriteParticleData
     {
@@ -136,6 +135,7 @@ private:
         QVector4D color;
         float size = 0.0f;
         float age = 0.0f;
+        float animationFrame = -1.0f;
         int emitterIndex = -1;
     };
 
@@ -182,11 +182,10 @@ private:
     QQuick3DTexture *m_sprite = nullptr;
     QQuick3DTexture *m_colorTable = nullptr;
     float m_particleScale = 5.0f;
-    int m_frameCount = 1;
     int m_nextEmitterIndex = 0;
-    bool m_interpolate = true;
     bool m_billboard = false;
     FeatureLevel m_featureLevel = FeatureLevel::Simple;
+    bool m_useAnimatedParticle = false;
 };
 
 QT_END_NAMESPACE

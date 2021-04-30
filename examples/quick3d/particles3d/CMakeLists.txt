@@ -83,6 +83,7 @@ set(qml_resource_files
     "qml/images/explosion_01_strip13.png"
     "qml/images/leather_n.png"
     "qml/images/speedometer_labels.png"
+    "qml/images/sprite_09.png"
     "qml/meshes/meter_background.mesh"
     "qml/meshes/meter_edge.mesh"
     "qml/main.qml"

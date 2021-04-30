@@ -49,5 +49,6 @@
         <file>qml/AnimatedSprite.qml</file>
         <file>qml/images/bear_black.png</file>
         <file>qml/images/explosion_01_strip13.png</file>
+        <file>qml/images/sprite_09.png</file>
     </qresource>
 </RCC>

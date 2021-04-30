@@ -27,6 +27,7 @@ qt_internal_add_module(Quick3DParticles
         qquick3dparticlewander.cpp qquick3dparticlewander_p.h
         qquick3dparticleutils.cpp qquick3dparticleutils_p.h
         qquick3dparticleforeign_p.h
+        qquick3dparticlespritesequence.cpp qquick3dparticlespritesequence_p.h
     DEFINES
         QT_BUILD_QUICK3DPARTICLES_LIB
     LIBRARIES

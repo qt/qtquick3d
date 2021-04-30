@@ -81,9 +81,13 @@ Item {
                 sprite: Texture {
                     source: "images/bear_black.png"
                 }
+                spriteSequence: SpriteSequence3D {
+                    frameCount: 13
+                    interpolate: false
+                    duration: 2000
+                    durationVariation: 1500
+                }
                 maxAmount: 4
-                frameCount: 13
-                interpolate: false
                 billboard: true
                 blendMode: SpriteParticle3D.Screen
             }
@@ -93,9 +97,31 @@ Item {
                 sprite: Texture {
                     source: "images/explosion_01_strip13.png"
                 }
+                spriteSequence: SpriteSequence3D {
+                    frameCount: 13
+                    interpolate: true
+                }
                 maxAmount: 26
-                frameCount: 13
-                interpolate: true
+                billboard: true
+                blendMode: SpriteParticle3D.Screen
+            }
+
+            SpriteParticle3D {
+                id: numberParticle
+                sprite: Texture {
+                    source: "images/sprite_09.png"
+                }
+                spriteSequence: SpriteSequence3D {
+                    id: numberParticleSequence
+                    frameCount: 10
+                    frameIndex: sliderFrameIndex.sliderValue
+                    animationDirection: sliderAnimationDirection.sliderValue
+                    interpolate: checkBoxInterpolate.checked
+                    randomStart: checkBoxRandom.checked
+                    duration: sliderDuration.sliderValue
+                    durationVariation: sliderDurationVariation.sliderValue
+                }
+                maxAmount: 10
                 billboard: true
                 blendMode: SpriteParticle3D.Screen
             }
@@ -104,31 +130,30 @@ Item {
             ParticleEmitter3D {
                 id: emitter1
                 particle: animated
-                particleScale: 20
-                position: Qt.vector3d(-200, 0, -200)
+                particleScale: 10
+                position: Qt.vector3d(-300, 0, 0)
                 emitRate: 1
                 lifeSpan: 4000
 
                 shape: ParticleShape3D {
                     fill: true
                 }
-                scale: Qt.vector3d(2.0, 2.0, 8.0)
-            }
-            Node {
-                y: -100
-                x: -200
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Animated"
-                    font.pointSize: settings.fontSizeLarge
-                    color: "#ffffff"
+                Node {
+                    y: -140
+                    x: -100
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Animated + durationVariation"
+                        font.pointSize: settings.fontSizeLarge
+                        color: "#ffffff"
+                    }
                 }
             }
 
             ParticleEmitter3D {
                 id: emitter2
                 particle: blended
-                position: Qt.vector3d(200, 0, 0)
+                position: Qt.vector3d(300, -100, 0)
                 particleScale: 20
                 velocity: VectorDirection3D {
                     direction: Qt.vector3d(0, 100, 0)
@@ -139,7 +164,7 @@ Item {
                 lifeSpan: 2000
                 lifeSpanVariation: 200
                 Node {
-                    y: -100
+                    y: -40
                     x: -100
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
@@ -149,8 +174,85 @@ Item {
                     }
                 }
             }
+
+            ParticleEmitter3D {
+                id: emitter3
+                particle: numberParticle
+                particleScale: 8
+                position: Qt.vector3d(0, 350, 0)
+                emitRate: 2
+                lifeSpan: 5000
+                velocity: VectorDirection3D {
+                    direction: Qt.vector3d(0, -100, 0)
+                }
+                Node {
+                    y: 40
+                    x: -50
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Controlled"
+                        font.pointSize: settings.fontSizeLarge
+                        color: "#ffffff"
+                    }
+                }
+            }
         }
     }
+
+    SettingsView {
+        CustomLabel {
+            property var enumStrings: ["Normal", "Reverse", "Alternate", "AlternateReverse", "SingleFrame"]
+            text: "Animation Direction: " + enumStrings[numberParticleSequence.animationDirection]
+        }
+        CustomSlider {
+            id: sliderAnimationDirection
+            sliderValue: 0
+            fromValue: 0
+            toValue: 4
+            sliderStepSize: 1
+        }
+        CustomLabel {
+            text: "Duration"
+        }
+        CustomSlider {
+            id: sliderDuration
+            sliderValue: -1
+            fromValue: -1
+            toValue: 8000
+        }
+        CustomLabel {
+            text: "Duration Variation"
+        }
+        CustomSlider {
+            id: sliderDurationVariation
+            sliderValue: 0
+            fromValue: 0
+            toValue: 2000
+        }
+        CustomCheckBox {
+            id: checkBoxInterpolate
+            text: "Interpolate"
+            checked: false
+        }
+        CustomCheckBox {
+            id: checkBoxRandom
+            text: "Random Start"
+            checked: false
+        }
+        CustomLabel {
+            text: "Frame Index"
+            opacity: checkBoxRandom.checked ? 0.4 : 1.0
+        }
+        CustomSlider {
+            id: sliderFrameIndex
+            sliderValue: 0
+            fromValue: 0
+            toValue: 9
+            sliderEnabled: !checkBoxRandom.checked
+            sliderStepSize: 1
+        }
+    }
+
     LoggingView {
         anchors.bottom: parent.bottom
         particleSystems: [psystem]

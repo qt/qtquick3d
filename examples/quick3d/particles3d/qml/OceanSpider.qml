@@ -338,8 +338,10 @@ Item {
                     source: "images/smoke_sprite.png"
                 }
                 maxAmount: 200
-                frameCount: 15
-                interpolate: true
+                spriteSequence: SpriteSequence3D {
+                    frameCount: 15
+                    interpolate: true
+                }
                 billboard: true
                 color: tentacleParticle.color
                 fadeInEffect: SpriteParticle3D.FadeNone

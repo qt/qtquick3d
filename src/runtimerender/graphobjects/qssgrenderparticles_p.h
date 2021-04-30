@@ -50,18 +50,33 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderImage;
 struct QSSGShaderMaterialAdapter;
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticle
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleSimple
 {
     QVector3D position;
     float size;
     QVector3D rotation;
     float age;
     QVector4D color;
+    // total 48 bytes
+};
+
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleAnimated
+{
+    QVector3D position;
+    float size;
+    QVector3D rotation;
+    float age;
+    QVector4D color;
+    float animationFrame;
+    // Padding for full 4 * 16 bytes, take into use as needed.
+    // See particleSize in vertex shader
+    QVector3D unusedPadding;
+    // total 64 bytes
 };
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
 {
-    void resize(int particleCount);
+    void resize(int particleCount, bool useAnimatedParticle);
     void setBounds(const QSSGBounds3& bounds);
 
     char *pointer();

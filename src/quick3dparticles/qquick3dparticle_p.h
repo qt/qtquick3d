@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuick3DParticleSpriteSequence;
+
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
 {
     Q_OBJECT
@@ -142,6 +144,7 @@ protected:
     }
 
     QList<QQuick3DParticleData> m_particleData;
+    QQuick3DParticleSpriteSequence *m_spriteSequence = nullptr;
 
     int m_maxAmount = 100;
     int m_currentIndex = -1;
@@ -160,6 +163,7 @@ protected:
 private:
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitter;
+    friend class QQuick3DParticleSpriteSequence;
 
     QQuick3DParticleSystem *m_system = nullptr;
 

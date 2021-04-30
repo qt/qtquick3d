@@ -70,17 +70,11 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
     const QVector4D color = QVector4D(renderable.particles.m_diffuseColor.toVector3D(), renderable.opacity);
     shaders->setUniform(ubufData, "qt_material_base_color", &color, 4 * sizeof(float), &cui.material_baseColorIdx);
 
-    float imageCount = 1.0f;
-    float gradient = 0.0f;
     float blendImages = renderable.particles.m_blendImages ? 1.0f : 0.0f;
-    if (renderable.particles.m_spriteImageCount)
-        imageCount = float(renderable.particles.m_spriteImageCount);
-    else
-        gradient = 1.0f;
-
+    float imageCount = float(renderable.particles.m_spriteImageCount);
     float ooImageCount = 1.0f / imageCount;
 
-    QVector4D spriteConfig(imageCount, ooImageCount, gradient, blendImages);
+    QVector4D spriteConfig(imageCount, ooImageCount, 0.0f, blendImages);
     shaders->setUniform(ubufData, "qt_spriteConfig", &spriteConfig, 4 * sizeof(float));
 
     const float billboard = renderable.particles.m_billboard ? 1.0f : 0.0f;

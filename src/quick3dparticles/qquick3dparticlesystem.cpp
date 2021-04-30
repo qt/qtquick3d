@@ -36,6 +36,7 @@
 #include <private/qqmldelegatemodel_p.h>
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticlespriteparticle_p.h"
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -620,7 +621,8 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
         if (timeS < d->startTime || timeS > particleTimeEnd) {
             // Particle not alive currently
             spriteParticle->setParticleData(i, {}, {},
-                                            {}, 0.0f, 0.0f);
+                                            {}, 0.0f, 0.0f,
+                                            0.0f);
             continue;
         }
 
@@ -645,6 +647,29 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
         const float particleTimeLeftS = d->lifetime - particleTimeS;
         processParticleFadeInOut(currentData, spriteParticle, particleTimeS, particleTimeLeftS);
 
+        float animationFrame = 0.0f;
+        if (auto sequence = spriteParticle->m_spriteSequence) {
+            // animationFrame range is [0..1) where 0.0 is the beginning of the first frame
+            // and 0.9999 is the end of the last frame.
+            const bool isSingleFrame = (sequence->animationDirection() == QQuick3DParticleSpriteSequence::SingleFrame);
+            float startFrame = sequence->firstFrame(d->index, isSingleFrame);
+            if (sequence->animationDirection() == QQuick3DParticleSpriteSequence::Normal) {
+                animationFrame = fmodf(startFrame + particleTimeS / d->animationTime, 1.0f);
+            } else if (sequence->animationDirection() == QQuick3DParticleSpriteSequence::Reverse) {
+                animationFrame = fmodf(startFrame + 0.9999f - fmodf(particleTimeS / d->animationTime, 1.0f), 1.0f);
+            } else if (sequence->animationDirection() == QQuick3DParticleSpriteSequence::Alternate) {
+                animationFrame = startFrame + particleTimeS / d->animationTime;
+                animationFrame = fabsf(fmodf(1.0f + animationFrame, 2.0f) - 1.0f);
+            } else if (sequence->animationDirection() == QQuick3DParticleSpriteSequence::AlternateReverse) {
+                animationFrame = fmodf(startFrame + 0.9999f, 1.0f) - particleTimeS / d->animationTime;
+                animationFrame = fabsf(fmodf(fabsf(1.0f + animationFrame), 2.0f) - 1.0f);
+            } else {
+                // SingleFrame
+                animationFrame = startFrame;
+            }
+            animationFrame = std::clamp(animationFrame, 0.0f, 0.9999f);
+        }
+
         // Affectors
         for (auto affector : qAsConst(m_affectors)) {
             // If affector is set to affect only particular particles, check these are included
@@ -662,7 +687,8 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
                               float(currentData.color.b) / 255.0f,
                               float(currentData.color.a) / 255.0f);
         spriteParticle->setParticleData(i, currentData.position, currentData.rotation,
-                                        color, currentData.scale.x(), timeChange);
+                                        color, currentData.scale.x(), timeChange,
+                                        animationFrame);
     }
     spriteParticle->commitParticles();
 }

@@ -122,40 +122,17 @@ QQuick3DTexture *QQuick3DParticleSpriteParticle::sprite() const
 }
 
 /*!
-    \qmlproperty int SpriteParticle3D::frameCount
+    \qmlproperty SpriteSequence3D SpriteParticle3D::spriteSequence
+    \since 6.2
 
-    This property defines the amount of image frames in \l sprite. Particle animates
-    through these frames during its \l {ParticleEmitter3D::lifeSpan}{lifeSpan}.
-    The frames should be laid out horizontally in the same image file. For example,
-    \l sprite could be a \c {512x64} image, with \c frameCount of \c 8. If the particle
-    \l {ParticleEmitter3D::lifeSpan}{lifeSpan} is \c 2000, each of those images will be
-    visible for \c 250 milliseconds.
-
-    The default value is \c 1.
-
-    \sa interpolate
+    This property defines the sprite sequence properties for the particle.
+    If the \l sprite texture contains a frame sequence, set this property
+    to define the frame count, animation direction etc. features.
 */
-int QQuick3DParticleSpriteParticle::frameCount() const
+
+QQuick3DParticleSpriteSequence *QQuick3DParticleSpriteParticle::spriteSequence() const
 {
-    return m_frameCount;
-}
-
-/*!
-    \qmlproperty bool SpriteParticle3D::interpolate
-
-    This property defines if the sprites are interpolated (blended) between frames
-    to make the animation appear smoother.
-
-    \note This property doesn't have an effect when the sprite has only a single
-    frame (so \l frameCount is \c 1).
-
-    The default value is \c true.
-
-    \sa frameCount
-*/
-bool QQuick3DParticleSpriteParticle::interpolate() const
-{
-    return m_interpolate;
+    return m_spriteSequence;
 }
 
 /*!
@@ -232,23 +209,15 @@ void QQuick3DParticleSpriteParticle::setSprite(QQuick3DTexture *sprite)
     Q_EMIT spriteChanged();
 }
 
-void QQuick3DParticleSpriteParticle::setFrameCount(int frameCount)
+void QQuick3DParticleSpriteParticle::setSpriteSequence(QQuick3DParticleSpriteSequence *spriteSequence)
 {
-    if (m_frameCount == frameCount)
+    if (m_spriteSequence == spriteSequence)
         return;
-    m_frameCount = std::max(1, frameCount);
+
+    m_spriteSequence = spriteSequence;
     updateFeatureLevel();
     markNodesDirty();
-    Q_EMIT frameCountChanged();
-}
-
-void QQuick3DParticleSpriteParticle::setInterpolate(bool interpolate)
-{
-    if (m_interpolate == interpolate)
-        return;
-    m_interpolate = interpolate;
-    markNodesDirty();
-    Q_EMIT interpolateChanged();
+    Q_EMIT spriteSequenceChanged();
 }
 
 void QQuick3DParticleSpriteParticle::setBillboard(bool billboard)
@@ -371,12 +340,15 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const 
     if (perEmitter.particleCount == 0)
         return particles;
 
-    if (m_sprite) {
+    if (m_sprite)
         particles->m_sprite = m_sprite->getRenderImage();
-        particles->m_spriteImageCount = m_frameCount;
-        particles->m_blendImages = m_interpolate;
-    } else {
+    else
         particles->m_sprite = nullptr;
+
+    if (m_spriteSequence) {
+        particles->m_spriteImageCount = m_spriteSequence->m_frameCount;
+        particles->m_blendImages = m_spriteSequence->m_interpolate;
+    } else {
         particles->m_spriteImageCount = 1;
         particles->m_blendImages = true;
     }
@@ -431,7 +403,7 @@ void QQuick3DParticleSpriteParticle::updateFeatureLevel()
     FeatureLevel featureLevel = FeatureLevel::Simple;
     if (m_colorTable)
         featureLevel = FeatureLevel::Mapped;
-    if (m_frameCount > 1)
+    if (m_spriteSequence)
         featureLevel = FeatureLevel::Animated;
 
     if (featureLevel != m_featureLevel)
@@ -480,10 +452,11 @@ void QQuick3DParticleSpriteParticle::setParticleData(int particleIndex,
                      const QVector3D &position,
                      const QVector3D &rotation,
                      const QVector4D &color,
-                     float size, float age)
+                     float size, float age,
+                     float animationFrame)
 {
     auto &dst = m_spriteParticleData[particleIndex];
-    dst = {position, rotation, color, size, age, dst.emitterIndex};
+    dst = {position, rotation, color, size, age, animationFrame, dst.emitterIndex};
 }
 
 void QQuick3DParticleSpriteParticle::updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *spatialNode)
@@ -492,10 +465,12 @@ void QQuick3DParticleSpriteParticle::updateParticleBuffer(const PerEmitterData &
     QSSGRenderParticles *node = static_cast<QSSGRenderParticles *>(spatialNode);
     if (!node)
         return;
+    const bool useAnimatedParticle = (m_featureLevel == QQuick3DParticleSpriteParticle::Animated);
     const int particleCount = perEmitter.particleCount;
-    if (node->m_particleBuffer.particleCount() != particleCount)
-        node->m_particleBuffer.resize(particleCount);
+    if (node->m_particleBuffer.particleCount() != particleCount || useAnimatedParticle != m_useAnimatedParticle)
+        node->m_particleBuffer.resize(particleCount, useAnimatedParticle);
 
+    m_useAnimatedParticle = useAnimatedParticle;
     char *dest = node->m_particleBuffer.pointer();
     const SpriteParticleData *src = particles.data();
     const int pps = node->m_particleBuffer.particlesPerSlice();
@@ -504,24 +479,47 @@ void QQuick3DParticleSpriteParticle::updateParticleBuffer(const PerEmitterData &
     const int emitterIndex = perEmitter.emitterIndex;
     int i = 0;
     QSSGBounds3 bounds;
-    for (int s = 0; s < slices; s++) {
-        QSSGParticle *dp = reinterpret_cast<QSSGParticle *>(dest);
-        for (int p = 0; p < pps && i < particleCount; ) {
-            if (src->emitterIndex == emitterIndex) {
-                if (src->size > 0.0f)
-                    bounds.include(src->position);
-                dp->position = src->position;
-                dp->rotation = src->rotation * float(M_PI / 180.0f);
-                dp->color = src->color;
-                dp->size = src->size * m_particleScale;
-                dp->age = src->age;
-                dp++;
-                p++;
-                i++;
+    if (m_useAnimatedParticle) {
+        for (int s = 0; s < slices; s++) {
+            QSSGParticleAnimated *dp = reinterpret_cast<QSSGParticleAnimated *>(dest);
+            for (int p = 0; p < pps && i < particleCount; ) {
+                if (src->emitterIndex == emitterIndex) {
+                    if (src->size > 0.0f)
+                        bounds.include(src->position);
+                    dp->position = src->position;
+                    dp->rotation = src->rotation * float(M_PI / 180.0f);
+                    dp->color = src->color;
+                    dp->size = src->size * m_particleScale;
+                    dp->age = src->age;
+                    dp->animationFrame = src->animationFrame;
+                    dp++;
+                    p++;
+                    i++;
+                }
+                src++;
             }
-            src++;
+            dest += ss;
         }
-        dest += ss;
+    } else {
+        for (int s = 0; s < slices; s++) {
+            QSSGParticleSimple *dp = reinterpret_cast<QSSGParticleSimple *>(dest);
+            for (int p = 0; p < pps && i < particleCount; ) {
+                if (src->emitterIndex == emitterIndex) {
+                    if (src->size > 0.0f)
+                        bounds.include(src->position);
+                    dp->position = src->position;
+                    dp->rotation = src->rotation * float(M_PI / 180.0f);
+                    dp->color = src->color;
+                    dp->size = src->size * m_particleScale;
+                    dp->age = src->age;
+                    dp++;
+                    p++;
+                    i++;
+                }
+                src++;
+            }
+            dest += ss;
+        }
     }
     node->m_particleBuffer.setBounds(bounds);
 }

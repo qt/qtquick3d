@@ -42,7 +42,7 @@ static int ceilDivide(int a, int b)
     return x + y;
 }
 
-void QSSGParticleBuffer::resize(int particleCount)
+void QSSGParticleBuffer::resize(int particleCount, bool useAnimatedParticle)
 {
     if (particleCount == 0) {
         m_particlesPerSlice = 0;
@@ -52,7 +52,7 @@ void QSSGParticleBuffer::resize(int particleCount)
         m_particleBuffer.resize(0);
         return;
     }
-    int vec4PerParticle = ceilDivide(sizeof(QSSGParticle), 16);
+    int vec4PerParticle = ceilDivide(useAnimatedParticle ? sizeof(QSSGParticleAnimated) : sizeof(QSSGParticleSimple), 16);
     int vec4s = particleCount * vec4PerParticle;
     int width = divisibleBy(sqrt(vec4s), vec4PerParticle);
     int height = ceilDivide(vec4s, width);

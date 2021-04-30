@@ -177,8 +177,10 @@ Item {
                     source: "images/smoke_sprite.png"
                 }
                 maxAmount: 600
-                frameCount: 15
-                interpolate: true
+                spriteSequence: SpriteSequence3D {
+                    frameCount: 15
+                    interpolate: true
+                }
                 billboard: true
                 blendMode: SpriteParticle3D.Screen
                 colorTable: Texture {

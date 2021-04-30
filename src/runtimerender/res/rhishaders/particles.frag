@@ -20,7 +20,12 @@ layout(binding = 3) uniform sampler2D qt_colorTable;
 layout(location = 0) out vec4 fragColor;
 
 layout(location = 0) in vec4 color;
-layout(location = 1) in float spriteFactor;
+/*
+    spriteData
+    x: particle age, 0..1 during the lifetime
+    y: particle lifetime over sprite animation duration
+*/
+layout(location = 1) in vec2 spriteData;
 layout(location = 2) in vec2 texcoord;
 layout(location = 3) flat in uint instanceIndex;
 
@@ -33,7 +38,7 @@ layout(location = 3) flat in uint instanceIndex;
 */
 float qt_spriteCoords(out vec2 coords[2])
 {
-    float imageOffset = (ubuf.qt_spriteConfig.x - ubuf.qt_spriteConfig.w) * spriteFactor;
+    float imageOffset = (ubuf.qt_spriteConfig.x - ubuf.qt_spriteConfig.w) * spriteData.y;
     float factor = fract(imageOffset);
     vec2 imageOffsets = vec2(imageOffset - factor, imageOffset - factor + 1.0);
     imageOffsets = clamp(imageOffsets * ubuf.qt_spriteConfig.y, 0.0, 1.0);
@@ -62,7 +67,7 @@ float qt_rand(vec2 co)
 vec4 qt_readColor()
 {
 #ifdef QSSG_PARTICLES_ENABLE_MAPPED
-    return color * texture(qt_colorTable, vec2(spriteFactor, qt_rand(vec2(instanceIndex, 0))));
+    return color * texture(qt_colorTable, vec2(spriteData.x, qt_rand(vec2(instanceIndex, 0))));
 #else
     return color;
 #endif

@@ -220,8 +220,10 @@ Item {
                     source: "images/smoke_sprite.png"
                 }
                 maxAmount: 200
-                frameCount: 15
-                interpolate: true
+                spriteSequence: SpriteSequence3D {
+                    frameCount: 15
+                    interpolate: true
+                }
                 billboard: true
                 color: "#40ffffff"
                 colorVariation: Qt.vector4d(0.5, 0.5, 0.5, 0.2)

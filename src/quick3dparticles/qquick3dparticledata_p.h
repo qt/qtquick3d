@@ -86,6 +86,8 @@ struct QQuick3DParticleData
     // Unified scaling among axes
     float startSize = 1.0f;
     float endSize = 1.0f;
+    // Seconds, sprite sequence animation total time
+    float animationTime = -1.0f;
     // Index/id of the particle. Used to get unique random values.
     // Might not be necessary, check later
     int index = 0;

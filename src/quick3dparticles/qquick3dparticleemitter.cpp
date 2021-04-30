@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -32,6 +32,7 @@
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticleshape_p.h"
 #include "qquick3dparticleutils_p.h"
+#include "qquick3dparticlespritesequence_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -715,6 +716,21 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         a = pc.alpha() * (1.0f - pcv.w()) + int(rand->get(particleIdIndex, QPRand::ColorAV) * 256) * pcv.w();
     }
     d->startColor = {r, g, b, a};
+
+    // Sprite sequence animation
+    if (auto sequence = particle->m_spriteSequence) {
+        if (sequence->duration() > 0) {
+            float animationTimeMs = float(sequence->duration()) / 1000.0f;
+            float animationTimeVarMs = float(sequence->durationVariation()) / 1000.0f;
+            animationTimeVarMs = animationTimeVarMs - 2.0f * rand->get(particleIdIndex, QPRand::SpriteAnimationV) * animationTimeVarMs;
+            // Sequence duration to be at least 1ms
+            const float MIN_DURATION = 0.001f;
+            d->animationTime = std::max(MIN_DURATION, animationTimeMs + animationTimeVarMs);
+        } else {
+            // Duration not set, so use the lifetime of the particle
+            d->animationTime = d->lifetime;
+        }
+    }
 }
 
 int QQuick3DParticleEmitter::getEmitAmount()

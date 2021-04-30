@@ -33,6 +33,7 @@
 
 #include <QtQuick3DParticles/private/qquick3dparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlespriteparticle_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticlespritesequence_p.h>
 
 
 class tst_QQuick3DParticleSpriteParticle : public QObject
@@ -47,30 +48,33 @@ private slots:
 void tst_QQuick3DParticleSpriteParticle::testInitialization()
 {
     QQuick3DParticleSpriteParticle *particle = new QQuick3DParticleSpriteParticle();
+    QQuick3DParticleSpriteSequence *sequence = new QQuick3DParticleSpriteSequence();
 
     QCOMPARE(particle->blendMode(), QQuick3DParticleSpriteParticle::SourceOver);
     QCOMPARE(particle->sprite(), nullptr);
-    QCOMPARE(particle->frameCount(), 1);
-    QCOMPARE(particle->interpolate(), true);
+    QCOMPARE(sequence->frameCount(), 1);
+    QCOMPARE(sequence->interpolate(), true);
     QCOMPARE(particle->billboard(), false);
     QCOMPARE(particle->colorTable(), nullptr);
     QVERIFY(qFuzzyCompare(particle->particleScale(), 5.0f));
 
+    delete sequence;
     delete particle;
 }
 
 void tst_QQuick3DParticleSpriteParticle::testParticle()
 {
     QQuick3DParticleSpriteParticle *particle = new QQuick3DParticleSpriteParticle();
+    QQuick3DParticleSpriteSequence *sequence = new QQuick3DParticleSpriteSequence();
 
     particle->setBlendMode(QQuick3DParticleSpriteParticle::Multiply);
     QCOMPARE(particle->blendMode(), QQuick3DParticleSpriteParticle::Multiply);
 
-    particle->setFrameCount(1000);
-    QCOMPARE(particle->frameCount(), 1000);
+    sequence->setFrameCount(1000);
+    QCOMPARE(sequence->frameCount(), 1000);
 
-    particle->setInterpolate(false);
-    QCOMPARE(particle->interpolate(), false);
+    sequence->setInterpolate(false);
+    QCOMPARE(sequence->interpolate(), false);
 
     particle->setBillboard(true);
     QCOMPARE(particle->billboard(), true);
@@ -86,6 +90,7 @@ void tst_QQuick3DParticleSpriteParticle::testParticle()
     QCOMPARE(particle->colorTable(), texture);
 
     delete texture;
+    delete sequence;
     delete particle;
 }
 

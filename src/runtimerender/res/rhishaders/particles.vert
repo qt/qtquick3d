@@ -19,7 +19,11 @@ out gl_PerVertex {
     vec4 gl_Position;
 };
 
+#ifdef QSSG_PARTICLES_ENABLE_ANIMATED
+const uint particleSize = 4;
+#else
 const uint particleSize = 3;
+#endif
 
 struct Particle
 {
@@ -28,6 +32,10 @@ struct Particle
     vec3 rotation;
     float age;
     vec4 color;
+#ifdef QSSG_PARTICLES_ENABLE_ANIMATED
+    float animationFrame;
+    vec3 unusedPadding;
+#endif
 };
 
 vec2 qt_indexToUV(in uint index)
@@ -44,11 +52,17 @@ Particle qt_loadParticle(in uint index)
     vec4 p0 = texture(qt_particleTexture, offset);
     vec4 p1 = texture(qt_particleTexture, vec2(offset.x + ubuf.qt_oneOverParticleImageSize.x, offset.y));
     vec4 p2 = texture(qt_particleTexture, vec2(offset.x + 2.0 * ubuf.qt_oneOverParticleImageSize.x, offset.y));
+#ifdef QSSG_PARTICLES_ENABLE_ANIMATED
+    vec4 p3 = texture(qt_particleTexture, vec2(offset.x + 3.0 * ubuf.qt_oneOverParticleImageSize.x, offset.y));
+#endif
     p.position = p0.xyz;
     p.size = p0.w;
     p.rotation = p1.xyz;
     p.age = p1.w;
     p.color = p2;
+#ifdef QSSG_PARTICLES_ENABLE_ANIMATED
+    p.animationFrame = p3.x;
+#endif
     return p;
 }
 
@@ -82,7 +96,7 @@ float qt_ageToSpriteFactor(in float age)
 }
 
 layout(location = 0) out vec4 color;
-layout(location = 1) out float spriteFactor;
+layout(location = 1) out vec2 spriteData;
 layout(location = 2) out vec2 texcoord;
 layout(location = 3) flat out uint instanceIndex;
 
@@ -105,6 +119,11 @@ void main()
     texcoord = corner;
     color = p.color;
     gl_Position = ubuf.qt_projectionMatrix * viewPos;
-    spriteFactor = qt_ageToSpriteFactor(p.age);
+#ifdef QSSG_PARTICLES_ENABLE_MAPPED
+    spriteData.x = qt_ageToSpriteFactor(p.age);
+#endif
+#ifdef QSSG_PARTICLES_ENABLE_ANIMATED
+    spriteData.y = p.animationFrame;
+#endif
 }
 
