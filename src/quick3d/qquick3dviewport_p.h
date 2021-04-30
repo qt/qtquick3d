@@ -159,7 +159,7 @@ private:
     RenderMode m_renderMode = Offscreen;
     QQuick3DRenderStats *m_renderStats = nullptr;
     QHash<QObject*, QMetaObject::Connection> m_connections;
-    bool m_enableInputProcessing = false;
+    bool m_enableInputProcessing = true;
 };
 
 QT_END_NAMESPACE

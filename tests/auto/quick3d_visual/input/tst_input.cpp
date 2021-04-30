@@ -124,7 +124,6 @@ void tst_Input::singleTap2D_data()
 
 void tst_Input::singleTap2D()
 {
-    QSKIP("Input Processing is disabled");
     QFETCH(QString, qmlSource);
     QFETCH(QString, objectName);
     QFETCH(QString, tapObjectName);
@@ -190,7 +189,6 @@ void tst_Input::dualTouchTap2D_data()
 
 void tst_Input::dualTouchTap2D()
 {
-    QSKIP("Input Processing is disabled");
     QFETCH(QString, qmlSource);
     QFETCH(QString, objectName1);
     QFETCH(QString, objectName2);
@@ -260,7 +258,6 @@ void tst_Input::fallthrough_data()
 
 void tst_Input::fallthrough()
 {
-    QSKIP("Input Processing is disabled");
     QFETCH(QPoint, pos);
     QFETCH(bool, mouseAreaCanBlock);
 
