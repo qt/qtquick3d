@@ -75,6 +75,11 @@ char *QSSGParticleBuffer::pointer()
     return m_particleBuffer.data();
 }
 
+const char *QSSGParticleBuffer::pointer() const
+{
+    return m_particleBuffer.constData();
+}
+
 int QSSGParticleBuffer::particlesPerSlice() const
 {
     return m_particlesPerSlice;
@@ -104,6 +109,12 @@ QByteArray QSSGParticleBuffer::data() const
 {
     return m_particleBuffer;
 }
+
+int QSSGParticleBuffer::bufferSize() const
+{
+    return m_particleBuffer.size();
+}
+
 
 QSSGBounds3 QSSGParticleBuffer::bounds() const
 {

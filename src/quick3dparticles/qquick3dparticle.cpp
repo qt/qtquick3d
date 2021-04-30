@@ -417,6 +417,43 @@ void QQuick3DParticle::setAlignTargetPosition(const QVector3D &alignPosition)
     Q_EMIT alignTargetPositionChanged();
 }
 
+/*!
+    \qmlproperty enumeration Particle3D::SortMode
+
+    Defines the sorting mode of the particle. The sorting mode determines
+    the order in which the particles are drawn.
+
+    \value Particle3D.SortNone
+        No sorting.
+    \value Particle3D.SortNewest
+        Sort based on particle lifetime, newest first.
+    \value Particle3D.SortOldest
+        Sort based on particle lifetime, oldest first.
+    \value Particle3D.SortDistance
+        Sort based on distance to the camera, farthest first.
+*/
+
+
+/*!
+    \qmlproperty SortMode Particle3D::sortMode
+
+    This property defines the sort mode used for the particles.
+
+    The default value is \c Particle3D.SortNone.
+*/
+QQuick3DParticle::SortMode QQuick3DParticle::sortMode() const
+{
+    return m_sortMode;
+}
+
+void QQuick3DParticle::setSortMode(QQuick3DParticle::SortMode mode)
+{
+    if (m_sortMode == mode)
+        return;
+    m_sortMode = mode;
+    Q_EMIT sortModeChanged();
+}
+
 void QQuick3DParticle::updateBurstIndex(int amount)
 {
     m_lastBurstIndex += amount;

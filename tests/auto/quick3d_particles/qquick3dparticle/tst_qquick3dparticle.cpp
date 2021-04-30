@@ -105,6 +105,11 @@ void tst_QQuick3DParticle::testParticle()
     QVERIFY(qFuzzyCompare(p->alignTargetPosition(), QVector3D()));
     p->setAlignTargetPosition(QVector3D(100.0f, 100.0f, 100.0f));
     QVERIFY(qFuzzyCompare(p->alignTargetPosition(), QVector3D(100.0f, 100.0f, 100.0f)));
+
+    QCOMPARE(p->sortMode(), QQuick3DParticle::SortNone);
+    p->setSortMode(QQuick3DParticle::SortDistance);
+    QCOMPARE(p->sortMode(), QQuick3DParticle::SortDistance);
+
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DParticle)

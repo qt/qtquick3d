@@ -111,12 +111,7 @@ protected:
                          const QVector4D &color,
                          float size, float age,
                          float animationFrame);
-    void commitParticles()
-    {
-        markAllDirty();
-        update();
-        updateNodes();
-    }
+    void commitParticles();
     void setDepthBias(float bias) override
     {
         QQuick3DParticle::setDepthBias(bias);
@@ -162,6 +157,7 @@ private:
     };
 
     void updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
+    void updateAnimatedParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
     QSSGRenderGraphObject *updateParticleNode(const ParticleUpdateNode *updateNode, QSSGRenderGraphObject *node);
     void updateSceneManager(QQuick3DSceneManager *window);
     void handleMaxAmountChanged(int amount);

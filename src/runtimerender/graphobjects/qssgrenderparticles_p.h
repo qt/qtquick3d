@@ -80,6 +80,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
     void setBounds(const QSSGBounds3& bounds);
 
     char *pointer();
+    const char *pointer() const;
     int particlesPerSlice() const;
     int sliceStride() const;
     int particleCount() const;
@@ -87,6 +88,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
     QSize size() const;
     QByteArray data() const;
     QSSGBounds3 bounds() const;
+    int bufferSize() const;
+
 private:
     int m_particlesPerSlice = 0;
     int m_sliceStride = 0;
@@ -130,6 +133,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     bool m_blendImages = true;
     bool m_billboard = true;
     bool m_hasTransparency = true;
+    bool m_depthSorting = false;
     QSSGRenderImage *m_colorTable = nullptr;
     QSSGRenderParticles::FeatureLevel m_featureLevel = FeatureLevel::Simple;
 

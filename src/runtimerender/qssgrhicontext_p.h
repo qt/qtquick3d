@@ -709,7 +709,10 @@ struct QSSGRhiInstanceBufferData
 struct QSSGRhiParticleData
 {
     QRhiTexture *texture = nullptr;
+    QByteArray sortedData;
+    QList<QSSGRhiSortData> sortData;
     int particleCount = 0;
+    bool sorting = false;
 };
 
 struct QSSGRhiDummyTextureKey

@@ -65,6 +65,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
     Q_PROPERTY(AlignMode alignMode READ alignMode WRITE setAlignMode NOTIFY alignModeChanged)
     Q_PROPERTY(QVector3D alignTargetPosition READ alignTargetPosition WRITE setAlignTargetPosition NOTIFY alignTargetPositionChanged)
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
+    Q_PROPERTY(SortMode sortMode READ sortMode WRITE setSortMode NOTIFY sortModeChanged)
+
     QML_NAMED_ELEMENT(Particle3D)
     QML_UNCREATABLE("Particle3D is abstract")
     QML_ADDED_IN_VERSION(6, 2)
@@ -89,6 +91,15 @@ public:
     };
     Q_ENUM(AlignMode)
 
+    enum SortMode
+    {
+        SortNone,
+        SortNewest,
+        SortOldest,
+        SortDistance,
+    };
+    Q_ENUM(SortMode)
+
     QQuick3DParticleSystem *system() const;
     int maxAmount() const;
     QColor color() const;
@@ -101,6 +112,7 @@ public:
     AlignMode alignMode() const;
     QVector3D alignTargetPosition() const;
     bool hasTransparency() const;
+    SortMode sortMode() const;
 
     float opacity() const;
     void resetColor();
@@ -118,6 +130,7 @@ public Q_SLOTS:
     void setAlignMode(AlignMode alignMode);
     void setAlignTargetPosition(const QVector3D &alignPosition);
     void setHasTransparency(bool transparency);
+    void setSortMode(SortMode sortMode);
 
 Q_SIGNALS:
     void systemChanged();
@@ -132,6 +145,7 @@ Q_SIGNALS:
     void alignModeChanged();
     void alignTargetPositionChanged();
     void hasTransparencyChanged();
+    void sortModeChanged();
 
 protected:
     // From QQmlParserStatus
@@ -180,6 +194,7 @@ private:
     int m_fadeOutDuration = 250;
     float m_depthBias = 0.0f;
     bool m_hasTransparency = true;
+    SortMode m_sortMode = SortNone;
 };
 
 QT_END_NAMESPACE

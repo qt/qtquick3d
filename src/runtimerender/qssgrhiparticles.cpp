@@ -108,6 +108,95 @@ static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend &targetBlend, QSSG
     }
 }
 
+static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
+                          const QSSGParticleBuffer &buffer, const QSSGRenderParticles &particles,
+                          const QVector3D &cameraDirection, bool animatedParticles)
+{
+    const QMatrix4x4 &invModelMatrix = particles.globalTransform.inverted();
+    QVector3D dir = invModelMatrix * cameraDirection;
+    QVector3D n = dir.normalized();
+    const auto particleCount = buffer.particleCount();
+    sortData.resize(particleCount);
+    sortData.fill({});
+
+    // create sort data
+    {
+        const auto slices = buffer.sliceCount();
+        const auto ss = buffer.sliceStride();
+        const auto pps = buffer.particlesPerSlice();
+
+        QSSGRhiSortData *dst = sortData.data();
+        const char *source = buffer.pointer();
+        const char *begin = source;
+        int i = 0;
+        if (animatedParticles) {
+            for (int s = 0; s < slices; s++) {
+                const QSSGParticleAnimated *sp = reinterpret_cast<const QSSGParticleAnimated *>(source);
+                for (int p = 0; p < pps && i < particleCount; p++) {
+                    *dst = { QVector3D::dotProduct(sp->position, n), int(reinterpret_cast<const char *>(sp) - begin)};
+                    sp++;
+                    dst++;
+                    i++;
+                }
+                source += ss;
+            }
+        } else {
+            for (int s = 0; s < slices; s++) {
+                const QSSGParticleSimple *sp = reinterpret_cast<const QSSGParticleSimple *>(source);
+                for (int p = 0; p < pps && i < particleCount; p++) {
+                    *dst = { QVector3D::dotProduct(sp->position, n), int(reinterpret_cast<const char *>(sp) - begin)};
+                    sp++;
+                    dst++;
+                    i++;
+                }
+                source += ss;
+            }
+        }
+    }
+
+    // sort
+    result.resize(buffer.bufferSize());
+    std::sort(sortData.begin(), sortData.end(), [](const QSSGRhiSortData &a, const QSSGRhiSortData &b){
+        return a.d > b.d;
+    });
+
+    auto copyParticles = [&](QByteArray &dst, const QList<QSSGRhiSortData> &data, const QSSGParticleBuffer &buffer) {
+        const auto slices = buffer.sliceCount();
+        const auto ss = buffer.sliceStride();
+        const auto pps = buffer.particlesPerSlice();
+        const QSSGRhiSortData *sdata = data.data();
+        char *dest = dst.data();
+        const char *source = buffer.pointer();
+        int i = 0;
+        if (animatedParticles) {
+            for (int s = 0; s < slices; s++) {
+                QSSGParticleAnimated *dp = reinterpret_cast<QSSGParticleAnimated *>(dest);
+                for (int p = 0; p < pps && i < particleCount; p++) {
+                    *dp = *reinterpret_cast<const QSSGParticleAnimated *>(source + sdata->indexOrOffset);
+                    dp++;
+                    sdata++;
+                    i++;
+                }
+                dest += ss;
+            }
+        } else {
+            for (int s = 0; s < slices; s++) {
+                QSSGParticleSimple *dp = reinterpret_cast<QSSGParticleSimple *>(dest);
+                for (int p = 0; p < pps && i < particleCount; p++) {
+                    *dp = *reinterpret_cast<const QSSGParticleSimple *>(source + sdata->indexOrOffset);
+                    dp++;
+                    sdata++;
+                    i++;
+                }
+                dest += ss;
+            }
+        }
+    };
+
+    // write result
+    copyParticles(result, sortData, buffer);
+}
+
 void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                                 QSSGRhiContext *rhiCtx,
                                                 QSSGRhiGraphicsPipelineState *ps,
@@ -142,9 +231,26 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
         particleData.particleCount = particleCount;
     }
 
+    bool sortingChanged = particleData.sorting != renderable.particles.m_depthSorting;
+    if (sortingChanged && !renderable.particles.m_depthSorting) {
+        particleData.sortData.clear();
+        particleData.sortedData.clear();
+    }
+    particleData.sorting = renderable.particles.m_depthSorting;
+
+    QByteArray uploadData;
+
+    if (renderable.particles.m_depthSorting) {
+        bool animatedParticles = renderable.particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Animated;
+        sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, *inData.cameraDirection, animatedParticles);
+        uploadData = particleData.sortedData;
+    } else {
+        uploadData = particleBuffer.data();
+    }
+
     QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
     QRhiTextureSubresourceUploadDescription upload;
-    upload.setData(particleBuffer.data());
+    upload.setData(uploadData);
     QRhiTextureUploadDescription uploadDesc(QRhiTextureUploadEntry(0, 0, upload));
     rub->uploadTexture(particleData.texture, uploadDesc);
     rhiCtx->commandBuffer()->resourceUpdate(rub);
