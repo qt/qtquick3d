@@ -49,6 +49,9 @@ QQuick3DParticleModelParticle::QQuick3DParticleModelParticle(QQuick3DNode *paren
     QObject::connect(this, &QQuick3DParticle::maxAmountChanged, [this]() {
         handleMaxAmountChanged(m_maxAmount);
     });
+    QObject::connect(this, &QQuick3DParticle::sortModeChanged, [this]() {
+        handleSortModeChanged(sortMode());
+    });
 }
 
 void QQuick3DParticleModelParticle::handleMaxAmountChanged(int amount)
@@ -102,15 +105,30 @@ void QQuick3DParticleModelParticle::setDelegate(QQmlComponent *delegate)
 
 class QQuick3DParticleInstanceTable : public QQuick3DInstancing
 {
+    struct SortData
+    {
+        float age;
+        int index;
+    };
+
 public:
     QQuick3DParticleInstanceTable() {}
-    void clear() { m_instances.clear(); }
-    void commit() { markDirty(); }
+    void clear() { m_instances.clear(); m_sortData.clear(); }
+    void commit() { sort(); markDirty(); }
     void addInstance(const QVector3D &position,
-                     const QVector3D &scale, const QVector3D &eulerRotation,
-                                             const QColor &color) {
+                     const QVector3D &scale,
+                     const QVector3D &eulerRotation,
+                     const QColor &color,
+                     float age) {
         auto entry = calculateTableEntry(position, scale, eulerRotation, color);
         m_instances.append(reinterpret_cast<char *>(&entry), sizeof(InstanceTableEntry));
+        if (m_ageSorting)
+            m_sortData.append({age, int(m_instances.size() / sizeof(InstanceTableEntry))});
+    }
+    void setSorting(bool enable, bool inverted = false)
+    {
+        m_ageSorting = enable;
+        m_inverted = inverted;
     }
 protected:
     QByteArray getInstanceBuffer(int *instanceCount) override
@@ -118,12 +136,49 @@ protected:
         if (instanceCount)
             *instanceCount = int(m_instances.count() / sizeof(InstanceTableEntry));
 
-        return m_instances;
+        if (!m_ageSorting)
+            return m_instances;
+        return m_sortedInstances;
+    }
+    void sort()
+    {
+        if (!m_ageSorting)
+            return;
+
+        if (m_inverted) {
+            std::sort(m_sortData.begin(), m_sortData.end(), [&](const SortData &a, const SortData &b) {
+                return a.age < b.age;
+            });
+        } else {
+            std::sort(m_sortData.begin(), m_sortData.end(), [&](const SortData &a, const SortData &b) {
+                return a.age > b.age;
+            });
+        }
+        m_sortedInstances.resize(m_instances.size());
+        const InstanceTableEntry *src = reinterpret_cast<InstanceTableEntry *>(m_instances.data());
+        InstanceTableEntry *dst = reinterpret_cast<InstanceTableEntry *>(m_sortedInstances.data());
+        for (auto &e : m_sortData)
+            *dst++ = src[e.index];
     }
 
 private:
+    QList<SortData> m_sortData;
     QByteArray m_instances;
+    QByteArray m_sortedInstances;
+    bool m_ageSorting = false;
+    bool m_inverted = false;
 };
+
+void QQuick3DParticleModelParticle::handleSortModeChanged(QQuick3DParticle::SortMode mode)
+{
+    if (m_instanceTable) {
+        if (mode == QQuick3DParticle::SortNewest || mode == QQuick3DParticle::SortOldest)
+            m_instanceTable->setSorting(true, mode == QQuick3DParticle::SortNewest);
+        else
+            m_instanceTable->setSorting(false);
+        m_instanceTable->setDepthSorting(mode == QQuick3DParticle::SortDistance);
+    }
+}
 
 QQuick3DInstancing *QQuick3DParticleModelParticle::instanceTable() const
 {
@@ -136,10 +191,10 @@ void QQuick3DParticleModelParticle::clearInstanceTable()
         m_instanceTable->clear();
 }
 
-void QQuick3DParticleModelParticle::addInstance(const QVector3D &position, const QVector3D &scale, const QVector3D &eulerRotation, const QColor &color)
+void QQuick3DParticleModelParticle::addInstance(const QVector3D &position, const QVector3D &scale, const QVector3D &eulerRotation, const QColor &color, float age)
 {
     if (m_instanceTable)
-        m_instanceTable->addInstance(position, scale, eulerRotation, color);
+        m_instanceTable->addInstance(position, scale, eulerRotation, color, age);
 }
 
 void QQuick3DParticleModelParticle::commitInstance()

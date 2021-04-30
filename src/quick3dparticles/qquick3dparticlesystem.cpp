@@ -599,7 +599,7 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
 
         const QColor color(currentData.color.r, currentData.color.g, currentData.color.b, currentData.color.a);
         // Set current particle properties
-        modelParticle->addInstance(currentData.position, currentData.scale, currentData.rotation, color);
+        modelParticle->addInstance(currentData.position, currentData.scale, currentData.rotation, color, timeChange);
     }
     modelParticle->commitInstance();
 }

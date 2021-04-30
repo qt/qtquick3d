@@ -93,13 +93,15 @@ protected:
 private:
     void regenerate();
     void handleMaxAmountChanged(int amount);
+    void handleSortModeChanged(QQuick3DParticle::SortMode mode);
 
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitter;
 
     void clearInstanceTable();
     void addInstance(const QVector3D &position, const QVector3D &scale,
-                     const QVector3D &eulerRotation, const QColor &color);
+                     const QVector3D &eulerRotation, const QColor &color,
+                     float age);
     void commitInstance();
     void updateDepthBias(float bias);
 
