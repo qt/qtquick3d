@@ -486,13 +486,6 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
                                                         const QSSGRenderNode &node,
                                                         QSSGRenderer::PickResultList &outIntersectionResultList)
 {
-    // Item2D's requires special handling
-    if (node.type == QSSGRenderGraphObject::Type::Item2D) {
-        const QSSGRenderItem2D &item2D = static_cast<const QSSGRenderItem2D &>(node);
-        intersectRayWithItem2D(inRay, item2D, outIntersectionResultList);
-        return;
-    }
-
     if (node.type != QSSGRenderGraphObject::Type::Model)
         return;
 
