@@ -432,8 +432,9 @@ void setupCameraForShadowMap(const QVector2D &/*inCameraVec*/,
         if (scenePoints) {
             QSSGBounds3 sceneBounds = calculateShadowCameraBoundingBox(scenePoints, forward, up,
                                                                        right);
-            if (sceneBounds.extents().x() * sceneBounds.extents().y() * sceneBounds.extents().z()
-                    < bounds.extents().x() * bounds.extents().y() * bounds.extents().z()) {
+            if (sceneBounds.isFinite() && (sceneBounds.extents().x() * sceneBounds.extents().y()
+                                           * sceneBounds.extents().z() < bounds.extents().x()
+                                           * bounds.extents().y() * bounds.extents().z())) {
                 bounds = sceneBounds;
                 inLightPos = sceneCtr;
             }
