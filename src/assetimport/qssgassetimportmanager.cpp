@@ -43,10 +43,14 @@ QSSGAssetImportManager::QSSGAssetImportManager(QObject *parent) : QObject(parent
     const QStringList keys = QSSGAssetImporterFactory::keys();
     for (const auto &key : keys) {
         auto importer = QSSGAssetImporterFactory::create(key, QStringList());
-        m_assetImporters.append(importer);
-        // Add to extension map
-        for (const auto &extension : importer->inputExtensions()) {
-            m_extensionsMap.insert(extension, importer);
+        if (importer) {
+            m_assetImporters.append(importer);
+            // Add to extension map
+            for (const auto &extension : importer->inputExtensions()) {
+                m_extensionsMap.insert(extension, importer);
+            }
+        } else {
+            qWarning() << "Failed to load asset import plugin with key: " << key;
         }
     }
 }
