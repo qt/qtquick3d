@@ -792,6 +792,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
         // translucency map
         QSSGRenderableImage *translucencyImage = nullptr;
         quint32 translucencyImageIdx = 0;
+        // opacity map
+        QSSGRenderableImage *opacityImage = nullptr;
+        quint32 opacityImageIdx = 0;
         // lightmaps
         QSSGRenderableImage *lightmapIndirectImage = nullptr;
         quint32 lightmapIndirectImageIdx = 0;
@@ -861,6 +864,9 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             } else if (img->m_mapType == QSSGImageMapTypes::Translucency) {
                 translucencyImage = img;
                 translucencyImageIdx = imageIdx;
+            } else if (img->m_mapType == QSSGImageMapTypes::Opacity) {
+                opacityImage = img;
+                opacityImageIdx = imageIdx;
             } else if (img->m_mapType == QSSGImageMapTypes::Emissive) {
                 hasEmissiveMap = true;
             } else if (img->m_mapType == QSSGImageMapTypes::LightmapIndirect) {
@@ -1416,7 +1422,27 @@ struct QSSGShaderGenerator : public QSSGDefaultMaterialShaderGeneratorInterface
             // Ensure the rgb colors are in range.
             fragmentShader.append("    fragOutput = vec4(clamp(global_diffuse_light.rgb + global_specular_light.rgb, 0.0, 1.0), global_diffuse_light.a);");
         } else {
-            fragmentShader.append("    fragOutput = vec4(diffuseColor.rgb, diffuseColor.a * objectOpacity);");
+            // NoLighting
+            // Check if we have opacityMap
+            if (opacityImage) {
+                fragmentShader.append("    vec4 texture_opacity;");
+
+                QByteArray texSwizzle;
+                QByteArray lookupSwizzle;
+
+                if (identityImages.contains(opacityImage))
+                    generateImageUVSampler(opacityImageIdx);
+                else
+                    generateImageUVCoordinates(opacityImageIdx, *opacityImage);
+                generateTextureSwizzle(opacityImage->m_image.m_textureData.m_texture->textureSwizzleMode(), texSwizzle, lookupSwizzle);
+
+                fragmentShader << "    texture_opacity" << texSwizzle << " = texture2D(" << m_imageSampler << ", " << m_imageFragCoords << ")" << lookupSwizzle << ";\n";
+
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
+                fragmentShader << "    fragOutput = vec4(diffuseColor.rgb, diffuseColor.a * objectOpacity * texture_opacity" << channelStr(channelProps, inKey) << ");";
+            } else {
+                fragmentShader.append("    fragOutput = vec4(diffuseColor.rgb, diffuseColor.a * objectOpacity);");
+            }
         }
 
         if (vertexGenerator().hasActiveWireframe()) {
