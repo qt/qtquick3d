@@ -48,20 +48,6 @@ QSSGRenderNode::QSSGRenderNode()
 QSSGRenderNode::QSSGRenderNode(Type type)
     : QSSGRenderGraphObject(type) {}
 
-QSSGRenderNode::QSSGRenderNode(const QSSGRenderNode &inCloningObject)
-    : QSSGRenderGraphObject(inCloningObject)
-    , rotation(inCloningObject.rotation) // Radians
-    , position(inCloningObject.position)
-    , scale(inCloningObject.scale)
-    , pivot(inCloningObject.pivot)
-    , localOpacity(inCloningObject.localOpacity)
-    , localTransform(inCloningObject.localTransform)
-    , globalTransform(inCloningObject.globalTransform)
-    , globalOpacity(inCloningObject.globalOpacity)
-    , skeletonId(inCloningObject.skeletonId)
-{
-}
-
 // Sets this object dirty and walks down the graph setting all
 // children who are not dirty to be dirty.
 void QSSGRenderNode::markDirty(TransformDirtyFlag inTransformDirty)

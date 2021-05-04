@@ -146,8 +146,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
     // Type is used for RTTI purposes down the road.
     Type type;
 
-    QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType) : type(inType) {}
+    explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType) : type(inType) {}
     virtual ~QSSGRenderGraphObject();
+
+    Q_DISABLE_COPY_MOVE(QSSGRenderGraphObject)
 };
 
 QT_END_NAMESPACE

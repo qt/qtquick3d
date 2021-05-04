@@ -130,8 +130,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     ChildList children;
 
     QSSGRenderNode();
-    QSSGRenderNode(Type type);
-    QSSGRenderNode(const QSSGRenderNode &inCloningObject);
+    explicit QSSGRenderNode(Type type);
     ~QSSGRenderNode() {}
 
     // Sets this object dirty and walks down the graph setting all
