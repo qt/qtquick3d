@@ -28,9 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
-import HelperWidgets 2.0 as HelperWidgets
+import HelperWidgets 2.0
 
-HelperWidgets.ComboBox {
+ComboBox {
     id: comboBox
 
     property alias typeFilter: itemFilterModel.typeFilter
@@ -41,7 +41,7 @@ HelperWidgets.ComboBox {
 
     textInput.validator: RegExpValidator { regExp: /(^$|^[a-z_]\w*)/ }
 
-    HelperWidgets.ItemFilterModel {
+    ItemFilterModel {
         id: itemFilterModel
         modelNodeBackendProperty: modelNodeBackend
     }
