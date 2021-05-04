@@ -36,6 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \inqmlmodule QtQuick3D.Particles3D
     \brief Provides information of the particle system.
+    \since 6.1
 
     The \c ParticleSystem3DLogging type provides information about particle system statistics.
     This element cannot be created directly, but can be retrieved from a \l ParticleSystem3D.

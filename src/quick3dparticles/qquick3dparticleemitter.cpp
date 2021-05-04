@@ -40,6 +40,7 @@ QT_BEGIN_NAMESPACE
     \inherits Node
     \inqmlmodule QtQuick3D.Particles3D
     \brief Emitter for logical particles.
+    \since 6.1
 
     This element emits logical particles into the \l ParticleSystem3D, with the given starting attributes.
 

@@ -36,6 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits Particle3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Particle using a Qt Quick 3D Model.
+    \since 6.1
 
     The ModelParticle3D is a logical particle element that creates particles
     from a Qt Quick 3D \l Model component.

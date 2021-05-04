@@ -36,6 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits Object3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Abstract logical particle.
+    \since 6.1
 
     This element defines the common properties of the logical particles.
     Particle3D is an abstract base class of particles, use \l ModelParticle3D or \l SpriteParticle3D instead.

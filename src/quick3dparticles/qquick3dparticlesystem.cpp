@@ -44,6 +44,7 @@ QT_BEGIN_NAMESPACE
     \inherits Node
     \inqmlmodule QtQuick3D.Particles3D
     \brief A system which includes particle, emitter, and affector types.
+    \since 6.1
 
     This element is the root of the particle system, which handles the system timing and groups all
     the other related elements like particles, emitters, and affectors together. To group the system
