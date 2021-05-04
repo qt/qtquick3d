@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
     \inherits Particle3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Particle using a 2D sprite texture.
+    \since 6.1
 
     The SpriteParticle3D is a logical particle element that creates particles
     from a 2D sprite texture.

@@ -39,6 +39,7 @@ QT_BEGIN_NAMESPACE
     \inherits Affector3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Applies random wave curves to particles.
+    \since 6.1
 
     This element applies random wave curves to particles. Curves can combine
     global values which are the same for all particles and unique values which

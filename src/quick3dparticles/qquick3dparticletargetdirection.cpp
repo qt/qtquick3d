@@ -38,6 +38,7 @@ QT_BEGIN_NAMESPACE
     \inherits Direction3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief For specifying a direction towards the target position.
+    \since 6.1
 
     This element sets emitted particle velocity towards the target position.
 

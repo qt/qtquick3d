@@ -37,6 +37,7 @@ QT_BEGIN_NAMESPACE
     \inherits Node
     \inqmlmodule QtQuick3D.Particles3D
     \brief Affectors modify the attributes of particles during their lifetime.
+    \since 6.1
 
     The Affector3D is an abstract base class of affectors like \l Gravity3D, \l Wander3D, and \l PointRotator3D.
 

@@ -36,6 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits Affector3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Rotates particles around a pivot point.
+    \since 6.1
 
     This element rotates particles around a \l pivotPoint towards the \l direction.
 */
