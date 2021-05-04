@@ -456,10 +456,10 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         QByteArray vertex, geometry, fragment, shaderCode;
         if (!m_passes.isEmpty()) {
             for (const auto &pass : qAsConst(m_passes)) {
-                QQuick3DShaderUtilsShader *sharedShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Shared));
-                QQuick3DShaderUtilsShader *vertShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Vertex));
-                QQuick3DShaderUtilsShader *fragShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Fragment));
-                QQuick3DShaderUtilsShader *geomShader = pass->m_shaders.at(int(QQuick3DShaderUtilsShader::Stage::Geometry));
+                QQuick3DShaderUtilsShader *sharedShader = pass->shader(QQuick3DShaderUtilsShader::Stage::Shared);
+                QQuick3DShaderUtilsShader *vertShader = pass->shader(QQuick3DShaderUtilsShader::Stage::Vertex);
+                QQuick3DShaderUtilsShader *fragShader = pass->shader(QQuick3DShaderUtilsShader::Stage::Fragment);
+                QQuick3DShaderUtilsShader *geomShader = pass->shader(QQuick3DShaderUtilsShader::Stage::Geometry);
                 if (!sharedShader && !vertShader && !fragShader && !geomShader) {
                     qWarning("Pass with no shader attatched!");
                     continue;

@@ -584,11 +584,8 @@ QQmlListProperty<QQuick3DShaderUtilsRenderCommand> QQuick3DShaderUtilsRenderPass
 void QQuick3DShaderUtilsRenderPass::qmlAppendShader(QQmlListProperty<QQuick3DShaderUtilsShader> *list,
                                                     QQuick3DShaderUtilsShader *shader)
 {
-    if (!shader)
-        return;
-
     QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
-    that->m_shaders[int(shader->stage)] = shader;
+    that->m_shaders.append(shader);
 }
 
 QQuick3DShaderUtilsShader *QQuick3DShaderUtilsRenderPass::qmlShaderAt(QQmlListProperty<QQuick3DShaderUtilsShader> *list,
@@ -607,10 +604,7 @@ int QQuick3DShaderUtilsRenderPass::qmlShaderCount(QQmlListProperty<QQuick3DShade
 void QQuick3DShaderUtilsRenderPass::qmlShaderClear(QQmlListProperty<QQuick3DShaderUtilsShader> *list)
 {
     QQuick3DShaderUtilsRenderPass *that = qobject_cast<QQuick3DShaderUtilsRenderPass *>(list->object);
-    auto it = that->m_shaders.begin();
-    const auto end = that->m_shaders.end();
-    for (;it != end; ++it)
-        *it = nullptr;
+    that->m_shaders.clear();
 }
 
 QQmlListProperty<QQuick3DShaderUtilsShader> QQuick3DShaderUtilsRenderPass::shaders()
@@ -620,7 +614,17 @@ QQmlListProperty<QQuick3DShaderUtilsShader> QQuick3DShaderUtilsRenderPass::shade
                                                       QQuick3DShaderUtilsRenderPass::qmlAppendShader,
                                                       QQuick3DShaderUtilsRenderPass::qmlShaderCount,
                                                       QQuick3DShaderUtilsRenderPass::qmlShaderAt,
-                                                      QQuick3DShaderUtilsRenderPass::qmlShaderClear);
+                                                       QQuick3DShaderUtilsRenderPass::qmlShaderClear);
+}
+
+QQuick3DShaderUtilsShader *QQuick3DShaderUtilsRenderPass::shader(
+        QQuick3DShaderUtilsShader::Stage stage) const
+{
+    for (QQuick3DShaderUtilsShader *shader : m_shaders) {
+        if (shader && shader->stage == stage)
+            return shader;
+    }
+    return nullptr;
 }
 
 void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)

@@ -52,7 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DShaderUtilsShader;
 
 namespace QSSGShaderUtils
 {
@@ -446,6 +445,28 @@ public:
     QByteArray &target = command.m_propertyName;
 };
 
+class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QByteArray shader MEMBER shader)
+    Q_PROPERTY(Stage stage MEMBER stage)
+public:
+    QQuick3DShaderUtilsShader() = default;
+    virtual ~QQuick3DShaderUtilsShader() = default;
+    enum class Stage : quint8
+    {
+        Shared,
+        Vertex,
+        Fragment,
+        Geometry,
+        Compute
+    };
+    Q_ENUM(Stage)
+
+    QByteArray shader;
+    Stage stage = Stage::Shared;
+};
+
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QObject
 {
     Q_OBJECT
@@ -470,7 +491,10 @@ public:
     QVector<QQuick3DShaderUtilsRenderCommand *> m_commands;
     QQuick3DShaderUtilsBuffer *outputBuffer = nullptr;
     QQmlListProperty<QQuick3DShaderUtilsShader> shaders();
-    QVarLengthArray<QQuick3DShaderUtilsShader *, 5> m_shaders { nullptr, nullptr, nullptr, nullptr, nullptr };
+    QQuick3DShaderUtilsShader *shader(QQuick3DShaderUtilsShader::Stage stage) const;
+
+private:
+    QVarLengthArray<QQuick3DShaderUtilsShader *, 5> m_shaders;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShaderInfo : public QObject
@@ -501,28 +525,6 @@ public:
 
     qint32 shaderKey {0};
     bool isValid() const { return !(version.isEmpty() && type.isEmpty()); }
-};
-
-class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QByteArray shader MEMBER shader)
-    Q_PROPERTY(Stage stage MEMBER stage)
-public:
-    QQuick3DShaderUtilsShader() = default;
-    virtual ~QQuick3DShaderUtilsShader() = default;
-    enum class Stage : quint8
-    {
-        Shared,
-        Vertex,
-        Fragment,
-        Geometry,
-        Compute
-    };
-    Q_ENUM(Stage)
-
-    QByteArray shader;
-    Stage stage = Stage::Shared;
 };
 
 QT_END_NAMESPACE
