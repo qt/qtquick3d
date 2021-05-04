@@ -360,7 +360,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                 auto &textureMap = sceneInfo.textureMap;
 
                 // Check if we already processed this texture
-                const auto it = textureMap.constFind(TextureEntry{QByteArrayView{texturePath.C_Str(), texturePath.length}, texInfo});
+                const auto it = textureMap.constFind(TextureEntry{QByteArrayView{texturePath.C_Str(), qsizetype(texturePath.length)}, texInfo});
                 if (it != textureMap.cend()) {
                     Q_ASSERT(it->texture);
                     tex = it->texture;
@@ -977,11 +977,13 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     if (gltfVersion == SceneInfo::GltfVersion::Unknown)
         return QLatin1String("Unknown format version!");
 
+    // Assuming consistent type usage
+    using It = decltype(sourceScene->mNumMeshes);
+
     // Before we can start processing the scene we start my mapping out the nodes
     // we can tell the type of.
     NodeMap nodeMap;
     {
-        using It = decltype (sourceScene->mNumMeshes);
         const auto &srcRootNode = *sourceScene->mRootNode;
 
         if (sourceScene->HasLights()) {
@@ -1015,13 +1017,13 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     const auto embeddedTextureCount = sourceScene->mNumTextures;
     SceneInfo::EmbeddedTextureMap embeddedTextures;
 
-    for (qsizetype i = 0; i != materialCount; ++i)
+    for (It i = 0; i != materialCount; ++i)
         materials.push_back({sourceScene->mMaterials[i], nullptr});
 
-    for (qsizetype i = 0; i != meshCount; ++i)
+    for (It i = 0; i != meshCount; ++i)
         meshes.push_back({sourceScene->mMeshes[i], nullptr});
 
-    for (qsizetype i = 0; i != embeddedTextureCount; ++i)
+    for (It i = 0; i != embeddedTextureCount; ++i)
         embeddedTextures.push_back(nullptr);
 
     SceneInfo::TextureMap textureMap;
