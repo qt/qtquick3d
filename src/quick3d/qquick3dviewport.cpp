@@ -307,7 +307,7 @@ void QQuick3DViewport::writeShaderCache(const QUrl &shaderCacheFile)
     QSaveFile file(filePath);
     QFileInfo(filePath).dir().mkpath(QStringLiteral("."));
     bool success = false;
-    if (file.open(QIODevice::WriteOnly) && file.write(m_shaderCacheData) != -1) {
+    if (file.open(QIODevice::WriteOnly) && file.write(m_shaderCacheIO) != -1) {
         file.commit();
         success = true;
     } else {
