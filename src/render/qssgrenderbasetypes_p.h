@@ -1063,6 +1063,7 @@ struct Q_QUICK3DRENDER_EXPORT QSSGRenderVertFragCompilationResult
 {
     const char *m_shaderName = nullptr;
     QSSGRef<QSSGRenderShaderProgram> m_shader; ///< contains the program
+    bool m_success = false;
 
     QSSGRenderVertFragCompilationResult();
     ~QSSGRenderVertFragCompilationResult();
