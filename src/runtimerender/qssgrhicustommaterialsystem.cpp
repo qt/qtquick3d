@@ -219,7 +219,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, layerData, *layerData.camera, nullptr, nullptr);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-        const bool instancing = renderable.prepareInstancing(rhiCtx);
+        const bool instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraDirection);
 
         ps->samples = samples;
 

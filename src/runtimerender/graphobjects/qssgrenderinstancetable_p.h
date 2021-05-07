@@ -48,6 +48,14 @@
 
 QT_BEGIN_NAMESPACE
 
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTableEntry {
+    QVector4D row0;
+    QVector4D row1;
+    QVector4D row2;
+    QVector4D color;
+    QVector4D instanceData;
+};
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRenderNode
 {
     QSSGRenderInstanceTable() : QSSGRenderNode(QSSGRenderGraphObject::Type::ModelInstance) {}
@@ -61,12 +69,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRender
     int stride() const { return instanceStride; }
     bool hasTransparency() { return transparency; }
     void setHasTransparency( bool t) { transparency = t; }
+    void setDepthSorting(bool enable) { depthSorting = enable; }
+    bool isDepthSortingEnabled() { return depthSorting; }
 
 private:
     int instanceCount = 0;
     int instanceSerial = 0;
     uint instanceStride = 0;
     bool transparency = false;
+    bool depthSorting = false;
     QByteArray table;
 };
 

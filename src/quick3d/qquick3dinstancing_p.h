@@ -57,6 +57,7 @@ public:
     bool m_hasTransparency = false;
     bool m_instanceDataChanged = true;
     bool m_instanceCountOverrideChanged = false;
+    bool m_depthSorting = false;
 };
 
 class Q_QUICK3D_EXPORT QQuick3DInstanceListEntry : public QQuick3DObject

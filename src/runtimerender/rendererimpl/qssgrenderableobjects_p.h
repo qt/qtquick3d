@@ -323,7 +323,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
         Q_ASSERT(renderableFlags.isCustomMaterialMeshSubset());
         return static_cast<const QSSGRenderCustomMaterial &>(material);
     }
-    bool prepareInstancing(QSSGRhiContext *rhiCtx);
+    bool prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);

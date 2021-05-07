@@ -210,7 +210,36 @@ static inline void addDepthTextureBindings(QSSGRhiContext *rhiCtx,
     }
 }
 
-bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx)
+static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortData, const void *instances,
+                          int stride, int count, const QVector3D &cameraDirection)
+{
+    sortData.resize(count);
+    Q_ASSERT(stride == sizeof(QSSGRenderInstanceTableEntry));
+    // create sort data
+    {
+        const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
+        for (int i = 0; i < count; i++) {
+            const QVector3D pos = QVector3D(instance->row0.w(), instance->row1.w(), instance->row2.w());
+            sortData[i] = {QVector3D::dotProduct(pos, cameraDirection), i};
+            instance++;
+        }
+    }
+
+    // sort
+    std::sort(sortData.begin(), sortData.end(), [](const QSSGRhiSortData &a, const QSSGRhiSortData &b){
+        return a.d > b.d;
+    });
+
+    // copy instances
+    {
+        const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
+        QSSGRenderInstanceTableEntry *dest = reinterpret_cast<QSSGRenderInstanceTableEntry *>(sortedData.data());
+        for (auto &s : sortData)
+            *dest++ = instance[s.indexOrOffset];
+    }
+}
+
+bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection)
 {
     if (!modelContext.model.instancing() || instanceBuffer)
         return instanceBuffer;
@@ -218,7 +247,15 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx)
     QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
     qsizetype instanceBufferSize = table->dataSize();
     // Create or resize the instance buffer ### if (instanceData.owned)
-    bool updateInstanceBuffer = table->serial() != instanceData.serial;
+    bool sortingChanged = table->isDepthSortingEnabled() != instanceData.sorting;
+    bool cameraDirectionChanged = !qFuzzyCompare(instanceData.sortedCameraDirection, cameraDirection);
+    bool updateInstanceBuffer = table->serial() != instanceData.serial || sortingChanged || (cameraDirectionChanged && table->isDepthSortingEnabled());
+    if (sortingChanged && !table->isDepthSortingEnabled()) {
+        instanceData.sortedData.clear();
+        instanceData.sortData.clear();
+        instanceData.sortedCameraDirection = {};
+    }
+    instanceData.sorting = table->isDepthSortingEnabled();
     if (instanceData.buffer && instanceData.buffer->size() < instanceBufferSize) {
         updateInstanceBuffer = true;
         //                    qDebug() << "Resizing instance buffer";
@@ -232,7 +269,17 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx)
         instanceData.buffer->create();
     }
     if (updateInstanceBuffer) {
-        const void *data = table->constData();
+        const void *data = nullptr;
+        if (table->isDepthSortingEnabled()) {
+            QMatrix4x4 invGlobalTransform = modelContext.model.globalTransform.inverted();
+            instanceData.sortedData.resize(table->dataSize());
+            sortInstances(instanceData.sortedData, instanceData.sortData, table->constData(), table->stride(), table->count(),
+                          (invGlobalTransform * cameraDirection).normalized());
+            data = instanceData.sortedData.constData();
+            instanceData.sortedCameraDirection = cameraDirection;
+        } else {
+            data = table->constData();
+        }
         if (data) {
             QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
             rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
@@ -247,10 +294,10 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx)
     return instanceBuffer;
 }
 
-static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipelineState *ps, QSSGRhiContext *rhiCtx)
+static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipelineState *ps, QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection)
 {
     // TODO: non-static so it can be used from QSSGCustomMaterialSystem::rhiPrepareRenderable()?
-    const bool instancing = renderable->prepareInstancing(rhiCtx);
+    const bool instancing = renderable->prepareInstancing(rhiCtx, cameraDirection);
     int instanceBufferBinding = 0;
     if (instancing) {
         // set up new bindings for instanced buffers
@@ -301,7 +348,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             fillTargetBlend(&ps->targetBlend, subsetRenderable.defaultMaterial().blendMode);
 
             ps->ia = subsetRenderable.subset.rhi.ia;
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraDirection);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;
@@ -477,7 +524,7 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
         ps->ia = subsetRenderable.subset.rhi.ia;
 
-        int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx);
+        int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, layerData.cameraDirection);
         ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
         QSSGRhiShaderResourceBindingList bindings;
@@ -913,7 +960,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
             ps->shaderPipeline = shaderPipeline.data();
             ps->ia = subsetRenderable.subset.rhi.ia;
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraDirection);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;

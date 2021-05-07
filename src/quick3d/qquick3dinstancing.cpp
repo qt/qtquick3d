@@ -93,6 +93,32 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool Instancing::depthSorting
+
+    Holds the depth sorting enabled value for the instance table. When enabled, instances are sorted
+    and rendered from the furthest instance from the camera to the nearest i.e. back-to-front.
+    If disabled, which is the default, instances are rendered in the order they are specified in
+    the instance table.
+
+    \note The instances are only sorted against each other. Instances are not sorted against other
+    objects in the scene.
+    \note The sorting increases the frame preparation time especially with large instance counts.
+*/
+
+/*!
+    \property QQuick3DInstancing::depthSorting
+
+    Holds the depth sorting enabled value for the instance table. When enabled, instances are sorted
+    and rendered from the furthest instance from the camera to the nearest i.e. back-to-front.
+    If disabled, which is the default, instances are rendered in the order they are specified in
+    the instance table.
+
+    \note The instances are only sorted against each other. Instances are not sorted against other
+    objects in the scene.
+    \note The sorting increases the frame preparation time especially with large instance counts.
+*/
+
+/*!
     \class QQuick3DInstancing
     \inmodule QtQuick3D
     \inherits QQuick3DObject
@@ -151,6 +177,12 @@ bool QQuick3DInstancing::hasTransparency() const
     return d->m_hasTransparency;
 }
 
+bool QQuick3DInstancing::depthSorting() const
+{
+    Q_D(const QQuick3DInstancing);
+    return d->m_depthSorting;
+}
+
 void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
 {
     Q_D(QQuick3DInstancing);
@@ -172,6 +204,17 @@ void QQuick3DInstancing::setHasTransparency(bool hasTransparency)
     d->m_hasTransparency = hasTransparency;
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
     emit hasTransparencyChanged();
+}
+
+void QQuick3DInstancing::setDepthSorting(bool sorting)
+{
+    Q_D(QQuick3DInstancing);
+    if (d->m_depthSorting == sorting)
+        return;
+
+    d->m_depthSorting = sorting;
+    d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
+    emit depthSortingChanged();
 }
 
 void QQuick3DInstancing::markDirty()
@@ -206,6 +249,7 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
     }
     d->m_instanceCountOverrideChanged = false;
     instanceTable->setHasTransparency(d->m_hasTransparency);
+    instanceTable->setDepthSorting(d->m_depthSorting);
     return node;
 }
 
@@ -815,5 +859,9 @@ QByteArray QQuick3DFileInstancing::getInstanceBuffer(int *instanceCount)
         *instanceCount = m_instanceCount;
     return m_instanceData;
 }
+
+static_assert(sizeof(QQuick3DInstancing::InstanceTableEntry) == sizeof(QSSGRenderInstanceTableEntry)
+                && alignof(QQuick3DInstancing::InstanceTableEntry) == alignof(QSSGRenderInstanceTableEntry),
+              "QSSGRenderInstanceTableEntry and QQuick3DInstancing::InstanceTableEntry do not match");
 
 QT_END_NAMESPACE

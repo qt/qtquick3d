@@ -689,11 +689,21 @@ struct QSSGRhiDrawCallData
     }
 };
 
+struct QSSGRhiSortData
+{
+    float d = 0.0f;
+    int indexOrOffset = -1;
+};
+
 struct QSSGRhiInstanceBufferData
 {
     QRhiBuffer *buffer = nullptr;
+    QByteArray sortedData;
+    QList<QSSGRhiSortData> sortData;
+    QVector3D sortedCameraDirection;
     int serial = -1;
     bool owned = true;
+    bool sorting = false;
 };
 
 struct QSSGRhiParticleData
