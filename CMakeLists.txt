@@ -33,13 +33,33 @@ if(NOT TARGET Qt::Quick)
     return()
 endif()
 
-# special case begin
+
 if(NOT TARGET Qt::OpenGL)
     message(NOTICE "Skipping the build as the condition \"TARGET Qt::OpenGL\" is not met.")
     return()
 endif()
 
+# Set up QT_HOST_PATH as an extra root path to look for the ShaderToolsTools package
+# when cross-compiling.
+if(NOT "${QT_HOST_PATH}" STREQUAL "")
+     set(_qt_backup_qtshadertools_CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH})
+     set(_qt_backup_qtshadertools_CMAKE_FIND_ROOT_PATH ${CMAKE_FIND_ROOT_PATH})
+     list(PREPEND CMAKE_PREFIX_PATH "${QT_HOST_PATH_CMAKE_DIR}")
+     list(PREPEND CMAKE_FIND_ROOT_PATH "${QT_HOST_PATH}")
+endif()
+
+# This can't use the find_package(Qt6 COMPONENTS) signature, because Qt6Config uses NO_DEFAULT and
+# won't look at the prepend extra find root paths.
+find_package(Qt6ShaderToolsTools ${PROJECT_VERSION} QUIET CONFIG REQUIRED)
+
+if(NOT "${QT_HOST_PATH}" STREQUAL "")
+     set(CMAKE_PREFIX_PATH ${_qt_backup_qtshadertools_CMAKE_PREFIX_PATH})
+     set(CMAKE_FIND_ROOT_PATH ${_qt_backup_qtshadertools_CMAKE_FIND_ROOT_PATH})
+endif()
+
+# Look for the target ShaderTools package to have access to the ShaderTools Qt module library.
+# TODO: When the repo is ready, make it optional so the build doesn't fail to configure,
+# but rather certain features will simply be disabled.
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS ShaderTools)
-# special case end
 
 qt_build_repo()
