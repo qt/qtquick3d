@@ -553,7 +553,6 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
 void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS)
 {
-    bool semiTransparent = false;
     modelParticle->clearInstanceTable();
 
     const int c = modelParticle->maxAmount();
@@ -601,11 +600,7 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
         const QColor color(currentData.color.r, currentData.color.g, currentData.color.b, currentData.color.a);
         // Set current particle properties
         modelParticle->addInstance(currentData.position, currentData.scale, currentData.rotation, color);
-
-        if (currentData.color.a != 255)
-            semiTransparent = true;
     }
-    modelParticle->setHasTransparency(semiTransparent);
     modelParticle->commitInstance();
 }
 

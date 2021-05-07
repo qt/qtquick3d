@@ -355,6 +355,8 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const 
         particles->m_blendImages = true;
     }
 
+    particles->m_hasTransparency = hasTransparency();
+
     if (m_colorTable)
         particles->m_colorTable = m_colorTable->getRenderImage();
     else

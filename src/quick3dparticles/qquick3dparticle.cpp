@@ -40,6 +40,11 @@ QT_BEGIN_NAMESPACE
 
     This element defines the common properties of the logical particles.
     Particle3D is an abstract base class of particles, use \l ModelParticle3D or \l SpriteParticle3D instead.
+
+    \note Unlike the materials used with the models, particles default to being rendered with assuming
+    semi-transparency, and so with blending enabled. This is the desired behavior most of the time due
+    to particle textures, color (alpha) variations, fadings etc. If you don't need the blending,
+    set the \l hasTransparency to \c false for possible performance gains.
 */
 
 QQuick3DParticle::QQuick3DParticle(QQuick3DObject *parent)
@@ -365,6 +370,34 @@ QQuick3DParticle::AlignMode QQuick3DParticle::alignMode() const
 QVector3D QQuick3DParticle::alignTargetPosition() const
 {
     return m_alignTarget;
+}
+
+/*!
+    \qmlproperty bool Particle3D::hasTransparency
+    \since 6.2
+
+    This property defines if the particle has any transparency and should
+    be blended with the background. Usually this should be true, like when
+    the particle color doesn't have full alpha, texture contains semi-transparent
+    pixels or particles opacity is faded in or out. Setting this to false can be
+    an optimization in specific cases.
+
+    The default value is \c true.
+
+    \sa color, fadeInEffect, fadeOutEffect
+*/
+bool QQuick3DParticle::hasTransparency() const
+{
+    return m_hasTransparency;
+}
+
+void QQuick3DParticle::setHasTransparency(bool transparency)
+{
+    if (m_hasTransparency == transparency)
+        return;
+
+    m_hasTransparency = transparency;
+    Q_EMIT hasTransparencyChanged();
 }
 
 void QQuick3DParticle::setAlignMode(AlignMode alignMode)

@@ -144,14 +144,10 @@ void QQuick3DParticleModelParticle::addInstance(const QVector3D &position, const
 
 void QQuick3DParticleModelParticle::commitInstance()
 {
-    if (m_instanceTable)
+    if (m_instanceTable) {
+        m_instanceTable->setHasTransparency(hasTransparency());
         m_instanceTable->commit();
-}
-
-void QQuick3DParticleModelParticle::setHasTransparency(bool transparent)
-{
-    if (m_instanceTable)
-        m_instanceTable->setHasTransparency(transparent);
+    }
 }
 
 static void setInstancing(QQuick3DNode *node, QQuick3DInstancing *instanceTable, float bias)

@@ -1022,6 +1022,7 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
     renderableFlags.setHasAttributeNormal(true);
     renderableFlags.setHasAttributeTexCoord0(true);
     renderableFlags.setHasAttributeColor(true);
+    renderableFlags.setHasTransparency(inParticles.m_hasTransparency);
 
     float opacity = inParticles.globalOpacity * inParticles.m_diffuseColor.w();
     QVector3D center(inParticles.m_particleBuffer.bounds().center());
@@ -1048,8 +1049,6 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
                                                                               inParticles.m_sprite->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
         QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *inParticles.m_sprite, texture);
         firstImage = theImage;
-        if (texture.m_flags.hasTransparency())
-            renderableFlags.setHasTransparency(true);
     }
 
     QSSGRenderableImage *colorTable = nullptr;
@@ -1064,12 +1063,7 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
 
         QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *inParticles.m_colorTable, texture);
         colorTable = theImage;
-        if (texture.m_flags.hasTransparency())
-            renderableFlags.setHasTransparency(true);
     }
-
-    if (opacity < (1.0 - QSSG_RENDER_MINIMUM_RENDER_OPACITY))
-        renderableFlags.setHasTransparency(true);
 
     if (opacity > 0.0f && inParticles.m_particleBuffer.particleCount()) {
         auto *theRenderableObject = RENDER_FRAME_NEW<QSSGParticlesRenderable>(contextInterface,

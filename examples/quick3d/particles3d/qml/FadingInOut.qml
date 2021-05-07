@@ -100,8 +100,7 @@ Item {
                 color: "#ffffff"
                 fadeInEffect: ModelParticle3D.FadeNone
                 fadeOutEffect: ModelParticle3D.FadeNone
-                fadeInDuration: sliderFadeInDuration.sliderValue
-                fadeOutDuration: sliderFadeOutDuration.sliderValue
+                hasTransparency: false
             }
             ModelParticle3D {
                 id: particleOpacity

@@ -129,6 +129,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     float m_depthBias = 0.0f;
     bool m_blendImages = true;
     bool m_billboard = true;
+    bool m_hasTransparency = true;
     QSSGRenderImage *m_colorTable = nullptr;
     QSSGRenderParticles::FeatureLevel m_featureLevel = FeatureLevel::Simple;
 

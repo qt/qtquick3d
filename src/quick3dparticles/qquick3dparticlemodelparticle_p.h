@@ -101,7 +101,6 @@ private:
     void addInstance(const QVector3D &position, const QVector3D &scale,
                      const QVector3D &eulerRotation, const QColor &color);
     void commitInstance();
-    void setHasTransparency(bool transparent);
     void updateDepthBias(float bias);
 
     QPointer<QQmlComponent> m_delegate;
