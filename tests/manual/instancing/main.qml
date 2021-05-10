@@ -274,6 +274,13 @@ Window {
                 }
             }
         }
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            onTapped: {
+                customInstancing.depthSorting = !customInstancing.depthSorting
+                console.log("right clicked: switching depth sorting to", customInstancing.depthSorting)
+            }
+        }
     } // View3D
 
     DebugView {
