@@ -153,6 +153,8 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
 
     const QMatrix4x4 &localInstanceTransform(renderable.modelContext.model.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(renderable.modelContext.model.globalInstanceTransform);
+    const QMatrix4x4 &modelMatrix(!renderable.modelContext.model.skeleton ? renderable.globalTransform
+                                            : renderable.modelContext.model.skeleton->globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,
@@ -164,7 +166,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           camera,
                                                           mvp,
                                                           renderable.modelContext.normalMatrix,
-                                                          renderable.globalTransform,
+                                                          modelMatrix,
                                                           clipSpaceCorrMatrix,
                                                           localInstanceTransform,
                                                           globalInstanceTransform,

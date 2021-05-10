@@ -130,6 +130,8 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
 
     const QMatrix4x4 &localInstanceTransform(subsetRenderable.modelContext.model.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(subsetRenderable.modelContext.model.globalInstanceTransform);
+    const QMatrix4x4 &modelMatrix(!subsetRenderable.modelContext.model.skeleton ? subsetRenderable.globalTransform
+                                                : subsetRenderable.modelContext.model.skeleton->globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
                                                           shaderPipeline,
@@ -141,7 +143,7 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           camera,
                                                           mvp,
                                                           subsetRenderable.modelContext.normalMatrix,
-                                                          subsetRenderable.modelContext.model.globalTransform,
+                                                          modelMatrix,
                                                           clipSpaceCorrMatrix,
                                                           localInstanceTransform,
                                                           globalInstanceTransform,
