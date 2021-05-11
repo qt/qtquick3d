@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
+static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QMatrix4x4 &inverseRootM, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
         QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
@@ -61,12 +61,13 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
         // if user doesn't give the inverseBindPose, identity matrixes are used.
         if (poses.size() > jointNode->index)
             M *= poses[jointNode->index];
+        M = inverseRootM * M;
         modelNode->boneTransforms[jointNode->index] = M;
         QMatrix3x3 N = mat44::getUpper3x3(M);
         modelNode->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
     }
     for (auto &child : node->children)
-        collectBoneTransforms(&child, modelNode, poses);
+        collectBoneTransforms(&child, modelNode, inverseRootM, poses);
 }
 
 template<typename T, typename V>
@@ -109,8 +110,10 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                     modelNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
                     modelNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
                 }
+                skeletonNode->calculateGlobalVariables();
+                const QMatrix4x4 inverseRootM = skeletonNode->globalTransform.inverted();
                 for (auto &child : skeletonNode->children)
-                    collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
+                    collectBoneTransforms(&child, modelNode, inverseRootM, modelNode->inverseBindPoses);
             }
             const int numMorphTarget = modelNode->morphTargets.size();
             for (int i = 0; i < numMorphTarget; ++i) {
