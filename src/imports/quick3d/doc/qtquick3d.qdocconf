@@ -3,6 +3,7 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 project                 = QtQuick3D
 description             = Qt Quick 3D Reference Documentation
 version                 = $QT_VERSION
+buildversion            = Qt Quick 3D | Commercial or GPLv3
 
 examplesinstallpath     = quick3d
 
