@@ -43,7 +43,9 @@
 # include <QtGui/qopenglcontext.h>
 #endif
 
+#ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
 #include <QtShaderTools/private/qshaderbaker_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +84,7 @@ size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
     return retval;
 }
 
+#ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
 static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
@@ -126,6 +129,11 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     baker->setGeneratedShaders(outputs);
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
+#else
+static void initBaker(QShaderBaker *, QRhi::Implementation)
+{
+}
+#endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
 
 QSSGShaderCache::~QSSGShaderCache() {}
 
@@ -206,6 +214,7 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
                                                               const ShaderFeatureSetList &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
+#ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
     const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, inFeatures);
     if (rhiShaders)
         return rhiShaders;
@@ -285,6 +294,17 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 
     const auto inserted = m_rhiShaders.insert(tempKey, shaders);
     return inserted.value();
+
+#else
+    Q_UNUSED(inKey);
+    Q_UNUSED(inVert);
+    Q_UNUSED(inFrag);
+    Q_UNUSED(inFeatures);
+    Q_UNUSED(stageFlags);
+    qWarning("Cannot compile and condition shaders at runtime because this build of Qt Quick 3D is not linking to Qt Shader Tools. "
+             "Only pre-processed materials are supported.");
+    return {};
+#endif
 }
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry)

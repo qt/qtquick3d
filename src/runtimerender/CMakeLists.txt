@@ -67,7 +67,6 @@ qt_internal_add_module(Quick3DRuntimeRender
     LIBRARIES
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
-        Qt::ShaderToolsPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
@@ -77,7 +76,15 @@ qt_internal_add_module(Quick3DRuntimeRender
     PRIVATE_MODULE_INTERFACE
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
+)
+
+qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
+    LIBRARIES
         Qt::ShaderToolsPrivate
+    PRIVATE_MODULE_INTERFACE
+        Qt::ShaderToolsPrivate
+    DEFINES
+        QT_QUICK3D_HAS_RUNTIME_SHADERS
 )
 
 # Resources:

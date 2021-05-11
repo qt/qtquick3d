@@ -52,8 +52,8 @@ if(NOT "${QT_HOST_PATH}" STREQUAL "")
 endif()
 
 # Look for the target ShaderTools package to have access to the ShaderTools Qt module library.
-# TODO: When the repo is ready, make it optional so the build doesn't fail to configure,
-# but rather certain features will simply be disabled.
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS ShaderTools)
+# This is optional. When not present, runtime shader processing will not be available, and
+# only materials pre-generated with the shadergen tool will be functional.
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS ShaderTools)
 
 qt_build_repo()
