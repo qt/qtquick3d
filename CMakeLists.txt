@@ -33,12 +33,6 @@ if(NOT TARGET Qt::Quick)
     return()
 endif()
 
-
-if(NOT TARGET Qt::OpenGL)
-    message(NOTICE "Skipping the build as the condition \"TARGET Qt::OpenGL\" is not met.")
-    return()
-endif()
-
 # Set up QT_HOST_PATH as an extra root path to look for the ShaderToolsTools package
 # when cross-compiling.
 if(NOT "${QT_HOST_PATH}" STREQUAL "")
