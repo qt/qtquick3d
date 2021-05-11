@@ -52,12 +52,15 @@ void tst_QQuick3DParticleVectorDirection::testVectorDirection()
 
     QVERIFY(qFuzzyCompare(vectorDir->direction(), QVector3D(0.0f, 100.0f, 0.0f)));
     QVERIFY(qFuzzyCompare(vectorDir->directionVariation(), QVector3D()));
+    QVERIFY(vectorDir->normalized() == false);
 
     const QVector3D vecVal(100.0f, 200.0f, 300.0f);
     vectorDir->setDirection(vecVal);
     QVERIFY(qFuzzyCompare(vectorDir->direction(), vecVal));
     vectorDir->setDirectionVariation(vecVal);
     QVERIFY(qFuzzyCompare(vectorDir->directionVariation(), vecVal));
+    vectorDir->setNormalized(true);
+    QVERIFY(vectorDir->normalized() == true);
 
     delete vectorDir;
 }

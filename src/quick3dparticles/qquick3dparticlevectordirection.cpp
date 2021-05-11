@@ -91,6 +91,21 @@ QVector3D QQuick3DParticleVectorDirection::directionVariation() const
     return m_directionVariation;
 }
 
+/*!
+    \qmlproperty bool VectorDirection3D::normalized
+
+    This property defines if the direction should be normalized after applying the variation.
+    When this is false, variation affects the magnitude of the particles velocity.
+    When set to true, variation affects the direction, but the magnitude is determined
+    by the original direction length.
+
+    The default value is \c false.
+*/
+bool QQuick3DParticleVectorDirection::normalized() const
+{
+    return m_normalized;
+}
+
 void QQuick3DParticleVectorDirection::setDirection(const QVector3D &direction)
 {
     if (m_direction == direction)
@@ -109,6 +124,15 @@ void QQuick3DParticleVectorDirection::setDirectionVariation(const QVector3D &dir
     Q_EMIT directionVariationChanged();
 }
 
+void QQuick3DParticleVectorDirection::setNormalized(bool normalized)
+{
+    if (m_normalized == normalized)
+        return;
+
+    m_normalized = normalized;
+    Q_EMIT normalizedChanged();
+}
+
 QVector3D QQuick3DParticleVectorDirection::sample(const QQuick3DParticleData &d)
 {
     QVector3D ret;
@@ -118,6 +142,8 @@ QVector3D QQuick3DParticleVectorDirection::sample(const QQuick3DParticleData &d)
     ret.setX(m_direction.x() - m_directionVariation.x() + rand->get(d.index, QPRand::VDirXV) * m_directionVariation.x() * 2.0f);
     ret.setY(m_direction.y() - m_directionVariation.y() + rand->get(d.index, QPRand::VDirYV) * m_directionVariation.y() * 2.0f);
     ret.setZ(m_direction.z() - m_directionVariation.z() + rand->get(d.index, QPRand::VDirZV) * m_directionVariation.z() * 2.0f);
+    if (m_normalized)
+        ret = m_direction.length() * ret.normalized();
     return ret;
 }
 
