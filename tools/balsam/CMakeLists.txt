@@ -11,7 +11,6 @@ qt_internal_add_tool(${target_name}
         main.cpp
     PUBLIC_LIBRARIES
         Qt::Qml # special case
-        Qt::OpenGL # special case
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
         Qt::Quick3DIblBakerPrivate
