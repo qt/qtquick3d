@@ -838,7 +838,7 @@ QT_BEGIN_NAMESPACE
     \badcode
         SHARED_VARS {
             vec3 colorThreshold;
-        }
+        };
         void MAIN()
         {
             BASE_COLOR = texture(baseColorMap, UV0);
@@ -866,7 +866,7 @@ QT_BEGIN_NAMESPACE
             float sheenRoughness;
             vec3 sheenColor;
             vec3 outSheenColor;
-        }
+        };
         void MAIN()
         {
             ...
