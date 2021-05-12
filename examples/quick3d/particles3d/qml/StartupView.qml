@@ -89,6 +89,10 @@ Item {
             name: "Speedometer"
             file: "Speedometer.qml"
         }
+        ListElement {
+            name: "Sorting"
+            file: "Sorting.qml"
+        }
     }
 
     ListModel {

@@ -3,6 +3,7 @@
         <file>qml/Snowing.qml</file>
         <file>qml/CustomCheckBox.qml</file>
         <file>qml/CustomSlider.qml</file>
+        <file>qml/CustomSelectionBox.qml</file>
         <file>qml/main.qml</file>
         <file>qml/images/arrow_icon.png</file>
         <file>qml/ColorfulParticles.qml</file>
@@ -13,6 +14,7 @@
         <file>qml/FadingInOut.qml</file>
         <file>qml/EmitAndBurst.qml</file>
         <file>qml/QtLogoAnimation.qml</file>
+        <file>qml/Sorting.qml</file>
         <file>qml/images/star.png</file>
         <file>qml/images/qt_logo.png</file>
         <file>qml/images/smoke.png</file>
