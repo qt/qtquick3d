@@ -78,8 +78,8 @@ Window {
         }
 
         DirectionalLight {
-            eulerRotation: "-30, -20, 0"
-            ambientColor: "#777"
+            eulerRotation: "-30, -20, -40"
+            ambientColor: "#333"
         }
 
         PerspectiveCamera {
@@ -89,16 +89,55 @@ Window {
 
         function resetView() {
             camera.position = "0, 150, 400"
-            camera.eulerRotation = "0, 0, 0"
-            wheelHandler.factor = 1.0
+            camera.eulerRotation = "-15, 0, 0"
             import_node.eulerRotation = "0, 0, 0"
+            import_node.resetScale()
+            import_node.resetPosition()
         }
 
         RuntimeLoader {
-            property real sf: wheelHandler.factor * 10
+            property alias sf: wheelHandler.factor
             scale: Qt.vector3d(sf, sf, sf)
             id: import_node
             source: importUrl
+
+            property real boundsDiameter: 0
+            property vector3d boundsCenter
+            property vector3d boundsSize
+
+            function resetScale() {
+                wheelHandler.factor = boundsDiameter ? 300 / boundsDiameter : 1.0
+            }
+            function resetPosition() {
+                position = Qt.vector3d(-boundsCenter.x*sf, -boundsCenter.y*sf, -boundsCenter.z*sf)
+            }
+
+            onBoundsChanged: {
+                boundsSize = Qt.vector3d(bounds.maximum.x - bounds.minimum.x,
+                                         bounds.maximum.y - bounds.minimum.y,
+                                         bounds.maximum.z - bounds.minimum.z)
+                boundsDiameter = Math.max(boundsSize.x, boundsSize.y, boundsSize.z)
+                boundsCenter = Qt.vector3d((bounds.maximum.x + bounds.minimum.x) / 2,
+                                           (bounds.maximum.y + bounds.minimum.y) / 2,
+                                           (bounds.maximum.z + bounds.minimum.z) / 2 )
+                console.log("Bounds changed: ", bounds.minimum, bounds.maximum,
+                            " center:", boundsCenter, "diameter:", boundsDiameter)
+                view3D.resetView()
+            }
+
+            Model {
+                id: visualize_bounds
+                source: "#Cube"
+                materials: PrincipledMaterial {
+                    baseColor: "red"
+                }
+                opacity: 0.2
+                visible: visualizeButton.checked && import_node.status === RuntimeLoader.Success
+                position: import_node.boundsCenter
+                scale: Qt.vector3d(import_node.boundsSize.x / 100,
+                                   import_node.boundsSize.y / 100,
+                                   import_node.boundsSize.z / 100)
+            }
         }
 
         Rectangle {
@@ -124,7 +163,7 @@ Window {
 
     WheelHandler {
         id: wheelHandler
-        property real factor: 1.0
+        property real factor: 10.0
         onWheel: (event)=> {
             if (event.angleDelta.y > 0)
                 factor *= 1.1
@@ -164,7 +203,13 @@ Window {
         RoundButton {
             id: scaleButton
             text: "Scale: " + import_node.sf.toPrecision(3)
-            onClicked: wheelHandler.factor = 1
+            onClicked: import_node.resetScale()
+            focusPolicy: Qt.NoFocus
+        }
+        RoundButton {
+            id: visualizeButton
+            checkable: true
+            text: "Visualize bounds"
             focusPolicy: Qt.NoFocus
         }
     }

@@ -30,7 +30,7 @@
 #ifndef QQUICK3DRUNTIMELOADER_H
 #define QQUICK3DRUNTIMELOADER_H
 
-#include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dmodel_p.h>
 
 class QQuick3DRuntimeLoader : public QQuick3DNode
 {
@@ -41,6 +41,8 @@ class QQuick3DRuntimeLoader : public QQuick3DNode
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
+    Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
+
 public:
     QQuick3DRuntimeLoader();
 
@@ -52,18 +54,27 @@ public:
     Q_ENUM(Status)
     Status status() const;
     QString errorString() const;
+    const QQuick3DBounds3 &bounds() const;
 
 Q_SIGNALS:
     void sourceChanged();
     void statusChanged();
     void errorStringChanged();
+    void boundsChanged();
+
+protected:
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
+    void calculateBounds();
     void loadSource();
+
     QPointer<QQuick3DNode> m_imported;
     QUrl m_source;
     Status m_status = Status::Empty;
     QString m_errorString;
+    bool m_boundsDirty = false;
+    QQuick3DBounds3 m_bounds;
 };
 
 #endif // QQUICK3DRUNTIMELOADER_H

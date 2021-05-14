@@ -59,7 +59,7 @@
 /*!
     \qmlproperty enumeration QtQuick3D::RuntimeLoader::status
 
-    This read-only property holds the status of the latest load operation.
+    This property holds the status of the latest load operation.
 
     \value RuntimeLoader.Empty
         No URL was specified.
@@ -67,12 +67,26 @@
         The load operation was successful.
     \value RuntimeLoader.Error
         The load operation failed. A human-readable error message is provided by \l errorString.
+
+    \readonly
 */
 
 /*!
     \qmlproperty string QtQuick3D::RuntimeLoader::errorString
 
-    This read-only property holds a human-readable string indicating the status of the latest load operation.
+    This property holds a human-readable string indicating the status of the latest load operation.
+
+    \readonly
+*/
+
+/*!
+    \qmlproperty Bounds QtQuick3D::RuntimeLoader::bounds
+
+    This property describes the extents of the bounding volume around the imported model.
+
+    \note The value may not be available before the first render
+
+    \readonly
 */
 
 QQuick3DRuntimeLoader::QQuick3DRuntimeLoader()
@@ -99,6 +113,27 @@ void QQuick3DRuntimeLoader::componentComplete()
 {
     QQuick3DNode::componentComplete();
     loadSource();
+}
+
+static void boxBoundsRecursive(const QQuick3DNode *baseNode, const QQuick3DNode *node, QQuick3DBounds3 &accBounds)
+{
+    if (!node)
+        return;
+
+    if (auto *model = qobject_cast<const QQuick3DModel *>(node)) {
+        auto b = model->bounds();
+        QSSGBounds2BoxPoints corners;
+        b.bounds.expand(corners);
+        for (const auto &point : corners) {
+            auto p = model->mapPositionToNode(const_cast<QQuick3DNode *>(baseNode), point);
+            if (Q_UNLIKELY(accBounds.bounds.isEmpty()))
+                accBounds.bounds = { p, p };
+            else
+                accBounds.bounds.include(p);
+        }
+    }
+    for (auto *child : node->childItems())
+        boxBoundsRecursive(baseNode, qobject_cast<const QQuick3DNode *>(child), accBounds);
 }
 
 void QQuick3DRuntimeLoader::loadSource()
@@ -144,6 +179,7 @@ void QQuick3DRuntimeLoader::loadSource()
     }
 
     m_imported = importManager.importScene(*this, scene);
+    m_boundsDirty = true;
 }
 
 QQuick3DRuntimeLoader::Status QQuick3DRuntimeLoader::status() const
@@ -154,4 +190,33 @@ QQuick3DRuntimeLoader::Status QQuick3DRuntimeLoader::status() const
 QString QQuick3DRuntimeLoader::errorString() const
 {
     return m_errorString;
+}
+
+QSSGRenderGraphObject *QQuick3DRuntimeLoader::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    auto *result = QQuick3DNode::updateSpatialNode(node);
+    if (m_boundsDirty)
+        QMetaObject::invokeMethod(this, &QQuick3DRuntimeLoader::boundsChanged, Qt::QueuedConnection);
+    return result;
+}
+
+void QQuick3DRuntimeLoader::calculateBounds()
+{
+    if (!m_imported || !m_boundsDirty)
+        return;
+
+    m_bounds.bounds.setEmpty();
+    boxBoundsRecursive(m_imported, m_imported, m_bounds);
+    m_boundsDirty = false;
+}
+
+const QQuick3DBounds3 &QQuick3DRuntimeLoader::bounds() const
+{
+    if (m_boundsDirty) {
+        auto *that = const_cast<QQuick3DRuntimeLoader *>(this);
+        that->calculateBounds();
+        return that->m_bounds;
+    }
+
+    return m_bounds;
 }
