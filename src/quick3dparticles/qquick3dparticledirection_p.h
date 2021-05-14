@@ -56,7 +56,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDirection : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleDirection(QObject *parent = nullptr);

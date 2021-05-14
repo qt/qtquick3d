@@ -85,7 +85,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystem : public QQuick3DNode
     Q_PROPERTY(bool logging READ logging WRITE setLogging NOTIFY loggingChanged)
     Q_PROPERTY(QQuick3DParticleSystemLogging *loggingData READ loggingData NOTIFY loggingDataChanged)
     QML_NAMED_ELEMENT(ParticleSystem3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleSystem(QQuick3DNode *parent = nullptr);

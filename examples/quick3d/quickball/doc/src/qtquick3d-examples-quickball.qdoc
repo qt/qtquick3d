@@ -133,7 +133,7 @@
     \image quickball-world.png
 
     Finally we add some sparkles for the targets, this time using the
-    \l {Qt Quick 3D Particles3D QML Types (Technology Preview)}{QtQuick3D.Particles3D}
+    \l {Qt Quick 3D Particles3D QML Types}{QtQuick3D.Particles3D}
     module. \l ParticleSystem3D contains a \l SpriteParticle3D and we allocate \c 200
     or them, which is enough for two simultaneous \c 100 particle bursts.
     \l ParticleEmitter3D defines the emitting properties for the particles like scale,

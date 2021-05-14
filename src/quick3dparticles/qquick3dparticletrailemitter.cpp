@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits ParticleEmitter3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Emitter for logical particles from other particles.
-    \since 6.1
+    \since 6.2
 
     TrailEmitter3D is a special emitter for emitting particles with starting positions inherited from
     other logical particles.

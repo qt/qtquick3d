@@ -64,8 +64,6 @@ import QtQuick3D.Helpers
 
 \section1 QtQuick3D.Particles3D QML Types
 
-\note This module is still in development and is provided as a technology preview.
-
 Import the QtQuick3D.Particles3D module with the following statement:
 
 \code

@@ -54,7 +54,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleTrailEmitter : public QQuick3DPa
     Q_OBJECT
     Q_PROPERTY(QQuick3DParticle *follow READ follow WRITE setFollow NOTIFY followChanged)
     QML_NAMED_ELEMENT(TrailEmitter3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleTrailEmitter(QQuick3DNode *parent = nullptr);

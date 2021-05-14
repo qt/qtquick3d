@@ -52,7 +52,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleGravity : public QQuick3DParticl
     Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
     QML_NAMED_ELEMENT(Gravity3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleGravity(QQuick3DNode *parent = nullptr);

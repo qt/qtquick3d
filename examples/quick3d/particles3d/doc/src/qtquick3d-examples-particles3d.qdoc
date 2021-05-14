@@ -33,7 +33,7 @@
     \image particles3d-testbed.jpg
 
     This example demonstrates different ways to use the
-    \l{Qt Quick 3D Particles3D QML Types (Technology Preview)}{QtQuick3D.Particles3D}
+    \l{Qt Quick 3D Particles3D QML Types}{QtQuick3D.Particles3D}
     module features. Particles Testbed contains a collection of examples, some emphasizing a
     particular feature and some combining more features for achieving the desired appearance.
 
@@ -56,12 +56,12 @@
 
     \section1 Snowing Example
 
-    Let's go through the basics of \l{Qt Quick 3D Particles3D QML Types (Technology Preview)}
+    Let's go through the basics of \l{Qt Quick 3D Particles3D QML Types}
     {Particles3D} by looking at the Snowing example.
 
     \image particles3d-snowing.jpg
 
-    First, import the \l{Qt Quick 3D Particles3D QML Types (Technology Preview)}
+    First, import the \l{Qt Quick 3D Particles3D QML Types}
     {QtQuick3D.Particles3D} module with the following statement:
 
     \code

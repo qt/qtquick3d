@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits Affector3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Accelerates particles to a vector of the specified magnitude in the specified direction.
-    \since 6.1
+    \since 6.2
 
     This element models the gravity of a massive object whose center of gravity is far away (and thus the
     gravitational pull is effectively constant across the scene). To model the gravity of an object near

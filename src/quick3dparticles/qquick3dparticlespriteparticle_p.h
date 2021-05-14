@@ -56,12 +56,12 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_OBJECT
     Q_PROPERTY(BlendMode blendMode READ blendMode WRITE setBlendMode NOTIFY blendModeChanged)
     Q_PROPERTY(QQuick3DTexture *sprite READ sprite WRITE setSprite NOTIFY spriteChanged)
-    Q_PROPERTY(QQuick3DParticleSpriteSequence *spriteSequence READ spriteSequence WRITE setSpriteSequence NOTIFY spriteSequenceChanged REVISION(6, 2))
+    Q_PROPERTY(QQuick3DParticleSpriteSequence *spriteSequence READ spriteSequence WRITE setSpriteSequence NOTIFY spriteSequenceChanged)
     Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(QQuick3DTexture *colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
     QML_NAMED_ELEMENT(SpriteParticle3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     enum BlendMode { SourceOver = 0, Screen, Multiply };
@@ -79,7 +79,7 @@ public:
 
     BlendMode blendMode() const;
     QQuick3DTexture *sprite() const;
-    Q_REVISION(6, 2) QQuick3DParticleSpriteSequence *spriteSequence() const;
+    QQuick3DParticleSpriteSequence *spriteSequence() const;
     bool billboard() const;
     float particleScale() const;
     QQuick3DTexture *colorTable() const;
@@ -87,7 +87,7 @@ public:
 public Q_SLOTS:
     void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
     void setSprite(QQuick3DTexture *sprite);
-    Q_REVISION(6, 2) void setSpriteSequence(QQuick3DParticleSpriteSequence *spriteSequence);
+    void setSpriteSequence(QQuick3DParticleSpriteSequence *spriteSequence);
     void setBillboard(bool billboard);
     void setParticleScale(float scale);
     void setColorTable(QQuick3DTexture *colorTable);
@@ -95,7 +95,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void blendModeChanged();
     void spriteChanged();
-    Q_REVISION(6, 2) void spriteSequenceChanged();
+    void spriteSequenceChanged();
     void billboardChanged();
     void particleScaleChanged();
     void colorTableChanged();

@@ -64,10 +64,10 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticle : public QQuick3DObject
     Q_PROPERTY(int fadeOutDuration READ fadeOutDuration WRITE setFadeOutDuration NOTIFY fadeOutDurationChanged)
     Q_PROPERTY(AlignMode alignMode READ alignMode WRITE setAlignMode NOTIFY alignModeChanged)
     Q_PROPERTY(QVector3D alignTargetPosition READ alignTargetPosition WRITE setAlignTargetPosition NOTIFY alignTargetPositionChanged)
-    Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged REVISION(6, 2))
+    Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
     QML_NAMED_ELEMENT(Particle3D)
     QML_UNCREATABLE("Particle3D is abstract")
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticle(QQuick3DObject *parent = nullptr);
@@ -100,7 +100,7 @@ public:
     int fadeOutDuration() const;
     AlignMode alignMode() const;
     QVector3D alignTargetPosition() const;
-    Q_REVISION(6, 2) bool hasTransparency() const;
+    bool hasTransparency() const;
 
     float opacity() const;
     void resetColor();
@@ -117,7 +117,7 @@ public Q_SLOTS:
     void setFadeOutDuration(int fadeOutDuration);
     void setAlignMode(AlignMode alignMode);
     void setAlignTargetPosition(const QVector3D &alignPosition);
-    Q_REVISION(6, 2) void setHasTransparency(bool transparency);
+    void setHasTransparency(bool transparency);
 
 Q_SIGNALS:
     void systemChanged();
@@ -131,7 +131,7 @@ Q_SIGNALS:
     void fadeOutDurationChanged();
     void alignModeChanged();
     void alignTargetPositionChanged();
-    Q_REVISION(6, 2) void hasTransparencyChanged();
+    void hasTransparencyChanged();
 
 protected:
     // From QQmlParserStatus

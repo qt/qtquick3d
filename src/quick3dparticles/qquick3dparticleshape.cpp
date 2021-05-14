@@ -39,7 +39,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \inqmlmodule QtQuick3D.Particles3D
     \brief Offers 3D shapes for emitters and affectors.
-    \since 6.1
+    \since 6.2
 
     The ParticleShape3D element supports shapes like \c Cube, \c Sphere and \c Cylinder for particles needs.
     For example, emitter can use \l {ParticleEmitter3D::shape}{shape} property to emit particles from the

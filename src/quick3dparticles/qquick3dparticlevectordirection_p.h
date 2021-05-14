@@ -51,26 +51,26 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleVectorDirection : public QQuick3
     Q_OBJECT
     Q_PROPERTY(QVector3D direction READ direction WRITE setDirection NOTIFY directionChanged)
     Q_PROPERTY(QVector3D directionVariation READ directionVariation WRITE setDirectionVariation NOTIFY directionVariationChanged)
-    Q_PROPERTY(bool normalized READ normalized WRITE setNormalized NOTIFY normalizedChanged REVISION(6, 2))
+    Q_PROPERTY(bool normalized READ normalized WRITE setNormalized NOTIFY normalizedChanged)
     QML_NAMED_ELEMENT(VectorDirection3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleVectorDirection(QObject *parent = nullptr);
 
     QVector3D direction() const;
     QVector3D directionVariation() const;
-    Q_REVISION(6, 2) bool normalized() const;
+    bool normalized() const;
 
 public Q_SLOTS:
     void setDirection(const QVector3D &direction);
     void setDirectionVariation(const QVector3D &directionVariation);
-    Q_REVISION(6, 2) void setNormalized(bool normalized);
+    void setNormalized(bool normalized);
 
 Q_SIGNALS:
     void directionChanged();
     void directionVariationChanged();
-    Q_REVISION(6, 2) void normalizedChanged();
+    void normalizedChanged();
 
 private:
     QVector3D sample(const QQuick3DParticleData &d) override;

@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \inqmlmodule QtQuick3D.Particles3D
     \brief Directions assign velocity for the emitted particles.
-    \since 6.1
+    \since 6.2
 
     The Direction3D is an abstract base class of directions like \l TargetDirection3D and \l VectorDirection3D.
 */

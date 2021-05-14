@@ -65,7 +65,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelParticle : public QQuick3DP
 
     QML_NAMED_ELEMENT(ModelParticle3D)
     Q_CLASSINFO("DefaultProperty", "delegate")
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleModelParticle(QQuick3DNode *parent = nullptr);

@@ -58,7 +58,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSystemLogging : public QObject
     Q_PROPERTY(float time READ time NOTIFY timeChanged)
     Q_PROPERTY(float timeAverage READ timeAverage NOTIFY timeAverageChanged)
     QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleSystemLogging(QObject *parent = nullptr);

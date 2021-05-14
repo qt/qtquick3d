@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     \inherits Particle3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Particle using a 2D sprite texture.
-    \since 6.1
+    \since 6.2
 
     The SpriteParticle3D is a logical particle element that creates particles
     from a 2D sprite texture.
@@ -125,7 +125,6 @@ QQuick3DTexture *QQuick3DParticleSpriteParticle::sprite() const
 
 /*!
     \qmlproperty SpriteSequence3D SpriteParticle3D::spriteSequence
-    \since 6.2
 
     This property defines the sprite sequence properties for the particle.
     If the \l sprite texture contains a frame sequence, set this property

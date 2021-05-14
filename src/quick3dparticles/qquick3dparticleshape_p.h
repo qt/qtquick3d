@@ -60,7 +60,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QObject, public Q
 
     QML_NAMED_ELEMENT(ParticleShape3D)
     Q_INTERFACES(QQmlParserStatus)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     enum ShapeType

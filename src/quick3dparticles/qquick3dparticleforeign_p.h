@@ -53,7 +53,7 @@ struct QQuick3DNodeForeign
     Q_GADGET
     QML_ANONYMOUS
     QML_FOREIGN(QQuick3DNode)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 };
 
 QT_END_NAMESPACE

@@ -27,10 +27,8 @@
 
 /*!
     \qmlmodule QtQuick3D.Particles3D
-    \title Qt Quick 3D Particles3D QML Types (Technology Preview)
+    \title Qt Quick 3D Particles3D QML Types
     \brief Module containing Particles for the Qt Quick 3D.
 
     This module provides particles using \l{Qt Quick 3D}.
-
-    \note This module is still in development and is provided as a technology preview.
 */

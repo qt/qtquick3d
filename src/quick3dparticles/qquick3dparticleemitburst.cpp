@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
     \inherits QtObject
     \inqmlmodule QtQuick3D.Particles3D
     \brief Declarative emitter bursts.
-    \since 6.1
+    \since 6.2
 
     This element defines particle bursts in the \l ParticleEmitter3D.
 

@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
     \inherits Affector3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Attracts particles towards a position or a shape.
-    \since 6.1
+    \since 6.2
 
     This element attracts particles towards a position inside the 3D view. To model
     the gravity of a massive object whose center of gravity is far away, use \l Gravity3D.

@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     \inherits Object3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Abstract logical particle.
-    \since 6.1
+    \since 6.2
 
     This element defines the common properties of the logical particles.
     Particle3D is an abstract base class of particles, use \l ModelParticle3D or \l SpriteParticle3D instead.
@@ -374,7 +374,6 @@ QVector3D QQuick3DParticle::alignTargetPosition() const
 
 /*!
     \qmlproperty bool Particle3D::hasTransparency
-    \since 6.2
 
     This property defines if the particle has any transparency and should
     be blended with the background. Usually this should be true, like when

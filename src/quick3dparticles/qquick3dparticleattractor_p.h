@@ -57,7 +57,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAttractor : public QQuick3DParti
     Q_PROPERTY(bool useCachedPositions READ useCachedPositions WRITE setUseCachedPositions NOTIFY useCachedPositionsChanged)
     Q_PROPERTY(int positionsAmount READ positionsAmount WRITE setPositionsAmount NOTIFY positionsAmountChanged)
     QML_NAMED_ELEMENT(Attractor3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleAttractor(QQuick3DNode *parent = nullptr);

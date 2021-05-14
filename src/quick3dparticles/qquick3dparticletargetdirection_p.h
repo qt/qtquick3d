@@ -57,7 +57,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleTargetDirection : public QQuick3
     Q_PROPERTY(float magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(float magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeChangedVariation)
     QML_NAMED_ELEMENT(TargetDirection3D)
-    QML_ADDED_IN_VERSION(6, 1)
+    QML_ADDED_IN_VERSION(6, 2)
 
 public:
     QQuick3DParticleTargetDirection(QObject *parent = nullptr);
