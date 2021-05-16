@@ -31,6 +31,7 @@
 #define QQUICK3DRUNTIMELOADER_H
 
 #include <QtQuick3D/private/qquick3dmodel_p.h>
+#include <QtQuick3D/private/qquick3dinstancing_p.h>
 
 class QQuick3DRuntimeLoader : public QQuick3DNode
 {
@@ -42,6 +43,7 @@ class QQuick3DRuntimeLoader : public QQuick3DNode
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
+    Q_PROPERTY(QQuick3DInstancing *instancing READ instancing WRITE setInstancing NOTIFY instancingChanged)
 
 public:
     QQuick3DRuntimeLoader();
@@ -56,11 +58,15 @@ public:
     QString errorString() const;
     const QQuick3DBounds3 &bounds() const;
 
+    QQuick3DInstancing *instancing() const;
+    void setInstancing(QQuick3DInstancing *newInstancing);
+
 Q_SIGNALS:
     void sourceChanged();
     void statusChanged();
     void errorStringChanged();
     void boundsChanged();
+    void instancingChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -68,6 +74,7 @@ protected:
 private:
     void calculateBounds();
     void loadSource();
+    void updateModels();
 
     QPointer<QQuick3DNode> m_imported;
     QUrl m_source;
@@ -75,6 +82,8 @@ private:
     QString m_errorString;
     bool m_boundsDirty = false;
     QQuick3DBounds3 m_bounds;
+    QQuick3DInstancing *m_instancing;
+    bool m_instancingChanged = false;
 };
 
 #endif // QQUICK3DRUNTIMELOADER_H

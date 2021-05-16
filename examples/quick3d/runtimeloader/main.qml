@@ -95,11 +95,23 @@ Window {
             import_node.resetPosition()
         }
 
+        RandomInstancing {
+            id: instaTest
+            instanceCount: 30
+            position: InstanceRange {
+                property alias d: import_node.boundsDiameter
+                from: Qt.vector3d(-3*d, -3*d, -3*d);
+                to: Qt.vector3d(3*d, 3*d, 3*d)
+            }
+            color: InstanceRange { from: "black"; to: "white" }
+        }
+
         RuntimeLoader {
             property alias sf: wheelHandler.factor
             scale: Qt.vector3d(sf, sf, sf)
             id: import_node
             source: importUrl
+            instancing: instancingButton.checked ? instaTest : null
 
             property real boundsDiameter: 0
             property vector3d boundsCenter
@@ -210,6 +222,12 @@ Window {
             id: visualizeButton
             checkable: true
             text: "Visualize bounds"
+            focusPolicy: Qt.NoFocus
+        }
+        RoundButton {
+            id: instancingButton
+            checkable: true
+            text: "Instancing"
             focusPolicy: Qt.NoFocus
         }
     }

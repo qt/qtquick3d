@@ -53,6 +53,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
+#include <QtQuick3D/qquick3d.h>
 
 int main(int argc, char *argv[])
 {
@@ -69,9 +70,10 @@ int main(int argc, char *argv[])
     if (importUrl.isValid())
         qDebug() << "Importing" << importUrl;
 
+    QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
+
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
-
     engine.load(url);
 
     if (engine.rootObjects().isEmpty()) {

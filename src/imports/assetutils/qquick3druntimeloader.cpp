@@ -89,6 +89,15 @@
     \readonly
 */
 
+/*!
+    \qmlproperty QtQuick3D::Instancing QtQuick3D::RuntimeLoader::instancing
+
+    If this property is set, the imported model will not be rendered normally. Instead, a number of
+    instances will be rendered, as defined by the instance table.
+
+    See the \l{Instanced Rendering} overview documentation for more information.
+*/
+
 QQuick3DRuntimeLoader::QQuick3DRuntimeLoader()
 {
 }
@@ -136,6 +145,18 @@ static void boxBoundsRecursive(const QQuick3DNode *baseNode, const QQuick3DNode 
         boxBoundsRecursive(baseNode, qobject_cast<const QQuick3DNode *>(child), accBounds);
 }
 
+template<typename Func>
+static void applyToModels(QQuick3DObject *obj, Func &&lambda)
+{
+    if (!obj)
+        return;
+    for (auto *child : obj->childItems()) {
+        if (auto *model = qobject_cast<QQuick3DModel *>(child))
+            lambda(model);
+        applyToModels(child, lambda);
+    }
+}
+
 void QQuick3DRuntimeLoader::loadSource()
 {
     delete m_imported;
@@ -180,6 +201,19 @@ void QQuick3DRuntimeLoader::loadSource()
 
     m_imported = importManager.importScene(*this, scene);
     m_boundsDirty = true;
+    m_instancingChanged = m_instancing != nullptr;
+    updateModels();
+}
+
+void QQuick3DRuntimeLoader::updateModels()
+{
+    if (m_instancingChanged) {
+        applyToModels(m_imported, [this](QQuick3DModel *model) {
+            model->setInstancing(m_instancing);
+            model->setInstanceRoot(m_imported);
+        });
+        m_instancingChanged = false;
+    }
 }
 
 QQuick3DRuntimeLoader::Status QQuick3DRuntimeLoader::status() const
@@ -219,4 +253,19 @@ const QQuick3DBounds3 &QQuick3DRuntimeLoader::bounds() const
     }
 
     return m_bounds;
+}
+
+QQuick3DInstancing *QQuick3DRuntimeLoader::instancing() const
+{
+    return m_instancing;
+}
+
+void QQuick3DRuntimeLoader::setInstancing(QQuick3DInstancing *newInstancing)
+{
+    if (m_instancing == newInstancing)
+        return;
+    m_instancing = newInstancing;
+    m_instancingChanged = true;
+    updateModels();
+    emit instancingChanged();
 }
