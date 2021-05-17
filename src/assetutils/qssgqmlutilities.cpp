@@ -498,6 +498,18 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Image>();
     case RuntimeType::TextureData:
         return qmlElementName<RuntimeType::TextureData>();
+    case RuntimeType::Model:
+        return qmlElementName<RuntimeType::Model>();
+    case RuntimeType::OrthographicCamera:
+        return qmlElementName<RuntimeType::OrthographicCamera>();
+    case RuntimeType::PerspectiveCamera:
+        return qmlElementName<RuntimeType::PerspectiveCamera>();
+    case RuntimeType::DirectionalLight:
+        return qmlElementName<RuntimeType::DirectionalLight>();
+    case RuntimeType::PointLight:
+        return qmlElementName<RuntimeType::PointLight>();
+    case RuntimeType::SpotLight:
+        return qmlElementName<RuntimeType::SpotLight>();
     default:
         return "UNKNOWN_TYPE";
     }
@@ -829,8 +841,7 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
 
     QSSGQmlScopedIndent scopedIndent(output);
 
-    if (output.type == OutputContext::Resource || output.type == OutputContext::RootNode)
-        indent(output) << "id: " << getIdForNode(node) << "\n";
+    indent(output) << "id: " << getIdForNode(node) << "\n";
 
     const auto &properties = node.properties;
     auto it = properties.begin();
@@ -1061,7 +1072,7 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
     }
 
     for (const auto &cld : node.children) {
-        if (cld.id == 0 && output.type == OutputContext::NodeTree) {
+        if (!QSSGRenderGraphObject::isResource(cld.runtimeType) && output.type == OutputContext::NodeTree) {
             QSSGQmlScopedIndent scopedIndent(output);
             writeQmlForNode(cld, output);
         }
@@ -1104,7 +1115,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     writeQmlForResources(scene.resources, output);
     output.type = OutputContext::NodeTree;
     for (const auto &cld : root->children) {
-        if (cld.id == 0) // If the child has an id (resource) we can skip it
+        if (!QSSGRenderGraphObject::isResource(cld.runtimeType)) // If the child is a resource we can skip it
             writeQmlForNode(cld, output);
     }
     // close the root
