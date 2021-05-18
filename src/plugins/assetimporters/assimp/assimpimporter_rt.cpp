@@ -946,10 +946,10 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     // Remove primitives that are not Triangles
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
-    // TODO: Right now we don't do any extra processing...
-    auto m_postProcessSteps = aiPostProcessSteps(0);
+    // Note: We do not do any post processing for runtime assets...
+    const auto postProcessSteps = aiPostProcessSteps(0);
 
-    auto sourceScene = importer->ReadFile(filePath.toStdString(), m_postProcessSteps);
+    auto sourceScene = importer->ReadFile(filePath.toStdString(), postProcessSteps);
     if (!sourceScene) {
         // Scene failed to load, use logger to get the reason
         return QString::fromLocal8Bit(importer->GetErrorString());
