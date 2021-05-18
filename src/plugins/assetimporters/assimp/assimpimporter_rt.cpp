@@ -1112,6 +1112,7 @@ GraphObjectType *createRuntimeObject(NodeType &node, QQuick3DObject &parent)
         obj->setParent(&parent);
         obj->setParentItem(&parent);
     }
+    Q_ASSERT(obj == node.obj);
 
     return obj;
 }
