@@ -95,6 +95,7 @@ struct Scene
     ResourceNodes resources;
     Allocator allocator;
     MeshStorage meshStorage;
+    mutable quint16 nodeId = 0;
 
     template<typename T, typename... Args>
     Q_REQUIRED_RESULT inline T *create(Args&&... args)

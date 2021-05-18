@@ -1088,12 +1088,8 @@ void writeQmlForResources(const QSSGSceneDesc::Scene::ResourceNodes &resources, 
 
         return false;
     });
-    decltype (QSSGSceneDesc::Node::id) id = 0;
-    for (const auto &res : qAsConst(sortedResources)) {
-        Q_ASSERT(res->id == 0);
-        res->id = ++id;
+    for (const auto &res : qAsConst(sortedResources))
         writeQmlForResourceNode(*res, output);
-    }
 }
 
 void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir)

@@ -34,10 +34,17 @@ QT_BEGIN_NAMESPACE
 bool QSSGSceneDesc::PropertyCall::set(QQuick3DObject &, const void *) { return false; }
 bool QSSGSceneDesc::PropertyCall::get(const QQuick3DObject &, const void *[]) const { return false; }
 
+static inline quint16 getNextNodeId(QSSGSceneDesc::Scene &scene)
+{
+    /* root node uses the default value 0 */
+    return ++scene.nodeId;
+}
+
 void QSSGSceneDesc::addNode(QSSGSceneDesc::Node &parent, QSSGSceneDesc::Node &node)
 {
     Q_ASSERT(parent.scene);
     node.scene = parent.scene;
+    node.id = getNextNodeId(*parent.scene);
 
     if (QSSGRenderGraphObject::isResource(node.runtimeType) || node.nodeType == Node::Type::Mesh || node.nodeType == Node::Type::Skeleton)
         node.scene->resources.push_back(&node);
@@ -50,6 +57,7 @@ void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &no
     if (scene.root) {
         addNode(*scene.root, node);
     } else {
+        Q_ASSERT(node.id == 0);
         node.scene = &scene;
         scene.root = &node;
     }
@@ -57,6 +65,7 @@ void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &no
 
 void QSSGSceneDesc::Scene::reset()
 {
+    nodeId = 0;
     root = nullptr;
     resources.clear();
     meshStorage.clear();
