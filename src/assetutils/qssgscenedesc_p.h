@@ -157,10 +157,14 @@ struct Node
     // Runtime type type mapping between this type and the QtQuick3D type
     using RuntimeType = QSSGRenderGraphObject::Type;
 
-    explicit Node(Node::Type type, Node::RuntimeType rt)
-        : runtimeType(rt)
+    explicit Node(QByteArrayView name, Node::Type type, Node::RuntimeType rt)
+        : name(name)
+        , runtimeType(rt)
         , nodeType(type) {}
+    explicit Node(Node::Type type, Node::RuntimeType rt)
+        : Node(nullptr, type, rt) {}
 
+    QByteArrayView name;
     Scene *scene = nullptr;
     QObject *obj = nullptr;
     Node *next = nullptr;
@@ -209,11 +213,9 @@ struct Material : Node
 struct Mesh : Node
 {
     explicit Mesh(QByteArrayView name, qsizetype index)
-        : Node(Node::Type::Mesh, RuntimeType::Node)
-        , name(name)
+        : Node(name, Node::Type::Mesh, RuntimeType::Node)
         , idx(index)
     {}
-    QByteArrayView name;
     qsizetype idx; // idx to the mesh data in the mesh data storage (see Scene).
 };
 

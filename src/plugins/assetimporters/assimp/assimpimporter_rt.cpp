@@ -183,6 +183,10 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
                               aiMatrix4x4 *transformCorrection,
                               bool skipScaling)
 {
+    // objectName
+    if (target.name.isNull())
+        target.name = fromAiString(target.scene->allocator, source.mName);
+
     const aiMatrix4x4 &transformMatrix = source.mTransformation;
 
     // Decompose Transform Matrix to get properties

@@ -505,7 +505,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
 
 static QString getIdForNode(const QSSGSceneDesc::Node &node)
 {
-    QString name = QString::fromLatin1(getQmlElementName(node));
+    const QString name = (!node.name.isNull()) ? QSSGQmlUtilities::sanitizeQmlId(QString::fromUtf8(node.name))
+                                               : QString::fromLatin1(getQmlElementName(node));
     return QStringLiteral("_q%1_%2").arg(name).arg(node.id);
 }
 
