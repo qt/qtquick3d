@@ -42,11 +42,11 @@ set(qml_resource_files
     "images/ball_n.jpg"
     "images/grass.jpg"
     "images/grass_n.jpg"
+    "images/particle.png"
     "images/qt_logo.jpg"
     "images/qt_logo_n.jpg"
     "images/quickball.png"
     "images/sky.jpg"
-    "images/particle.png"
     "main.qml"
 )
 
