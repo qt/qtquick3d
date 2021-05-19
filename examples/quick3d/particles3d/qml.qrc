@@ -56,5 +56,11 @@
         <file>qml/meshes/oldqtlogo.mesh</file>
         <file>qml/ModelShape.qml</file>
         <file>qml/meshes/suzanne.mesh</file>
+        <file>qml/EmitterCustomShapes.qml</file>
+        <file>qml/images/color_table4.png</file>
+        <file>qml/images/color_table5.png</file>
+        <file>qml/data/qt_logo_in_4096.cbor</file>
+        <file>qml/data/qt_logo_out_4096.cbor</file>
+        <file>qml/data/heart_4096.cbor</file>
     </qresource>
 </RCC>

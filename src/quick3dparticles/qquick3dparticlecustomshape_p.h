@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEABSTRACTSHAPE_H
-#define QQUICK3DPARTICLEABSTRACTSHAPE_H
+#ifndef QQUICK3DPARTICLECUSTOMSHAPE_H
+#define QQUICK3DPARTICLECUSTOMSHAPE_H
 
 //
 //  W A R N I N G
@@ -41,41 +41,44 @@
 // We mean it.
 //
 
-#include <QObject>
-#include <QtQml/qqmlparserstatus.h>
-#include <QtQml/qqml.h>
-#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+#include "qquick3dparticleabstractshape_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleSystem;
-class QQuick3DNode;
-
-class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAbstractShape : public QObject, public QQmlParserStatus
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleCustomShape : public QQuick3DParticleAbstractShape
 {
     Q_OBJECT
-    QML_ANONYMOUS
-    Q_INTERFACES(QQmlParserStatus)
-    QML_ADDED_IN_VERSION(6, 2)
-
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    Q_PROPERTY(bool randomizeData READ randomizeData WRITE setRandomizeData NOTIFY randomizeDataChanged)
+    QML_NAMED_ELEMENT(ParticleCustomShape3D)
+    QML_ADDED_IN_VERSION(6, 3)
 public:
-    explicit QQuick3DParticleAbstractShape(QObject *parent = nullptr);
-    // Returns position inside the shape
-    virtual QVector3D getPosition(int particleIndex) = 0;
+    explicit QQuick3DParticleCustomShape(QObject *parent = nullptr);
 
-protected:
-    // These need access to m_system
-    friend class QQuick3DParticleEmitter;
-    friend class QQuick3DParticleAttractor;
+    QUrl source() const;
+    bool randomizeData() const;
 
-    // From QQmlParserStatus
-    void componentComplete() override;
-    void classBegin() override {}
+    // Returns point inside this shape
+    QVector3D getPosition(int particleIndex) override;
 
-    QQuick3DNode *m_parentNode = nullptr;
-    QQuick3DParticleSystem *m_system = nullptr;
+public Q_SLOTS:
+    void setSource(const QUrl &source);
+    void setRandomizeData(bool random);
+
+Q_SIGNALS:
+    void sourceChanged();
+    void randomizeDataChanged();
+
+private:
+    void loadFromSource();
+    void doRandomizeData();
+
+    QUrl m_source;
+    bool m_random = false;
+    bool m_randomizeDirty = false;
+    QList<QVector3D> m_positions;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEABSTRACTSHAPE_H
+#endif // QQUICK3DPARTICLECUSTOMSHAPE_H

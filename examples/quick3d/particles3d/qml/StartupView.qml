@@ -111,6 +111,10 @@ Item {
             file: "EmitterShapes.qml"
         }
         ListElement {
+            name: "Emitter Custom Shapes"
+            file: "EmitterCustomShapes.qml"
+        }
+        ListElement {
             name: "Attractor Shapes"
             file: "AttractorShapes.qml"
         }

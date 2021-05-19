@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEABSTRACTSHAPE_H
-#define QQUICK3DPARTICLEABSTRACTSHAPE_H
+#ifndef QQUICK3DPARTICLESHAPEDATAUTILS_P_H
+#define QQUICK3DPARTICLESHAPEDATAUTILS_P_H
 
 //
 //  W A R N I N G
@@ -41,41 +41,25 @@
 // We mean it.
 //
 
-#include <QObject>
-#include <QtQml/qqmlparserstatus.h>
-#include <QtQml/qqml.h>
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+#include <QtCore/QCborStreamReader>
+#include <QtCore/QCborStreamWriter>
+#include <QtCore/QVariant>
+#include <QtCore/QMetaType>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleSystem;
-class QQuick3DNode;
-
-class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAbstractShape : public QObject, public QQmlParserStatus
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShapeDataUtils
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_INTERFACES(QQmlParserStatus)
-    QML_ADDED_IN_VERSION(6, 2)
-
 public:
-    explicit QQuick3DParticleAbstractShape(QObject *parent = nullptr);
-    // Returns position inside the shape
-    virtual QVector3D getPosition(int particleIndex) = 0;
-
-protected:
-    // These need access to m_system
-    friend class QQuick3DParticleEmitter;
-    friend class QQuick3DParticleAttractor;
-
-    // From QQmlParserStatus
-    void componentComplete() override;
-    void classBegin() override {}
-
-    QQuick3DNode *m_parentNode = nullptr;
-    QQuick3DParticleSystem *m_system = nullptr;
+    static QVariant readValue(QCborStreamReader &reader, QMetaType::Type type);
+    static QString readString(QCborStreamReader &reader);
+    static double readReal(QCborStreamReader &reader);
+    static int readShapeHeader(QCborStreamReader &reader);
+    static void writeShapeHeader(QCborStreamWriter &writer, int version = 1);
+    static void writeValue(QCborStreamWriter &writer, const QVariant &value);
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEABSTRACTSHAPE_H
+#endif // QQUICK3DPARTICLESHAPEDATAUTILS_P_H

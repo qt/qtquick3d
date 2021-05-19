@@ -47,6 +47,7 @@ qt_add_qml_module(particles3d
         qml/CustomSlider.qml
         qml/CustomSelectionBox.qml
         qml/EmitAndBurst.qml
+        qml/EmitterCustomShapes.qml
         qml/EmitterShapes.qml
         qml/FadingInOut.qml
         qml/Fire.qml
@@ -70,6 +71,8 @@ qt_add_qml_module(particles3d
         qml/images/colorTable.png
         qml/images/color_table2.png
         qml/images/color_table3.png
+        qml/images/color_table4.png
+        qml/images/color_table5.png
         qml/images/dot.png
         qml/images/dust.png
         qml/images/explosion_01_strip13.png
@@ -95,6 +98,9 @@ qt_add_qml_module(particles3d
         qml/meshes/meter_edge.mesh
         qml/meshes/oldqtlogo.mesh
         qml/meshes/suzanne.mesh
+        qml/data/qt_logo_in_4096.cbor
+        qml/data/qt_logo_out_4096.cbor
+        qml/data/heart_4096.cbor
     NO_RESOURCE_TARGET_PATH
 )
 
