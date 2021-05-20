@@ -105,6 +105,8 @@ Q_DECLARE_TYPEINFO(NodeInfo, Q_PRIMITIVE_TYPE);
 
 using NodeMap = QHash<const aiNode *, NodeInfo>;
 
+using AnimationNodeMap = QHash<QByteArrayView, QSSGSceneDesc::Node *>;
+
 struct TextureInfo
 {
     aiTextureMapping mapping = aiTextureMapping::aiTextureMapping_UV;
@@ -896,7 +898,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
     return node;
 }
 
-static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSceneDesc::Node &parent, const NodeMap &nodeMap)
+static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSceneDesc::Node &parent, const NodeMap &nodeMap, AnimationNodeMap &animationNodes)
 {
     QSSGSceneDesc::Node *node = nullptr;
     if (source.mNumMeshes != 0) {
@@ -917,10 +919,28 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
 
     Q_ASSERT(node->scene);
 
+    // Check if this node is a target for an animation
+    if (!animationNodes.isEmpty()) {
+        const auto &nodeName = source.mName;
+        auto aNodeIt = animationNodes.find(QByteArray{nodeName.C_Str(), qsizetype(nodeName.length)});
+        if (aNodeIt != animationNodes.end() && aNodeIt.value() == nullptr)
+            *aNodeIt = node;
+    }
+
     // Process child nodes
     using It = decltype (source.mNumChildren);
     for (It i = 0, end = source.mNumChildren; i != end; ++i)
-        processNode(sceneInfo, **(source.mChildren + i), *node, nodeMap);
+        processNode(sceneInfo, **(source.mChildren + i), *node, nodeMap, animationNodes);
+}
+
+static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiVectorKey &key) {
+    const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Vec3);
+    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, 0.0f }, float(key.mTime), flag };
+}
+
+static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiQuatKey &key) {
+    const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Quaternion);
+    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w }, float(key.mTime), flag };
 }
 
 static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneDesc::Scene &targetScene)
@@ -979,6 +999,9 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     // Before we can start processing the scene we start my mapping out the nodes
     // we can tell the type of.
     NodeMap nodeMap;
+    // We need to know which nodes are animated so we can map _our_ animation data to
+    // the target node (in Assimp this is string based mapping).
+    AnimationNodeMap animatingNodes;
     {
         const auto &srcRootNode = *sourceScene->mRootNode;
 
@@ -998,7 +1021,20 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
             }
         }
 
-        // TODO: Bones and animations
+        if (sourceScene->HasAnimations()) {
+            for (It i = 0, end = sourceScene->mNumAnimations; i != end; ++i) {
+                const auto &srcAnim = *sourceScene->mAnimations[i];
+                const auto channelCount = srcAnim.mNumChannels;
+                for (It cIdx = 0; cIdx != channelCount; ++cIdx) {
+                    const auto &srcChannel = srcAnim.mChannels[cIdx];
+                    const auto &nodeName = srcChannel->mNodeName;
+                    if (nodeName.length > 0) {
+                        // We'll update this once we've created the node!
+                        animatingNodes.insert(QByteArrayView{nodeName.C_Str(), qsizetype(nodeName.length)}, nullptr);
+                    }
+                }
+            }
+        }
     }
 
     // We'll use these to ensure we don't re-create resources.
@@ -1035,7 +1071,87 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 
     // Now lets go through the scene
     if (sourceScene->mRootNode)
-        processNode(sceneInfo, *sourceScene->mRootNode, *targetScene.root, nodeMap);
+        processNode(sceneInfo, *sourceScene->mRootNode, *targetScene.root, nodeMap, animatingNodes);
+
+    static const auto createAnimation = [](QSSGSceneDesc::Scene &targetScene, const aiAnimation &srcAnim, const AnimationNodeMap &animatingNodes) {
+        using namespace QSSGSceneDesc;
+        Animation targetAnimation;
+        auto &channels = targetAnimation.channels;
+        // Process property channels
+        for (It i = 0, end = srcAnim.mNumChannels; i != end; ++i) {
+            const auto &srcChannel = *srcAnim.mChannels[i];
+
+            const auto &nodeName = srcChannel.mNodeName;
+            if (nodeName.length > 0) {
+                const auto aNodeEnd = animatingNodes.cend();
+                const auto aNodeIt = animatingNodes.constFind(QByteArrayView{nodeName.C_Str(), qsizetype(nodeName.length)});
+                if (aNodeIt != aNodeEnd && aNodeIt.value() != nullptr) {
+                    auto targetNode = aNodeIt.value();
+                    // Target property(s)
+
+                    { // Position
+                        const auto posKeyEnd = srcChannel.mNumPositionKeys;
+                        Animation::Channel targetChannel;
+                        targetChannel.targetProperty = Animation::Channel::TargetProperty::Position;
+                        targetChannel.target = targetNode;
+                        for (It posKeyIdx = 0; posKeyIdx != posKeyEnd; ++posKeyIdx) {
+                            const auto &posKey = srcChannel.mPositionKeys[posKeyIdx];
+                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(posKey));
+                            targetChannel.keys.push_back(*animationKey);
+                        }
+
+                        if (!targetChannel.keys.isEmpty())
+                            channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                    }
+
+                    { // Rotation
+                        const auto rotKeyEnd = srcChannel.mNumRotationKeys;
+                        Animation::Channel targetChannel;
+                        targetChannel.targetProperty = Animation::Channel::TargetProperty::Rotation;
+                        targetChannel.target = targetNode;
+                        for (It rotKeyIdx = 0; rotKeyIdx != rotKeyEnd; ++rotKeyIdx) {
+                            const auto &rotKey = srcChannel.mRotationKeys[rotKeyIdx];
+                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(rotKey));
+                            targetChannel.keys.push_back(*animationKey);
+                        }
+
+                        if (!targetChannel.keys.isEmpty())
+                            channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                    }
+
+                    { // Scale
+                        const auto scaleKeyEnd = srcChannel.mNumScalingKeys;
+                        Animation::Channel targetChannel;
+                        targetChannel.targetProperty = Animation::Channel::TargetProperty::Scale;
+                        targetChannel.target = targetNode;
+                        for (It scaleKeyIdx = 0; scaleKeyIdx != scaleKeyEnd; ++scaleKeyIdx) {
+                            const auto &scaleKey = srcChannel.mScalingKeys[scaleKeyIdx];
+                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(scaleKey));
+                            targetChannel.keys.push_back(*animationKey);
+                        }
+
+                        if (!targetChannel.keys.isEmpty())
+                            channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                    }
+                }
+            }
+        }
+
+        // If we have data we need to make it persistent.
+        if (!targetAnimation.channels.isEmpty())
+            targetScene.animations.push_back(targetScene.create<Animation>(targetAnimation));
+
+    };
+
+    // All scene nodes should now be created (and ready), so let's go through the animation data.
+    if (sourceScene->HasAnimations()) {
+        const auto animationCount = sourceScene->mNumAnimations;
+        targetScene.animations.reserve(animationCount);
+        for (It i = 0, end = animationCount; i != end; ++i) {
+            const auto &srcAnim = *sourceScene->mAnimations[i];
+            createAnimation(targetScene, srcAnim, animatingNodes);
+        }
+    }
 
     return QString();
 }

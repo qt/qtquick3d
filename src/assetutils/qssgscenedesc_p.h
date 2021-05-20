@@ -82,18 +82,21 @@ namespace QSSGSceneDesc
 {
 
 struct Node;
+struct Animation;
 
 struct Scene
 {
     using ResourceNodes = QVarLengthArray<Node *>;
     using MeshStorage = QVector<QSSGMesh::Mesh>;
     using Allocator = QSSGPerFrameAllocator;
+    using Animations = QVector<Animation *>;
 
     // Root node, usually an empty 'transform' node.
     Node *root = nullptr;
     ResourceNodes resources;
     Allocator allocator;
     MeshStorage meshStorage;
+    Animations animations;
     mutable quint16 nodeId = 0;
 
     template<typename T, typename... Args>
@@ -244,6 +247,61 @@ struct Joint : Node
     Joint() : Node(Node::Type::Joint, Node::RuntimeType::Joint) {}
 };
 
+struct Animation
+{
+    struct KeyPosition
+    {
+        enum class KeyType : quint16
+        {
+            Frame = 0x100,
+            Time = 0x200
+        };
+
+        enum class ValueType : quint8
+        {
+            Number,
+            Vec2,
+            Vec3,
+            Vec4,
+            Quaternion
+        };
+
+        ValueType getValueType() const { return ValueType(0xf & flag); }
+        KeyType getKeyType() const { return KeyType(0xf00 & flag); }
+
+        QVector4D value;
+        float time = 0.0f;
+        quint16 flag = 0;
+        KeyPosition *next = nullptr;
+    };
+    using Keys = QSSGInvasiveSingleLinkedList<Animation::KeyPosition, &Animation::KeyPosition::next>;
+
+    struct Channel
+    {
+        enum class TargetType : quint8
+        {
+            Property
+        };
+
+        // This is a bit simplistic, but is all we support so let's keep simple.
+        enum class TargetProperty : quint8
+        {
+            Unknown,
+            Position,
+            Rotation,
+            Scale
+        };
+
+        Node *target = nullptr;
+        Keys keys;
+        Channel *next = nullptr;
+        TargetType targetType = TargetType::Property;
+        TargetProperty targetProperty = TargetProperty::Unknown;
+    };
+    using Channels = QSSGInvasiveSingleLinkedList<Animation::Channel, &Animation::Channel::next>;
+
+    Channels channels;
+};
 
 // Add a child node to parent node.
 Q_QUICK3DASSETUTILS_EXPORT void addNode(Node &parent, Node &node);
@@ -457,7 +515,8 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::Camera)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Light)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Skeleton)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Joint)
-Q_DECLARE_METATYPE(QSSGSceneDesc::NodeList);
+Q_DECLARE_METATYPE(QSSGSceneDesc::NodeList)
+Q_DECLARE_METATYPE(QSSGSceneDesc::Animation)
 
 Q_DECLARE_METATYPE(QSSGSceneDesc::BufferView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::UrlView)
