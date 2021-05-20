@@ -180,8 +180,7 @@ struct SceneInfo
 
 static void setNodeProperties(QSSGSceneDesc::Node &target,
                               const aiNode &source,
-                              aiMatrix4x4 *transformCorrection,
-                              bool skipScaling)
+                              aiMatrix4x4 *transformCorrection)
 {
     // objectName
     if (target.name.isNull())
@@ -212,14 +211,7 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
     QSSGSceneDesc::setProperty(target, "rotation", &QQuick3DNode::setRotation, rot);
 
     // scale
-    if (!skipScaling) {
-        // Apply the global scale for a root node
-        // TODO:
-        // if (!sourceNode.mParent)
-        //     scaling *= m_globalScaleValue;
-
-        QSSGSceneDesc::setProperty(target, "scale", &QQuick3DNode::setScale, QVector3D { scaling.x, scaling.y, scaling.z });
-    }
+    QSSGSceneDesc::setProperty(target, "scale", &QQuick3DNode::setScale, QVector3D { scaling.x, scaling.y, scaling.z });
     // pivot
 
     // opacity
@@ -604,7 +596,7 @@ static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &s
         needsCorrection = true;
     }
 
-    setNodeProperties(target, sourceNode, needsCorrection ? &correctionMatrix : nullptr, true);
+    setNodeProperties(target, sourceNode, needsCorrection ? &correctionMatrix : nullptr);
 
     // clipNear and clipFar
     if (target.runtimeType == Node::RuntimeType::PerspectiveCamera) {
@@ -674,7 +666,7 @@ static void setLightProperties(QSSGSceneDesc::Light &target, const aiLight &sour
 
     target.runtimeType = asQtLightType(source.mType);
 
-    setNodeProperties(target, sourceNode, needsCorrection ? &correctionMatrix : nullptr, true);
+    setNodeProperties(target, sourceNode, needsCorrection ? &correctionMatrix : nullptr);
 
     // brightness
     // Assimp has no property related to brightness or intensity.
@@ -750,7 +742,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     auto &targetScene = target.scene;
     const auto &srcScene = sceneInfo.scene;
     // TODO: Correction and scale
-    setNodeProperties(target, source, nullptr, true);
+    setNodeProperties(target, source, nullptr);
 
     auto &meshStorage = targetScene->meshStorage;
     auto &materialMap = sceneInfo.materialMap;
@@ -894,7 +886,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         node = targetScene->create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(parent, *node);
         // TODO: arguments for correction
-        setNodeProperties(*node, srcNode, nullptr, false);
+        setNodeProperties(*node, srcNode, nullptr);
     }
         break;
     default:
