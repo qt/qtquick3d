@@ -100,11 +100,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
     QByteArray data() const;
     QSSGBounds3 bounds() const;
     int bufferSize() const;
+    int serial() const;
 
 private:
     int m_particlesPerSlice = 0;
     int m_sliceStride = 0;
     int m_particleCount = 0;
+    int m_serial = 0;
     QSize m_size;
     QByteArray m_particleBuffer;
     QSSGBounds3 m_bounds;

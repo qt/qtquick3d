@@ -713,6 +713,7 @@ struct QSSGRhiParticleData
     QByteArray sortedData;
     QList<QSSGRhiSortData> sortData;
     int particleCount = 0;
+    int serial = -1;
     bool sorting = false;
 };
 

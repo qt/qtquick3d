@@ -475,6 +475,7 @@ void QQuick3DParticleModelBlendParticle::setParticleData(int particleIndex,
 {
     auto &dst = m_triangleParticleData[particleIndex];
     dst = {position, rotation, dst.center, color, age, size, dst.emitterIndex};
+    m_dataChanged = true;
 }
 
 QQuick3DParticleModelBlendParticle::PerEmitterData &QQuick3DParticleModelBlendParticle::perEmitterData(int emitterIndex)
@@ -490,7 +491,7 @@ void QQuick3DParticleModelBlendParticle::updateParticleBuffer(QSSGParticleBuffer
 {
     const auto &particles = m_triangleParticleData;
 
-    if (!buffer)
+    if (!buffer || !m_dataChanged)
         return;
 
     const int particleCount = m_particleCount;
@@ -522,6 +523,7 @@ void QQuick3DParticleModelBlendParticle::updateParticleBuffer(QSSGParticleBuffer
         dest += ss;
     }
     buffer->setBounds(bounds);
+    m_dataChanged = false;
 }
 
 void QQuick3DParticleModelBlendParticle::itemChange(QQuick3DObject::ItemChange change,

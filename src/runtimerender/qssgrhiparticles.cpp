@@ -386,6 +386,7 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
     QSSGRhiParticleData &particleData = rhiCtx->particleData(model);
     const QSSGParticleBuffer &particleBuffer = *model->particleBuffer;
     int particleCount = particleBuffer.particleCount();
+    bool update = particleBuffer.serial() != particleData.serial;
     if (particleData.texture == nullptr || particleData.particleCount != particleCount) {
         QSize size(particleBuffer.size());
         if (!particleData.texture) {
@@ -396,15 +397,18 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
             particleData.texture->create();
         }
         particleData.particleCount = particleCount;
+        update = true;
     }
 
-    QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-    QRhiTextureSubresourceUploadDescription upload;
-    upload.setData(particleBuffer.data());
-    QRhiTextureUploadDescription uploadDesc(QRhiTextureUploadEntry(0, 0, upload));
-    rub->uploadTexture(particleData.texture, uploadDesc);
-    rhiCtx->commandBuffer()->resourceUpdate(rub);
-
+    if (update) {
+        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+        QRhiTextureSubresourceUploadDescription upload;
+        upload.setData(particleBuffer.data());
+        QRhiTextureUploadDescription uploadDesc(QRhiTextureUploadEntry(0, 0, upload));
+        rub->uploadTexture(particleData.texture, uploadDesc);
+        rhiCtx->commandBuffer()->resourceUpdate(rub);
+    }
+    particleData.serial = particleBuffer.serial();
     int samplerBinding = shaderPipeline->bindingForTexture("qt_particleTexture");
     if (samplerBinding >= 0) {
         QRhiTexture *texture = particleData.texture;

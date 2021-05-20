@@ -68,6 +68,7 @@ void QSSGParticleBuffer::resize(int particleCount, int particleSize)
 void QSSGParticleBuffer::setBounds(const QSSGBounds3& bounds)
 {
     m_bounds = bounds;
+    m_serial++;
 }
 
 char *QSSGParticleBuffer::pointer()
@@ -115,6 +116,10 @@ int QSSGParticleBuffer::bufferSize() const
     return m_particleBuffer.size();
 }
 
+int QSSGParticleBuffer::serial() const
+{
+    return m_serial;
+}
 
 QSSGBounds3 QSSGParticleBuffer::bounds() const
 {

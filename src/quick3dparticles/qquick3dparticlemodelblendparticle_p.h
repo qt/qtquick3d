@@ -159,6 +159,7 @@ private:
     int m_particleCount = 0;
     ModelBlendMode m_modelBlendMode = Explode;
     int m_endTime = 0;
+    bool m_dataChanged = true;
 };
 
 QT_END_NAMESPACE
