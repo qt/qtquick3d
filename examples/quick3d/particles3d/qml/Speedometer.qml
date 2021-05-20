@@ -266,8 +266,9 @@ Item {
                             }
 
                             particleScale: 4.0
+                            particleScaleVariation: 2.0
                             particleEndScale: 1.0
-                            particleScaleVariation: 1.0
+                            particleEndScaleVariation: 0.5
                             velocity: VectorDirection3D {
                                 direction: Qt.vector3d(0, 110, 0)
                                 directionVariation: Qt.vector3d(10, 10, 10)

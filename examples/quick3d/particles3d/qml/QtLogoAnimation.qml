@@ -286,7 +286,8 @@ Item {
                 }
                 particleScale: 2.0
                 particleScaleVariation: 1.0
-                particleEndScale: 4.0
+                particleEndScale: 5.0
+                particleEndScaleVariation: 3.0
                 particleRotationVariation: Qt.vector3d(0, 0, 180)
                 particleRotationVelocityVariation: Qt.vector3d(0, 0, 200)
                 velocity: TargetDirection3D {

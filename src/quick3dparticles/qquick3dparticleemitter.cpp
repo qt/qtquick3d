@@ -218,7 +218,7 @@ void QQuick3DParticleEmitter::setParticleScale(float particleScale)
 
     This property defines the scale multiplier of the particles at the end
     of particle \l lifeSpan. To have variation in the particle end sizes, use
-    \l particleScaleVariation. When the value is negative, end scale is the
+    \l particleEndScaleVariation. When the value is negative, end scale is the
     same as the \l particleScale, so scale doesn't change during the particle
     \l lifeSpan.
 
@@ -243,22 +243,20 @@ void QQuick3DParticleEmitter::setParticleEndScale(float particleEndScale)
 /*!
     \qmlproperty real ParticleEmitter3D::particleScaleVariation
 
-    This property defines the scale variation of the particles. This variation
-    is used for both \l particleScale and \l particleEndScale. For example, to
-    emit particles which start at scale 0.5 - 1.5 and end at 2.5 - 3.5:
+    This property defines the scale variation of the particles. For example, to
+    emit particles at scale 0.5 - 1.5:
 
     \qml
     ParticleEmitter3D {
         ...
         particleScale: 1.0
-        particleEndScale: 3.0
         particleScaleVariation: 0.5
     }
     \endqml
 
     The default value is \c 0.0.
 
-    \sa particleScale, particleScaleVariation
+    \sa particleScale, particleEndScaleVariation
 */
 float QQuick3DParticleEmitter::particleScaleVariation() const
 {
@@ -272,6 +270,42 @@ void QQuick3DParticleEmitter::setParticleScaleVariation(float particleScaleVaria
 
     m_particleScaleVariation = particleScaleVariation;
     Q_EMIT particleScaleVariationChanged();
+}
+
+/*!
+    \qmlproperty real ParticleEmitter3D::particleEndScaleVariation
+
+    This property defines the scale variation of the particles in the end.
+    When the value is negative, \l particleScaleVariation is used also for the
+    end scale. For example, to emit particles which start at scale 0.5 - 1.5 and end
+    at scale 1.0 - 5.0:
+
+    \qml
+    ParticleEmitter3D {
+        ...
+        particleScale: 1.0
+        particleScaleVariation: 0.5
+        particleEndScale: 3.0
+        particleEndScaleVariation: 2.0
+    }
+    \endqml
+
+    The default value is \c -1.0.
+
+    \sa particleEndScale
+*/
+float QQuick3DParticleEmitter::particleEndScaleVariation() const
+{
+    return m_particleEndScaleVariation;
+}
+
+void QQuick3DParticleEmitter::setParticleEndScaleVariation(float particleEndScaleVariation)
+{
+    if (qFuzzyCompare(m_particleEndScaleVariation, particleEndScaleVariation))
+        return;
+
+    m_particleEndScaleVariation = particleEndScaleVariation;
+    Q_EMIT particleEndScaleVariationChanged();
 }
 
 /*!
@@ -646,9 +680,12 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
 
     // Size
     float sVar = m_particleScaleVariation - 2.0f * rand->get(particleIdIndex, QPRand::ScaleV) * m_particleScaleVariation;
-    float endScale = m_particleEndScale < 0.0f ? m_particleScale : m_particleEndScale;
+    float endScale = (m_particleEndScale < 0.0f) ? m_particleScale : m_particleEndScale;
+    float sEndVar = (m_particleEndScaleVariation < 0.0f)
+            ? sVar
+            : m_particleEndScaleVariation - 2.0f * rand->get(particleIdIndex, QPRand::ScaleEV) * m_particleEndScaleVariation;
     d->startSize = std::max(0.0f, float(m_particleScale + sVar));
-    d->endSize = std::max(0.0f, float(endScale + sVar));
+    d->endSize = std::max(0.0f, float(endScale + sEndVar));
 
     // Emiting area/shape
     if (m_shape) {

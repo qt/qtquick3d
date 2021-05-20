@@ -298,7 +298,8 @@ Item {
                 particle: smokeParticle
                 particleScale: 10
                 particleScaleVariation: 5
-                particleEndScale: 80
+                particleEndScale: 60
+                particleEndScaleVariation: 30
                 particleRotationVariation: Qt.vector3d(0, 0, 180)
                 particleRotationVelocityVariation: Qt.vector3d(0, 0, 40)
                 emitRate: sliderDustEmitRate.sliderValue
@@ -317,8 +318,9 @@ Item {
                 lifeSpan: 3000
                 lifeSpanVariation: 1000
                 particleScale: 10.0
-                particleEndScale: 30.0
                 particleScaleVariation: 5.0
+                particleEndScale: 30.0
+                particleEndScaleVariation: 10.0
                 particleRotationVariation: Qt.vector3d(20, 20, 180)
                 particleRotationVelocityVariation: Qt.vector3d(5, 5, 50)
                 velocity: VectorDirection3D {
@@ -388,7 +390,8 @@ Item {
                 scale: Qt.vector3d(12, 12, 12)
                 particleScale: 2.0
                 particleScaleVariation: 1.0
-                particleEndScale: 0.5
+                particleEndScale: 1.0
+                particleEndScaleVariation: 0.5
                 emitRate: 100
                 lifeSpan: 3000
                 shape: ParticleShape3D {

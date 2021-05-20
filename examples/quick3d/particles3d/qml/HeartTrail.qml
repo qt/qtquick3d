@@ -198,8 +198,9 @@ Item {
                 particle: smokeParticle
                 position: psystemStar.position
                 particleScale: 20
-                particleScaleVariation: 10
-                particleEndScale: 40
+                particleScaleVariation: 5
+                particleEndScale: 30
+                particleEndScaleVariation: 10
                 particleRotationVariation: Qt.vector3d(0, 0, 180)
                 particleRotationVelocityVariation: Qt.vector3d(0, 0, 40)
                 emitRate: sliderSmokeEmitRate.sliderValue

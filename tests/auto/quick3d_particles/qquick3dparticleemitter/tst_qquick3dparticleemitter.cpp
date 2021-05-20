@@ -61,6 +61,7 @@ void tst_QQuick3DParticleEmitter::testInitialization()
     QVERIFY(qFuzzyCompare(emitter->particleScale(), 1.0f));
     QVERIFY(qFuzzyCompare(emitter->particleEndScale(), -1.0f));
     QVERIFY(qFuzzyCompare(emitter->particleScaleVariation(), 0.0f));
+    QVERIFY(qFuzzyCompare(emitter->particleEndScaleVariation(), -1.0f));
     QVERIFY(qFuzzyCompare(emitter->particleRotation(), QVector3D()));
     QVERIFY(qFuzzyCompare(emitter->particleRotationVariation(), QVector3D()));
     QVERIFY(qFuzzyCompare(emitter->particleRotationVelocity(), QVector3D()));
@@ -116,6 +117,9 @@ void tst_QQuick3DParticleEmitter::testEmitter()
 
     emitter->setParticleScaleVariation(0.2f);
     QVERIFY(qFuzzyCompare(emitter->particleScaleVariation(), 0.2f));
+
+    emitter->setParticleEndScaleVariation(0.5f);
+    QVERIFY(qFuzzyCompare(emitter->particleEndScaleVariation(), 0.5f));
 
     const QVector3D rotation(1.0f, 2.0f, 3.0f);
     emitter->setParticleRotation(rotation);

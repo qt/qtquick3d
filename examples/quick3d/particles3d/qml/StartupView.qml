@@ -216,8 +216,8 @@ Item {
                     type: ParticleShape3D.Cube
                 }
                 particleScale: 2.4
-                particleEndScale: 0.2
                 particleScaleVariation: 1.8
+                particleEndScale: 0.2
                 velocity: TargetDirection3D {
                     magnitudeVariation: magnitude
                     positionVariation: Qt.vector3d(180, 180, 180)

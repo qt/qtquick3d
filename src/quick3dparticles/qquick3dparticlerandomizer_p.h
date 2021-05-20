@@ -105,6 +105,7 @@ public:
                                 // deterministic based on the particle index
         LifeSpanV, // Emitter
         ScaleV,
+        ScaleEV,
         RotXV,
         RotYV,
         RotZV,

@@ -65,6 +65,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(float particleEndScale READ particleEndScale WRITE setParticleEndScale NOTIFY particleEndScaleChanged)
     Q_PROPERTY(float particleScaleVariation READ particleScaleVariation WRITE setParticleScaleVariation NOTIFY particleScaleVariationChanged)
+    Q_PROPERTY(float particleEndScaleVariation READ particleEndScaleVariation WRITE setParticleEndScaleVariation NOTIFY particleEndScaleVariationChanged)
     Q_PROPERTY(QVector3D particleRotation READ particleRotation WRITE setParticleRotation NOTIFY particleRotationChanged)
     Q_PROPERTY(QVector3D particleRotationVariation READ particleRotationVariation WRITE setParticleRotationVariation NOTIFY particleRotationVariationChanged)
     Q_PROPERTY(QVector3D particleRotationVelocity READ particleRotationVelocity WRITE setParticleRotationVelocity NOTIFY particleRotationVelocityChanged)
@@ -85,6 +86,7 @@ public:
     float particleScale() const;
     float particleEndScale() const;
     float particleScaleVariation() const;
+    float particleEndScaleVariation() const;
     int lifeSpan() const;
     int lifeSpanVariation() const;
     QQuick3DParticle *particle() const;
@@ -109,6 +111,7 @@ public Q_SLOTS:
     void setParticleScale(float particleScale);
     void setParticleEndScale(float particleEndScale);
     void setParticleScaleVariation(float particleScaleVariation);
+    void setParticleEndScaleVariation(float particleEndScaleVariation);
     void setLifeSpan(int lifeSpan);
     void setLifeSpanVariation(int lifeSpanVariation);
     void setParticle(QQuick3DParticle *particle);
@@ -126,6 +129,7 @@ Q_SIGNALS:
     void particleScaleChanged();
     void particleEndScaleChanged();
     void particleScaleVariationChanged();
+    void particleEndScaleVariationChanged();
     void lifeSpanChanged();
     void lifeSpanVariationChanged();
     void particleChanged();
@@ -178,6 +182,7 @@ private:
     float m_particleScale = 1.0f;
     float m_particleEndScale = -1.0f;
     float m_particleScaleVariation = 0.0f;
+    float m_particleEndScaleVariation = -1.0f;
     int m_lifeSpan = 1000;
     int m_lifeSpanVariation = 0;
     float m_unemittedF = 0.0f;

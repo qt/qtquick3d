@@ -159,6 +159,7 @@ Item {
                 particleScale: 4
                 particleEndScale: 12
                 particleScaleVariation: 3
+                particleEndScaleVariation: 5
                 velocity: VectorDirection3D {
                     direction: Qt.vector3d(0, 20 + fireStrength, 0)
                     directionVariation: Qt.vector3d(10 + fireStrength * 0.2, 10, 0)
@@ -239,7 +240,8 @@ Item {
                 position: Qt.vector3d(fireEmitter.position.x, fireEmitter.position.y, fireEmitter.position.z - 2)
                 particleScale: 6
                 particleScaleVariation: 4
-                particleEndScale: 40
+                particleEndScale: 35
+                particleEndScaleVariation: 15
                 particleRotationVariation: Qt.vector3d(0, 0, 180)
                 particleRotationVelocityVariation: Qt.vector3d(0, 0, 40)
                 emitRate: smokeStrength * 0.5
