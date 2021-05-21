@@ -858,7 +858,7 @@ QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) con
 
     \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
 */
-QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const
+QVector3D QQuick3DNode::mapPositionToNode(const QQuick3DNode *node, const QVector3D &localPosition) const
 {
     const auto scenePositionSelf = mapPositionToScene(localPosition);
     return node ? node->mapPositionFromScene(scenePositionSelf) : scenePositionSelf;
@@ -874,7 +874,7 @@ QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &l
 
     \sa mapPositionToScene, mapPositionFromScene, mapPositionToNode
 */
-QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
+QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVector3D &localPosition) const
 {
     const auto scenePositionOther = node ? node->mapPositionToScene(localPosition) : localPosition;
     return mapPositionFromScene(scenePositionOther);
@@ -933,7 +933,7 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
 
     \sa mapDirectionFromNode, mapDirectionFromScene, mapDirectionToScene
 */
-QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const
+QVector3D QQuick3DNode::mapDirectionToNode(const QQuick3DNode *node, const QVector3D &localDirection) const
 {
     const auto sceneDirectionSelf = mapDirectionToScene(localDirection);
     return node ? node->mapDirectionFromScene(sceneDirectionSelf) : sceneDirectionSelf;
@@ -954,7 +954,7 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
 
     \sa mapDirectionToNode, mapDirectionFromScene, mapDirectionToScene
 */
-QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
+QVector3D QQuick3DNode::mapDirectionFromNode(const QQuick3DNode *node, const QVector3D &localDirection) const
 {
     const auto sceneDirectionOther = node ? node->mapDirectionToScene(localDirection) : localDirection;
     return mapDirectionFromScene(sceneDirectionOther);
