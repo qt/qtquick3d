@@ -120,12 +120,12 @@ public:
 
     Q_INVOKABLE QVector3D mapPositionToScene(const QVector3D &localPosition) const;
     Q_INVOKABLE QVector3D mapPositionFromScene(const QVector3D &scenePosition) const;
-    Q_INVOKABLE QVector3D mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const;
-    Q_INVOKABLE QVector3D mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const;
+    Q_INVOKABLE QVector3D mapPositionToNode(const QQuick3DNode *node, const QVector3D &localPosition) const;
+    Q_INVOKABLE QVector3D mapPositionFromNode(const QQuick3DNode *node, const QVector3D &localPosition) const;
     Q_INVOKABLE QVector3D mapDirectionToScene(const QVector3D &localDirection) const;
     Q_INVOKABLE QVector3D mapDirectionFromScene(const QVector3D &sceneDirection) const;
-    Q_INVOKABLE QVector3D mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const;
-    Q_INVOKABLE QVector3D mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const;
+    Q_INVOKABLE QVector3D mapDirectionToNode(const QQuick3DNode *node, const QVector3D &localDirection) const;
+    Q_INVOKABLE QVector3D mapDirectionFromNode(const QQuick3DNode *node, const QVector3D &localDirection) const;
 
     void markAllDirty() override;
 
