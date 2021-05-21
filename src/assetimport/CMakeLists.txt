@@ -10,6 +10,10 @@ qt_internal_add_module(Quick3DAssetImport
         ../3rdparty/xatlas/xatlas.cpp ../3rdparty/xatlas/xatlas.h
         qssglightmapuvgenerator.cpp qssglightmapuvgenerator_p.h
         qtquick3dassetimportglobal_p.h
+        qssgassetimporter_p.h
+        qssgassetimporterfactory.cpp qssgassetimporterfactory_p.h
+        qssgassetimporterplugin_p.h
+        qssgassetimportmanager.cpp qssgassetimportmanager_p.h
     DEFINES
         QT_BUILD_QUICK3DASSETIMPORT_LIB
     INCLUDE_DIRECTORIES
@@ -30,17 +34,6 @@ qt_internal_add_module(Quick3DAssetImport
 #### Keys ignored in scope 1:.:.:assetimport.pro:<TRUE>:
 # MODULE = "quick3dassetimport"
 # OTHER_FILES = "options-schema.json"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(Quick3DAssetImport CONDITION (android_app OR NOT ANDROID) AND (android_app OR NOT INTEGRITY) AND (NOT ANDROID OR NOT CMAKE_CROSSCOMPILING) AND (NOT ANDROID OR NOT WASM) AND (NOT CMAKE_CROSSCOMPILING OR NOT INTEGRITY) AND (NOT INTEGRITY OR NOT WASM)
-    SOURCES
-        qssgassetimporter_p.h
-        qssgassetimporterfactory.cpp qssgassetimporterfactory_p.h
-        qssgassetimporterplugin_p.h
-        qssgassetimportmanager.cpp qssgassetimportmanager_p.h
-)
 
 # Silence warnings in 3rdparty code
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
