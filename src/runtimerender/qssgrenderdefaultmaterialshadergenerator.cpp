@@ -107,13 +107,22 @@ constexpr ImageStringSet imageStringTable[] {
 
 const int TEXCOORD_VAR_LEN = 16;
 
-void textureCoordVariableName(char (&outString)[TEXCOORD_VAR_LEN], quint8 uvSet)
+void textureCoordVaryingName(char (&outString)[TEXCOORD_VAR_LEN], quint8 uvSet)
 {
     // For now, uvSet will be less than 2.
     // But this value will be verified in the setProperty function.
     Q_ASSERT(uvSet < 9);
     qstrncpy(outString, "qt_varTexCoordX", TEXCOORD_VAR_LEN);
     outString[14] = '0' + uvSet;
+}
+
+void textureCoordVariableName(char (&outString)[TEXCOORD_VAR_LEN], quint8 uvSet)
+{
+    // For now, uvSet will be less than 2.
+    // But this value will be verified in the setProperty function.
+    Q_ASSERT(uvSet < 9);
+    qstrncpy(outString, "qt_texCoordX", TEXCOORD_VAR_LEN);
+    outString[11] = '0' + uvSet;
 }
 
 }
@@ -140,6 +149,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
                                        QSSGStageGeneratorBase &fragmentShader,
                                        const QSSGShaderDefaultMaterialKey &key,
                                        QSSGRenderableImage &image,
+                                       bool forceFragmentShader = false,
                                        quint32 uvSet = 0)
 {
     if (image.uvCoordsGenerated)
@@ -147,18 +157,33 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
 
     const auto &names = imageStringTable[int(image.m_mapType)];
     char textureCoordName[TEXCOORD_VAR_LEN];
-    textureCoordVariableName(textureCoordName, uvSet);
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
-    vertexShader.addUniform(names.imageOffsets, "vec3");
-    vertexShader.addUniform(names.imageRotations, "vec4");
+    if (!forceFragmentShader) {
+        vertexShader.addUniform(names.imageOffsets, "vec3");
+        vertexShader.addUniform(names.imageRotations, "vec4");
+    } else {
+        fragmentShader.addUniform(names.imageOffsets, "vec3");
+        fragmentShader.addUniform(names.imageRotations, "vec4");
+    }
     QByteArray uvTrans = uvTransform(names.imageRotations, names.imageOffsets);
     if (image.m_imageNode.m_mappingMode == QSSGRenderImage::MappingModes::Normal) {
-        vertexShader << uvTrans;
-        vertexShader.addOutgoing(names.imageFragCoords, "vec2");
-        vertexShader.addFunction("getTransformedUVCoords");
+        if (!forceFragmentShader) {
+            vertexShader << uvTrans;
+            vertexShader.addOutgoing(names.imageFragCoords, "vec2");
+            vertexShader.addFunction("getTransformedUVCoords");
+        } else {
+            fragmentShader << uvTrans;
+            fragmentShader.addFunction("getTransformedUVCoords");
+        }
         vertexShader.generateUVCoords(uvSet, key);
-        vertexShader << "    vec2 " << names.imageFragCoordsTemp << " = qt_getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), qt_uTransform, qt_vTransform);\n";
-        vertexShader.assignOutput(names.imageFragCoords, names.imageFragCoordsTemp);
+        if (!forceFragmentShader) {
+            textureCoordVaryingName(textureCoordName, uvSet);
+            vertexShader << "    vec2 " << names.imageFragCoordsTemp << " = qt_getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), qt_uTransform, qt_vTransform);\n";
+            vertexShader.assignOutput(names.imageFragCoords, names.imageFragCoordsTemp);
+        } else {
+            textureCoordVariableName(textureCoordName, uvSet);
+            fragmentShader << "    vec2 " << names.imageFragCoords << " = qt_getTransformedUVCoords(vec3(" << textureCoordName << ", 1.0), qt_uTransform, qt_vTransform);\n";
+        }
     } else {
         fragmentShader.addUniform(names.imageOffsets, "vec3");
         fragmentShader.addUniform(names.imageRotations, "vec4");
@@ -648,7 +673,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (includeCustomFragmentMain && hasCustomFunction(QByteArrayLiteral("qt_customMain"))) {
             fragmentShader << "    qt_customMain(qt_customBaseColor, qt_customEmissiveColor, qt_customMetalnessAmount, qt_customSpecularRoughness,"
                               " qt_customSpecularAmount, qt_customFresnelPower, qt_world_normal, qt_tangent, qt_binormal,"
-                              " qt_varTexCoord0, qt_varTexCoord1, qt_view_vector";
+                              " qt_texCoord0, qt_texCoord1, qt_view_vector";
             if (usesSharedVar)
                 fragmentShader << ", qt_customShared);\n";
             else
@@ -692,14 +717,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader.addFunction("diffuseReflectionBSDF");
 
         if (bumpImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, bumpImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *bumpImage, false, bumpImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Bump)];
             fragmentShader.addUniform(names.imageSamplerSize, "vec2");
             fragmentShader.append("    float bumpAmount = qt_material_properties2.y;\n");
             fragmentShader.addInclude("defaultMaterialBumpNoLod.glsllib");
             fragmentShader << "    qt_world_normal = qt_defaultMaterialBumpNoLod(" << names.imageSampler << ", bumpAmount, " << names.imageFragCoords << ", qt_tangent, qt_binormal, qt_world_normal, " << names.imageSamplerSize << ");\n";
         } else if (normalImage != nullptr) {
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, normalImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *normalImage, false, normalImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Normal)];
             fragmentShader.append("    float normalStrength = qt_material_properties2.y;\n");
             fragmentShader.addFunction("sampleNormalTexture");
@@ -726,7 +751,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIdentityMap)
             generateImageUVSampler(vertexShader, fragmentShader, inKey, *baseImage, imageFragCoords, baseImage->m_imageNode.m_indexUV);
         else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage, baseImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *baseImage, false, baseImage->m_imageNode.m_indexUV);
 
         // NOTE: The base image hande is used for both the diffuse map and the base color map, so we can't hard-code the type here...
         const auto &names = imageStringTable[int(baseImage->m_mapType)];
@@ -756,7 +781,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIdentityMap)
             generateImageUVSampler(vertexShader, fragmentShader, inKey, *opacityImage, imageFragCoords, opacityImage->m_imageNode.m_indexUV);
         else
-            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, opacityImage->m_imageNode.m_indexUV);
+            generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, false, opacityImage->m_imageNode.m_indexUV);
 
         const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Opacity)];
         const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
@@ -790,7 +815,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *metalnessImage, imageFragCoords, metalnessImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, metalnessImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, false, metalnessImage->m_imageNode.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Metalness)];
             fragmentShader << "    float qt_sampledMetalness = texture2D(" << names.imageSampler << ", "
@@ -822,7 +847,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *specularAmountImage, imageFragCoords, specularAmountImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, specularAmountImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *specularAmountImage, false, specularAmountImage->m_imageNode.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::SpecularAmountMap)];
             // TODO: This might need to be colorspace corrected to linear
@@ -837,7 +862,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *translucencyImage, imageFragCoords);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *translucencyImage);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *translucencyImage, false);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Translucency)];
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::TranslucencyChannel];
@@ -867,7 +892,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *roughnessImage, imageFragCoords, roughnessImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, roughnessImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, false, roughnessImage->m_imageNode.m_indexUV);
 
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
             fragmentShader << "    qt_roughnessAmount *= texture2D(" << names.imageSampler << ", "
@@ -1125,7 +1150,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 if (hasIdentityMap)
                     generateImageUVSampler(vertexShader, fragmentShader, inKey, *image, imageFragCoords, image->m_imageNode.m_indexUV);
                 else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, image->m_imageNode.m_indexUV);
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, false, image->m_imageNode.m_indexUV);
 
                 const auto &names = imageStringTable[int(image->m_mapType)];
                 fragmentShader << "    qt_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler
@@ -1155,7 +1180,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (hasIdentityMap)
                 generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
             else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, occlusionImage->m_imageNode.m_indexUV);
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, false, occlusionImage->m_imageNode.m_indexUV);
             const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
             fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
@@ -1170,7 +1195,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader << "    vec4 qt_color_sum = vec4(global_diffuse_light.rgb + global_specular_light + qt_global_emission, global_diffuse_light.a);\n";
         if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_customPostProcessor"))) {
             // COLOR_SUM, DIFFUSE, SPECULAR, EMISSIVE, UV0, UV1(, SHARED)
-            fragmentShader << "    qt_customPostProcessor(qt_color_sum, global_diffuse_light, global_specular_light, qt_global_emission, qt_varTexCoord0, qt_varTexCoord1";
+            fragmentShader << "    qt_customPostProcessor(qt_color_sum, global_diffuse_light, global_specular_light, qt_global_emission, qt_texCoord0, qt_texCoord1";
             if (usesSharedVar)
                 fragmentShader << ", qt_customShared);\n";
             else

@@ -141,17 +141,19 @@ struct QSSGMaterialVertexPipeline
             if (hasCustomShadedMain || meshHasUV0) {
                 addInterpolationParameter("qt_varTexCoord0", "vec2");
                 vertex() << "    qt_varTexCoord0 = qt_vertUV0;\n";
+                fragment() <<"    vec2 qt_texCoord0 = qt_varTexCoord0;\n";
             } else {
                 vertex() << "    vec2 qt_varTexCoord0 = vec2(0.0);\n";
-                fragment() << "    vec2 qt_varTexCoord0 = vec2(0.0);\n";
+                fragment() << "    vec2 qt_texCoord0 = vec2(0.0);\n";
             }
         } else if (inUVSet == 1) {
             if (hasCustomShadedMain || meshHasUV1) {
                 addInterpolationParameter("qt_varTexCoord1", "vec2");
                 vertex() << "    qt_varTexCoord1 = qt_vertUV1;\n";
+                fragment() <<"    vec2 qt_texCoord1 = qt_varTexCoord1;\n";
             } else {
                 vertex() << "    vec2 qt_varTexCoord1 = vec2(0.0);\n";
-                fragment() << "    vec2 qt_varTexCoord1 = vec2(0.0);\n";
+                fragment() << "    vec2 qt_texCoord1 = vec2(0.0);\n";
             }
         }
     }
