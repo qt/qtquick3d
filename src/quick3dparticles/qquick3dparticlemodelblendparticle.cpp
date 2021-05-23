@@ -268,7 +268,7 @@ static void copyToUnindexedVertices(QByteArray &unindexedVertexData,
                                     quint32 vertexStride,
                                     quint32 posOffset,
                                     const QByteArray &indexBufferData,
-                                    QSSGMesh::Mesh::ComponentType indexBufferComponentType,
+                                    bool u16Indices,
                                     quint32 primitiveCount)
 {
     const quint8 *srcVertices = reinterpret_cast<const quint8 *>(vertexBufferData.data());
@@ -278,7 +278,7 @@ static void copyToUnindexedVertices(QByteArray &unindexedVertexData,
     const float c_div3 = 1.0f / 3.0f;
     for (quint32 i = 0; i < primitiveCount; i++) {
         quint32 i0, i1, i2;
-        if (indexBufferComponentType == QSSGMesh::Mesh::ComponentType::UnsignedInt16) {
+        if (u16Indices) {
             i0 = indexData16[3 * i];
             i1 = indexData16[3 * i + 1];
             i2 = indexData16[3 * i + 2];
@@ -323,16 +323,81 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
     // The primitives needs to be triangle list without indexing, because each triangle
     // needs to be it's own primitive and we need vertex index to get the particle index,
     // which we don't get with indexed primitives
-    if (!m_model->geometry()) {
+    if (m_model->geometry()) {
+        QQuick3DGeometry *geometry = m_model->geometry();
+        if (geometry->primitiveType() != QQuick3DGeometry::PrimitiveType::Triangles) {
+            qWarning () << "ModelBlendParticle3D: Invalid geometry primitive type, must be Triangles. ";
+            return;
+        }
+        auto vertexBuffer = geometry->vertexData();
+        auto indexBuffer = geometry->indexData();
+
+        if (!vertexBuffer.size()) {
+            qWarning () << "ModelBlendParticle3D: Invalid geometry, vertexData is empty. ";
+            return;
+        }
+
+        const auto attributeBySemantic = [&](const QQuick3DGeometry *geometry, QQuick3DGeometry::Attribute::Semantic semantic) {
+            for (int i = 0; i < geometry->attributeCount(); i++) {
+                const auto attr = geometry->attribute(i);
+                if (attr.semantic == semantic)
+                    return attr;
+            }
+            Q_ASSERT(0);
+            return QQuick3DGeometry::Attribute();
+        };
+
+        if (indexBuffer.size()) {
+            m_modelGeometry = new QQuick3DGeometry;
+
+            m_modelGeometry->setBounds(geometry->boundsMin(), geometry->boundsMax());
+            m_modelGeometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
+            m_modelGeometry->setStride(geometry->stride());
+
+            for (int i = 0; i < geometry->attributeCount(); i++) {
+                auto attr = geometry->attribute(i);
+                if (attr.semantic != QQuick3DGeometry::Attribute::IndexSemantic)
+                    m_modelGeometry->addAttribute(attr);
+            }
+
+            // deindex data
+            QByteArray unindexedVertexData;
+            quint32 primitiveCount = indexBuffer.size();
+            auto indexAttribute = attributeBySemantic(geometry, QQuick3DGeometry::Attribute::IndexSemantic);
+            bool u16IndexType = indexAttribute.componentType == QQuick3DGeometry::Attribute::U16Type;
+            if (u16IndexType)
+                primitiveCount /= 6;
+            else
+                primitiveCount /= 12;
+
+            unindexedVertexData.resize(geometry->stride() * primitiveCount * 3);
+            m_centerData.resize(primitiveCount);
+            m_particleCount = primitiveCount;
+            copyToUnindexedVertices(unindexedVertexData, m_centerData, vertexBuffer, geometry->stride(), attributeBySemantic(geometry, QQuick3DGeometry::Attribute::PositionSemantic).offset, indexBuffer, u16IndexType, primitiveCount);
+
+            m_modelGeometry->setVertexData(unindexedVertexData);
+            m_model->setGeometry(m_modelGeometry);
+        } else {
+            // can use provided geometry directly
+            quint32 primitiveCount = vertexBuffer.size() / geometry->stride() / 3;
+            m_centerData.resize(primitiveCount);
+            m_particleCount = primitiveCount;
+            getVertexCenterData(m_centerData, vertexBuffer, geometry->stride(), attributeBySemantic(geometry, QQuick3DGeometry::Attribute::PositionSemantic).offset, primitiveCount);
+        }
+    } else {
         const QQmlContext *context = qmlContext(this);
         QString src = m_model->source().toString();
         if (context && !src.startsWith(QLatin1Char('#')))
             src = QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(m_model->source()));
         QSSGMesh::Mesh mesh = loadMesh(src);
-        if (!mesh.isValid())
+        if (!mesh.isValid()) {
+            qWarning () << "ModelBlendParticle3D: Unable to load mesh: " << src;
             return;
-        if (mesh.drawMode() != QSSGMesh::Mesh::DrawMode::Triangles)
+        }
+        if (mesh.drawMode() != QSSGMesh::Mesh::DrawMode::Triangles) {
+            qWarning () << "ModelBlendParticle3D: Invalid mesh primitive type, must be Triangles. ";
             return;
+        }
 
         m_modelGeometry = new QQuick3DGeometry;
 
@@ -367,10 +432,12 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             // deindex data
             QByteArray unindexedVertexData;
             quint32 primitiveCount = indexedPrimitiveCount(indexBuffer);
+            bool u16IndexType = indexBuffer.componentType == QSSGMesh::Mesh::ComponentType::UnsignedInt16;
             unindexedVertexData.resize(vertexBuffer.stride * primitiveCount * 3);
             m_centerData.resize(primitiveCount);
             m_particleCount = primitiveCount;
-            copyToUnindexedVertices(unindexedVertexData, m_centerData, vertexBuffer.data, vertexBuffer.stride, entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())), indexBuffer.data, indexBuffer.componentType, primitiveCount);
+
+            copyToUnindexedVertices(unindexedVertexData, m_centerData, vertexBuffer.data, vertexBuffer.stride, entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())), indexBuffer.data, u16IndexType, primitiveCount);
             m_modelGeometry->setBounds(mesh.subsets().first().bounds.min, mesh.subsets().first().bounds.max);
             m_modelGeometry->setStride(vertexBuffer.stride);
             m_modelGeometry->setVertexData(unindexedVertexData);
@@ -387,30 +454,30 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             m_modelGeometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
         }
 
-        QMatrix4x4 transform = m_model->sceneTransform();
-        if (m_model->parentNode())
-            transform = m_model->parentNode()->sceneTransform().inverted() * transform;
-        m_triangleParticleData.resize(m_particleCount);
-        m_particleData.resize(m_particleCount);
-        m_particleData.fill({});
-        for (int i = 0; i < m_particleCount; i++) {
-            m_triangleParticleData[i].center = m_centerData[i];
-            m_centerData[i] = transform * m_centerData[i];
-            if (m_modelBlendMode == Construct) {
-                m_triangleParticleData[i].size = 0.0f;
-            } else {
-                m_triangleParticleData[i].size = 1.0f;
-                m_triangleParticleData[i].position = m_centerData[i];
-            }
-        }
-        QQuick3DParticle::doSetMaxAmount(m_particleCount);
-
         for (auto &e : vertexBuffer.entries)
             m_modelGeometry->addAttribute(toAttribute(e));
 
         m_model->setSource({});
         m_model->setGeometry(m_modelGeometry);
     }
+
+    QMatrix4x4 transform = m_model->sceneTransform();
+    if (m_model->parentNode())
+        transform = m_model->parentNode()->sceneTransform().inverted() * transform;
+    m_triangleParticleData.resize(m_particleCount);
+    m_particleData.resize(m_particleCount);
+    m_particleData.fill({});
+    for (int i = 0; i < m_particleCount; i++) {
+        m_triangleParticleData[i].center = m_centerData[i];
+        m_centerData[i] = transform * m_centerData[i];
+        if (m_modelBlendMode == Construct) {
+            m_triangleParticleData[i].size = 0.0f;
+        } else {
+            m_triangleParticleData[i].size = 1.0f;
+            m_triangleParticleData[i].position = m_centerData[i];
+        }
+    }
+    QQuick3DParticle::doSetMaxAmount(m_particleCount);
 }
 
 QSSGRenderGraphObject *QQuick3DParticleModelBlendParticle::updateSpatialNode(QSSGRenderGraphObject *node)
