@@ -60,6 +60,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelBlendParticle : public QQui
     Q_PROPERTY(QQuick3DNode *endNode READ endNode WRITE setEndNode NOTIFY endNodeChanged)
     Q_PROPERTY(ModelBlendMode modelBlendMode READ modelBlendMode WRITE setModelBlendMode NOTIFY modelBlendModeChanged)
     Q_PROPERTY(int endTime READ endTime WRITE setEndTime NOTIFY endTimeChanged)
+    Q_PROPERTY(QQuick3DNode *activationNode READ activationNode WRITE setActivationNode NOTIFY activationNodeChanged)
     QML_NAMED_ELEMENT(ModelBlendParticle3D)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -79,12 +80,14 @@ public:
     QQuick3DNode *endNode() const;
     ModelBlendMode modelBlendMode() const;
     int endTime() const;
+    QQuick3DNode *activationNode() const;
 
 public Q_SLOTS:
     void setDelegate(QQmlComponent *setDelegate);
     void setEndNode(QQuick3DNode *endNode);
     void setEndTime(int endTime);
     void setModelBlendMode(ModelBlendMode mode);
+    void setActivationNode(QQuick3DNode *activationNode);
 
 Q_SIGNALS:
     void delegateChanged();
@@ -92,6 +95,7 @@ Q_SIGNALS:
     void endNodeChanged();
     void modelBlendModeChanged();
     void endTimeChanged();
+    void activationNodeChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -160,6 +164,7 @@ private:
     ModelBlendMode m_modelBlendMode = Explode;
     int m_endTime = 0;
     bool m_dataChanged = true;
+    QQuick3DNode *m_activationNode = nullptr;
 };
 
 QT_END_NAMESPACE

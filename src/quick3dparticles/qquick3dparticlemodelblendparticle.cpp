@@ -66,6 +66,8 @@ QT_BEGIN_NAMESPACE
     transferred from one place to another.
     \endlist
 
+    The particles are emitted in the order they are specified in the model unless \l activationNode is set.
+
     Some features defined in base class and emitters are not functional with this type:
     \list
     \li \l Particle3D::alignMode is not functional since the particles can be in arbitrary orientation
@@ -175,6 +177,21 @@ int QQuick3DParticleModelBlendParticle::endTime() const
     return m_endTime;
 }
 
+/*!
+    \qmlproperty Node ModelBlendParticle3D::activationNode
+    \preliminary
+    This property holds a node that activates particles and overrides the reqular emit routine.
+    The activation node can be used to control how the particles are emitted spatially when the
+    model is exploded/constructed from the particles.
+    The activation node emits a particle if the center of that particle is on the positive half
+    of the z-axis of the activation node. Animating the activation node to move trough the model
+    will cause the particles to be emitted sequentially along the path the activation node moves.
+*/
+QQuick3DNode *QQuick3DParticleModelBlendParticle::activationNode() const
+{
+    return m_activationNode;
+}
+
 void QQuick3DParticleModelBlendParticle::setEndNode(QQuick3DNode *node)
 {
     if (m_endNode == node)
@@ -204,6 +221,15 @@ void QQuick3DParticleModelBlendParticle::setEndTime(int endTime)
         return;
     m_endTime = endTime;
     Q_EMIT endTimeChanged();
+}
+
+void QQuick3DParticleModelBlendParticle::setActivationNode(QQuick3DNode *activationNode)
+{
+    if (m_activationNode == activationNode)
+        return;
+
+    m_activationNode = activationNode;
+    Q_EMIT activationNodeChanged();
 }
 
 void QQuick3DParticleModelBlendParticle::regenerate()

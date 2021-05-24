@@ -659,7 +659,7 @@ void QQuick3DParticleEmitter::unRegisterEmitBurst(QQuick3DParticleEmitBurst* emi
     m_burstGenerated = false;
 }
 
-void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QQuaternion &parentRotation, const QVector3D &centerPos)
+void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QQuaternion &parentRotation, const QVector3D &centerPos, int index)
 {
     if (!m_system)
         return;
@@ -669,7 +669,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     if (mbp && mbp->lastParticle())
         return;
 
-    int particleDataIndex = particle->nextCurrentIndex(this);
+    int particleDataIndex = index == -1 ? particle->nextCurrentIndex(this) : index;
     auto d = &particle->m_particleData[particleDataIndex];
     int particleIdIndex = m_system->m_particleIdIndex++;
     if (m_system->m_particleIdIndex == INT_MAX)
@@ -841,6 +841,13 @@ void QQuick3DParticleEmitter::emitParticles()
     if (!m_particle)
         return;
 
+    auto *mbp = qobject_cast<QQuick3DParticleModelBlendParticle *>(m_particle);
+    if (mbp && mbp->activationNode()) {
+        // The particles are emitted using the activationNode instead of regular emit
+        emitActivationNodeParticles(mbp);
+        return;
+    }
+
     const int systemTime = m_system->time();
 
     // Keep previous emitting time within max the life span.
@@ -868,6 +875,38 @@ void QQuick3DParticleEmitter::emitParticles()
         // when time has jumped a lot (like a starttime).
         float startTime = (m_prevEmitTime / 1000.0f) + (float(1+i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0f);
         emitParticle(m_particle, startTime, transform, rotation, centerPos);
+    }
+
+    m_prevEmitTime = systemTime;
+}
+
+void QQuick3DParticleEmitter::emitActivationNodeParticles(QQuick3DParticleModelBlendParticle *particle)
+{
+    QMatrix4x4 matrix = particle->activationNode()->sceneTransform();
+    QMatrix4x4 actTransform = sceneTransform().inverted() * matrix;
+    QVector3D front = actTransform.column(2).toVector3D();
+    QVector3D pos = actTransform.column(3).toVector3D();
+    float d = QVector3D::dotProduct(pos, front);
+
+    const int systemTime = m_system->time();
+
+    // Keep previous emitting time within max the life span.
+    // This way emitting is reasonable also with big time jumps.
+    const int maxLifeSpan = m_lifeSpan + m_lifeSpanVariation;
+    m_prevEmitTime = std::max(m_prevEmitTime, systemTime - maxLifeSpan);
+
+    float startTime = systemTime / 1000.0f;
+
+    QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    QQuaternion rotation = calculateParticleRotation(parentNode(), m_systemSharedParent);
+    QVector3D centerPos = position();
+
+    for (int i = 0; i < particle->maxAmount(); i++) {
+        if (particle->m_particleData[i].startTime >= 0)
+            continue;
+        const QVector3D pc = particle->particleCenter(i);
+        if (QVector3D::dotProduct(front, pc) - d > 0.0f)
+            emitParticle(particle, startTime, transform, rotation, centerPos, i);
     }
 
     m_prevEmitTime = systemTime;

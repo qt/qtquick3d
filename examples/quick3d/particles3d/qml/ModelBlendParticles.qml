@@ -85,6 +85,12 @@ Item {
                 property: "rot"
                 Keyframe { frame: 0; value: 0 }
                 Keyframe { frame: 100; value: -180 }
+            },
+            KeyframeGroup {
+                target: actNode
+                property: "y"
+                Keyframe { frame: 0; value: 50 }
+                Keyframe { frame: 100; value: -100 }
             }
         ]
     }
@@ -139,6 +145,24 @@ Item {
             running: false
             x: -100
 
+            Node {
+                id: actNode
+                eulerRotation: Qt.vector3d(-90, 0, 0)
+
+                Model {
+                    visible: showActivationPlane.checked
+                    source: "#Rectangle"
+                    scale: Qt.vector3d(5, 5, 1)
+                    materials: [
+                        DefaultMaterial {
+                            diffuseColor: "red"
+                            cullMode: Material.NoCulling
+                            opacity: 0.5
+                        }
+                    ]
+                }
+            }
+
             Component {
                 id: modelComponent
                 Model {
@@ -168,6 +192,7 @@ Item {
                 endNode: translateNode
                 modelBlendMode: blendModeSelectionBox.selection
                 endTime: 2500
+                activationNode: actNode
             }
 
             ParticleEmitter3D {
@@ -189,6 +214,12 @@ Item {
     }
 
     SettingsView {
+        CustomCheckBox {
+            id: showActivationPlane
+            text: "Show activation plane"
+            checked: true
+        }
+
         CustomCheckBox {
             id: cullingModelBox
             text: "Enable culling"
