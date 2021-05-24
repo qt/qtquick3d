@@ -473,7 +473,7 @@ void QQuick3DParticle::componentComplete()
 }
 
 void QQuick3DParticle::reset() {
-    m_currentIndex = 0;
+    m_currentIndex = -1;
     m_lastBurstIndex = 0;
 
     // Reset all particles data
