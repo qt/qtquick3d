@@ -1135,19 +1135,38 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (hasIblProbe) {
             vertexShader.generateWorldNormal(inKey);
             if (materialAdapter->isPrincipled()) {
-                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
+                fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
             } else {
-                fragmentShader << "    global_diffuse_light.rgb += qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_world_normal).rgb;\n";
+                fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_world_normal).rgb;\n";
             }
             if (specularLightingEnabled) {
                 if (materialAdapter->isPrincipled()) {
-                    fragmentShader << "    global_specular_light.rgb += "
+                    fragmentShader << "    vec3 qt_iblSpecular = "
                                    << "qt_specularTint * qt_sampleGlossyPrincipled(qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
                 } else {
-                    fragmentShader << "    global_specular_light.rgb += qt_specularAmount * "
+                    fragmentShader << "    vec3 qt_iblSpecular = qt_specularAmount * "
                                    << "qt_specularTint * qt_sampleGlossy(qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
                 }
             }
+
+            // Occlusion Map
+            if (occlusionImage) {
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
+                const bool hasIdentityMap = identityImages.contains(occlusionImage);
+                if (hasIdentityMap)
+                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
+                else
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, occlusionImage->m_imageNode.m_indexUV);
+                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
+                fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
+                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+                fragmentShader << "    qt_iblDiffuse = mix(qt_iblDiffuse, qt_iblDiffuse * qt_ao, qt_material_properties3.x);\n";
+                fragmentShader << "    qt_iblSpecular = mix(qt_iblSpecular, qt_iblSpecular * qt_ao, qt_material_properties3.x);\n";
+            }
+
+            fragmentShader << "    global_diffuse_light.rgb += qt_iblDiffuse;\n";
+            if (specularLightingEnabled)
+                fragmentShader << "    global_specular_light += qt_iblSpecular;\n";
         }
 
         if (hasImage) {
@@ -1193,21 +1212,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     break;
                 }
             }
-        }
-
-        // Occlusion Map
-        if (occlusionImage) {
-            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
-            const bool hasIdentityMap = identityImages.contains(occlusionImage);
-            if (hasIdentityMap)
-                generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
-            else
-                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
-            fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
-                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
-            fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * qt_ao, qt_material_properties3.x);\n";
-            fragmentShader << "    qt_global_emission = mix(qt_global_emission, qt_global_emission * qt_ao, qt_material_properties3.x);\n";
         }
 
         if (materialAdapter->isPrincipled()) {
