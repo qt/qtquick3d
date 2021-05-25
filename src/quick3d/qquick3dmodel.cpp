@@ -459,10 +459,9 @@ void QQuick3DModel::setInverseBindPoses(const QList<QMatrix4x4> &poses)
 
 void QQuick3DModel::setBounds(const QVector3D &min, const QVector3D &max)
 {
-    if (!qFuzzyCompare(m_bounds.m_maximum, max)
-            || !qFuzzyCompare(m_bounds.m_minimum, min))  {
-        m_bounds.m_maximum = max;
-        m_bounds.m_minimum = min;
+    if (!qFuzzyCompare(m_bounds.maximum(), max)
+            || !qFuzzyCompare(m_bounds.minimum(), min))  {
+        m_bounds.bounds = QSSGBounds3 { min, max };
         emit boundsChanged();
     }
 }

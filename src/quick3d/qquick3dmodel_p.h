@@ -47,6 +47,7 @@
 #include <QtQuick3D/private/qquick3dinstancing_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
 #include <QtQuick3D/private/qquick3dmorphtarget_p.h>
+#include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
 #include <QtQml/QQmlListProperty>
 
@@ -65,37 +66,18 @@ class Q_QUICK3D_EXPORT QQuick3DBounds3
     Q_PROPERTY(QVector3D maximum READ maximum CONSTANT)
 
 public:
-    QQuick3DBounds3() = default;
-    QQuick3DBounds3(const QQuick3DBounds3& bounds)
-        : m_minimum(bounds.m_minimum), m_maximum(bounds.m_maximum)
-    {
-
-    }
-
-    QQuick3DBounds3 operator = (const QQuick3DBounds3 &bounds)
-    {
-        m_minimum = bounds.m_minimum;
-        m_maximum = bounds.m_maximum;
-        return *this;
-    }
-
-    bool operator == (const QQuick3DBounds3 &other) const
-    {
-        return m_minimum == other.m_minimum && m_maximum == other.m_maximum;
-    }
-
     QVector3D minimum() const
     {
-        return m_minimum;
+        return bounds.minimum;
     }
 
     QVector3D maximum() const
     {
-        return m_maximum;
+        return bounds.maximum;
     }
 
-    QVector3D m_minimum;
-    QVector3D m_maximum;
+    // For compatibility we start with zero values.
+    QSSGBounds3 bounds { QVector3D{}, QVector3D{} };
 };
 
 class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
