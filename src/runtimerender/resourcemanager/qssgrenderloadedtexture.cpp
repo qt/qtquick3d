@@ -54,6 +54,8 @@ QSSGRef<QSSGLoadedTexture> QSSGLoadedTexture::loadQImage(const QString &inPath,
     QImage image(inPath);
     if (inFormat == QSSGRenderTextureFormat::Unknown) {
         switch (image.format()) {
+        case QImage::Format_Mono:
+        case QImage::Format_MonoLSB:
         case QImage::Format_Indexed8: // Convert palleted images
             image.convertTo(QImage::Format_RGBA8888_Premultiplied);
             break;
