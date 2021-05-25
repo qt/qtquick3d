@@ -236,10 +236,11 @@ Item {
             }
 
             Wander3D {
-                uniqueAmount: Qt.vector3d(20, 20, 0)
+                uniqueAmount: Qt.vector3d(40, 40, 0)
                 uniqueAmountVariation: 0.8
                 uniquePace: Qt.vector3d(0.1, 0.1, 0)
                 uniquePaceVariation: 0.8
+                fadeInDuration: 3000
             }
         }
 

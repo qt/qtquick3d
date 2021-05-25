@@ -57,6 +57,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleWander : public QQuick3DParticle
     Q_PROPERTY(QVector3D uniquePace READ uniquePace WRITE setUniquePace NOTIFY uniquePaceChanged)
     Q_PROPERTY(float uniqueAmountVariation READ uniqueAmountVariation WRITE setUniqueAmountVariation NOTIFY uniqueAmountVariationChanged)
     Q_PROPERTY(float uniquePaceVariation READ uniquePaceVariation WRITE setUniquePaceVariation NOTIFY uniquePaceVariationChanged)
+    Q_PROPERTY(int fadeInDuration READ fadeInDuration WRITE setFadeInDuration NOTIFY fadeInDurationChanged)
+    Q_PROPERTY(int fadeOutDuration READ fadeOutDuration WRITE setFadeOutDuration NOTIFY fadeOutDurationChanged)
     QML_NAMED_ELEMENT(Wander3D)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -70,6 +72,8 @@ public:
     const QVector3D &uniquePace() const;
     float uniqueAmountVariation() const;
     float uniquePaceVariation() const;
+    int fadeInDuration() const;
+    int fadeOutDuration() const;
 
 public Q_SLOTS:
     void setGlobalAmount(const QVector3D &globalAmount);
@@ -79,6 +83,8 @@ public Q_SLOTS:
     void setUniquePace(const QVector3D &uniquePace);
     void setUniqueAmountVariation(float uniqueAmountVariation);
     void setUniquePaceVariation(float uniquePaceVariation);
+    void setFadeInDuration(int fadeInDuration);
+    void setFadeOutDuration(int fadeOutDuration);
 
 Q_SIGNALS:
     void globalAmountChanged();
@@ -88,6 +94,8 @@ Q_SIGNALS:
     void uniquePaceChanged();
     void uniqueAmountVariationChanged();
     void uniquePaceVariationChanged();
+    void fadeInDurationChanged();
+    void fadeOutDurationChanged();
 
 protected:
     void affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time) override;
@@ -100,6 +108,8 @@ private:
     QVector3D m_uniquePace;
     float m_uniqueAmountVariation = 0.0f;
     float m_uniquePaceVariation = 0.0f;
+    int m_fadeInDuration = 0;
+    int m_fadeOutDuration = 0;
 };
 
 QT_END_NAMESPACE

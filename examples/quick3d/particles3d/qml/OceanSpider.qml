@@ -282,6 +282,7 @@ Item {
                 Wander3D {
                     globalAmount: Qt.vector3d(15, 15, 15)
                     globalPace: Qt.vector3d(1.0, 1.0, 1.0)
+                    fadeInDuration: 1000
                     Vector3dAnimation on globalPaceStart {
                         loops: Animation.Infinite
                         duration: 8000

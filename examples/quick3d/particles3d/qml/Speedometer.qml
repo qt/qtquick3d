@@ -326,6 +326,7 @@ Item {
                 Wander3D {
                     uniqueAmount: Qt.vector3d(10, 0, 10)
                     uniquePace: Qt.vector3d(0.1, 0.1, 0.1)
+                    fadeInDuration: 2000
                 }
                 PointRotator3D {
                     particles: particleSpark2

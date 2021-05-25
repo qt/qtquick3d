@@ -156,6 +156,36 @@ float QQuick3DParticleWander::uniquePaceVariation() const
     return m_uniquePaceVariation;
 }
 
+/*!
+    \qmlproperty int Wander3D::fadeInDuration
+
+    This property defines the duration in milliseconds for fading in the affector.
+    After this duration, the wandering will be in full effect.
+    Setting this can be useful to emit from a specific position or shape,
+    otherwise wander will affect position also at the beginning.
+
+    The default value is \c 0.
+*/
+int QQuick3DParticleWander::fadeInDuration() const
+{
+    return m_fadeInDuration;
+}
+
+/*!
+    \qmlproperty int Wander3D::fadeOutDuration
+
+    This property defines the duration in milliseconds for fading out the affector.
+    Setting this can be useful to reduce the wander when the particle life
+    time ends, for example when combined with \l Attractor3D so end positions will
+    match the \l{Attractor3D::shape}{shape}.
+
+    The default value is \c 0.
+*/
+int QQuick3DParticleWander::fadeOutDuration() const
+{
+    return m_fadeOutDuration;
+}
+
 void QQuick3DParticleWander::setGlobalAmount(const QVector3D &globalAmount)
 {
     if (m_globalAmount == globalAmount)
@@ -228,16 +258,45 @@ void QQuick3DParticleWander::setUniquePaceVariation(float uniquePaceVariation)
     Q_EMIT update();
 }
 
+void QQuick3DParticleWander::setFadeInDuration(int fadeInDuration)
+{
+    if (m_fadeInDuration == fadeInDuration)
+        return;
+
+    m_fadeInDuration = std::max(0, fadeInDuration);
+    Q_EMIT fadeInDurationChanged();
+    Q_EMIT update();
+}
+
+void QQuick3DParticleWander::setFadeOutDuration(int fadeOutDuration)
+{
+    if (m_fadeOutDuration == fadeOutDuration)
+        return;
+
+    m_fadeOutDuration = std::max(0, fadeOutDuration);
+    Q_EMIT fadeOutDurationChanged();
+    Q_EMIT update();
+}
+
 void QQuick3DParticleWander::affectParticle(const QQuick3DParticleData &sd, QQuick3DParticleDataCurrent *d, float time)
 {
     if (!system())
         return;
     auto rand = system()->rand();
 
-    // Smooth 1 sec start to full wandering
-    // Required to respect particle emitter start position
-    // TODO: API?
-    float smooth = std::min(1.0f, sqrtf(time));
+    // Optionally smoothen the beginning & end of wander
+    float smooth = 1.0f;
+    if (m_fadeInDuration > 0) {
+        smooth = time / (float(m_fadeInDuration) / 1000.0f);
+        smooth = std::min(1.0f, smooth);
+    }
+    if (m_fadeOutDuration > 0) {
+        float timeLeft = (sd.lifetime - time);
+        float smoothOut = timeLeft / (float(m_fadeOutDuration) / 1000.0f);
+        // When fading both in & out, select smaller (which is always max 1.0)
+        smooth = std::min(smoothOut, smooth);
+    }
+
     const float pi2 = float(M_PI * 2);
     // Global
     if (!qFuzzyIsNull(m_globalAmount.x()) && !qFuzzyIsNull(m_globalPace.x()))

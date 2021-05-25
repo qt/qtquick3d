@@ -222,6 +222,7 @@ Item {
                     uniquePace: Qt.vector3d(0.2, 0.2, 0.2)
                     uniqueAmountVariation: 0.5
                     uniquePaceVariation: 0.5
+                    fadeInDuration: 1000
                 }
             }
         }
