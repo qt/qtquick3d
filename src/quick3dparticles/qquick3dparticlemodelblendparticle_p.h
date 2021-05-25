@@ -61,6 +61,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelBlendParticle : public QQui
     Q_PROPERTY(ModelBlendMode modelBlendMode READ modelBlendMode WRITE setModelBlendMode NOTIFY modelBlendModeChanged)
     Q_PROPERTY(int endTime READ endTime WRITE setEndTime NOTIFY endTimeChanged)
     Q_PROPERTY(QQuick3DNode *activationNode READ activationNode WRITE setActivationNode NOTIFY activationNodeChanged)
+    Q_PROPERTY(bool random READ random WRITE setRandom NOTIFY randomChanged)
     QML_NAMED_ELEMENT(ModelBlendParticle3D)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -81,6 +82,7 @@ public:
     ModelBlendMode modelBlendMode() const;
     int endTime() const;
     QQuick3DNode *activationNode() const;
+    bool random() const;
 
 public Q_SLOTS:
     void setDelegate(QQmlComponent *setDelegate);
@@ -88,6 +90,7 @@ public Q_SLOTS:
     void setEndTime(int endTime);
     void setModelBlendMode(ModelBlendMode mode);
     void setActivationNode(QQuick3DNode *activationNode);
+    void setRandom(bool random);
 
 Q_SIGNALS:
     void delegateChanged();
@@ -96,6 +99,7 @@ Q_SIGNALS:
     void modelBlendModeChanged();
     void endTimeChanged();
     void activationNodeChanged();
+    void randomChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -112,6 +116,7 @@ protected:
     QVector3D particleCenter(int particleIndex) const;
     QVector3D particleEndPosition(int particleIndex) const;
     QVector3D particleEndRotation(int particleIndex) const;
+    int randomIndex(int particleIndex);
     void commitParticles()
     {
         markAllDirty();
@@ -150,6 +155,7 @@ private:
     QVector<QVector3D> m_centerData;
     QHash<QByteArray, QMetaObject::Connection> m_connections;
     QMap<const QQuick3DParticleEmitter *, PerEmitterData> m_perEmitterData;
+    QVector<int> m_randomParticles;
     PerEmitterData n_noPerEmitterData;
     int m_nextEmitterIndex = 0;
     bool m_bufferUpdated = false;
@@ -164,6 +170,7 @@ private:
     ModelBlendMode m_modelBlendMode = Explode;
     int m_endTime = 0;
     bool m_dataChanged = true;
+    bool m_random = false;
     QQuick3DNode *m_activationNode = nullptr;
 };
 

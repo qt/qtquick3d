@@ -29,6 +29,7 @@
 
 #include "qquick3dparticlemodelblendparticle_p.h"
 #include "qquick3dparticleemitter_p.h"
+#include "qquick3dparticlerandomizer_p.h"
 
 #include <QtCore/qdir.h>
 #include <QtQml/qqmlfile.h>
@@ -66,7 +67,8 @@ QT_BEGIN_NAMESPACE
     transferred from one place to another.
     \endlist
 
-    The particles are emitted in the order they are specified in the model unless \l activationNode is set.
+    The particles are emitted in the order they are specified in the model unless \l activationNode is set
+    or \l random is set to \c true.
 
     Some features defined in base class and emitters are not functional with this type:
     \list
@@ -192,6 +194,18 @@ QQuick3DNode *QQuick3DParticleModelBlendParticle::activationNode() const
     return m_activationNode;
 }
 
+/*!
+    \qmlproperty bool ModelBlendParticle3D::random
+    \preliminary
+    This property holds whether the particles are emitted in random order instead of in the order
+    they are specified in the model. The default is \c false.
+    \note This property is ignored if \l activationNode is set.
+*/
+bool QQuick3DParticleModelBlendParticle::random() const
+{
+    return m_random;
+}
+
 void QQuick3DParticleModelBlendParticle::setEndNode(QQuick3DNode *node)
 {
     if (m_endNode == node)
@@ -230,6 +244,15 @@ void QQuick3DParticleModelBlendParticle::setActivationNode(QQuick3DNode *activat
 
     m_activationNode = activationNode;
     Q_EMIT activationNodeChanged();
+}
+
+void QQuick3DParticleModelBlendParticle::setRandom(bool random)
+{
+    if (m_random == random)
+        return;
+
+    m_random = random;
+    Q_EMIT randomChanged();
 }
 
 void QQuick3DParticleModelBlendParticle::regenerate()
@@ -660,6 +683,24 @@ QVector3D QQuick3DParticleModelBlendParticle::particleEndPosition(int idx) const
 QVector3D QQuick3DParticleModelBlendParticle::particleEndRotation(int) const
 {
     return m_endNodeRotation;
+}
+
+int QQuick3DParticleModelBlendParticle::randomIndex(int particleIndex)
+{
+    if (m_randomParticles.isEmpty()) {
+        m_randomParticles.resize(m_maxAmount);
+        for (int i = 0; i < m_maxAmount; i++)
+            m_randomParticles[i] = i;
+
+        // Randomize particle indices just once
+        QRandomGenerator rand(system()->rand()->generator());
+        for (int i = 0; i < m_maxAmount; i++) {
+            int ridx = rand.generate() % m_maxAmount;
+            if (i != ridx)
+                qSwap(m_randomParticles[i], m_randomParticles[ridx]);
+        }
+    }
+    return m_randomParticles[particleIndex];
 }
 
 QT_END_NAMESPACE

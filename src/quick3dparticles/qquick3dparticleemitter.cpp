@@ -670,6 +670,9 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         return;
 
     int particleDataIndex = index == -1 ? particle->nextCurrentIndex(this) : index;
+    if (index == -1 && mbp && mbp->random())
+        particleDataIndex = mbp->randomIndex(particleDataIndex);
+
     auto d = &particle->m_particleData[particleDataIndex];
     int particleIdIndex = m_system->m_particleIdIndex++;
     if (m_system->m_particleIdIndex == INT_MAX)

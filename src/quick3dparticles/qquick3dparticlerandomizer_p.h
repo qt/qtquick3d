@@ -154,7 +154,10 @@ public:
         m_index = (m_index < m_size - 1) ? m_index + 1 : 0;
         return m_randomList.at(m_index);
     }
-
+    QRandomGenerator generator() const
+    {
+        return m_generator;
+    }
 private:
     QRandomGenerator m_generator;
     int m_size = 0;

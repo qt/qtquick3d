@@ -150,7 +150,7 @@ Item {
                 eulerRotation: Qt.vector3d(-90, 0, 0)
 
                 Model {
-                    visible: showActivationPlane.checked
+                    visible: enableActivationPlane.checked
                     source: "#Rectangle"
                     scale: Qt.vector3d(5, 5, 1)
                     materials: [
@@ -192,7 +192,8 @@ Item {
                 endNode: translateNode
                 modelBlendMode: blendModeSelectionBox.selection
                 endTime: 2500
-                activationNode: actNode
+                activationNode: enableActivationPlane.checked ? actNode : null
+                random: enableRandom.checked
             }
 
             ParticleEmitter3D {
@@ -215,11 +216,16 @@ Item {
 
     SettingsView {
         CustomCheckBox {
-            id: showActivationPlane
-            text: "Show activation plane"
-            checked: true
+            id: enableActivationPlane
+            text: "Enable activation plane"
+            checked: false
         }
-
+        CustomCheckBox {
+            id: enableRandom
+            text: "Random"
+            checked: false
+            enabled: !enableActivationPlane.checked
+        }
         CustomCheckBox {
             id: cullingModelBox
             text: "Enable culling"
