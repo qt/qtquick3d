@@ -196,7 +196,6 @@ Window {
     }
     WasdController {
         controlledObject: camera
-        focus: true
     }
 
     Row {
