@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLESHAPE_H
-#define QQUICK3DPARTICLESHAPE_H
+#ifndef QQUICK3DPARTICLEMODELSHAPE_H
+#define QQUICK3DPARTICLEMODELSHAPE_H
 
 //
 //  W A R N I N G
@@ -46,57 +46,50 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleSystem;
 class QQuick3DModel;
+class QQmlComponent;
 
-class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QQuick3DParticleAbstractShape
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelShape : public QQuick3DParticleAbstractShape
 {
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
-    Q_PROPERTY(ShapeType type READ type WRITE setType NOTIFY typeChanged)
-    Q_PROPERTY(QVector3D extents READ extents WRITE setExtents NOTIFY extentsChanged)
-
-    QML_NAMED_ELEMENT(ParticleShape3D)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    QML_NAMED_ELEMENT(ParticleModelShape3D)
     QML_ADDED_IN_VERSION(6, 2)
 
 public:
-    enum ShapeType
-    {
-        Cube = 0,
-        Sphere,
-        Cylinder
-    };
-    Q_ENUM(ShapeType)
-
-    QQuick3DParticleShape(QObject *parent = nullptr);
+    QQuick3DParticleModelShape(QObject *parent = nullptr);
+    ~QQuick3DParticleModelShape() override;
 
     bool fill() const;
-    ShapeType type() const;
-    QVector3D extents() const;
+    QQmlComponent *delegate() const;
+
+public Q_SLOTS:
+    void setFill(bool fill);
+    void setDelegate(QQmlComponent *delegate);
 
     // Returns point inside this shape
     QVector3D getPosition(int particleIndex) override;
 
-public Q_SLOTS:
-    void setFill(bool fill);
-    void setType(QQuick3DParticleShape::ShapeType type);
-    void setExtents(QVector3D extends);
-
 Q_SIGNALS:
     void fillChanged();
-    void typeChanged();
-    void extentsChanged();
+    void delegateChanged();
 
 private:
-    QVector3D randomPositionCube(int particleIndex) const;
-    QVector3D randomPositionSphere(int particleIndex) const;
-    QVector3D randomPositionCylinder(int particleIndex) const;
+    QVector3D randomPositionModel(int particleIndex);
+    void createModel();
+    void clearModelVertexPositions();
+    void calculateModelVertexPositions();
 
+    QQmlComponent *m_delegate = nullptr;
+    QQuick3DModel *m_model = nullptr;
+    QVector<QVector3D> m_vertexPositions;
+    float m_modelTriangleAreasSum = 0;
+    QVector<float> m_modelTriangleAreas;
+    QVector3D m_modelTriangleCenter;
     bool m_fill = true;
-    ShapeType m_type = ShapeType::Cube;
-    QVector3D m_extents = QVector3D(50, 50, 50);
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLESHAPE_H
+#endif // QQUICK3DPARTICLEMODELSHAPE_H

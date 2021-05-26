@@ -50,7 +50,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleAttractor : public QQuick3DParti
 {
     Q_OBJECT
     Q_PROPERTY(QVector3D positionVariation READ positionVariation WRITE setPositionVariation NOTIFY positionVariationChanged)
-    Q_PROPERTY(QQuick3DParticleShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
+    Q_PROPERTY(QQuick3DParticleAbstractShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariation READ durationVariation WRITE setDurationVariation NOTIFY durationVariationChanged)
     Q_PROPERTY(bool hideAtEnd READ hideAtEnd WRITE setHideAtEnd NOTIFY hideAtEndChanged)
@@ -63,7 +63,7 @@ public:
     QQuick3DParticleAttractor(QQuick3DNode *parent = nullptr);
 
     QVector3D positionVariation() const;
-    QQuick3DParticleShape *shape() const;
+    QQuick3DParticleAbstractShape *shape() const;
     int duration() const;
     int durationVariation() const;
     bool hideAtEnd() const;
@@ -72,7 +72,7 @@ public:
 
 public Q_SLOTS:
     void setPositionVariation(const QVector3D &positionVariation);
-    void setShape(QQuick3DParticleShape *shape);
+    void setShape(QQuick3DParticleAbstractShape *shape);
     void setDuration(int duration);
     void setDurationVariation(int durationVariation);
     void setHideAtEnd(bool hideAtEnd);
@@ -95,7 +95,7 @@ protected:
 private:
     void updateShapePositions();
 
-    QQuick3DParticleShape *m_shape = nullptr;
+    QQuick3DParticleAbstractShape *m_shape = nullptr;
     QList<QVector3D> m_shapePositionList;
     QVector3D m_centerPos;
     QMatrix4x4 m_particleTransform;

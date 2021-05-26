@@ -30,7 +30,6 @@
 #include "qquick3dparticleemitter_p.h"
 #include "qquick3dparticlemodelparticle_p.h"
 #include "qquick3dparticlerandomizer_p.h"
-#include "qquick3dparticleshape_p.h"
 #include "qquick3dparticleutils_p.h"
 #include "qquick3dparticlespritesequence_p.h"
 #include "qquick3dparticlemodelblendparticle_p.h"
@@ -400,9 +399,10 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
 }
 
 /*!
-    \qmlproperty ParticleShape3D ParticleEmitter3D::shape
+    \qmlproperty ParticleAbstractShape3D ParticleEmitter3D::shape
 
-    This property defines optional shape for the emitting area. Shape is scaled,
+    This property defines optional shape for the emitting area. It can be either
+    \l ParticleShape3D or \l ParticleModelShape3D. Shape is scaled,
     positioned and rotated based on the emitter node properties. When the Shape
     \l {ParticleShape3D::fill}{fill} property is set to false, emitting happens
     only from the surface of the shape.
@@ -410,12 +410,12 @@ void QQuick3DParticleEmitter::setParticle(QQuick3DParticle *particle)
     When the shape is not defined, emitting is done from the center point of the
     emitter node.
 */
-QQuick3DParticleShape *QQuick3DParticleEmitter::shape() const
+QQuick3DParticleAbstractShape *QQuick3DParticleEmitter::shape() const
 {
     return m_shape;
 }
 
-void QQuick3DParticleEmitter::setShape(QQuick3DParticleShape *shape)
+void QQuick3DParticleEmitter::setShape(QQuick3DParticleAbstractShape *shape)
 {
     if (m_shape == shape)
         return;
@@ -704,7 +704,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         // When shape is not set, default to node center point.
         QVector3D pos = centerPos;
         if (m_shape)
-            pos += m_shape->randomPosition(particleIdIndex);
+            pos += m_shape->getPosition(particleIdIndex);
         d->startPosition = transform * pos;
     }
 

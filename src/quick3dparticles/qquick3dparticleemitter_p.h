@@ -45,7 +45,7 @@
 #include <QtQuick3DParticles/private/qquick3dparticledirection_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlemodelparticle_p.h>
-#include <QtQuick3DParticles/private/qquick3dparticleshape_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticleabstractshape_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticleemitburst_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +58,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitter : public QQuick3DNode
     Q_PROPERTY(QQuick3DParticleDirection *velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
     Q_PROPERTY(QQuick3DParticle *particle READ particle WRITE setParticle NOTIFY particleChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(QQuick3DParticleShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
+    Q_PROPERTY(QQuick3DParticleAbstractShape *shape READ shape WRITE setShape NOTIFY shapeChanged)
     Q_PROPERTY(float emitRate READ emitRate WRITE setEmitRate NOTIFY emitRateChanged)
     Q_PROPERTY(int lifeSpan READ lifeSpan WRITE setLifeSpan NOTIFY lifeSpanChanged)
     Q_PROPERTY(int lifeSpanVariation READ lifeSpanVariation WRITE setLifeSpanVariation NOTIFY lifeSpanVariationChanged)
@@ -90,7 +90,7 @@ public:
     int lifeSpan() const;
     int lifeSpanVariation() const;
     QQuick3DParticle *particle() const;
-    QQuick3DParticleShape *shape() const;
+    QQuick3DParticleAbstractShape *shape() const;
     QVector3D particleRotation() const;
     QVector3D particleRotationVariation() const;
     QVector3D particleRotationVelocity() const;
@@ -115,7 +115,7 @@ public Q_SLOTS:
     void setLifeSpan(int lifeSpan);
     void setLifeSpanVariation(int lifeSpanVariation);
     void setParticle(QQuick3DParticle *particle);
-    void setShape(QQuick3DParticleShape *shape);
+    void setShape(QQuick3DParticleAbstractShape *shape);
     void setParticleRotation(const QVector3D &particleRotation);
     void setParticleRotationVariation(const QVector3D &particleRotationVariation);
     void setParticleRotationVelocity(const QVector3D &particleRotationVelocity);
@@ -189,7 +189,7 @@ private:
     float m_unemittedF = 0.0f;
     float m_depthBias = 0.0f;
     QQuick3DParticle *m_particle = nullptr;
-    QQuick3DParticleShape *m_shape = nullptr;
+    QQuick3DParticleAbstractShape *m_shape = nullptr;
     QVector3D m_particleRotation;
     QVector3D m_particleRotationVariation;
     QVector3D m_particleRotationVelocity;

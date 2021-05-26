@@ -150,7 +150,7 @@ Item {
                 }
                 emitRate: 3000
                 lifeSpan: 1000
-                shape: ParticleShape3D {
+                shape: ParticleModelShape3D {
                     id: shape1
                     delegate: suzanne
                 }
@@ -177,7 +177,7 @@ Item {
                 }
                 emitRate: 3000
                 lifeSpan: 1000
-                shape: ParticleShape3D {
+                shape: ParticleModelShape3D {
                     id: shape2
                     delegate: suzanne
                     fill: false

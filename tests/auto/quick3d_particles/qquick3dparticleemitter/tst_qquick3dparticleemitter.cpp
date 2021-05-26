@@ -35,7 +35,7 @@
 #include <QtQuick3DParticles/private/qquick3dparticleemitter_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlespriteparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticletargetdirection_p.h>
-
+#include <QtQuick3DParticles/private/qquick3dparticleshape_p.h>
 
 class tst_QQuick3DParticleEmitter : public QObject
 {

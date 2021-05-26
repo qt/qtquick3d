@@ -94,9 +94,9 @@ void QQuick3DParticleAttractor::setPositionVariation(const QVector3D &positionVa
 }
 
 /*!
-    \qmlproperty ParticleShape3D Attractor3D::shape
+    \qmlproperty ParticleAbstractShape3D Attractor3D::shape
 
-    This property defines a \l ParticleShape3D for particles attraction.
+    This property defines a \l ParticleAbstractShape3D for particles attraction.
     Each particle will be attracted into a random position inside this shape. This is an
     alternative for defining \l {Node::position}{position} and \l positionVariation. Here
     is an example how to attract particles into some random point inside sphere by the end
@@ -114,12 +114,12 @@ void QQuick3DParticleAttractor::setPositionVariation(const QVector3D &positionVa
 
     \sa {Node::position}, positionVariation
 */
-QQuick3DParticleShape *QQuick3DParticleAttractor::shape() const
+QQuick3DParticleAbstractShape *QQuick3DParticleAttractor::shape() const
 {
     return m_shape;
 }
 
-void QQuick3DParticleAttractor::setShape(QQuick3DParticleShape *shape)
+void QQuick3DParticleAttractor::setShape(QQuick3DParticleAbstractShape *shape)
 {
     if (m_shape == shape)
         return;
@@ -270,7 +270,7 @@ void QQuick3DParticleAttractor::updateShapePositions()
 
         m_shapePositionList.reserve(pCount);
         for (int i = 0; i < pCount; i++)
-            m_shapePositionList << m_shape->randomPosition(i);
+            m_shapePositionList << m_shape->getPosition(i);
     } else {
         m_shapePositionList.clear();
         m_shapePositionList.squeeze();
@@ -314,7 +314,7 @@ void QQuick3DParticleAttractor::affectParticle(const QQuick3DParticleData &sd, Q
         if (m_useCachedPositions)
             pos += m_shapePositionList[sd.index % m_shapePositionList.size()];
         else
-            pos += m_shape->randomPosition(sd.index);
+            pos += m_shape->getPosition(sd.index);
     }
 
     if (!m_positionVariation.isNull()) {
