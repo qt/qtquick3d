@@ -638,6 +638,10 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
             float size = 0.0f;
             QVector3D pos;
             QVector3D rot;
+            QVector4D color(float(d->startColor.r)/ 255.0f,
+                            float(d->startColor.g)/ 255.0f,
+                            float(d->startColor.b)/ 255.0f,
+                            float(d->startColor.a)/ 255.0f);
             if (d->startTime > 0.0f && timeS > particleTimeEnd
                     && (particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Construct ||
                         particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Transfer)) {
@@ -645,13 +649,17 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
                 size = 1.0f;
                 pos = particle->particleEndPosition(i);
                 rot = particle->particleEndRotation(i);
+                if (particle->fadeOutEffect() == QQuick3DParticle::FadeOpacity)
+                    color.setW(0.0f);
             } else if (particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Explode ||
                        particle->modelBlendMode() == QQuick3DParticleModelBlendParticle::Transfer) {
                 age = 0.0f;
                 size = 1.0f;
                 pos = particle->particleCenter(i);
+                if (particle->fadeInEffect() == QQuick3DParticle::FadeOpacity)
+                    color.setW(0.0f);
             }
-            particle->setParticleData(i, pos, rot, {}, size, age);
+            particle->setParticleData(i, pos, rot, color, size, age);
             continue;
         }
 

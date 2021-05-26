@@ -77,6 +77,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
 
     QSSGParticleBuffer *particleBuffer = nullptr;
     QMatrix4x4 particleMatrix;
+    bool hasTransparency = false;
 
     QVector<float> morphWeights;
     QVector<quint32> morphAttributes;

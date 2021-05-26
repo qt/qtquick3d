@@ -56,6 +56,8 @@ QQuick3DParticle::QQuick3DParticle(QQuick3DObject *parent)
 
 QQuick3DParticle::QQuick3DParticle(QQuick3DObjectPrivate &dd, QQuick3DNode *parent)
     : QQuick3DObject(dd, parent)
+    , m_color(255, 255, 255, 255)
+    , m_colorVariation(0, 0, 0, 0)
 {
 
 }

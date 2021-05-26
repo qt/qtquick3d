@@ -896,16 +896,19 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
         if (theMaterialObject == nullptr)
             continue;
 
+        bool usesBlendParticles = theModelContext.model.particleBuffer != nullptr;
         bool usesInstancing = theModelContext.model.instancing()
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
         if (usesInstancing && theModelContext.model.instanceTable->hasTransparency())
+            renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+        if (theModelContext.model.hasTransparency)
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
 
         if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
             // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
             // if the mesh has it.
-            theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing;
+            theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing || usesBlendParticles;
             QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                     prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights));
             QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);

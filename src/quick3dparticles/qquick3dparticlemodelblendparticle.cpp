@@ -78,12 +78,16 @@ QT_BEGIN_NAMESPACE
     the primitives are specified in the model.
     \li \l ParticleEmitter3D::depthBias is not functional since the model depth bias is used instead.
     \endlist
+
+    \note The default \l {Particle3D::fadeInEffect}{fadeInEffect} and \l {Particle3D::fadeInEffect}{fadeOutEffect}
+    are \c Particle3D.FadeNone.
 */
 
 QQuick3DParticleModelBlendParticle::QQuick3DParticleModelBlendParticle(QQuick3DNode *parent)
     : QQuick3DParticle(*new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::ModelBlendParticle), parent)
 {
-
+    setFadeInEffect(QQuick3DParticle::FadeNone);
+    setFadeOutEffect(QQuick3DParticle::FadeNone);
 }
 
 QQuick3DParticleModelBlendParticle::~QQuick3DParticleModelBlendParticle()
@@ -542,6 +546,7 @@ QSSGRenderGraphObject *QQuick3DParticleModelBlendParticle::updateSpatialNode(QSS
         QQuick3DParticleSystem *psystem = QQuick3DParticle::system();
         QMatrix4x4 particleMatrix = psystem->sceneTransform().inverted() * m_model->sceneTransform();
         model->particleMatrix = particleMatrix.inverted();
+        model->hasTransparency = fadeInEffect() == QQuick3DParticle::FadeOpacity || fadeOutEffect() == QQuick3DParticle::FadeOpacity;
         updateParticleBuffer(model->particleBuffer);
     }
     return node;
