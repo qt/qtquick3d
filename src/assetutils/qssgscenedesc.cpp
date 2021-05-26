@@ -72,4 +72,9 @@ void QSSGSceneDesc::Scene::reset()
     allocator.reset();
 }
 
+QMetaType QSSGSceneDesc::listViewMetaType()
+{
+    return QMetaType::fromType<QSSGSceneDesc::ListView>();
+}
+
 QT_END_NAMESPACE

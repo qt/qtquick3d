@@ -84,6 +84,9 @@ namespace QSSGSceneDesc
 struct Node;
 struct Animation;
 
+template<typename T>
+using rm_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
 struct Scene
 {
     using ResourceNodes = QVarLengthArray<Node *>;
@@ -100,9 +103,10 @@ struct Scene
     mutable quint16 nodeId = 0;
 
     template<typename T, typename... Args>
-    Q_REQUIRED_RESULT inline T *create(Args&&... args)
+    Q_REQUIRED_RESULT inline auto create(Args&&... args)
     {
-        return new (allocator.allocate(sizeof (T)))T(std::forward<Args>(args)...);
+        using Tt = rm_cvref_t<T>;
+        return new (allocator.allocate(sizeof(Tt)))Tt(std::forward<Args>(args)...);
     }
 
     void reset();
@@ -247,6 +251,14 @@ struct Joint : Node
     Joint() : Node(Node::Type::Joint, Node::RuntimeType::Joint) {}
 };
 
+struct ListView
+{
+    void *head = nullptr;
+    qsizetype count = -1;
+};
+
+Q_QUICK3DASSETUTILS_EXPORT QMetaType listViewMetaType();
+
 struct Animation
 {
     struct KeyPosition
@@ -309,7 +321,6 @@ Q_QUICK3DASSETUTILS_EXPORT void addNode(Node &parent, Node &node);
 // become a child of the root node.
 Q_QUICK3DASSETUTILS_EXPORT void addNode(Scene &scene, Node &node);
 
-
 template <typename T> struct TypeMap {};
 template <> struct TypeMap<QSSGSceneDesc::Node> { using type = QQuick3DNode; };
 template <> struct TypeMap<QSSGSceneDesc::Texture> { using type = QQuick3DTexture; };
@@ -322,6 +333,15 @@ template <> struct TypeMap<QSSGSceneDesc::Light> { using type = QQuick3DAbstract
 
 template <> struct TypeMap<QQuick3DMaterial> { using type = QSSGSceneDesc::Material; };
 
+template<typename> struct ListParam { enum { value = 0 }; };
+template<typename T> struct ListParam<QList<T>>
+{
+    using type = T;
+    enum { value = 1 };
+};
+
+template <typename T>
+using listParam_t = typename ListParam<rm_cvref_t<T>>::type;
 
 template <typename T>
 struct FuncType
@@ -336,8 +356,8 @@ struct FuncType<R (C::*)(A...)>
     using Ret = R;
     using Class = C;
     // For now we only care about single argument functions
-    using Arg0 = typename std::tuple_element_t<0, std::tuple<A...>>;
-    using Arg0Base = typename std::remove_cv_t<typename std::remove_reference_t<typename std::remove_pointer_t<Arg0>>>;
+    using Arg0 = std::tuple_element_t<0, std::tuple<A...>>;
+    using Arg0Base = rm_cvref_t<Arg0>;
 };
 
 template <typename T, typename C>
@@ -346,6 +366,8 @@ struct FuncType<QQmlListProperty<T> (C::*)()>
     enum { value = 2 };
     using Ret = QQmlListProperty<T>;
     using Class = C;
+    using Arg0 = void;
+    using Arg0Base = Arg0;
 };
 
 template <typename Ret, typename Class, typename Arg>
@@ -362,6 +384,28 @@ struct PropertySetter : PropertyCall
                 (qobject_cast<Class *>(&that)->*call)(reinterpret_cast<typename FuncType<Setter>::Arg0>(const_cast<void *>(value)));
             else
                 (qobject_cast<Class *>(&that)->*call)(*reinterpret_cast<typename FuncType<Setter>::Arg0Base *>(const_cast<void *>(value)));
+            return true;
+        }
+
+        return false;
+    }
+};
+
+template <typename Ret, typename Class, typename Arg>
+struct PropertyListSetter : PropertyCall
+{
+    using Setter = Ret (Class::*)(Arg);
+    using ListT = typename FuncType<Setter>::Arg0Base;
+    using It = listParam_t<ListT>;
+    constexpr explicit PropertyListSetter(Setter fn) : call(fn) {}
+    Setter call = nullptr;
+    bool get(const QQuick3DObject &, const void *[]) const override { return false; }
+    bool set(QQuick3DObject &that, const void *value) override
+    {
+        if (const auto listView = reinterpret_cast<const ListView *>(value)) {
+            const auto begin = reinterpret_cast<It *>(listView->head);
+            const auto end = reinterpret_cast<It *>(listView->head) + listView->count;
+            (qobject_cast<Class *>(&that)->*call)(ListT{begin, end});
             return true;
         }
 
@@ -422,21 +466,44 @@ struct PropertyMember : PropertyCall
     }
 };
 
+template <typename Setter, typename Value>
+using if_compatible_t = typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Arg0Base, rm_cvref_t<Value>>, bool>;
+
 // Sets a property on a node, the property is a name map to struct containing a pointer to the value and a function
 // to set the value on an runtime object (QtQuick3DObject). The type is verified at compile-time, so we can assume
 // the value is of the right type when setting it at run-time.
-template<typename Setter, typename Value, typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Arg0Base, Value>, bool> = false>
-static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const Value &value)
+template<typename Setter, typename T, if_compatible_t<Setter, T> = false>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, T &&value)
 {
-    Q_ASSERT(node.scene);
-    static_assert((std::is_copy_constructible_v<Value> && std::is_trivially_destructible_v<Value>),
-                  "Value needs to be copy constructable and trivially destructible!");
-    Property *prop = node.scene->create<Property>();
+     Q_ASSERT(node.scene);
+    static_assert(std::is_trivially_destructible_v<rm_cvref_t<T>>, "Value needs to be trivially destructible!");
+    auto prop = node.scene->create<Property>();
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<Value>();
-    prop->value.dptr = node.scene->create<Value>(value);
+    prop->value.mt = QMetaType::fromType<T>();
+    prop->value.dptr = node.scene->create<T>(std::forward<T>(value));
     node.properties.push_back(*prop);
+}
+
+template<typename Setter, typename T, if_compatible_t<Setter, QList<T>> = false>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QList<T> value)
+{
+    Q_ASSERT(node.scene);
+    static_assert(!std::is_pointer_v<T>, "Type cannot be a pointer!");
+    static_assert(std::is_trivially_destructible_v<T> && std::is_trivially_copy_constructible_v<T>,
+            "List parameter type needs to be trivially constructable and trivially destructible!");
+    if (const auto count = value.count()) {
+        const auto asize = count * sizeof(T);
+        auto data = node.scene->allocator.allocate(asize);
+        memcpy(data, value.constData(), asize);
+
+        auto prop = node.scene->create<Property>();
+        prop->name = name;
+        prop->call = node.scene->create<decltype(PropertyListSetter(setter))>(setter);
+        prop->value.mt = listViewMetaType();
+        prop->value.dptr = node.scene->create<ListView>(ListView{ data, count });
+        node.properties.push_back(*prop);
+    }
 }
 
 // Calling this will omit any type checking, so make sure the type is handled correctly
@@ -521,5 +588,6 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::Animation)
 Q_DECLARE_METATYPE(QSSGSceneDesc::BufferView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::UrlView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::StringView)
+Q_DECLARE_METATYPE(QSSGSceneDesc::ListView)
 
 #endif // QSSGSCENEDESCRIPTION_P_H
