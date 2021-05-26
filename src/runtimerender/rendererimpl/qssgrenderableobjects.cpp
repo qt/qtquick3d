@@ -65,10 +65,13 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , lights(inLights)
     , morphWeights(inMorphWeights)
 {
-    if (mat.type == QSSGRenderGraphObject::Type::CustomMaterial)
+    if (mat.type == QSSGRenderGraphObject::Type::CustomMaterial) {
         renderableFlags.setCustomMaterialMeshSubset(true);
-    else
+        depthWriteMode = static_cast<const QSSGRenderCustomMaterial *>(&mat)->m_depthDrawMode;
+    } else {
         renderableFlags.setDefaultMaterialMeshSubset(true);
+        depthWriteMode = static_cast<const QSSGRenderDefaultMaterial *>(&mat)->depthDrawMode;
+    }
 }
 
 QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,

@@ -54,6 +54,7 @@ class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
     Q_OBJECT
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
+    Q_PROPERTY(DepthDrawMode depthDrawMode READ depthDrawMode WRITE setDepthDrawMode NOTIFY depthDrawModeChanged)
 
     QML_NAMED_ELEMENT(Material)
     QML_UNCREATABLE("Material is Abstract")
@@ -63,7 +64,7 @@ public:
     enum CullMode {
         BackFaceCulling = 1,
         FrontFaceCulling = 2,
-        NoCulling = 3,
+        NoCulling = 3
     };
     Q_ENUM(CullMode)
 
@@ -75,19 +76,31 @@ public:
     };
     Q_ENUM(TextureChannelMapping)
 
+    enum DepthDrawMode {
+        OpaqueOnlyDepthDraw = 0,
+        AlwaysDepthDraw,
+        NeverDepthDraw,
+        OpaquePrePassDepthDraw,
+    };
+    Q_ENUM(DepthDrawMode)
+
     ~QQuick3DMaterial() override;
 
     QQuick3DTexture *lightProbe() const;
 
     CullMode cullMode() const;
 
+    DepthDrawMode depthDrawMode() const;
+
 public Q_SLOTS:
     void setLightProbe(QQuick3DTexture *lightProbe);
     void setCullMode(QQuick3DMaterial::CullMode cullMode);
+    void setDepthDrawMode(QQuick3DMaterial::DepthDrawMode depthDrawMode);
 
 Q_SIGNALS:
     void lightProbeChanged(QQuick3DTexture *lightProbe);
     void cullModeChanged(QQuick3DMaterial::CullMode cullMode);
+    void depthDrawModeChanged(QQuick3DMaterial::DepthDrawMode depthDrawMode);
 
 protected:
     explicit QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);
@@ -101,6 +114,7 @@ private:
     QQuick3DTexture *m_iblProbe = nullptr;
 
     CullMode m_cullMode = CullMode::BackFaceCulling;
+    DepthDrawMode m_depthDrawMode = DepthDrawMode::OpaqueOnlyDepthDraw;
 };
 
 QT_END_NAMESPACE

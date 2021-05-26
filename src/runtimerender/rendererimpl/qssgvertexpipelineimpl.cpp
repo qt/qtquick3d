@@ -240,11 +240,20 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
     }
 
+    // The custom fragment main should be skipped if this is a
+    // depth pass, but not if it is also a OpaqueDepthPrePass
+    // because then we need to know the real alpha values
     skipCustomFragmentSnippet = false;
+    bool isDepthPass = false;
+    bool isOpaqueDepthPrePass = false;
     for (const auto &feature : inFeatureSet) {
         if (feature.name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass))
-            skipCustomFragmentSnippet = feature.enabled;
+            isDepthPass = feature.enabled;
+        else if (feature.name == QSSGShaderDefines::asString(QSSGShaderDefines::OpaqueDepthPrePass))
+            isOpaqueDepthPrePass = feature.enabled;
     }
+    if (isDepthPass)
+        skipCustomFragmentSnippet = !isOpaqueDepthPrePass;
 
     if (hasCustomVertexShader) { // this is both for unshaded and shaded
         vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");

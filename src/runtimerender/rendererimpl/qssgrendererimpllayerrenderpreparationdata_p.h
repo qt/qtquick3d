@@ -207,6 +207,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     // it is simplest to duplicate the lists.
     TRenderableObjectList renderedOpaqueObjects;
     TRenderableObjectList renderedTransparentObjects;
+    TRenderableObjectList renderedOpaqueDepthPrepassObjects;
+    TRenderableObjectList renderedDepthWriteObjects;
     QMatrix4x4 viewProjection;
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;

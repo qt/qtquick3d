@@ -96,7 +96,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
 
     QSize m_previousOutputSize;
 
-    bool m_zPrePassPossible;
+    bool m_globalZPrePassActive;
 
     QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
 

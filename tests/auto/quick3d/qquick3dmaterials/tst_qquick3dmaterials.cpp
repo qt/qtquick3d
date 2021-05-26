@@ -220,6 +220,19 @@ void tst_QQuick3DMaterials::testDefaultEnums()
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
         QCOMPARE(int(material.specularModel()), int(node->specularModel));
     }
+
+    auto depthDrawModes = {
+        QQuick3DMaterial::DepthDrawMode::OpaqueOnlyDepthDraw,
+        QQuick3DMaterial::DepthDrawMode::AlwaysDepthDraw,
+        QQuick3DMaterial::DepthDrawMode::NeverDepthDraw,
+        QQuick3DMaterial::DepthDrawMode::OpaquePrePassDepthDraw
+    };
+
+    for (const auto depthDrawMode : depthDrawModes) {
+        material.setDepthDrawMode(depthDrawMode);
+        node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
+        QCOMPARE(int(material.depthDrawMode()), int(node->depthDrawMode));
+    }
 }
 
 void tst_QQuick3DMaterials::testPrincipledProperties()
@@ -411,6 +424,19 @@ void tst_QQuick3DMaterials::testPrincipledEnums()
         material.setAlphaMode(alphaMode);
         node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
         QCOMPARE(int(material.alphaMode()), int(node->alphaMode));
+    }
+
+    auto depthDrawModes = {
+        QQuick3DMaterial::DepthDrawMode::OpaqueOnlyDepthDraw,
+        QQuick3DMaterial::DepthDrawMode::AlwaysDepthDraw,
+        QQuick3DMaterial::DepthDrawMode::NeverDepthDraw,
+        QQuick3DMaterial::DepthDrawMode::OpaquePrePassDepthDraw
+    };
+
+    for (const auto depthDrawMode : depthDrawModes) {
+        material.setDepthDrawMode(depthDrawMode);
+        node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(nullptr));
+        QCOMPARE(int(material.depthDrawMode()), int(node->depthDrawMode));
     }
 }
 

@@ -1447,6 +1447,8 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     renderedOpaqueObjects.clear();
     renderedTransparentObjects.clear();
     renderedItem2Ds.clear();
+    renderedOpaqueDepthPrepassObjects.clear();
+    renderedDepthWriteObjects.clear();
 }
 
 QT_END_NAMESPACE

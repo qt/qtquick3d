@@ -1079,6 +1079,29 @@ inline const char *toString(QSSGCullFaceMode value)
     return "Unknown";
 }
 
+enum class QSSGDepthDrawMode
+{
+    OpaqueOnly,
+    Always,
+    Never,
+    OpaquePrePass
+};
+
+inline const char *toString(QSSGDepthDrawMode value)
+{
+    switch (value) {
+    case QSSGDepthDrawMode::OpaqueOnly:
+        return "OpaqueOnly";
+    case QSSGDepthDrawMode::Always:
+        return "Always";
+    case QSSGDepthDrawMode::Never:
+        return "Never";
+    case QSSGDepthDrawMode::OpaquePrePass:
+        return "OpaquePrePass";
+    }
+    return "Unknown";
+}
+
 // Return coordinates in pixels but relative to this rect.
 inline QVector2D toRectRelative(const QRectF &r, const QVector2D &absoluteCoordinates)
 {

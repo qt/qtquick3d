@@ -52,7 +52,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_progressiveAAPassIndex(0)
     , m_temporalAAPassIndex(0)
     , m_textScale(1.0f)
-    , m_zPrePassPossible(true)
+    , m_globalZPrePassActive(false)
 {
 }
 
@@ -484,8 +484,11 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 {
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
 
+    const bool isOpaqueDepthPrePass = obj->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
     ShaderFeatureSetList featureSet;
     featureSet.append({ QSSGShaderDefines::DepthPass, true });
+    if (isOpaqueDepthPrePass)
+        featureSet.append({ QSSGShaderDefines::OpaqueDepthPrePass, true });
 
     QSSGRhiDrawCallData *dcd = nullptr;
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
@@ -539,6 +542,67 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
         // Depth and SSAO textures, in case a custom material's shader code does something with them.
         addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
+
+        if (isOpaqueDepthPrePass) {
+            // Texture maps that affect alpha
+            QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
+            while (renderableImage) {
+                const auto mapType = renderableImage->m_mapType;
+                if (mapType == QSSGRenderableImage::Type::BaseColor ||
+                        mapType == QSSGRenderableImage::Type::Diffuse ||
+                        mapType == QSSGRenderableImage::Type::Translucency ||
+                        mapType == QSSGRenderableImage::Type::Opacity)
+                {
+                    const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
+                    const int samplerHint = int(renderableImage->m_mapType);
+                    int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
+                    if (samplerBinding >= 0) {
+                        QRhiTexture *texture = renderableImage->m_texture.m_texture;
+                        if (samplerBinding >= 0 && texture) {
+                            const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                            QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
+                                                                     toRhi(renderableImage->m_imageNode.m_magFilterType),
+                                                                     mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                                                                     toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                                                                     toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
+                            bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
+                        }
+                    } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
+                    renderableImage = renderableImage->m_nextImage;
+                }
+            }
+            // For custom Materials we can't know which maps affect alpha, so map all
+            if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
+                QVector<QShaderDescription::InOutVariable> samplerVars =
+                        shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
+                for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+                    auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
+                                           [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
+                    if (it == samplerVars.cend())
+                        samplerVars.append(var);
+                }
+
+                int maxSamplerBinding = -1;
+                for (const QShaderDescription::InOutVariable &var : samplerVars)
+                    maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
+
+                if (maxSamplerBinding >= 0) {
+                    // custom property textures
+                    int customTexCount = shaderPipeline->extraTextureCount();
+                    for (int i = 0; i < customTexCount; ++i) {
+                        const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
+                        const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
+                        if (samplerBinding >= 0) {
+                            QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
+                            bindings.addTexture(samplerBinding,
+                                                VISIBILITY_ALL,
+                                                t.texture,
+                                                sampler);
+                        }
+                    }
+                }
+            }
+        }
 
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
@@ -1507,6 +1571,28 @@ void QSSGLayerRenderData::rhiPrepare()
         const auto &sortedTransparentObjects = getTransparentRenderableObjects(); // back to front
         const auto &item2Ds = getRenderableItem2Ds();
 
+        // Verify that the depth write list(s) were cleared between frames
+        Q_ASSERT(renderedDepthWriteObjects.isEmpty());
+        Q_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty());
+
+        // Depth Write List
+        if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
+            for (const auto &opaqueObject : sortedOpaqueObjects) {
+                const auto depthMode = opaqueObject.obj->depthWriteMode;
+                if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
+                    renderedDepthWriteObjects.append(opaqueObject);
+                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                    renderedOpaqueDepthPrepassObjects.append(opaqueObject);
+            }
+            for (const auto &transparentObject : sortedTransparentObjects) {
+                const auto depthMode = transparentObject.obj->depthWriteMode;
+                if (depthMode == QSSGDepthDrawMode::Always)
+                    renderedDepthWriteObjects.append(transparentObject);
+                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                    renderedOpaqueDepthPrepassObjects.append(transparentObject);
+            }
+        }
+
         // If needed, generate a depth texture with the opaque objects. This
         // and the SSAO texture must come first since other passes may want to
         // expose these textures to their shaders.
@@ -1582,16 +1668,21 @@ void QSSGLayerRenderData::rhiPrepare()
         // Prepare the data for it.
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
                 && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
-                && (!sortedOpaqueObjects.isEmpty() || !item2Ds.isEmpty());
-        if (zPrePass) {
+                && (!renderedDepthWriteObjects.isEmpty() || !item2Ds.isEmpty());
+        if (zPrePass || !renderedOpaqueDepthPrepassObjects.isEmpty()) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
-            if (!rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
-                                     sortedOpaqueObjects, {},
-                                     QSSGRhiDrawCallDataKey::ZPrePass,
-                                     rhiCtx->mainPassSampleCount()))
-            {
-                // alas, no Z prepass for you
-                m_zPrePassPossible = false;
+            m_globalZPrePassActive = false;
+            if (!zPrePass) {
+                rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
+                                    {}, renderedOpaqueDepthPrepassObjects,
+                                    QSSGRhiDrawCallDataKey::ZPrePass,
+                                    rhiCtx->mainPassSampleCount());
+
+            } else {
+                m_globalZPrePassActive = rhiPrepareDepthPass(rhiCtx, *ps, rhiCtx->mainRenderPassDescriptor(), *this,
+                                                         renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
+                                                         QSSGRhiDrawCallDataKey::ZPrePass,
+                                                         rhiCtx->mainPassSampleCount());
             }
             cb->debugMarkEnd();
         }
@@ -1651,15 +1742,17 @@ void QSSGLayerRenderData::rhiPrepare()
 
             cb->debugMarkEnd();
         }
-
-        if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !sortedOpaqueObjects.isEmpty()) {
-            ps->depthTestEnable = true;
+        const bool layerEnableDepthTest = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest);
+        bool depthTestEnableDefault = false;
+        bool depthWriteEnableDefault = false;
+        if (layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty())) {
+            depthTestEnableDefault = true;
             // enable depth write for opaque objects when there was no Z prepass
-            ps->depthWriteEnable = !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass) || !m_zPrePassPossible;
-        } else {
-            ps->depthTestEnable = false;
-            ps->depthWriteEnable = false;
+            depthWriteEnableDefault = !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass) || !m_globalZPrePassActive;
         }
+
+        ps->depthTestEnable = depthTestEnableDefault;
+        ps->depthWriteEnable = depthWriteEnableDefault;
 
         // Screen texture with opaque objects.
         if (layerPrepResult->flags.requiresScreenTexture() && m_progressiveAAPassIndex == 0) {
@@ -1700,8 +1793,16 @@ void QSSGLayerRenderData::rhiPrepare()
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
+            const auto depthWriteMode = theObject->depthWriteMode;
+            ps->depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never ||
+                                    depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
+                                    m_globalZPrePassActive || !layerEnableDepthTest);
             rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
+
+        // Reset depth state to defaults for item2Ds
+        ps->depthTestEnable = depthTestEnableDefault;
+        ps->depthWriteEnable = depthWriteEnableDefault;
 
         for (const auto &item: item2Ds) {
             QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
@@ -1747,6 +1848,11 @@ void QSSGLayerRenderData::rhiPrepare()
 
         for (const auto &handle : sortedTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
+            const auto depthWriteMode = theObject->depthWriteMode;
+            if (depthWriteMode == QSSGDepthDrawMode::Always && !m_globalZPrePassActive)
+                ps->depthWriteEnable = true;
+            else
+                ps->depthWriteEnable = false;
             if (!(theObject->renderableFlags.isCompletelyTransparent()))
                 rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
@@ -1828,10 +1934,15 @@ void QSSGLayerRenderData::rhiRender()
 
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
                 && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
-                && (!theOpaqueObjects.isEmpty() || !item2Ds.isEmpty());
-        if (zPrePass && m_zPrePassPossible) {
+                && (!renderedDepthWriteObjects.isEmpty() || !item2Ds.isEmpty());
+        if (zPrePass && m_globalZPrePassActive) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
-            rhiRenderDepthPass(rhiCtx, *this, theOpaqueObjects, {}, &needsSetViewport);
+            rhiRenderDepthPass(rhiCtx, *this, renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
+            cb->debugMarkEnd();
+        } else if (!renderedOpaqueDepthPrepassObjects.isEmpty() &&
+                   layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z forced prepass"));
+            rhiRenderDepthPass(rhiCtx, *this, {}, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
             cb->debugMarkEnd();
         }
 

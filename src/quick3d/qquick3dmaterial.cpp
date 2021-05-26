@@ -72,6 +72,21 @@ QT_BEGIN_NAMESPACE
     \value Material.NoCulling No triangles are discarded.
 */
 
+/*!
+    \qmlproperty enumeration Material::depthDrawMode
+
+    This property determines when depth rendering takes place.
+
+    The default value is Material.OqaqueOnlyDepthDraw
+
+    \value Material.OpaqueOnlyDepthDraw Depth rendering is only performed for
+    opaque materials.
+    \value Material.AlwaysDepthDraw Depth rendering is always performed.
+    \value Material.NeverDepthDraw Depth rendering is never performed.
+    \value Material.OpaquePrePassDepthDraw Depth rendering is performed for the
+    opaque parts of the material in the depth pre-pass.
+*/
+
 
 QQuick3DMaterial::QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
     : QQuick3DObject(dd, parent) {}
@@ -90,6 +105,11 @@ QQuick3DTexture *QQuick3DMaterial::lightProbe() const
 QQuick3DMaterial::CullMode QQuick3DMaterial::cullMode() const
 {
     return m_cullMode;
+}
+
+QQuick3DMaterial::DepthDrawMode QQuick3DMaterial::depthDrawMode() const
+{
+    return m_depthDrawMode;
 }
 
 void QQuick3DMaterial::setLightProbe(QQuick3DTexture *iblProbe)
@@ -116,6 +136,16 @@ void QQuick3DMaterial::setCullMode(QQuick3DMaterial::CullMode cullMode)
     update();
 }
 
+void QQuick3DMaterial::setDepthDrawMode(QQuick3DMaterial::DepthDrawMode depthDrawMode)
+{
+    if (m_depthDrawMode == depthDrawMode)
+        return;
+
+    m_depthDrawMode = depthDrawMode;
+    emit depthDrawModeChanged(m_depthDrawMode);
+    update();
+}
+
 QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node)
@@ -131,6 +161,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
             defaultMaterial->iblProbe = m_iblProbe->getRenderImage();
 
         defaultMaterial->cullMode = QSSGCullFaceMode(m_cullMode);
+        defaultMaterial->depthDrawMode = QSSGDepthDrawMode(m_depthDrawMode);
         node = defaultMaterial;
 
     } else if (node->type == QSSGRenderGraphObject::Type::CustomMaterial) {
@@ -142,6 +173,7 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
             customMaterial->m_iblProbe = m_iblProbe->getRenderImage();
 
         customMaterial->m_cullMode = QSSGCullFaceMode(m_cullMode);
+        customMaterial->m_depthDrawMode = QSSGDepthDrawMode(m_depthDrawMode);
         node = customMaterial;
     }
 

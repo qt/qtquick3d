@@ -61,7 +61,8 @@ static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_ACES_TONEMAPPING",
     "QSSG_ENABLE_HEJLDAWSON_TONEMAPPING",
     "QSSG_ENABLE_FILMIC_TONEMAPPING",
-    "QSSG_ENABLE_RGBE_LIGHT_PROBE"
+    "QSSG_ENABLE_RGBE_LIGHT_PROBE",
+    "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS"
 };
 
 const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }

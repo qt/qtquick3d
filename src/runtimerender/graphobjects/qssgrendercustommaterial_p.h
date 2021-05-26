@@ -121,6 +121,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;
     QSSGCullFaceMode m_cullMode = QSSGCullFaceMode::Back;
+    QSSGDepthDrawMode m_depthDrawMode = QSSGDepthDrawMode::OpaqueOnly;
     RenderFlags m_renderFlags;
     QRhiGraphicsPipeline::BlendFactor m_srcBlend;
     QRhiGraphicsPipeline::BlendFactor m_dstBlend;

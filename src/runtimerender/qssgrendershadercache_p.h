@@ -74,6 +74,7 @@ enum Define : quint8
     HejlDawsonTonemapping,
     FilmicTonemapping,
     RGBELightProbe,
+    OpaqueDepthPrePass,
     Count /* New defines are added before this one! */
 };
 

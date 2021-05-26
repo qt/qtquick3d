@@ -530,6 +530,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool enableSSAO = false;
     bool enableShadowMaps = false;
     bool isDepthPass = false;
+    bool isOpaqueDepthPrePass = false;
     bool isOrthoShadowPass = false;
     bool isCubeShadowPass = false;
     bool enableBumpNormal = normalImage || bumpImage;
@@ -548,6 +549,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             isOrthoShadowPass = featureSet.at(idx).enabled;
         else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass))
             isCubeShadowPass = featureSet.at(idx).enabled;
+        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::OpaqueDepthPrePass))
+            isOpaqueDepthPrePass = featureSet.at(idx).enabled;
     }
 
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
@@ -588,11 +591,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         metalnessEnabled = false;
         specularLightingEnabled = false;
-        vertexColorsEnabled = false;
 
-        baseImage = nullptr;
-
-        includeCustomFragmentMain = false;
+        if (!isOpaqueDepthPrePass) {
+            vertexColorsEnabled = false;
+            baseImage = nullptr;
+            includeCustomFragmentMain = false;
+        }
     }
 
     bool includeSSAOVars = enableSSAO || enableShadowMaps;
@@ -704,7 +708,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (isCubeShadowPass)
         vertexShader.generateShadowWorldPosition(inKey);
 
-    if (hasImage && !isDepthPass && !isOrthoShadowPass && !isCubeShadowPass) {
+    if (hasImage && (!isDepthPass || isOpaqueDepthPrePass) && !isOrthoShadowPass && !isCubeShadowPass) {
         fragmentShader.append("    vec3 qt_uTransform;");
         fragmentShader.append("    vec3 qt_vTransform;");
     }
@@ -1284,6 +1288,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                            << "    float qt_shadowDist = length(qt_varShadowWorldPos - qt_shadowCamPos);\n"
                            << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
                            << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
+        } else if (isDepthPass) {
+            if (isOpaqueDepthPrePass) {
+                fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
+                fragmentShader << "        discard;\n";
+            }
         } else {
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_diffuseColor.rgb), qt_diffuseColor.a * qt_objectOpacity);");

@@ -223,6 +223,7 @@ struct QSSGRenderableObject
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
     float depthBias;
+    QSSGDepthDrawMode depthWriteMode = QSSGDepthDrawMode::OpaqueOnly;
     QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QMatrix4x4 &inGlobalTransform,
