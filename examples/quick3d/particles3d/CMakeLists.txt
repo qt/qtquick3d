@@ -61,6 +61,7 @@ set(qml_resource_files
     "qml/StartupView.qml"
     "qml/SystemPlayPause.qml"
     "qml/TrailEmitterBurst.qml"
+    "qml/ModelShape.qml"
     "qml/images/arrow_icon.png"
     "qml/images/bear_black.png"
     "qml/images/colorTable.png"
@@ -91,7 +92,7 @@ set(qml_resource_files
     "qml/meshes/meter_background.mesh"
     "qml/meshes/meter_edge.mesh"
     "qml/meshes/oldqtlogo.mesh"
-
+    "qml/meshes/suzanne.mesh"
 )
 
 qt6_add_resources(particles3d "qml"

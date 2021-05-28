@@ -50,6 +50,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuick3DParticleSystem;
+class QQuick3DModel;
 
 class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QObject, public QQmlParserStatus
 {
@@ -57,6 +58,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleShape : public QObject, public Q
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
     Q_PROPERTY(ShapeType type READ type WRITE setType NOTIFY typeChanged)
     Q_PROPERTY(QVector3D extents READ extents WRITE setExtents NOTIFY extentsChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 
     QML_NAMED_ELEMENT(ParticleShape3D)
     Q_INTERFACES(QQmlParserStatus)
@@ -72,23 +74,27 @@ public:
     Q_ENUM(ShapeType)
 
     QQuick3DParticleShape(QObject *parent = nullptr);
+    ~QQuick3DParticleShape() override;
 
     bool fill() const;
     ShapeType type() const;
     QVector3D extents() const;
+    QQmlComponent *delegate() const;
 
     // Returns random point inside this shape
-    QVector3D randomPosition(int particleIndex) const;
+    QVector3D randomPosition(int particleIndex);
 
 public Q_SLOTS:
     void setFill(bool fill);
     void setType(QQuick3DParticleShape::ShapeType type);
     void setExtents(QVector3D extends);
+    void setDelegate(QQmlComponent *delegate);
 
 Q_SIGNALS:
     void fillChanged();
     void typeChanged();
     void extentsChanged();
+    void delegateChanged();
 
 protected:
     // From QQmlParserStatus
@@ -103,8 +109,19 @@ private:
     QVector3D randomPositionCube(int particleIndex) const;
     QVector3D randomPositionSphere(int particleIndex) const;
     QVector3D randomPositionCylinder(int particleIndex) const;
+    QVector3D randomPositionModel(int particleIndex);
+
+    void createModel();
+    void clearModelVertexPositions();
+    void calculateModelVertexPositions();
 
     QQuick3DNode *m_parentNode = nullptr;
+    QQmlComponent *m_delegate = nullptr;
+    QQuick3DModel *m_model = nullptr;
+    QVector<QVector3D> m_vertexPositions;
+    float m_modelTriangleAreasSum = 0;
+    QVector<float> m_modelTriangleAreas;
+    QVector3D m_modelTriangleCenter;
     bool m_fill = true;
     ShapeType m_type = ShapeType::Cube;
     QVector3D m_extents = QVector3D(50, 50, 50);

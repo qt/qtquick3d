@@ -137,6 +137,10 @@ Item {
             name: "Animated Sprite"
             file: "AnimatedSprite.qml"
         }
+        ListElement {
+            name: "Model Shape"
+            file: "ModelShape.qml"
+        }
     }
 
     View3D {

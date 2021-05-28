@@ -54,5 +54,7 @@
         <file>qml/images/sprite_09.png</file>
         <file>qml/ModelBlendParticles.qml</file>
         <file>qml/meshes/oldqtlogo.mesh</file>
+        <file>qml/ModelShape.qml</file>
+        <file>qml/meshes/suzanne.mesh</file>
     </qresource>
 </RCC>
