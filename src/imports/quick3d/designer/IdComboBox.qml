@@ -39,7 +39,7 @@ ComboBox {
     editable: true
     model: comboBox.addDefaultItem(itemFilterModel.itemModel)
 
-    textInput.validator: RegExpValidator { regExp: /(^$|^[a-z_]\w*)/ }
+    textInput.validator: RegularExpressionValidator { regularExpression: /(^$|^[a-z_]\w*)/ }
 
     ItemFilterModel {
         id: itemFilterModel
