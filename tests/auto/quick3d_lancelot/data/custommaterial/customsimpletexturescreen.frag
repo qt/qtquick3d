@@ -9,5 +9,4 @@ void MAIN()
     if (FRAMEBUFFER_Y_UP < 0.0)
         screencoord.y = 1.0 - screencoord.y;
     BASE_COLOR *= texture(SCREEN_TEXTURE, screencoord);
-    EMISSIVE_COLOR = vec3(0.8);
 }
