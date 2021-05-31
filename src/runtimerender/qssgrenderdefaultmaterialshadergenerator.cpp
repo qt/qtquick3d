@@ -1156,7 +1156,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 if (hasIdentityMap)
                     generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
                 else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, occlusionImage->m_imageNode.m_indexUV);
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
                 const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
                 fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
                                << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
