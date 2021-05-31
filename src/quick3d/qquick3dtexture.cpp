@@ -188,6 +188,17 @@ QUrl QQuick3DTexture::source() const
     \l{Qt Quick Scene Graph} on more information about the Qt Quick render
     loops.
 
+    \note A Texture that contains the results of a Qt Quick offscreen render
+    pass will in effect have an Y axis orientation that is different from what
+    a Texture that receives its content via the source property uses. When used
+    in combination with DefaultMaterial or PrincipledMaterial, this is all
+    transparent to the application as the necessary UV transformations are
+    applied automatically, and so no further action is needed, regardless of
+    how the texture was sourced. However, when developing
+    \l{QtQuick3D::CustomMaterial}{custom materials} this needs to be kept in
+    mind by the shader code author when sampling the texture and working with
+    UV coordinates.
+
     \sa source, textureData
 */
 QQuickItem *QQuick3DTexture::sourceItem() const
