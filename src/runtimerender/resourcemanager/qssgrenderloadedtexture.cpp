@@ -247,10 +247,8 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
     return retval;
 }
 
-QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath, bool inFlipY)
+QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath)
 {
-    Q_UNUSED(inFlipY);
-
     QSSGLoadedTexture *retval = nullptr;
 
     // Open File
@@ -623,7 +621,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
             // (tells if we want want RGBA16F or RGBE-on-RGBA8)
             theLoadedImage = loadHdrImage(theStream, inFormat);
         } else if (QTextureFileReader::supportedFileFormats().contains(ext)) {
-            theLoadedImage = loadCompressedImage(fileName, inFlipY);
+            theLoadedImage = loadCompressedImage(fileName); // no choice but to ignore inFlipY here
         } else if (QImageReader::supportedImageFormats().contains(ext)) {
             theLoadedImage = loadQImage(fileName, inFlipY);
         } else {
