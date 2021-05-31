@@ -116,7 +116,7 @@ public:
                                    const QSSGRenderTextureFormat &inFormat,
                                    bool inFlipY = true);
     static QSSGLoadedTexture *loadQImage(const QString &inPath, qint32 flipVertical);
-    static QSSGLoadedTexture *loadCompressedImage(const QString &inPath, bool inFlipY = true);
+    static QSSGLoadedTexture *loadCompressedImage(const QString &inPath);
     static QSSGLoadedTexture *loadHdrImage(const QSharedPointer<QIODevice> &source, const QSSGRenderTextureFormat &inFormat);
     static QSSGLoadedTexture *loadTextureData(QSSGRenderTextureData *textureData);
 };

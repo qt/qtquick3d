@@ -317,10 +317,8 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
     return retval;
 }
 
-QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath, bool inFlipY)
+QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath)
 {
-    Q_UNUSED(inFlipY);
-
     QSSGLoadedTexture *retval = nullptr;
 
     // Open File
@@ -695,7 +693,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
             theLoadedImage = loadHdrImage(theStream, inFormat);
             break;
         case QSSGInputUtil::TextureFile:
-            theLoadedImage = loadCompressedImage(fileName, inFlipY);
+            theLoadedImage = loadCompressedImage(fileName); // no choice but to ignore inFlipY here
             break;
         default:
             theLoadedImage = loadQImage(fileName, inFlipY);
