@@ -206,6 +206,13 @@ QQuickItem *QQuick3DTexture::sourceItem() const
 
     The default is 1.0.
 
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
     \sa tilingModeHorizontal
  */
 float QQuick3DTexture::scaleU() const
@@ -223,6 +230,13 @@ float QQuick3DTexture::scaleU() const
     texture is repeated from bottom to top.
 
     The default is 1.0.
+
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
 
     \sa tilingModeVertical
 */
@@ -299,6 +313,13 @@ QQuick3DTexture::TilingMode QQuick3DTexture::verticalTiling() const
 
     The default is 0.0.
 
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
     \sa pivotU, pivotV
 */
 float QQuick3DTexture::rotationUV() const
@@ -312,6 +333,15 @@ float QQuick3DTexture::rotationUV() const
     This property offsets the U coordinate mapping from left to right.
 
     The default is 0.0.
+
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
+    \sa positionV
 */
 float QQuick3DTexture::positionU() const
 {
@@ -328,6 +358,15 @@ float QQuick3DTexture::positionU() const
     \note Qt Quick 3D uses OpenGL-style vertex data, regardless of the graphics
     API used at run time. The UV position \c{(0, 0)} is therefore referring to
     the bottom-left corner of the image data.
+
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
+    \sa positionU
 */
 float QQuick3DTexture::positionV() const
 {
@@ -342,7 +381,14 @@ float QQuick3DTexture::positionV() const
 
     The default is 0.0.
 
-    \sa rotationUV
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
+    \sa pivotB, rotationUV
 */
 float QQuick3DTexture::pivotU() const
 {
@@ -357,7 +403,14 @@ float QQuick3DTexture::pivotU() const
 
     The default is 0.0.
 
-    \sa rotationUV
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
+    \sa pivotU, rotationUV
 */
 float QQuick3DTexture::pivotV() const
 {
@@ -370,6 +423,13 @@ float QQuick3DTexture::pivotV() const
     This property sets the use of the vertically flipped coordinates.
 
     The default is false.
+
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
 */
 bool QQuick3DTexture::flipV() const
 {
