@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QSSGSceneDesc {
 struct Scene;
+struct Animation;
 }
 
 namespace QSSGMesh {
@@ -109,6 +110,8 @@ void Q_QUICK3DASSETUTILS_EXPORT writeQmlPropertyHelper(QTextStream &output, int 
 void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir);
 
 Q_REQUIRED_RESULT QString Q_QUICK3DASSETUTILS_EXPORT getMeshSourceName(const QByteArrayView &name);
+
+void Q_QUICK3DASSETUTILS_EXPORT createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *parent);
 
 }
 

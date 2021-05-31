@@ -8,3 +8,6 @@ dependencies:
   ../qtshadertools:
     ref: 24dd29cdad5499f84e492bef6be87018b10973f2
     required: true
+  ../qtquicktimeline:
+    ref: e1a720648d9f2ad68908ac23a1349f3ab71828fe
+    required: false

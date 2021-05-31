@@ -47,6 +47,12 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
+#ifdef QT_QUICK3D_ENABLE_RT_ANIMATIONS
+// timeline
+#include <QtQuickTimeline/private/qquicktimeline_p.h>
+#endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
+
+
 QT_BEGIN_NAMESPACE
 
 namespace QSSGQmlUtilities {
@@ -577,10 +583,12 @@ static const char *blockEnd(OutputContext &output)
     return blockEnd();
 }
 
-static void writeImportHeader(OutputContext &output)
+static void writeImportHeader(OutputContext &output, bool hasAnimation = false)
 {
     output.stream << "import QtQuick\n"
                   << "import QtQuick3D\n\n";
+    if (hasAnimation)
+        output.stream << "import QtQuick.Timeline\n\n";
 }
 
 static QString toQuotedString(const QString &text) { return QStringLiteral("\"%1\"").arg(text); }
@@ -599,11 +607,35 @@ QString getMeshSourceName(const QByteArrayView &name)
 
 static inline QString getTextureFolder() { return QStringLiteral("maps/"); }
 
+static inline QString getAnimationFolder() { return QStringLiteral("animations/"); }
+static inline QString getAnimationExtension() { return QStringLiteral(".qad"); }
+QString getAnimationSourceName(QByteArrayView targetName, QByteArrayView propertyName, qsizetype index)
+{
+    const auto animationFolder = getAnimationFolder();
+    const auto extension = getAnimationExtension();
+    const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(QString::fromUtf8(targetName));
+    return QString(animationFolder + sanitizedName + QStringLiteral("_")
+                        + propertyName.toByteArray() + QStringLiteral("_")
+                        + QString::number(index) + extension);
+}
+
 QString asString(const QSSGSceneDesc::Value &value)
 {
     QString str;
     QMetaType::convert(value.mt, value.dptr, QMetaType::fromType<QString>(), &str);
     return str;
+}
+
+QString asString(QSSGSceneDesc::Animation::Channel::TargetProperty prop)
+{
+    if (prop == QSSGSceneDesc::Animation::Channel::TargetProperty::Position)
+        return QStringLiteral("position");
+    if (prop == QSSGSceneDesc::Animation::Channel::TargetProperty::Rotation)
+        return QStringLiteral("rotation");
+    if (prop == QSSGSceneDesc::Animation::Channel::TargetProperty::Scale)
+        return QStringLiteral("scale");
+
+    return QStringLiteral("unknown");
 }
 
 using PropertyPair = std::pair<const char * /* name */, QString /* value */>;
@@ -1103,12 +1135,54 @@ void writeQmlForResources(const QSSGSceneDesc::Scene::ResourceNodes &resources, 
         writeQmlForResourceNode(*res, output);
 }
 
+void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, OutputContext &output)
+{
+    indent(output) << "Timeline {\n";
+
+    QSSGQmlScopedIndent scopedIndent(output);
+    indent(output) << "startFrame: 0\n";
+    indent(output) << "endFrame: " << anim.length << "\n";
+    indent(output) << "currentFrame: 0\n";
+    indent(output) << "enabled: true\n";
+    indent(output) << "animations: TimelineAnimation {\n";
+    {
+        QSSGQmlScopedIndent scopedIndent(output);
+        indent(output) << "duration: " << anim.length << "\n";
+        indent(output) << "from: 0\n";
+        indent(output) << "to: " << anim.length << "\n";
+        indent(output) << "running: true\n";
+    }
+    indent(output) << blockEnd(output);
+
+    for (const auto &channel : anim.channels) {
+        indent(output) << "KeyframeGroup {\n";
+        {
+            QSSGQmlScopedIndent scopedIndent(output);
+            indent(output) << "target: " << getIdForNode(*channel.target) << "\n";
+            indent(output) << "property: " << toQuotedString(asString(channel.targetProperty)) << "\n";
+
+            Q_ASSERT(!channel.keys.isEmpty());
+            for (const auto &key : channel.keys) {
+                indent(output) << "Keyframe {\n";
+                {
+                    QSSGQmlScopedIndent scopedIndent(output);
+                    indent(output) << "frame: " << key.time << "\n";
+                    indent(output) << "value: " << variantToQml(key.getValue()) << "\n";
+                }
+                indent(output) << blockEnd(output);
+            }
+        }
+        indent(output) << blockEnd(output);
+    }
+}
+
+
 void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir)
 {
     auto root = scene.root;
     Q_ASSERT(root);
     OutputContext output { stream, outdir, 0, OutputContext::Header };
-    writeImportHeader(output);
+    writeImportHeader(output, scene.animations.count() > 0);
     output.type = OutputContext::RootNode;
     writeQml(*root, output); // Block scope will be left open!
     output.type = OutputContext::Resource;
@@ -1119,7 +1193,55 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
             writeQmlForNode(cld, output);
     }
     // close the root
+
+    // animations
+    for (const auto &cld : scene.animations) {
+        QSSGQmlScopedIndent scopedIndent(output);
+        writeQmlForAnimation(*cld, output);
+        indent(output) << blockEnd(output);
+    }
+
     indent(output) << blockEnd(output);
+}
+
+void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *parent)
+{
+#ifdef QT_QUICK3D_ENABLE_RT_ANIMATIONS
+    auto timeline = new QQuickTimeline(parent);
+    auto timelineKeyframeGroup = timeline->keyframeGroups();
+    for (const auto &channel : anim.channels) {
+        auto keyframeGroup = new QQuickKeyframeGroup(timeline);
+        keyframeGroup->setTargetObject(channel.target->obj);
+        keyframeGroup->setProperty(asString(channel.targetProperty));
+
+        Q_ASSERT(!channel.keys.isEmpty());
+        auto keyframes = keyframeGroup->keyframes();
+        for (const auto &key : channel.keys) {
+            auto keyframe = new QQuickKeyframe(keyframeGroup);
+            keyframe->setFrame(key.time);
+            keyframe->setValue(key.getValue());
+            keyframes.append(&keyframes, keyframe);
+        }
+        (qobject_cast<QQmlParserStatus *>(keyframeGroup))->componentComplete();
+        timelineKeyframeGroup.append(&timelineKeyframeGroup, keyframeGroup);
+    }
+    timeline->setEndFrame(anim.length);
+    timeline->setEnabled(true);
+
+    auto timelineAnimation = new QQuickTimelineAnimation(timeline);
+    timelineAnimation->setDuration(int(anim.length));
+    timelineAnimation->setFrom(0.0f);
+    timelineAnimation->setTo(anim.length);
+    timelineAnimation->setLoops(QQuickTimelineAnimation::Infinite);
+    timelineAnimation->setTargetObject(timeline);
+
+    (qobject_cast<QQmlParserStatus *>(timeline))->componentComplete();
+
+    timelineAnimation->setRunning(true);
+#else // QT_QUICK3D_ENABLE_RT_ANIMATIONS
+    Q_UNUSED(anim)
+    Q_UNUSED(parent)
+#endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
 }
 
 }

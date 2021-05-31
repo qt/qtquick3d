@@ -59,4 +59,8 @@ endif()
 # only materials pre-generated with the shadergen tool will be functional.
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS ShaderTools)
 
+# Look for the target QuickTimeline package to have access to the QuickTimeline Qt module library.
+# This is optional. When not present, runtime assets' timeline animation will not work.
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS QuickTimeline)
+
 qt_build_repo()

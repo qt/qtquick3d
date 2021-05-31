@@ -19,3 +19,12 @@ qt_internal_add_module(Quick3DAssetUtils
         Qt::Quick3DRuntimeRenderPrivate
         Qt::Quick3DPrivate
 )
+
+qt_internal_extend_target(Quick3DAssetUtils CONDITION TARGET Qt::QuickTimeline
+    LIBRARIES
+        Qt::QuickTimelinePrivate
+    PRIVATE_MODULE_INTERFACE
+        Qt::QuickTimelinePrivate
+    DEFINES
+        QT_QUICK3D_ENABLE_RT_ANIMATIONS
+)

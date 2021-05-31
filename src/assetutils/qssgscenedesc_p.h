@@ -315,7 +315,21 @@ struct Animation
 
         ValueType getValueType() const { return ValueType(0xf & flag); }
         KeyType getKeyType() const { return KeyType(0xf00 & flag); }
-
+        QVariant getValue() const {
+            switch (getValueType()) {
+            case ValueType::Number:
+                return value.x();
+            case ValueType::Vec2:
+                return value.toVector2D();
+            case ValueType::Vec3:
+                return value.toVector3D();
+            case ValueType::Vec4:
+                return value;
+            case ValueType::Quaternion:
+                return QQuaternion(value);
+            }
+            return value;
+        }
         QVector4D value;
         float time = 0.0f;
         quint16 flag = 0;
@@ -348,6 +362,10 @@ struct Animation
     using Channels = QSSGInvasiveSingleLinkedList<Animation::Channel, &Animation::Channel::next>;
 
     Channels channels;
+    // It stores the length of this Animation, every keys in every channels in
+    // an animation will have the same KeyType and it will be a type of
+    // the length
+    float length = 0.0f;
 };
 
 // Add a child node to parent node.

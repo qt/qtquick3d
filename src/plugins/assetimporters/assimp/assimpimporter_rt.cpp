@@ -1100,8 +1100,12 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                             targetChannel.keys.push_back(*animationKey);
                         }
 
-                        if (!targetChannel.keys.isEmpty())
+                        if (!targetChannel.keys.isEmpty()) {
                             channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                            float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime);
+                            if (targetAnimation.length < endTime)
+                                targetAnimation.length = endTime;
+                        }
                     }
 
                     { // Rotation
@@ -1115,8 +1119,12 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                             targetChannel.keys.push_back(*animationKey);
                         }
 
-                        if (!targetChannel.keys.isEmpty())
+                        if (!targetChannel.keys.isEmpty()) {
                             channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                            float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime);
+                            if (targetAnimation.length < endTime)
+                                targetAnimation.length = endTime;
+                        }
                     }
 
                     { // Scale
@@ -1130,8 +1138,12 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                             targetChannel.keys.push_back(*animationKey);
                         }
 
-                        if (!targetChannel.keys.isEmpty())
+                        if (!targetChannel.keys.isEmpty()) {
                             channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                            float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime);
+                            if (targetAnimation.length < endTime)
+                                targetAnimation.length = endTime;
+                        }
                     }
                 }
             }
@@ -1290,13 +1302,13 @@ static void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent,
 
     QQuick3DObject *obj = nullptr;
     switch (node.nodeType) {
-    case QSSGSceneDesc::Node::Type::Skeleton:
+    case Node::Type::Skeleton:
         obj = createRuntimeObject<QQuick3DSkeleton>(static_cast<Skeleton &>(node), parent);
         break;
-    case QSSGSceneDesc::Node::Type::Joint:
+    case Node::Type::Joint:
         obj = createRuntimeObject<QQuick3DJoint>(static_cast<Joint &>(node), parent);
         break;
-    case QSSGSceneDesc::Node::Type::Light:
+    case Node::Type::Light:
     {
         auto &light = static_cast<Light &>(node);
         if (light.runtimeType == Node::RuntimeType::DirectionalLight)
@@ -1368,6 +1380,10 @@ QQuick3DNode *AssimpImporter::import(QQuick3DNode &parent, const QSSGSceneDesc::
         createGraphObject(*resource, parent, false);
 
     createGraphObject(*root, parent);
+
+    // For now, all the animations are enabled like the balsam importer.
+    for (const auto &anim: scene.animations)
+        QSSGQmlUtilities::createTimelineAnimation(*anim, root->obj);
 
     return qobject_cast<QQuick3DNode *>(scene.root->obj);
 }
