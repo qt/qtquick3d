@@ -418,9 +418,9 @@ float QQuick3DTexture::pivotV() const
 }
 
 /*!
-    \qmlproperty bool QtQuick3D::Texture::flipV
+    \qmlproperty bool QtQuick3D::Texture::flipU
 
-    This property sets the use of the vertically flipped coordinates.
+    This property sets the use of the horizontally flipped texture coordinates.
 
     The default is false.
 
@@ -430,6 +430,29 @@ float QQuick3DTexture::pivotV() const
     code, and so transformations such as the one configured by this property
     are ignored and are up to the application-provided shader code to
     implement.
+
+    \sa flipV
+*/
+bool QQuick3DTexture::flipU() const
+{
+    return m_flipU;
+}
+
+/*!
+    \qmlproperty bool QtQuick3D::Texture::flipV
+
+    This property sets the use of the vertically flipped texture coordinates.
+
+    The default is false.
+
+    \note This property is effective when the Texture is used in combination
+    with a DefaultMaterial or PrincipledMaterial.
+    \l{QtQuick3D::CustomMaterial}{Custom materials} provide their own shader
+    code, and so transformations such as the one configured by this property
+    are ignored and are up to the application-provided shader code to
+    implement.
+
+    \sa flipU
 */
 bool QQuick3DTexture::flipV() const
 {
@@ -750,6 +773,17 @@ void QQuick3DTexture::setPivotV(float pivotV)
     update();
 }
 
+void QQuick3DTexture::setFlipU(bool flipU)
+{
+    if (m_flipU == flipU)
+        return;
+
+    m_flipU = flipU;
+    m_dirtyFlags.setFlag(DirtyFlag::TransformDirty);
+    emit flipUChanged();
+    update();
+}
+
 void QQuick3DTexture::setFlipV(bool flipV)
 {
     if (m_flipV == flipV)
@@ -861,6 +895,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
     if (m_dirtyFlags.testFlag(DirtyFlag::TransformDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::TransformDirty, false);
+        imageNode->m_flipU = m_flipU;
         imageNode->m_flipV = m_sourceItem ? !m_flipV : m_flipV;
         imageNode->m_scale = QVector2D(m_scaleU, m_scaleV);
         imageNode->m_pivot = QVector2D(m_pivotU, m_pivotV);

@@ -70,6 +70,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(float positionV READ positionV WRITE setPositionV NOTIFY positionVChanged)
     Q_PROPERTY(float pivotU READ pivotU WRITE setPivotU NOTIFY pivotUChanged)
     Q_PROPERTY(float pivotV READ pivotV WRITE setPivotV NOTIFY pivotVChanged)
+    Q_PROPERTY(bool flipU READ flipU WRITE setFlipU NOTIFY flipUChanged)
     Q_PROPERTY(bool flipV READ flipV WRITE setFlipV NOTIFY flipVChanged)
     Q_PROPERTY(int indexUV READ indexUV WRITE setIndexUV NOTIFY indexUVChanged)
     Q_PROPERTY(Filter magFilter READ magFilter WRITE setMagFilter NOTIFY magFilterChanged)
@@ -119,6 +120,7 @@ public:
     float positionV() const;
     float pivotU() const;
     float pivotV() const;
+    bool flipU() const;
     bool flipV() const;
     int indexUV() const;
     Filter magFilter() const;
@@ -142,6 +144,7 @@ public Q_SLOTS:
     void setPositionV(float positionV);
     void setPivotU(float pivotU);
     void setPivotV(float pivotV);
+    void setFlipU(bool flipU);
     void setFlipV(bool flipV);
     void setIndexUV(int indexUV);
     void setMagFilter(QQuick3DTexture::Filter magFilter);
@@ -163,6 +166,7 @@ Q_SIGNALS:
     void positionVChanged();
     void pivotUChanged();
     void pivotVChanged();
+    void flipUChanged();
     void flipVChanged();
     void indexUVChanged();
     void magFilterChanged();
@@ -209,6 +213,7 @@ private:
     float m_positionV = 0;
     float m_pivotU = 0;
     float m_pivotV = 0;
+    bool m_flipU = false;
     bool m_flipV = false;
     int m_indexUV = 0;
     Filter m_magFilter = Linear;

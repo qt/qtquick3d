@@ -91,6 +91,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     QVector2D m_pivot { 0.0f, 0.0f };
     QVector2D m_position { 0.0f, 0.0f };
     float m_rotation = 0.0f; // degrees
+    bool m_flipU = false;
     bool m_flipV = false;
     int m_indexUV = 0;
     MappingModes m_mappingMode = MappingModes::Normal;

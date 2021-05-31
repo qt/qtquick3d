@@ -57,13 +57,18 @@ void QSSGRenderImage::calculateTextureTransform()
 {
     m_flags.setFlag(Flag::TransformDirty, false);
 
+    m_textureTransform = QMatrix4x4();
+    if (m_flipU) {
+        m_textureTransform *= QMatrix4x4(-1.f, 0.f, 0.f, 1.f,
+                                         0.f,  1.f, 0.f, 0.f,
+                                         0.f,  0.f, 1.f, 0.f,
+                                         0.f,  0.f, 0.f, 1.f);
+    }
     if (m_flipV) {
-        m_textureTransform = QMatrix4x4(1.f,  0.f, 0.f, 0.f,
-                                        0.f, -1.f, 0.f, 1.f,
-                                        0.f,  0.f, 1.f, 0.f,
-                                        0.f,  0.f, 0.f, 1.f);
-    } else {
-        m_textureTransform = QMatrix4x4();
+        m_textureTransform *= QMatrix4x4(1.f,  0.f, 0.f, 0.f,
+                                         0.f, -1.f, 0.f, 1.f,
+                                         0.f,  0.f, 1.f, 0.f,
+                                         0.f,  0.f, 0.f, 1.f);
     }
 
     QMatrix4x4 pivot;
