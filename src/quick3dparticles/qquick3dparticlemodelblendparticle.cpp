@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ModelBlendParticle3D
     \inherits Particle3D
     \inqmlmodule QtQuick3D.Particles3D
-    \brief Blends particle effect with a 3D model
+    \brief Blends particle effect with a 3D model.
     \preliminary
 
     \note This type is in tech preview in 6.2. \b {The API is under development and subject to change.}

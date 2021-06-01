@@ -73,7 +73,7 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         owners.append(da);
     }
 
-    /*!
+    /*
         Transforms viewport coordinates to 2D scene coordinates.
         Returns the point in targetItem corresponding to \a viewportPoint,
         assuming that targetItem is mapped onto sceneParentNode.

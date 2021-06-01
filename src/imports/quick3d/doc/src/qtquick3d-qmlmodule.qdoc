@@ -84,3 +84,10 @@ import QtQuick3D.Particles3D
 
 \noautolist
 */
+
+/*!
+    \qmlmodule QtQuick3D.AssetUtils
+    \title Qt Quick 3D Asset Utility QML Types
+    \since 6.2
+    \brief Provides a way to load 3D assets directly from source at runtime.
+*/

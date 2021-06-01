@@ -49,7 +49,7 @@ existing 3D assets.
     Qt Quick 3D
     \li  \l{Qt Quick 3D Effects QML Types}{QtQuick3D.Effects} - A library of built-in post processing effect
     components
-    \li  \l{Qt Quick 3D Asset Utility QML Types}{QtQuick3D.AssetUtils} - A library for importing 3D assets at runtime
+    \li  \l{QtQuick3D.AssetUtils QML Types}{QtQuick3D.AssetUtils} - A library for importing 3D assets at runtime
     \li \l{Qt Quick 3D Helpers QML Types}{QtQuick3D.Helpers} - A library of additional components which can be
     used to help design 3D and debug 3D scenes.
 \endlist

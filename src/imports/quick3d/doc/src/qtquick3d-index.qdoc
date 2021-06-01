@@ -109,7 +109,8 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D QML Types}
     \li \l{Qt Quick 3D C++ Classes}
     \li \l{Qt Quick 3D Helpers QML Types}
-    \li \l{Qt Quick 3D Asset Utility QML Types}
+    \li \l{QtQuick3D.AssetUtils QML Types}
+          {Qt Quick 3D Asset Utility QML Types}
     \li \l{Qt Quick 3D Effects QML Types}
     \li \l{Qt Quick 3D Particles3D QML Types}
 \endlist

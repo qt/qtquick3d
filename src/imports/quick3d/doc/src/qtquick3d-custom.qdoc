@@ -520,7 +520,7 @@ alpha. The default value is \c{(1.0, 1.0, 1.0, 1.0)}.
 \li EMISSIVE_COLOR
 \li vec3
 \li The color of self-illumination. Corresponds to
-\l{PrincipledMaterial::emissiveColor}. The default value is \c{(0.0, 0.0, 0.0)}.
+\l{PrincipledMaterial::emissiveFactor}. The default value is \c{(0.0, 0.0, 0.0)}.
 \row
 \li METALNESS
 \li float

@@ -100,7 +100,7 @@ void QQuick3DParticleAttractor::setPositionVariation(const QVector3D &positionVa
     Each particle will be attracted into a random position inside this shape. This is an
     alternative for defining \l {Node::position}{position} and \l positionVariation. Here
     is an example how to attract particles into some random point inside sphere by the end
-    of the particles \l {Particle3D::lifeSpan}{lifeSpan}:
+    of the particles \l {ParticleEmitter3D::}{lifeSpan}:
 
     \qml
     Attractor3D {

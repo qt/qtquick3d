@@ -60,16 +60,16 @@ QQuick3DParticleSpriteSequence::~QQuick3DParticleSpriteSequence()
 /*!
     \qmlproperty int SpriteSequence3D::frameCount
 
-    This property defines the amount of image frames in \l {SpriteParticle3D::sprite}{sprite}.
+    This property defines the amount of image frames in \l {SpriteParticle3D::}{sprite}.
     Particle animates through these frames during its \l duration.
     The frames should be laid out horizontally in the same image file. For example,
-    \l sprite could be a \c {512x64} image, with \c frameCount of \c 8. This would make
+    \e sprite could be a \c {512x64} image, with \c frameCount of \c 8. This would make
     each particle frame size \c {64x64} pixels.
 
     The default value is \c 1.
 
     \note If your image only has a single sprite frame, don't define the
-    \l {SpriteParticle3D::spriteSequence}{spriteSequence} property at all.
+    \l {SpriteParticle3D::}{spriteSequence} property at all.
 
     \sa interpolate
 */
