@@ -991,6 +991,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         if (!theObject->renderableFlags.castsShadows())
             continue;
 
+        ShaderFeatureSetList objectFeatureSet = featureSet;
+        const bool isOpaqueDepthPrePass = theObject->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
+        if (isOpaqueDepthPrePass)
+            objectFeatureSet.append({ QSSGShaderDefines::OpaqueDepthPrePass, true});
+
         QSSGRhiDrawCallData *dcd = nullptr;
         QMatrix4x4 modelViewProjection;
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
@@ -1005,7 +1010,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset()) {
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
 
-            shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
+            shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
@@ -1016,7 +1021,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
 
             QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
-            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, subsetRenderable.customMaterial(), subsetRenderable, featureSet);
+            shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, subsetRenderable.customMaterial(), subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
@@ -1039,6 +1044,67 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
             // Depth and SSAO textures, in case a custom material's shader code does something with them.
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
+
+            if (isOpaqueDepthPrePass) {
+                // Texture maps that affect alpha
+                QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
+                while (renderableImage) {
+                    const auto mapType = renderableImage->m_mapType;
+                    if (mapType == QSSGRenderableImage::Type::BaseColor ||
+                            mapType == QSSGRenderableImage::Type::Diffuse ||
+                            mapType == QSSGRenderableImage::Type::Translucency ||
+                            mapType == QSSGRenderableImage::Type::Opacity) {
+                        const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
+                        const int samplerHint = int(mapType);
+                        int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
+                        if (samplerBinding >= 0) {
+                            QRhiTexture *texture = renderableImage->m_texture.m_texture;
+                            if (samplerBinding >= 0 && texture) {
+                                const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                                QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
+                                                                         toRhi(renderableImage->m_imageNode.m_magFilterType),
+                                                                         mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                                                                         toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                                                                         toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
+                                bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
+                            }
+                        } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
+                    }
+                    renderableImage = renderableImage->m_nextImage;
+                }
+
+                // For custom Materials we can't know which maps affect alpha, so map all
+                if (theObject->renderableFlags.isCustomMaterialMeshSubset()) {
+                    QVector<QShaderDescription::InOutVariable> samplerVars =
+                            shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
+                    for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+                        auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
+                                               [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
+                        if (it == samplerVars.cend())
+                            samplerVars.append(var);
+                    }
+
+                    int maxSamplerBinding = -1;
+                    for (const QShaderDescription::InOutVariable &var : samplerVars)
+                        maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
+
+                    if (maxSamplerBinding >= 0) {
+                        // custom property textures
+                        int customTexCount = shaderPipeline->extraTextureCount();
+                        for (int i = 0; i < customTexCount; ++i) {
+                            const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
+                            const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
+                            if (samplerBinding >= 0) {
+                                QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
+                                bindings.addTexture(samplerBinding,
+                                                    VISIBILITY_ALL,
+                                                    t.texture,
+                                                    sampler);
+                            }
+                        }
+                    }
+                }
+            }
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
@@ -1647,24 +1713,26 @@ void QSSGLayerRenderData::rhiPrepare()
             m_rhiAoTexture.reset();
         }
 
-        // Shadows. Generates a 2D or cube shadow map. (opaque objects only)
+        // Shadows. Generates a 2D or cube shadow map. (opaque + pre-pass transparent objects)
         if (layerPrepResult->flags.requiresShadowMapPass() && m_progressiveAAPassIndex == 0) {
             if (!shadowMapManager)
                 shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
 
-            if (!opaqueObjects.isEmpty() || !globalLights.isEmpty()) {
+            const TRenderableObjectList shadowPassObjects = renderedDepthWriteObjects + renderedOpaqueDepthPrepassObjects;
+
+            if (!shadowPassObjects.isEmpty() || !globalLights.isEmpty()) {
                 cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
 
                 rhiRenderShadowMap(rhiCtx, *this, shadowMapManager, layerPrepResult->viewport(), *camera,
                                    globalLights, // scoped lights are not relevant here
-                                   sortedOpaqueObjects,
+                                   shadowPassObjects,
                                    renderer);
 
                 cb->debugMarkEnd();
             }
         }
 
-        // Z (depth) pre-pass, if enabled, is part of the main render pass. (opaque objects only)
+        // Z (depth) pre-pass, if enabled, is part of the main render pass. (opaque + pre-pass transparent objects)
         // Prepare the data for it.
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
                 && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)

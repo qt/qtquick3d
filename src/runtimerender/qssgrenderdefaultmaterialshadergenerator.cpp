@@ -708,7 +708,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (isCubeShadowPass)
         vertexShader.generateShadowWorldPosition(inKey);
 
-    if (hasImage && (!isDepthPass || isOpaqueDepthPrePass) && !isOrthoShadowPass && !isCubeShadowPass) {
+    if (hasImage && ((!isDepthPass && !isOrthoShadowPass && !isCubeShadowPass) || isOpaqueDepthPrePass)) {
         fragmentShader.append("    vec3 qt_uTransform;");
         fragmentShader.append("    vec3 qt_vTransform;");
     }
@@ -1275,6 +1275,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 #endif
 
     } else {
+        if ((isOrthoShadowPass || isCubeShadowPass || isDepthPass) && isOpaqueDepthPrePass) {
+            fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
+            fragmentShader << "        discard;\n";
+        }
+
         if (isOrthoShadowPass) {
             fragmentShader.addUniform("qt_shadowDepthAdjust", "vec2");
             fragmentShader << "    // directional shadow pass\n"
@@ -1288,11 +1293,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                            << "    float qt_shadowDist = length(qt_varShadowWorldPos - qt_shadowCamPos);\n"
                            << "    qt_shadowDist = (qt_shadowDist - qt_cameraProperties.x) / (qt_cameraProperties.y - qt_cameraProperties.x);\n"
                            << "    fragOutput = vec4(qt_shadowDist, qt_shadowDist, qt_shadowDist, 1.0);\n";
-        } else if (isDepthPass) {
-            if (isOpaqueDepthPrePass) {
-                fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";
-                fragmentShader << "        discard;\n";
-            }
         } else {
             fragmentShader.addInclude("tonemapping.glsllib");
             fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_diffuseColor.rgb), qt_diffuseColor.a * qt_objectOpacity);");
