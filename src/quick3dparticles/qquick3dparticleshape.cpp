@@ -378,7 +378,7 @@ void QQuick3DParticleShape::calculateModelVertexPositions()
             bool hasIndexBuffer = false;
             QQuick3DGeometry::Attribute::ComponentType indexBufferFormat;
             int posOffset = 0;
-            QQuick3DGeometry::Attribute::ComponentType posType;
+            QQuick3DGeometry::Attribute::ComponentType posType = QQuick3DGeometry::Attribute::U16Type;
             for (int i = 0; i < geometry->attributeCount(); ++i) {
                 auto attribute = geometry->attribute(i);
                 if (attribute.semantic == QQuick3DGeometry::Attribute::PositionSemantic) {
@@ -397,16 +397,17 @@ void QQuick3DParticleShape::calculateModelVertexPositions()
                     memcpy(v, data + posOffset + i, sizeof(v));
                     positions.append(QVector3D(v[0], v[1], v[2]));
                 }
-            }
-            if (hasIndexBuffer) {
-                const auto &data = geometry->vertexData();
-                int indexSize = 4;
-                if (indexBufferFormat == QQuick3DGeometry::Attribute::U16Type)
-                    indexSize = 2;
-                for (int i = 0; i < data.size(); i += indexSize) {
-                    quint64 index = 0;
-                    memcpy(&index, data + i, indexSize);
-                    indicedPositions.append(positions[index]);
+                if (hasIndexBuffer) {
+                    const auto &data = geometry->vertexData();
+                    int indexSize = 4;
+                    if (indexBufferFormat == QQuick3DGeometry::Attribute::U16Type)
+                        indexSize = 2;
+                    for (int i = 0; i < data.size(); i += indexSize) {
+                        quint64 index = 0;
+                        memcpy(&index, data + i, indexSize);
+                        if (positions.size() > index)
+                            indicedPositions.append(positions[index]);
+                    }
                 }
             }
         } else {
@@ -441,13 +442,14 @@ void QQuick3DParticleShape::calculateModelVertexPositions()
                         memcpy(v, data + posOffset + i, sizeof(v));
                         positions.append(QVector3D(v[0], v[1], v[2]));
                     }
-                }
-                const auto &data = mesh.indexBuffer().data;
-                int indexSize = QSSGMesh::MeshInternal::byteSizeForComponentType(mesh.indexBuffer().componentType);
-                for (int i = 0; i < data.size(); i += indexSize) {
-                    quint64 index = 0;
-                    memcpy(&index, data + i, indexSize);
-                    indicedPositions.append(positions[index]);
+                    const auto &indexData = mesh.indexBuffer().data;
+                    int indexSize = QSSGMesh::MeshInternal::byteSizeForComponentType(mesh.indexBuffer().componentType);
+                    for (int i = 0; i < indexData.size(); i += indexSize) {
+                        quint64 index = 0;
+                        memcpy(&index, indexData + i, indexSize);
+                        if (positions.size() > index)
+                            indicedPositions.append(positions[index]);
+                    }
                 }
         }
         if (!indicedPositions.empty())
