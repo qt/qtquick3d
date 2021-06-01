@@ -197,6 +197,7 @@ private:
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
     void markDirty(DirtyFlag type);
     void trySetSourceParent();
+    bool effectiveFlipV() const;
 
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
