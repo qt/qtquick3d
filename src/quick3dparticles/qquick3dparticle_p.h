@@ -127,10 +127,10 @@ public Q_SLOTS:
     void setFadeOutEffect(QQuick3DParticle::FadeType fadeOutEffect);
     void setFadeInDuration(int fadeInDuration);
     void setFadeOutDuration(int fadeOutDuration);
-    void setAlignMode(AlignMode alignMode);
+    void setAlignMode(QQuick3DParticle::AlignMode alignMode);
     void setAlignTargetPosition(const QVector3D &alignPosition);
     void setHasTransparency(bool transparency);
-    void setSortMode(SortMode sortMode);
+    void setSortMode(QQuick3DParticle::SortMode sortMode);
 
 Q_SIGNALS:
     void systemChanged();
