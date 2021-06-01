@@ -67,9 +67,9 @@ public:
     bool normalized() const;
     float magnitude() const;
     float magnitudeVariation() const;
+    QVector3D positionVariation() const;
 
 public Q_SLOTS:
-    QVector3D positionVariation() const;
     void setPositionVariation(const QVector3D &positionVariation);
     void setNormalized(bool normalized);
     void setMagnitude(float magnitude);
