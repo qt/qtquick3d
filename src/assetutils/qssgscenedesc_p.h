@@ -330,6 +330,21 @@ struct Animation
             }
             return value;
         }
+        QMetaType::Type getValueQMetaType() const {
+            switch (getValueType()) {
+            case ValueType::Number:
+                return QMetaType::Float;
+            case ValueType::Vec2:
+                return QMetaType::QVector2D;
+            case ValueType::Vec3:
+                return QMetaType::QVector3D;
+            case ValueType::Vec4:
+                return QMetaType::QVector4D;
+            case ValueType::Quaternion:
+                return QMetaType::QQuaternion;
+            }
+            return QMetaType::QVector4D;
+        }
         QVector4D value;
         float time = 0.0f;
         quint16 flag = 0;
