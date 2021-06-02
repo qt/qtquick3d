@@ -489,8 +489,12 @@ struct PropertyMember : PropertyCall
     }
 };
 
+template <typename NodeT>
+using if_node = typename std::enable_if_t<is_node_v<NodeT>, bool>;
 template <typename Setter, typename Value>
 using if_compatible_t = typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Arg0Base, rm_cvref_t<Value>>, bool>;
+template <typename Setter, typename T>
+using if_compatible_node_list_t = typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Ret, QQmlListProperty<as_scene_type_t<T>>>, bool>;
 
 // Sets a property on a node, the property is a name map to struct containing a pointer to the value and a function
 // to set the value on an runtime object (QtQuick3DObject). The type is verified at compile-time, so we can assume
@@ -542,7 +546,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     node.properties.push_back(*prop);
 }
 
-template<typename Setter, typename ViewValue, typename std::enable_if_t<std::is_base_of_v<QSSGSceneDesc::BufferView, ViewValue>, bool> = false>
+template<typename Setter, typename ViewValue, if_compatible_t<Setter, typename ViewValue::type> = false>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, ViewValue view)
 {
     Q_ASSERT(node.scene);
@@ -569,8 +573,8 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 }
 
 // Overloaded function for setting a type to a property that's a QQmlListProperty.
-template<typename Setter, typename NodeT, typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Ret, QQmlListProperty<as_scene_type_t<NodeT>>>, bool> = true>
-static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const QVarLengthArray<NodeT *> &list)
+template<typename Setter, typename NodeT, qsizetype Prealloc, if_compatible_node_list_t<Setter, NodeT> = true>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const QVarLengthArray<NodeT *, Prealloc> &list)
 {
     Q_ASSERT(node.scene);
     if (!list.isEmpty()) {
