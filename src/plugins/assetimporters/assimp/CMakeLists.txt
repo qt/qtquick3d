@@ -345,6 +345,11 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION (CMAKE_CROSSCOMPILING O
         Qt::ZlibPrivate
 )
 
+qt_internal_extend_target(AssimpImporterPlugin CONDITION EMSCRIPTEN AND NOT QT_FEATURE_system_assimp
+    DEFINES
+        USE_FILE32API
+)
+
 # special case begin
 qt_internal_extend_target(AssimpImporterPlugin CONDITION ICC AND NOT QT_FEATURE_system_assimp AND (NOT CMAKE_CROSSCOMPILING OR NOT host_build)
     COMPILE_OPTIONS
