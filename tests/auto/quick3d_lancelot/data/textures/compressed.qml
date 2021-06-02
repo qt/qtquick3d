@@ -125,7 +125,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(-125, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: o1_bc1.source; flipV: true }
+                    diffuseMap: Texture { source: o1_bc1.source }
                 } ]
         }
 
@@ -134,7 +134,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(0, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: t2_bc2.source; flipV: true }
+                    diffuseMap: Texture { source: t2_bc2.source }
                 } ]
         }
 

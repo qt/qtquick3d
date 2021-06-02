@@ -131,7 +131,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(-125, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: path1.source; flipV: false }
+                    diffuseMap: Texture { source: path1.source }
                 } ]
         }
 
@@ -140,7 +140,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(0, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: path2.source; flipV: true }
+                    diffuseMap: Texture { source: path2.source }
                 } ]
         }
 
@@ -149,7 +149,7 @@ Rectangle {
             scale: Qt.vector3d(0.7, 0.7, 1)
             position: Qt.vector3d(125, 65, 0)
             materials: [ DefaultMaterial {
-                    diffuseMap: Texture { source: path3.source; flipV: true }
+                    diffuseMap: Texture { source: path3.source }
                 } ]
         }
 

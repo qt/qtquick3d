@@ -75,7 +75,6 @@ Rectangle {
         Texture {
             id: tex_miptester
             source: "../shared/maps/miptester_etc2.ktx"
-            flipV: true
         }
 
         DefaultMaterial {

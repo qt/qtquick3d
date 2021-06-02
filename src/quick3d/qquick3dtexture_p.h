@@ -77,6 +77,7 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(Filter minFilter READ minFilter WRITE setMinFilter NOTIFY minFilterChanged)
     Q_PROPERTY(Filter mipFilter READ mipFilter WRITE setMipFilter NOTIFY mipFilterChanged)
     Q_PROPERTY(bool generateMipmaps READ generateMipmaps WRITE setGenerateMipmaps NOTIFY generateMipmapsChanged)
+    Q_PROPERTY(bool autoOrientation READ autoOrientation WRITE setAutoOrientation NOTIFY autoOrientationChanged REVISION(6, 2))
 
     QML_NAMED_ELEMENT(Texture)
     QML_ADDED_IN_VERSION(1, 14)
@@ -128,6 +129,7 @@ public:
     Filter mipFilter() const;
     QQuick3DTextureData *textureData() const;
     bool generateMipmaps() const;
+    bool autoOrientation() const;
 
     QSSGRenderImage *getRenderImage();
 
@@ -152,6 +154,7 @@ public Q_SLOTS:
     void setMipFilter(QQuick3DTexture::Filter mipFilter);
     void setTextureData(QQuick3DTextureData * textureData);
     void setGenerateMipmaps(bool generateMipmaps);
+    void setAutoOrientation(bool autoOrientation);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -174,6 +177,7 @@ Q_SIGNALS:
     void mipFilterChanged();
     void textureDataChanged();
     void generateMipmapsChanged();
+    void autoOrientationChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -192,12 +196,13 @@ private:
         IndexUVDirty = (1 << 2),
         TextureDataDirty = (1 << 3),
         SamplerDirty = (1 << 4),
-        SourceItemDirty = (1 << 5)
+        SourceItemDirty = (1 << 5),
+        FlipVDirty = (1 << 6)
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
     void markDirty(DirtyFlag type);
     void trySetSourceParent();
-    bool effectiveFlipV() const;
+    bool effectiveFlipV(const QSSGRenderImage &imageNode) const;
 
     QUrl m_source;
     QQuickItem *m_sourceItem = nullptr;
@@ -234,6 +239,7 @@ private:
     QMetaObject::Connection m_textureDataConnection;
     QQuick3DTextureData *m_textureData = nullptr;
     bool m_generateMipmaps = false;
+    bool m_autoOrientation = true;
     QMetaMethod m_updateSlot;
 };
 
