@@ -161,6 +161,7 @@ struct Node
         Joint
     };
 
+    using type = QQuick3DNode;
     // Runtime type type mapping between this type and the QtQuick3D type
     using RuntimeType = QSSGRenderGraphObject::Type;
 
@@ -184,15 +185,34 @@ struct Node
     Type nodeType;
 };
 
-static_assert(std::is_trivially_copy_constructible_v<Node>, "Nope");
+template<typename T>
+static constexpr bool is_node_v = std::is_base_of_v<Node, T>;
+
+// Set up type mapping from a QQuick3D type to a SceneDesc type
+// and verfiy that the node is trivially destructable.
+template <typename T> struct TypeMap {};
+#define QSSG_DECLARE_NODE(NODE) \
+static_assert(is_node_v<NODE>, #NODE " - does not inherit from Node!"); \
+static_assert (std::is_trivially_destructible_v<NODE>, #NODE " - needs to be trivially destructable!"); \
+template <> struct TypeMap<NODE::type> { using type = QSSGSceneDesc::NODE; };
+
+template<typename T>
+using as_scene_type_t = typename T::type;
+template<typename T>
+using as_node_type_t = typename TypeMap<T>::type;
+
+QSSG_DECLARE_NODE(Node)
 
 struct Texture : Node
 {
+    using type = QQuick3DTexture;
     Texture() : Node(Node::Type::Texture, RuntimeType::Image) {}
 };
+QSSG_DECLARE_NODE(Texture)
 
 struct TextureData : Node
 {
+    using type = QQuick3DTextureData;
     enum class Flags : quint8
     {
         Compressed = 0x1
@@ -211,12 +231,17 @@ struct TextureData : Node
     Format fmt;
     quint8 flgs;
 };
+QSSG_DECLARE_NODE(TextureData)
 
 struct Material : Node
 {
+    using type = QQuick3DMaterial;
     explicit Material(Node::RuntimeType rt) : Node(Node::Type::Material, rt) {}
 };
+QSSG_DECLARE_NODE(Material)
 
+// The mesh is a special node, as it's not really a node type but
+// a handle to a mesh that will be turned into a source URL...
 struct Mesh : Node
 {
     explicit Mesh(QByteArrayView name, qsizetype index)
@@ -228,28 +253,38 @@ struct Mesh : Node
 
 struct Model : Node
 {
+    using type = QQuick3DModel;
     Model() : Node(Node::Type::Model, Node::RuntimeType::Model) {}
 };
+QSSG_DECLARE_NODE(Model)
 
 struct Camera : Node
 {
+    using type = QQuick3DCamera;
     explicit Camera(RuntimeType rt) : Node(Node::Type::Camera, rt) {}
 };
+QSSG_DECLARE_NODE(Camera)
 
 struct Light : Node
 {
+    using type = QQuick3DAbstractLight;
     explicit Light(RuntimeType rt) : Node(Node::Type::Light, rt) {}
 };
+QSSG_DECLARE_NODE(Light)
 
 struct Skeleton : Node
 {
+    using type = QQuick3DSkeleton;
     Skeleton() : Node(Node::Type::Skeleton, Node::RuntimeType::Skeleton) {}
 };
+QSSG_DECLARE_NODE(Skeleton)
 
 struct Joint : Node
 {
+    using type = QQuick3DJoint;
     Joint() : Node(Node::Type::Joint, Node::RuntimeType::Joint) {}
 };
+QSSG_DECLARE_NODE(Joint)
 
 struct ListView
 {
@@ -320,18 +355,6 @@ Q_QUICK3DASSETUTILS_EXPORT void addNode(Node &parent, Node &node);
 // Add node to the scene, if a node is already set the new node will
 // become a child of the root node.
 Q_QUICK3DASSETUTILS_EXPORT void addNode(Scene &scene, Node &node);
-
-template <typename T> struct TypeMap {};
-template <> struct TypeMap<QSSGSceneDesc::Node> { using type = QQuick3DNode; };
-template <> struct TypeMap<QSSGSceneDesc::Texture> { using type = QQuick3DTexture; };
-template <> struct TypeMap<QSSGSceneDesc::TextureData> { using type = QQuick3DTextureData; };
-template <> struct TypeMap<QSSGSceneDesc::Material> { using type = QQuick3DMaterial; };
-template <> struct TypeMap<QSSGSceneDesc::Mesh> { using type = QQuick3DNode; };
-template <> struct TypeMap<QSSGSceneDesc::Model> { using type = QQuick3DModel; };
-template <> struct TypeMap<QSSGSceneDesc::Camera> { using type = QQuick3DCamera; };
-template <> struct TypeMap<QSSGSceneDesc::Light> { using type = QQuick3DAbstractLight; };
-
-template <> struct TypeMap<QQuick3DMaterial> { using type = QSSGSceneDesc::Material; };
 
 template<typename> struct ListParam { enum { value = 0 }; };
 template<typename T> struct ListParam<QList<T>>
@@ -429,7 +452,7 @@ struct PropertyList : PropertyCall
         if (value) {
             ListType list = (qobject_cast<Class *>(&that)->*listfn)();
             const auto &nodeList = *reinterpret_cast<const QSSGSceneDesc::NodeList *>(value);
-            auto head = reinterpret_cast<typename TypeMap<T>::type **>(nodeList.head);
+            auto head = reinterpret_cast<as_node_type_t<T> **>(nodeList.head);
             for (int i = 0, end = nodeList.count; i != end; ++i)
                 list.append(&list, qobject_cast<T *>((*(head + i))->obj));
             return true;
@@ -532,7 +555,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     node.properties.push_back(*prop);
 }
 
-template<typename Setter, typename Value, typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Arg0, typename TypeMap<Value>::type *>, bool> = true>
+template<typename Setter, typename Value, if_compatible_t<Setter, as_scene_type_t<Value> *> = true>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, Value *value)
 {
     Q_ASSERT(node.scene);
@@ -546,8 +569,8 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 }
 
 // Overloaded function for setting a type to a property that's a QQmlListProperty.
-template<typename Setter, typename NodeT, typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Ret, QQmlListProperty<typename TypeMap<std::remove_pointer_t<NodeT>>::type>>, bool> = true>
-static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const QVarLengthArray<NodeT> &list)
+template<typename Setter, typename NodeT, typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Ret, QQmlListProperty<as_scene_type_t<NodeT>>>, bool> = true>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, const QVarLengthArray<NodeT *> &list)
 {
     Q_ASSERT(node.scene);
     if (!list.isEmpty()) {
