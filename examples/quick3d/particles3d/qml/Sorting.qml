@@ -166,10 +166,12 @@ Item {
         }
     }
     SettingsView {
+        id: settingsView
         CustomSelectionBox {
             id: sortModeSelectionBox
-            text: "Sort Mode"
+            text: "Mode"
             values: ["SortNone", "SortNewest", "SortOldest", "SortDistance"]
+            parentWidth: settingsView.width
         }
         CustomCheckBox {
             id: checkBoxRotateCamera

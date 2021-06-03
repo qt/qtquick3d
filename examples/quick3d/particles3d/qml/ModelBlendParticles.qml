@@ -215,6 +215,7 @@ Item {
     }
 
     SettingsView {
+        id: settingsView
         CustomCheckBox {
             id: enableActivationPlane
             text: "Enable activation plane"
@@ -235,6 +236,7 @@ Item {
             id: blendModeSelectionBox
             text: "Mode"
             values: ["Explode", "Construct", "Transfer"]
+            parentWidth: settingsView.width
             onSelectionChanged: {
                 timeline.currentFrame = 0
                 psystem.reset()

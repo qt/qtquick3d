@@ -57,6 +57,7 @@ Item {
     property string text
     property string selection
     property alias values: combo.model
+    property real parentWidth
 
     width: rowLayout.width
     height: rowLayout.height
@@ -68,7 +69,7 @@ Item {
             displayText: text + ": " + model[currentIndex]
             textRole: text
             anchors.rightMargin: 0
-            width: 400
+            implicitWidth: Math.max(parentWidth - 5, 100)
 
             delegate: ItemDelegate {
                 id: lightDelegate
