@@ -150,6 +150,9 @@ void QQuick3DJoint::markSkeletonDirty(QSSGRenderSkeleton *skeletonNode)
 
 QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *node)
 {
+    if (!m_skeletonRoot)
+        return node;
+
     if (!node) {
         markAllDirty();
         node = new QSSGRenderJoint();
