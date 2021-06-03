@@ -1045,11 +1045,12 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             dcd = &rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
                                           pEntry, cubeFace, QSSGRhiDrawCallDataKey::Shadow });
         }
-
+        QSSGRhiShaderResourceBindingList bindings;
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*theObject));
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset()) {
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
+            const bool blendParticles = subsetRenderable.generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
             shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
@@ -1057,7 +1058,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
+            if (blendParticles)
+                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+            if (blendParticles)
+                QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
         } else if (theObject->renderableFlags.isCustomMaterialMeshSubset()) {
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
 
@@ -1080,7 +1085,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraDirection);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
-            QSSGRhiShaderResourceBindingList bindings;
+
             bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd->ubuf);
 
             // Depth and SSAO textures, in case a custom material's shader code does something with them.
