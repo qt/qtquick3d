@@ -1274,7 +1274,10 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     ps.depthBias = 2;
     ps.slopeScaledDepthBias = 1.5f;
 
-    auto bounds = camera.parent->getBounds(renderer->contextInterface()->bufferManager());
+    QSSGRenderNode *root = camera.parent;
+    while (root->parent)
+        root = root->parent;
+    auto bounds = root->getBounds(renderer->contextInterface()->bufferManager());
 
     QVector3D scenePoints[8];
     scenePoints[0] = bounds.minimum;
