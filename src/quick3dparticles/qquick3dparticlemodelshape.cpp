@@ -272,7 +272,7 @@ void QQuick3DParticleModelShape::calculateModelVertexPositions()
                     if (indexBufferFormat == QQuick3DGeometry::Attribute::U16Type)
                         indexSize = 2;
                     for (int i = 0; i < data.size(); i += indexSize) {
-                        quint64 index = 0;
+                        qsizetype index = 0;
                         memcpy(&index, data + i, indexSize);
                         if (positions.size() > index)
                             indicedPositions.append(positions[index]);
@@ -314,7 +314,7 @@ void QQuick3DParticleModelShape::calculateModelVertexPositions()
                     const auto &indexData = mesh.indexBuffer().data;
                     int indexSize = QSSGMesh::MeshInternal::byteSizeForComponentType(mesh.indexBuffer().componentType);
                     for (int i = 0; i < indexData.size(); i += indexSize) {
-                        quint64 index = 0;
+                        qsizetype index = 0;
                         memcpy(&index, indexData + i, indexSize);
                         if (positions.size() > index)
                             indicedPositions.append(positions[index]);
