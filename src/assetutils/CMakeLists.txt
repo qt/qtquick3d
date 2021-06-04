@@ -1,23 +1,35 @@
-qt_internal_add_module(Quick3DAssetUtils
+qt_internal_add_qml_module(Quick3DAssetUtils
+    URI "QtQuick3D.AssetUtils"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQuick3DAssetUtilsPlugin
+    PLUGIN_TARGET qtquick3dassetutilsplugin
+    DEPENDENCIES
+        QtQuick3D/auto
     SOURCES
         qtquick3dassetutilsglobal_p.h
         qssgscenedesc.cpp qssgscenedesc_p.h
         qssgqmlutilities.cpp qssgqmlutilities_p.h
+        qquick3druntimeloader.cpp qquick3druntimeloader_p.h
     DEFINES
         QT_BUILD_QUICK3DASSETUTILS_LIB
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
+        Qt::Quick3DAssetImportPrivate
         Qt::Quick3DRuntimeRenderPrivate
         Qt::Quick3DPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
+        Qt::Quick
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::Quick3DRuntimeRenderPrivate
         Qt::Quick3DPrivate
+        Qt::Quick3DAssetUtilsPrivate
+        Qt::Quick3DAssetImportPrivate
 )
 
 qt_internal_extend_target(Quick3DAssetUtils CONDITION TARGET Qt::QuickTimeline

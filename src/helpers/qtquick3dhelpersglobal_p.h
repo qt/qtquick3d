@@ -27,29 +27,38 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlengine.h>
+#ifndef QTQUICK3DHELPERSGLOBAL_P_H
+#define QTQUICK3DHELPERSGLOBAL_P_H
 
-#include "gridgeometry_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-extern void qml_register_types_QtQuick3D_Helpers();
+#include <QtGui/qtguiglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QtQuick3DHelpersPlugin : public QQmlEngineExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
-public:
-    QtQuick3DHelpersPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
-    {
-        volatile auto registration = &qml_register_types_QtQuick3D_Helpers;
-        Q_UNUSED(registration);
-    }
-};
+#ifndef Q_QUICK3DHELPERS_EXPORT
+#ifndef QT_STATIC
+#if defined(QT_BUILD_QUICK3DHELPERS_LIB)
+#define Q_QUICK3DHELPERS_EXPORT Q_DECL_EXPORT
+#else
+#define Q_QUICK3DHELPERS_EXPORT Q_DECL_IMPORT
+#endif
+#else
+#define Q_QUICK3DHELPERS_EXPORT
+#endif
+#endif
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+void Q_QUICK3DHELPERS_EXPORT qml_register_types_QtQuick3D_Helpers();
+
+#endif // QTQUICK3DHELPERSGLOBAL_P_H

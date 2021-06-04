@@ -43,6 +43,9 @@
 
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 
+// Workaround for QTBUG-94099, ensures qml_register_types...() is exported
+#include "qtquick3dhelpersglobal_p.h"
+
 QT_BEGIN_NAMESPACE
 
 class GridGeometry : public QQuick3DGeometry

@@ -33,6 +33,9 @@
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dinstancing_p.h>
 
+// Workaround for QTBUG-94099, ensures qml_register_types...() is exported
+#include "qtquick3dassetutilsglobal_p.h"
+
 class QQuick3DRuntimeLoader : public QQuick3DNode
 {
     Q_OBJECT

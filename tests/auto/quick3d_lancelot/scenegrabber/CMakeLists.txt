@@ -39,16 +39,10 @@ qt_quick3d_internal_bake_lightprobe_hdri(qquick3d_qmlscenegrabber "ibl_assets"
         "../data/shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
 )
 
-#### Keys ignored in scope 1:.:.:scenegrabber.pro:<TRUE>:
-# QML_IMPORT_NAME = "QtQuick3D.Lancelot"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
-
-set_target_properties(qquick3d_qmlscenegrabber PROPERTIES
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick3D.Lancelot
+# Turn it into a QML module which has no plugin (i.e. just a backing target)
+qt6_add_qml_module(qquick3d_qmlscenegrabber
+    URI "QtQuick3D.Lancelot"
+    VERSION "${PROJECT_VERSION}"
+    NO_CREATE_PLUGIN_TARGET
+    NO_GENERATE_PLUGIN_SOURCE
 )
-
-qt6_qml_type_registration(qquick3d_qmlscenegrabber)

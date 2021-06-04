@@ -4,7 +4,13 @@
 ## Quick3D Module:
 #####################################################################
 
-qt_internal_add_module(Quick3D
+qt_internal_add_qml_module(Quick3D
+    URI "QtQuick3D"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QQuick3DPlugin
+    PLUGIN_TARGET qquick3dplugin
+    NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qquick3d.cpp qquick3d.h
         qquick3dabstractlight.cpp qquick3dabstractlight_p.h
@@ -70,22 +76,20 @@ qt_internal_add_module(Quick3D
         Qt::QuickPrivate
 )
 
+qt_internal_extend_target(qquick3dplugin
+    SOURCES
+        plugin.cpp
+    LIBRARIES
+        Qt::Quick3DPrivate
+)
+
 set_property(SOURCE qquick3dgeometry.cpp PROPERTY SKIP_AUTOMOC ON) # special case
 set_property(SOURCE qquick3dtexturedata.cpp PROPERTY SKIP_AUTOMOC ON) # special case
 
-#### Keys ignored in scope 1:.:.:quick3d.pro:<TRUE>:
-# MODULE = "quick3d"
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick3D"
-# QML_IMPORT_NAME = "QtQuick3D"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
+if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
+    add_subdirectory(designer)
+endif()
 
-set_target_properties(Quick3D PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick3D
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick3D"
+qt_internal_add_docs(Quick3D
+    doc/qtquick3d.qdocconf
 )
-
-qt6_qml_type_registration(Quick3D)

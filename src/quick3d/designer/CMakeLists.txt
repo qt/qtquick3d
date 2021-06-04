@@ -1,0 +1,56 @@
+qt_copy_or_install(
+    FILES
+        BufferInputSection.qml
+        BufferInputSpecifics.qml
+        BufferSection.qml
+        BufferSpecifics.qml
+        CustomCameraSection.qml
+        CustomCameraSpecifics.qml
+        CustomMaterialSection.qml
+        CustomMaterialSpecifics.qml
+        DefaultMaterialSection.qml
+        DefaultMaterialSpecifics.qml
+        DirectionalLightSection.qml
+        DirectionalLightSpecifics.qml
+        EffectSection.qml
+        EffectSpecifics.qml
+        FrustumCameraSection.qml
+        FrustumCameraSpecifics.qml
+        IdComboBox.qml
+        MaterialSection.qml
+        ModelSection.qml
+        ModelSpecifics.qml
+        NodeSection.qml
+        NodeSpecifics.qml
+        Object3DSection.qml
+        OrthographicCameraSection.qml
+        OrthographicCameraSpecifics.qml
+        PassSection.qml
+        PassSpecifics.qml
+        PerspectiveCameraSection.qml
+        PerspectiveCameraSpecifics.qml
+        PointLightSection.qml
+        PointLightSpecifics.qml
+        PrincipledMaterialSection.qml
+        PrincipledMaterialSpecifics.qml
+        SceneEnvironmentSection.qml
+        SceneEnvironmentSpecifics.qml
+        SetUniformValueSection.qml
+        SetUniformValueSpecifics.qml
+        ShaderSection.qml
+        ShaderSpecifics.qml
+        ShadowSection.qml
+        SpotLightSection.qml
+        SpotLightSpecifics.qml
+        TextureInputSection.qml
+        TextureInputSpecifics.qml
+        TextureSection.qml
+        TextureSpecifics.qml
+        View3DSection.qml
+        View3DSpecifics.qml
+        quick3d.metainfo
+    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/designer"
+)
+
+add_subdirectory(source)
+add_subdirectory(images)

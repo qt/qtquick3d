@@ -3,7 +3,14 @@
 ## Quick3DParticles Module:
 #####################################################################
 
-qt_internal_add_module(Quick3DParticles
+qt_internal_add_qml_module(Quick3DParticles
+    URI "QtQuick3D.Particles3D"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    CLASSNAME QtQuick3DParticles3DPlugin
+    PLUGIN_TARGET qtquick3dparticles3dplugin
+    DEPENDENCIES
+        QtQuick3D/auto
     SOURCES
         qtquick3dparticlesglobal.h qtquick3dparticlesglobal_p.h
         qquick3dparticle.cpp qquick3dparticle_p.h
@@ -58,20 +65,3 @@ qt_internal_add_module(Quick3DParticles
         Qt::QuickPrivate
         Qt::Quick3DPrivate
 )
-
-#### Keys ignored in scope 1:.:.:quick3d.pro:<TRUE>:
-# MODULE = "quick3dparticles"
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick3D/Particles3D"
-# QML_IMPORT_NAME = "QtQuick3D.Particles3D"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-set_target_properties(Quick3DParticles PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick3D.Particles3D
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick3D/Particles3D"
-)
-
-qt6_qml_type_registration(Quick3DParticles)
