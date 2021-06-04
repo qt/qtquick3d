@@ -1985,7 +1985,7 @@ void LightNode::writeQmlProperties(QTextStream &output, int tabLevel, bool isInR
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightdiffuse"), m_lightDiffuse);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightspecular"), m_lightSpecular);
     writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness / 100.f);
     if (m_lightType == LightNode::Point) {
         writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
         writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("linearfade"), m_linearFade);
@@ -2017,7 +2017,7 @@ void LightNode::writeQmlProperties(const PropertyChangeList &changeList, QTextSt
         } else if (targetProperty == QStringLiteral("lightambient")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("lightambient"), m_lightAmbient);
         } else if (targetProperty == QStringLiteral("brightness")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("brightness"), m_brightness / 100.f);
         } else if (targetProperty == QStringLiteral("constantfade")) {
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("constantfade"), m_constantFade);
         } else if (targetProperty == QStringLiteral("linearfade")) {
