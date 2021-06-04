@@ -84,7 +84,7 @@ Item {
                 target: cameraRotation
                 property: "rot"
                 Keyframe { frame: 0; value: 0 }
-                Keyframe { frame: 100; value: -180 }
+                Keyframe { frame: 100; value: 180 }
             },
             KeyframeGroup {
                 target: actNode
@@ -100,7 +100,7 @@ Item {
         camera: camera
 
         environment: SceneEnvironment {
-            clearColor: "#c0c0c0"
+            clearColor: "#404040"
             backgroundMode: SceneEnvironment.Color
             antialiasingMode: settings.antialiasingMode
             antialiasingQuality: settings.antialiasingQuality
@@ -113,29 +113,34 @@ Item {
             PerspectiveCamera {
                 id: camera
                 position: Qt.vector3d(0, 0, 150)
+                clipFar: 2000
             }
         }
 
-        PointLight {
-            y: 300
-            brightness: 200
-        }
         DirectionalLight {
-            brightness: 100
+            brightness: 50
+            eulerRotation: Qt.vector3d(-90, -90, 0)
+            castsShadow: true
+            shadowFactor: 25
+            shadowMapQuality: Light.ShadowMapQualityHigh
         }
         DirectionalLight {
             eulerRotation: Qt.vector3d(180, 0, 0)
-            brightness: 100
+            brightness: 25
+        }
+        DirectionalLight {
+            brightness: 25
         }
 
         Model {
             source: "#Rectangle"
             eulerRotation: Qt.vector3d(-90, 0, 0)
-            y: -50
-            scale: Qt.vector3d(300, 300, 1)
+            y: -30
+            scale: Qt.vector3d(3, 3, 1)
+            receivesShadows: true
             materials: [
                 DefaultMaterial {
-                    diffuseColor: "green"
+                    diffuseColor: "#0c100c"
                 }
             ]
         }
@@ -152,12 +157,13 @@ Item {
                 Model {
                     visible: enableActivationPlane.checked
                     source: "#Rectangle"
-                    scale: Qt.vector3d(5, 5, 1)
+                    scale: Qt.vector3d(0.5, 0.5, 1)
+                    receivesShadows: false
                     materials: [
                         DefaultMaterial {
-                            diffuseColor: "red"
+                            lighting: DefaultMaterial.NoLighting
                             cullMode: Material.NoCulling
-                            opacity: 0.5
+                            opacity: 0.25
                         }
                     ]
                 }
@@ -168,13 +174,13 @@ Item {
                 Model {
                     source: "meshes/oldqtlogo.mesh"
                     scale: Qt.vector3d(10, 10, 10)
-
+                    receivesShadows: false
                     materials: [
                         PrincipledMaterial {
                             baseColor: "#41cd52"
-                            metalness: 1
+                            metalness: 0.8
                             roughness: 0.1
-                            specularAmount: 0
+                            specularAmount: 1
                             cullMode: cullingModelBox.checked ? Material.BackFaceCulling : Material.NoCulling
                         }
                     ]
@@ -183,7 +189,7 @@ Item {
 
             Node {
                 id: translateNode
-                x: 100
+                x: 150
             }
 
             ModelBlendParticle3D {
@@ -191,7 +197,7 @@ Item {
                 delegate: modelComponent
                 endNode: translateNode
                 modelBlendMode: blendModeSelectionBox.selection
-                endTime: 2500
+                endTime: 1500
                 activationNode: enableActivationPlane.checked ? actNode : null
                 random: enableRandom.checked
             }
@@ -203,7 +209,7 @@ Item {
                 lifeSpan: particle.modelBlendMode === ModelBlendParticle3D.Explode ? 40000 : 4000
                 emitRate: particle.maxAmount / 10
                 velocity: VectorDirection3D {
-                    direction: Qt.vector3d(40, 10, 0)
+                    direction: Qt.vector3d(50, 10, 0)
                     directionVariation: Qt.vector3d(0, 10, 10)
                 }
                 particleRotation: Qt.vector3d(20, 0, 3)
@@ -220,12 +226,20 @@ Item {
             id: enableActivationPlane
             text: "Enable activation plane"
             checked: false
+            onCheckedChanged: {
+                timeline.currentFrame = 0
+                psystem.reset()
+            }
         }
         CustomCheckBox {
             id: enableRandom
             text: "Random"
             checked: false
             enabled: !enableActivationPlane.checked
+            onCheckedChanged: {
+                timeline.currentFrame = 0
+                psystem.reset()
+            }
         }
         CustomCheckBox {
             id: cullingModelBox
