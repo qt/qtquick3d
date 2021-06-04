@@ -136,7 +136,7 @@ private:
     bool m_hasValue = false;
 };
 
-Q_DECLARE_TYPEINFO(PropertyChange, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(PropertyChange, Q_RELOCATABLE_TYPE);
 
 class PropertyChangeList
 {
@@ -342,8 +342,8 @@ public:
     KeyFrameList m_keyFrames;
 };
 
-Q_DECLARE_TYPEINFO(AnimationTrack::KeyFrame, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(AnimationTrack, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(AnimationTrack::KeyFrame, Q_RELOCATABLE_TYPE);
+Q_DECLARE_TYPEINFO(AnimationTrack, Q_RELOCATABLE_TYPE);
 
 inline bool operator==(const AnimationTrack::KeyFrame &a, const AnimationTrack::KeyFrame &b)
 {

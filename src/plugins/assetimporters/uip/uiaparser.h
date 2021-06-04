@@ -75,7 +75,7 @@ struct DataInputEntry
     bool hasMinMax() const { return maxValue > minValue; }
 };
 
-Q_DECLARE_TYPEINFO(DataInputEntry, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(DataInputEntry, Q_RELOCATABLE_TYPE);
 
 class UiaParser : AbstractXmlParser
 {
