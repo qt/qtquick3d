@@ -135,23 +135,6 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QUr
     return ImportState::Success;
 }
 
-QQuick3DNode *QSSGAssetImportManager::importScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene)
-{
-    auto it = m_assetImporters.cbegin();
-    const auto end = m_assetImporters.cend();
-    for (; it != end; ++it) {
-        if ((*it)->name() == QLatin1String("assimp"))
-            break;
-    }
-
-    if (it != end) {
-        const auto &importer = *it;
-        return importer->import(parent, scene);
-    }
-
-    return nullptr;
-}
-
 QVariantMap QSSGAssetImportManager::getOptionsForFile(const QString &filename)
 {
     QFileInfo fileInfo(filename);

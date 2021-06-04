@@ -90,7 +90,6 @@ public:
     ImportState importFile(const QUrl &url,
                            QSSGSceneDesc::Scene &scene,
                            QString *error = nullptr);
-    QQuick3DNode *importScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene);
     QVariantMap getOptionsForFile(const QString &filename);
     QHash<QString, QVariantMap> getAllOptions() const;
     QHash<QString, QStringList> getSupportedExtensions() const;
