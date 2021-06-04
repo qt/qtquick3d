@@ -919,7 +919,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
 
             if (inModel.particleBuffer && inModel.particleBuffer->particleCount())
                 renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, true);
-             else
+            else
                 renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, false);
 
             // Skin
