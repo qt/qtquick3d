@@ -853,6 +853,30 @@ static void setLightProperties(QSSGSceneDesc::Light &target, const aiLight &sour
     // shadowFilter
 }
 
+using MorphAttributes = QQuick3DMorphTarget::MorphTargetAttributes;
+using MorphProperty = QPair<MorphAttributes, float>;
+
+static QVector<MorphProperty> getMorphTargetProperties(const aiMesh &mesh)
+{
+    QVector<MorphProperty> targets;
+    const quint32 numMorphTargets = qMin(8U, mesh.mNumAnimMeshes);
+
+    for (uint i = 0; i < numMorphTargets; ++i) {
+        const auto &animMesh = mesh.mAnimMeshes[i];
+        QQuick3DMorphTarget::MorphTargetAttributes mTarget;
+        if (animMesh->HasPositions())
+            mTarget |= QQuick3DMorphTarget::MorphTargetAttribute::Position;
+        if (animMesh->HasNormals())
+            mTarget |= QQuick3DMorphTarget::MorphTargetAttribute::Normal;
+        if (animMesh->HasTangentsAndBitangents()) {
+            mTarget |= QQuick3DMorphTarget::MorphTargetAttribute::Tangent;
+            mTarget |= QQuick3DMorphTarget::MorphTargetAttribute::Binormal;
+        }
+        targets.push_back(qMakePair(mTarget, animMesh->mWeight));
+    }
+    return targets;
+}
+
 static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &source, const SceneInfo &sceneInfo)
 {
     if (source.mNumMeshes == 0)
@@ -1034,8 +1058,43 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
 static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSceneDesc::Node &parent, const NodeMap &nodeMap, AnimationNodeMap &animationNodes)
 {
     QSSGSceneDesc::Node *node = nullptr;
-    if (source.mNumMeshes != 0)
+    if (source.mNumMeshes != 0) {
+        // Process morphTargets first and then add them to the modelNode
+        using It = decltype(source.mNumMeshes);
+        QVector<MorphProperty> morphProps;
+        for (It i = 0, end = source.mNumMeshes; i != end; ++i) {
+            const auto &srcScene = sceneInfo.scene;
+            const aiMesh &mesh = *srcScene.mMeshes[source.mMeshes[i]];
+            if (mesh.mNumAnimMeshes && mesh.mAnimMeshes) {
+                morphProps = getMorphTargetProperties(mesh);
+                break;
+            }
+        }
         node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Model }, source, parent, sceneInfo);
+        if (!morphProps.isEmpty()) {
+            auto &targetScene = parent.scene;
+            const QString nodeName(source.mName.C_Str());
+            QVarLengthArray<QSSGSceneDesc::MorphTarget *> morphTargets;
+            morphTargets.reserve(morphProps.count());
+            for (int i = 0, end = morphProps.count(); i != end; ++i) {
+                const auto morphProp = morphProps.at(i);
+
+                auto morphNode = targetScene->create<QSSGSceneDesc::MorphTarget>();
+                QSSGSceneDesc::addNode(*node, *morphNode);
+                QSSGSceneDesc::setProperty(*morphNode, "weight", &QQuick3DMorphTarget::setWeight, morphProp.second);
+                QSSGSceneDesc::setProperty(*morphNode, "attributes", &QQuick3DMorphTarget::setAttributes, morphProp.first);
+                morphTargets.push_back(morphNode);
+
+                if (!animationNodes.isEmpty()) {
+                    QString morphTargetName = nodeName + QStringLiteral("_morph") + QString::number(i);
+                    const auto aNodeIt = animationNodes.find(morphTargetName.toUtf8());
+                    if (aNodeIt != animationNodes.end() && aNodeIt.value() == nullptr)
+                        *aNodeIt = morphNode;
+                }
+            }
+            QSSGSceneDesc::setProperty(*node, "morphTargets", &QQuick3DModel::morphTargets, morphTargets);
+        }
+    }
 
     // For now, all the nodes are generated, even if they are empty.
     if (!node)
@@ -1068,6 +1127,11 @@ static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiVectorKey &k
 static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiQuatKey &key, qreal freq) {
     const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Quaternion);
     return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w }, float(key.mTime * freq), flag };
+}
+
+static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiMeshMorphKey &key, qreal freq, uint morphId) {
+    const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Number);
+    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ float(key.mWeights[morphId]), 0.0f, 0.0f, 0.0f }, float(key.mTime * freq), flag };
 }
 
 static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneDesc::Scene &targetScene)
@@ -1168,7 +1232,24 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                     const auto &nodeName = srcChannel->mNodeName;
                     if (nodeName.length > 0) {
                         // We'll update this once we've created the node!
-                        animatingNodes.insert(QByteArrayView{nodeName.C_Str(), qsizetype(nodeName.length)}, nullptr);
+                        QByteArrayView name(nodeName.C_Str(), qsizetype(nodeName.length));
+                        if (!animatingNodes.contains(name))
+                            animatingNodes.insert(name, nullptr);
+                    }
+                }
+                const auto morphChannelCount = srcAnim.mNumMorphMeshChannels;
+                for (It cIdx = 0; cIdx != morphChannelCount; ++cIdx) {
+                    const auto &srcChannel = srcAnim.mMorphMeshChannels[cIdx];
+                    const auto &nodeName = srcChannel->mName;
+                    if (nodeName.length > 0) {
+                        const auto morphKeys = srcChannel->mKeys;
+                        const auto numMorphTargets = qMin(morphKeys[0].mNumValuesAndWeights, 8U);
+                        // MorphTarget is renamed with <nodeName> + '_morph' + <targetNumber>
+                        for (It j = 0; j < numMorphTargets; ++j) {
+                            QString morphTargetName(nodeName.C_Str());
+                            morphTargetName += QStringLiteral("_morph") + QString::number(j);
+                            animatingNodes.insert(morphTargetName.toUtf8(), nullptr);
+                        }
                     }
                 }
             }
@@ -1340,11 +1421,40 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                 }
             }
         }
+        // Morphing Animations
+        for (It i = 0, end = srcAnim.mNumMorphMeshChannels; i != end; ++i) {
+            const auto &srcMorphChannel = *srcAnim.mMorphMeshChannels[i];
+            const QString nodeName(srcMorphChannel.mName.C_Str());
+            const auto *morphKeys = srcMorphChannel.mKeys;
+            const auto numMorphTargets = qMin(morphKeys[0].mNumValuesAndWeights, 8U);
+            for (It targetId = 0; targetId != numMorphTargets; ++targetId) {
+                QString morphTargetName = nodeName + QStringLiteral("_morph") + QString::number(targetId);
+                const auto aNodeEnd = animatingNodes.cend();
+                const auto aNodeIt = animatingNodes.constFind(morphTargetName.toUtf8());
+                if (aNodeIt != aNodeEnd && aNodeIt.value() != nullptr) {
+                    auto targetNode = aNodeIt.value();
+                    const auto weightKeyEnd = srcMorphChannel.mNumKeys;
+                    Animation::Channel targetChannel;
+                    targetChannel.targetProperty = Animation::Channel::TargetProperty::Weight;
+                    targetChannel.target = targetNode;
+                    for (It wId = 0; wId != weightKeyEnd; ++wId) {
+                        const auto &weightKey = srcMorphChannel.mKeys[wId];
+                        const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(weightKey, freq, targetId));
+                        targetChannel.keys.push_back(*animationKey);
+                    }
+                    if (!targetChannel.keys.isEmpty()) {
+                        channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                        float endTime = float(srcMorphChannel.mKeys[weightKeyEnd - 1].mTime);
+                        if (targetAnimation.length < endTime)
+                            targetAnimation.length = endTime;
+                    }
+                }
+            }
+        }
 
         // If we have data we need to make it persistent.
         if (!targetAnimation.channels.isEmpty())
             targetScene.animations.push_back(targetScene.create<Animation>(targetAnimation));
-
     };
 
     // All scene nodes should now be created (and ready), so let's go through the animation data.

@@ -183,6 +183,9 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
         // is required for other nodes to be completed before
         deferredNodes.push_back(&node);
         break;
+    case Node::Type::MorphTarget:
+        obj = createRuntimeObject<QQuick3DMorphTarget>(static_cast<MorphTarget &>(node), parent);
+        break;
     case Node::Type::Light:
     {
         auto &light = static_cast<Light &>(node);

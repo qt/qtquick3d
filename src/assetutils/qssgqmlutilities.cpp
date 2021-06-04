@@ -498,6 +498,7 @@ template<> const char *qmlElementName<QSSGSceneDesc::Camera::RuntimeType::PointL
 template<> const char *qmlElementName<QSSGSceneDesc::Joint::RuntimeType::Joint>() { return "Joint"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Skeleton::RuntimeType::Skeleton>() { return "Skeleton"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Skin>() { return "Skin"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::MorphTarget>() { return "MorphTarget"; }
 
 static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
 {
@@ -533,6 +534,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Joint>();
     case RuntimeType::Skin:
         return qmlElementName<RuntimeType::Skin>();
+    case RuntimeType::MorphTarget:
+        return qmlElementName<RuntimeType::MorphTarget>();
     default:
         return "UNKNOWN_TYPE";
     }
@@ -765,6 +768,8 @@ QString asString(QSSGSceneDesc::Animation::Channel::TargetProperty prop)
         return QStringLiteral("rotation");
     if (prop == QSSGSceneDesc::Animation::Channel::TargetProperty::Scale)
         return QStringLiteral("scale");
+    if (prop == QSSGSceneDesc::Animation::Channel::TargetProperty::Weight)
+        return QStringLiteral("weight");
 
     return QStringLiteral("unknown");
 }
@@ -902,7 +907,9 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 break;
             case QSSGSceneDesc::Node::Type::Mesh:
                 break;
-
+            case QSSGSceneDesc::Node::Type::MorphTarget:
+                return { property.name, QLatin1String(qmlElementName<RuntimeType::MorphTarget>()) + QLatin1Char('.') + asString(value) };
+                break;
             }
         }
 
@@ -1110,6 +1117,14 @@ static void writeQml(const QSSGSceneDesc::Skin &skin, OutputContext &output)
     writeNodeProperties(skin, output);
 }
 
+static void writeQml(const QSSGSceneDesc::MorphTarget &morphTarget, OutputContext &output)
+{
+    using namespace QSSGSceneDesc;
+    Q_ASSERT(morphTarget.nodeType == Node::Type::MorphTarget);
+    indent(output) << qmlElementName<QSSGSceneDesc::Node::RuntimeType::MorphTarget>() << blockBegin(output);
+    writeNodeProperties(morphTarget, output);
+}
+
 QString getTextureSourceName(const QString &name)
 {
     const auto textureFolder = getTextureFolder();
@@ -1216,6 +1231,9 @@ static void writeQmlForResourceNode(const QSSGSceneDesc::Node &node, OutputConte
         switch (node.nodeType) {
         case Node::Type::Skin:
             writeQml(static_cast<const Skin &>(node), output);
+            break;
+        case Node::Type::MorphTarget:
+            writeQml(static_cast<const MorphTarget &>(node), output);
             break;
         case Node::Type::Skeleton:
             writeQml(static_cast<const Skeleton &>(node), output);

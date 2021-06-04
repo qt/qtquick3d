@@ -163,7 +163,8 @@ struct Node
         Mesh,
         Skin,
         Skeleton,
-        Joint
+        Joint,
+        MorphTarget
     };
 
     using type = QQuick3DNode;
@@ -304,6 +305,13 @@ struct Joint : Node
 };
 QSSG_DECLARE_NODE(Joint)
 
+struct MorphTarget : Node
+{
+    using type = QQuick3DMorphTarget;
+    MorphTarget() : Node(Node::Type::MorphTarget, Node::RuntimeType::MorphTarget) {}
+};
+QSSG_DECLARE_NODE(MorphTarget)
+
 struct ListView
 {
     void *head = nullptr;
@@ -383,7 +391,8 @@ struct Animation
             Unknown,
             Position,
             Rotation,
-            Scale
+            Scale,
+            Weight // for MorphMesh
         };
 
         Node *target = nullptr;
@@ -712,6 +721,7 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::Light)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Skin)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Skeleton)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Joint)
+Q_DECLARE_METATYPE(QSSGSceneDesc::MorphTarget)
 Q_DECLARE_METATYPE(QSSGSceneDesc::NodeList)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Animation)
 
