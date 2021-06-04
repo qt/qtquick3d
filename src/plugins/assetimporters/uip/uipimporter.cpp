@@ -209,11 +209,6 @@ const QString UipImporter::import(const QString &sourceFile, const QDir &savePat
     return errorString;
 }
 
-QQuick3DNode *UipImporter::import(QQuick3DNode &, const QSSGSceneDesc::Scene &)
-{
-    return nullptr;
-}
-
 void UipImporter::processNode(GraphObject *object, QTextStream &output, int tabLevel, bool isInRootLevel, bool processSiblings)
 {
     GraphObject *obj = object;

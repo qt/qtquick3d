@@ -31,6 +31,7 @@
 
 #include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
 #include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
+#include <QtQuick3DAssetUtils/private/qssgrtutilities_p.h>
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 
 /*!
@@ -199,7 +200,7 @@ void QQuick3DRuntimeLoader::loadSource()
         return;
     }
 
-    m_imported = importManager.importScene(*this, scene);
+    m_imported = QSSGRuntimeUtils::createScene(*this, scene);
     m_boundsDirty = true;
     m_instancingChanged = m_instancing != nullptr;
     updateModels();

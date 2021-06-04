@@ -89,7 +89,6 @@ public:
     const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options,
                          QStringList *generatedFiles) override;
     QString import(const QUrl &sourceFile, const QVariantMap &options, QSSGSceneDesc::Scene &scene) override;
-    QQuick3DNode *import(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene) override;
 
 private:
     void writeHeader(QTextStream &output);

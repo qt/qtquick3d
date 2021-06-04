@@ -55,7 +55,6 @@ public:
     const QString typeDescription() const override;
     const QVariantMap importOptions() const override;
     const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles) override;
-    QQuick3DNode *import(QQuick3DNode &, const QSSGSceneDesc::Scene &) override;
 
 private:
     QString processUipPresentation(UipPresentation *presentation, const QString &ouputFilePath);
