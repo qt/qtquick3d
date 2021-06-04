@@ -38,6 +38,8 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
+#include <QtCore/QBitArray>
+
 QT_BEGIN_NAMESPACE
 
 static constexpr float QSSG_PI = float(M_PI);
@@ -475,6 +477,98 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     }
 }
 
+static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
+                                          QSSGRhiShaderPipeline *shaderPipeline,
+                                          QSSGRenderableImage *renderableImage,
+                                          QSSGRhiShaderResourceBindingList &bindings,
+                                          bool isCustomMaterialMeshSubset = false)
+{
+    static const auto imageAffectsAlpha = [](QSSGRenderableImage::Type mapType) {
+        return mapType == QSSGRenderableImage::Type::BaseColor ||
+               mapType == QSSGRenderableImage::Type::Diffuse ||
+               mapType == QSSGRenderableImage::Type::Translucency ||
+               mapType == QSSGRenderableImage::Type::Opacity;
+    };
+
+    while (renderableImage) {
+        const auto mapType = renderableImage->m_mapType;
+        if (imageAffectsAlpha(mapType)) {
+            const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(mapType);
+            const int samplerHint = int(mapType);
+            int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
+            if (samplerBinding >= 0) {
+                QRhiTexture *texture = renderableImage->m_texture.m_texture;
+                if (samplerBinding >= 0 && texture) {
+                    const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                    QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
+                                                             toRhi(renderableImage->m_imageNode.m_magFilterType),
+                                                             mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                                                             toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                                                             toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
+                    bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
+                }
+            } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
+            renderableImage = renderableImage->m_nextImage;
+        }
+    }
+    // For custom Materials we can't know which maps affect alpha, so map all
+    if (isCustomMaterialMeshSubset) {
+        QVector<QShaderDescription::InOutVariable> samplerVars =
+                shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
+        for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
+            auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
+                                   [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
+            if (it == samplerVars.cend())
+                samplerVars.append(var);
+        }
+
+        int maxSamplerBinding = -1;
+        for (const QShaderDescription::InOutVariable &var : samplerVars)
+            maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
+
+        // Will need to set unused image-samplers to something dummy
+        // because the shader code contains all custom property textures,
+        // and not providing a binding for all of them is invalid with some
+        // graphics APIs (and will need a real texture because setting a
+        // null handle or similar is not permitted with some of them so the
+        // srb does not accept null QRhiTextures either; but first let's
+        // figure out what bindings are unused in this frame)
+        QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
+
+        if (maxSamplerBinding >= 0) {
+            // custom property textures
+            int customTexCount = shaderPipeline->extraTextureCount();
+            for (int i = 0; i < customTexCount; ++i) {
+                const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
+                const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
+                if (samplerBinding >= 0) {
+                    samplerBindingsSpecified.setBit(samplerBinding);
+                    QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
+                    bindings.addTexture(samplerBinding,
+                                        VISIBILITY_ALL,
+                                        t.texture,
+                                        sampler);
+                }
+            }
+        }
+
+        // use a dummy texture for the unused samplers in the shader
+        QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+        QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+        QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+        QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
+        rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+
+        for (const QShaderDescription::InOutVariable &var : samplerVars) {
+            if (!samplerBindingsSpecified.testBit(var.binding)) {
+                QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
+                bindings.addTexture(var.binding, VISIBILITY_ALL, t, dummySampler);
+            }
+        }
+    }
+}
+
 static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
                                          QSSGLayerRenderData &layerData,
                                          QSSGRenderableObject *obj,
@@ -544,64 +638,11 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
         addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
 
         if (isOpaqueDepthPrePass) {
-            // Texture maps that affect alpha
-            QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
-            while (renderableImage) {
-                const auto mapType = renderableImage->m_mapType;
-                if (mapType == QSSGRenderableImage::Type::BaseColor ||
-                        mapType == QSSGRenderableImage::Type::Diffuse ||
-                        mapType == QSSGRenderableImage::Type::Translucency ||
-                        mapType == QSSGRenderableImage::Type::Opacity)
-                {
-                    const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
-                    const int samplerHint = int(renderableImage->m_mapType);
-                    int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
-                    if (samplerBinding >= 0) {
-                        QRhiTexture *texture = renderableImage->m_texture.m_texture;
-                        if (samplerBinding >= 0 && texture) {
-                            const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                            QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
-                                                                     toRhi(renderableImage->m_imageNode.m_magFilterType),
-                                                                     mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
-                                                                     toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
-                                                                     toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
-                            bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
-                        }
-                    } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
-                    renderableImage = renderableImage->m_nextImage;
-                }
-            }
-            // For custom Materials we can't know which maps affect alpha, so map all
-            if (obj->renderableFlags.isCustomMaterialMeshSubset()) {
-                QVector<QShaderDescription::InOutVariable> samplerVars =
-                        shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
-                for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
-                    auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
-                                           [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
-                    if (it == samplerVars.cend())
-                        samplerVars.append(var);
-                }
-
-                int maxSamplerBinding = -1;
-                for (const QShaderDescription::InOutVariable &var : samplerVars)
-                    maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
-
-                if (maxSamplerBinding >= 0) {
-                    // custom property textures
-                    int customTexCount = shaderPipeline->extraTextureCount();
-                    for (int i = 0; i < customTexCount; ++i) {
-                        const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
-                        const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
-                        if (samplerBinding >= 0) {
-                            QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
-                            bindings.addTexture(samplerBinding,
-                                                VISIBILITY_ALL,
-                                                t.texture,
-                                                sampler);
-                        }
-                    }
-                }
-            }
+            addOpaqueDepthPrePassBindings(rhiCtx,
+                                          shaderPipeline.data(),
+                                          subsetRenderable.firstImage,
+                                          bindings,
+                                          obj->renderableFlags.isCustomMaterialMeshSubset());
         }
 
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
@@ -1046,65 +1087,13 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
 
             if (isOpaqueDepthPrePass) {
-                // Texture maps that affect alpha
-                QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
-                while (renderableImage) {
-                    const auto mapType = renderableImage->m_mapType;
-                    if (mapType == QSSGRenderableImage::Type::BaseColor ||
-                            mapType == QSSGRenderableImage::Type::Diffuse ||
-                            mapType == QSSGRenderableImage::Type::Translucency ||
-                            mapType == QSSGRenderableImage::Type::Opacity) {
-                        const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
-                        const int samplerHint = int(mapType);
-                        int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
-                        if (samplerBinding >= 0) {
-                            QRhiTexture *texture = renderableImage->m_texture.m_texture;
-                            if (samplerBinding >= 0 && texture) {
-                                const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                                QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
-                                                                         toRhi(renderableImage->m_imageNode.m_magFilterType),
-                                                                         mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
-                                                                         toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
-                                                                         toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
-                                bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
-                            }
-                        } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
-                    }
-                    renderableImage = renderableImage->m_nextImage;
-                }
-
-                // For custom Materials we can't know which maps affect alpha, so map all
-                if (theObject->renderableFlags.isCustomMaterialMeshSubset()) {
-                    QVector<QShaderDescription::InOutVariable> samplerVars =
-                            shaderPipeline->fragmentStage()->shader().description().combinedImageSamplers();
-                    for (const QShaderDescription::InOutVariable &var : shaderPipeline->vertexStage()->shader().description().combinedImageSamplers()) {
-                        auto it = std::find_if(samplerVars.cbegin(), samplerVars.cend(),
-                                               [&var](const QShaderDescription::InOutVariable &v) { return var.binding == v.binding; });
-                        if (it == samplerVars.cend())
-                            samplerVars.append(var);
-                    }
-
-                    int maxSamplerBinding = -1;
-                    for (const QShaderDescription::InOutVariable &var : samplerVars)
-                        maxSamplerBinding = qMax(maxSamplerBinding, var.binding);
-
-                    if (maxSamplerBinding >= 0) {
-                        // custom property textures
-                        int customTexCount = shaderPipeline->extraTextureCount();
-                        for (int i = 0; i < customTexCount; ++i) {
-                            const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
-                            const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
-                            if (samplerBinding >= 0) {
-                                QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
-                                bindings.addTexture(samplerBinding,
-                                                    VISIBILITY_ALL,
-                                                    t.texture,
-                                                    sampler);
-                            }
-                        }
-                    }
-                }
+                addOpaqueDepthPrePassBindings(rhiCtx,
+                                              shaderPipeline.data(),
+                                              subsetRenderable.firstImage,
+                                              bindings,
+                                              theObject->renderableFlags.isCustomMaterialMeshSubset());
             }
+
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
             const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
