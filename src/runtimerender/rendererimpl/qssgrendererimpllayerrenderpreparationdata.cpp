@@ -962,6 +962,11 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
             QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
             renderableFlags = theMaterialPrepResult.renderableFlags;
 
+            if (inModel.particleBuffer && inModel.particleBuffer->particleCount())
+                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, true);
+            else
+                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, false);
+
             // Skin
             renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
             renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(

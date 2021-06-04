@@ -44,6 +44,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
 
 #include <QtCore/qbitarray.h>
 
@@ -205,9 +206,12 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
     const QSSGCullFaceMode cullMode = material.m_cullMode;
 
+    const bool blendParticles = renderable.generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(renderable.shaderDescription);
+
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForCustomMaterial(ps, material, renderable, featureSet);
 
     if (shaderPipeline) {
+        QSSGRhiShaderResourceBindingList bindings;
         QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layerData.layer,
                                                         &renderable.modelContext.model,
                                                         &material,
@@ -217,8 +221,12 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, layerData, *layerData.camera, nullptr, nullptr);
+        if (blendParticles)
+            QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &renderable.modelContext.model);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
+        if (blendParticles)
+            QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
         const bool instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraDirection);
 
         ps->samples = samples;
@@ -250,7 +258,6 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
-        QSSGRhiShaderResourceBindingList bindings;
         bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
         bindings.addUniformBuffer(1, VISIBILITY_ALL, dcd.ubuf,
                                   shaderPipeline->ub0LightDataOffset(),
@@ -277,6 +284,9 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         // srb does not accept null QRhiTextures either; but first let's
         // figure out what bindings are unused in this frame)
         QBitArray samplerBindingsSpecified(maxSamplerBinding + 1);
+
+        if (blendParticles)
+            samplerBindingsSpecified.setBit(shaderPipeline->bindingForTexture("qt_particleTexture"));
 
         if (shaderPipeline->lightProbeTexture()) {
             int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
