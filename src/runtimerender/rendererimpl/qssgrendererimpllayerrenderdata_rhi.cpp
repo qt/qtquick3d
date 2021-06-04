@@ -508,8 +508,8 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
                     bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
                 }
             } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
-            renderableImage = renderableImage->m_nextImage;
         }
+        renderableImage = renderableImage->m_nextImage;
     }
     // For custom Materials we can't know which maps affect alpha, so map all
     if (isCustomMaterialMeshSubset) {
