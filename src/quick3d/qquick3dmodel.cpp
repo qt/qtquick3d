@@ -781,7 +781,7 @@ void QQuick3DModel::qmlAppendMorphTarget(QQmlListProperty<QQuick3DMorphTarget> *
     }
     self->m_morphTargets.push_back(morphTarget);
     self->m_numMorphAttribs += morphTarget->numAttribs();
-    if (self->m_numMorphAttribs >= 8)
+    if (self->m_numMorphAttribs > 8)
         qWarning("The number of morph attributes exceeds 8. This morph target will be supported partially.");
 
     self->markDirty(QQuick3DModel::MorphTargetsDirty);
