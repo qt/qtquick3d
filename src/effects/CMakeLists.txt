@@ -98,7 +98,6 @@ qt_internal_add_qml_module(Quick3DEffects
     DEPENDENCIES
         QtQuick3D/1.15
         QtQuick.Window/2.1
-    NO_GENERATE_PLUGIN_SOURCE
     NO_SYNC_QT
     QML_FILES
         ${qml_files}
@@ -106,11 +105,6 @@ qt_internal_add_qml_module(Quick3DEffects
         Qt::Qml
         Qt::Quick
         Qt::Quick3DPrivate
-)
-
-qt_internal_extend_target(qtquick3deffectplugin
-    SOURCES
-        plugin.cpp
 )
 
 # Resources:
