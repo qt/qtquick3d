@@ -10,6 +10,7 @@ qt_internal_add_qml_module(Quick3D
     DESIGNER_SUPPORTED
     CLASSNAME QQuick3DPlugin
     PLUGIN_TARGET qquick3dplugin
+    NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qquick3d.cpp qquick3d.h

@@ -257,7 +257,6 @@ void tst_RenderControl::dynamicLights()
 {
     QQuick3DTestOffscreenRenderer renderer;
     QVERIFY(initRenderer(&renderer, "dynamic_lights.qml"));
-    QSKIP("Test broken after cmake QML API change");
 
     if (renderer.quickWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
 #ifdef Q_OS_MACOS

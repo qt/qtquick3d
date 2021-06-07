@@ -35,7 +35,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         Qt::Quick3DPrivate
 )
 
-qt_internal_add_resource(Quick3DHelpersPrivate "Quick3DHelpers"
+qt_internal_add_resource(Quick3DHelpers "Quick3DHelpers"
     PREFIX
         "/qt-project.org/imports/QtQuick3D/Helpers"
     FILES
