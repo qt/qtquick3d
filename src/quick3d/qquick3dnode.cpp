@@ -854,11 +854,14 @@ QVector3D QQuick3DNode::mapPositionFromScene(const QVector3D &scenePosition) con
     Transforms \a localPosition from the local space of this node to
     the local space of \a node.
 
+    \note If \a node is null, then \a localPosition will be transformed into scene space coordinates.
+
     \sa mapPositionToScene, mapPositionFromScene, mapPositionFromNode
 */
 QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
-    return node->mapPositionFromScene(mapPositionToScene(localPosition));
+    const auto scenePositionSelf = mapPositionToScene(localPosition);
+    return node ? node->mapPositionFromScene(scenePositionSelf) : scenePositionSelf;
 }
 
 /*!
@@ -867,11 +870,14 @@ QVector3D QQuick3DNode::mapPositionToNode(QQuick3DNode *node, const QVector3D &l
     Transforms \a localPosition from the local space of \a node to
     the local space of this node.
 
+    \note If \a node is null, then \a localPosition is interpreted as it is in scene space coordinates.
+
     \sa mapPositionToScene, mapPositionFromScene, mapPositionToNode
 */
 QVector3D QQuick3DNode::mapPositionFromNode(QQuick3DNode *node, const QVector3D &localPosition) const
 {
-    return mapPositionFromScene(node->mapPositionToScene(localPosition));
+    const auto scenePositionOther = node ? node->mapPositionToScene(localPosition) : localPosition;
+    return mapPositionFromScene(scenePositionOther);
 }
 
 /*!
@@ -923,11 +929,14 @@ QVector3D QQuick3DNode::mapDirectionFromScene(const QVector3D &sceneDirection) c
     \note the return value will have the same length as \a localDirection
     (i.e. not normalized).
 
+    \note if \a node is null, then the returned direction will be transformed into scene space coordinates.
+
     \sa mapDirectionFromNode, mapDirectionFromScene, mapDirectionToScene
 */
 QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
-    return node->mapDirectionFromScene(mapDirectionToScene(localDirection));
+    const auto sceneDirectionSelf = mapDirectionToScene(localDirection);
+    return node ? node->mapDirectionFromScene(sceneDirectionSelf) : sceneDirectionSelf;
 }
 
 /*!
@@ -941,11 +950,14 @@ QVector3D QQuick3DNode::mapDirectionToNode(QQuick3DNode *node, const QVector3D &
     \note the return value will have the same length as \a localDirection
     (i.e. not normalized).
 
+    \note If \a node is null, then \a localDirection is interpreted as it is in scene space coordinates.
+
     \sa mapDirectionToNode, mapDirectionFromScene, mapDirectionToScene
 */
 QVector3D QQuick3DNode::mapDirectionFromNode(QQuick3DNode *node, const QVector3D &localDirection) const
 {
-    return mapDirectionFromScene(node->mapDirectionToScene(localDirection));
+    const auto sceneDirectionOther = node ? node->mapDirectionToScene(localDirection) : localDirection;
+    return mapDirectionFromScene(sceneDirectionOther);
 }
 
 void QQuick3DNode::markAllDirty()
