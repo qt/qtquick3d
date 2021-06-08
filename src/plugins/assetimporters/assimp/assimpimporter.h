@@ -103,7 +103,7 @@ private:
     QVector<QString> generateMorphing(aiNode *node, const AssimpUtils::MeshList &meshes, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
     void generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx);
-    void generateSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
+    void processSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
     void processAnimations(QTextStream &output);
     template <typename T>
     void generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
@@ -138,11 +138,11 @@ private:
     QHash<aiNode *, QSSGQmlUtilities::PropertyMap::Type> m_nodeTypeMap;
 
     QHash<QString, aiNode *> m_bones;
-    QHash<aiNode *, quint32> m_skeletonIdxMap;
+    using SkeletonInfo = QPair<quint32, bool>;
+    QHash<aiNode *, SkeletonInfo> m_skeletonIdxMap; // pair(id, isRootBone)
     AssimpUtils::BoneIndexMap m_boneIdxMap;
     QVector<QString> m_skeletonIds;
     QVector<qint32> m_numBonesInSkeleton;
-    QSet<aiNode *> m_generatedBones;
 
     QDir m_savePath;
     QFileInfo m_sourceFile;
