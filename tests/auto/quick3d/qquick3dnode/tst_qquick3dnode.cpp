@@ -48,6 +48,8 @@ class tst_QQuick3DNode : public QObject
 private slots:
     void testProperties();
     void testEnums();
+    void testPositionMapping();
+    void testDirectionMapping();
 };
 
 void tst_QQuick3DNode::testProperties()
@@ -134,6 +136,130 @@ void tst_QQuick3DNode::testEnums()
     NodeItem nodeItem;
     auto node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(nullptr));
     QVERIFY(node);
+}
+
+void tst_QQuick3DNode::testPositionMapping()
+{
+    QQuick3DNode nodeA, nodeB;
+    nodeB.setPosition(QVector3D{2.0f, 2.0f, 2.0f});
+
+    { // map pos TO scene A
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapPositionToScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map pos TO scene B
+        const QVector3D expected { 3.0f, 3.0f, 3.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeB.mapPositionToScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map pos FROM scene A
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapPositionFromScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map pos FROM scene B
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 3.0f, 3.0f, 3.0f };
+        const auto res = nodeB.mapPositionFromScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map node A's postion TO node B
+        const QVector3D expected { -1.0f, -1.0f, -1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapPositionToNode(&nodeB, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map node A's postion to node 'null'
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapPositionToNode(nullptr, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map pos FROM node B's pos
+        const QVector3D expected { 3.0f, 3.0f, 3.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapPositionFromNode(&nodeB, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map pos FROM null node
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapPositionFromNode(nullptr, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+}
+
+void tst_QQuick3DNode::testDirectionMapping()
+{
+    QQuick3DNode nodeA, nodeB;
+    nodeB.setEulerRotation(QVector3D{0.0f, 0.0f, 90.0f});
+
+    { // map dir TO scene A
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapDirectionToScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map dir TO scene B
+        const QVector3D expected { -1.0f, 1.0f, 0.0f };
+        const QVector3D input { 1.0f, 1.0f, 0.0f };
+        const auto res = nodeB.mapDirectionToScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map dir FROM scene A
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapDirectionFromScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map dir FROM scene B
+        const QVector3D expected { 1.0f, -1.0f, 0.0f };
+        const QVector3D input { 1.0f, 1.0f, 0.0f };
+        const auto res = nodeB.mapDirectionFromScene(input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map direction FROM node A's TO node B's space
+        const QVector3D expected { 1.0f, -1.0f, 0.0f };
+        const QVector3D input { 1.0f, 1.0f, 0.0f };
+        const auto res = nodeA.mapDirectionToNode(&nodeB, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map direction FROM node A's TO null node
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapDirectionToNode(nullptr, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map direction FROM node B's pos
+        const QVector3D expected { -1.0f, 1.0f, 0.0f };
+        const QVector3D input { 1.0f, 1.0f, 0.0f };
+        const auto res = nodeA.mapDirectionFromNode(&nodeB, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
+
+    { // map pos FROM null node
+        const QVector3D expected { 1.0f, 1.0f, 1.0f };
+        const QVector3D input { 1.0f, 1.0f, 1.0f };
+        const auto res = nodeA.mapDirectionFromNode(nullptr, input);
+        QVERIFY(qFuzzyCompare(res, expected));
+    }
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DNode)
