@@ -1312,6 +1312,7 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
 #else // QT_QUICK3D_ENABLE_RT_ANIMATIONS
     Q_UNUSED(anim)
     Q_UNUSED(parent)
+    Q_UNUSED(useBinaryKeyframes)
 #endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
 }
 
