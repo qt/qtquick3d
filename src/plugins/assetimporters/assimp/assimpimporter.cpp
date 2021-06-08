@@ -343,6 +343,11 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
                     // assumes that all the Joints have children which are Joints
                     if (!isBone(cNode))
                         continue;
+
+                    QString boneName = QString::fromUtf8(cNode->mName.C_Str());
+                    m_nodeTypeMap.insert(cNode, QSSGQmlUtilities::PropertyMap::Joint);
+                    m_skeletonIdxMap.insert(cNode, qMakePair(skeletonIdx, true));
+                    m_boneIdxMap.insert(boneName, numBones++);
                     generateSkeletonIdxMap(cNode, skeletonIdx, numBones);
                 }
                 m_numBonesInSkeleton.append(numBones);
@@ -438,16 +443,18 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 void AssimpImporter::generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx)
 {
     Q_ASSERT(node != nullptr);
-    m_skeletonIdxMap.insert(node, skeletonIdx);
-    m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Joint);
-    QString boneName = QString::fromUtf8(node->mName.C_Str());
-    m_boneIdxMap.insert(boneName, boneIdx++);
     for (uint i = 0; i < node->mNumChildren; ++i) {
         aiNode *cNode = node->mChildren[i];
-        // assumes that all the Joints have children which are Joints
-        if (!isBone(cNode)) {
+
+        if (!isModel(cNode) && !isCamera(cNode) && !isLight(cNode)) {
+            // assumes that all the Joints have children which are Joints
             QString boneName = QString::fromUtf8(cNode->mName.C_Str());
-            m_bones.insert(boneName, cNode);
+            if (!isBone(cNode)) {
+                m_bones.insert(boneName, cNode);
+            }
+            m_nodeTypeMap.insert(cNode, QSSGQmlUtilities::PropertyMap::Joint);
+            m_skeletonIdxMap.insert(cNode, qMakePair(skeletonIdx, false));
+            m_boneIdxMap.insert(boneName, boneIdx++);
         }
         generateSkeletonIdxMap(cNode, skeletonIdx, boneIdx);
     }
@@ -500,18 +507,32 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             auto type = generateCameraProperties(currentNode, output, tabLevel);
             m_nodeTypeMap.insert(node, type);
         } else if (isBone(currentNode)) {
-            if (m_generatedBones.contains(currentNode))
+            SkeletonInfo skeletonInfo = m_skeletonIdxMap[currentNode];
+            QString nodeName = QString::fromUtf8(currentNode->mName.C_Str());
+            qint32 boneIdx = m_boneIdxMap[nodeName];
+            quint32 skeletonIdx = skeletonInfo.first;
+            QString skeletonId = m_skeletonIds[skeletonIdx];
+            if (boneIdx == 0) {
+                output << QSSGQmlUtilities::insertTabs(tabLevel)
+                       << QStringLiteral("Skeleton {\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+                       << QStringLiteral("id: ") << skeletonId << QStringLiteral("\n");
+                processSkeleton(currentNode->mParent, skeletonIdx, output, tabLevel + 1);
+                output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
                 return;
-
-            quint32 skeletonIdx = m_skeletonIdxMap[currentNode];
-            QString id = m_skeletonIds[skeletonIdx];
-
-            output << QSSGQmlUtilities::insertTabs(tabLevel)
-                   << QStringLiteral("Skeleton {\n");
-            output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-                   << QStringLiteral("id: ") << id << QStringLiteral("\n");
-
-            generateSkeleton(currentNode->mParent, skeletonIdx, output, tabLevel + 1);
+            } else if (!skeletonInfo.second) {
+                output << QSSGQmlUtilities::insertTabs(tabLevel)
+                       << QStringLiteral("Joint {\n");
+                generateNodeProperties(currentNode, output, tabLevel + 1);
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+                       << QStringLiteral("index: ") << QString::number(boneIdx)
+                       << QStringLiteral("\n");
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
+                       << QStringLiteral("skeletonRoot: ") << skeletonId << QStringLiteral("\n");
+            } else {
+                // isRootBone but it should be processed when making Skeleton with processSkeleton.
+                return;
+            }
         } else {
             // Transform Node
 
@@ -576,7 +597,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
         QString boneName = QString::fromUtf8(bone->mName.C_Str());
         aiNode *boneNode = m_bones[boneName];
         Q_ASSERT(m_skeletonIdxMap.contains(boneNode));
-        skeletonIdx = m_skeletonIdxMap[boneNode];
+        skeletonIdx = m_skeletonIdxMap[boneNode].first;
         id = m_skeletonIds[skeletonIdx];
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("skeleton: ")
                << id << QStringLiteral("\n");
@@ -601,7 +622,7 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
             aiNode *boneNode = m_bones[boneName];
             Q_ASSERT(m_skeletonIdxMap.contains(boneNode));
             // check this skinned mesh can be merged with previous one
-            if (skeletonIdx != m_skeletonIdxMap[boneNode]) {
+            if (skeletonIdx != m_skeletonIdxMap[boneNode].first) {
                 // This node will be processed at the next time.
                 continue;
             }
@@ -1687,33 +1708,34 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     return outputString;
 }
 
-void AssimpImporter::generateSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel)
+void AssimpImporter::processSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel)
 {
     if (!node)
         return;
 
-    QString nodeName = QString::fromUtf8(node->mName.C_Str());
+    for (uint i = 0; i < node->mNumChildren; ++i) {
+        aiNode *cNode = node->mChildren[i];
+        if (!isBone(cNode))
+            continue;
 
-    if (isBone(node) && !m_generatedBones.contains(node)) {
-        m_generatedBones.insert(node);
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Joint {\n");
-        generateNodeProperties(node, output, tabLevel + 1);
-
+        QString id = m_skeletonIds[idx];
+        QString nodeName = QString::fromUtf8(cNode->mName.C_Str());
         qint32 boneIdx = m_boneIdxMap[nodeName];
-
+        output << QSSGQmlUtilities::insertTabs(tabLevel)
+               << QStringLiteral("Joint {\n");
+        generateNodeProperties(cNode, output, tabLevel + 1);
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
                << QStringLiteral("index: ") << QString::number(boneIdx)
                << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-               << QStringLiteral("skeletonRoot: ") << m_skeletonIds[idx]
-               << QStringLiteral("\n");
-        for (uint i = 0; i < node->mNumChildren; ++i)
-            generateSkeleton(node->mChildren[i], idx, output, tabLevel + 1);
+               << QStringLiteral("skeletonRoot: ") << id << QStringLiteral("\n");
 
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
+        for (uint j = 0; j < cNode->mNumChildren; ++j)
+            processNode(cNode->mChildren[j], output, tabLevel + 1);
+
+        output << QSSGQmlUtilities::insertTabs(tabLevel)
+               << QStringLiteral("}\n");
     }
-    for (uint i = 0; i < node->mNumChildren; ++i)
-        generateSkeleton(node->mChildren[i], idx, output, tabLevel);
 }
 
 void AssimpImporter::processAnimations(QTextStream &output)
@@ -2076,7 +2098,7 @@ bool AssimpImporter::containsNodesOfConsequence(aiNode *node)
     isUseful |= isLight(node);
     isUseful |= isModel(node);
     isUseful |= isCamera(node);
-    isUseful |= (isBone(node) && !m_generatedBones.contains(node));
+    isUseful |= isBone(node);
 
     // Return early if we know already
     if (isUseful)
