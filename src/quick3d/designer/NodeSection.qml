@@ -69,6 +69,17 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+            Label {
+                text: qsTr("Static Flags")
+                tooltip: qsTr("This property defines the static flags that are used to evaluate how the node is rendered.")
+            }
+            SecondColumnLayout {
+                LineEdit {
+                    backendValue: backendValues.staticFlags
+                    Layout.fillWidth: true
+                    showTranslateCheckBox: false
+                }
+            }
         }
     }
 

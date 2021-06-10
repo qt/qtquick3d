@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -31,10 +31,32 @@ import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
-Column {
+Section {
+    caption: qsTr("Repeater")
     width: parent.width
 
-    AbstractLightSection {
-        width: parent.width
+    SectionLayout {
+        Label {
+            text: qsTr("Model")
+            tooltip: qsTr("The model providing data for the repeater.")
+        }
+        SecondColumnLayout {
+            LineEdit {
+                backendValue: backendValues.model
+                Layout.fillWidth: true
+                showTranslateCheckBox: false
+            }
+        }
+        Label {
+            text: qsTr("Delegate")
+            tooltip: qsTr("The delegate provides a template defining each object instantiated by the repeater.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Object3D"
+                Layout.fillWidth: true
+                backendValue: backendValues.delegate
+            }
+        }
     }
 }

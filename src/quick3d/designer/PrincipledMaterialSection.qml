@@ -30,6 +30,7 @@
 import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -46,7 +47,7 @@ Column {
             SecondColumnLayout {
                 ComboBox {
                     scope: "PrincipledMaterial"
-                    model: ["Default", "Mask", "Blend"]
+                    model: ["Default", "Mask", "Blend", "Opaque"]
                     backendValue: backendValues.alphaMode
                     Layout.fillWidth: true
                 }
@@ -92,6 +93,36 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+            Label {
+                text: qsTr("Point Size")
+                tooltip: qsTr("This property determines the size of the points rendered, when the geometry is using a primitive type of points.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    realDragRange: 5000
+                    decimals: 2
+                    backendValue: backendValues.pointSize
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Line Width")
+                tooltip: qsTr("This property determines the width of the lines rendered, when the geometry is using a primitive type of lines or line strips.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    realDragRange: 5000
+                    decimals: 2
+                    backendValue: backendValues.lineWidth
+                    Layout.fillWidth: true
+                }
+            }
+
         }
     }
 
@@ -313,6 +344,79 @@ Column {
     }
 
     Section {
+        caption: qsTr("Height")
+        width: parent.width
+        SectionLayout {
+            Label {
+                text: qsTr("Height Map")
+                tooltip: qsTr("This property defines a texture used to determine the height the texture will be displaced when rendered through the use of Parallax Mapping.")
+            }
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    Layout.fillWidth: true
+                    backendValue: backendValues.heightMap
+                }
+            }
+
+            Label {
+                text: qsTr("Height Channel")
+                tooltip: qsTr("This property defines the texture channel used to read the height value from heightMap.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.heightChannel
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Height Amount")
+                tooltip: qsTr("This property contains the factor used to modify the values from the heightMap texture.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: 0
+                    decimals: 0
+                    backendValue: backendValues.heightAmount
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Min Height Map Samples")
+                tooltip: qsTr("This property defines the minimum number of samples used for performing Parallex Occlusion Mapping using the heightMap.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: 0
+                    decimals: 0
+                    backendValue: backendValues.minHeightMapSamples
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Max Height Map Samples")
+                tooltip: qsTr("This property defines the maximum number of samples used for performing Parallex Occlusion Mapping using the heightMap.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: 0
+                    decimals: 0
+                    backendValue: backendValues.maxHeightMapSamples
+                    Layout.fillWidth: true
+                }
+            }
+        }
+    }
+
+    Section {
         caption: qsTr("Specular")
         width: parent.width
         SectionLayout {
@@ -407,13 +511,6 @@ Column {
 
         Column {
             width: parent.width
-
-            ColorEditor {
-                caption: qsTr("Emissive Color")
-                backendValue: backendValues.emissiveColor
-                supportGradient: false
-                Layout.fillWidth: true
-            }
             SectionLayout {
                 Label {
                     text: qsTr("Emissive Map")
@@ -424,6 +521,58 @@ Column {
                         typeFilter: "QtQuick3D.Texture"
                         Layout.fillWidth: true
                         backendValue: backendValues.emissiveMap
+                    }
+                }
+                Label {
+                    text: qsTr("Emissive Factor")
+                    tooltip: qsTr("This property determines the color of self-illumination for this material.")
+                }
+                ColumnLayout {
+                    spacing: 0
+                    RowLayout {
+                        spacing: 0
+                        Label {
+                            text: qsTr("X")
+                            color: StudioTheme.Values.theme3DAxisXColor
+                        }
+                        SpinBox {
+                            maximumValue: 9999999
+                            minimumValue: -9999999
+                            realDragRange: 5000
+                            decimals: 2
+                            backendValue: backendValues.emissiveFactor_x
+                            Layout.fillWidth: true
+                        }
+                    }
+                    RowLayout {
+                        spacing: 0
+                        Label {
+                            text: qsTr("Y")
+                            color: StudioTheme.Values.theme3DAxisYColor
+                        }
+                        SpinBox {
+                            maximumValue: 9999999
+                            minimumValue: -9999999
+                            realDragRange: 5000
+                            decimals: 2
+                            backendValue: backendValues.emissiveFactor_y
+                            Layout.fillWidth: true
+                        }
+                    }
+                    RowLayout {
+                        spacing: 0
+                        Label {
+                            text: qsTr("Z")
+                            color: StudioTheme.Values.theme3DAxisZColor
+                        }
+                        SpinBox {
+                            maximumValue: 9999999
+                            minimumValue: -9999999
+                            realDragRange: 5000
+                            decimals: 2
+                            backendValue: backendValues.emissiveFactor_z
+                            Layout.fillWidth: true
+                        }
                     }
                 }
             }

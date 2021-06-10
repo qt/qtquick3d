@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -31,10 +31,37 @@ import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
-Column {
+Section {
+    caption: qsTr("Morph Target")
     width: parent.width
 
-    AbstractLightSection {
-        width: parent.width
+    SectionLayout {
+        Label {
+            text: qsTr("Weight")
+            tooltip: qsTr("Specifies the weight of the current morph target.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 2
+                backendValue: backendValues.weight
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Attributes")
+            tooltip: qsTr("Specifies the set of attributes of the current morph target.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "MorphTarget"
+                model: ["Position", "Normal", "Tangent", "Binormal"]
+                backendValue: backendValues.attributes
+                Layout.fillWidth: true
+            }
+        }
     }
 }

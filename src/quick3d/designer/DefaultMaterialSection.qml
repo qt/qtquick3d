@@ -68,6 +68,35 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+            Label {
+                text: qsTr("Point Size")
+                tooltip: qsTr("This property determines the size of the points rendered, when the geometry is using a primitive type of points.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    realDragRange: 5000
+                    decimals: 2
+                    backendValue: backendValues.pointSize
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Line Width")
+                tooltip: qsTr("This property determines the width of the lines rendered, when the geometry is using a primitive type of lines or line strips.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 9999999
+                    minimumValue: -9999999
+                    realDragRange: 5000
+                    decimals: 2
+                    backendValue: backendValues.lineWidth
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 
@@ -103,12 +132,6 @@ Column {
         width: parent.width
         Column {
             width: parent.width
-            ColorEditor {
-                caption: qsTr("Emissive Color")
-                backendValue: backendValues.emissiveColor
-                supportGradient: false
-                Layout.fillWidth: true
-            }
             SectionLayout {
                 Label {
                     text: qsTr("Emissive Factor")
@@ -183,7 +206,7 @@ Column {
                 }
                 ComboBox {
                     scope: "DefaultMaterial"
-                    model: ["Default", "KGGX", "KWard"]
+                    model: ["Default", "KGGX"]
                     backendValue: backendValues.specularModel
                     Layout.fillWidth: true
                 }
@@ -250,6 +273,18 @@ Column {
                         backendValue: backendValues.roughnessMap
                     }
                 }
+                Label {
+                    text: qsTr("Roughness Channel")
+                    tooltip: qsTr("This property defines the texture channel used to read the roughness value from roughnessMap.")
+                }
+                SecondColumnLayout {
+                    ComboBox {
+                        scope: "Material"
+                        model: ["R", "G", "B", "A"]
+                        backendValue: backendValues.roughnessChannel
+                        Layout.fillWidth: true
+                    }
+                }
             }
         }
     }
@@ -281,6 +316,18 @@ Column {
                     typeFilter: "QtQuick3D.Texture"
                     Layout.fillWidth: true
                     backendValue: backendValues.opacityMap
+                }
+            }
+            Label {
+                text: qsTr("Opacity Channel")
+                tooltip: qsTr("This property defines the texture channel used to read the opacity value from opacityMap.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.opacityChannel
+                    Layout.fillWidth: true
                 }
             }
         }
@@ -388,6 +435,18 @@ Column {
                     typeFilter: "QtQuick3D.Texture"
                     Layout.fillWidth: true
                     backendValue: backendValues.translucencyMap
+                }
+            }
+            Label {
+                text: qsTr("Translucency Channel")
+                tooltip: qsTr("This property defines the texture channel used to read the translucency value from translucencyMap.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.translucencyChannel
+                    Layout.fillWidth: true
                 }
             }
         }

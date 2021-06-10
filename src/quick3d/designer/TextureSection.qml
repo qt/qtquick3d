@@ -56,6 +56,17 @@ Section {
                 backendValue: backendValues.sourceItem
             }
         }
+        Label {
+            text: qsTr("Texture Data")
+            tooltip: qsTr("This property holds a reference to a TextureData component which defines the contents and properties of raw texture data.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.TextureData"
+                Layout.fillWidth: true
+                backendValue: backendValues.textureData
+            }
+        }
 
         Label {
             text: qsTr("U Scale")
@@ -86,7 +97,43 @@ Section {
                 Layout.fillWidth: true
             }
         }
+        Label {
+            text: qsTr("Flip V")
+            tooltip: qsTr("This property sets the use of the vertically flipped coordinates.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                id: flipVcheckBox
+                text: backendValues.flipV.valueToString
+                backendValue: backendValues.flipV
+                Layout.fillWidth: true
+            }
+        }
 
+        Label {
+            text: qsTr("Flip U")
+            tooltip: qsTr("This property sets the use of the horizontally flipped texture coordinates.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                id: flipUCheckBox
+                text: backendValues.flipU.valueToString
+                backendValue: backendValues.flipU
+                Layout.fillWidth: true
+            }
+        }
+        Label {
+            text: qsTr("Auto Orientation")
+            tooltip: qsTr("This property determines if a texture transformation, such as flipping the V texture coordinate, is applied automatically for textures where this is typically relevant.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                id: autoOrientationCheckBox
+                text: backendValues.autoOrientation.valueToString
+                backendValue: backendValues.autoOrientation
+                Layout.fillWidth: true
+            }
+        }
         Label {
             text: qsTr("Texture Mapping")
             tooltip: qsTr("Defines which method of mapping to use when sampling this texture.")
@@ -107,7 +154,7 @@ Section {
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
-                model: ["Unknown", "ClampToEdge", "MirroredRepeat", "Repeat"]
+                model: ["ClampToEdge", "MirroredRepeat", "Repeat"]
                 backendValue: backendValues.tilingModeHorizontal
                 Layout.fillWidth: true
             }
@@ -120,8 +167,22 @@ Section {
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
-                model: ["Unknown", "ClampToEdge", "MirroredRepeat", "Repeat"]
+                model: ["ClampToEdge", "MirroredRepeat", "Repeat"]
                 backendValue: backendValues.tilingModeVertical
+                Layout.fillWidth: true
+            }
+        }
+        Label {
+            text: qsTr("UV Index")
+            tooltip: qsTr("This property sets the UV coordinate index used by this texture.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 999999
+                minimumValue: 0
+                realDragRange: 1
+                decimals: 0
+                backendValue: backendValues.indexUV
                 Layout.fillWidth: true
             }
         }
@@ -201,6 +262,58 @@ Section {
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.pivotV
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Generate Mipmaps")
+            tooltip: qsTr("This property determines if mipmaps are generated for textures that do not provide mipmap levels themselves.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                id: generateMipmapscheckBox
+                text: backendValues.generateMipmaps.valueToString
+                backendValue: backendValues.generateMipmaps
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Mag Filter")
+            tooltip: qsTr("This property determines how the texture is sampled when a texel covers more than one pixel.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "Texture"
+                model: ["None", "Nearest", "Linear"]
+                backendValue: backendValues.magFilter
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Min Filter")
+            tooltip: qsTr("This property determines how the texture is sampled when a texel covers more than one pixel.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "Texture"
+                model: ["None", "Nearest", "Linear"]
+                backendValue: backendValues.minFilter
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Mip Filter")
+            tooltip: qsTr("This property determines how the texture mipmaps are sampled when a texel covers less than one pixel.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                scope: "Texture"
+                model: ["None", "Nearest", "Linear"]
+                backendValue: backendValues.mipFilter
                 Layout.fillWidth: true
             }
         }

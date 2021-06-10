@@ -34,11 +34,11 @@ import QtQuick.Layouts 1.12
 Column {
     width: parent.width
 
-    NodeSection {
+    PointLightSection {
         width: parent.width
     }
 
-    PointLightSection {
+    AbstractLightSection {
         width: parent.width
     }
 }

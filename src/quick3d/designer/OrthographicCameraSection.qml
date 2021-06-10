@@ -65,5 +65,47 @@ Section {
                 Layout.fillWidth: true
             }
         }
+
+        Label {
+            text: qsTr("Horizontal Magnification")
+            tooltip: qsTr("This property holds the horizontal magnification of the OrthographicCamera's frustum.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 2
+                backendValue: backendValues.horizontalMagnification
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Vertical Magnification")
+            tooltip: qsTr("This property holds the vertical magnification of the OrthographicCamera's frustum.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 2
+                backendValue: backendValues.verticalMagnification
+                Layout.fillWidth: true
+            }
+        }
+        Label {
+            text: qsTr("Frustum Culling Enabled")
+            tooltip: qsTr("When this property is true, objects outside the camera frustum will be culled, meaning they will not be passed to the renderer.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.frustumCullingEnabled.valueToString
+                backendValue: backendValues.frustumCullingEnabled
+                Layout.fillWidth: true
+            }
+        }
     }
 }

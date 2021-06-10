@@ -1,11 +1,10 @@
 qt_copy_or_install(
     FILES
+        AbstractLightSection.qml
         BufferInputSection.qml
         BufferInputSpecifics.qml
         BufferSection.qml
         BufferSpecifics.qml
-        CustomCameraSection.qml
-        CustomCameraSpecifics.qml
         CustomMaterialSection.qml
         CustomMaterialSpecifics.qml
         DefaultMaterialSection.qml
@@ -14,12 +13,24 @@ qt_copy_or_install(
         DirectionalLightSpecifics.qml
         EffectSection.qml
         EffectSpecifics.qml
+        FileInstancingSection.qml
+        FileInstancingSpecifics.qml
         FrustumCameraSection.qml
         FrustumCameraSpecifics.qml
         IdComboBox.qml
+        InstanceListEntrySection.qml
+        InstanceListEntrySpecifics.qml
+        InstanceListSection.qml
+        InstanceListSpecifics.qml
+        JointSection.qml
+        JointSpecifics.qml
+        Loader3DSection.qml
+        Loader3DSpecifics.qml
         MaterialSection.qml
         ModelSection.qml
         ModelSpecifics.qml
+        MorphTargetSection.qml
+        MorphTargetSpecifics.qml
         NodeSection.qml
         NodeSpecifics.qml
         Object3DSection.qml
@@ -33,6 +44,8 @@ qt_copy_or_install(
         PointLightSpecifics.qml
         PrincipledMaterialSection.qml
         PrincipledMaterialSpecifics.qml
+        Repeater3DSection.qml
+        Repeater3DSpecifics.qml
         SceneEnvironmentSection.qml
         SceneEnvironmentSpecifics.qml
         SetUniformValueSection.qml

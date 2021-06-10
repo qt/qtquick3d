@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -31,10 +31,26 @@ import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
-Column {
+Section {
+    caption: qsTr("Instance List")
     width: parent.width
 
-    AbstractLightSection {
-        width: parent.width
+    SectionLayout {
+        Label {
+            text: qsTr("Instances")
+            tooltip: qsTr("This property contains the list of instance definitions. Modifying this list, or any of its elements, will cause the instance table to be updated.")
+        }
+        SecondColumnLayout {
+            EditableListView {
+                backendValue: backendValues.instances
+                model: backendValues.instances.expressionAsList
+                Layout.fillWidth: true
+                typeFilter: "QtQuick3D.InstanceListEntry"
+
+                onAdd: function(value) { backendValues.instances.idListAdd(value) }
+                onRemove: function(idx) { backendValues.instances.idListRemove(idx) }
+                onReplace: function (idx, value) { backendValues.instances.idListReplace(idx, value) }
+            }
+        }
     }
 }

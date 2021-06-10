@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -32,9 +32,35 @@ import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
 Section {
-    caption: qsTr("Custom Camera")
+    caption: qsTr("Joint")
+    width: parent.width
 
     SectionLayout {
-        // TODO: projection is matrix4x4 property, is that supported?
+        Label {
+            text: qsTr("Index")
+            tooltip: qsTr("Specifies the index of this joint.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 0
+                backendValue: backendValues.index
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Skeleton Root")
+            tooltip: qsTr("Specifies the skeleton that contains this joint.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Skeleton"
+                Layout.fillWidth: true
+                backendValue: backendValues.skeletonRoot
+            }
+        }
     }
 }
