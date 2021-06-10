@@ -489,6 +489,8 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
                                      intersectionResult.rayLengthSquared,
                                      intersectionResult.relXY,
                                      intersectionResult.scenePosition,
+                                     intersectionResult.localPosition,
+                                     intersectionResult.faceNormal,
                                      resultSubset));
 }
 
@@ -512,7 +514,9 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
             outIntersectionResultList.push_back(QSSGRenderPickResult(item2D,
                                                                      intersectionTime * intersectionTime,
                                                                      qmlCoordinate,
-                                                                     intersectionPoint));
+                                                                     intersectionPoint,
+                                                                     localIntersectionPoint,
+                                                                     normal));
         }
     }
 }
@@ -603,11 +607,15 @@ QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObj
                                            float inCameraDistance,
                                            const QVector2D &inLocalUVCoords,
                                            const QVector3D &scenePosition,
+                                           const QVector3D &inLocalPosition,
+                                           const QVector3D &faceNormal,
                                            int subset)
     : m_hitObject(&inHitObject)
     , m_distanceSq(inCameraDistance)
     , m_localUVCoords(inLocalUVCoords)
     , m_scenePosition(scenePosition)
+    , m_localPosition(inLocalPosition)
+    , m_faceNormal(faceNormal.normalized())
     , m_subset(subset)
 {
 }

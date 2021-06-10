@@ -77,6 +77,10 @@ struct QSSGRenderPickResult
     QVector2D m_localUVCoords;
     // The position in world coordinates
     QVector3D m_scenePosition;
+    // The position in local coordinates
+    QVector3D m_localPosition;
+    // The normal of the hit face
+    QVector3D m_faceNormal;
     // The subset index
     int m_subset = 0;
 
@@ -84,6 +88,8 @@ struct QSSGRenderPickResult
                          float inCameraDistance,
                          const QVector2D &inLocalUVCoords,
                          const QVector3D &inScenePosition,
+                         const QVector3D &inLocalPosition,
+                         const QVector3D &faceNormal,
                          int subset = 0);
     QSSGRenderPickResult() = default;
 };

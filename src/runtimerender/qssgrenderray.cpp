@@ -94,7 +94,8 @@ QSSGRenderRay::IntersectionResult QSSGRenderRay::createIntersectionResult(const 
     const float yRange = boundsMax.y() - boundsMin.y();
     const QVector2D uvCoords{((localPosition[0] - boundsMin.x()) / xRange), ((localPosition[1] - boundsMin.y()) / yRange)};
 
-    return IntersectionResult(rayLenSquared, uvCoords, globalPosition);
+    // Since we just intersected with a bounding box, there is no face normal
+    return IntersectionResult(rayLenSquared, uvCoords, globalPosition, localPosition, QVector3D());
 }
 
 QSSGRenderRay::HitResult QSSGRenderRay::intersectWithAABBv2(const QSSGRenderRay::RayData &data,
@@ -137,12 +138,13 @@ bool QSSGRenderRay::triangleIntersect(const QSSGRenderRay &ray,
                                       const QVector3D &v1,
                                       const QVector3D &v2,
                                       float &u,
-                                      float &v)
+                                      float &v,
+                                      QVector3D &normal)
 {
     // Compute the Triangle's Normal (N)
     const QVector3D v0v1 = v1 - v0;
     const QVector3D v0v2 = v2 - v0;
-    const QVector3D normal = QVector3D::crossProduct(v0v1, v0v2);
+    normal = QVector3D::crossProduct(v0v1, v0v2);
     const float denominator = QVector3D::dotProduct(normal, normal);
 
     // Find the Intersection point (P)
@@ -240,12 +242,14 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
         // Use Barycentric Coordinates to get the intersection values
         float u = 0.f;
         float v = 0.f;
+        QVector3D normal;
         const bool intersects = triangleIntersect(relativeRay,
                                                   triangle->vertex1,
                                                   triangle->vertex2,
                                                   triangle->vertex3,
                                                   u,
-                                                  v);
+                                                  v,
+                                                  normal);
         if (intersects) {
             const float w = 1.0f - u - v;
             const QVector3D localIntersectionPoint = u * triangle->vertex1 +
@@ -261,7 +265,11 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
             const QVector3D hitVector = data.ray.origin - sceneIntersectionPos;
             // Get the magnitude of the hit vector
             const float rayLengthSquared = vec3::magnitudeSquared(hitVector);
-            results.append(IntersectionResult(rayLengthSquared, uvCoordinate, sceneIntersectionPos));
+            results.append(IntersectionResult(rayLengthSquared,
+                                              uvCoordinate,
+                                              sceneIntersectionPos,
+                                              localIntersectionPoint,
+                                              normal));
         }
     }
 

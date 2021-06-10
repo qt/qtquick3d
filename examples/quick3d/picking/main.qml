@@ -89,6 +89,22 @@ Window {
                 font.pointSize: 14
                 text: "World Position:"
             }
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "Local Position:"
+            }
+
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "World Normal:"
+            }
+            Label {
+                color: "white"
+                font.pointSize: 14
+                text: "Local Normal:"
+            }
         }
         Column {
             Label {
@@ -116,6 +132,22 @@ Window {
                 color: "white"
                 font.pointSize: 14
             }
+            Label {
+                id: localPosition
+                color: "white"
+                font.pointSize: 14
+            }
+            Label {
+                id: worldNormal
+                color: "white"
+                font.pointSize: 14
+            }
+            Label {
+                id: localNormal
+                color: "white"
+                font.pointSize: 14
+            }
+
         }
     }
 
@@ -262,13 +294,29 @@ Window {
                 distance.text = result.distance.toFixed(2);
                 scenePosition.text = "("
                         + result.scenePosition.x.toFixed(2) + ", "
-                        + result.scenePosition.y.toFixed(2) + ")";
+                        + result.scenePosition.y.toFixed(2) + ", "
+                        + result.scenePosition.z.toFixed(2) + ")";
+                localPosition.text = "("
+                        + result.position.x.toFixed(2) + ", "
+                        + result.position.y.toFixed(2) + ", "
+                        + result.position.z.toFixed(2) + ")";
+                worldNormal.text = "("
+                        + result.sceneNormal.x.toFixed(2) + ", "
+                        + result.sceneNormal.y.toFixed(2) + ", "
+                        + result.sceneNormal.z.toFixed(2) + ")";
+                localNormal.text = "("
+                        + result.normal.x.toFixed(2) + ", "
+                        + result.normal.y.toFixed(2) + ", "
+                        + result.normal.z.toFixed(2) + ")";
                 //! [pick specifics]
             } else {
                 pickName.text = "None";
                 uvPosition.text = "";
                 distance.text = "";
                 scenePosition.text = "";
+                localPosition.text = "";
+                worldNormal.text = "";
+                localNormal.text = "";
             }
         }
     }

@@ -1180,7 +1180,9 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
     return QQuick3DPickResult(model,
                               ::sqrtf(pickResult.m_distanceSq),
                               pickResult.m_localUVCoords,
-                              pickResult.m_scenePosition);
+                              pickResult.m_scenePosition,
+                              pickResult.m_localPosition,
+                              pickResult.m_faceNormal);
 }
 
 QT_END_NAMESPACE

@@ -79,7 +79,8 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
                                   const QVector3D &v1,
                                   const QVector3D &v2,
                                   float &u,
-                                  float &v);
+                                  float &v,
+                                  QVector3D &normal);
 
     struct IntersectionResult
     {
@@ -87,12 +88,20 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
         float rayLengthSquared = 0.; // Length of the ray in world coordinates for the hit.
         QVector2D relXY; // UV coords for further mouse picking against a offscreen-rendered object.
         QVector3D scenePosition;
+        QVector3D localPosition;
+        QVector3D faceNormal;
         IntersectionResult() = default;
-        inline constexpr IntersectionResult(float rl, const QVector2D &relxy, const QVector3D &scenePosition)
+        inline constexpr IntersectionResult(float rl,
+                                            const QVector2D &relxy,
+                                            const QVector3D &scenePosition,
+                                            const QVector3D &localPosition,
+                                            const QVector3D &normal)
             : intersects(true)
             , rayLengthSquared(rl)
             , relXY(relxy)
             , scenePosition(scenePosition)
+            , localPosition(localPosition)
+            , faceNormal(normal)
         {}
     };
 
