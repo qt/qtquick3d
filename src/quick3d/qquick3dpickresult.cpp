@@ -50,11 +50,15 @@ QQuick3DPickResult::QQuick3DPickResult()
 QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
                                        float distanceFromCamera,
                                        const QVector2D &uvPosition,
-                                       const QVector3D &scenePosition)
+                                       const QVector3D &scenePosition,
+                                       const QVector3D &position,
+                                       const QVector3D &normal)
     : m_objectHit(hitObject)
     , m_distance(distanceFromCamera)
     , m_uvPosition(uvPosition)
     , m_scenePosition(scenePosition)
+    , m_position(position)
+    , m_normal(normal)
 {
 }
 
@@ -104,6 +108,46 @@ QVector2D QQuick3DPickResult::uvPosition() const
 QVector3D QQuick3DPickResult::scenePosition() const
 {
     return m_scenePosition;
+}
+
+/*!
+    \qmlproperty vector3d PickResult::position
+    \readonly
+
+    This property holds the scene position of the hit in local coordinate
+    space.
+*/
+QVector3D QQuick3DPickResult::position() const
+{
+    return m_position;
+}
+
+/*!
+    \qmlproperty vector3d PickResult::normal
+    \readonly
+
+    This property holds the normal of the face that was hit in local coordinate
+    space.
+*/
+QVector3D QQuick3DPickResult::normal() const
+{
+    return m_normal;
+}
+
+
+/*!
+    \qmlproperty vector3d PickResult::sceneNormal
+    \readonly
+
+    This property holds the normal of the face that was hit in scene coordinate
+    space.
+*/
+QVector3D QQuick3DPickResult::sceneNormal() const
+{
+    if (!m_objectHit)
+        return QVector3D();
+
+    return m_objectHit->mapDirectionToScene(m_normal);
 }
 
 QT_END_NAMESPACE
