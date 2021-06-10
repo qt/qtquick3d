@@ -160,8 +160,8 @@ static void applyToModels(QQuick3DObject *obj, Func &&lambda)
 
 void QQuick3DRuntimeLoader::loadSource()
 {
-    delete m_imported;
-    m_imported.clear();
+    delete m_root;
+    m_root.clear();
 
     m_status = Status::Empty;
     m_errorString = QStringLiteral("No file selected");
@@ -200,7 +200,11 @@ void QQuick3DRuntimeLoader::loadSource()
         return;
     }
 
-    m_imported = QSSGRuntimeUtils::createScene(*this, scene);
+    // We create a dummy root node here, as it will be the parent to the first-level nodes
+    // and resources. If we use 'this' those first-level nodes/resources won't be deleted
+    // when a new scene is loaded.
+    m_root = new QQuick3DNode(this);
+    m_imported = QSSGRuntimeUtils::createScene(*m_root, scene);
     m_boundsDirty = true;
     m_instancingChanged = m_instancing != nullptr;
     updateModels();
