@@ -79,6 +79,7 @@ private:
     void loadSource();
     void updateModels();
 
+    QPointer<QQuick3DNode> m_root;
     QPointer<QQuick3DNode> m_imported;
     QUrl m_source;
     Status m_status = Status::Empty;
