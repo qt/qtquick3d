@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -32,49 +32,53 @@ import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
 Section {
-    caption: qsTr("Material")
-
+    caption: qsTr("Loader3D")
+    width: parent.width
     SectionLayout {
-
-        // Baked Lighting properties (may be internal eventually)
-        // ### lightmapIndirect
-        // ### lightmapRadiosity
-        // ### lightmapShadow
-
-        // ### iblProbe override
-
         Label {
-            text: qsTr("Light Probe")
-            tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with this material.")
+            text: qsTr("Active")
+            tooltip: qsTr("This property is true if the Loader3D is currently active.")
         }
+
         SecondColumnLayout {
-            IdComboBox {
-                typeFilter: "QtQuick3D.Texture"
+            CheckBox {
+                text: backendValues.active.valueToString
+                backendValue: backendValues.active
+            }
+        }
+        Label {
+            text: qsTr("Source")
+            tooltip: qsTr("This property holds the URL of the QML component to instantiate.")
+        }
+
+        SecondColumnLayout {
+            UrlChooser {
+                filter: "*.qml"
                 Layout.fillWidth: true
-                backendValue: backendValues.lightProbe
+                backendValue:  backendValues.source
             }
         }
 
         Label {
-            text: qsTr("Culling Mode")
-            tooltip: qsTr("Defines whether culling is enabled and which mode is actually enabled.")
-        }
-        ComboBox {
-            scope: "Material"
-            model: ["BackFaceCulling", "FrontFaceCulling", "NoCulling"]
-            backendValue: backendValues.cullMode
-            Layout.fillWidth: true
-        }
-        Label {
-            text: qsTr("Depth Draw Mode")
-            tooltip: qsTr("This property determines if and when depth rendering takes place for this material.")
+            text: qsTr("Source Component")
+            tooltip: qsTr("This property holds the component to instantiate.")
         }
         SecondColumnLayout {
-            ComboBox {
-                scope: "Material"
-                model: ["OpaqueOnlyDepthDraw", "AlwaysDepthDraw", "NeverDepthDraw", "OpaquePrePassDepthDraw"]
-                backendValue: backendValues.depthDrawMode
+            IdComboBox {
+                typeFilter: "QtQuick3D.QQmlComponent"
                 Layout.fillWidth: true
+                backendValue: backendValues.sourceComponent
+            }
+        }
+        Label {
+            text: qsTr("Asynchronous")
+            tooltip: qsTr("This property holds whether the component will be instantiated asynchronously.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.asynchronous.valueToString
+                backendValue: backendValues.asynchronous
             }
         }
     }

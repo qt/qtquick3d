@@ -30,62 +30,27 @@
 import QtQuick 2.15
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
     Section {
-        caption: qsTr("Scene Environment")
         width: parent.width
+        caption: qsTr("Scene Environment")
         SectionLayout {
             Label {
-                text: qsTr("Antialiasing Mode")
-                tooltip: qsTr("Sets the antialiasing mode applied to the scene.")
+                text: qsTr("Clear Color")
+                tooltip: qsTr("This property defines which color will be used to clear the viewport when using SceneEnvironment.Color for the backgroundMode property.")
             }
             SecondColumnLayout {
-                ComboBox {
-                    scope: "SceneEnvironment"
-                    model: ["NoAA", "SSAA", "MSAA", "ProgressiveAA"]
-                    backendValue: backendValues.antialiasingMode
+                ColorEditor {
+                    caption: qsTr("clearColor")
+                    backendValue: backendValues.clearColor
+                    supportGradient: false
                     Layout.fillWidth: true
                 }
             }
-            Label {
-                text: qsTr("Antialiasing Quality")
-                tooltip: qsTr("Sets the level of antialiasing applied to the scene.")
-            }
-            SecondColumnLayout {
-                ComboBox {
-                    scope: "SceneEnvironment"
-                    model: ["Medium", "High", "VeryHigh"]
-                    backendValue: backendValues.antialiasingQuality
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Temporal AA")
-                tooltip: qsTr("Enables temporal antialiasing using camera jittering and frame blending.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.temporalAAEnabled.valueToString
-                    backendValue: backendValues.temporalAAEnabled
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Temporal AA Strength")
-                tooltip: qsTr("Sets the amount of temporal antialiasing applied.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 2.0
-                    minimumValue: 0.01
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.temporalAAStrength
-                    Layout.fillWidth: true
-                }
-            }
+
 
             Label {
                 text: qsTr("Background Mode")
@@ -138,83 +103,125 @@ Column {
                     onReplace: function (idx, value) { backendValues.effects.idListReplace(idx, value) }
                 }
             }
-        }
-    }
-
-    Section {
-        caption: qsTr("Clear Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Clear Color")
-            backendValue: backendValues.clearColor
-            supportGradient: false
-            Layout.fillWidth: true
-        }
-    }
-
-    Section {
-        caption: qsTr("Ambient Occlusion")
-        width: parent.width
-
-        SectionLayout {
-
             Label {
-                text: qsTr("AO Strength")
-                tooltip: qsTr("Sets the amount of ambient occlusion applied.")
+                text: qsTr("Tonemap Mode")
+                tooltip: qsTr("This property defines how colors are tonemapped before rendering.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "SceneEnvironment"
+                    model: ["TonemapModeNone", "TonemapModeLinear", "TonemapModeAces", "TonemapModeHejlDawson", "TonemapModeFilmic"]
+                    backendValue: backendValues.tonemapMode
+                    Layout.fillWidth: true
+                }
+            }
+        }
+    }
+    Section {
+        width: parent.width
+        caption: qsTr("Antialiasing")
+        SectionLayout {
+            Label {
+                text: qsTr("Antialiasing Mode")
+                tooltip: qsTr("Sets the antialiasing mode applied to the scene.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "SceneEnvironment"
+                    model: ["NoAA", "SSAA", "MSAA", "ProgressiveAA"]
+                    backendValue: backendValues.antialiasingMode
+                    Layout.fillWidth: true
+                }
+            }
+            Label {
+                text: qsTr("Antialiasing Quality")
+                tooltip: qsTr("Sets the level of antialiasing applied to the scene.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "SceneEnvironment"
+                    model: ["Medium", "High", "VeryHigh"]
+                    backendValue: backendValues.antialiasingQuality
+                    Layout.fillWidth: true
+                }
+            }
+            Label {
+                text: qsTr("Temporal AA")
+                tooltip: qsTr("Enables temporal antialiasing using camera jittering and frame blending.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.temporalAAEnabled.valueToString
+                    backendValue: backendValues.temporalAAEnabled
+                    Layout.fillWidth: true
+                }
+            }
+            Label {
+                text: qsTr("Temporal AA Strength")
+                tooltip: qsTr("Sets the amount of temporal antialiasing applied.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    maximumValue: 2.0
+                    minimumValue: 0.01
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.temporalAAStrength
+                    Layout.fillWidth: true
+                }
+            }
+        }
+    }
+
+    Section {
+        width: parent.width
+        caption: qsTr("Ambient Occlusion")
+        SectionLayout {
+            Label {
+                text: qsTr("Strength")
+                tooltip: qsTr("This property defines the amount of ambient occulusion applied.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 100
                     minimumValue: 0
-                    decimals: 0
+                    decimals: 2
                     backendValue: backendValues.aoStrength
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("AO Distance")
-                tooltip: qsTr("Sets how far ambient occlusion shadows spread away from objects.")
+                text: qsTr("Distance")
+                tooltip: qsTr("This property defines roughly how far ambient occlusion shadows spread away from objects.")
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 99999
+                    maximumValue: 9999999
                     minimumValue: 0
-                    decimals: 0
+                    realDragRange: 5000
+                    decimals: 2
                     backendValue: backendValues.aoDistance
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("AO Softness")
-                tooltip: qsTr("Sets how smooth the edges of the ambient occlusion shading are.")
+                text: qsTr("Softness")
+                tooltip: qsTr("This property how smooth the edges of the ambient occlusion shading are.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 50
                     minimumValue: 0
-                    decimals: 0
+                    decimals: 2
                     backendValue: backendValues.aoSoftness
                     Layout.fillWidth: true
                 }
             }
-
             Label {
-                text: qsTr("AO Dither")
-                tooltip: qsTr("Enables scattering of the ambient occlusion shadow band edges to improve smoothness (at the risk of sometimes producing obvious patterned artifacts).")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.aoDither.valueToString
-                    backendValue: backendValues.aoDither
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("AO Sample Rate")
-                tooltip: qsTr("Sets the ambient occlusion quality (more shades of gray) at the expense of performance.")
+                text: qsTr("Sample Rate")
+                tooltip: qsTr("This property defines ambient occlusion quality (more shades of gray) at the expense of performance.")
             }
             SecondColumnLayout {
                 SpinBox {
@@ -227,29 +234,40 @@ Column {
             }
 
             Label {
-                text: qsTr("AO Bias")
-                tooltip: qsTr("Sets the cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
+                text: qsTr("Bias")
+                tooltip: qsTr("This property defines a cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
+                    maximumValue: 9999999
+                    minimumValue: 0
                     realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.aoBias
                     Layout.fillWidth: true
                 }
             }
+            Label {
+                text: qsTr("Dither")
+                tooltip: qsTr("When this property is enabled it scatters the edges of the ambient occlusion shadow bands to improve smoothness.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    id: aoDitherCheckBox
+                    text: backendValues.aoDither.valueToString
+                    backendValue: backendValues.aoDither
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
-
     Section {
-        caption: qsTr("Image Based Lighting")
         width: parent.width
+        caption: qsTr("Light Probe")
         SectionLayout {
             Label {
-                text: qsTr("Light Probe")
-                tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with the skybox of this scene.")
+                text: qsTr("Image")
+                tooltip: qsTr("This property defines an image, to use to light the scene, either instead of or in addition to standard lights.")
             }
             SecondColumnLayout {
                 IdComboBox {
@@ -258,47 +276,83 @@ Column {
                     backendValue: backendValues.lightProbe
                 }
             }
+
             Label {
-                text: qsTr("Probe Brightness")
-                tooltip: qsTr("Sets the amount of light emitted by the light probe.")
+                text: qsTr("Exposure")
+                tooltip: qsTr("This property modifies the amount of light emitted by the light probe.")
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
-                    minimumValue: -999999
+                    maximumValue: 9999999
+                    minimumValue: 0
                     realDragRange: 5000
-                    decimals: 0
+                    decimals: 2
                     backendValue: backendValues.probeExposure
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("Probe Horizon")
-                tooltip: qsTr("Upper limit for horizon darkening of the light probe.")
+                text: qsTr("Horizon")
+                tooltip: qsTr("This property when defined with increasing values adds darkness (black) to the bottom half of the environment, forcing the lighting to come predominantly from the top of the image.")
             }
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: -0.001
-                    minimumValue: -1
-                    decimals: 3
-                    stepSize: 0.1
+                    minimumValue: 1
+                    maximumValue: 0
+                    decimals: 2
                     backendValue: backendValues.probeHorizon
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("Probe FOV")
-                tooltip: qsTr("Image source FOV for the case of using a camera-source as the IBL probe.")
+                text: qsTr("Orientation")
+                tooltip: qsTr("This property when defines the orientation of the light probe. Orientation is defined in terms of euler angles in degrees over the x, y, and z axes.")
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 180
-                    minimumValue: 1.0
-                    decimals: 1
-                    backendValue: backendValues.probeFieldOfView
-                    Layout.fillWidth: true
+            ColumnLayout {
+                RowLayout {
+                    Label {
+                        text: qsTr("X")
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+                    SpinBox {
+                        maximumValue: 9999999
+                        minimumValue: -9999999
+                        realDragRange: 5000
+                        decimals: 2
+                        backendValue: backendValues.probeOrientation_x
+                        Layout.fillWidth: true
+                    }
+                }
+                RowLayout {
+
+                    Label {
+                        text: qsTr("Y")
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+                    SpinBox {
+                        maximumValue: 9999999
+                        minimumValue: -9999999
+                        realDragRange: 5000
+                        decimals: 2
+                        backendValue: backendValues.probeOrientation_y
+                        Layout.fillWidth: true
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: qsTr("Z")
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+                    SpinBox {
+                        maximumValue: 9999999
+                        minimumValue: -9999999
+                        realDragRange: 5000
+                        decimals: 2
+                        backendValue: backendValues.probeOrientation_z
+                        Layout.fillWidth: true
+                    }
                 }
             }
         }

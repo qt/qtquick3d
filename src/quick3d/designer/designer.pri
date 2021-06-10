@@ -7,8 +7,6 @@ AUX_QML_FILES += \
     $$PWD/OrthographicCameraSpecifics.qml \
     $$PWD/FrustumCameraSection.qml \
     $$PWD/FrustumCameraSpecifics.qml \
-    $$PWD/CustomCameraSection.qml \
-    $$PWD/CustomCameraSpecifics.qml \
     $$PWD/CustomMaterialSection.qml \
     $$PWD/CustomMaterialSpecifics.qml \
     $$PWD/DefaultMaterialSection.qml \
@@ -48,7 +46,22 @@ AUX_QML_FILES += \
     $$PWD/TextureInputSection.qml \
     $$PWD/TextureInputSpecifics.qml \
     $$PWD/EffectSection.qml \
-    $$PWD/EffectSpecifics.qml
+    $$PWD/EffectSpecifics.qml \
+    $$PWD/AbstractLightSection.qml \
+    $$PWD/InstanceListEntrySection.qml \
+    $$PWD/InstanceListEntrySpecifics.qml \
+    $$PWD/InstanceListSection.qml \
+    $$PWD/InstanceListSpecifics.qml \
+    $$PWD/JointSection.qml \
+    $$PWD/JointSpecifics.qml \
+    $$PWD/MorphTargetSection.qml \
+    $$PWD/MorphTargetSpecifics.qml \
+    $$PWD/Loader3DSection.qml \
+    $$PWD/Loader3DSpecifics.qml \
+    $$PWD/Repeater3DSection.qml \
+    $$PWD/Repeater3DSpecifics.qml \
+
+
 
 AUX_QML_FILES += \
     $$PWD/source/view3D_template.qml \

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -34,7 +34,7 @@ import QtQuick.Layouts 1.12
 Column {
     width: parent.width
 
-    AbstractLightSection {
+    InstanceListEntrySection {
         width: parent.width
     }
 }

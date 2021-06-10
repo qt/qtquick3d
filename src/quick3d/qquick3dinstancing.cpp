@@ -583,7 +583,7 @@ void QQuick3DInstanceListEntry::setColor(QColor color)
 }
 
 /*!
-    \qmlproperty vector3d QtQuick3D::InstanceListEntry::customData
+    \qmlproperty vector4d QtQuick3D::InstanceListEntry::customData
 
     This property specifies the custom data for the instance. This is not used by default,
     but is made available to the vertex shader of custom materials as \c INSTANCE_DATA.

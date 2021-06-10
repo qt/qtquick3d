@@ -43,6 +43,7 @@ Section {
         }
         SecondColumnLayout {
             UrlChooser {
+                id: sourceUrlChooser
                 backendValue: backendValues.source
                 filter: "*.mesh"
             }
@@ -108,6 +109,91 @@ Section {
                 onAdd: function(value) { backendValues.materials.idListAdd(value) }
                 onRemove: function(idx) { backendValues.materials.idListRemove(idx) }
                 onReplace: function (idx, value) { backendValues.materials.idListReplace(idx, value) }
+            }
+        }
+        Label {
+            text: qsTr("Geometry")
+            tooltip: qsTr("Specify a custom geometry for the model")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                id: geometryComboBox
+                typeFilter: "QtQuick3D.Geometry"
+                Layout.fillWidth: true
+                backendValue: backendValues.geometry
+
+                Connections {
+                    target: geometryComboBox.backendValue
+                    onExpressionChanged: {
+                        if (geometryComboBox.backendValue.expression !== "" &&
+                                sourceUrlChooser.backendValue.expression !== "")
+                            sourceUrlChooser.backendValue.resetValue()
+                    }
+                }
+            }
+        }
+        Label {
+            text: qsTr("Instancing")
+            tooltip: qsTr("If this property is set, the model will not be rendered normally. Instead, a number of instances of the model will be rendered, as defined by the instance table.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Instancing"
+                Layout.fillWidth: true
+                backendValue: backendValues.instancing
+            }
+        }
+        Label {
+            text: qsTr("Instance Root")
+            tooltip: qsTr("This property defines the origin of the instance’s coordinate system.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Node"
+                Layout.fillWidth: true
+                backendValue: backendValues.instanceRoot
+            }
+        }
+        Label {
+            text: qsTr("Skeleton")
+            tooltip: qsTr("Contains the skeleton for the model.")
+        }
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Skeleton"
+                Layout.fillWidth: true
+                backendValue: backendValues.skeleton
+            }
+        }
+        Label {
+            text: qsTr("Morph Targets")
+            tooltip: qsTr("This property contains a list of MorphTargets used to render the provided geometry.")
+        }
+        SecondColumnLayout {
+            EditableListView {
+                backendValue: backendValues.morphTargets
+                model: backendValues.morphTargets.expressionAsList
+                Layout.fillWidth: true
+                typeFilter: "QtQuick3D.MorphTarget"
+
+                onAdd: function(value) { backendValues.morphTargets.idListAdd(value) }
+                onRemove: function(idx) { backendValues.morphTargets.idListRemove(idx) }
+                onReplace: function (idx, value) { backendValues.morphTargets.idListReplace(idx, value) }
+            }
+
+        }
+        Label {
+            text: qsTr("Depth Bias")
+            tooltip: qsTr("Holds the depth bias of the model.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                realDragRange: 5000
+                decimals: 0
+                backendValue: backendValues.depthBias
+                Layout.fillWidth: true
             }
         }
     }
