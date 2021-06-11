@@ -1067,6 +1067,9 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         }
     }
 
+    if (gltfVersion == SceneInfo::GltfVersion::v1)
+        return QLatin1String("Unsupported version");
+
     if (gltfVersion == SceneInfo::GltfVersion::Unknown)
         return QLatin1String("Unknown format version!");
 
