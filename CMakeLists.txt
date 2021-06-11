@@ -10,14 +10,6 @@ project(QtQuick3D
     LANGUAGES CXX C
 )
 
-# special case begin
-
-# Make sure we only use latest private CMake API, aka no compatibility wrappers.
-set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
-
-# Make sure we use the fixed BASE argument of qt_add_resource.
-set(QT_USE_FIXED_QT_ADD_RESOURCE_BASE TRUE)
-
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core)
 find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Concurrent Network Quick Widgets)
 
@@ -25,7 +17,6 @@ find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Concurrent 
 set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
 
 include(src/quick3d/Qt6Quick3DMacros.cmake)
-# special case end
 
 if(VXWORKS OR WATCHOS)
     message(NOTICE "Skipping the build as the condition \"NOT VXWORKS AND NOT WATCHOS\" is not met.")
