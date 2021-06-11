@@ -249,9 +249,6 @@ protected:
                                                  const QSSGRenderRay &inRay,
                                                  const QSSGRenderNode &node,
                                                  PickResultList &outIntersectionResultList);
-    static void intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
-                                          QSSGRenderableObject &inRenderableObject,
-                                          TPickResultArray &outIntersectionResultList);
     static void intersectRayWithItem2D(const QSSGRenderRay &inRay,
                                        const QSSGRenderItem2D &item2D,
                                        PickResultList &outIntersectionResultList);
