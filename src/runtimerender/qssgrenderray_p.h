@@ -130,11 +130,6 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
     static HitResult intersectWithAABBv2(const RayData &data,
                                          const QSSGBounds3 &bounds);
 
-    static IntersectionResult intersectWithAABB(const QMatrix4x4 &inGlobalTransform,
-                                                const QSSGBounds3 &inBounds,
-                                                const QSSGRenderRay &ray,
-                                                bool inForceIntersect = false);
-
     static void intersectWithBVH(const RayData &data,
                                         const QSSGMeshBVHNode *bvh,
                                         const QSSGRenderMesh *mesh,

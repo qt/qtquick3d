@@ -492,27 +492,6 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
                                      resultSubset));
 }
 
-void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRenderRay &inRay,
-                                                    QSSGRenderableObject &inRenderableObject,
-                                                    TPickResultArray &outIntersectionResultList)
-{
-    QSSGRenderRay::IntersectionResult intersectionResult = QSSGRenderRay::intersectWithAABB(inRenderableObject.globalTransform, inRenderableObject.bounds, inRay);
-    if (!intersectionResult.intersects)
-        return;
-
-    // Leave the coordinates relative for right now.
-    const QSSGRenderGraphObject *thePickObject = nullptr;
-    thePickObject = &static_cast<QSSGSubsetRenderable *>(&inRenderableObject)->modelContext.model;
-
-    if (thePickObject != nullptr) {
-        outIntersectionResultList.push_back(
-                    QSSGRenderPickResult(*thePickObject,
-                                         intersectionResult.rayLengthSquared,
-                                         intersectionResult.relXY,
-                                         intersectionResult.scenePosition));
-    }
-}
-
 void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, QSSGRenderer::PickResultList &outIntersectionResultList)
 {
     // Get the plane (and normal) that the item 2D is on

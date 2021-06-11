@@ -41,22 +41,12 @@ public:
     ~intersection() = default;
 
 private slots:
-    void test_aabbIntersection();
-    void test_aabbIntersectionScaled();
-    void test_aabbIntersectionTranslated();
-    void test_aabbIntersectionRotated();
     void test_aabbIntersectionv2();
     void test_aabbIntersectionScaledv2();
     void test_aabbIntersectionTranslatedv2();
     void test_aabbIntersectionRotatedv2();
 
 private:
-    static QSSGRenderRay::IntersectionResult intersectWithAABB_proxy(const QMatrix4x4 &inGlobalTransform,
-                                                                     const QSSGBounds3 &inBounds,
-                                                                     const QSSGRenderRay &ray)
-    {
-        return QSSGRenderRay::intersectWithAABB(inGlobalTransform, inBounds, ray);
-    }
     static QSSGRenderRay::IntersectionResult intersectWithAABBv2_proxy(const QMatrix4x4 &inGlobalTransform,
                                                                        const QSSGBounds3 &inBounds,
                                                                        const QSSGRenderRay &ray)
@@ -73,26 +63,6 @@ private:
     void aabbIntersectionTranslated(const IntersectionFunc &intersectFunc);
     void aabbIntersectionRotated(const IntersectionFunc &intersectFunc);
 };
-
-void intersection::test_aabbIntersection()
-{
-    aabbIntersection(&intersection::intersectWithAABB_proxy);
-}
-
-void intersection::test_aabbIntersectionScaled()
-{
-    aabbIntersectionScaled(&intersection::intersectWithAABB_proxy);
-}
-
-void intersection::test_aabbIntersectionTranslated()
-{
-    aabbIntersectionTranslated(&intersection::intersectWithAABB_proxy);
-}
-
-void intersection::test_aabbIntersectionRotated()
-{
-    aabbIntersectionRotated(&intersection::intersectWithAABB_proxy);
-}
 
 void intersection::test_aabbIntersectionv2()
 {
