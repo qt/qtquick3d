@@ -1028,8 +1028,12 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                 // Get material
                 if (backendModel->materials.count() < (pickResult.m_subset + 1))
                     materialSubset = backendModel->materials.count() - 1;
+                if (materialSubset < 0)
+                    continue;
                 const auto backendMaterial = backendModel->materials.at(materialSubset);
                 const auto frontendMaterial = sceneManager->lookUpNode(backendMaterial);
+                if (!frontendMaterial)
+                    continue;
                 const auto frontendMaterialPrivate = QQuick3DObjectPrivate::get(frontendMaterial);
 
                 if (frontendMaterialPrivate->type == QQuick3DObjectPrivate::Type::DefaultMaterial) {
