@@ -86,7 +86,7 @@ private:
     QString m_errorString;
     bool m_boundsDirty = false;
     QQuick3DBounds3 m_bounds;
-    QQuick3DInstancing *m_instancing;
+    QQuick3DInstancing *m_instancing = nullptr;
     bool m_instancingChanged = false;
 };
 
