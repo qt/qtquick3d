@@ -231,7 +231,7 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
         }
     };
 
-    static const int MAX_ATTRIBUTES = 8;
+    static const int MAX_ATTRIBUTES = 16;
 
     void clear()
     {

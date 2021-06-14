@@ -709,6 +709,14 @@ QQuick3DGeometry::Attribute::Semantic QQuick3DGeometryPrivate::semanticFromName(
         semanticMap[QSSGMesh::MeshInternal::getColorAttrName()] = QQuick3DGeometry::Attribute::ColorSemantic;
         semanticMap[QSSGMesh::MeshInternal::getWeightAttrName()] = QQuick3DGeometry::Attribute::WeightSemantic;
         semanticMap[QSSGMesh::MeshInternal::getJointAttrName()] = QQuick3DGeometry::Attribute::JointSemantic;
+        for (int i = 0; i < 8; i++)
+            semanticMap[QSSGMesh::MeshInternal::getTargetPositionAttrName(i)] = QQuick3DGeometry::Attribute::TargetPositionSemantic;
+        for (int i = 0; i < 4; i++)
+            semanticMap[QSSGMesh::MeshInternal::getTargetNormalAttrName(i)] = QQuick3DGeometry::Attribute::TargetNormalSemantic;
+        for (int i = 0; i < 2; i++)
+            semanticMap[QSSGMesh::MeshInternal::getTargetTangentAttrName(i)] = QQuick3DGeometry::Attribute::TargetTangentSemantic;
+        for (int i = 0; i < 2; i++)
+            semanticMap[QSSGMesh::MeshInternal::getTargetBinormalAttrName(i)] = QQuick3DGeometry::Attribute::TargetBinormalSemantic;
     }
     return semanticMap[name];
 }
