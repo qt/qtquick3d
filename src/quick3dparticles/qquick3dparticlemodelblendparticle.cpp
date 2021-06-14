@@ -214,13 +214,17 @@ void QQuick3DParticleModelBlendParticle::setEndNode(QQuick3DNode *node)
 {
     if (m_endNode == node)
         return;
+    if (m_endNode)
+        QObject::disconnect(this);
 
     m_endNode = node;
-    if (node) {
-        m_endNodePosition = m_endNode->position();
-        m_endNodeRotation = m_endNode->rotation().toEulerAngles();
-        m_endNodeScale = m_endNode->scale();
+
+    if (m_endNode) {
+        QObject::connect(m_endNode, &QQuick3DNode::positionChanged, this, &QQuick3DParticleModelBlendParticle::handleEndNodeChanged);
+        QObject::connect(m_endNode, &QQuick3DNode::rotationChanged, this, &QQuick3DParticleModelBlendParticle::handleEndNodeChanged);
+        QObject::connect(m_endNode, &QQuick3DNode::scaleChanged, this, &QQuick3DParticleModelBlendParticle::handleEndNodeChanged);
     }
+    handleEndNodeChanged();
     Q_EMIT endNodeChanged();
 }
 
@@ -281,11 +285,7 @@ void QQuick3DParticleModelBlendParticle::regenerate()
     } else {
         delete obj;
     }
-    if (m_endNode) {
-        m_endNodePosition = m_endNode->position();
-        m_endNodeRotation = m_endNode->rotation().toEulerAngles();
-        m_endNodeScale = m_endNode->scale();
-    }
+    handleEndNodeChanged();
 }
 
 static QSSGMesh::Mesh loadMesh(const QString &source)
@@ -680,9 +680,59 @@ bool QQuick3DParticleModelBlendParticle::lastParticle() const
     return m_currentIndex >= m_maxAmount - 1;
 }
 
+static QMatrix3x3 qt_fromEulerRotation(const QVector3D &eulerRotation)
+{
+    float x = qDegreesToRadians(eulerRotation.x());
+    float y = qDegreesToRadians(eulerRotation.y());
+    float z = qDegreesToRadians(eulerRotation.z());
+    float a = cos(x);
+    float b = sin(x);
+    float c = cos(y);
+    float d = sin(y);
+    float e = cos(z);
+    float f = sin(z);
+    QMatrix3x3 ret;
+    float bd = b * d;
+    float ad = a * d;
+    ret(0,0) = c * e;
+    ret(0,1) = -c * f;
+    ret(0,2) = d;
+    ret(1,0) = bd * e + a * f;
+    ret(1,1) = a * e - bd * f;
+    ret(1,2) = -b * c;
+    ret(2,0) = b * f - ad * e;
+    ret(2,1) = ad * f + b * e;
+    ret(2,2) = a * c;
+    return ret;
+}
+
+void QQuick3DParticleModelBlendParticle::handleEndNodeChanged()
+{
+    if (m_endNode && m_model) {
+        if (!m_model->rotation().isIdentity()) {
+            // Use the same function as the shader for end node rotation so that they produce same matrix
+            QMatrix3x3 r1 = qt_fromEulerRotation(m_endNode->eulerRotation());
+            QMatrix3x3 r2 = m_model->rotation().toRotationMatrix();
+            QMatrix3x3 r = r2 * r1.transposed() * r2.transposed();
+            m_endNodeRotation = m_endNode->eulerRotation();
+            m_endRotationMatrix = QMatrix4x4(r);
+        } else {
+            m_endNodeRotation = m_endNode->eulerRotation();
+            m_endRotationMatrix = QMatrix4x4(m_endNode->rotation().toRotationMatrix().transposed());
+        }
+        m_endNodePosition = m_endNode->position();
+        m_endNodeScale = m_endNode->scale();
+    } else {
+        m_endNodePosition = QVector3D();
+        m_endNodeRotation = QVector3D();
+        m_endNodeScale = QVector3D(1.0f, 1.0f, 1.0f);
+        m_endRotationMatrix.setToIdentity();
+    }
+}
+
 QVector3D QQuick3DParticleModelBlendParticle::particleEndPosition(int idx) const
 {
-    return m_endNodeScale * m_centerData[idx] + m_endNodePosition;
+    return m_endRotationMatrix * QVector3D(m_endNodeScale * m_centerData[idx]) + m_endNodePosition;
 }
 
 QVector3D QQuick3DParticleModelBlendParticle::particleEndRotation(int) const

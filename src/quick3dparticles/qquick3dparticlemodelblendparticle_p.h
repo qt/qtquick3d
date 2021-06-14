@@ -43,6 +43,7 @@
 
 #include <QColor>
 #include <QVector4D>
+#include <QMatrix4x4>
 
 #include <QtQuick3DParticles/private/qquick3dparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
@@ -149,6 +150,7 @@ private:
     void updateParticleBuffer(QSSGParticleBuffer *buffer);
     void regenerate();
     void updateParticles();
+    void handleEndNodeChanged();
     PerEmitterData &perEmitterData(int emitterIndex);
 
     QVector<TriangleParticleData> m_triangleParticleData;
@@ -166,6 +168,7 @@ private:
     QVector3D m_endNodePosition;
     QVector3D m_endNodeRotation;
     QVector3D m_endNodeScale;
+    QMatrix4x4 m_endRotationMatrix;
     int m_particleCount = 0;
     ModelBlendMode m_modelBlendMode = Explode;
     int m_endTime = 0;
