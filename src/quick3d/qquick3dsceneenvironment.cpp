@@ -305,9 +305,21 @@ float QQuick3DSceneEnvironment::aoBias() const
 /*!
     \qmlproperty QtQuick3D::Texture QtQuick3D::SceneEnvironment::lightProbe
 
-    This property defines an image (preferably a high-dynamic range image or a
-    \l{Pre-generating IBL cubemap}{pre-generated cubemap}), to use to light the
-    scene, either instead of or in addition to standard lights.
+    This property defines an image used to light the scene, either instead of,
+    or in addition to standard lights.
+
+    The image is preferably a high-dynamic range image or a \l{Pre-generating
+    IBL cubemap}{pre-generated cubemap}). Pre-baking provides significant
+    performance improvements at run time, because no time is spent on filtering
+    and mipmap generation. If the source is a .hdr or other image, the
+    GPU-based pre-processing happens at run time after loading the image file,
+    and that can be potentially time consuming, in particular on embedded and
+    mobile hardware.
+
+    \note Using a Texture with \l{Texture::sourceItem}{sourceItem} is not
+    supported in combination with this property. Pre-filtering of all mip
+    levels for dynamic Qt Quick content is typically not reasonable in practice
+    due to performance implications.
 */
 QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 {
