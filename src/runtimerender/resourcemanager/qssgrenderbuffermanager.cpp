@@ -121,6 +121,12 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             theImage.value().m_texture = qsgTexture->rhiTexture();
             theImage.value().m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
             result = theImage.value();
+
+            // inMipMode is ignored completely when sourcing the texture from a
+            // QSGTexture. Mipmap generation is not supported, whereas
+            // attempting to use such a texture as a light probe will fail. (no
+            // mip levels, no pre-filtering) In the latter case, print a warning
+            // because that will definitely lead to visual problems in the result.
             if (inMipMode == MipModeBsdf)
                 qWarning("Cannot use QSGTexture from Texture.sourceItem as light probe.");
         } else {
