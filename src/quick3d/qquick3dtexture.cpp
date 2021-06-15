@@ -592,6 +592,11 @@ QQuick3DTextureData *QQuick3DTexture::textureData() const
     \note It is necessary to set a \l{QtQuick3D::Texture::mipFilter}{mipFilter} mode
     for the generated mipmaps to be be used.
 
+    \note This property is not applicable when the texture content is based on
+    a Qt Quick item referenced by the \l sourceItem property. Mipmap generation
+    for dynamic textures is not feasible due to the performance implications.
+    Therefore, the value of this property is ignored for such textures.
+
     \sa mipFilter
 */
 bool QQuick3DTexture::generateMipmaps() const
