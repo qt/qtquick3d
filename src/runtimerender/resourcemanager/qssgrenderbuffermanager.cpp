@@ -121,6 +121,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             theImage.value().m_texture = qsgTexture->rhiTexture();
             theImage.value().m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
             result = theImage.value();
+            if (inMipMode == MipModeBsdf)
+                qWarning("Cannot use QSGTexture from Texture.sourceItem as light probe.");
         } else {
             qWarning("Cannot use QSGTexture (presumably from Texture.sourceItem) on a thread "
                      "that is different from the Qt Quick render thread that created the QSGTexture. "
