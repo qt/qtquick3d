@@ -99,8 +99,12 @@
     See the \l{Instanced Rendering} overview documentation for more information.
 */
 
-QQuick3DRuntimeLoader::QQuick3DRuntimeLoader()
+QT_BEGIN_NAMESPACE
+
+QQuick3DRuntimeLoader::QQuick3DRuntimeLoader(QQuick3DNode *parent)
+    : QQuick3DNode(parent)
 {
+
 }
 
 QUrl QQuick3DRuntimeLoader::source() const
@@ -274,3 +278,5 @@ void QQuick3DRuntimeLoader::setInstancing(QQuick3DInstancing *newInstancing)
     updateModels();
     emit instancingChanged();
 }
+
+QT_END_NAMESPACE
