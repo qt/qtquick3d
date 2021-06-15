@@ -307,9 +307,7 @@ float QQuick3DSceneEnvironment::aoBias() const
 
     This property defines an image (preferably a high-dynamic range image or a
     \l{Pre-generating IBL cubemap}{pre-generated cubemap}), to use to light the
-    scene, either instead of or in addition to standard lights. Note that this image
-    will be used as the environment for any custom materials, instead of the
-    environment map often associated with them.
+    scene, either instead of or in addition to standard lights.
 */
 QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 {
