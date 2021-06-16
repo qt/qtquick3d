@@ -226,16 +226,29 @@ QT_BEGIN_NAMESPACE
     \qmlproperty Texture PrincipledMaterial::specularReflectionMap
 
     This property sets a Texture used for specular highlights on the material.
-    By default the Texture is applied using environmental mapping (not UV
-    mapping): as you rotate the model the map will appear as though it is
-    reflecting from the environment. Specular Reflection maps are an easy way to
-    add a high-quality look with relatively low cost.
 
-    \note Using a Light Probe in your \l SceneEnvironment for image-based lighting
-    will automatically use that image as the specular reflection.
+    This is typically used to perform environment mapping: as the model is
+    rotated, the map will appear as though it is reflecting from the
+    environment. For this to work as expected, the Texture's
+    \l{Texture::mappingMode}{mappingMode} needs to be set to
+    Texture.Environment. Specular reflection maps are an easy way to add a
+    high-quality look with a relatively low cost.
+
+    \note Associating a \l{SceneEnvironment::lightProbe}{light probe} with the
+    \l SceneEnvironment, and thus relying on image-based lighting, can achieve
+    similar environmental reflection effects. Light probes are however a
+    conceptually different, and when it comes to performance, potentially more
+    expensive solution. Each approaches have their own specific uses, and the
+    one to use needs to be decided on a case by case basis. When it comes to
+    the Texture set to the property, specularReflectionMap has an advantage,
+    because it presents no limitations and supports all types of textures,
+    including ones that source their data from a Qt Quick sub-scene via
+    \l{Texture::sourceItem}{sourceItem}.
 
     \note Crisp images cause your material to look very glossy; the more you
     blur your image the softer your material will appear.
+
+    \sa Texture::mappingMode
 */
 
 /*!
