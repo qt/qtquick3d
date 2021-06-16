@@ -74,7 +74,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
     Q_PROPERTY(bool enabled MEMBER enabled NOTIFY enabledChanged)
 
     QML_NAMED_ELEMENT(TextureInput)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DShaderUtilsTextureInput() = default;
@@ -106,7 +105,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBuffer : public QObject
     Q_PROPERTY(QByteArray name MEMBER name)
 
     QML_NAMED_ELEMENT(Buffer)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DShaderUtilsBuffer() = default;
@@ -174,7 +172,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderCommand : public QObject
     Q_OBJECT
 
     QML_NAMED_ELEMENT(Command)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DShaderUtilsRenderCommand() = default;
@@ -191,7 +188,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsBufferInput : public QQuick3DShaderUti
     Q_PROPERTY(QByteArray sampler MEMBER sampler)
 
     QML_NAMED_ELEMENT(BufferInput)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DShaderUtilsBufferInput() = default;
@@ -230,7 +226,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsApplyValue : public QQuick3DShaderUtil
     Q_PROPERTY(QVariant value MEMBER value)
 
     QML_NAMED_ELEMENT(SetUniformValue)
-    QML_ADDED_IN_VERSION(1, 15)
 
 public:
     QQuick3DShaderUtilsApplyValue() = default;
@@ -249,7 +244,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsRenderPass : public QObject
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsShader> shaders READ shaders)
 
     QML_NAMED_ELEMENT(Pass)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DShaderUtilsRenderPass() = default;
@@ -279,7 +273,6 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
     Q_PROPERTY(Stage stage MEMBER stage)
 
     QML_NAMED_ELEMENT(Shader)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DShaderUtilsShader() = default;

@@ -55,7 +55,6 @@ class Q_QUICK3D_EXPORT QQuick3DOrthographicCamera : public QQuick3DCamera
     Q_PROPERTY(float verticalMagnification READ verticalMagnification WRITE setVerticalMagnification NOTIFY verticalMagnificationChanged)
 
     QML_NAMED_ELEMENT(OrthographicCamera)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     explicit QQuick3DOrthographicCamera(QQuick3DNode *parent = nullptr);

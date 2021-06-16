@@ -66,7 +66,6 @@ class Q_QUICK3D_EXPORT QQuick3DQuaternionAnimation : public QQuickPropertyAnimat
     Q_PROPERTY(float toZRotation READ toZRotation WRITE setToZRotation NOTIFY toZRotationChanged)
 
     QML_NAMED_ELEMENT(QuaternionAnimation)
-    QML_ADDED_IN_VERSION(1, 15)
 
 public:
     enum Type {

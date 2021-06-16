@@ -63,7 +63,6 @@ class Q_QUICK3D_EXPORT QQuick3DAbstractLight : public QQuick3DNode
 
     QML_NAMED_ELEMENT(Light)
     QML_UNCREATABLE("Light is Abstract")
-    QML_ADDED_IN_VERSION(1, 14)
 public:
     ~QQuick3DAbstractLight() override;
 

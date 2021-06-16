@@ -61,7 +61,6 @@ class Q_QUICK3D_EXPORT QQuick3DEffect : public QQuick3DObject
     Q_PROPERTY(QQmlListProperty<QQuick3DShaderUtilsRenderPass> passes READ passes)
 
     QML_NAMED_ELEMENT(Effect)
-    QML_ADDED_IN_VERSION(1, 15)
 public:
     explicit QQuick3DEffect(QQuick3DObject *parent = nullptr);
 

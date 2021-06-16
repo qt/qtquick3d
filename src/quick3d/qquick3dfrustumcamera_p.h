@@ -55,7 +55,6 @@ class Q_QUICK3D_EXPORT QQuick3DFrustumCamera : public QQuick3DPerspectiveCamera
     Q_PROPERTY(float left READ right WRITE setLeft NOTIFY leftChanged)
 
     QML_NAMED_ELEMENT(FrustumCamera)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DFrustumCamera();

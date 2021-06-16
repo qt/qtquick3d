@@ -60,7 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float metalness READ metalness WRITE setMetalness NOTIFY metalnessChanged)
     Q_PROPERTY(QQuick3DTexture *metalnessMap READ metalnessMap WRITE setMetalnessMap NOTIFY metalnessMapChanged)
-    Q_PROPERTY(TextureChannelMapping metalnessChannel READ metalnessChannel WRITE setMetalnessChannel NOTIFY metalnessChannelChanged REVISION(1, 1))
+    Q_PROPERTY(TextureChannelMapping metalnessChannel READ metalnessChannel WRITE setMetalnessChannel NOTIFY metalnessChannelChanged)
 
     Q_PROPERTY(float specularAmount READ specularAmount WRITE setSpecularAmount NOTIFY specularAmountChanged)
     Q_PROPERTY(QQuick3DTexture *specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged)
@@ -68,14 +68,14 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float roughness READ roughness WRITE setRoughness NOTIFY roughnessChanged)
     Q_PROPERTY(QQuick3DTexture *roughnessMap READ roughnessMap WRITE setRoughnessMap NOTIFY roughnessMapChanged)
-    Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged REVISION(1, 1))
+    Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged)
 
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
     Q_PROPERTY(QQuick3DTexture *opacityMap READ opacityMap WRITE setOpacityMap NOTIFY opacityMapChanged)
-    Q_PROPERTY(TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged REVISION(1, 1))
+    Q_PROPERTY(TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged)
 
     Q_PROPERTY(QQuick3DTexture *normalMap READ normalMap WRITE setNormalMap NOTIFY normalMapChanged)
     Q_PROPERTY(float normalStrength READ normalStrength WRITE setNormalStrength NOTIFY normalStrengthChanged)
@@ -83,7 +83,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *specularReflectionMap READ specularReflectionMap WRITE setSpecularReflectionMap NOTIFY specularReflectionMapChanged)
 
     Q_PROPERTY(QQuick3DTexture *occlusionMap READ occlusionMap WRITE setOcclusionMap NOTIFY occlusionMapChanged)
-    Q_PROPERTY(TextureChannelMapping occlusionChannel READ occlusionChannel WRITE setOcclusionChannel NOTIFY occlusionChannelChanged REVISION(1, 1))
+    Q_PROPERTY(TextureChannelMapping occlusionChannel READ occlusionChannel WRITE setOcclusionChannel NOTIFY occlusionChannelChanged)
     Q_PROPERTY(float occlusionAmount READ occlusionAmount WRITE setOcclusionAmount NOTIFY occlusionAmountChanged)
 
     Q_PROPERTY(AlphaMode alphaMode READ alphaMode WRITE setAlphaMode NOTIFY alphaModeChanged)
@@ -99,7 +99,6 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(int maxHeightMapSamples READ maxHeightMapSamples WRITE setMaxHeightMapSamples NOTIFY maxHeightMapSamplesChanged)
 
     QML_NAMED_ELEMENT(PrincipledMaterial)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum Lighting {
@@ -148,10 +147,10 @@ public:
     float occlusionAmount() const;
     AlphaMode alphaMode() const;
     float alphaCutoff() const;
-    Q_REVISION(1, 1) TextureChannelMapping metalnessChannel() const;
-    Q_REVISION(1, 1) TextureChannelMapping roughnessChannel() const;
-    Q_REVISION(1, 1) TextureChannelMapping opacityChannel() const;
-    Q_REVISION(1, 1) TextureChannelMapping occlusionChannel() const;
+    TextureChannelMapping metalnessChannel() const;
+    TextureChannelMapping roughnessChannel() const;
+    TextureChannelMapping opacityChannel() const;
+    TextureChannelMapping occlusionChannel() const;
     float pointSize() const;
     float lineWidth() const;
     Q_REVISION(6, 2) QQuick3DTexture *heightMap() const;
@@ -183,10 +182,10 @@ public Q_SLOTS:
     void setOcclusionAmount(float occlusionAmount);
     void setAlphaMode(QQuick3DPrincipledMaterial::AlphaMode alphaMode);
     void setAlphaCutoff(float alphaCutoff);
-    Q_REVISION(1, 1) void setMetalnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setRoughnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setOpacityChannel(QQuick3DMaterial::TextureChannelMapping channel);
-    Q_REVISION(1, 1) void setOcclusionChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setMetalnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setRoughnessChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setOpacityChannel(QQuick3DMaterial::TextureChannelMapping channel);
+    void setOcclusionChannel(QQuick3DMaterial::TextureChannelMapping channel);
     void setPointSize(float size);
     void setLineWidth(float width);
     Q_REVISION(6, 2) void setHeightMap(QQuick3DTexture *heightMap);
@@ -218,10 +217,10 @@ Q_SIGNALS:
     void occlusionAmountChanged(float occlusionAmount);
     void alphaModeChanged(QQuick3DPrincipledMaterial::AlphaMode alphaMode);
     void alphaCutoffChanged(float alphaCutoff);
-    Q_REVISION(1, 1) void metalnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
-    Q_REVISION(1, 1) void roughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
-    Q_REVISION(1, 1) void opacityChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
-    Q_REVISION(1, 1) void occlusionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    void metalnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    void roughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    void opacityChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    void occlusionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     void pointSizeChanged();
     void lineWidthChanged();
     Q_REVISION(6, 2) void heightMapChanged(QQuick3DTexture *heightMap);

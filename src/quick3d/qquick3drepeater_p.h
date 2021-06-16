@@ -62,7 +62,6 @@ class Q_QUICK3D_EXPORT QQuick3DRepeater : public QQuick3DNode
     Q_CLASSINFO("DefaultProperty", "delegate")
 
     QML_NAMED_ELEMENT(Repeater3D)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     QQuick3DRepeater(QQuick3DNode *parent = nullptr);
