@@ -55,7 +55,6 @@ class Q_QUICK3D_EXPORT QQuick3DJoint : public QQuick3DNode
     Q_PROPERTY(QQuick3DSkeleton *skeletonRoot READ skeletonRoot WRITE setSkeletonRoot NOTIFY skeletonRootChanged)
 
     QML_NAMED_ELEMENT(Joint)
-    QML_ADDED_IN_VERSION(1, 15)
 
 public:
     explicit QQuick3DJoint(QQuick3DNode *parent = nullptr);

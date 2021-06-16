@@ -62,7 +62,6 @@ class Q_QUICK3D_EXPORT QQuick3DCustomMaterial : public QQuick3DMaterial
     Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth NOTIFY lineWidthChanged)
 
     QML_NAMED_ELEMENT(CustomMaterial)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum class ShadingMode

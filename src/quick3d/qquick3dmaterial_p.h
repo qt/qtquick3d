@@ -58,7 +58,6 @@ class Q_QUICK3D_EXPORT QQuick3DMaterial : public QQuick3DObject
 
     QML_NAMED_ELEMENT(Material)
     QML_UNCREATABLE("Material is Abstract")
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum CullMode {

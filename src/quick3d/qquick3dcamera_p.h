@@ -52,7 +52,6 @@ class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
     Q_PROPERTY(bool frustumCullingEnabled READ frustumCullingEnabled WRITE setFrustumCullingEnabled NOTIFY frustumCullingEnabledChanged)
     QML_NAMED_ELEMENT(Camera)
     QML_UNCREATABLE("Camera is Abstract")
-    QML_ADDED_IN_VERSION(1, 14)
 public:
     Q_INVOKABLE QVector3D mapToViewport(const QVector3D &scenePos) const;
     Q_INVOKABLE QVector3D mapFromViewport(const QVector3D &viewportPos) const;
@@ -63,8 +62,8 @@ public:
                               qreal width,
                               qreal height);
 
-    Q_REVISION(1, 1) Q_INVOKABLE void lookAt(const QVector3D &scenePos);
-    Q_REVISION(1, 1) Q_INVOKABLE void lookAt(QQuick3DNode *node);
+    Q_INVOKABLE void lookAt(const QVector3D &scenePos);
+    Q_INVOKABLE void lookAt(QQuick3DNode *node);
 
     QSSGRenderCamera *cameraNode() const;
     void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }

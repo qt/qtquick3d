@@ -82,10 +82,9 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 
     Q_PROPERTY(QQuick3DEnvironmentTonemapModes tonemapMode READ tonemapMode WRITE setTonemapMode NOTIFY tonemapModeChanged)
 
-    Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects REVISION(1, 1))
+    Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects)
 
     QML_NAMED_ELEMENT(SceneEnvironment)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
 

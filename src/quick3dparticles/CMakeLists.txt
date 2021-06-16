@@ -35,7 +35,6 @@ qt_internal_add_qml_module(Quick3DParticles
         qquick3dparticlevectordirection.cpp qquick3dparticlevectordirection_p.h
         qquick3dparticlewander.cpp qquick3dparticlewander_p.h
         qquick3dparticleutils.cpp qquick3dparticleutils_p.h
-        qquick3dparticleforeign_p.h
         qquick3dparticlespritesequence.cpp qquick3dparticlespritesequence_p.h
         qquick3dparticlemodelblendparticle_p.h qquick3dparticlemodelblendparticle.cpp
     DEFINES

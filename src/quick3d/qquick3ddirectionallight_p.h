@@ -52,7 +52,6 @@ class Q_QUICK3D_EXPORT QQuick3DDirectionalLight : public QQuick3DAbstractLight
     Q_OBJECT
 
     QML_NAMED_ELEMENT(DirectionalLight)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     explicit QQuick3DDirectionalLight(QQuick3DNode *parent = nullptr);

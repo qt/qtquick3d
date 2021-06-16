@@ -77,7 +77,6 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "data")
 
     QML_NAMED_ELEMENT(View3D)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum RenderMode {

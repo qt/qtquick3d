@@ -80,7 +80,6 @@ class Q_QUICK3D_EXPORT QQuick3DTexture : public QQuick3DObject, public QQuickIte
     Q_PROPERTY(bool autoOrientation READ autoOrientation WRITE setAutoOrientation NOTIFY autoOrientationChanged REVISION(6, 2))
 
     QML_NAMED_ELEMENT(Texture)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     enum MappingMode

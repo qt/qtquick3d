@@ -94,11 +94,10 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DNode *instanceRoot READ instanceRoot WRITE setInstanceRoot NOTIFY instanceRootChanged)
     Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
     Q_PROPERTY(QList<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
-    Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged REVISION(1, 1))
+    Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
     Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
 
     QML_NAMED_ELEMENT(Model)
-    QML_ADDED_IN_VERSION(1, 14)
 
 public:
     explicit QQuick3DModel(QQuick3DNode *parent = nullptr);
