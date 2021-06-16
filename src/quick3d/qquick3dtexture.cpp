@@ -262,17 +262,21 @@ float QQuick3DTexture::scaleV() const
     This property defines which method of mapping to use when sampling this
     texture.
 
-    \value Texture.UV The default for diffuse and opacity maps,
-        this causes the image to be stuck to the mesh. The same portion of the
-        image will always appear on the same vertex (unless the UV properties are
-        animated).
-    \value Texture.Environment The default for specular reflection,
-        this causes the image to be ‘projected’ onto the material as though it is
-        being reflected. Using Environmental Mapping for diffuse maps provides a
-        mirror effect.
+    \value Texture.UV The default value. Suitable for base color, diffuse,
+    opacity, and most other texture maps. Performs standard UV mapping. The
+    same portion of the image will always appear on the same vertex, unless the
+    UV coordinates are transformed and animated.
+
+    \value Texture.Environment Used for
+    \l{PrincipledMaterial::specularReflectionMap}{specular reflection}, this
+    causes the image to be projected onto the material as though it was being
+    reflected. Using this mode for other type of texture maps provides a mirror
+    effect.
+
     \value Texture.LightProbe The default for HDRI sphere maps used by light
-    probes. Normally this does not need to be set when using a light probe, but
-    may need to be set explicitly when using environment maps.
+    probes. This mode does not need to be manually set for Texture objects
+    associated with the \l{SceneEnvironment::lightProbe}{lightProbe} property,
+    because it is implied automatically.
 */
 QQuick3DTexture::MappingMode QQuick3DTexture::mappingMode() const
 {
