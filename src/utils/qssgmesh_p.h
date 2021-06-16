@@ -145,7 +145,6 @@ public:
                               const QVector<AssetMeshSubset> &subsets);
 
     static Mesh fromRuntimeData(const RuntimeMeshData &data,
-                                const QSSGBounds3 &bounds,
                                 QString *error);
 
     bool isValid() const { return !m_subsets.isEmpty(); }
@@ -243,6 +242,7 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
 
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
+    QVector<Mesh::Subset> m_subsets;
 
     Attribute m_attributes[MAX_ATTRIBUTES];
     int m_attributeCount = 0;

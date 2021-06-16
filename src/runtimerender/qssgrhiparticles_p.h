@@ -66,7 +66,7 @@ public:
                                          QSSGRenderCamera &inCamera);
     static void updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                                char *ubufData,
-                                               const QSSGRenderModel *model);
+                                               const QSSGRenderModel *model, quint32 offset);
 
     static void rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                      QSSGRhiContext *rhiCtx,

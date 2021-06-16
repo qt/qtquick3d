@@ -507,10 +507,11 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             m_modelGeometry->setVertexData(vertexBuffer.data);
             m_modelGeometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
         }
-
+        QQuick3DGeometryPrivate *geometryPrivate = static_cast<QQuick3DGeometryPrivate *>(QQuick3DGeometryPrivate::get(m_modelGeometry));
         for (auto &e : vertexBuffer.entries)
             m_modelGeometry->addAttribute(toAttribute(e));
-
+        for (auto &s : mesh.subsets())
+            geometryPrivate->m_subsets.append({s.name, s.bounds.min, s.bounds.max, s.offset, s.count});
         m_model->setSource({});
         m_model->setGeometry(m_modelGeometry);
     }

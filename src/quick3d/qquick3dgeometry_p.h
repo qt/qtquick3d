@@ -53,10 +53,20 @@ class Q_QUICK3D_PRIVATE_EXPORT QQuick3DGeometryPrivate : public QQuick3DObjectPr
 {
 public:
     QQuick3DGeometryPrivate();
+
+    struct Subset {
+        QString name;
+        QVector3D boundsMin;
+        QVector3D boundsMax;
+        quint32 offset;
+        quint32 count;
+    };
+
     static const int MAX_ATTRIBUTE_COUNT = 16;
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
     QQuick3DGeometry::Attribute m_attributes[MAX_ATTRIBUTE_COUNT];
+    QVector<Subset> m_subsets;
     int m_attributeCount = 0;
     QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::PrimitiveType::Triangles;
     QVector3D m_min;

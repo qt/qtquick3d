@@ -345,7 +345,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
             if (blendParticles)
-                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model);
+                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
             if (blendParticles)
@@ -1043,8 +1043,9 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(theObject));
             modelViewProjection = pEntry->m_lightVP * renderable->globalTransform;
             dcd = &rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
-                                          pEntry, cubeFace, QSSGRhiDrawCallDataKey::Shadow });
+                                          pEntry, cubeFace + int(renderable->subset.offset << 3), QSSGRhiDrawCallDataKey::Shadow });
         }
+
         QSSGRhiShaderResourceBindingList bindings;
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*theObject));
@@ -1059,7 +1060,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
             if (blendParticles)
-                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model);
+                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             if (blendParticles)
                 QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);

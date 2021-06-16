@@ -84,6 +84,7 @@ public:
                       int offset,
                       QSSGMesh::Mesh::ComponentType componentType);
     void addAttribute(const Attribute &att);
+    void addSubset(quint32 offset, quint32 count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name = {});
 
     void clear();
     void clearAttributes();

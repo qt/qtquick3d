@@ -83,7 +83,8 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
 
 void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                                           char *ubufData,
-                                                          const QSSGRenderModel *model)
+                                                          const QSSGRenderModel *model,
+                                                          quint32 offset)
 {
     auto &particleBuffer = *model->particleBuffer;
     const quint32 particlesPerSlice = particleBuffer.particlesPerSlice();
@@ -92,6 +93,7 @@ void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderP
     shaderPipeline->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, sizeof(quint32));
     const QMatrix4x4 &particleMatrix = model->particleMatrix;
     shaderPipeline->setUniform(ubufData, "qt_particleMatrix", &particleMatrix, 16 * sizeof(float));
+    shaderPipeline->setUniform(ubufData, "qt_particleIndexOffset", &offset, sizeof(quint32));
 }
 
 static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend &targetBlend, QSSGRenderParticles::BlendMode mode)
