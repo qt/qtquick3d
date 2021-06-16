@@ -89,7 +89,7 @@ mat3 qt_fromEulerRotation(in vec3 rotation)
 
 vec3 qt_applyParticle(in vec3 position, in vec3 normal, in vec4 color, out vec3 outNormal, out vec4 outColor, in mat4 particleMatrix)
 {
-    uint index = gl_VertexIndex / 3;
+    uint index = (gl_VertexIndex + qt_particleIndexOffset) / 3;
     Particle p = qt_loadParticle(index);
     mat3 rotMat = qt_fromEulerRotation(p.rotation);
     vec3 particlePos = p.size * rotMat * (position - p.center);

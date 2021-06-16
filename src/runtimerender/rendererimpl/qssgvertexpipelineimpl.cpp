@@ -172,6 +172,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_countPerSlice", "uint");
         vertexShader.addUniform("qt_oneOverParticleImageSize", "vec2");
         vertexShader.addUniform("qt_particleMatrix", "mat4");
+        vertexShader.addUniform("qt_particleIndexOffset", "uint");
     }
 
     if (m_hasSkinning && meshHasJointsAndWeights) {

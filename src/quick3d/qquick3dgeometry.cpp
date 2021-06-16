@@ -680,10 +680,28 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
         geometry->setVertexData(d->m_vertexBuffer);
         geometry->setPrimitiveType(mapPrimitiveType(d->m_primitiveType));
         geometry->clearAttributes();
+        quint32 indexBufferComponentSize = 0;
         for (int i = 0; i < d->m_attributeCount; ++i) {
+            const auto componentType = mapComponentType(d->m_attributes[i].componentType);
             geometry->addAttribute(mapSemantic(d->m_attributes[i].semantic),
                                    d->m_attributes[i].offset,
-                                   mapComponentType(d->m_attributes[i].componentType));
+                                   componentType);
+            if (d->m_attributes[i].semantic == Attribute::IndexSemantic)
+                indexBufferComponentSize = QSSGMesh::MeshInternal::byteSizeForComponentType(componentType);
+        }
+        // Implicitely add subset if none set for backwards compatibility
+        if (d->m_subsets.isEmpty()) {
+            quint32 offset = 0;
+            quint32 count = 0;
+            if (!d->m_indexBuffer.isEmpty()) {
+                count = d->m_indexBuffer.size() / indexBufferComponentSize;
+            } else {
+                count = d->m_vertexBuffer.size() / d->m_stride;
+            }
+            geometry->addSubset(offset, count, d->m_min, d->m_max);
+        } else {
+            for (auto &s : d->m_subsets)
+                geometry->addSubset(s.offset, s.count, s.boundsMin, s.boundsMax, s.name);
         }
         d->m_geometryChanged = false;
     }

@@ -547,7 +547,7 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
     return mesh;
 }
 
-Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, const QSSGBounds3 &bounds, QString *error)
+Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
 {
     if (data.m_vertexBuffer.size() == 0) {
         *error = QObject::tr("Vertex buffer empty");
@@ -632,21 +632,7 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, const QSSGBounds3 &bound
     // Only interleaved vertex attribute packing is supported, both internally
     // and in the QQuick3DGeometry API, hence the per-vertex buffer stride.
     mesh.m_vertexBuffer.stride = data.m_stride;
-
-    Subset subset;
-    subset.bounds.min = bounds.minimum;
-    subset.bounds.max = bounds.maximum;
-    subset.offset = 0;
-
-    if (hasIndexBuffer) {
-        mesh.m_indexBuffer.data = data.m_indexBuffer;
-        mesh.m_indexBuffer.componentType = indexBufferComponentType;
-        subset.count = mesh.m_indexBuffer.data.size() / indexBufferComponentByteSize;
-    } else {
-        subset.count = mesh.m_vertexBuffer.data.size() / mesh.m_vertexBuffer.stride;
-    }
-
-    mesh.m_subsets.append(subset);
+    mesh.m_subsets = data.m_subsets;
 
     return mesh;
 }

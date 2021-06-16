@@ -122,6 +122,11 @@ void QSSGRenderGeometry::addAttribute(const Attribute &att)
     m_dirty = true;
 }
 
+void QSSGRenderGeometry::addSubset(quint32 offset, quint32 count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name)
+{
+    m_meshData.m_subsets.append({name, {boundsMin, boundsMax}, count, offset, {}});
+}
+
 void QSSGRenderGeometry::setStride(int stride)
 {
     m_meshData.m_stride = stride;
@@ -169,7 +174,7 @@ QSSGRenderMesh *QSSGRenderGeometry::createOrUpdate(const QSSGRef<QSSGBufferManag
     if (m_dirty) {
         QSSGRenderMesh *renderMesh = nullptr;
         QString error;
-        QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(m_meshData, m_bounds, &error);
+        QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(m_meshData, &error);
         if (mesh.isValid())
             renderMesh = bufferManager->loadCustomMesh(this, mesh, true);
         else
