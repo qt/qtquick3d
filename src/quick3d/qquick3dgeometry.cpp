@@ -577,10 +577,100 @@ void QQuick3DGeometry::clear()
     d->m_vertexBuffer.clear();
     d->m_indexBuffer.clear();
     d->m_attributeCount = 0;
+    d->m_subsets.clear();
     d->m_primitiveType = PrimitiveType::Triangles;
     d->m_geometryChanged = true;
     d->m_min = {};
     d->m_max = {};
+}
+
+/*!
+    Returns the number of subsets.
+*/
+int QQuick3DGeometry::subsetCount() const
+{
+    Q_D(const QQuick3DGeometry);
+    return d->m_subsets.size();
+}
+
+/*!
+    Returns the number of minimum bounds of a subset.
+
+    \sa subsetBoundsMax
+*/
+QVector3D QQuick3DGeometry::subsetBoundsMin(int subset) const
+{
+    Q_D(const QQuick3DGeometry);
+    if (subset >= 0 && subset < d->m_subsets.size())
+        return d->m_subsets[subset].boundsMin;
+    return {};
+}
+
+/*!
+    Returns the number of maximum bounds of a subset.
+
+    \sa subsetBoundsMin
+*/
+QVector3D QQuick3DGeometry::subsetBoundsMax(int subset) const
+{
+    Q_D(const QQuick3DGeometry);
+    if (subset >= 0 && subset < d->m_subsets.size())
+        return d->m_subsets[subset].boundsMax;
+    return {};
+}
+
+/*!
+    Returns the subset offset to the vertex or index buffer.
+
+    \sa subsetCount
+*/
+int QQuick3DGeometry::subsetOffset(int subset) const
+{
+    Q_D(const QQuick3DGeometry);
+    if (subset >= 0 && subset < d->m_subsets.size())
+        return d->m_subsets[subset].offset;
+    return 0;
+}
+
+/*!
+    Returns the subset primitive count.
+
+    \sa subsetOffset
+*/
+int QQuick3DGeometry::subsetCount(int subset) const
+{
+    Q_D(const QQuick3DGeometry);
+    if (subset >= 0 && subset < d->m_subsets.size())
+        return d->m_subsets[subset].count;
+    return 0;
+}
+
+/*!
+    Returns the subset name.
+*/
+QString QQuick3DGeometry::subsetName(int subset) const
+{
+    Q_D(const QQuick3DGeometry);
+    if (subset >= 0 && subset < d->m_subsets.size())
+        return d->m_subsets[subset].name;
+    return {};
+}
+
+/*!
+    Adds new subset to the geometry. Subsets allow rendering parts of the geometry with different
+    materials. The materials are specified in the \l {Model::materials}{model}.
+
+    If the geometry has index buffer, then the offset and count are the primitive offset and
+    count of indices in the subset. If the geometry has only vertex buffer,
+    the offset is the vertex offset and count is the number of vertices in the subset.
+
+    The bounds should enclose the subset just like geometry bounds. Also the subset can have a name.
+*/
+void QQuick3DGeometry::addSubset(int offset, int count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name)
+{
+    Q_D(QQuick3DGeometry);
+    d->m_subsets.append({name, boundsMin, boundsMax, quint32(offset), quint32(count)});
+    d->m_geometryChanged = true;
 }
 
 static inline QSSGMesh::Mesh::DrawMode mapPrimitiveType(QQuick3DGeometry::PrimitiveType t)

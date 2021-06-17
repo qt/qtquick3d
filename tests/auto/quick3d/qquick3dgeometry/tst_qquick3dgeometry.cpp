@@ -50,6 +50,7 @@ private slots:
     void testGeometry();
     void testGeometry2();
     void testPartialUpdate();
+    void testGeometrySubset();
 };
 
 void tst_QQuick3DGeometry::testGeometry()
@@ -277,6 +278,29 @@ void tst_QQuick3DGeometry::testPartialUpdate()
     QCOMPARE(geom.indexData().mid(95), smallData.left(5));
 }
 
+void tst_QQuick3DGeometry::testGeometrySubset()
+{
+    Geometry geom;
+    QCOMPARE(geom.subsetCount(), 0);
+
+    geom.addSubset(0, 50, QVector3D(-10, -10, -10), QVector3D(0, 0, 0), "subset1");
+    QCOMPARE(geom.subsetCount(), 1);
+
+    geom.addSubset(50, 50, QVector3D(0, 0, 0), QVector3D(10, 10, 10), "subset2");
+    QCOMPARE(geom.subsetCount(), 2);
+
+    QCOMPARE(geom.subsetOffset(0), 0);
+    QCOMPARE(geom.subsetCount(0), 50);
+    QVERIFY(qFuzzyCompare(geom.subsetBoundsMin(0), QVector3D(-10, -10, -10)));
+    QVERIFY(qFuzzyCompare(geom.subsetBoundsMax(0), QVector3D(0, 0, 0)));
+    QCOMPARE(geom.subsetName(0), "subset1");
+
+    QCOMPARE(geom.subsetOffset(1), 50);
+    QCOMPARE(geom.subsetCount(1), 50);
+    QVERIFY(qFuzzyCompare(geom.subsetBoundsMin(1), QVector3D(0, 0, 0)));
+    QVERIFY(qFuzzyCompare(geom.subsetBoundsMax(1), QVector3D(10, 10, 10)));
+    QCOMPARE(geom.subsetName(1), "subset2");
+}
 
 QTEST_APPLESS_MAIN(tst_QQuick3DGeometry)
 #include "tst_qquick3dgeometry.moc"

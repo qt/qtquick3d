@@ -106,6 +106,14 @@ public:
                       Attribute::ComponentType componentType);
     void addAttribute(const Attribute &att);
 
+    Q_REVISION(6, 3) int subsetCount() const;
+    Q_REVISION(6, 3) QVector3D subsetBoundsMin(int subset) const;
+    Q_REVISION(6, 3) QVector3D subsetBoundsMax(int subset) const;
+    Q_REVISION(6, 3) int subsetOffset(int subset) const;
+    Q_REVISION(6, 3) int subsetCount(int subset) const;
+    Q_REVISION(6, 3) QString subsetName(int subset) const;
+    Q_REVISION(6, 3) void addSubset(int offset, int count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name = {});
+
     void clear();
 
 Q_SIGNALS:
