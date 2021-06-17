@@ -219,6 +219,8 @@ public:
     //void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
+    void removeLastFrameLayer(QSSGLayerRenderPreparationData *layerData);
+
     static QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                                         const QSSGRef<QSSGShaderCache> &shaderCache,
                                                                         const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,

@@ -172,6 +172,11 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
     m_materialClearDirty.insert(material);
 }
 
+void QSSGRenderer::removeLastFrameLayer(QSSGLayerRenderPreparationData *layerData)
+{
+    m_lastFrameLayers.removeAll(layerData);
+}
+
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 

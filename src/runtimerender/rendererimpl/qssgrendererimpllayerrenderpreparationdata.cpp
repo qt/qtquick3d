@@ -156,6 +156,9 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
 QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData()
 {
     delete shadowMapManager;
+
+    if (renderer)
+        renderer->removeLastFrameLayer(this);
 }
 
 void QSSGLayerRenderPreparationData::setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue)
