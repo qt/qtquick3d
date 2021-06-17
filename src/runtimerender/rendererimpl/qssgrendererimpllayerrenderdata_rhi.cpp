@@ -1764,46 +1764,49 @@ void QSSGLayerRenderData::rhiPrepare()
 
             const QSSGRenderImageTexture lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe,
                                                                                                                             QSSGBufferManager::MipModeBsdf);
-            layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
+            const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
+            if (hasValidTexture) {
+                layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
 
-            QSSGRhiShaderResourceBindingList bindings;
+                QSSGRhiShaderResourceBindingList bindings;
 
-            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
-                                                     QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
-            int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-            const int ubufSize = 3 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 3x mat4 + 2 floats
-            bindings.addTexture(samplerBinding,
-                                QRhiShaderResourceBinding::FragmentStage,
-                                lightProbeTexture.m_texture, sampler);
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
+                                                         QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
+                int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
+                const int ubufSize = 3 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 3x mat4 + 2 floats
+                bindings.addTexture(samplerBinding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    lightProbeTexture.m_texture, sampler);
 
-            QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
+                QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
 
-            QRhi *rhi = rhiCtx->rhi();
-            if (!dcd.ubuf) {
-                dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                dcd.ubuf->create();
+                QRhi *rhi = rhiCtx->rhi();
+                if (!dcd.ubuf) {
+                    dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+                    dcd.ubuf->create();
+                }
+
+                const QMatrix4x4 &inverseProjection = camera->projection.inverted();
+                const QMatrix4x4 &viewMatrix = camera->globalTransform;
+                float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
+                const float exposure = layer.probeExposure;
+                // orientation
+                const QMatrix4x4 &rotationMatrix(layer.probeOrientation);
+
+                char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+                memcpy(ubufData, viewMatrix.constData(), 64);
+                memcpy(ubufData + 64, inverseProjection.constData(), 64);
+                memcpy(ubufData + 128, rotationMatrix.constData(), 64);
+                memcpy(ubufData + 192, &adjustY, 4);
+                memcpy(ubufData + 196, &exposure, 4);
+                dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+                bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+
+                layer.skyBoxSrb = rhiCtx->srb(bindings);
+
+                renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
             }
-
-            const QMatrix4x4 &inverseProjection = camera->projection.inverted();
-            const QMatrix4x4 &viewMatrix = camera->globalTransform;
-            float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
-            const float exposure = layer.probeExposure;
-            // orientation
-            const QMatrix4x4 &rotationMatrix(layer.probeOrientation);
-
-            char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            memcpy(ubufData, viewMatrix.constData(), 64);
-            memcpy(ubufData + 64, inverseProjection.constData(), 64);
-            memcpy(ubufData + 128, rotationMatrix.constData(), 64);
-            memcpy(ubufData + 192, &adjustY, 4);
-            memcpy(ubufData + 196, &exposure, 4);
-            dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-
-            bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
-
-            layer.skyBoxSrb = rhiCtx->srb(bindings);
-
-            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 
             cb->debugMarkEnd();
         }
