@@ -88,6 +88,7 @@ QQuick3DParticleModelBlendParticle::QQuick3DParticleModelBlendParticle(QQuick3DN
 {
     setFadeInEffect(QQuick3DParticle::FadeNone);
     setFadeOutEffect(QQuick3DParticle::FadeNone);
+    QQuick3DParticle::doSetMaxAmount(0);
 }
 
 QQuick3DParticleModelBlendParticle::~QQuick3DParticleModelBlendParticle()
@@ -535,6 +536,8 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
 
 QSSGRenderGraphObject *QQuick3DParticleModelBlendParticle::updateSpatialNode(QSSGRenderGraphObject *node)
 {
+    if (!m_model)
+        return node;
     auto *spatialNode = QQuick3DObjectPrivate::get(m_model)->spatialNode;
     if (spatialNode) {
         QSSGRenderModel *model = static_cast<QSSGRenderModel *>(spatialNode);
