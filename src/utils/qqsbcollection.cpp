@@ -93,7 +93,7 @@ void QQsbCollection::unmap()
             }
             QDataStream ds(&device);
             const auto start = device.pos();
-            ds << entries << start << decltype(Version::One)(Version::One) << MagicaDS;
+            ds << entries << start << decltype(version)(Version::One) << MagicaDS;
         } else {
             if (devOwner == DeviceOwner::Self)
                 file.remove();
