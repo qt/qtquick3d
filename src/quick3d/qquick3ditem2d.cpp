@@ -135,8 +135,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     QQuick3DNode::updateSpatialNode(node);
 
     auto itemNode = static_cast<QSSGRenderItem2D *>(node);
-    QSGRenderContext *rc = sourceItemPrivate->sceneGraphRenderContext();
-
+    QSGRenderContext *rc = static_cast<QQuickWindowPrivate *>(QObjectPrivate::get(window))->context;
 
     m_rootNode = sourceItemPrivate->rootNode();
     if (!m_rootNode) {
