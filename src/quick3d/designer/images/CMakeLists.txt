@@ -24,9 +24,15 @@ qt_copy_or_install(
         group.png
         group16.png
         group@2x.png
-        light.png
-        light16.png
-        light@2x.png
+        lightdirectional.png
+        lightdirectional16.png
+        lightdirectional@2x.png
+        lightpoint.png
+        lightpoint16.png
+        lightpoint@2x.png
+        lightspot.png
+        lightspot16.png
+        lightspot@2x.png
         material.png
         material16.png
         material@2x.png
