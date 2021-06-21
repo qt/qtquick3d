@@ -135,7 +135,8 @@ QT_BEGIN_NAMESPACE
     \fn QByteArray QQuick3DInstancing::getInstanceBuffer(int *instanceCount)
 
     Implement this function to return the contents of the instance table. The number of instances should be
-    returned in \a instanceCount. The subclass is responsible for caching the result if necessary.
+    returned in \a instanceCount. The subclass is responsible for caching the result if necessary. If the
+    instance table changes, the subclass should call markDirty().
  */
 
 QQuick3DInstancingPrivate::QQuick3DInstancingPrivate()
@@ -216,6 +217,12 @@ void QQuick3DInstancing::setDepthSorting(bool sorting)
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
     emit depthSortingChanged();
 }
+
+/*!
+  Mark that the instance data has changed and must be uploaded again.
+
+  \sa getInstanceBuffer, instanceCountOverride
+  */
 
 void QQuick3DInstancing::markDirty()
 {
