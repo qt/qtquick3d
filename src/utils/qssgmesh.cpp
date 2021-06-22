@@ -564,7 +564,9 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
 
     for (int i = 0; i < data.m_attributeCount; ++i) {
         const RuntimeMeshData::Attribute &att = data.m_attributes[i];
-        if (att.semantic != RuntimeMeshData::Attribute::IndexSemantic) {
+        if (att.semantic == RuntimeMeshData::Attribute::IndexSemantic) {
+            mesh.m_indexBuffer.componentType = att.componentType;
+        } else {
             const char *name = nullptr;
             switch (att.semantic) {
             case RuntimeMeshData::Attribute::PositionSemantic:
@@ -626,6 +628,7 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
     // and in the QQuick3DGeometry API, hence the per-vertex buffer stride.
     mesh.m_vertexBuffer.stride = data.m_stride;
     mesh.m_subsets = data.m_subsets;
+    mesh.m_indexBuffer.data = data.m_indexBuffer;
 
     return mesh;
 }
