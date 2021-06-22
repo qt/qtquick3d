@@ -689,15 +689,18 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
             if (d->m_attributes[i].semantic == Attribute::IndexSemantic)
                 indexBufferComponentSize = QSSGMesh::MeshInternal::byteSizeForComponentType(componentType);
         }
+        if (!d->m_indexBuffer.isEmpty() && !indexBufferComponentSize) {
+            qWarning("IndexData has been set, but no index attribute found.");
+            geometry->setIndexData({});
+        }
         // Implicitely add subset if none set for backwards compatibility
         if (d->m_subsets.isEmpty()) {
             quint32 offset = 0;
             quint32 count = 0;
-            if (!d->m_indexBuffer.isEmpty()) {
+            if (!d->m_indexBuffer.isEmpty() && indexBufferComponentSize)
                 count = d->m_indexBuffer.size() / indexBufferComponentSize;
-            } else {
+            else
                 count = d->m_vertexBuffer.size() / d->m_stride;
-            }
             geometry->addSubset(offset, count, d->m_min, d->m_max);
         } else {
             for (auto &s : d->m_subsets)
