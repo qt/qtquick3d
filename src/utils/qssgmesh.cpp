@@ -562,16 +562,9 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
     mesh.m_drawMode = data.m_primitiveType;
     mesh.m_winding = Winding::CounterClockwise;
 
-    bool hasIndexBuffer = false;
-    ComponentType indexBufferComponentType = ComponentType::UnsignedInt16;
-    int indexBufferComponentByteSize = 2;
     for (int i = 0; i < data.m_attributeCount; ++i) {
         const RuntimeMeshData::Attribute &att = data.m_attributes[i];
-        if (att.semantic == RuntimeMeshData::Attribute::IndexSemantic) {
-            hasIndexBuffer = true;
-            indexBufferComponentType = att.componentType;
-            indexBufferComponentByteSize = MeshInternal::byteSizeForComponentType(att.componentType);
-        } else {
+        if (att.semantic != RuntimeMeshData::Attribute::IndexSemantic) {
             const char *name = nullptr;
             switch (att.semantic) {
             case RuntimeMeshData::Attribute::PositionSemantic:
