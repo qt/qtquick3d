@@ -1073,6 +1073,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     if (gltfVersion == SceneInfo::GltfVersion::Unknown)
         return QLatin1String("Unknown format version!");
 
+    // For simplicity, and convenience, we'll just use the file path as the id.
+    // DO NOT USE it for anything else, once the scene is created there's no
+    // real connection to the source asset file.
+    targetScene.id = sourceFile.canonicalFilePath();
+
     // Assuming consistent type usage
     using It = decltype(sourceScene->mNumMeshes);
 

@@ -65,6 +65,7 @@ void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &no
 
 void QSSGSceneDesc::Scene::reset()
 {
+    id.clear();
     nodeId = 0;
     root = nullptr;
     resources.clear();

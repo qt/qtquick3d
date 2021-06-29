@@ -44,14 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static QUrl createAndRegisterMesh(const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode)
-{
-    const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
-    const auto &meshData = scene.meshStorage.at(meshNode.idx);
-    QSSGBufferManager::registerMeshData(QSSGRenderPath(meshSourceName), meshData);
-    return meshSourceName;
-}
-
 static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
 {
     using namespace QSSGSceneDesc;
@@ -70,7 +62,7 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
             // as a source property in the intermediate scene we therefore need to convert it to
             // be a usable source url now.
             if (const auto meshNode = reinterpret_cast<const Mesh *>(v.value.dptr)) {
-                const auto url = createAndRegisterMesh(*node.scene, *meshNode);
+                const auto url = QUrl(QSSGBufferManager::runtimeMeshSourceName(node.scene->id, meshNode->idx));
                 v.call->set(obj, &url);
             }
         } else if (v.value.mt == QMetaType::fromType<BufferView>()) {
@@ -249,6 +241,8 @@ QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGScen
 {
     Q_ASSERT(scene.root);
     Q_ASSERT(QQuick3DObjectPrivate::get(&parent)->sceneManager);
+
+    QSSGBufferManager::registerMeshData(scene.id, scene.meshStorage);
 
     auto root = scene.root;
     for (const auto &resource : scene.resources)
