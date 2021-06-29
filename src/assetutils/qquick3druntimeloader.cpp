@@ -33,6 +33,7 @@
 #include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 #include <QtQuick3DAssetUtils/private/qssgrtutilities_p.h>
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
 /*!
     \qmltype RuntimeLoader
@@ -166,6 +167,7 @@ void QQuick3DRuntimeLoader::loadSource()
 {
     delete m_root;
     m_root.clear();
+    QSSGBufferManager::unregisterMeshData(m_assetId);
 
     m_status = Status::Empty;
     m_errorString = QStringLiteral("No file selected");
@@ -209,6 +211,7 @@ void QQuick3DRuntimeLoader::loadSource()
     // when a new scene is loaded.
     m_root = new QQuick3DNode(this);
     m_imported = QSSGRuntimeUtils::createScene(*m_root, scene);
+    m_assetId = scene.id;
     m_boundsDirty = true;
     m_instancingChanged = m_instancing != nullptr;
     updateModels();

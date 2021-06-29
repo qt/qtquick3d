@@ -154,7 +154,9 @@ public:
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();
     void commitBufferResourceUpdates();
 
-    static bool registerMeshData(const QSSGRenderPath &renderPath, const QSSGMesh::Mesh &meshData);
+    static void registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData);
+    static void unregisterMeshData(const QString &assetId);
+    static QString runtimeMeshSourceName(const QString &assetId, qsizetype meshId);
     static QString primitivePath(const QString &primitive);
 
 private:

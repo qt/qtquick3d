@@ -96,6 +96,7 @@ struct Scene
 
     // Root node, usually an empty 'transform' node.
     Node *root = nullptr;
+    QString id; // Don't make any assumption about the content of this id...
     ResourceNodes resources;
     Allocator allocator;
     MeshStorage meshStorage;

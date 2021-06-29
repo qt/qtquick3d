@@ -51,14 +51,35 @@
 
 QT_BEGIN_NAMESPACE
 
-struct ImportedMesh
+struct MeshStorageRef
 {
-    QSSGRenderPath path;
-    QSSGMesh::Mesh mesh;
+    QVector<QSSGMesh::Mesh> meshes;
+    qsizetype ref = 0;
 };
+using AssetMeshMap = QHash<QString, MeshStorageRef>;
 
-using ImportedMeshes = QList<ImportedMesh>;
-Q_GLOBAL_STATIC(ImportedMeshes, g_importedMeshes)
+Q_GLOBAL_STATIC(AssetMeshMap, g_assetMeshMap)
+
+// Returns !idx@asset_id
+QString QSSGBufferManager::runtimeMeshSourceName(const QString &assetId, qsizetype meshId)
+{
+    return QString::fromLatin1("!%1@%2").arg(QByteArray::number(meshId), assetId);
+}
+
+using MeshIdxNamePair = QPair<qsizetype, QString>;
+static MeshIdxNamePair splitRuntimeMeshPath(const QSSGRenderPath &rpath)
+{
+    const auto &path = rpath.path();
+    Q_ASSERT(path.startsWith(u'!'));
+    const auto strings = path.mid(1).split(u'@');
+    const bool hasData = (strings.size() == 2) && !strings[0].isEmpty() && !strings[1].isEmpty();
+    qsizetype idx = -1;
+    bool ok = false;
+    if (hasData)
+        idx = strings.at(0).toLongLong(&ok);
+
+    return (ok) ? qMakePair(idx, strings.at(1)) : qMakePair(qsizetype(-1), QString());
+}
 
 namespace {
 struct PrimitiveEntry
@@ -1249,14 +1270,20 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
     }
 }
 
-bool QSSGBufferManager::registerMeshData(const QSSGRenderPath &renderPath, const QSSGMesh::Mesh &meshData)
+void QSSGBufferManager::registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData)
 {
-    if (!meshData.isValid())
-        return false;
+    auto it = g_assetMeshMap->find(assetId);
+    if (it != g_assetMeshMap->end())
+        ++it->ref;
+    else
+        g_assetMeshMap->insert(assetId, { meshData, 1 });
+}
 
-    g_importedMeshes->push_back({renderPath, meshData});
-
-    return true;
+void QSSGBufferManager::unregisterMeshData(const QString &assetId)
+{
+    auto it = g_assetMeshMap->find(assetId);
+    if (it != g_assetMeshMap->end() && (--it->ref == 0))
+        g_assetMeshMap->erase(AssetMeshMap::const_iterator(it));
 }
 
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
@@ -1366,14 +1393,19 @@ QSSGMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath)
     if (inMeshPath.path().startsWith(QChar::fromLatin1('#')))
         result = loadPrimitive(inMeshPath.path());
 
-    // check if this is an imported mesh
-    if (!result.isValid()) {
-        const auto importItr = std::find_if(g_importedMeshes->constBegin(),
-                                            g_importedMeshes->constEnd(),
-                                            [inMeshPath](const auto &mesh) { return mesh.path == inMeshPath; });
-
-        if (importItr != g_importedMeshes->constEnd())
-            result = importItr->mesh;
+    // check if this is an imported mesh. Expected path format: !name@path_to_asset
+    if (!result.isValid() && inMeshPath.path().startsWith(u'!')) {
+        const auto &[idx, assetId] = splitRuntimeMeshPath(inMeshPath);
+        if (idx >= 0) {
+            const auto ait = g_assetMeshMap->constFind(assetId);
+            if (ait != g_assetMeshMap->constEnd()) {
+                const auto &meshes = ait->meshes;
+                if (idx < meshes.size())
+                    result = ait->meshes.at(idx);
+            }
+        } else {
+            qWarning("Unexpected mesh path!");
+        }
     }
 
     // Attempt a load from the filesystem otherwise.

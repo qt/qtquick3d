@@ -82,6 +82,7 @@ private:
 
     QPointer<QQuick3DNode> m_root;
     QPointer<QQuick3DNode> m_imported;
+    QString m_assetId; // Used to release runtime assets in the buffer manager.
     QUrl m_source;
     Status m_status = Status::Empty;
     QString m_errorString;
