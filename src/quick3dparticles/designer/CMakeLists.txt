@@ -1,0 +1,43 @@
+qt_copy_or_install(
+    FILES
+        Particle3DSection.qml
+        Particle3DSpecifics.qml
+        Affector3DSection.qml
+        Affector3DSpecifics.qml
+        Attractor3DSection.qml
+        Attractor3DSpecifics.qml
+        EmitBurst3DSection.qml
+        EmitBurst3DSpecifics.qml
+        ParticleEmitter3DSection.qml
+        ParticleEmitter3DSpecifics.qml
+        Gravity3DSection.qml
+        Gravity3DSpecifics.qml
+        ModelBlendParticle3DSection.qml
+        ModelBlendParticle3DSpecifics.qml
+        ModelParticle3DSection.qml
+        ModelParticle3DSpecifics.qml
+        ParticleModelShape3DSection.qml
+        ParticleModelShape3DSpecifics.qml
+        PointRotator3DSection.qml
+        PointRotator3DSpecifics.qml
+        ParticleShape3DSection.qml
+        ParticleShape3DSpecifics.qml
+        SpriteParticle3DSection.qml
+        SpriteParticle3DSpecifics.qml
+        SpriteSequence3DSection.qml
+        SpriteSequence3DSpecifics.qml
+        ParticleSystem3DSection.qml
+        ParticleSystem3DSpecifics.qml
+        TargetDirection3DSection.qml
+        TargetDirection3DSpecifics.qml
+        TrailEmitter3DSection.qml
+        TrailEmitter3DSpecifics.qml
+        VectorDirection3DSection.qml
+        VectorDirection3DSpecifics.qml
+        Wander3DSection.qml
+        Wander3DSpecifics.qml
+        particles3d.metainfo
+    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/Particles3D/designer"
+)
+
+add_subdirectory(images)
