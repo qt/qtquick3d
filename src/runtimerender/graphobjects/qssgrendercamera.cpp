@@ -175,13 +175,6 @@ void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) cons
     outMatrix = projection * globalTransform.inverted();
 }
 
-QSSGCuboidRect QSSGRenderCamera::getCameraBounds(const QRectF &inViewport) const
-{
-    Q_UNUSED(inViewport);
-    QSSGCuboidRect normalizedCuboid(-1, 1, 1, -1);
-    return normalizedCuboid;
-}
-
 QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,
                                               const QRectF &inViewport) const
 {
