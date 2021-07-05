@@ -57,25 +57,6 @@ struct QSSGCameraGlobalCalculationResult
     bool m_computeFrustumSucceeded /* = true */;
 };
 
-struct QSSGCuboidRect
-{
-    float left;
-    float top;
-    float right;
-    float bottom;
-    constexpr QSSGCuboidRect(float l = 0.0f, float t = 0.0f, float r = 0.0f, float b = 0.0f)
-        : left(l), top(t), right(r), bottom(b)
-    {
-    }
-    void translate(QVector2D inTranslation)
-    {
-        left += inTranslation.x();
-        right += inTranslation.x();
-        top += inTranslation.y();
-        bottom += inTranslation.y();
-    }
-};
-
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
 {
     // Setting these variables should set dirty on the camera.
@@ -125,17 +106,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     bool computeCustomFrustum(const QRectF &inViewport);
 
     void calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const;
-
-    // If this is an orthographic camera, the cuboid properties are the distance from the center
-    // point
-    // to the left, top, right, and bottom edges of the view frustum in world units.
-    // If this is a perspective camera, the cuboid properties are the FOV angles
-    // (left,top,right,bottom)
-    // of the view frustum.
-
-    // Return a normalized rect that describes the area the camera is rendering to.
-    // This takes into account the various camera properties (scale mode, scale anchor).
-    QSSGCuboidRect getCameraBounds(const QRectF &inViewport) const;
 
     // Unproject a point (x,y) in viewport relative coordinates meaning
     // left, bottom is 0,0 and values are increasing right,up respectively.
