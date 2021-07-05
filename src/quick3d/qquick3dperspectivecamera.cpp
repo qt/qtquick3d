@@ -78,8 +78,15 @@ QT_BEGIN_NAMESPACE
 /*!
     \internal
 */
+QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
+    : QQuick3DCamera(dd, parent)
+{}
+
+/*!
+    \internal
+*/
 QQuick3DPerspectiveCamera::QQuick3DPerspectiveCamera(QQuick3DNode *parent)
-    : QQuick3DCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::PerspectiveCamera)), parent)
+    : QQuick3DPerspectiveCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::PerspectiveCamera)), parent)
 {}
 
 /*!
