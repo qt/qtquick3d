@@ -36,6 +36,8 @@
 
 #include "qquick3dutils_p.h"
 
+#include "qquick3dnode_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -78,7 +80,9 @@ QT_BEGIN_NAMESPACE
 /*!
  * \internal
  */
-QQuick3DFrustumCamera::QQuick3DFrustumCamera() {}
+QQuick3DFrustumCamera::QQuick3DFrustumCamera(QQuick3DNode *parent)
+    : QQuick3DPerspectiveCamera(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::CustomFrustumCamera)), parent)
+{}
 
 /*!
     \qmlproperty real FrustumCamera::top

@@ -57,7 +57,7 @@ class Q_QUICK3D_EXPORT QQuick3DFrustumCamera : public QQuick3DPerspectiveCamera
     QML_NAMED_ELEMENT(FrustumCamera)
 
 public:
-    QQuick3DFrustumCamera();
+    explicit QQuick3DFrustumCamera(QQuick3DNode *parent = nullptr);
 
     float top() const;
     float bottom() const;

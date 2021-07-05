@@ -83,6 +83,8 @@ Q_SIGNALS:
     void fieldOfViewOrientationChanged();
 
 protected:
+    explicit QQuick3DPerspectiveCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
+
     virtual bool checkSpatialNode(QSSGRenderCamera *camera) override;
 
 private:

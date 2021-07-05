@@ -80,6 +80,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         // Camera nodes
         OrthographicCamera = BaseType::Camera | BaseType::Node,
         PerspectiveCamera,
+        CustomFrustumCamera, // Perspective camera with user specified frustum bounds.
         CustomCamera,
         // Renderable nodes
         Model = BaseType::Renderable | BaseType::Node, // Renderable Node
