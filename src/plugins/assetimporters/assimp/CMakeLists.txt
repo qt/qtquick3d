@@ -20,7 +20,7 @@ qt_internal_add_plugin(AssimpImporterPlugin
         assimputils.cpp assimputils.h
         assimpimporter.cpp assimpimporter_rt.cpp assimpimporter.h
         assimpimporterplugin.cpp assimpimporterplugin.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
