@@ -19,7 +19,7 @@ qt_internal_add_plugin(UipAssetImporterPlugin
         uipparser.cpp uipparser.h
         uippresentation.cpp uippresentation.h
         uniqueidmapper.cpp uniqueidmapper.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
