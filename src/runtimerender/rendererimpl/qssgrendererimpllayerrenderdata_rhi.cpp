@@ -53,7 +53,6 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
     , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
     , m_progressiveAAPassIndex(0)
     , m_temporalAAPassIndex(0)
-    , m_textScale(1.0f)
     , m_globalZPrePassActive(false)
 {
 }

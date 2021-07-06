@@ -82,17 +82,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
     QSSGRhiRenderableTexture m_rhiAoTexture;
     QSSGRhiRenderableTexture m_rhiScreenTexture;
 
-    QSSGRenderCamera m_sceneCamera;
-    QVector2D m_sceneDimensions;
-
     // ProgressiveAA algorithm details.
     quint32 m_progressiveAAPassIndex;
     // Increments every frame regardless to provide appropriate jittering
     quint32 m_temporalAAPassIndex;
-
-    float m_textScale;
-
-    QSSGOption<QVector3D> m_boundingRectColor;
 
     QSize m_previousOutputSize;
 
