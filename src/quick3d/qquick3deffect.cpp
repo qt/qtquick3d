@@ -831,7 +831,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 {
                     const auto &vertex = shaderSource[int(QSSGShaderCache::ShaderType::Vertex)];
                     const auto &fragment = shaderSource[int(QSSGShaderCache::ShaderType::Fragment)];
-                    shaderPathKey.append(':' + QCryptographicHash::hash(vertex + fragment, QCryptographicHash::Algorithm::Sha1).toHex());
+                    const QByteArray key = vertex + fragment;
+                    shaderPathKey.append(':' + QCryptographicHash::hash(key, QCryptographicHash::Algorithm::Sha1).toHex());
                 }
 
                 // Now that the final shaderPathKey is known, store the source and
