@@ -103,7 +103,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
 
     QRectF previousInViewport;
 
-    explicit QSSGRenderCamera(QSSGRenderGraphObject::Type type = Type::CustomCamera);
+    explicit QSSGRenderCamera(QSSGRenderGraphObject::Type type);
 
     QMatrix3x3 getLookAtMatrix(const QVector3D &inUpDir, const QVector3D &inDirection) const;
     // Set our position, rotation member variables based on the lookat target

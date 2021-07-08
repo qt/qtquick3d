@@ -108,8 +108,6 @@ void QQuick3DCustomCamera::setProjection(const QMatrix4x4 &projection)
 
 bool QQuick3DCustomCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
-    camera->flags.setFlag(QSSGRenderNode::Flag::CameraCustomProjection, true);
-
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->projection, m_projection);
     changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());

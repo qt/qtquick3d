@@ -253,7 +253,7 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos,
                                         qreal height)
 {
     if (!m_cameraNode) {
-        m_cameraNode = new QSSGRenderCamera();
+        m_cameraNode = new QSSGRenderCamera(QQuick3DObjectPrivate::get(this)->type);
         // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
         checkSpatialNode(m_cameraNode);
         m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
@@ -270,7 +270,7 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos,
                                           qreal height)
 {
     if (!m_cameraNode) {
-        m_cameraNode = new QSSGRenderCamera();
+        m_cameraNode = new QSSGRenderCamera(QQuick3DObjectPrivate::get(this)->type);
         // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
         checkSpatialNode(m_cameraNode);
         m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
@@ -333,7 +333,7 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
 {
     if (!node) {
         markAllDirty();
-        node = new QSSGRenderCamera();
+        node = new QSSGRenderCamera(QQuick3DObjectPrivate::get(this)->type);
     }
 
     QQuick3DNode::updateSpatialNode(node);

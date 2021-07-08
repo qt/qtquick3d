@@ -191,8 +191,6 @@ void QQuick3DOrthographicCamera::setVerticalMagnification(float verticalMagnific
 
 bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
-    camera->flags.setFlag(QSSGRenderNode::Flag::Orthographic, true);
-
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
     changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
