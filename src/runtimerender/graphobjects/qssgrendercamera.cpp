@@ -78,14 +78,23 @@ bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport)
     previousInViewport = inViewport;
     flags.setFlag(Flag::CameraDirty, false);
 
-    if (flags.testFlag(Flag::CameraCustomProjection))
-        retval = true; // AKA, do nothing
-    else if (flags.testFlag(Flag::CameraFrustumProjection))
-        retval = computeCustomFrustum(inViewport);
-    else if (flags.testFlag(Flag::Orthographic))
+    switch (type) {
+    case QSSGRenderGraphObject::Type::OrthographicCamera:
         retval = computeFrustumOrtho(inViewport);
-    else
+        break;
+    case QSSGRenderGraphObject::Type::PerspectiveCamera:
         retval = computeFrustumPerspective(inViewport);
+        break;
+    case QSSGRenderGraphObject::Type::CustomCamera:
+        retval = true; // Do nothing
+        break;
+    case QSSGRenderGraphObject::Type::CustomFrustumCamera:
+        retval = computeCustomFrustum(inViewport);
+        break;
+    default:
+        Q_UNREACHABLE();
+    }
+
     if (retval) {
         float *writePtr(projection.data());
         frustumScale.setX(writePtr[0]);
@@ -177,7 +186,7 @@ QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoo
     QVector2D inverseFrustumScale(1.0f / frustumScale.x(), 1.0f / frustumScale.y());
     QVector2D scaledCoords(inverseFrustumScale.x() * normalizedCoords.x(), inverseFrustumScale.y() * normalizedCoords.y());
 
-    if (flags.testFlag(Flag::Orthographic)) {
+    if (type == QSSGRenderCamera::Type::OrthographicCamera) {
         outOrigin.setX(scaledCoords.x());
         outOrigin.setY(scaledCoords.y());
         outOrigin.setZ(0.0f);

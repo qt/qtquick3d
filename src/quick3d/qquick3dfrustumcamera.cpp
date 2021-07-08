@@ -166,8 +166,6 @@ void QQuick3DFrustumCamera::setLeft(float left)
 
 bool QQuick3DFrustumCamera::checkSpatialNode(QSSGRenderCamera *camera)
 {
-    camera->flags.setFlag(QSSGRenderNode::Flag::CameraFrustumProjection, true);
-
     bool changed = false;
     changed |= qUpdateIfNeeded(camera->clipNear, clipNear());
     changed |= qUpdateIfNeeded(camera->clipFar, clipFar());

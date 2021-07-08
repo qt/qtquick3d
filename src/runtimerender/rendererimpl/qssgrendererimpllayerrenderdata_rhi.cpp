@@ -879,6 +879,7 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
     theCamera.fov = qDegreesToRadians(90.f);
 
     if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
+        Q_ASSERT(theCamera.type == QSSGRenderCamera::Type::OrthographicCamera);
         QVector3D frustumPoints[8];
         computeFrustumBounds(inCamera, frustumPoints);
         QVector3D forward = inLightDir;
@@ -917,7 +918,6 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
         theCamera.clipFar = dims.z();
     }
 
-    theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->type == QSSGRenderLight::Type::DirectionalLight);
     theCamera.parent = nullptr;
     theCamera.pivot = inLight->pivot;
 
@@ -932,13 +932,13 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
 
 static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inCameras[6])
 {
+    Q_ASSERT(inLight != nullptr);
+    Q_ASSERT(inLight->type != QSSGRenderLight::Type::DirectionalLight);
+
     // setup light matrix
     quint32 mapRes = 1 << inLight->m_shadowMapRes;
     QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
     QQuaternion rotOfs[6];
-
-    Q_ASSERT(inLight != nullptr);
-    Q_ASSERT(inLight->type != QSSGRenderLight::Type::DirectionalLight);
 
     const QVector3D inLightPos = inLight->getGlobalPos();
 
@@ -950,7 +950,6 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     rotOfs[5] = QQuaternion::fromEulerAngles(0.f, 0.f, qRadiansToDegrees(QSSG_PI));
 
     for (int i = 0; i < 6; ++i) {
-        inCameras[i].flags.setFlag(QSSGRenderCamera::Flag::Orthographic, false);
         inCameras[i].parent = nullptr;
         inCameras[i].pivot = inLight->pivot;
         inCameras[i].clipNear = 1.0f;
@@ -1311,8 +1310,10 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             const QSize size = pEntry->m_rhiDepthMap->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-            QSSGRenderCamera theCamera;
-            setupCameraForShadowMap(camera, globalLights[i].light, theCamera, scenePoints);
+            const auto &light = globalLights[i].light;
+            const auto cameraType = (light->type == QSSGRenderLight::Type::DirectionalLight) ? QSSGRenderCamera::Type::OrthographicCamera : QSSGRenderCamera::Type::CustomCamera;
+            QSSGRenderCamera theCamera(cameraType);
+            setupCameraForShadowMap(camera, light, theCamera, scenePoints);
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
@@ -1334,7 +1335,12 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             const QSize size = pEntry->m_rhiDepthCube->pixelSize();
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-            QSSGRenderCamera theCameras[6];
+            QSSGRenderCamera theCameras[6] { QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                             QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                             QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                             QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                             QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                             QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera} };
             setupCubeShadowCameras(globalLights[i].light, theCameras);
             pEntry->m_lightView = QMatrix4x4();
 
