@@ -1600,7 +1600,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 
         customMaterial->m_customShaderPresence = {};
         if (!vertex.isEmpty() || !fragment.isEmpty()) {
-            customMaterial->m_shaderPathKey = shaderPathKey.append(':' + QCryptographicHash::hash(vertex + fragment, QCryptographicHash::Algorithm::Sha1).toHex());
+            customMaterial->m_shaderPathKey = shaderPathKey.append(':' + QCryptographicHash::hash(QByteArray(vertex + fragment), QCryptographicHash::Algorithm::Sha1).toHex());
 
             if (!vertex.isEmpty()) {
                 customMaterial->m_customShaderPresence.setFlag(QSSGRenderCustomMaterial::CustomShaderPresenceFlag::Vertex);
