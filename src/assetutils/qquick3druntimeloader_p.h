@@ -30,6 +30,17 @@
 #ifndef QQUICK3DRUNTIMELOADER_H
 #define QQUICK3DRUNTIMELOADER_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dinstancing_p.h>
 
