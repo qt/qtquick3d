@@ -942,7 +942,9 @@ void QQuick3DNode::markAllDirty()
 
     This property contains the rotation values for the x, y, and z axis.
     These values are stored as a vector3d.  Rotation order is assumed to
-    be XYZ.
+    be ZXY.
+
+    \sa QQuaternion::fromEulerAngles()
 */
 
 QVector3D QQuick3DNode::eulerRotation() const
