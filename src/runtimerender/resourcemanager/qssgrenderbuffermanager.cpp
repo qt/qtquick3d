@@ -63,7 +63,7 @@ Q_GLOBAL_STATIC(AssetMeshMap, g_assetMeshMap)
 // Returns !idx@asset_id
 QString QSSGBufferManager::runtimeMeshSourceName(const QString &assetId, qsizetype meshId)
 {
-    return QString::fromLatin1("!%1@%2").arg(QByteArray::number(meshId), assetId);
+    return QString::fromUtf16(u"!%1@%2").arg(QString::number(meshId), assetId);
 }
 
 using MeshIdxNamePair = QPair<qsizetype, QString>;
