@@ -12,6 +12,29 @@ elseif(NOT TARGET WrapZLIB::WrapZLIB)
 endif()
 # special case end
 
+# Work around command line length issue on Windows QTBUG-95284 when using CMake 3.21
+if(CMAKE_GENERATOR MATCHES "Ninja" AND CMAKE_HOST_WIN32 AND NOT QT_NO_NINJA_FORCE_RESPONSE_FILE)
+    set(CMAKE_NINJA_FORCE_RESPONSE_FILE TRUE)
+
+    # Work around sccache reading the rsp file contents and passing all options directly to the
+    # compiler. This causes the command line length limit to be hit despite usage of a response
+    # file.
+    # Unset the compiler launcher variables, rather than setting the properties directly on the
+    # target because we also need to apply the modification to the resource target and there's
+    # no nice way to retrieve the resource target name.
+    # Match paths ending with sccache and an optional executable suffix.
+    set(sccache_suffix "${CMAKE_EXECUTABLE_SUFFIX}")
+    qt_re_escape(sccache_suffix_escaped "${sccache_suffix}")
+    set(sccache_regex "sccache(${sccache_suffix_escaped})?$")
+
+    if(CMAKE_C_COMPILER_LAUNCHER MATCHES "${sccache_regex}")
+        set(CMAKE_C_COMPILER_LAUNCHER "")
+    endif()
+    if(CMAKE_CXX_COMPILER_LAUNCHER MATCHES "${sccache_regex}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "")
+    endif()
+endif()
+
 qt_internal_add_plugin(AssimpImporterPlugin
     OUTPUT_NAME assimp
     TYPE assetimporters
