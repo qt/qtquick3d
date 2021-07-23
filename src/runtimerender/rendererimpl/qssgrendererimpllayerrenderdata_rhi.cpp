@@ -920,8 +920,11 @@ static void setupCameraForShadowMap(const QRectF &inViewport,
         if (scenePoints) {
             QSSGBounds3 sceneBounds = calculateShadowCameraBoundingBox(scenePoints, forward, up,
                                                                        right);
-            if (sceneBounds.extents().x() * sceneBounds.extents().y() * sceneBounds.extents().z()
-                    < bounds.extents().x() * bounds.extents().y() * bounds.extents().z()) {
+
+            if (sceneBounds.isFinite() // handle empty scene
+                && sceneBounds.extents().x() * sceneBounds.extents().y() * sceneBounds.extents().z()
+                        < bounds.extents().x() * bounds.extents().y() * bounds.extents().z()) {
+                // Scene is smaller than frustum, set bounds to scene
                 bounds = sceneBounds;
                 inLightPos = sceneCtr;
             }
