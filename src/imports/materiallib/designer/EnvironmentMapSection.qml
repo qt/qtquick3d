@@ -30,15 +30,44 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Environment Map")
     width: parent.width
 
-    CustomCameraSection {
-        width: parent.width
-    }
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Enabled")
+            tooltip: qsTr("Specifies if the environment map is enabled.")
+        }
 
-    NodeSection {
-        width: parent.width
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.uEnvironmentMappingEnabled.valueToString
+                backendValue: backendValues.uEnvironmentMappingEnabled
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Texture")
+            tooltip: qsTr("Defines a texture for environment map.")
+        }
+
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Texture"
+                backendValue: backendValues.uEnvironmentTexture_texture
+                defaultItem: qsTr("Default")
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
     }
 }
