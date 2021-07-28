@@ -62,6 +62,8 @@
 
 #include <private/qqmlglobal_p.h>
 
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick3D);
+
 static void initResources()
 {
 #ifdef QT_STATIC
