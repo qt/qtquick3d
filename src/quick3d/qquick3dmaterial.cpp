@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty enumeration Material::depthDrawMode
 
     This property determines if and when depth rendering takes place for this
-    material. The default behavior when \l SceneEnvironment.depthTestEnabled
+    material. The default behavior when \l {SceneEnvironment::depthTestEnabled}
     is set to \c true is that during the main render pass only opaque materials
     will write to the depth buffer. This property makes it possible to change
     this behavior to fine tune the rendering of a material.
@@ -92,7 +92,7 @@ QT_BEGIN_NAMESPACE
     separate depth pass, but only opaque values are written. This mode also
     enables transparent materials to be used in combination with shadows.
 
-    \note If \l SceneEnvironment.depthPrePassEnabled is set to \c true then all
+    \note If \l {SceneEnvironment::depthPrePassEnabled} is set to \c true then all
     depth writes will take place as a result of the depth prepass, but it is
     still necessary to explicitly set \c Material.OpaquePrePassDepthDraw to only
     write the opaque fragments in the depth and shadow passes.

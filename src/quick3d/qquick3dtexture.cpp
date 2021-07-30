@@ -418,7 +418,7 @@ float QQuick3DTexture::positionV() const
     are ignored and are up to the application-provided shader code to
     implement.
 
-    \sa pivotB, rotationUV
+    \sa rotationUV
 */
 float QQuick3DTexture::pivotU() const
 {
