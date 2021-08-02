@@ -176,7 +176,7 @@ void QQuick3DParticleModelParticle::handleSortModeChanged(QQuick3DParticle::Sort
             m_instanceTable->setSorting(true, mode == QQuick3DParticle::SortNewest);
         else
             m_instanceTable->setSorting(false);
-        m_instanceTable->setDepthSorting(mode == QQuick3DParticle::SortDistance);
+        m_instanceTable->setDepthSortingEnabled(mode == QQuick3DParticle::SortDistance);
     }
 }
 
