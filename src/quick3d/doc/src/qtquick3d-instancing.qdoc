@@ -84,7 +84,7 @@ custom materials and an instance table implemented in C++.
 Correct alpha blending requires that semi-transparent objects are rendered back-to-front. For this
 reason, QtQuick3D sorts opaque and semi-transparent objects separately, and renders them in the
 correct order. With instancing, however, the GPU will render the instances in the order specified by
-the instancing table, if \l {Instancing::depthSorting}{depth-sorting} is not turned on.
+the instancing table, if \l {Instancing::depthSortingEnabled}{depth-sorting} is not turned on.
 For performance reasons, QtQuick3D does not sort the table by default as it can take long time with
 large number of instances. This means that if semi-transparent instances overlap with each other,
 or with other semi-transparent objects, the results may look wrong. In general, the error is less

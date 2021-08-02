@@ -49,7 +49,7 @@ class Q_QUICK3D_EXPORT QQuick3DInstancing : public QQuick3DObject
     QML_ADDED_IN_VERSION(6, 2)
     Q_PROPERTY(int instanceCountOverride READ instanceCountOverride WRITE setInstanceCountOverride NOTIFY instanceCountOverrideChanged)
     Q_PROPERTY(bool hasTransparency READ hasTransparency WRITE setHasTransparency NOTIFY hasTransparencyChanged)
-    Q_PROPERTY(bool depthSorting READ depthSorting WRITE setDepthSorting NOTIFY depthSortingChanged)
+    Q_PROPERTY(bool depthSortingEnabled READ depthSortingEnabled WRITE setDepthSortingEnabled NOTIFY depthSortingEnabledChanged)
 
 public:
     struct InstanceTableEntry {
@@ -66,18 +66,18 @@ public:
     QByteArray instanceBuffer(int *instanceCount);
     int instanceCountOverride() const;
     bool hasTransparency() const;
-    bool depthSorting() const;
+    bool depthSortingEnabled() const;
 
 public Q_SLOTS:
     void setInstanceCountOverride(int instanceCountOverride);
     void setHasTransparency(bool hasTransparency);
-    void setDepthSorting(bool sorting);
+    void setDepthSortingEnabled(bool enabled);
 
 Q_SIGNALS:
     void instanceNodeDirty();
     void instanceCountOverrideChanged();
     void hasTransparencyChanged();
-    void depthSortingChanged();
+    void depthSortingEnabledChanged();
 
 protected:
     virtual QByteArray getInstanceBuffer(int *instanceCount) = 0;

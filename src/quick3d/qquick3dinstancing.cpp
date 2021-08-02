@@ -93,7 +93,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool Instancing::depthSorting
+    \qmlproperty bool Instancing::depthSortingEnabled
 
     Holds the depth sorting enabled value for the instance table. When enabled, instances are sorted
     and rendered from the furthest instance from the camera to the nearest i.e. back-to-front.
@@ -106,7 +106,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \property QQuick3DInstancing::depthSorting
+    \property QQuick3DInstancing::depthSortingEnabled
 
     Holds the depth sorting enabled value for the instance table. When enabled, instances are sorted
     and rendered from the furthest instance from the camera to the nearest i.e. back-to-front.
@@ -178,10 +178,10 @@ bool QQuick3DInstancing::hasTransparency() const
     return d->m_hasTransparency;
 }
 
-bool QQuick3DInstancing::depthSorting() const
+bool QQuick3DInstancing::depthSortingEnabled() const
 {
     Q_D(const QQuick3DInstancing);
-    return d->m_depthSorting;
+    return d->m_depthSortingEnabled;
 }
 
 void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
@@ -207,15 +207,15 @@ void QQuick3DInstancing::setHasTransparency(bool hasTransparency)
     emit hasTransparencyChanged();
 }
 
-void QQuick3DInstancing::setDepthSorting(bool sorting)
+void QQuick3DInstancing::setDepthSortingEnabled(bool enabled)
 {
     Q_D(QQuick3DInstancing);
-    if (d->m_depthSorting == sorting)
+    if (d->m_depthSortingEnabled == enabled)
         return;
 
-    d->m_depthSorting = sorting;
+    d->m_depthSortingEnabled = enabled;
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
-    emit depthSortingChanged();
+    emit depthSortingEnabledChanged();
 }
 
 /*!
@@ -256,7 +256,7 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
     }
     d->m_instanceCountOverrideChanged = false;
     instanceTable->setHasTransparency(d->m_hasTransparency);
-    instanceTable->setDepthSorting(d->m_depthSorting);
+    instanceTable->setDepthSorting(d->m_depthSortingEnabled);
     return node;
 }
 

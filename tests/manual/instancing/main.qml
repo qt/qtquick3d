@@ -277,8 +277,8 @@ Window {
         TapHandler {
             acceptedButtons: Qt.RightButton
             onTapped: {
-                customInstancing.depthSorting = !customInstancing.depthSorting
-                console.log("right clicked: switching depth sorting to", customInstancing.depthSorting)
+                customInstancing.depthSortingEnabled = !customInstancing.depthSortingEnabled
+                console.log("right clicked: switching depth sorting to", customInstancing.depthSortingEnabled)
             }
         }
     } // View3D
