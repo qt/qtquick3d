@@ -35,19 +35,15 @@ target_link_libraries(custominstancing PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "cubeMaterial.frag"
-    "cubeMaterial.vert"
-    "main.qml"
-)
-
-qt6_add_resources(custominstancing "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(custominstancing
+    URI InstancingExample
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        cubeMaterial.frag
+        cubeMaterial.vert
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS custominstancing
@@ -55,10 +51,3 @@ install(TARGETS custominstancing
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(custominstancing PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI InstancingExample
-)
-
-qt6_qml_type_registration(custominstancing)

@@ -34,35 +34,22 @@ target_link_libraries(custommaterial PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-    "weirdShape.mesh"
-)
-
-qt6_add_resources(custommaterial "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-set(materials_resource_files
-    "maps/OpenfootageNET_lowerAustria01-1024.hdr"
-    "material_customlights.frag"
-    "material_customspecular.frag"
-    "material_distortion.vert"
-    "material_metallic.frag"
-    "material_simple.frag"
-    "material_transparent.frag"
-    "screen.frag"
-)
-
-qt6_add_resources(custommaterial "materials"
-    PREFIX
-        "/"
-    FILES
-        ${materials_resource_files}
+qt_add_qml_module(custommaterial
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        maps/OpenfootageNET_lowerAustria01-1024.hdr
+        material_customlights.frag
+        material_customspecular.frag
+        material_distortion.vert
+        material_metallic.frag
+        material_simple.frag
+        material_transparent.frag
+        screen.frag
+        weirdShape.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS custommaterial

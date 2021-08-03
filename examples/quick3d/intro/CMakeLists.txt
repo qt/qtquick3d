@@ -34,17 +34,11 @@ target_link_libraries(intro PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-)
-
-qt6_add_resources(intro "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(intro
+    URI Example
+    VERSION 1.0
+    QML_FILES main.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS intro

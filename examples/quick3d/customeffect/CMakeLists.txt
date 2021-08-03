@@ -34,22 +34,18 @@ target_link_libraries(customeffect PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "checkers2.png"
-    "effect.frag"
-    "effect2.frag"
-    "effect2.vert"
-    "main.qml"
-    "qt_logo_rect.png"
-)
-
-qt6_add_resources(customeffect "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(customeffect
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        checkers2.png
+        effect.frag
+        effect2.frag
+        effect2.vert
+        qt_logo_rect.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS customeffect

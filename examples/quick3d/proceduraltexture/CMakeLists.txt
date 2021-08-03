@@ -17,6 +17,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/proceduraltexture")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
+find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
@@ -35,17 +36,11 @@ target_link_libraries(proceduraltexture PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-)
-
-qt6_add_resources(proceduraltexture "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(proceduraltexture
+    URI ProceduralTextureExample
+    VERSION 1.0
+    QML_FILES main.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS proceduraltexture
@@ -53,10 +48,3 @@ install(TARGETS proceduraltexture
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(proceduraltexture PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI ProceduralTextureExample
-)
-
-qt6_qml_type_registration(proceduraltexture)

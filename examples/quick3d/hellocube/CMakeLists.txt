@@ -34,18 +34,12 @@ target_link_libraries(hellocube PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-    "qt_logo.png"
-)
-
-qt6_add_resources(hellocube "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(hellocube
+    URI Example
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES qt_logo.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS hellocube

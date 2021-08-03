@@ -35,17 +35,11 @@ target_link_libraries(custommorphing PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-)
-
-qt6_add_resources(custommorphing "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(custommorphing
+    URI Example
+    VERSION 1.0
+    QML_FILES main.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS custommorphing
@@ -53,10 +47,3 @@ install(TARGETS custommorphing
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(custommorphing PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Example
-)
-
-qt6_qml_type_registration(custommorphing)

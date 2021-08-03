@@ -51,7 +51,7 @@
 import QtQuick
 import QtQuick.Timeline
 import QtQuick3D
-import InstancingExample
+import HelloExample
 
 Window {
     id: window

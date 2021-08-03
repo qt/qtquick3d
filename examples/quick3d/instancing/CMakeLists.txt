@@ -34,21 +34,17 @@ target_link_libraries(instancing PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "Asteroid.qml"
-    "SimpleSpaceship.qml"
-    "main.qml"
-    "meshes/asteroid.mesh"
-    "meshes/ship.mesh"
-)
-
-qt6_add_resources(instancing "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(instancing
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        Asteroid.qml
+        SimpleSpaceship.qml
+        main.qml
+    RESOURCES
+        meshes/asteroid.mesh
+        meshes/ship.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS instancing

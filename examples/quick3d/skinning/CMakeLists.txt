@@ -17,6 +17,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/skinning")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
+find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Quick3D)
 
@@ -35,18 +36,13 @@ target_link_libraries(skinning PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "SimpleSkinning.qml"
-    "main.qml"
-)
-
-qt6_add_resources(skinning "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(skinning
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        main.qml
+        SimpleSkinning.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS skinning
@@ -54,10 +50,3 @@ install(TARGETS skinning
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(skinning PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Example
-)
-
-qt6_qml_type_registration(skinning)

@@ -34,24 +34,20 @@ target_link_libraries(effects PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "CustomEffect.qml"
-    "EffectBox.qml"
-    "EffectColor.qml"
-    "EffectSlider.qml"
-    "SettingsGroup.qml"
-    "cork.jpg"
-    "main.qml"
-    "texture.png"
-)
-
-qt6_add_resources(effects "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(effects
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        CustomEffect.qml
+        EffectBox.qml
+        EffectColor.qml
+        EffectSlider.qml
+        SettingsGroup.qml
+        main.qml
+    RESOURCES
+        cork.jpg
+        texture.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS effects

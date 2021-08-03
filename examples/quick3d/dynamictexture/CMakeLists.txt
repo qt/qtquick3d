@@ -34,38 +34,22 @@ target_link_libraries(dynamictexture PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "CorkBoards.qml"
-    "Doors.qml"
-    "main.qml"
-    "meshes/door1.mesh"
-    "meshes/door2.mesh"
-    "meshes/wall.mesh"
-)
-
-qt6_add_resources(dynamictexture "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-set(qmake_immediate_resource_files
-    "content/Panel.qml"
-    "content/cork.jpg"
-    "content/note-yellow.png"
-    "content/tack.png"
-    "meshes/door1.mesh"
-    "meshes/door2.mesh"
-    "meshes/wall.mesh"
-)
-
-qt6_add_resources(dynamictexture "qmake_immediate"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_immediate_resource_files}
+qt_add_qml_module(dynamictexture
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        CorkBoards.qml
+        Doors.qml
+        main.qml
+        content/Panel.qml
+    RESOURCES
+        meshes/door1.mesh
+        meshes/door2.mesh
+        meshes/wall.mesh
+        content/cork.jpg
+        content/note-yellow.png
+        content/tack.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS dynamictexture

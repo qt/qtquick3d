@@ -34,23 +34,19 @@ target_link_libraries(customshaders PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(resources_resource_files
-    "ExampleMaterial.qml"
-    "MaterialControl.qml"
-    "example.frag"
-    "example.vert"
-    "example_tex.frag"
-    "main.qml"
-    "qt_logo.png"
-)
-
-qt6_add_resources(customshaders "resources"
-    PREFIX
-        "/"
-    FILES
-        ${resources_resource_files}
+qt_add_qml_module(customshaders
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        main.qml
+        ExampleMaterial.qml
+        MaterialControl.qml
+    RESOURCES
+        example.frag
+        example.vert
+        example_tex.frag
+        qt_logo.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS customshaders
