@@ -43,18 +43,12 @@ if(TARGET Qt::Widgets)
     )
 endif()
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-    "maps/OpenfootageNET_lowerAustria01-1024.hdr"
-)
-
-qt6_add_resources(runtimeloader "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(runtimeloader
+    URI Example
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES maps/OpenfootageNET_lowerAustria01-1024.hdr
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS runtimeloader

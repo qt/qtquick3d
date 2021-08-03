@@ -34,72 +34,68 @@ target_link_libraries(particles3d PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "qml/AlignedParticles.qml"
-    "qml/AnimatedSprite.qml"
-    "qml/AttractorShapes.qml"
-    "qml/ColorfulParticles.qml"
-    "qml/CustomCheckBox.qml"
-    "qml/CustomLabel.qml"
-    "qml/CustomSlider.qml"
-    "qml/CustomSelectionBox.qml"
-    "qml/EmitAndBurst.qml"
-    "qml/EmitterShapes.qml"
-    "qml/FadingInOut.qml"
-    "qml/Fire.qml"
-    "qml/HeartTrail.qml"
-    "qml/LoggingView.qml"
-    "qml/ModelBlendParticles.qml"
-    "qml/OceanSpider.qml"
-    "qml/QtLogoAnimation.qml"
-    "qml/SettingsView.qml"
-    "qml/Snowing.qml"
-    "qml/Sorting.qml"
-    "qml/Speedometer.qml"
-    "qml/StartupView.qml"
-    "qml/SystemPlayPause.qml"
-    "qml/TrailEmitterBurst.qml"
-    "qml/ModelShape.qml"
-    "qml/images/arrow_icon.png"
-    "qml/images/bear_black.png"
-    "qml/images/colorTable.png"
-    "qml/images/color_table2.png"
-    "qml/images/color_table3.png"
-    "qml/images/dot.png"
-    "qml/images/dust.png"
-    "qml/images/explosion_01_strip13.png"
-    "qml/images/icon_interval.png"
-    "qml/images/icon_logging.png"
-    "qml/images/icon_pause.png"
-    "qml/images/icon_play.png"
-    "qml/images/icon_settings.png"
-    "qml/images/leather_n.png"
-    "qml/images/qt_logo.png"
-    "qml/images/qt_logo2.png"
-    "qml/images/qt_logo2_n.png"
-    "qml/images/smoke.png"
-    "qml/images/smoke_sprite.png"
-    "qml/images/snowflake.png"
-    "qml/images/speedometer_labels.png"
-    "qml/images/sphere.png"
-    "qml/images/sprite_09.png"
-    "qml/images/star.png"
-    "qml/images/star2.png"
-    "qml/images/star3.png"
-    "qml/main.qml"
-    "qml/meshes/meter_background.mesh"
-    "qml/meshes/meter_edge.mesh"
-    "qml/meshes/oldqtlogo.mesh"
-    "qml/meshes/suzanne.mesh"
-)
-
-qt6_add_resources(particles3d "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(particles3d
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        qml/AlignedParticles.qml
+        qml/AnimatedSprite.qml
+        qml/AttractorShapes.qml
+        qml/ColorfulParticles.qml
+        qml/CustomCheckBox.qml
+        qml/CustomLabel.qml
+        qml/CustomSlider.qml
+        qml/CustomSelectionBox.qml
+        qml/EmitAndBurst.qml
+        qml/EmitterShapes.qml
+        qml/FadingInOut.qml
+        qml/Fire.qml
+        qml/HeartTrail.qml
+        qml/LoggingView.qml
+        qml/ModelBlendParticles.qml
+        qml/OceanSpider.qml
+        qml/QtLogoAnimation.qml
+        qml/SettingsView.qml
+        qml/Snowing.qml
+        qml/Sorting.qml
+        qml/Speedometer.qml
+        qml/StartupView.qml
+        qml/SystemPlayPause.qml
+        qml/TrailEmitterBurst.qml
+        qml/ModelShape.qml
+        qml/main.qml
+    RESOURCES
+        qml/images/arrow_icon.png
+        qml/images/bear_black.png
+        qml/images/colorTable.png
+        qml/images/color_table2.png
+        qml/images/color_table3.png
+        qml/images/dot.png
+        qml/images/dust.png
+        qml/images/explosion_01_strip13.png
+        qml/images/icon_interval.png
+        qml/images/icon_logging.png
+        qml/images/icon_pause.png
+        qml/images/icon_play.png
+        qml/images/icon_settings.png
+        qml/images/leather_n.png
+        qml/images/qt_logo.png
+        qml/images/qt_logo2.png
+        qml/images/qt_logo2_n.png
+        qml/images/smoke.png
+        qml/images/smoke_sprite.png
+        qml/images/snowflake.png
+        qml/images/speedometer_labels.png
+        qml/images/sphere.png
+        qml/images/sprite_09.png
+        qml/images/star.png
+        qml/images/star2.png
+        qml/images/star3.png
+        qml/meshes/meter_background.mesh
+        qml/meshes/meter_edge.mesh
+        qml/meshes/oldqtlogo.mesh
+        qml/meshes/suzanne.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS particles3d

@@ -34,19 +34,15 @@ target_link_libraries(morphing PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "RealSlider.qml"
-    "main.qml"
-    "suzanne.mesh"
-)
-
-qt6_add_resources(morphing "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(morphing
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        RealSlider.qml
+        main.qml
+    RESOURCES
+        suzanne.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS morphing

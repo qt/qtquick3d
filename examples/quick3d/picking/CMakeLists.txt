@@ -34,27 +34,12 @@ target_link_libraries(picking PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-)
-
-qt6_add_resources(picking "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-set(materials_resource_files
-    "maps/roughness.jpg"
-)
-
-qt6_add_resources(picking "materials"
-    PREFIX
-        "/"
-    FILES
-        ${materials_resource_files}
+qt_add_qml_module(picking
+    URI Example
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES maps/roughness.jpg
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS picking

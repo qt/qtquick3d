@@ -34,28 +34,15 @@ target_link_libraries(submeshes PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(meshes_resource_files
-    "meshes/distortedcube.mesh"
-)
-
-qt6_add_resources(submeshes "meshes"
-    PREFIX
-        "/"
-    FILES
-        ${meshes_resource_files}
-)
-set(qml_resource_files
-    "qml/DistortedCube.qml"
-    "qml/main.qml"
-)
-
-qt6_add_resources(submeshes "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(submeshes
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        qml/DistortedCube.qml
+        qml/main.qml
+    RESOURCES
+        meshes/distortedcube.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS submeshes

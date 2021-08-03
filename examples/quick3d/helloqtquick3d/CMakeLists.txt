@@ -35,30 +35,20 @@ target_link_libraries(helloqtquick3d PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-    "oldqtlogo.mesh"
-    "qt_logo.png"
+qt_add_qml_module(helloqtquick3d
+    URI HelloExample
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        oldqtlogo.mesh
+        qt_logo.png
+    NO_RESOURCE_TARGET_PATH
 )
 
-qt6_add_resources(helloqtquick3d "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
 
 install(TARGETS helloqtquick3d
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(helloqtquick3d PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI InstancingExample
-)
-
-qt6_qml_type_registration(helloqtquick3d)

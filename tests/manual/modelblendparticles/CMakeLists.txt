@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(modelblendparticles LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -33,24 +33,20 @@ target_link_libraries(modelblendparticles PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-    "SettingsView.qml"
-    "CustomSelectionBox.qml"
-    "CustomSlider.qml"
-    "CustomCheckBox.qml"
-    "images/icon_pause.png"
-    "images/icon_play.png"
-    "images/icon_settings.png"
-)
-
-qt6_add_resources(modelblendparticles "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(modelblendparticles
+    URI ModelBlendParticlesExample
+    VERSION 1.0
+    QML_FILES
+        main.qml
+        SettingsView.qml
+        CustomSelectionBox.qml
+        CustomSlider.qml
+        CustomCheckBox.qml
+    RESOURCES
+        images/icon_pause.png
+        images/icon_play.png
+        images/icon_settings.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS modelblendparticles
@@ -59,9 +55,3 @@ install(TARGETS modelblendparticles
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
 
-set_target_properties(modelblendparticles PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI TestGeometryExample
-)
-
-qt6_qml_type_registration(modelblendparticles)

@@ -34,32 +34,19 @@ target_link_libraries(principledmaterial PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "MaterialControl.qml"
-    "main.qml"
-)
-
-qt6_add_resources(principledmaterial "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-set(materials_resource_files
-    "maps/OpenfootageNET_garage-1024.hdr"
-    "maps/metallic/basecolor.jpg"
-    "maps/metallic/metallic.jpg"
-    "maps/metallic/normal.jpg"
-    "maps/metallic/roughness.jpg"
-)
-
-qt6_add_resources(principledmaterial "materials"
-    PREFIX
-        "/"
-    FILES
-        ${materials_resource_files}
+qt_add_qml_module(principledmaterial
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        MaterialControl.qml
+        main.qml
+    RESOURCES
+        maps/OpenfootageNET_garage-1024.hdr
+        maps/metallic/basecolor.jpg
+        maps/metallic/metallic.jpg
+        maps/metallic/normal.jpg
+        maps/metallic/roughness.jpg
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS principledmaterial

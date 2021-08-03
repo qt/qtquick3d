@@ -34,27 +34,23 @@ target_link_libraries(quickball PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "images/ball.jpg"
-    "images/ball_icon.png"
-    "images/ball_n.jpg"
-    "images/grass.jpg"
-    "images/grass_n.jpg"
-    "images/particle.png"
-    "images/qt_logo.jpg"
-    "images/qt_logo_n.jpg"
-    "images/quickball.png"
-    "images/sky.jpg"
-    "main.qml"
-)
-
-qt6_add_resources(quickball "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(quickball
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        images/ball.jpg
+        images/ball_icon.png
+        images/ball_n.jpg
+        images/grass.jpg
+        images/grass_n.jpg
+        images/particle.png
+        images/qt_logo.jpg
+        images/qt_logo_n.jpg
+        images/quickball.png
+        images/sky.jpg
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS quickball

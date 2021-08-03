@@ -147,13 +147,13 @@ QT_BEGIN_NAMESPACE
     QML_IMPORT_MAJOR_VERSION = 1
     \endcode
 
-    Alternatively, with CMake the equivalent is:
+    With CMake, automatic registration is the default behavior, so no special
+    settings are needed beyond basic QML module setup:
     \code
-    set_target_properties(application PROPERTIES
-        QT_QML_MODULE_VERSION 1.0
-        QT_QML_MODULE_URI Example
+    qt_add_qml_module(application
+        URI Example
+        VERSION 1.0
     )
-    qt6_qml_type_registration(application)
     \endcode
 
     The class implementation should add QML_NAMED_ELEMENT:

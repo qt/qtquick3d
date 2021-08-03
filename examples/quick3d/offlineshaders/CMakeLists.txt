@@ -34,41 +34,17 @@ target_link_libraries(offlineshaders PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "MaterialRed.qml"
-    "MaterialRedExtended.qml"
-    "main.qml"
+qt_add_qml_module(offlineshaders
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        MaterialRed.qml
+        MaterialRedExtended.qml
+        main.qml
+    RESOURCES
+        maps/metallic/basecolor.jpg
+    NO_RESOURCE_TARGET_PATH
 )
-
-qt6_add_resources(offlineshaders "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-set(materials_resource_files
-    "maps/metallic/basecolor.jpg"
-)
-
-qt6_add_resources(offlineshaders "materials"
-    PREFIX
-        "/"
-    FILES
-        ${materials_resource_files}
-)
-
-# special case begin
-#! [CMake material build function]
-qt6_add_materials(offlineshaders "shaders"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-#! [CMake material build function]
-# special case end
 
 install(TARGETS offlineshaders
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

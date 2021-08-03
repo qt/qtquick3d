@@ -34,18 +34,12 @@ target_link_libraries(view3d PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "main.qml"
-    "teapot.mesh"
-)
-
-qt6_add_resources(view3d "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(view3d
+    URI Example
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES teapot.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS view3d

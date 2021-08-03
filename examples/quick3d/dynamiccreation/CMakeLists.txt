@@ -34,19 +34,15 @@ target_link_libraries(dynamiccreation PUBLIC
     Qt::Quick3D
 )
 
-
-# Resources:
-set(qml_resource_files
-    "WeirdShape.qml"
-    "main.qml"
-    "weirdShape.mesh"
-)
-
-qt6_add_resources(dynamiccreation "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
+qt_add_qml_module(dynamiccreation
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        WeirdShape.qml
+        main.qml
+    RESOURCES
+        weirdShape.mesh
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS dynamiccreation

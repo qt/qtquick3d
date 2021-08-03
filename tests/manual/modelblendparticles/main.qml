@@ -53,7 +53,7 @@ import QtQuick3D
 import QtQuick3D.Particles3D
 import QtQuick3D.Helpers
 import QtQuick.Timeline
-import TestGeometryExample
+import ModelBlendParticlesExample
 
 Window {
     id: mainWindow
