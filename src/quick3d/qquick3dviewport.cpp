@@ -601,6 +601,8 @@ void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
         return;
 
     m_camera = camera;
+    if (m_camera && !m_camera->parentItem())
+        m_camera->setParentItem(m_sceneRoot);
     if (m_camera)
         m_camera->updateGlobalVariables(QRect(0, 0, width(), height()));
     emit cameraChanged();
