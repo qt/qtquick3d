@@ -91,10 +91,6 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
                                            QRhiRenderPassDescriptor *rpDesc, Flags flags)
 {
     // ps must have viewport and shaderPipeline set already
-
-    ps->ia.vertexBuffer = m_vbuf;
-    ps->ia.indexBuffer = m_ibuf;
-
     if (flags.testFlag(UvCoords)) {
         ps->ia.inputLayout.setAttributes({
                                             { 0, 0, QRhiVertexInputAttribute::Float3, 0 },
@@ -123,8 +119,8 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
     cb->setGraphicsPipeline(rhiCtx->pipeline({ *ps, rpDesc, srb }));
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
-    QRhiCommandBuffer::VertexInput vb(ps->ia.vertexBuffer->buffer(), 0);
-    cb->setVertexInput(0, 1, &vb, ps->ia.indexBuffer->buffer(), ps->ia.indexBuffer->indexFormat());
+    QRhiCommandBuffer::VertexInput vb(m_vbuf->buffer(), 0);
+    cb->setVertexInput(0, 1, &vb, m_ibuf->buffer(), m_ibuf->indexFormat());
     cb->drawIndexed(6);
     QSSGRHICTX_STAT(rhiCtx, drawIndexed(6, 1));
 }

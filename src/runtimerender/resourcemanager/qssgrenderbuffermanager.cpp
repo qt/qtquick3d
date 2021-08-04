@@ -1129,8 +1129,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh)
     rhi.ia.inputLayout.setAttributes(inputAttrs.cbegin(), inputAttrs.cend());
     rhi.ia.inputLayout.setBindings({ vertexBuffer.stride });
     rhi.ia.topology = QSSGRhiInputAssemblerState::toTopology(QSSGRenderDrawMode(mesh.drawMode()));
-    rhi.ia.vertexBuffer = rhi.vertexBuffer;
-    rhi.ia.indexBuffer = rhi.indexBuffer;
 
     QVector<QSSGMesh::Mesh::Subset> meshSubsets = mesh.subsets();
     for (quint32 subsetIdx = 0, subsetEnd = meshSubsets.size(); subsetIdx < subsetEnd; ++subsetIdx) {

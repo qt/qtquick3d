@@ -504,8 +504,8 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     if (!ps || !srb)
         return;
 
-    QRhiBuffer *vertexBuffer = renderable.subset.rhi.ia.vertexBuffer->buffer();
-    QRhiBuffer *indexBuffer = renderable.subset.rhi.ia.indexBuffer ? renderable.subset.rhi.ia.indexBuffer->buffer() : nullptr;
+    QRhiBuffer *vertexBuffer = renderable.subset.rhi.vertexBuffer->buffer();
+    QRhiBuffer *indexBuffer = renderable.subset.rhi.indexBuffer ? renderable.subset.rhi.indexBuffer->buffer() : nullptr;
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->setGraphicsPipeline(ps);
@@ -526,7 +526,7 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         vertexBufferCount = 2;
     }
     if (indexBuffer) {
-        cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable.subset.rhi.ia.indexBuffer->indexFormat());
+        cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable.subset.rhi.indexBuffer->indexFormat());
         cb->drawIndexed(renderable.subset.count, instances, renderable.subset.offset);
         QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable.subset.count, instances));
     } else {

@@ -270,8 +270,6 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
     rhiCtx->commandBuffer()->resourceUpdate(rub);
 
     ps->ia.topology = QRhiGraphicsPipeline::TriangleStrip;
-    ps->ia.indexBuffer = nullptr;
-    ps->ia.vertexBuffer = nullptr;
     ps->ia.inputLayout = QRhiVertexInputLayout();
     ps->ia.inputs.clear();
 
