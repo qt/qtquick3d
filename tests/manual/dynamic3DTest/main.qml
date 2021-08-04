@@ -56,6 +56,8 @@ import QtQuick.Layouts
 import QtQml
 import QtQuick3D.Helpers
 
+import io.qt.tests.manual.dynamic3DTest
+
 Window {
     width: 1280
     height: 720
@@ -74,16 +76,24 @@ Window {
         Model {
             id: mainSphere
             source: "#Sphere"
-            materials: DefaultMaterial {
+            materials: PrincipledMaterial {
                 id: sphereMaterial
-                diffuseColor: "blue"
+                baseColor: "blue"
             }
 
             function updateTexture() {
                 if (objectSpawner.textures.length > 0)
-                    sphereMaterial.diffuseMap = objectSpawner.textures[objectSpawner.textures.length - 1];
+                    sphereMaterial.baseColorMap = objectSpawner.textures[objectSpawner.textures.length - 1];
                 else
-                    sphereMaterial.diffuseMap = null
+                    sphereMaterial.baseColorMap = null
+
+                if (objectSpawner.dynamicTextures.length > 0) {
+                    sphereMaterial.emissiveFactor = Qt.vector3d(1, 1, 1)
+                    sphereMaterial.emissiveMap = objectSpawner.dynamicTextures[objectSpawner.dynamicTextures.length - 1]
+                } else {
+                    sphereMaterial.emissiveMap = null
+                    sphereMaterial.emissiveFactor = Qt.vector3d(0, 0, 0)
+                }
             }
 
             NumberAnimation on y {
@@ -105,6 +115,7 @@ Window {
             property var models: []
             property var dynamicModels: []
             property var textures: []
+            property var dynamicTextures: []
 
             property int directionLightsCount: 0
             property int pointLightsCount: 0
@@ -113,6 +124,7 @@ Window {
             property int modelsCount: 0
             property int dynamicModelsCount: 0
             property int texturesCount: 0
+            property int dynamicTexturesCount: 0
 
             Component {
                 id: directionalLight
@@ -179,6 +191,20 @@ Window {
                 }
             }
 
+            Component {
+                id: dynamicTexture
+                Texture {
+                    property alias height: gradientTexture.height
+                    property alias width: gradientTexture.width
+                    property alias startColor: gradientTexture.startColor
+                    property alias endColor: gradientTexture.endColor
+                    textureData: GradientTexture {
+                        id: gradientTexture
+
+                    }
+                }
+            }
+
             function getRandomVector3d(range) {
                 return Qt.vector3d((2 * Math.random() * range) - range,
                                    (2 * Math.random() * range) - range,
@@ -186,10 +212,10 @@ Window {
             }
 
             function getRandomColor() {
-                return Qt.rgba(Math.floor(Math.random() * 255),
-                               Math.floor(Math.random() * 255),
-                               Math.floor(Math.random() * 255),
-                               255)
+                return Qt.rgba(Math.random(),
+                               Math.random(),
+                               Math.random(),
+                               1.0)
             }
 
             function getRandomInt(min, max) {
@@ -305,7 +331,7 @@ Window {
                 let color = getRandomColor();
                 let lines = getRandomInt(100, 1000);
                 let steps = getRandomInt(1, 25);
-                let instance = dynamicModel.createObject(objectSpawner, {"position": position, "eulerRotation": rotation, "color": color, "lines": lines, "steps": steps})
+                let instance = dynamicModel.createObject(objectSpawner, {"position": position, "eulerRotation": rotation, "color": color, "lines": lines, "step": steps})
                 dynamicModels.push(instance)
                 dynamicModelsCount++
             }
@@ -337,6 +363,27 @@ Window {
                 // reset the texture sources
                 textures.forEach(texture => texture.source = getImageSource())
             }
+
+            function addDynamicTexture() {
+                let startColor = getRandomColor()
+                let endColor = getRandomColor()
+                let width = 2048
+                let height = 2048
+                let instance = dynamicTexture.createObject(objectSpawner, {"startColor": startColor, "endColor": endColor, "height": height, "width": width})
+                dynamicTextures.push(instance);
+                dynamicTexturesCount++
+                mainSphere.updateTexture()
+            }
+
+            function removeDynamicTexture() {
+                if (dynamicTextures.length > 0) {
+                    let instance = dynamicTextures.pop();
+                    instance.destroy();
+                    dynamicTexturesCount--
+                    mainSphere.updateTexture()
+                }
+            }
+
             function changeModels() {
                 // reset the model sources
                 models.forEach(model => model.source = getMeshSource())
@@ -602,6 +649,30 @@ Window {
                     text: "<->"
                     onClicked: {
                         objectSpawner.changeTextures()
+                    }
+                }
+            }
+            RowLayout {
+                Label {
+                    text: "Dynamic Texture"
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: objectSpawner.dynamicTexturesCount
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                ToolButton {
+                    text: "+"
+                    onClicked: {
+                        objectSpawner.addDynamicTexture()
+                    }
+                }
+                ToolButton {
+                    text: "-"
+                    onClicked: {
+                        objectSpawner.removeDynamicTexture()
                     }
                 }
             }
