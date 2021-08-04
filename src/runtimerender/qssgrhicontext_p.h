@@ -88,8 +88,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
     QRhiVertexInputLayout inputLayout;
     QVarLengthArray<InputSemantic, 8> inputs;
     QRhiGraphicsPipeline::Topology topology;
-    QSSGRef<QSSGRhiBuffer> vertexBuffer;
-    QSSGRef<QSSGRhiBuffer> indexBuffer;
 
     static QRhiVertexInputAttribute::Format toVertexInputFormat(QSSGRenderComponentType compType, quint32 numComps);
     static QRhiGraphicsPipeline::Topology toTopology(QSSGRenderDrawMode drawMode);

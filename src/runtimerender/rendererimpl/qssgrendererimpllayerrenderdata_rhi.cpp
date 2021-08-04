@@ -746,9 +746,9 @@ static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGSubsetRenderable *subsetRenderable(static_cast<QSSGSubsetRenderable *>(obj));
 
-        QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.ia.vertexBuffer->buffer();
-        QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.ia.indexBuffer
-                ? subsetRenderable->subset.rhi.ia.indexBuffer->buffer()
+        QRhiBuffer *vertexBuffer = subsetRenderable->subset.rhi.vertexBuffer->buffer();
+        QRhiBuffer *indexBuffer = subsetRenderable->subset.rhi.indexBuffer
+                ? subsetRenderable->subset.rhi.indexBuffer->buffer()
                 : nullptr;
 
         QRhiGraphicsPipeline *ps = subsetRenderable->rhiRenderData.depthPrePass.pipeline;
@@ -778,7 +778,7 @@ static void rhiRenderDepthPassForObject(QSSGRhiContext *rhiCtx,
         }
 
         if (indexBuffer) {
-            cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable->subset.rhi.ia.indexBuffer->indexFormat());
+            cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable->subset.rhi.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
             QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable->subset.count, instances));
         } else {
@@ -1129,9 +1129,9 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
             QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(theObject));
 
-            QRhiBuffer *vertexBuffer = renderable->subset.rhi.ia.vertexBuffer->buffer();
-            QRhiBuffer *indexBuffer = renderable->subset.rhi.ia.indexBuffer
-                    ? renderable->subset.rhi.ia.indexBuffer->buffer()
+            QRhiBuffer *vertexBuffer = renderable->subset.rhi.vertexBuffer->buffer();
+            QRhiBuffer *indexBuffer = renderable->subset.rhi.indexBuffer
+                    ? renderable->subset.rhi.indexBuffer->buffer()
                     : nullptr;
 
             cb->setGraphicsPipeline(renderable->rhiRenderData.shadowPass.pipeline);
@@ -1154,7 +1154,7 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
                 vertexBufferCount = 2;
             }
             if (indexBuffer) {
-                cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable->subset.rhi.ia.indexBuffer->indexFormat());
+                cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, renderable->subset.rhi.indexBuffer->indexFormat());
                 cb->drawIndexed(renderable->subset.count, instances, renderable->subset.offset);
                 QSSGRHICTX_STAT(rhiCtx, drawIndexed(renderable->subset.count, instances));
             } else {
@@ -1948,8 +1948,8 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         if (!ps || !srb)
             return;
 
-        QRhiBuffer *vertexBuffer = subsetRenderable.subset.rhi.ia.vertexBuffer->buffer();
-        QRhiBuffer *indexBuffer = subsetRenderable.subset.rhi.ia.indexBuffer ? subsetRenderable.subset.rhi.ia.indexBuffer->buffer() : nullptr;
+        QRhiBuffer *vertexBuffer = subsetRenderable.subset.rhi.vertexBuffer->buffer();
+        QRhiBuffer *indexBuffer = subsetRenderable.subset.rhi.indexBuffer ? subsetRenderable.subset.rhi.indexBuffer->buffer() : nullptr;
 
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         // QRhi optimizes out unnecessary binding of the same pipline
@@ -1971,7 +1971,7 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             vertexBufferCount = 2;
         }
         if (indexBuffer) {
-            cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.ia.indexBuffer->indexFormat());
+            cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
             QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable.subset.count, instances));
         } else {
