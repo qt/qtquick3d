@@ -42,6 +42,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -137,6 +138,9 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
                 bufferManager->removeMeshReference(model->meshPath, model);
             else // Models with geometry should be cleaned up here
                 rhi->cleanupDrawCallData(model);
+        } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
+            auto textureData = static_cast<QSSGRenderTextureData *>(resource);
+            bufferManager->releaseTextureData(textureData);
         }
 
         // ### There might be more types that need to be supported
