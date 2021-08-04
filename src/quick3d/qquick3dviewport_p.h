@@ -59,6 +59,7 @@ class QQuick3DNode;
 class QQuick3DSceneRootNode;
 class QQuick3DSceneRenderer;
 class QQuick3DRenderStats;
+class QQuick3DSceneManager;
 
 class SGFramebufferObjectNode;
 class QQuick3DSGRenderNode;
@@ -148,6 +149,7 @@ private:
     bool checkIsVisible() const;
     bool internalPick(QPointerEvent *event, const QVector3D &origin = QVector3D(), const QVector3D &direction = QVector3D()) const;
     QQuick3DPickResult processPickResult(const QSSGRenderPickResult &pickResult) const;
+    QQuick3DSceneManager *findChildSceneManager(QQuick3DObject *inObject, QQuick3DSceneManager *manager = nullptr);
 
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;

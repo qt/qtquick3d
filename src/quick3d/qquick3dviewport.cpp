@@ -644,13 +644,18 @@ void QQuick3DViewport::setImportScene(QQuick3DNode *inScene)
 
     m_importScene = inScene;
     if (m_importScene) {
-        // If the referenced scene doesn't have a manager use the one from the sceen root (scenes defined outside of an view3d)
         auto privateObject = QQuick3DObjectPrivate::get(m_importScene);
         if (!privateObject->sceneManager) {
-            if (QQuick3DSceneManager *manager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager) {
+            // If object doesn't already have scene manager, check from its children
+            QQuick3DSceneManager *manager = findChildSceneManager(m_importScene);
+            // If still not found, use the one from the scene root (scenes defined outside of an view3d)
+            if (!manager)
+                manager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
+            if (manager) {
                 manager->setWindow(window());
                 privateObject->refSceneManager(*manager);
             }
+            // At this point some manager will exist
             Q_ASSERT(privateObject->sceneManager);
         }
 
@@ -1189,6 +1194,23 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
                               pickResult.m_scenePosition,
                               pickResult.m_localPosition,
                               pickResult.m_faceNormal);
+}
+
+// Returns the first found scene manager of objects children
+QQuick3DSceneManager *QQuick3DViewport::findChildSceneManager(QQuick3DObject *inObject, QQuick3DSceneManager *manager)
+{
+    if (manager)
+        return manager;
+
+    auto children = QQuick3DObjectPrivate::get(inObject)->childItems;
+    for (auto child : children) {
+        if (auto m = QQuick3DObjectPrivate::get(child)->sceneManager) {
+            manager = m;
+            break;
+        }
+        manager = findChildSceneManager(child, manager);
+    }
+    return manager;
 }
 
 QT_END_NAMESPACE
