@@ -30,7 +30,7 @@ function(_qt_internal_quick3d_generate_resource_from_qrc target qrcfile)
 endfunction()
 
 #generate shaders from the given files
-function(qt6_quick3d_generate_materials target resource_name)
+function(qt6_add_materials target resource_name)
 
     cmake_parse_arguments(arg
         "" "PREFIX" "FILES" ${ARGN}
@@ -124,8 +124,8 @@ function(qt6_add_lightprobe_images target resource_name)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    function(qt_quick3d_build_shaders)
-        qt6_quick3d_generate_materials(${ARGV})
+    function(qt_add_materials)
+        qt6_add_materials(${ARGV})
     endfunction()
     function(qt_add_lightprobe_images)
         qt6_add_lightprobe_images(${ARGV})
@@ -138,6 +138,10 @@ function(qt_internal_add_lightprobe_images)
 endfunction()
 
 # Qt 6.1 compatibility
+function(qt6_quick3d_generate_materials)
+    message(AUTHOR_WARNING "qt6_quick3d_generate_materials is deprecated, use qt6_add_materials instead")
+    qt6_add_materials(${ARGV})
+endfunction()
 function(qt6_quick3d_bake_lightprobe_hdri)
     message(AUTHOR_WARNING "qt6_quick3d_bake_lightprobe_hdri is deprecated, use qt6_add_lightprobe_images instead")
     qt6_add_lightprobe_images(${ARGV})
