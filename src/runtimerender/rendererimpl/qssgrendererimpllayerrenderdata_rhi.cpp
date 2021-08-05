@@ -1826,7 +1826,7 @@ void QSSGLayerRenderData::rhiPrepare()
         const bool layerEnableDepthTest = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest);
         bool depthTestEnableDefault = false;
         bool depthWriteEnableDefault = false;
-        if (layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty())) {
+        if (layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty())) {
             depthTestEnableDefault = true;
             // enable depth write for opaque objects when there was no Z prepass
             depthWriteEnableDefault = !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass) || !m_globalZPrePassActive;
