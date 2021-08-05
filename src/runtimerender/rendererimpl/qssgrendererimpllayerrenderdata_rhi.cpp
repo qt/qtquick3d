@@ -1267,10 +1267,31 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     ps.depthBias = 2;
     ps.slopeScaledDepthBias = 1.5f;
 
-    QSSGRenderNode *root = camera.parent;
-    while (root->parent)
-        root = root->parent;
-    auto bounds = root->getBounds(renderer->contextInterface()->bufferManager());
+    QSSGBounds3 bounds;
+
+    // Since we may have nodes that are not a child of the camera parent we go through all
+    // the opaque objects and include them in the bounds. Failing to do this can result in
+    // too small bounds.
+    for (const QSSGRenderableObjectHandle &handle : sortedOpaqueObjects) {
+        const QSSGRenderableObject &obj = *handle.obj;
+
+        // We skip objects not receiving shadows since they don't need to be covered by the shadow map
+        if (!obj.renderableFlags.receivesShadows())
+            continue;
+
+        const QVector3D &max = obj.bounds.maximum;
+        const QVector3D &min = obj.bounds.minimum;
+
+        // Take all corners of the bounding box to make sure the transformed bounding box is big enough
+        bounds.include(obj.globalTransform.map(min));
+        bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), min.z())));
+        bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), min.z())));
+        bounds.include(obj.globalTransform.map(QVector3D(max.x(), max.y(), min.z())));
+        bounds.include(obj.globalTransform.map(QVector3D(min.x(), min.y(), max.z())));
+        bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), max.z())));
+        bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), max.z())));
+        bounds.include(obj.globalTransform.map(max));
+    }
 
     QVector3D scenePoints[8];
     scenePoints[0] = bounds.minimum;
