@@ -68,7 +68,7 @@ project file:
 
 CMake:
 \code
-qt6_quick3d_generate_materials(offlineshaders "shaders"
+qt6_add_materials(offlineshaders "shaders"
     PREFIX
         "/"
     FILES

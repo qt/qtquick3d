@@ -61,7 +61,7 @@ qt6_add_resources(offlineshaders "materials"
 
 # special case begin
 #! [CMake material build function]
-qt6_quick3d_generate_materials(offlineshaders "shaders"
+qt6_add_materials(offlineshaders "shaders"
     PREFIX
         "/"
     FILES
