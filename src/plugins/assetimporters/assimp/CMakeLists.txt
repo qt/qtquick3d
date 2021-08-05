@@ -37,7 +37,7 @@ endif()
 
 qt_internal_add_plugin(AssimpImporterPlugin
     OUTPUT_NAME assimp
-    TYPE assetimporters
+    PLUGIN_TYPE assetimporters
     EXCEPTIONS # special case
     SOURCES
         assimputils.cpp assimputils.h

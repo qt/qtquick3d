@@ -6,7 +6,7 @@
 
 qt_internal_add_plugin(UipAssetImporterPlugin
     OUTPUT_NAME uip
-    TYPE assetimporters
+    PLUGIN_TYPE assetimporters
     SOURCES
         abstractxmlparser.cpp abstractxmlparser.h
         datamodelparser.cpp datamodelparser.h
