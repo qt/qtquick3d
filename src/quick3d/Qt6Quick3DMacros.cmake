@@ -60,13 +60,13 @@ endfunction()
 # For example, the following autogenerates the lightprobe map at build time and
 # includes it in the executable under :/maps/OpenfootageNET_garage-1024.ktx:
 #
-# qt6_quick3d_bake_lightprobe_hdri(principledmaterial "ibl_assets"
+# qt6_add_lightprobe_images(principledmaterial "ibl_assets"
 #    PREFIX
 #        "/maps"
 #    FILES
 #        "maps/OpenfootageNET_garage-1024.hdr" )
 #
-function(qt6_quick3d_bake_lightprobe_hdri target resource_name)
+function(qt6_add_lightprobe_images target resource_name)
     cmake_parse_arguments(arg
         ""
         "PREFIX;_QT_INTERNAL"
@@ -127,12 +127,18 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     function(qt_quick3d_build_shaders)
         qt6_quick3d_generate_materials(${ARGV})
     endfunction()
-    function(qt_quick3d_bake_lightprobe_hdri)
-        qt6_quick3d_bake_lightprobe_hdri(${ARGV})
+    function(qt_add_lightprobe_images)
+        qt6_add_lightprobe_images(${ARGV})
     endfunction()
 endif()
 
 # for use by Qt modules that need qt_internal_add_resource
-function(qt_quick3d_internal_bake_lightprobe_hdri)
-    qt6_quick3d_bake_lightprobe_hdri(${ARGV} _QT_INTERNAL)
+function(qt_internal_add_lightprobe_images)
+    qt6_add_lightprobe_images(${ARGV} _QT_INTERNAL)
+endfunction()
+
+# Qt 6.1 compatibility
+function(qt6_quick3d_bake_lightprobe_hdri)
+    message(AUTHOR_WARNING "qt6_quick3d_bake_lightprobe_hdri is deprecated, use qt6_add_lightprobe_images instead")
+    qt6_add_lightprobe_images(${ARGV})
 endfunction()
