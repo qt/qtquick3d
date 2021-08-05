@@ -69,7 +69,7 @@ endfunction()
 function(qt6_quick3d_bake_lightprobe_hdri target resource_name)
     cmake_parse_arguments(arg
         ""
-        "PREFIX;INTERNAL"
+        "PREFIX;_QT_INTERNAL"
         "FILES"
         ${ARGN}
     )
@@ -106,7 +106,7 @@ function(qt6_quick3d_bake_lightprobe_hdri target resource_name)
         set_source_files_properties("${ktx_result}" PROPERTIES QT_RESOURCE_ALIAS "${ktx_result_name}")
     endforeach()
 
-    if(arg_INTERNAL)
+    if(arg__QT_INTERNAL)
         qt_internal_add_resources(${target} ${resource_name}
             PREFIX
                 "${arg_PREFIX}"
@@ -123,10 +123,6 @@ function(qt6_quick3d_bake_lightprobe_hdri target resource_name)
     endif()
 endfunction()
 
-function(qt6_quick3d_internal_bake_lightprobe_hdri)
-    qt6_quick3d_bake_lightprobe_hdri(${ARGV} INTERNAL)
-endfunction()
-
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     function(qt_quick3d_build_shaders)
         qt6_quick3d_generate_materials(${ARGV})
@@ -134,7 +130,9 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     function(qt_quick3d_bake_lightprobe_hdri)
         qt6_quick3d_bake_lightprobe_hdri(${ARGV})
     endfunction()
-    function(qt_quick3d_internal_bake_lightprobe_hdri)
-        qt6_quick3d_internal_bake_lightprobe_hdri(${ARGV})
-    endfunction()
 endif()
+
+# for use by Qt modules that need qt_internal_add_resource
+function(qt_quick3d_internal_bake_lightprobe_hdri)
+    qt6_quick3d_bake_lightprobe_hdri(${ARGV} _QT_INTERNAL)
+endfunction()
