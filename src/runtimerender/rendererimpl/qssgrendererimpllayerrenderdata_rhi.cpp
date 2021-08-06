@@ -802,37 +802,24 @@ static void rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
 }
 
 static void computeFrustumBounds(const QSSGRenderCamera &inCamera,
-                                 const QRectF &inViewPort,
                                  QVector3D &ctrBound,
                                  QVector3D camVerts[8])
 {
-    QVector3D camEdges[4];
+    QMatrix4x4 viewProjection;
+    inCamera.calculateViewProjectionMatrix(viewProjection);
 
-    const float *dataPtr(inCamera.globalTransform.constData());
-    QVector3D camX(dataPtr[0], dataPtr[1], dataPtr[2]);
-    QVector3D camY(dataPtr[4], dataPtr[5], dataPtr[6]);
-    QVector3D camZ(dataPtr[8], dataPtr[9], dataPtr[10]);
+    bool invertible = false;
+    QMatrix4x4 inv = viewProjection.inverted(&invertible);
+    Q_ASSERT(invertible);
 
-    float tanFOV = tanf(inCamera.verticalFov(inViewPort) * 0.5f);
-    float asTanFOV = tanFOV * inViewPort.width() / inViewPort.height();
-    camEdges[0] = -asTanFOV * camX + tanFOV * camY + camZ;
-    camEdges[1] = asTanFOV * camX + tanFOV * camY + camZ;
-    camEdges[2] = asTanFOV * camX - tanFOV * camY + camZ;
-    camEdges[3] = -asTanFOV * camX - tanFOV * camY + camZ;
-
-    for (int i = 0; i < 4; ++i) {
-        camEdges[i].setX(-camEdges[i].x());
-        camEdges[i].setY(-camEdges[i].y());
-    }
-
-    camVerts[0] = inCamera.position + camEdges[0] * inCamera.clipNear;
-    camVerts[1] = inCamera.position + camEdges[0] * inCamera.clipFar;
-    camVerts[2] = inCamera.position + camEdges[1] * inCamera.clipNear;
-    camVerts[3] = inCamera.position + camEdges[1] * inCamera.clipFar;
-    camVerts[4] = inCamera.position + camEdges[2] * inCamera.clipNear;
-    camVerts[5] = inCamera.position + camEdges[2] * inCamera.clipFar;
-    camVerts[6] = inCamera.position + camEdges[3] * inCamera.clipNear;
-    camVerts[7] = inCamera.position + camEdges[3] * inCamera.clipFar;
+    camVerts[0] = inv.map(QVector3D(-1, -1, -1));
+    camVerts[1] = inv.map(QVector3D(-1, -1, +1));
+    camVerts[2] = inv.map(QVector3D(-1, +1, -1));
+    camVerts[3] = inv.map(QVector3D(-1, +1, +1));
+    camVerts[4] = inv.map(QVector3D(+1, -1, -1));
+    camVerts[5] = inv.map(QVector3D(+1, -1, +1));
+    camVerts[6] = inv.map(QVector3D(+1, +1, -1));
+    camVerts[7] = inv.map(QVector3D(+1, +1, +1));
 
     ctrBound = camVerts[0];
     for (int i = 1; i < 8; ++i) {
@@ -873,8 +860,7 @@ static QSSGBounds3 calculateShadowCameraBoundingBox(const QVector3D *points,
                        QVector3D(maxDistanceX, maxDistanceY, maxDistanceZ));
 }
 
-static void setupCameraForShadowMap(const QRectF &inViewport,
-                                    const QSSGRenderCamera &inCamera,
+static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
                                     const QSSGRenderLight *inLight,
                                     QSSGRenderCamera &theCamera,
                                     QVector3D *scenePoints = nullptr)
@@ -893,7 +879,7 @@ static void setupCameraForShadowMap(const QRectF &inViewport,
 
     if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
         QVector3D frustumPoints[8], boundCtr, sceneCtr;
-        computeFrustumBounds(inCamera, inViewport, boundCtr, frustumPoints);
+        computeFrustumBounds(inCamera, boundCtr, frustumPoints);
 
         if (scenePoints) {
             sceneCtr = QVector3D(0, 0, 0);
@@ -1252,7 +1238,6 @@ static void rhiBlurShadowMap(QSSGRhiContext *rhiCtx,
 static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                QSSGLayerRenderData &inData,
                                QSSGRenderShadowMap *shadowMapManager,
-                               const QRectF &viewViewport,
                                const QSSGRenderCamera &camera,
                                const QSSGShaderLightList &globalLights,
                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
@@ -1312,7 +1297,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
             QSSGRenderCamera theCamera;
-            setupCameraForShadowMap(viewViewport, camera, globalLights[i].light, theCamera, scenePoints);
+            setupCameraForShadowMap(camera, globalLights[i].light, theCamera, scenePoints);
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
@@ -1723,7 +1708,10 @@ void QSSGLayerRenderData::rhiPrepare()
             if (!shadowPassObjects.isEmpty() || !globalLights.isEmpty()) {
                 cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
 
-                rhiRenderShadowMap(rhiCtx, *this, shadowMapManager, layerPrepResult->viewport(), *camera,
+                rhiRenderShadowMap(rhiCtx,
+                                   *this,
+                                   shadowMapManager,
+                                   *camera,
                                    globalLights, // scoped lights are not relevant here
                                    shadowPassObjects,
                                    renderer);
