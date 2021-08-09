@@ -461,12 +461,33 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
     const QVector3D prevPosition = mat44::getPosition(m_sceneTransform);
     const QQuaternion prevRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform)).normalized();
     const QVector3D prevScale = mat44::getScale(m_sceneTransform);
+    QVector3D prevForward, prevUp, prevRight;
+    QVector3D newForward, newUp, newRight;
+    // Do direction (forward, up, right) calculations only if they have connections
+    bool emitDirectionChanges = (m_directionConnectionCount > 0);
+    if (emitDirectionChanges) {
+        // Instead of calling forward(), up() and right(), calculate them here.
+        // This way m_sceneTransform isn't updated due to m_sceneTransformDirty and
+        // common theDirMatrix operations are not duplicated.
+        QMatrix3x3 theDirMatrix = mat44::getUpper3x3(m_sceneTransform);
+        theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+        prevForward = mat33::transform(theDirMatrix, QVector3D(0, 0, -1)).normalized();
+        prevUp = mat33::transform(theDirMatrix, QVector3D(0, 1, 0)).normalized();
+        prevRight = mat33::transform(theDirMatrix, QVector3D(1, 0, 0)).normalized();
+    }
 
     calculateGlobalVariables();
 
     const QVector3D newPosition = mat44::getPosition(m_sceneTransform);
     const QQuaternion newRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform)).normalized();
     const QVector3D newScale = mat44::getScale(m_sceneTransform);
+    if (emitDirectionChanges) {
+        QMatrix3x3 theDirMatrix = mat44::getUpper3x3(m_sceneTransform);
+        theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+        newForward = mat33::transform(theDirMatrix, QVector3D(0, 0, -1)).normalized();
+        newUp = mat33::transform(theDirMatrix, QVector3D(0, 1, 0)).normalized();
+        newRight = mat33::transform(theDirMatrix, QVector3D(1, 0, 0)).normalized();
+    }
 
     const bool positionChanged = prevPosition != newPosition;
     const bool rotationChanged = prevRotation != newRotation;
@@ -483,6 +504,17 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
         emit q->sceneRotationChanged();
     if (scaleChanged)
         emit q->sceneScaleChanged();
+    if (emitDirectionChanges) {
+        const bool forwardChanged = prevForward != newForward;
+        const bool upChanged = prevUp != newUp;
+        const bool rightChanged = prevRight != newRight;
+        if (forwardChanged)
+            Q_EMIT q->forwardChanged();
+        if (upChanged)
+            Q_EMIT q->upChanged();
+        if (rightChanged)
+            Q_EMIT q->rightChanged();
+    }
 }
 
 bool QQuick3DNodePrivate::isSceneTransformRelatedSignal(const QMetaMethod &signal) const
@@ -500,6 +532,19 @@ bool QQuick3DNodePrivate::isSceneTransformRelatedSignal(const QMetaMethod &signa
             || signal == sceneScaleSignal);
 }
 
+bool QQuick3DNodePrivate::isDirectionRelatedSignal(const QMetaMethod &signal) const
+{
+    // Return true if its likely that we need to emit
+    // the given signal when our global transform changes.
+    static const QMetaMethod forwardSignal = QMetaMethod::fromSignal(&QQuick3DNode::forwardChanged);
+    static const QMetaMethod upSignal = QMetaMethod::fromSignal(&QQuick3DNode::upChanged);
+    static const QMetaMethod rightSignal = QMetaMethod::fromSignal(&QQuick3DNode::rightChanged);
+
+    return (signal == forwardSignal
+            || signal == upSignal
+            || signal == rightSignal);
+}
+
 void QQuick3DNode::connectNotify(const QMetaMethod &signal)
 {
     Q_D(QQuick3DNode);
@@ -509,6 +554,8 @@ void QQuick3DNode::connectNotify(const QMetaMethod &signal)
     // whenever our geometry changes (unless someone asks for it explicitly).
     if (d->isSceneTransformRelatedSignal(signal))
         d->m_sceneTransformConnectionCount++;
+    if (d->isDirectionRelatedSignal(signal))
+        d->m_directionConnectionCount++;
 }
 
 void QQuick3DNode::disconnectNotify(const QMetaMethod &signal)
@@ -516,13 +563,15 @@ void QQuick3DNode::disconnectNotify(const QMetaMethod &signal)
     Q_D(QQuick3DNode);
     if (d->isSceneTransformRelatedSignal(signal))
         d->m_sceneTransformConnectionCount--;
+    if (d->isDirectionRelatedSignal(signal))
+        d->m_directionConnectionCount--;
 }
 
 void QQuick3DNode::componentComplete()
 {
     Q_D(QQuick3DNode);
     QQuick3DObject::componentComplete();
-    if (d->m_sceneTransformConnectionCount > 0)
+    if (d->m_sceneTransformConnectionCount > 0 || d->m_directionConnectionCount > 0)
         d->emitChangesToSceneTransform();
 }
 
@@ -543,7 +592,7 @@ void QQuick3DNodePrivate::markSceneTransformDirty()
 
     m_sceneTransformDirty = true;
 
-    if (m_sceneTransformConnectionCount > 0)
+    if (m_sceneTransformConnectionCount > 0 || m_directionConnectionCount > 0)
         emitChangesToSceneTransform();
 
     auto children = QQuick3DObjectPrivate::get(q)->childItems;

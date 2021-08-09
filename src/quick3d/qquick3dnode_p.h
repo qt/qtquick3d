@@ -65,9 +65,9 @@ class Q_QUICK3D_EXPORT QQuick3DNode : public QQuick3DObject
     Q_PROPERTY(QVector3D pivot READ pivot WRITE setPivot NOTIFY pivotChanged)
     Q_PROPERTY(float opacity READ localOpacity WRITE setLocalOpacity NOTIFY localOpacityChanged)
     Q_PROPERTY(bool visible READ visible WRITE setVisible NOTIFY visibleChanged)
-    Q_PROPERTY(QVector3D forward READ forward)
-    Q_PROPERTY(QVector3D up READ up)
-    Q_PROPERTY(QVector3D right READ right)
+    Q_PROPERTY(QVector3D forward READ forward NOTIFY forwardChanged)
+    Q_PROPERTY(QVector3D up READ up NOTIFY upChanged)
+    Q_PROPERTY(QVector3D right READ right NOTIFY rightChanged)
     Q_PROPERTY(QVector3D scenePosition READ scenePosition NOTIFY scenePositionChanged)
     Q_PROPERTY(QQuaternion sceneRotation READ sceneRotation NOTIFY sceneRotationChanged)
     Q_PROPERTY(QVector3D sceneScale READ sceneScale NOTIFY sceneScaleChanged)
@@ -157,6 +157,9 @@ Q_SIGNALS:
     void pivotChanged();
     void localOpacityChanged();
     void visibleChanged();
+    void forwardChanged();
+    void upChanged();
+    void rightChanged();
     void sceneTransformChanged();
     void scenePositionChanged();
     void sceneRotationChanged();
