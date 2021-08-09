@@ -74,6 +74,7 @@ public:
 
     void emitChangesToSceneTransform();
     bool isSceneTransformRelatedSignal(const QMetaMethod &signal) const;
+    bool isDirectionRelatedSignal(const QMetaMethod &signal) const;
 
     void setIsHiddenInEditor(bool isHidden);
 
@@ -90,6 +91,7 @@ public:
     QMatrix4x4 m_sceneTransform; // Right handed
     bool m_sceneTransformDirty = true;
     int m_sceneTransformConnectionCount = 0;
+    int m_directionConnectionCount = 0;
     bool m_isHiddenInEditor = false;
     bool m_hasInheritedUniformScale = true;
     bool m_eulerRotationDirty = false;
