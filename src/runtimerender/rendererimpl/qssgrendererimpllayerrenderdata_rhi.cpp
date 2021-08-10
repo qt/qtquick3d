@@ -801,9 +801,16 @@ static void rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
         rhiRenderDepthPassForObject(rhiCtx, inData, handle.obj, needsSetViewport);
 }
 
-static void computeFrustumBounds(const QSSGRenderCamera &inCamera,
-                                 QVector3D &ctrBound,
-                                 QVector3D camVerts[8])
+static QVector3D calcCenter(QVector3D vertices[8])
+{
+    QVector3D center = vertices[0];
+    for (int i = 1; i < 8; ++i) {
+        center += vertices[i];
+    }
+    return center * 0.125f;
+}
+
+static void computeFrustumBounds(const QSSGRenderCamera &inCamera, QVector3D camVerts[8])
 {
     QMatrix4x4 viewProjection;
     inCamera.calculateViewProjectionMatrix(viewProjection);
@@ -820,12 +827,6 @@ static void computeFrustumBounds(const QSSGRenderCamera &inCamera,
     camVerts[5] = inv.map(QVector3D(+1, -1, +1));
     camVerts[6] = inv.map(QVector3D(+1, +1, -1));
     camVerts[7] = inv.map(QVector3D(+1, +1, +1));
-
-    ctrBound = camVerts[0];
-    for (int i = 1; i < 8; ++i) {
-        ctrBound += camVerts[i];
-    }
-    ctrBound *= 0.125f;
 }
 
 static QSSGBounds3 calculateShadowCameraBoundingBox(const QVector3D *points,
@@ -878,16 +879,8 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
     theCamera.fov = qDegreesToRadians(90.f);
 
     if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
-        QVector3D frustumPoints[8], boundCtr, sceneCtr;
-        computeFrustumBounds(inCamera, boundCtr, frustumPoints);
-
-        if (scenePoints) {
-            sceneCtr = QVector3D(0, 0, 0);
-            for (int i = 0; i < 8; ++i)
-                sceneCtr += scenePoints[i];
-            sceneCtr *= 0.125f;
-        }
-
+        QVector3D frustumPoints[8];
+        computeFrustumBounds(inCamera, frustumPoints);
         QVector3D forward = inLightDir;
         forward.normalize();
         QVector3D right;
@@ -901,7 +894,7 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
 
         // Calculate bounding box of the scene camera frustum
         QSSGBounds3 bounds = calculateShadowCameraBoundingBox(frustumPoints, forward, up, right);
-        inLightPos = boundCtr;
+        inLightPos = calcCenter(frustumPoints);
         if (scenePoints) {
             QSSGBounds3 sceneBounds = calculateShadowCameraBoundingBox(scenePoints, forward, up,
                                                                        right);
@@ -911,26 +904,27 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
                         < bounds.extents().x() * bounds.extents().y() * bounds.extents().z()) {
                 // Scene is smaller than frustum, set bounds to scene
                 bounds = sceneBounds;
-                inLightPos = sceneCtr;
+                inLightPos = calcCenter(scenePoints);
             }
         }
 
         // Apply bounding box parameters to shadow map camera projection matrix
         // so that the whole scene is fit inside the shadow map
-        theViewport.setHeight(bounds.extents().y() * 2);
-        theViewport.setWidth(bounds.extents().x() * 2);
-        theCamera.clipNear = -bounds.extents().z() * 2;
-        theCamera.clipFar = bounds.extents().z() * 2;
+        const QVector3D dims = bounds.dimensions();
+        theViewport.setHeight(dims.y());
+        theViewport.setWidth(dims.x());
+        theCamera.clipNear = -dims.z();
+        theCamera.clipFar = dims.z();
     }
 
     theCamera.flags.setFlag(QSSGRenderCamera::Flag::Orthographic, inLight->type == QSSGRenderLight::Type::DirectionalLight);
     theCamera.parent = nullptr;
     theCamera.pivot = inLight->pivot;
 
-    if (inLight->type != QSSGRenderLight::Type::PointLight) {
-        theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), inLightPos + inLightDir);
-    } else {
+    if (inLight->type == QSSGRenderLight::Type::PointLight) {
         theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), QVector3D(0, 0, 0));
+    } else {
+        theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), inLightPos + inLightDir);
     }
 
     theCamera.calculateGlobalVariables(theViewport);
