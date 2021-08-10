@@ -77,7 +77,7 @@ Q_SIGNALS:
     void leftChanged();
 
 protected:
-    bool checkSpatialNode(QSSGRenderCamera *camera) override;
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
     float m_top = 0.0f;

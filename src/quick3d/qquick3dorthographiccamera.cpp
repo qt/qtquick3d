@@ -189,16 +189,19 @@ void QQuick3DOrthographicCamera::setVerticalMagnification(float verticalMagnific
     update();
 }
 
-bool QQuick3DOrthographicCamera::checkSpatialNode(QSSGRenderCamera *camera)
+QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    bool changed = false;
-    changed |= qUpdateIfNeeded(camera->clipNear, m_clipNear);
-    changed |= qUpdateIfNeeded(camera->clipFar, m_clipFar);
-    changed |= qUpdateIfNeeded(camera->horizontalMagnification, m_horizontalMagnification);
-    changed |= qUpdateIfNeeded(camera->verticalMagnification, m_verticalMagnification);
-    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
+    QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
+    if (camera) {
+        const bool changed = ((qUpdateIfNeeded(camera->clipNear, m_clipNear)
+                               | qUpdateIfNeeded(camera->clipFar, m_clipFar)
+                               | qUpdateIfNeeded(camera->horizontalMagnification, m_horizontalMagnification)
+                               | qUpdateIfNeeded(camera->verticalMagnification, m_verticalMagnification)) != 0);
+        if (changed)
+            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+    }
 
-    return changed;
+    return camera;
 }
 
 QT_END_NAMESPACE

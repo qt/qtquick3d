@@ -869,7 +869,7 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     layerNode.setProbeOrientation(view3D.environment()->probeOrientation());
 
     if (view3D.camera())
-        layerNode.explicitCamera = view3D.camera()->cameraNode();
+        layerNode.explicitCamera = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode);
 
     if (view3D.environment()->depthTestEnabled())
         layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);
