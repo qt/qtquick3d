@@ -32,7 +32,7 @@ qt_internal_add_resource(qquick3d_qmlscenegrabber "scenegrabber"
         ${scenegrabber_resource_files}
 )
 
-qt_quick3d_internal_bake_lightprobe_hdri(qquick3d_qmlscenegrabber "ibl_assets"
+qt6_add_lightprobe_images(qquick3d_qmlscenegrabber "ibl_assets"
     PREFIX
         "/"
     FILES
