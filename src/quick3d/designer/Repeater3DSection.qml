@@ -28,35 +28,46 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Repeater")
     width: parent.width
 
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Model")
             tooltip: qsTr("The model providing data for the repeater.")
         }
+
         SecondColumnLayout {
             LineEdit {
                 backendValue: backendValues.model
-                Layout.fillWidth: true
                 showTranslateCheckBox: false
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+                width: implicitWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Delegate")
             tooltip: qsTr("The delegate provides a template defining each object instantiated by the repeater.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Object3D"
-                Layout.fillWidth: true
                 backendValue: backendValues.delegate
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

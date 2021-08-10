@@ -28,34 +28,45 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Model Particle")
     width: parent.width
+
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Delegate")
             tooltip: qsTr("The delegate provides a template defining each object instantiated by the particle.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "Component"
-                Layout.fillWidth: true
                 backendValue: backendValues.delegate
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Instance Table")
             tooltip: qsTr("")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Instancing"
-                Layout.fillWidth: true
                 backendValue: backendValues.instanceTable
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

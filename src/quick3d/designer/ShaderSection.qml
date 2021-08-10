@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,37 +28,44 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Shader")
     width: parent.width
 
-    Section {
-        caption: qsTr("Shader")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Source")
+            tooltip: qsTr("Shader source code.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Source")
-                tooltip: qsTr("Shader source code.")
+        SecondColumnLayout {
+            UrlChooser {
+                backendValue: backendValues.shader
+                filter: "*.vert *.frag *.glslv *.glslf *.glsl *.vsh *.fsh"
             }
-            SecondColumnLayout {
-                UrlChooser {
-                    backendValue: backendValues.shader
-                    filter: "*.vert *.frag *.glslv *.glslf *.glsl *.vsh *.fsh"
-                }
-            }
-            Label {
-                text: qsTr("Stage")
-                tooltip: qsTr("Shader stage.")
-            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Stage")
+            tooltip: qsTr("Shader stage.")
+        }
+
+        SecondColumnLayout {
             ComboBox {
                 scope: "Shader"
                 model: ["Vertex", "Fragment"]
                 backendValue: backendValues.stage
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

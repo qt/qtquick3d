@@ -28,88 +28,113 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Model Blend")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Delegate")
             tooltip: qsTr("The delegate provides a template defining the model for the ModelBlendParticle3D.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "Component"
-                Layout.fillWidth: true
                 backendValue: backendValues.delegate
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("End Node")
             tooltip: qsTr("This property holds the node that specifies the transformation for the model at the end of particle effect.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Node"
-                Layout.fillWidth: true
                 backendValue: backendValues.endNode
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Model Blend Mode")
             tooltip: qsTr("This property holds blending mode for the particle effect.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "ModelBlendParticle3D"
                 model: ["Explode", "Construct", "Transfer"]
                 backendValue: backendValues.modelBlendMode
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("End Time")
             tooltip: qsTr("This property holds the end time of the particle in milliseconds.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.endTime
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Activation Node")
             tooltip: qsTr("This property holds a node that activates particles and overrides the reqular emit routine.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Node"
-                Layout.fillWidth: true
                 backendValue: backendValues.activationNode
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Random")
             tooltip: qsTr("This property holds whether the particles are emitted in random order instead of in the order they are specified in the model.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: randomCheckBox
                 text: backendValues.random.valueToString
                 backendValue: backendValues.random
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 

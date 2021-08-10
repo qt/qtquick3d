@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +28,8 @@
 ****************************************************************************/
 
 import QtQuick 2.15
-import HelperWidgets 2.0
 import QtQuick.Layouts 1.15
+import HelperWidgets 2.0
 import StudioTheme 1.0 as StudioTheme
 
 Column {
@@ -48,14 +48,14 @@ Column {
             SecondColumnLayout {
                 // ### should be a slider
                 SpinBox {
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
                     minimumValue: 0
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.opacity
                     sliderIndicatorVisible: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
                 ExpandingSpacer {}
@@ -85,11 +85,11 @@ Column {
 
             SecondColumnLayout {
                 LineEdit {
+                    backendValue: backendValues.staticFlags
+                    showTranslateCheckBox: false
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
                     width: implicitWidth
-                    backendValue: backendValues.staticFlags
-                    showTranslateCheckBox: false
                 }
 
                 ExpandingSpacer {}
@@ -113,13 +113,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -136,13 +135,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -159,13 +157,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -187,13 +184,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.eulerRotation_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -210,13 +206,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.eulerRotation_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -233,13 +228,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.eulerRotation_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -261,13 +255,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.scale_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -284,13 +277,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.scale_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -307,13 +299,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.scale_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -335,13 +326,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.pivot_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -358,13 +348,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.pivot_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
@@ -381,13 +370,12 @@ Column {
 
                 SecondColumnLayout {
                     SpinBox {
-                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                       + StudioTheme.Values.actionIndicatorWidth
-                        maximumValue: 9999999
                         minimumValue: -9999999
-                        realDragRange: 5000
+                        maximumValue: 9999999
                         decimals: 2
                         backendValue: backendValues.pivot_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
 
                     Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }

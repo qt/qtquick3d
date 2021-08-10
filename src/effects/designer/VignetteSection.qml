@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,56 +28,58 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Vignette")
     width: parent.width
 
-    Section {
-        caption: qsTr("Vignette")
-        width: parent.width
-
-        SectionLayout {
-            Label {
-                text: qsTr("Strength")
-                tooltip: qsTr("Set the vignette strength.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 15
-                    minimumValue: 0
-                    decimals: 2
-                    backendValue: backendValues.vignetteStrength
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Radius")
-                tooltip: qsTr("Set the vignette radius.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 5
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.vignetteRadius
-                    Layout.fillWidth: true
-                }
-            }
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Strength")
+            tooltip: qsTr("Set the vignette strength.")
         }
-    }
 
-    Section {
-        caption: qsTr("Color")
-        width: parent.width
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 15
+                decimals: 2
+                backendValue: backendValues.vignetteStrength
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Radius")
+            tooltip: qsTr("Set the vignette radius.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 5
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.vignetteRadius
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel { text: qsTr("Vignette Color") }
+
         ColorEditor {
-            caption: qsTr("Vignette Color")
             backendValue: backendValues.vignetteColor
             supportGradient: false
             isVector3D: true
-            Layout.fillWidth: true
         }
     }
 }

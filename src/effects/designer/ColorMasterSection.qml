@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,73 +28,89 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Colors")
     width: parent.width
 
-    Section {
-        caption: qsTr("Colors")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Red Strength")
+            tooltip: qsTr("Red strength.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Red Strength")
-                tooltip: qsTr("Red strength.")
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 2
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.redStrength
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 2
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.redStrength
-                    Layout.fillWidth: true
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Green Strength")
+            tooltip: qsTr("Green strength.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 2
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.greenStrength
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Green Strength")
-                tooltip: qsTr("Green strength.")
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Blue Strength")
+            tooltip: qsTr("Blue strength.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 2
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.blueStrength
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 2
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.greenStrength
-                    Layout.fillWidth: true
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Saturation")
+            tooltip: qsTr("Color saturation.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -1
+                maximumValue: 1
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.saturation
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Blue Strength")
-                tooltip: qsTr("Blue strength.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 2
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.blueStrength
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Saturation")
-                tooltip: qsTr("Color saturation.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: -1
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.saturation
-                    Layout.fillWidth: true
-                }
-            }
+
+            ExpandingSpacer {}
         }
     }
 }

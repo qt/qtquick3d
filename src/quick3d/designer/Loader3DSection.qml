@@ -28,14 +28,16 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Loader3D")
     width: parent.width
+
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Active")
             tooltip: qsTr("This property is true if the Loader3D is currently active.")
         }
@@ -44,9 +46,14 @@ Section {
             CheckBox {
                 text: backendValues.active.valueToString
                 backendValue: backendValues.active
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Source")
             tooltip: qsTr("This property holds the URL of the QML component to instantiate.")
         }
@@ -54,23 +61,29 @@ Section {
         SecondColumnLayout {
             UrlChooser {
                 filter: "*.qml"
-                Layout.fillWidth: true
                 backendValue:  backendValues.source
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Source Component")
             tooltip: qsTr("This property holds the component to instantiate.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.QQmlComponent"
-                Layout.fillWidth: true
                 backendValue: backendValues.sourceComponent
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Asynchronous")
             tooltip: qsTr("This property holds whether the component will be instantiated asynchronously.")
         }
@@ -79,7 +92,11 @@ Section {
             CheckBox {
                 text: backendValues.asynchronous.valueToString
                 backendValue: backendValues.asynchronous
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,69 +28,84 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
+
     Section {
         width: parent.width
         caption: qsTr("Scene Environment")
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Clear Color")
                 tooltip: qsTr("This property defines which color will be used to clear the viewport when using SceneEnvironment.Color for the backgroundMode property.")
             }
-            SecondColumnLayout {
-                ColorEditor {
-                    caption: qsTr("clearColor")
-                    backendValue: backendValues.clearColor
-                    supportGradient: false
-                    Layout.fillWidth: true
-                }
+
+            ColorEditor {
+                backendValue: backendValues.clearColor
+                supportGradient: false
             }
 
-
-            Label {
+            PropertyLabel {
                 text: qsTr("Background Mode")
                 tooltip: qsTr("Controls if and how the background of the scene should be cleared.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["Transparent", "Unspecified", "Color", "SkyBox"]
                     backendValue: backendValues.backgroundMode
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Enable Depth Test")
                 tooltip: qsTr("Enables depth testing. Disable to optimize render speed for layers with mostly transparent objects.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.depthTestEnabled.valueToString
                     backendValue: backendValues.depthTestEnabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Enable Depth Prepass")
                 tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.depthPrePassEnabled.valueToString
                     backendValue: backendValues.depthPrePassEnabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Effect")
                 tooltip: qsTr("A post-processing effect applied to this scene.")
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 5
             }
+
             SecondColumnLayout {
                 EditableListView {
                     backendValue: backendValues.effects
@@ -102,73 +117,101 @@ Column {
                     onRemove: function(idx) { backendValues.effects.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.effects.idListReplace(idx, value) }
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Tonemap Mode")
                 tooltip: qsTr("This property defines how colors are tonemapped before rendering.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["TonemapModeNone", "TonemapModeLinear", "TonemapModeAces", "TonemapModeHejlDawson", "TonemapModeFilmic"]
                     backendValue: backendValues.tonemapMode
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         width: parent.width
         caption: qsTr("Antialiasing")
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Antialiasing Mode")
                 tooltip: qsTr("Sets the antialiasing mode applied to the scene.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["NoAA", "SSAA", "MSAA", "ProgressiveAA"]
                     backendValue: backendValues.antialiasingMode
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Antialiasing Quality")
                 tooltip: qsTr("Sets the level of antialiasing applied to the scene.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["Medium", "High", "VeryHigh"]
                     backendValue: backendValues.antialiasingQuality
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Temporal AA")
                 tooltip: qsTr("Enables temporal antialiasing using camera jittering and frame blending.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.temporalAAEnabled.valueToString
                     backendValue: backendValues.temporalAAEnabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Temporal AA Strength")
                 tooltip: qsTr("Sets the amount of temporal antialiasing applied.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 2.0
                     minimumValue: 0.01
+                    maximumValue: 2.0
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.temporalAAStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
@@ -176,184 +219,241 @@ Column {
     Section {
         width: parent.width
         caption: qsTr("Ambient Occlusion")
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Strength")
                 tooltip: qsTr("This property defines the amount of ambient occulusion applied.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 100
                     minimumValue: 0
+                    maximumValue: 100
                     decimals: 2
                     backendValue: backendValues.aoStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Distance")
                 tooltip: qsTr("This property defines roughly how far ambient occlusion shadows spread away from objects.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 9999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 9999999
                     decimals: 2
                     backendValue: backendValues.aoDistance
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Softness")
                 tooltip: qsTr("This property how smooth the edges of the ambient occlusion shading are.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 50
                     minimumValue: 0
+                    maximumValue: 50
                     decimals: 2
                     backendValue: backendValues.aoSoftness
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Sample Rate")
                 tooltip: qsTr("This property defines ambient occlusion quality (more shades of gray) at the expense of performance.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 4
                     minimumValue: 2
+                    maximumValue: 4
                     decimals: 0
                     backendValue: backendValues.aoSampleRate
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Bias")
                 tooltip: qsTr("This property defines a cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 9999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 9999999
                     decimals: 2
                     backendValue: backendValues.aoBias
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Dither")
                 tooltip: qsTr("When this property is enabled it scatters the edges of the ambient occlusion shadow bands to improve smoothness.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     id: aoDitherCheckBox
                     text: backendValues.aoDither.valueToString
                     backendValue: backendValues.aoDither
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         width: parent.width
         caption: qsTr("Light Probe")
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Image")
                 tooltip: qsTr("This property defines an image, to use to light the scene, either instead of or in addition to standard lights.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.lightProbe
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Exposure")
                 tooltip: qsTr("This property modifies the amount of light emitted by the light probe.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 9999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 9999999
                     decimals: 2
                     backendValue: backendValues.probeExposure
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Horizon")
                 tooltip: qsTr("This property when defined with increasing values adds darkness (black) to the bottom half of the environment, forcing the lighting to come predominantly from the top of the image.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 1
                     maximumValue: 0
                     decimals: 2
                     backendValue: backendValues.probeHorizon
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Orientation")
                 tooltip: qsTr("This property when defines the orientation of the light probe. Orientation is defined in terms of euler angles in degrees over the x, y, and z axes.")
             }
-            ColumnLayout {
-                RowLayout {
-                    Label {
-                        text: qsTr("X")
-                        color: StudioTheme.Values.theme3DAxisXColor
-                    }
-                    SpinBox {
-                        maximumValue: 9999999
-                        minimumValue: -9999999
-                        realDragRange: 5000
-                        decimals: 2
-                        backendValue: backendValues.probeOrientation_x
-                        Layout.fillWidth: true
-                    }
-                }
-                RowLayout {
 
-                    Label {
-                        text: qsTr("Y")
-                        color: StudioTheme.Values.theme3DAxisYColor
-                    }
-                    SpinBox {
-                        maximumValue: 9999999
-                        minimumValue: -9999999
-                        realDragRange: 5000
-                        decimals: 2
-                        backendValue: backendValues.probeOrientation_y
-                        Layout.fillWidth: true
-                    }
+            SecondColumnLayout {
+                SpinBox {
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                    minimumValue: -9999999
+                    maximumValue: 9999999
+                    decimals: 2
+                    backendValue: backendValues.probeOrientation_x
                 }
-                RowLayout {
-                    Label {
-                        text: qsTr("Z")
-                        color: StudioTheme.Values.theme3DAxisZColor
-                    }
-                    SpinBox {
-                        maximumValue: 9999999
-                        minimumValue: -9999999
-                        realDragRange: 5000
-                        decimals: 2
-                        backendValue: backendValues.probeOrientation_z
-                        Layout.fillWidth: true
-                    }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "X"
+                    color: StudioTheme.Values.theme3DAxisXColor
                 }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                    minimumValue: -9999999
+                    maximumValue: 9999999
+                    decimals: 2
+                    backendValue: backendValues.probeOrientation_y
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "Y"
+                    color: StudioTheme.Values.theme3DAxisYColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                    minimumValue: -9999999
+                    maximumValue: 9999999
+                    decimals: 2
+                    backendValue: backendValues.probeOrientation_z
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "Z"
+                    color: StudioTheme.Values.theme3DAxisZColor
+                }
+
+                ExpandingSpacer {}
             }
         }
     }

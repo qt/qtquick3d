@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,39 +28,45 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Texture Input")
     width: parent.width
 
-    Section {
-        caption: qsTr("Texture Input")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Texture")
+            tooltip: qsTr("Input texture.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Input texture.")
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Texture"
+                backendValue: backendValues.texture
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.texture
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Enabled")
+            tooltip: qsTr("Texture enable state.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.enabled.valueToString
+                backendValue: backendValues.enabled
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Enabled")
-                tooltip: qsTr("Texture enable state.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.enabled.valueToString
-                    backendValue: backendValues.enabled
-                    Layout.fillWidth: true
-                }
-            }
+
+            ExpandingSpacer {}
         }
     }
 }

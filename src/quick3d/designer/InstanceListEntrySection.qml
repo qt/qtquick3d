@@ -28,222 +28,244 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
+
     Section {
-        id: entrySection
         width: parent.width
         caption: qsTr("Instance List Entry")
 
-        property int labelWidth: 10
-        property int labelSpinBoxSpacing: 0
-        property int spinBoxMinimumWidth: 120
-
         ColumnLayout {
-            width: parent.width - 16
-            Label {
-                text: qsTr("Color")
-                tooltip: qsTr("This property specifies the color for the instance.")
-            }
-            SecondColumnLayout {
+            spacing: StudioTheme.Values.transform3DSectionSpacing
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Color")
+                    tooltip: qsTr("This property specifies the color for the instance.")
+                }
+
                 ColorEditor {
-                    caption: qsTr("Color")
                     backendValue: backendValues.color
                     supportGradient: false
-                    Layout.fillWidth: true
                 }
             }
 
-            GridLayout {
-                columns: 2
-                rows: 2
-                columnSpacing: 24
-                rowSpacing: 12
-                width: parent.width - 16
-
-                ColumnLayout {
-                    Label {
-                        width: 100
-                        text: qsTr("Position")
-                        tooltip: qsTr("This property specifies the position for the instance.")
-                    }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-
-                        Label {
-                            text: qsTr("X")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.position_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
-                    }
-
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("Y")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.position_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
-                    }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("Z")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.position_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
-                    }
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Position")
+                    tooltip: qsTr("This property specifies the position for the instance.")
                 }
 
-                ColumnLayout {
-                    Label {
-                        width: 100
-                        text: qsTr("Scale")
-                        tooltip: qsTr("This property specifies the scale for the instance.")
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.position_x
                     }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("X")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.scale_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
                     }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("Y")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.scale_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
-                    }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("Z")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.scale_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
-                    }
+
+                    ExpandingSpacer {}
                 }
-                ColumnLayout {
-                    Label {
-                        width: 150
-                        text: qsTr("Rotation")
-                        tooltip: qsTr("This property specifies the rotation for the instance.")
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.position_y
                     }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("X")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.eulerRotation_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
                     }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("Y")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.eulerRotation_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.position_z
                     }
-                    RowLayout {
-                        spacing: entrySection.labelSpinBoxSpacing
-                        Label {
-                            text: qsTr("Z")
-                            width: entrySection.labelWidth
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.eulerRotation_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: entrySection.spinBoxMinimumWidth
-                        }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
                     }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Scale")
+                    tooltip: qsTr("This property specifies the scale for the instance.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.scale_x
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.scale_y
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.scale_z
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Rotation")
+                    tooltip: qsTr("This property specifies the rotation for the instance.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.eulerRotation_x
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.eulerRotation_y
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                        + StudioTheme.Values.actionIndicatorWidth
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.eulerRotation_z
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
                 }
             }
         }
     }
 }
-

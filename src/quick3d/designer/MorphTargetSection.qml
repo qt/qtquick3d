@@ -28,40 +28,48 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Morph Target")
     width: parent.width
 
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Weight")
             tooltip: qsTr("Specifies the weight of the current morph target.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 9999999
                 minimumValue: -9999999
-                realDragRange: 5000
+                maximumValue: 9999999
                 decimals: 2
                 backendValue: backendValues.weight
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Attributes")
             tooltip: qsTr("Specifies the set of attributes of the current morph target.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "MorphTarget"
                 model: ["Position", "Normal", "Tangent", "Binormal"]
                 backendValue: backendValues.attributes
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

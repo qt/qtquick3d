@@ -27,333 +27,383 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Column {
+    width: parent.width
+
     Section {
         caption: qsTr("Particle Wander")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Unique Amount Variation")
                 tooltip: qsTr("This property defines variation for uniqueAmount between 0.0 and 1.0.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.01
                     backendValue: backendValues.uniqueAmountVariation
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Unique Pace Variation")
                 tooltip: qsTr("This property defines the unique pace (frequency) variation for each particle between 0.0 and 1.0.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.01
                     backendValue: backendValues.uniquePaceVariation
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Fade In Duration")
                 tooltip: qsTr("This property defines the duration in milliseconds for fading in the affector.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 0
                     backendValue: backendValues.fadeInDuration
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Fade Out Duration")
                 tooltip: qsTr("This property defines the duration in milliseconds for fading out the affector.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 0
                     backendValue: backendValues.fadeOutDuration
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         width: parent.width
         caption: qsTr("Global")
-        SectionLayout {
-            GridLayout {
-                columns: 2
-                rows: 2
-                columnSpacing: 24
-                rowSpacing: 12
-                width: parent.parent.width
 
-                ColumnLayout {
-                    Label {
-                        text: qsTr("Amount")
-                        tooltip: qsTr("This property defines how long distance each particle moves at the ends of curves.")
-                    }
-                    ColumnLayout {
-                        RowLayout {
-                            spacing: 0
+        ColumnLayout {
+            spacing: StudioTheme.Values.transform3DSectionSpacing
 
-                            Label {
-                                text: qsTr("X")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisXColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalAmount_x
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("Y")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisYColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalAmount_y
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("Z")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisZColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalAmount_z
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                    }
-
-                    Label {
-                        text: qsTr("Pace")
-                        tooltip: qsTr("This property defines the pace (frequency) each particle wanders in curves per second.")
-                    }
-                    ColumnLayout {
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("X")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisXColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalPace_x
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("Y")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisYColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalPace_y
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("Z")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisZColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalPace_z
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                    }
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Amount")
+                    tooltip: qsTr("This property defines how long distance each particle moves at the ends of curves.")
                 }
-                ColumnLayout {
-                    Label {
-                        text: qsTr("Pace Start")
-                        tooltip: qsTr("This property defines the starting point for the pace (frequency).")
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalAmount_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
-                    ColumnLayout {
-                        RowLayout {
-                            spacing: 0
 
-                            Label {
-                                text: qsTr("X")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisXColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalPaceStart_x
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                            Label {
-                                text: qsTr("Y")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisYColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalPaceStart_y
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("Z")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisZColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.globalPaceStart_z
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
                     }
-                    Label {
-                        text: qsTr("Unique Pace")
-                        tooltip: qsTr("This property defines the unique pace (frequency) each particle wanders in curves per second.")
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalAmount_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
-                    ColumnLayout {
-                        RowLayout {
-                            spacing: 0
 
-                            Label {
-                                text: qsTr("X")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisXColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.uniquePace_x
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                            Label {
-                                text: qsTr("Y")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisYColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.uniquePace_y
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-
-                            Label {
-                                text: qsTr("Z")
-                                width: 100
-                                color: StudioTheme.Values.theme3DAxisZColor
-                            }
-                            SpinBox {
-                                maximumValue: 9999999
-                                minimumValue: -9999999
-                                realDragRange: 5000
-                                decimals: 2
-                                backendValue: backendValues.uniquePace_z
-                                Layout.fillWidth: true
-                                Layout.minimumWidth: 0
-                            }
-                        }
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
                     }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalAmount_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Pace")
+                    tooltip: qsTr("This property defines the pace (frequency) each particle wanders in curves per second.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalPace_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalPace_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalPace_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Pace Start")
+                    tooltip: qsTr("This property defines the starting point for the pace (frequency).")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalPaceStart_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalPaceStart_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.globalPaceStart_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Unique Pace")
+                    tooltip: qsTr("This property defines the unique pace (frequency) each particle wanders in curves per second.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.uniquePace_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.uniquePace_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.uniquePace_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
                 }
             }
         }

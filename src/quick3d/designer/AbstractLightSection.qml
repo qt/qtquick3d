@@ -28,68 +28,71 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
+    width: parent.width
+
     Section {
         caption: qsTr("Light")
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Color")
                 tooltip: qsTr("This property defines the color applied to models illuminated by this light.")
             }
-            SecondColumnLayout {
-                ColorEditor {
-                    caption: qsTr("Color")
-                    backendValue: backendValues.color
-                    supportGradient: false
-                    Layout.fillWidth: true
-                }
+
+            ColorEditor {
+                backendValue: backendValues.color
+                supportGradient: false
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Ambient Color")
                 tooltip: qsTr("The property defines the ambient color applied to materials before being lit by this light.")
             }
-            SecondColumnLayout {
-                ColorEditor {
-                    caption: qsTr("Ambient Color")
-                    backendValue: backendValues.ambientColor
-                    supportGradient: false
-                    Layout.fillWidth: true
-                }
+
+            ColorEditor {
+                backendValue: backendValues.ambientColor
+                supportGradient: false
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Brightness")
                 tooltip: qsTr("This property defines an overall multiplier for this light’s effects.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 9999999
                     minimumValue: -9999999
-                    realDragRange: 5000
+                    maximumValue: 9999999
                     decimals: 0
                     backendValue: backendValues.brightness
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Scope")
                 tooltip: qsTr("The property allows the selection of a Node in the scene. Only that node and it's children are affected by this light.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Node"
-                    Layout.fillWidth: true
                     backendValue: backendValues.scope
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-            }
 
+                ExpandingSpacer {}
+            }
         }
     }
 
@@ -101,4 +104,3 @@ Column {
         width: parent.width
     }
 }
-

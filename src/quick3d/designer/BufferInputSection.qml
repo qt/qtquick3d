@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,39 +28,46 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Buffer Input")
     width: parent.width
 
-    Section {
-        caption: qsTr("Buffer Input")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Buffer")
+            tooltip: qsTr("Input buffer for a pass.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Buffer")
-                tooltip: qsTr("Input buffer for a pass.")
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Buffer"
+                backendValue: backendValues.buffer
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Buffer"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.buffer
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Parameter")
+            tooltip: qsTr("Buffer input buffer name in the shader.")
+        }
+
+        SecondColumnLayout {
+            LineEdit {
+                backendValue: backendValues.param
+                showTranslateCheckBox: false
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+                width: implicitWidth
             }
-            Label {
-                text: qsTr("Parameter")
-                tooltip: qsTr("Buffer input buffer name in the shader.")
-            }
-            SecondColumnLayout {
-                LineEdit {
-                    backendValue: backendValues.param
-                    Layout.fillWidth: true
-                    showTranslateCheckBox: false
-                }
-            }
+
+            ExpandingSpacer {}
         }
     }
 }

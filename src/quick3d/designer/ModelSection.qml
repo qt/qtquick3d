@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Model")
@@ -37,16 +38,19 @@ Section {
     SectionLayout {
         id: tessellationSection
 
-        Label {
+        PropertyLabel {
             text: qsTr("Source")
             tooltip: qsTr("Defines the location of the mesh file containing the geometry of this model.")
         }
+
         SecondColumnLayout {
             UrlChooser {
                 id: sourceUrlChooser
                 backendValue: backendValues.source
                 filter: "*.mesh"
             }
+
+            ExpandingSpacer {}
         }
 
         function hasTessellationMode(mode) {
@@ -61,45 +65,60 @@ Section {
             return true
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Casts Shadows")
             tooltip: qsTr("Enables the geometry of this model to be rendered to the shadow maps.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.castsShadows.valueToString
                 backendValue: backendValues.castsShadows
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Receives Shadows")
             tooltip: qsTr("Enables the geometry of this model to receive shadows.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.receivesShadows.valueToString
                 backendValue: backendValues.receivesShadows
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Pickable")
             tooltip: qsTr("Controls whether the model is pickable or not.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.pickable.valueToString
                 backendValue: backendValues.pickable
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Materials")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
         }
+
         SecondColumnLayout {
             EditableListView {
                 backendValue: backendValues.materials
@@ -110,17 +129,22 @@ Section {
                 onRemove: function(idx) { backendValues.materials.idListRemove(idx) }
                 onReplace: function (idx, value) { backendValues.materials.idListReplace(idx, value) }
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Geometry")
             tooltip: qsTr("Specify a custom geometry for the model")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 id: geometryComboBox
                 typeFilter: "QtQuick3D.Geometry"
-                Layout.fillWidth: true
                 backendValue: backendValues.geometry
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
 
                 Connections {
                     target: geometryComboBox.backendValue
@@ -131,44 +155,65 @@ Section {
                     }
                 }
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Instancing")
             tooltip: qsTr("If this property is set, the model will not be rendered normally. Instead, a number of instances of the model will be rendered, as defined by the instance table.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Instancing"
-                Layout.fillWidth: true
                 backendValue: backendValues.instancing
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Instance Root")
             tooltip: qsTr("This property defines the origin of the instance’s coordinate system.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Node"
-                Layout.fillWidth: true
                 backendValue: backendValues.instanceRoot
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Skeleton")
             tooltip: qsTr("Contains the skeleton for the model.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Skeleton"
-                Layout.fillWidth: true
                 backendValue: backendValues.skeleton
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Morph Targets")
             tooltip: qsTr("This property contains a list of MorphTargets used to render the provided geometry.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
         }
+
         SecondColumnLayout {
             EditableListView {
                 backendValue: backendValues.morphTargets
@@ -181,20 +226,25 @@ Section {
                 onReplace: function (idx, value) { backendValues.morphTargets.idListReplace(idx, value) }
             }
 
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Depth Bias")
             tooltip: qsTr("Holds the depth bias of the model.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 9999999
                 minimumValue: -9999999
-                realDragRange: 5000
+                maximumValue: 9999999
                 decimals: 0
                 backendValue: backendValues.depthBias
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

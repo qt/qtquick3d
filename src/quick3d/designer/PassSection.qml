@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,60 +28,73 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Pass")
     width: parent.width
 
-    Section {
-        caption: qsTr("Pass")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Commands")
+            tooltip: qsTr("Render commands of the pass.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Commands")
-                tooltip: qsTr("Render commands of the pass.")
-            }
-            SecondColumnLayout {
-                EditableListView {
-                    backendValue: backendValues.commands
-                    model: backendValues.commands.expressionAsList
-                    Layout.fillWidth: true
-                    typeFilter: "QtQuick3D.Command"
+        SecondColumnLayout {
+            EditableListView {
+                backendValue: backendValues.commands
+                model: backendValues.commands.expressionAsList
+                Layout.fillWidth: true
+                typeFilter: "QtQuick3D.Command"
 
-                    onAdd: function(value) { backendValues.commands.idListAdd(value) }
-                    onRemove: function(idx) { backendValues.commands.idListRemove(idx) }
-                    onReplace: function (idx, value) { backendValues.commands.idListReplace(idx, value) }
-                }
+                onAdd: function(value) { backendValues.commands.idListAdd(value) }
+                onRemove: function(idx) { backendValues.commands.idListRemove(idx) }
+                onReplace: function (idx, value) { backendValues.commands.idListReplace(idx, value) }
             }
-            Label {
-                text: qsTr("Buffer")
-                tooltip: qsTr("Output buffer for the pass.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Buffer"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.output
-                }
-            }
-            Label {
-                text: qsTr("Shaders")
-                tooltip: qsTr("Shaders for the pass.")
-            }
-            SecondColumnLayout {
-                EditableListView {
-                    backendValue: backendValues.shaders
-                    model: backendValues.shaders.expressionAsList
-                    Layout.fillWidth: true
-                    typeFilter: "QtQuick3D.Shader"
 
-                    onAdd: function(value) { backendValues.shaders.idListAdd(value) }
-                    onRemove: function(idx) { backendValues.shaders.idListRemove(idx) }
-                    onReplace: function (idx, value) { backendValues.shaders.idListReplace(idx, value) }
-                }
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Buffer")
+            tooltip: qsTr("Output buffer for the pass.")
+        }
+
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Buffer"
+                backendValue: backendValues.output
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Shaders")
+            tooltip: qsTr("Shaders for the pass.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
+        }
+
+        SecondColumnLayout {
+            EditableListView {
+                backendValue: backendValues.shaders
+                model: backendValues.shaders.expressionAsList
+                Layout.fillWidth: true
+                typeFilter: "QtQuick3D.Shader"
+
+                onAdd: function(value) { backendValues.shaders.idListAdd(value) }
+                onRemove: function(idx) { backendValues.shaders.idListRemove(idx) }
+                onReplace: function (idx, value) { backendValues.shaders.idListReplace(idx, value) }
+            }
+
+            ExpandingSpacer {}
         }
     }
 }

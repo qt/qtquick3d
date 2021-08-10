@@ -27,34 +27,41 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Column {
+    width: parent.width
+
     Section {
         caption: qsTr("Particle Emitter")
         width: parent.width
-        SectionLayout {
 
-            Label {
+        SectionLayout {
+            PropertyLabel {
                 text: qsTr("System")
                 tooltip: qsTr("This property defines the ParticleSystem3D for the emitter. If system is direct parent of the emitter, this property does not need to be defined.")
             }
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Particles3D.ParticleSystem3D"
-                    Layout.fillWidth: true
                     backendValue: backendValues.system
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Emit Bursts")
                 tooltip: qsTr("This property takes a list of EmitBurst3D elements, to declaratively define bursts.")
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 5
             }
+
             SecondColumnLayout {
                 EditableListView {
                     backendValue: backendValues.emitBursts
@@ -66,443 +73,518 @@ Column {
                     onRemove: function(idx) { backendValues.emitBursts.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.emitBursts.idListReplace(idx, value) }
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Velocity")
                 tooltip: qsTr("This property can be used to set a starting velocity for emitted particles.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QQuick3DParticleDirection"
-                    Layout.fillWidth: true
                     backendValue: backendValues.velocity
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Particle")
                 tooltip: qsTr("This property defines the scale multiplier of the particles at the beginning.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Particles3D.Particle3D"
-                    Layout.fillWidth: true
                     backendValue: backendValues.particle
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Enabled")
                 tooltip: qsTr("If enabled is set to false, this emitter will not emit any particles.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     id: enabledCheckBox
                     text: backendValues.enabled.valueToString
                     backendValue: backendValues.enabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Shape")
                 tooltip: qsTr("This property defines optional shape for the emitting area.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QQuick3DParticleAbstractShape"
-                    Layout.fillWidth: true
                     backendValue: backendValues.shape
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Emit Rate")
                 tooltip: qsTr("This property defines the constant emitting rate in particles per second.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 2
                     backendValue: backendValues.emitRate
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Life Span")
                 tooltip: qsTr("This property defines the lifespan of a single particle in milliseconds.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: 0
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 0
                     backendValue: backendValues.lifeSpan
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Life Span Variation")
                 tooltip: qsTr("This property defines the lifespan variation of a single particle in milliseconds.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 0
                     backendValue: backendValues.lifeSpanVariation
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Particle Scale")
                 tooltip: qsTr("This property defines the scale multiplier of the particles at the beginning")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 2
                     backendValue: backendValues.particleScale
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Particle End Scale")
                 tooltip: qsTr("This property defines the scale multiplier of the particles at the end of particle lifeSpan.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 2
                     backendValue: backendValues.particleEndScale
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Particle Scale Variation")
                 tooltip: qsTr("This property defines the scale variation of the particles.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 2
                     backendValue: backendValues.particleScaleVariation
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Particle End Scale Variation")
                 tooltip: qsTr("This property defines the scale variation of the particles in the end.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 2
                     backendValue: backendValues.particleEndScaleVariation
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Depth Bias")
                 tooltip: qsTr("Holds the depth bias of the emitter. Depth bias is added to the object distance from camera when sorting objects.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 999999
                     minimumValue: -999999
-                    realDragRange: 5000
+                    maximumValue: 999999
                     decimals: 2
                     backendValue: backendValues.depthBias
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         width: parent.width
         caption: qsTr("Particle Rotation")
 
-        SectionLayout {
-            GridLayout {
-                columns: 2
-                rows: 1
-                columnSpacing: 24
-                rowSpacing: 12
-                width: parent.parent.width
-                ColumnLayout {
-                    Label {
-                        text: qsTr("Rotation")
-                        tooltip: qsTr("This property defines the rotation of the particles in the beginning. Rotation is defined as degrees in euler angles.")
-                    }
-                    RowLayout {
-                        spacing: 0
+        ColumnLayout {
+            spacing: StudioTheme.Values.transform3DSectionSpacing
 
-                        Label {
-                            text: qsTr("X")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotation_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
-                    RowLayout {
-                        spacing: 0
-
-                        Label {
-                            text: qsTr("Y")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotation_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
-                    RowLayout {
-                        spacing: 0
-
-                        Label {
-                            text: qsTr("Z")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotation_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Rotation")
+                    tooltip: qsTr("This property defines the rotation of the particles in the beginning. Rotation is defined as degrees in euler angles.")
                 }
 
-                ColumnLayout {
-                    Label {
-                        text: qsTr("Variation")
-                        tooltip: qsTr("This property defines the rotation variation of the particles in the beginning. Rotation variation is defined as degrees in euler angles.")
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotation_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
-                    RowLayout {
-                        spacing: 0
 
-                        Label {
-                            text: qsTr("X")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVariation_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
-                    RowLayout {
-                        spacing: 0
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                        Label {
-                            text: qsTr("Y")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVariation_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
                     }
-                    RowLayout {
-                        spacing: 0
 
-                        Label {
-                            text: qsTr("Z")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVariation_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotation_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotation_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Variation")
+                    tooltip: qsTr("This property defines the rotation variation of the particles in the beginning. Rotation variation is defined as degrees in euler angles.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVariation_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVariation_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVariation_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
                 }
             }
         }
     }
+
     Section {
         width: parent.width
         caption: qsTr("Particle Velocity")
 
-        SectionLayout {
-            GridLayout {
-                columns: 2
-                rows: 1
-                columnSpacing: 24
-                rowSpacing: 12
-                width: parent.parent.width
-                ColumnLayout {
-                    Label {
-                        text: qsTr("Velocity")
-                        tooltip: qsTr("This property defines the rotation velocity of the particles in the beginning. Rotation velocity is defined as degrees per second in euler angles.")
-                    }
-                    RowLayout {
-                        spacing: 0
+        ColumnLayout {
+            spacing: StudioTheme.Values.transform3DSectionSpacing
 
-                        Label {
-                            text: qsTr("X")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVelocity_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
-                    RowLayout {
-                        spacing: 0
-
-                        Label {
-                            text: qsTr("Y")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVelocity_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
-                    RowLayout {
-                        spacing: 0
-
-                        Label {
-                            text: qsTr("Z")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVelocity_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Velocity")
+                    tooltip: qsTr("This property defines the rotation velocity of the particles in the beginning. Rotation velocity is defined as degrees per second in euler angles.")
                 }
-                ColumnLayout {
-                    Label {
-                        text: qsTr("Variation")
-                        tooltip: qsTr("This property defines the rotation velocity variation of the particles. Rotation velocity variation is defined as degrees per second in euler angles.")
-                    }
-                    RowLayout {
-                        spacing: 0
 
-                        Label {
-                            text: qsTr("X")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisXColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVelocityVariation_x
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVelocity_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
                     }
-                    RowLayout {
-                        spacing: 0
 
-                        Label {
-                            text: qsTr("Y")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisYColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVelocityVariation_y
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
-                    }
-                    RowLayout {
-                        spacing: 0
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                        Label {
-                            text: qsTr("Z")
-                            width: 100
-                            color: StudioTheme.Values.theme3DAxisZColor
-                        }
-                        SpinBox {
-                            maximumValue: 9999999
-                            minimumValue: -9999999
-                            realDragRange: 5000
-                            decimals: 2
-                            backendValue: backendValues.particleRotationVelocityVariation_z
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 0
-                        }
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
                     }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVelocity_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVelocity_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Variation")
+                    tooltip: qsTr("This property defines the rotation velocity variation of the particles. Rotation velocity variation is defined as degrees per second in euler angles.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVelocityVariation_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVelocityVariation_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.particleRotationVelocityVariation_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
                 }
             }
         }

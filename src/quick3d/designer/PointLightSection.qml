@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,18 +28,20 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Point Light")
     width: parent.width
 
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Constant Fade")
             tooltip: qsTr("Sets the constant attenuation of the light.")
         }
+
         SecondColumnLayout {
             SpinBox {
                 minimumValue: 0
@@ -47,14 +49,18 @@ Section {
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.constantFade
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Linear Fade")
             tooltip: qsTr("Sets the linear attenuation of the light.")
         }
+
         SecondColumnLayout {
             SpinBox {
                 minimumValue: 0
@@ -62,14 +68,18 @@ Section {
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.linearFade
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Quadratic Fade")
             tooltip: qsTr("Sets the quadratic attenuation of the light.")
         }
+
         SecondColumnLayout {
             SpinBox {
                 minimumValue: 0
@@ -77,8 +87,11 @@ Section {
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.quadraticFade
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

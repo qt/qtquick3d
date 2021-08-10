@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,45 +28,51 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Blur")
     width: parent.width
 
-    Section {
-        caption: qsTr("Blur")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Fade Amount")
+            tooltip: qsTr("Specifies how much the blur fades away each frame.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Fade Amount")
-                tooltip: qsTr("Specifies how much the blur fades away each frame.")
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 1
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.fadeAmount
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.fadeAmount
-                    Layout.fillWidth: true
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Quality")
+            tooltip: qsTr("Blur quality.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0.1
+                maximumValue: 1
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.blurQuality
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Quality")
-                tooltip: qsTr("Blur quality.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: 0.1
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.blurQuality
-                    Layout.fillWidth: true
-                }
-            }
+
+            ExpandingSpacer {}
         }
     }
 }
