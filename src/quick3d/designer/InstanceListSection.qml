@@ -28,18 +28,21 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 
 Section {
     caption: qsTr("Instance List")
     width: parent.width
 
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Instances")
             tooltip: qsTr("This property contains the list of instance definitions. Modifying this list, or any of its elements, will cause the instance table to be updated.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
         }
+
         SecondColumnLayout {
             EditableListView {
                 backendValue: backendValues.instances
@@ -51,6 +54,8 @@ Section {
                 onRemove: function(idx) { backendValues.instances.idListRemove(idx) }
                 onReplace: function (idx, value) { backendValues.instances.idListReplace(idx, value) }
             }
+
+            ExpandingSpacer {}
         }
     }
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,33 +28,28 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 
-Column {
+Section {
+    caption: qsTr("Additive Color Gradient")
     width: parent.width
 
-    Section {
-        caption: qsTr("Top Color")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel { text: qsTr("Top Color") }
+
         ColorEditor {
-            caption: qsTr("Top Color")
             backendValue: backendValues.topColor
             supportGradient: false
             isVector3D: true
-            Layout.fillWidth: true
         }
-    }
 
-    Section {
-        caption: qsTr("Bottom Color")
-        width: parent.width
+        PropertyLabel { text: qsTr("Bottom Color") }
+
         ColorEditor {
-            caption: qsTr("Bottom Color")
             backendValue: backendValues.bottomColor
             supportGradient: false
             isVector3D: true
-            Layout.fillWidth: true
         }
     }
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,18 +28,22 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Effect")
     width: parent.width
 
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Passes")
             tooltip: qsTr("Render passes of the effect.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
         }
+
         SecondColumnLayout {
             EditableListView {
                 backendValue: backendValues.passes
@@ -51,6 +55,8 @@ Section {
                 onRemove: function(idx) { backendValues.passes.idListRemove(idx) }
                 onReplace: function (idx, value) { backendValues.passes.idListReplace(idx, value) }
             }
+
+            ExpandingSpacer {}
         }
     }
 }

@@ -27,152 +27,169 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Vector Direction")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Direction")
             tooltip: qsTr("This property defines the direction for particles target.")
         }
 
-        ColumnLayout {
-            RowLayout {
-                spacing: 0
-
-                Label {
-                    text: qsTr("X")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisXColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.direction_x
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.direction_x
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
             }
-            RowLayout {
-                spacing: 0
 
-                Label {
-                    text: qsTr("Y")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisYColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.direction_y
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
-            }
-            RowLayout {
-                spacing: 0
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                Label {
-                    text: qsTr("Z")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisZColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.direction_z
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+            ControlLabel {
+                text: "X"
+                color: StudioTheme.Values.theme3DAxisXColor
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.direction_y
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Y"
+                color: StudioTheme.Values.theme3DAxisYColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.direction_z
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Z"
+                color: StudioTheme.Values.theme3DAxisZColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Direction Variation")
             tooltip: qsTr("This property defines the direction variation for particles target.")
         }
-        ColumnLayout {
-            RowLayout {
-                spacing: 0
 
-                Label {
-                    text: qsTr("X")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisXColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.directionVariation_x
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.directionVariation_x
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
             }
-            RowLayout {
-                spacing: 0
 
-                Label {
-                    text: qsTr("Y")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisYColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.directionVariation_y
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
-            }
-            RowLayout {
-                spacing: 0
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                Label {
-                    text: qsTr("Z")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisZColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.directionVariation_z
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+            ControlLabel {
+                text: "X"
+                color: StudioTheme.Values.theme3DAxisXColor
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.directionVariation_y
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Y"
+                color: StudioTheme.Values.theme3DAxisYColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.directionVariation_z
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Z"
+                color: StudioTheme.Values.theme3DAxisZColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Normalized")
             tooltip: qsTr("This property defines if the direction should be normalized after applying the variation.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: normalizedCheckBox
                 text: backendValues.normalized.valueToString
                 backendValue: backendValues.normalized
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
-
 }

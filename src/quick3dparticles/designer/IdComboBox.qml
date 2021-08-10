@@ -58,7 +58,7 @@ ComboBox {
         comboBox.setCurrentText(comboBox.textValue)
     }
     onModelChanged: comboBox.setCurrentText(comboBox.textValue)
-    onCompressedActivated: comboBox.handleActivate(index)
+    onCompressedActivated: function(index, reason) { comboBox.handleActivate(index) }
     Component.onCompleted: comboBox.setCurrentText(comboBox.textValue)
 
     onEditTextChanged: {

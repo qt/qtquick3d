@@ -27,32 +27,39 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Affector")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("System")
             tooltip: qsTr("This property defines the ParticleSystem3D for the affector. If system is direct parent of the affector, this property does not need to be defined.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Particles3D.ParticleSystem3D"
-                Layout.fillWidth: true
                 backendValue: backendValues.system
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Particles")
             tooltip: qsTr("This list controls which logical particles will be affected. When empty, all particles in the system are affected.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
         }
+
         SecondColumnLayout {
             EditableListView {
                 backendValue: backendValues.particles
@@ -64,20 +71,25 @@ Section {
                 onRemove: function(idx) { backendValues.particles.idListRemove(idx) }
                 onReplace: function (idx, value) { backendValues.particles.idListReplace(idx, value) }
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Enabled")
             tooltip: qsTr("If enabled is set to false, this affector will not alter any particles. Usually this is used to conditionally turn an affector on or off.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: enabledCheckBox
                 text: backendValues.enabled.valueToString
                 backendValue: backendValues.enabled
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
-
 }

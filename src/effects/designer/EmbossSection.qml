@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,31 +28,32 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Emboss")
     width: parent.width
 
-    Section {
-        caption: qsTr("Emboss")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Amount")
+            tooltip: qsTr("Strength of the emboss.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Amount")
-                tooltip: qsTr("Strength of the emboss.")
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 0.01
+                decimals: 4
+                stepSize: 0.001
+                backendValue: backendValues.amount
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 0.01
-                    minimumValue: 0
-                    decimals: 4
-                    stepSize: 0.001
-                    backendValue: backendValues.amount
-                    Layout.fillWidth: true
-                }
-            }
+
+            ExpandingSpacer {}
         }
     }
 }

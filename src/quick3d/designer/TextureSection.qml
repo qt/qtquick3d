@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,296 +28,391 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
-    caption: qsTr("Image")
+    caption: qsTr("Texture")
     width: parent.width
+
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Source")
             tooltip: qsTr("Holds the location of an image file containing the data used by the texture.")
         }
+
         SecondColumnLayout {
             UrlChooser {
                 backendValue: backendValues.source
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Source Item")
             tooltip: qsTr("Defines an item to be used as the source of the texture.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick.Item"
-                Layout.fillWidth: true
                 backendValue: backendValues.sourceItem
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+        PropertyLabel {
             text: qsTr("Texture Data")
             tooltip: qsTr("This property holds a reference to a TextureData component which defines the contents and properties of raw texture data.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.TextureData"
-                Layout.fillWidth: true
                 backendValue: backendValues.textureData
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
-            text: qsTr("U Scale")
-            tooltip: qsTr("Defines how to scale the U texture coordinate when mapping to UV coordinates of a mesh.")
+        PropertyLabel {
+            text: qsTr("Scale")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 2
+                maximumValue: 999999
                 decimals: 2
                 backendValue: backendValues.scaleU
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-        }
 
-        Label {
-            text: qsTr("V Scale")
-            tooltip: qsTr("Defines how to scale the V texture coordinate when mapping to UV coordinates of a mesh.")
-        }
-        SecondColumnLayout {
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "U"
+                tooltip: qsTr("Defines how to scale the U texture coordinate when mapping to UV coordinates of a mesh.")
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 2
+                maximumValue: 999999
                 decimals: 2
                 backendValue: backendValues.scaleV
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "V"
+                tooltip: qsTr("Defines how to scale the V texture coordinate when mapping to UV coordinates of a mesh.")
+            }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Flip V")
             tooltip: qsTr("This property sets the use of the vertically flipped coordinates.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: flipVcheckBox
                 text: backendValues.flipV.valueToString
                 backendValue: backendValues.flipV
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Flip U")
             tooltip: qsTr("This property sets the use of the horizontally flipped texture coordinates.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: flipUCheckBox
                 text: backendValues.flipU.valueToString
                 backendValue: backendValues.flipU
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Auto Orientation")
             tooltip: qsTr("This property determines if a texture transformation, such as flipping the V texture coordinate, is applied automatically for textures where this is typically relevant.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: autoOrientationCheckBox
                 text: backendValues.autoOrientation.valueToString
                 backendValue: backendValues.autoOrientation
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Texture Mapping")
             tooltip: qsTr("Defines which method of mapping to use when sampling this texture.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
                 model: ["UV", "Environment", "LightProbe"]
                 backendValue: backendValues.mappingMode
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("U Tiling")
             tooltip: qsTr("Controls how the texture is mapped when the U scaling value is greater than 1.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
                 model: ["ClampToEdge", "MirroredRepeat", "Repeat"]
                 backendValue: backendValues.tilingModeHorizontal
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("V Tiling")
             tooltip: qsTr("Controls how the texture is mapped when the V scaling value is greater than 1.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
                 model: ["ClampToEdge", "MirroredRepeat", "Repeat"]
                 backendValue: backendValues.tilingModeVertical
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("UV Index")
             tooltip: qsTr("This property sets the UV coordinate index used by this texture.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 1
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.indexUV
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("UV Rotation")
             tooltip: qsTr("Rotates the texture around the pivot point.")
         }
+
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 360
                 decimals: 0
                 backendValue: backendValues.rotationUV
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
-            text: qsTr("U Position")
-            tooltip: qsTr("Offsets the U coordinate mapping from left to right.")
+        PropertyLabel {
+            text: qsTr("Position")
         }
+
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 2
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.positionU
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-        }
 
-        Label {
-            text: qsTr("V Position")
-            tooltip: qsTr("Offsets the V coordinate mapping from bottom to top.")
-        }
-        SecondColumnLayout {
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "U"
+                tooltip: qsTr("Offsets the U coordinate mapping from left to right.")
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 2
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.positionV
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "V"
+                tooltip: qsTr("Offsets the V coordinate mapping from bottom to top.")
+            }
+
+            ExpandingSpacer {}
         }
 
-        Label {
-            text: qsTr("U Pivot")
-            tooltip: qsTr("Sets the pivot U position.")
+        PropertyLabel {
+            text: qsTr("Pivot")
         }
+
         SecondColumnLayout {
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 2
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.pivotU
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-        }
 
-        Label {
-            text: qsTr("V Pivot")
-            tooltip: qsTr("Sets the pivot V position.")
-        }
-        SecondColumnLayout {
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "U"
+                tooltip: qsTr("Sets the pivot U position.")
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
             SpinBox {
                 maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 2
                 decimals: 2
                 stepSize: 0.1
                 backendValue: backendValues.pivotV
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "V"
+                tooltip: qsTr("Sets the pivot V position.")
+            }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Generate Mipmaps")
             tooltip: qsTr("This property determines if mipmaps are generated for textures that do not provide mipmap levels themselves.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: generateMipmapscheckBox
                 text: backendValues.generateMipmaps.valueToString
                 backendValue: backendValues.generateMipmaps
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Mag Filter")
             tooltip: qsTr("This property determines how the texture is sampled when a texel covers more than one pixel.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
                 model: ["None", "Nearest", "Linear"]
                 backendValue: backendValues.magFilter
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Min Filter")
             tooltip: qsTr("This property determines how the texture is sampled when a texel covers more than one pixel.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
                 model: ["None", "Nearest", "Linear"]
                 backendValue: backendValues.minFilter
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Mip Filter")
             tooltip: qsTr("This property determines how the texture mipmaps are sampled when a texel covers less than one pixel.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Texture"
                 model: ["None", "Nearest", "Linear"]
                 backendValue: backendValues.mipFilter
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
-
     }
-
 }

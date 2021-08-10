@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,99 +28,125 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Tonemap")
     width: parent.width
 
-    Section {
-        caption: qsTr("Tonemap")
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Gamma")
+            tooltip: qsTr("Amount of gamma.")
+        }
 
-        SectionLayout {
-            Label {
-                text: qsTr("Gamma")
-                tooltip: qsTr("Amount of gamma.")
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0.1
+                maximumValue: 4
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.gamma
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 4
-                    minimumValue: 0.1
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.gamma
-                    Layout.fillWidth: true
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Exposure")
+            tooltip: qsTr("Amount of exposure.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9
+                maximumValue: 9
+                decimals: 2
+                backendValue: backendValues.exposure
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Exposure")
-                tooltip: qsTr("Amount of exposure.")
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Blur Falloff")
+            tooltip: qsTr("Amount of blur falloff.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 10
+                decimals: 2
+                backendValue: backendValues.blurFalloff
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9
-                    minimumValue: -9
-                    decimals: 2
-                    backendValue: backendValues.exposure
-                    Layout.fillWidth: true
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Tonemapping Lerp")
+            tooltip: qsTr("Tonemapping linear interpolation value.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 1
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.tonemappingLerp
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Blur Falloff")
-                tooltip: qsTr("Amount of blur falloff.")
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Bloom Threshold")
+            tooltip: qsTr("Bloom color threshold value.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 1
+                decimals: 3
+                stepSize: 0.1
+                backendValue: backendValues.bloomThreshold
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 10
-                    minimumValue: 0
-                    decimals: 2
-                    backendValue: backendValues.blurFalloff
-                    Layout.fillWidth: true
-                }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Channel Threshold")
+            tooltip: qsTr("Channel color threshold value.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 1
+                decimals: 3
+                stepSize: 0.1
+                backendValue: backendValues.channelThreshold
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            Label {
-                text: qsTr("Tonemapping Lerp")
-                tooltip: qsTr("Tonemapping linear interpolation value.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: 0
-                    decimals: 2
-                    stepSize: 0.1
-                    backendValue: backendValues.tonemappingLerp
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Bloom Threshold")
-                tooltip: qsTr("Bloom color threshold value.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: 0
-                    decimals: 3
-                    stepSize: 0.1
-                    backendValue: backendValues.bloomThreshold
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Channel Threshold")
-                tooltip: qsTr("Channel color threshold value.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 1
-                    minimumValue: 0
-                    decimals: 3
-                    stepSize: 0.1
-                    backendValue: backendValues.channelThreshold
-                    Layout.fillWidth: true
-                }
-            }
+
+            ExpandingSpacer {}
         }
     }
 }

@@ -27,103 +27,117 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Shape")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Fill")
             tooltip: qsTr("This property defines if the shape should be filled or just use the shape outlines.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: fillCheckBox
                 text: backendValues.fill.valueToString
                 backendValue: backendValues.fill
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Type")
             tooltip: qsTr("This property defines the type of the shape.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "ParticleShape3D"
                 model: ["Cube", "Sphere", "Cylinder"]
                 backendValue: backendValues.type
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Extents")
             tooltip: qsTr("This property defines the extents of the shape.")
         }
-        ColumnLayout {
-            RowLayout {
-                spacing: 0
 
-                Label {
-                    text: qsTr("X")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisXColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.extents_x
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.extents_x
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
-            RowLayout {
-                spacing: 0
 
-                Label {
-                    text: qsTr("Y")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisYColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.extents_y
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
-            }
-            RowLayout {
-                spacing: 0
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-                Label {
-                    text: qsTr("Z")
-                    width: 100
-                    color: StudioTheme.Values.theme3DAxisZColor
-                }
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    realDragRange: 5000
-                    decimals: 2
-                    backendValue: backendValues.extents_z
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                }
+            ControlLabel {
+                text: "X"
+                color: StudioTheme.Values.theme3DAxisXColor
             }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.extents_y
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Y"
+                color: StudioTheme.Values.theme3DAxisYColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: -9999999
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.extents_z
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Z"
+                color: StudioTheme.Values.theme3DAxisZColor
+            }
+
+            ExpandingSpacer {}
         }
     }
-
 }

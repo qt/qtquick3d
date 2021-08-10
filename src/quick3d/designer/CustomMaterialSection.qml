@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,100 +28,126 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Custom Material")
-
     width: parent.width
+
     SectionLayout {
-        Label {
+        PropertyLabel {
             text: qsTr("Shading Mode")
             tooltip: qsTr("Specifies the type of the material.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "CustomMaterial"
                 model: ["Unshaded", "Shaded"]
                 backendValue: backendValues.shadingMode
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Vertex Shader")
             tooltip: qsTr("Holds the location of a vertex shader file for this material.")
         }
+
         SecondColumnLayout {
             UrlChooser {
                 backendValue: backendValues.vertexShader
                 filter: "*.*"
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Fragment Shader")
             tooltip: qsTr("Holds the location of a fragment shader file for this material.")
         }
+
         SecondColumnLayout {
             UrlChooser {
                 backendValue: backendValues.fragmentShader
                 filter: "*.*"
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Source Blend")
             tooltip: qsTr("Specifies the source blend factor.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "CustomMaterial"
                 model: ["NoBlend", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor", "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha", "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor", "ConstantAlpha", "OneMinusConstantAlpha", "SrcAlphaSaturate"]
                 backendValue: backendValues.sourceBlend
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Destination Blend")
             tooltip: qsTr("Specifies the destination blend factor.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "CustomMaterial"
                 model: ["NoBlend", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor", "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha", "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor", "ConstantAlpha", "OneMinusConstantAlpha", "SrcAlphaSaturate"]
                 backendValue: backendValues.destinationBlend
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+                ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Always Dirty")
             tooltip: qsTr("Always dirty material is refreshed every time it is used by QtQuick3D.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.alwaysDirty.valueToString
                 backendValue: backendValues.alwaysDirty
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Line Width")
             tooltip: qsTr("Determines the width of the lines when the geometry is using lines or line strips.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 1
-                realDragRange: 10
+                maximumValue: 999999
                 decimals: 2
                 backendValue: backendValues.lineWidth
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

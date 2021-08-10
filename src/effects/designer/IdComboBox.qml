@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -59,7 +59,7 @@ ComboBox {
         comboBox.setCurrentText(comboBox.textValue)
     }
     onModelChanged: comboBox.setCurrentText(comboBox.textValue)
-    onCompressedActivated: comboBox.handleActivate(index)
+    onCompressedActivated: function(index, reason) { comboBox.handleActivate(index) }
     Component.onCompleted: comboBox.setCurrentText(comboBox.textValue)
 
     onEditTextChanged: {

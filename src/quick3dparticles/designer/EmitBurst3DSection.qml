@@ -28,54 +28,67 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Emit Burst")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Time")
             tooltip: qsTr("This property defines the time in milliseconds when emitting the burst starts.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.time
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Amount")
             tooltip: qsTr("This property defines the amount of particles emitted during the burst.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.amount
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Duration")
             tooltip: qsTr("This property defines the duration of the burst.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.duration
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

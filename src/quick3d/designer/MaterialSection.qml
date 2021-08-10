@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Material")
@@ -43,39 +44,54 @@ Section {
 
         // ### iblProbe override
 
-        Label {
+        PropertyLabel {
             text: qsTr("Light Probe")
             tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with this material.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Texture"
-                Layout.fillWidth: true
                 backendValue: backendValues.lightProbe
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Culling Mode")
             tooltip: qsTr("Defines whether culling is enabled and which mode is actually enabled.")
         }
-        ComboBox {
-            scope: "Material"
-            model: ["BackFaceCulling", "FrontFaceCulling", "NoCulling"]
-            backendValue: backendValues.cullMode
-            Layout.fillWidth: true
+
+        SecondColumnLayout {
+            ComboBox {
+                scope: "Material"
+                model: ["BackFaceCulling", "FrontFaceCulling", "NoCulling"]
+                backendValue: backendValues.cullMode
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
         }
-        Label {
+
+        PropertyLabel {
             text: qsTr("Depth Draw Mode")
             tooltip: qsTr("This property determines if and when depth rendering takes place for this material.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "Material"
                 model: ["OpaqueOnlyDepthDraw", "AlwaysDepthDraw", "NeverDepthDraw", "OpaquePrePassDepthDraw"]
                 backendValue: backendValues.depthDrawMode
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

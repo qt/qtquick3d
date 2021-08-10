@@ -27,39 +27,47 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Model Shape")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Fill")
             tooltip: qsTr("This property defines if the shape should be filled or just use the shape outlines.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: fillCheckBox
                 text: backendValues.fill.valueToString
                 backendValue: backendValues.fill
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Delegate")
             tooltip: qsTr("The delegate provides a template defining the model for the ParticleModelShape3D.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "Component"
-                Layout.fillWidth: true
                 backendValue: backendValues.delegate
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }

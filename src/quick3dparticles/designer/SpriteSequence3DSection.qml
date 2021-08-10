@@ -27,114 +27,136 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Sprite Sequence")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Frame Count")
             tooltip: qsTr("This property defines the amount of image frames in sprite.")
         }
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 5000
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.frameCount
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Frame Index")
             tooltip: qsTr("This property defines the initial index of the frame.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: 0
-                realDragRange: 5000
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.frameIndex
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Interpolate")
             tooltip: qsTr("This property defines if the sprites are interpolated (blended) between frames to make the animation appear smoother.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: interpolateCheckBox
                 text: backendValues.interpolate.valueToString
                 backendValue: backendValues.interpolate
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Duration")
             tooltip: qsTr("This property defines the duration in milliseconds how long it takes for the sprite sequence to animate.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: -1
-                realDragRange: 5000
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.duration
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Duration Variation")
             tooltip: qsTr("This property defines the duration variation in milliseconds.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
+                maximumValue: 999999
                 decimals: 0
                 backendValue: backendValues.durationVariation
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Random Start")
             tooltip: qsTr("This property defines if the animation should start from a random frame between 0 and frameCount - 1.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: randomStartCheckBox
                 text: backendValues.randomStart.valueToString
                 backendValue: backendValues.randomStart
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Animation Direction")
             tooltip: qsTr("This property defines the animation direction of the sequence.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "SpriteSequence3D"
                 model: ["Normal", "Reverse", "Alternate", "AlternateReverse", "SingleFrame"]
                 backendValue: backendValues.animationDirection
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
-
 }

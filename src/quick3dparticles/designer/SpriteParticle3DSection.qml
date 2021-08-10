@@ -27,91 +27,114 @@
 **
 ****************************************************************************/
 
-
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Section {
     caption: qsTr("Particle Sprite Particle")
     width: parent.width
-    SectionLayout {
 
-        Label {
+    SectionLayout {
+        PropertyLabel {
             text: qsTr("Blend Mode")
             tooltip: qsTr("This property defines the blending mode used for rendering the particles.")
         }
+
         SecondColumnLayout {
             ComboBox {
                 scope: "SpriteParticle3D"
                 model: ["SourceOver", "Screen", "Multiply"]
                 backendValue: backendValues.blendMode
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Sprite")
             tooltip: qsTr("This property defines the Texture used for the particles.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Texture"
-                Layout.fillWidth: true
                 backendValue: backendValues.sprite
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Sprite Sequence")
             tooltip: qsTr("This property defines the sprite sequence properties for the particle.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Particles3D.SpriteSequence3D"
-                Layout.fillWidth: true
                 backendValue: backendValues.spriteSequence
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Billboard")
             tooltip: qsTr("This property defines if the particle texture should always be aligned face towards the screen.")
         }
+
         SecondColumnLayout {
             CheckBox {
                 id: billboardCheckBox
                 text: backendValues.billboard.valueToString
                 backendValue: backendValues.billboard
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Particle Scale")
             tooltip: qsTr("This property defines the scale multiplier of the particles.")
         }
+
         SecondColumnLayout {
             SpinBox {
-                maximumValue: 999999
                 minimumValue: -999999
-                realDragRange: 5000
+                maximumValue: 999999
                 decimals: 2
                 backendValue: backendValues.particleScale
-                Layout.fillWidth: true
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
 
-        Label {
+        PropertyLabel {
             text: qsTr("Color Table")
             tooltip: qsTr("This property defines the Texture used for coloring the particles.")
         }
+
         SecondColumnLayout {
             IdComboBox {
                 typeFilter: "QtQuick3D.Texture"
-                Layout.fillWidth: true
                 backendValue: backendValues.colorTable
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
             }
+
+            ExpandingSpacer {}
         }
     }
 }
