@@ -106,13 +106,18 @@ void QQuick3DCustomCamera::setProjection(const QMatrix4x4 &projection)
     update();
 }
 
-bool QQuick3DCustomCamera::checkSpatialNode(QSSGRenderCamera *camera)
+/*!
+ * \internal
+ */
+QSSGRenderGraphObject *QQuick3DCustomCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    bool changed = false;
-    changed |= qUpdateIfNeeded(camera->projection, m_projection);
-    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
+    QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
+    if (camera) {
+        if (qUpdateIfNeeded(camera->projection, m_projection))
+            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+    }
 
-    return changed;
+    return camera;
 }
 
 QT_END_NAMESPACE

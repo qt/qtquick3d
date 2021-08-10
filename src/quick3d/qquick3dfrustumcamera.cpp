@@ -164,21 +164,20 @@ void QQuick3DFrustumCamera::setLeft(float left)
     update();
 }
 
-bool QQuick3DFrustumCamera::checkSpatialNode(QSSGRenderCamera *camera)
+QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    bool changed = false;
-    changed |= qUpdateIfNeeded(camera->clipNear, clipNear());
-    changed |= qUpdateIfNeeded(camera->clipFar, clipFar());
-    changed |= qUpdateIfNeeded(camera->fov, qDegreesToRadians(fieldOfView()));
-    changed |= qUpdateIfNeeded(camera->fovHorizontal, fieldOfViewOrientation()
-                               == QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal);
-    changed |= qUpdateIfNeeded(camera->enableFrustumClipping, frustumCullingEnabled());
-    changed |= qUpdateIfNeeded(camera->top, m_top);
-    changed |= qUpdateIfNeeded(camera->bottom, m_bottom);
-    changed |= qUpdateIfNeeded(camera->right, m_right);
-    changed |= qUpdateIfNeeded(camera->left, m_left);
+    // NOTE: The frustum camera extends the perspective camera!
+    QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DPerspectiveCamera::updateSpatialNode(node));
+    if (camera) {
+        const bool changed = ((qUpdateIfNeeded(camera->top, m_top)
+                              | qUpdateIfNeeded(camera->bottom, m_bottom)
+                              | qUpdateIfNeeded(camera->right, m_right)
+                              | qUpdateIfNeeded(camera->left, m_left)) != 0);
+        if (changed)
+            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+    }
 
-    return changed;
+    return camera;
 }
 
 QT_END_NAMESPACE

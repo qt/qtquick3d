@@ -65,9 +65,6 @@ public:
     Q_INVOKABLE void lookAt(const QVector3D &scenePos);
     Q_INVOKABLE void lookAt(QQuick3DNode *node);
 
-    QSSGRenderCamera *cameraNode() const;
-    void setCameraNode(QSSGRenderCamera *camera) { m_cameraNode = camera; }
-
     // It will be used only after the scene was drawn.
     // It means that the spatialNode of this camera already was created.
     void updateGlobalVariables(const QRectF &inViewport);
@@ -84,10 +81,8 @@ protected:
     explicit QQuick3DCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
 
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
-    virtual bool checkSpatialNode(QSSGRenderCamera *camera) = 0;
 
 private:
-    QSSGRenderCamera *m_cameraNode = nullptr;
     bool m_frustumCullingEnabled = false;
 };
 

@@ -99,14 +99,6 @@ QQuick3DCamera::QQuick3DCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
     : QQuick3DNode(dd, parent) {}
 
 /*!
-    \internal
-*/
-QSSGRenderCamera *QQuick3DCamera::cameraNode() const
-{
-    return m_cameraNode;
-}
-
-/*!
     \qmlproperty bool Camera::frustumCullingEnabled
 
     When this property is \c true, objects outside the camera frustum will be culled, meaning they will
@@ -147,14 +139,15 @@ void QQuick3DCamera::setFrustumCullingEnabled(bool frustumCullingEnabled)
 */
 QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 {
-    if (!m_cameraNode)
+    QSSGRenderCamera *cameraNode = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+    if (!cameraNode)
         return QVector3D(0, 0, 0);
 
     QVector4D scenePosRightHand(scenePos, 1);
 
     // Transform position
     const QMatrix4x4 sceneToCamera = sceneTransform().inverted();
-    const QMatrix4x4 projectionViewMatrix = m_cameraNode->projection * sceneToCamera;
+    const QMatrix4x4 projectionViewMatrix = cameraNode->projection * sceneToCamera;
     const QVector4D transformedScenePos = mat44::transform(projectionViewMatrix, scenePosRightHand);
 
     if (qFuzzyIsNull(transformedScenePos.w()))
@@ -205,7 +198,8 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
 */
 QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 {
-    if (!m_cameraNode)
+    QSSGRenderCamera *cameraNode = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+    if (!cameraNode)
         return QVector3D(0, 0, 0);
 
     // Pick two positions in the frustum
@@ -223,8 +217,7 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
 
     // Transform position to scene
     const QMatrix4x4 sceneToCamera = sceneTransform().inverted();
-    const QMatrix4x4 projectionViewMatrixInv
-            = (m_cameraNode->projection * sceneToCamera).inverted();
+    const QMatrix4x4 projectionViewMatrixInv = (cameraNode->projection * sceneToCamera).inverted();
     const QVector4D transformedClipNearPos = mat44::transform(projectionViewMatrixInv, clipNearPos);
     const QVector4D transformedClipFarPos = mat44::transform(projectionViewMatrixInv, clipFarPos);
 
@@ -252,11 +245,10 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos,
                                         qreal width,
                                         qreal height)
 {
-    if (!m_cameraNode) {
-        m_cameraNode = new QSSGRenderCamera(QQuick3DObjectPrivate::get(this)->type);
-        // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
-        checkSpatialNode(m_cameraNode);
-        m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
+    // We can be called before a spatial node is created, if that is the case, create the node now.
+    if (QSSGRenderCamera *cameraNode = static_cast<QSSGRenderCamera *>(updateSpatialNode(QQuick3DObjectPrivate::get(this)->spatialNode))) {
+        QQuick3DObjectPrivate::get(this)->spatialNode = cameraNode;
+        cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
     }
 
     return QQuick3DCamera::mapToViewport(scenePos);
@@ -269,11 +261,10 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos,
                                           qreal width,
                                           qreal height)
 {
-    if (!m_cameraNode) {
-        m_cameraNode = new QSSGRenderCamera(QQuick3DObjectPrivate::get(this)->type);
-        // Ignore the returned dirty because of forcing to call calculateGlobalVariables.
-        checkSpatialNode(m_cameraNode);
-        m_cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
+    // We can be called before a spatial node is created, if that is the case, create the node now.
+    if (QSSGRenderCamera *cameraNode = static_cast<QSSGRenderCamera *>(updateSpatialNode(QQuick3DObjectPrivate::get(this)->spatialNode))) {
+        QQuick3DObjectPrivate::get(this)->spatialNode = cameraNode;
+        cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
     }
 
     return QQuick3DCamera::mapFromViewport(viewportPos);
@@ -321,7 +312,7 @@ void QQuick3DCamera::lookAt(QQuick3DNode *node)
 
 void QQuick3DCamera::updateGlobalVariables(const QRectF &inViewport)
 {
-    QSSGRenderCamera *node = cameraNode();
+    QSSGRenderCamera *node = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(this)->spatialNode);
     if (node)
         node->calculateGlobalVariables(inViewport);
 }
@@ -339,12 +330,9 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
     QQuick3DNode::updateSpatialNode(node);
 
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(node);
-
-    bool changed = checkSpatialNode(camera);
-    setCameraNode(camera);
-
-    if (changed)
+    if (qUpdateIfNeeded(camera->enableFrustumClipping, m_frustumCullingEnabled))
         camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+
     return node;
 }
 QT_END_NAMESPACE

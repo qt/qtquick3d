@@ -77,7 +77,7 @@ Q_SIGNALS:
     void verticalMagnificationChanged();
 
 protected:
-    bool checkSpatialNode(QSSGRenderCamera *camera) override;
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
     float m_clipNear = 10.0f;

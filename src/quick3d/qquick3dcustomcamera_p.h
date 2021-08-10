@@ -65,7 +65,7 @@ Q_SIGNALS:
     void projectionChanged();
 
 protected:
-    bool checkSpatialNode(QSSGRenderCamera *camera) override;
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
     QMatrix4x4 m_projection;

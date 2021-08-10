@@ -84,8 +84,7 @@ Q_SIGNALS:
 
 protected:
     explicit QQuick3DPerspectiveCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
-
-    virtual bool checkSpatialNode(QSSGRenderCamera *camera) override;
+    QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
 private:
     float m_clipNear = 10.0f;
