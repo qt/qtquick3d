@@ -1872,6 +1872,13 @@ void QSSGLayerRenderData::rhiPrepare()
             // Set the projection matrix
             if (!item2D->m_renderer)
                 continue;
+            if (item2D->m_rci != renderer->contextInterface()) {
+                if (!item2D->m_contextWarningShown) {
+                    qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
+                    item2D->m_contextWarningShown = true;
+                }
+                continue;
+            }
 
             item2D->m_renderer->setProjectionMatrix(item2D->MVP);
             const auto &renderTarget = rhiCtx->renderTarget();
@@ -2034,7 +2041,8 @@ void QSSGLayerRenderData::rhiRender()
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
             for (const auto &item : item2Ds) {
                 QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
-                item2D->m_renderer->renderSceneInline();
+                if (item2D->m_rci == renderer->contextInterface())
+                    item2D->m_renderer->renderSceneInline();
             }
             cb->debugMarkEnd();
         }
