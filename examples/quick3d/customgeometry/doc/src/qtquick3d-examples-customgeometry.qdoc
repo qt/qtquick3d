@@ -72,9 +72,12 @@
     the vertex buffer, which is then filled with vertices for a single triangle
     with corners in (-1, -1, 0), (1, -1, 0) and (0, 1, 0).
 
-    Then the vertex data is uploaded and the stride is set by calling \c
-    setVertexData() and \c setStride(). Then the primitive type is set by
-    calling \c setPrimitiveType(). Lastly, we specify how the attributes for
-    position, normal and uv coords are laid out in memory in the previously
-    uploaded buffer by calling \c addAttribute() for each attribute.
+    Then the vertex data is uploaded and the stride is set by calling
+    \c setVertexData() and \c setStride(). The bounds of the geometry
+    is set by calling \c setBounds. Although not used in this example
+    setting the bounds is needed for shadows to work. Then the primitive
+    type is set by calling \c setPrimitiveType(). Lastly, we specify how
+    the attributes for position, normal and uv coords are laid out in
+    memory in the previously uploaded buffer by calling \c addAttribute()
+    for each attribute.
 */

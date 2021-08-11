@@ -137,6 +137,10 @@ QSSGRenderGraphObject *SkinGeometry::updateSpatialNode(QSSGRenderGraphObject *no
     if (m_vertexDirty) {
         m_vertexDirty = false;
 
+        constexpr float maxFloat = std::numeric_limits<float>::max();
+        auto boundsMin = QVector3D(maxFloat, maxFloat, maxFloat);
+        auto boundsMax = QVector3D(-maxFloat, -maxFloat, -maxFloat);
+
         const int numVertexes = m_positions.size();
         m_vertexBuffer.resize(numVertexes * s_vertexSize);
         Vertex *vert = reinterpret_cast<Vertex *>(m_vertexBuffer.data());
@@ -152,11 +156,20 @@ QSSGRenderGraphObject *SkinGeometry::updateSpatialNode(QSSGRenderGraphObject *no
                 memcpy(v.weights, m_weights.constData() + 4 * i, 4 * sizeof(float));
             else
                 v.weights[0] = v.weights[1] = v.weights[2] = v.weights[3] = 0.0f;
+
+            boundsMin.setX(std::min(boundsMin.x(), v.position.x()));
+            boundsMin.setY(std::min(boundsMin.y(), v.position.y()));
+            boundsMin.setZ(std::min(boundsMin.z(), v.position.z()));
+
+            boundsMax.setX(std::max(boundsMax.x(), v.position.x()));
+            boundsMax.setY(std::max(boundsMax.y(), v.position.y()));
+            boundsMax.setZ(std::max(boundsMax.z(), v.position.z()));
         }
 
         setStride(s_vertexSize);
         setVertexData(m_vertexBuffer);
         setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
+        setBounds(boundsMin, boundsMax);
     }
 
     if (m_indexDirty) {
