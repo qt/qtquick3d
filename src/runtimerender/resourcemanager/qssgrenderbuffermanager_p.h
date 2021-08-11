@@ -49,6 +49,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
+#include <QtCore/QMutex>
+
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderMesh;
@@ -104,6 +106,7 @@ private:
     ModelPathMap cachedModelPathMap;
     ImagePathMap cachedImagePathMap;
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
+    QMutex meshBufferMutex;
 
     void clear();
 
@@ -158,6 +161,8 @@ public:
     static void unregisterMeshData(const QString &assetId);
     static QString runtimeMeshSourceName(const QString &assetId, qsizetype meshId);
     static QString primitivePath(const QString &primitive);
+
+    QMutex *meshUpdateMutex();
 
 private:
     bool createRhiTexture(QSSGRenderImageTexture &texture,

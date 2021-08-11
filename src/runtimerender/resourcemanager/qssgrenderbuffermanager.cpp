@@ -928,6 +928,11 @@ QString QSSGBufferManager::primitivePath(const QString &primitive)
     return {};
 }
 
+QMutex *QSSGBufferManager::meshUpdateMutex()
+{
+    return &meshBufferMutex;
+}
+
 QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
 {
     QString path = primitivePath(inRelativePath);
@@ -1314,6 +1319,7 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry,
         CustomMeshMap::iterator meshItr = customMeshMap.find(geometry);
         // Only create the mesh if it doesn't yet exist or update is true
         if (meshItr == customMeshMap.end() || update) {
+            QMutexLocker locker(meshUpdateMutex());
             if (meshItr != customMeshMap.end()) {
                 delete meshItr.value();
                 customMeshMap.erase(meshItr);
