@@ -1286,35 +1286,39 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
             transparentObjects.clear();
 
             // Cameras
-            // First, check the activeCamera is GloballyActive
-            // and then if not, seek a GloballyActive one from the first
-            camera = layer.activeCamera;
+            // 1. If there's an explicit camera set and it's active (visible) we'll use that.
+            // 2. ... if the explicitly set camera is not visible, no further attempts will be done.
+            // 3. If no explicit camera is set, we'll search and pick the first active camera.
+            camera = layer.explicitCamera;
             if (camera != nullptr) {
+                // 1.
                 camera->dpr = renderer->contextInterface()->dpr();
-                wasDataDirty = wasDataDirty
-                    || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                wasDataDirty = wasDataDirty || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
                 if (!theResult.m_computeFrustumSucceeded)
                     qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+
+                // 2.
                 if (!camera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                     camera = nullptr;
-
+            } else {
+                // 3.
+                for (auto iter = cameras.cbegin();
+                     (camera == nullptr) && (iter != cameras.cend()); iter++) {
+                    QSSGRenderCamera *theCamera = *iter;
+                    theCamera->dpr = renderer->contextInterface()->dpr();
+                    wasDataDirty = wasDataDirty
+                            || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                    QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
+                    wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+                    if (!theResult.m_computeFrustumSucceeded)
+                        qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+                    if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
+                        camera = theCamera;
+                }
+                layer.renderedCamera = camera;
             }
-            for (auto iter = cameras.cbegin();
-                    (camera == nullptr) && (iter != cameras.cend()); iter++) {
-                QSSGRenderCamera *theCamera = *iter;
-                theCamera->dpr = renderer->contextInterface()->dpr();
-                wasDataDirty = wasDataDirty
-                    || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
-                QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
-                wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                if (!theResult.m_computeFrustumSucceeded)
-                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-                if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
-                    camera = theCamera;
-            }
-            layer.renderedCamera = camera;
 
             QSSGShaderLightList renderableLights;
             int shadowMapCount = 0;

@@ -67,7 +67,7 @@ QSSGRenderLayer::QSSGRenderLayer()
     , temporalAAEnabled(false)
     , temporalAAStrength(0.3f)
     , ssaaMultiplier(1.5f)
-    , activeCamera(nullptr)
+    , explicitCamera(nullptr)
     , renderedCamera(nullptr)
     , tonemapMode(TonemapMode::Linear)
 {
