@@ -117,6 +117,7 @@ void MorphGeometry::updateData()
     setStride(sizeof(Vertex));
     setVertexData(m_vertexBuffer);
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
+    setBounds(boundsMin, boundsMax);
 
     m_indexBuffer = QByteArray(reinterpret_cast<char *>(m_indexes.data()), m_indexes.size() * sizeof(quint32));
     setIndexData(m_indexBuffer);
@@ -136,6 +137,10 @@ void MorphGeometry::calculateGeometry()
     m_indexes.clear();
     m_targetPositions.clear();
     m_targetNormals.clear();
+
+    constexpr float maxFloat = std::numeric_limits<float>::max();
+    boundsMin = QVector3D(maxFloat, maxFloat, maxFloat);
+    boundsMax = QVector3D(-maxFloat, -maxFloat, -maxFloat);
 
     // We construct a rectangular grid of iw times ih vertices;
     // ix and iy are indices into the grid. x, y, and z are the spatial
@@ -191,6 +196,16 @@ void MorphGeometry::calculateGeometry()
 
             m_targetPositions.append(targetPosition);
             m_targetNormals.append(targetNormal.normalized());
+
+            // Note: We only use the bounds of the target positions since they are strictly
+            // bigger than the original
+            boundsMin.setX(std::min(boundsMin.x(), targetPosition.x()));
+            boundsMin.setY(std::min(boundsMin.y(), targetPosition.y()));
+            boundsMin.setZ(std::min(boundsMin.z(), targetPosition.z()));
+
+            boundsMax.setX(std::max(boundsMax.x(), targetPosition.x()));
+            boundsMax.setY(std::max(boundsMax.y(), targetPosition.y()));
+            boundsMax.setZ(std::max(boundsMax.z(), targetPosition.z()));
         }
     }
 

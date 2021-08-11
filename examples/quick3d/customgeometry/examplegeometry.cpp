@@ -50,6 +50,7 @@
 
 #include "examplegeometry.h"
 #include <QRandomGenerator>
+#include <QVector3D>
 
 ExampleTriangleGeometry::ExampleTriangleGeometry()
 {
@@ -139,6 +140,7 @@ void ExampleTriangleGeometry::updateData()
 
     setVertexData(vertexData);
     setStride(stride);
+    setBounds(QVector3D(-1.0f, -1.0f, 0.0f), QVector3D(+1.0f, +1.0f, 0.0f));
 
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
 
@@ -169,6 +171,9 @@ void ExamplePointGeometry::updateData()
 {
     clear();
 
+    constexpr auto randomFloat = [](const float lowest, const float highest) -> float {
+        return lowest + QRandomGenerator::global()->generateDouble() * (highest - lowest);
+    };
     constexpr int NUM_POINTS = 2000;
     constexpr int stride = 3 * sizeof(float);
 
@@ -177,15 +182,14 @@ void ExamplePointGeometry::updateData()
     float *p = reinterpret_cast<float *>(vertexData.data());
 
     for (int i = 0; i < NUM_POINTS; ++i) {
-        const float x = float(QRandomGenerator::global()->bounded(200.0f) - 100.0f) / 20.0f;
-        const float y = float(QRandomGenerator::global()->bounded(200.0f) - 100.0f) / 20.0f;
-        *p++ = x;
-        *p++ = y;
+        *p++ = randomFloat(-5.0f, +5.0f);
+        *p++ = randomFloat(-5.0f, +5.0f);
         *p++ = 0.0f;
     }
 
     setVertexData(vertexData);
     setStride(stride);
+    setBounds(QVector3D(-5.0f, -5.0f, 0.0f), QVector3D(+5.0f, +5.0f, 0.0f));
 
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Points);
 

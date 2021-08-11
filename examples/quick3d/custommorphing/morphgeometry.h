@@ -89,6 +89,8 @@ private:
     QByteArray m_indexBuffer;
 
     int m_gridSize = 50;
+    QVector3D boundsMin;
+    QVector3D boundsMax;
 };
 //! [class definition]
 
