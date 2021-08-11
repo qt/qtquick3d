@@ -59,6 +59,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
 
     QSGRenderer *m_renderer = nullptr;
     QRhiRenderPassDescriptor *m_rp = nullptr;
+    QSSGRenderContextInterface *m_rci = nullptr;
+    bool m_contextWarningShown = false;
 
     QSSGRenderItem2D();
     ~QSSGRenderItem2D();

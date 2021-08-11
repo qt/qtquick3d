@@ -74,6 +74,7 @@ Q_SIGNALS:
 
 protected:
     void preSync() override;
+    void itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value) override;
 private:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -83,7 +84,7 @@ private:
     QSGRootNode *m_rootNode = nullptr;
     QQuickWindow *m_window = nullptr;
     QQuickItem *m_contentItem = nullptr;
-
+    bool m_sceneManagerValid = false;
     QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
 };
 

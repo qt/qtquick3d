@@ -153,6 +153,12 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     m_renderer->nodeChanged(m_rootNode, QSGNode::DirtyForceUpdate); // Force render list update.
 
     itemNode->m_renderer = m_renderer;
+    if (m_sceneManagerValid) {
+        if (itemNode->m_rci != QQuick3DObjectPrivate::get(this)->sceneManager->rci)
+            itemNode->m_rci = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
+    } else {
+        itemNode->m_rci = nullptr;
+    }
 
     return node;
 }
@@ -160,6 +166,18 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 void QQuick3DItem2D::markAllDirty()
 {
     QQuick3DNode::markAllDirty();
+}
+
+void QQuick3DItem2D::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
+{
+    QQuick3DNode::itemChange(change, value);
+    if (change == QQuick3DObject::ItemSceneChange) {
+        if (value.sceneManager)
+            m_sceneManagerValid = true;
+        else
+            m_sceneManagerValid = false;
+        markAllDirty();
+    }
 }
 
 void QQuick3DItem2D::preSync()
