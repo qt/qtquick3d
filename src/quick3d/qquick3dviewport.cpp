@@ -260,6 +260,9 @@ QQmlListProperty<QObject> QQuick3DViewport::data()
     This property specifies which \l Camera is used to render the scene. If this
     property is not set, then the first enabled camera in the scene will be used.
 
+    \note If this property contains a camera that's not \l {Node::visible}{visible} then
+    no further attempts to find a camera will be done.
+
     \sa PerspectiveCamera, OrthographicCamera, FrustumCamera, CustomCamera
 */
 QQuick3DCamera *QQuick3DViewport::camera() const

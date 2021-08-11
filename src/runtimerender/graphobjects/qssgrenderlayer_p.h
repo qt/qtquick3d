@@ -170,10 +170,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     uint tempAAPassIndex;
     uint progAAPassIndex;
 
-    QSSGRenderCamera *activeCamera;
-    // It is the used camera for the scene.
-    // If activeCamera is not GloballyActive,
-    // the first GloballyActive one will be used for render.
+    // The camera explicitly set on the view by the user.
+    QSSGRenderCamera *explicitCamera;
+    // The camera used for rendering (explicitCamera, nullptr or first usable camera).
     QSSGRenderCamera *renderedCamera;
 
     // Tonemapping
