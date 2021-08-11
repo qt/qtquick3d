@@ -47,6 +47,8 @@
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <QtCore/QMutexLocker>
+
 #include <cstdlib>
 #include <algorithm>
 #include <limits>
@@ -426,8 +428,12 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
 
     const QSSGRenderModel &model = static_cast<const QSSGRenderModel &>(node);
 
-    // TODO: Technically we should have some guard here, as the meshes are usually loaded on a different thread,
-    // so this isn't really nice (assumes all meshes are loaded before picking and none are removed, which currently should be the case).
+    // We have to have a guard here, as the meshes are usually loaded on the render thread,
+    // and we assume all meshes are loaded before picking and none are removed, which
+    // is usually true, except for custom geometry which can be updated at any time. So this
+    // guard should really only be locked whenever a custom geometry buffer is being updated
+    // on the render thread.  Still naughty though because this can block the render thread.
+    QMutexLocker mutexLocker(bufferManager->meshUpdateMutex());
     auto mesh = bufferManager->getMesh(model.meshPath);
     if (!mesh) {
         // Check if there is custom geometry before bailing out
