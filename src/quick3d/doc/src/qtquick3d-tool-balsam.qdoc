@@ -86,7 +86,7 @@ Some of the formats supported also allow for either embedding or referencing of
 texture assets. These assets are also supported, provided Qt also has support
 for them.
 
-\section1 Support for 3D Studio Projects
+\section1 Support for Qt 3D Studio Projects
 
 The Balsam tool also has support for converting projects created with Qt 3D Studio
 into Qt Quick 3D QML projects.
