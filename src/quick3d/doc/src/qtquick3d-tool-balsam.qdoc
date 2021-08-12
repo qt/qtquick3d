@@ -86,6 +86,16 @@ Some of the formats supported also allow for either embedding or referencing of
 texture assets. These assets are also supported, provided Qt also has support
 for them.
 
+\section1 Baking for Image-Based Lighting
+
+Balsam also supports generating a pre-filtered cubemap image from .hdr
+files. Specifying a file with .hdr extension as the input results in generating
+a file with the same name but with an extension of .ktx. The application can
+then ship the resulting .ktx file and reference that from the \l Texture
+associated with \l SceneEnvironment::lightProbe. This avoids the costly runtime
+processing that is necessary for image-based lighting. See \l{Pre-generating IBL
+cubemap} for more details.
+
 \section1 Support for Qt 3D Studio Projects
 
 The Balsam tool also has support for converting projects created with Qt 3D Studio
