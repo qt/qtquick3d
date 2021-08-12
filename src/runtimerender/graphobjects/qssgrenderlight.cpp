@@ -51,6 +51,7 @@ QSSGRenderLight::QSSGRenderLight(QSSGRenderGraphObject::Type type)
     , m_shadowMapFar(5000.0f)
     , m_shadowFilter(35.0f)
 {
+    Q_ASSERT(QSSGRenderGraphObject::isLight(type));
 }
 
 QT_END_NAMESPACE

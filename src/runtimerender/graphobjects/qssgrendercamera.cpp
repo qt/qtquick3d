@@ -58,6 +58,7 @@ QSSGRenderCamera::QSSGRenderCamera(QSSGRenderGraphObject::Type type)
     , fovHorizontal(false)
     , enableFrustumClipping(true)
 {
+    Q_ASSERT(QSSGRenderCamera::isCamera(type));
     flags.setFlag(Flag::CameraDirty, true);
 }
 
