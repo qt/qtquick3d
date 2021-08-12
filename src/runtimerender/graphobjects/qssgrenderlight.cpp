@@ -51,7 +51,6 @@ QSSGRenderLight::QSSGRenderLight(QSSGRenderGraphObject::Type type)
     , m_shadowMapFar(5000.0f)
     , m_shadowFilter(35.0f)
 {
-    flags.setFlag(Flag::PointLight, false);
 }
 
 QT_END_NAMESPACE
