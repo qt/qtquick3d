@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick3D 6.0
+import QtQuick
+import QtQuick3D
 
 Model {
     source: "#Sphere"
