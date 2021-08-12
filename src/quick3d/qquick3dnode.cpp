@@ -757,9 +757,11 @@ void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
 }
 
 /*!
-    \qmlproperty enumeration QQuick3D::Node::TransformSpace
+    \qmlmethod QQuick3D::Node::rotate(real degrees, vector3d axis, enumeration space)
 
-    Defines the relationship of the axis.
+    Rotates this node around an \a axis by the given \a degrees. The specified
+    rotation will be added to the node's current rotation. The axis can
+    be specified relative to different \a {space}s.
 
     \value Node.LocalSpace
            Axis is relative to the local orientation of this node.
@@ -767,14 +769,7 @@ void QQuick3DNode::setEulerRotation(const QVector3D &eulerRotation) {
            Axis is relative to the local orientation of the parent node.
     \value Node.SceneSpace
            Axis is relative to the scene.
-*/
 
-/*!
-    \qmlmethod QQuick3D::Node::rotate(real degrees, vector3d axis, TransformSpace space)
-
-    Rotates this node around an \a axis by the given \a degrees. The specified
-    rotation will be added to the node's current rotation. The axis can
-    be specified relative to different \l {TransformSpace}{\a {space}s}.
 */
 void QQuick3DNode::rotate(qreal degrees, const QVector3D &axis, TransformSpace space)
 {
