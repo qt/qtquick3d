@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     \qmltype ParticleAbstractShape3D
     \inherits QtObject
     \inqmlmodule QtQuick3D.Particles3D
-    \brief Abstract base type of particle shapes
+    \brief Abstract base type of particle shapes.
     \since 6.2
 
     The ParticleAbstractShape3D is an abstract base type of shapes like \l ParticleShape3D

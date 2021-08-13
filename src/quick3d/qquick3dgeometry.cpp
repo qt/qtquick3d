@@ -594,7 +594,7 @@ int QQuick3DGeometry::subsetCount() const
 }
 
 /*!
-    Returns the number of minimum bounds of a subset.
+    Returns the number of minimum bounds of a \a subset.
 
     \sa subsetBoundsMax
 */
@@ -607,7 +607,7 @@ QVector3D QQuick3DGeometry::subsetBoundsMin(int subset) const
 }
 
 /*!
-    Returns the number of maximum bounds of a subset.
+    Returns the number of maximum bounds of a \a subset.
 
     \sa subsetBoundsMin
 */
@@ -620,7 +620,7 @@ QVector3D QQuick3DGeometry::subsetBoundsMax(int subset) const
 }
 
 /*!
-    Returns the subset offset to the vertex or index buffer.
+    Returns the \a subset offset to the vertex or index buffer.
 
     \sa subsetCount
 */
@@ -646,7 +646,7 @@ int QQuick3DGeometry::subsetCount(int subset) const
 }
 
 /*!
-    Returns the subset name.
+    Returns the \a subset name.
 */
 QString QQuick3DGeometry::subsetName(int subset) const
 {
@@ -660,11 +660,12 @@ QString QQuick3DGeometry::subsetName(int subset) const
     Adds new subset to the geometry. Subsets allow rendering parts of the geometry with different
     materials. The materials are specified in the \l {Model::materials}{model}.
 
-    If the geometry has index buffer, then the offset and count are the primitive offset and
+    If the geometry has index buffer, then the \a offset and \a count are the primitive offset and
     count of indices in the subset. If the geometry has only vertex buffer,
     the offset is the vertex offset and count is the number of vertices in the subset.
 
-    The bounds should enclose the subset just like geometry bounds. Also the subset can have a name.
+    The bounds \a boundsMin and \a boundsMax should enclose the subset just like geometry bounds.
+    Also the subset can have a \a name.
 */
 void QQuick3DGeometry::addSubset(int offset, int count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name)
 {
