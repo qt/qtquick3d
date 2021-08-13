@@ -159,7 +159,7 @@ private:
     void processParticleCommon(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticleData *d, float particleTimeS);
     void processParticleFadeInOut(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, float particleTimeS, float particleTimeLeftS);
     void processParticleAlignment(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, const QQuick3DParticleData *d);
-
+    static bool isGloballyDisabled();
 
 private:
     friend class QQuick3DParticleEmitter;

@@ -496,7 +496,7 @@ void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector
 
 void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 {
-    if (!m_initialized)
+    if (!m_initialized || isGloballyDisabled())
         return;
 
     if (m_time != currentTime) {
@@ -847,6 +847,12 @@ void QQuick3DParticleSystem::processParticleAlignment(QQuick3DParticleDataCurren
         QQuaternion alignQuat = QQuick3DQuaternionUtils::lookAt(d->startVelocity, QVector3D());
         currentData.rotation = (alignQuat * QQuaternion::fromEulerAngles(currentData.rotation)).toEulerAngles();
     }
+}
+
+bool QQuick3DParticleSystem::isGloballyDisabled()
+{
+    static const bool disabled = qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_PARTICLE_SYSTEMS");
+    return disabled;
 }
 
 void QQuick3DParticleSystem::updateLoggingData()
