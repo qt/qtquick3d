@@ -6,5 +6,6 @@ TEMPLATE = subdirs
         balsam \
         meshdebug \
         shadergen \
-        instancer
+        instancer \
+        shapegen
 }
