@@ -1317,8 +1317,8 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
                     if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
                         camera = theCamera;
                 }
-                layer.renderedCamera = camera;
             }
+            layer.renderedCamera = camera;
 
             QSSGShaderLightList renderableLights;
             int shadowMapCount = 0;
