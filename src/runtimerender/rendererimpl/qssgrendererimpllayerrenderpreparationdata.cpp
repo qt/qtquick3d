@@ -65,9 +65,36 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
         modelNode->boneTransforms[jointNode->index] = M;
         QMatrix3x3 N = mat44::getUpper3x3(M);
         modelNode->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
+    } else {
+        modelNode->skeletonContainsNonJointNodes = true;
     }
     for (auto &child : node->children)
         collectBoneTransforms(&child, modelNode, inverseRootM, poses);
+}
+
+static bool hasDirtyNonJointNodes(QSSGRenderNode *node, bool &hasChildJoints)
+{
+    if (!node)
+        return false;
+    // we might be non-joint dirty node, but if we do not have child joints we need to return false
+    // Note! The frontend clears TransformDirty. Use dirty instead.
+    bool dirtyNonJoint = ((node->type != QSSGRenderGraphObject::Type::Joint)
+                                              && node->flags.testFlag(QSSGRenderNode::Flag::Dirty));
+
+    // Tell our parent we are joint
+    if (node->type == QSSGRenderGraphObject::Type::Joint)
+        hasChildJoints = true;
+    bool nodeHasChildJoints = false;
+    for (auto &child : node->children) {
+        bool ret = hasDirtyNonJointNodes(&child, nodeHasChildJoints);
+        // return if we have child joints and non-joint dirty nodes, else check other children
+        hasChildJoints |= nodeHasChildJoints;
+        if (ret && nodeHasChildJoints)
+            return true;
+    }
+    // return true if we have child joints and we are dirty non-joint
+    hasChildJoints |= nodeHasChildJoints;
+    return dirtyNonJoint && nodeHasChildJoints;
 }
 
 template<typename T, typename V>
@@ -91,7 +118,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     int &ioCameraCount,
                                     QVector<QSSGRenderLight *> &outLights,
                                     int &ioLightCount,
-                                    quint32 &ioDFSIndex)
+                                    quint32 &ioDFSIndex,
+                                    QVector<QSSGRenderSkeleton*> &dirtySkeletons)
 {
     ++ioDFSIndex;
     inNode.dfsIndex = ioDFSIndex;
@@ -100,8 +128,14 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         if (inNode.type == QSSGRenderGraphObject::Type::Model) {
             auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
             auto skeletonNode = modelNode->skeleton;
-            if (skeletonNode && modelNode->skinningDirty) {
+            bool hcj = false;
+            const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
+            const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
+                                            && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
+            if (skeletonNode && (modelNode->skinningDirty || hasDirtyNonJoints)) {
                 skeletonNode->boneTransformsDirty = false;
+                if (hasDirtyNonJoints && !dirtySkeleton)
+                    dirtySkeletons.append(skeletonNode);
                 modelNode->skinningDirty = false;
                 // For now, boneTransforms is a QVector<QMatrix4x4>
                 // but it will be efficient to use QVector<float>
@@ -112,6 +146,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                 }
                 skeletonNode->calculateGlobalVariables();
                 const QMatrix4x4 inverseRootM = skeletonNode->globalTransform.inverted();
+                modelNode->skeletonContainsNonJointNodes = false;
                 for (auto &child : skeletonNode->children)
                     collectBoneTransforms(&child, modelNode, inverseRootM, modelNode->inverseBindPoses);
             }
@@ -133,7 +168,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
     }
 
     for (auto &theChild : inNode.children)
-        maybeQueueNodeForRender(theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex);
+        maybeQueueNodeForRender(theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex, dirtySkeletons);
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
@@ -1265,8 +1300,12 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
             int cameraNodeCount = 0;
             int lightNodeCount = 0;
             quint32 dfsIndex = 0;
+            // First model using skeleton clears the dirty flag so we need another mechanism
+            // to tell to the other models the skeleton is dirty.
+            QVector<QSSGRenderSkeleton*> dirtySkeletons;
             for (auto &theChild : layer.children)
-                maybeQueueNodeForRender(theChild, renderableNodes, renderableNodeCount, cameras, cameraNodeCount, lights, lightNodeCount, dfsIndex);
+                maybeQueueNodeForRender(theChild, renderableNodes, renderableNodeCount, cameras, cameraNodeCount, lights, lightNodeCount, dfsIndex, dirtySkeletons);
+            dirtySkeletons.clear();
 
             if (renderableNodes.size() != renderableNodeCount)
                 renderableNodes.resize(renderableNodeCount);
