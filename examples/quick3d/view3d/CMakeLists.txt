@@ -1,6 +1,6 @@
 # Generated from view3d.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(view3d LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
