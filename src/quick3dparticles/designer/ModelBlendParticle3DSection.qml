@@ -33,7 +33,7 @@ import HelperWidgets 2.0
 import StudioTheme 1.0 as StudioTheme
 
 Section {
-    caption: qsTr("Particle Model Blend")
+    caption: qsTr("Model Blend Particle")
     width: parent.width
 
     SectionLayout {

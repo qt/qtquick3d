@@ -67,9 +67,10 @@ Column {
 
             SecondColumnLayout {
                 SpinBox {
-                    minimumValue: -9999999
+                    minimumValue: 0
                     maximumValue: 9999999
-                    decimals: 0
+                    decimals: 2
+                    stepSize: 0.01
                     backendValue: backendValues.brightness
                     implicitWidth: StudioTheme.Values.twoControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
