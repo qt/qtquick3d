@@ -160,39 +160,96 @@ Column {
         caption: qsTr("Emissive")
         width: parent.width
 
-        SectionLayout {
-            PropertyLabel {
-                text: qsTr("Emissive Factor")
-                tooltip: qsTr("Determines the amount of self-illumination from the material (will not light other objects).")
-            }
+        ColumnLayout {
+            spacing: StudioTheme.Values.transform3DSectionSpacing
 
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 0
-                    maximumValue: 1
-                    stepSize: 0.1
-                    backendValue: backendValues.emissiveFactor
-                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Emissive Factor")
+                    tooltip: qsTr("Determines the amount of self-illumination from the material (will not light other objects).")
                 }
 
-                ExpandingSpacer {}
-            }
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: 0
+                        maximumValue: 1
+                        decimals: 2
+                        stepSize: 0.01
+                        backendValue: backendValues.emissiveFactor_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
 
-            PropertyLabel {
-                text: qsTr("Emissive Map")
-                tooltip: qsTr("Sets a texture to be used to set the emissive factor for different parts of the material.")
-            }
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    backendValue: backendValues.emissiveMap
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
+                    ControlLabel {
+                        text: qsTr("R")
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
                 }
 
-                ExpandingSpacer {}
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: 0
+                        maximumValue: 1
+                        decimals: 2
+                        stepSize: 0.01
+                        backendValue: backendValues.emissiveFactor_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: qsTr("G")
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: 0
+                        maximumValue: 1
+                        decimals: 2
+                        stepSize: 0.01
+                        backendValue: backendValues.emissiveFactor_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: qsTr("B")
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+                PropertyLabel {
+                    text: qsTr("Emissive Map")
+                    tooltip: qsTr("Sets a texture to be used to set the emissive factor for different parts of the material.")
+                }
+
+                SecondColumnLayout {
+                    IdComboBox {
+                        typeFilter: "QtQuick3D.Texture"
+                        backendValue: backendValues.emissiveMap
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    ExpandingSpacer {}
+                }
             }
         }
     }
