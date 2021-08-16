@@ -834,31 +834,14 @@ static QSSGBounds3 calculateShadowCameraBoundingBox(const QVector3D *points,
                                                     const QVector3D &up,
                                                     const QVector3D &right)
 {
-    float minDistanceZ = std::numeric_limits<float>::max();
-    float maxDistanceZ = -std::numeric_limits<float>::max();
-    float minDistanceY = std::numeric_limits<float>::max();
-    float maxDistanceY = -std::numeric_limits<float>::max();
-    float minDistanceX = std::numeric_limits<float>::max();
-    float maxDistanceX = -std::numeric_limits<float>::max();
+    QSSGBounds3 bounds;
     for (int i = 0; i < 8; ++i) {
-        float distanceZ = QVector3D::dotProduct(points[i], forward);
-        if (distanceZ < minDistanceZ)
-            minDistanceZ = distanceZ;
-        if (distanceZ > maxDistanceZ)
-            maxDistanceZ = distanceZ;
-        float distanceY = QVector3D::dotProduct(points[i], up);
-        if (distanceY < minDistanceY)
-            minDistanceY = distanceY;
-        if (distanceY > maxDistanceY)
-            maxDistanceY = distanceY;
-        float distanceX = QVector3D::dotProduct(points[i], right);
-        if (distanceX < minDistanceX)
-            minDistanceX = distanceX;
-        if (distanceX > maxDistanceX)
-            maxDistanceX = distanceX;
+        const float distanceZ = QVector3D::dotProduct(points[i], forward);
+        const float distanceY = QVector3D::dotProduct(points[i], up);
+        const float distanceX = QVector3D::dotProduct(points[i], right);
+        bounds.include(QVector3D(distanceX, distanceY, distanceZ));
     }
-    return QSSGBounds3(QVector3D(minDistanceX, minDistanceY, minDistanceZ),
-                       QVector3D(maxDistanceX, maxDistanceY, maxDistanceZ));
+    return bounds;
 }
 
 static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
