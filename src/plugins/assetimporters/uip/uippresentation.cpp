@@ -2459,7 +2459,14 @@ void DefaultMaterial::writeQmlProperties(QTextStream &output, int tabLevel, bool
 
     if (!m_emissiveMap_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << Qt::endl;
-    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor.lighter(m_emissiveFactor));
+    QVector3D emissiveFactor(1.f, 1.f, 1.f);
+    emissiveFactor *= (m_emissiveFactor / 100.f);
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower.x"),
+                           emissiveFactor.x() * m_emissiveColor.redF());
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower.y"),
+                           emissiveFactor.y() * m_emissiveColor.greenF());
+    writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower.z"),
+                           emissiveFactor.z() * m_emissiveColor.blueF());
 
     if (!m_specularReflection_unresolved.isEmpty())
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("specularReflectionMap: ") << UniqueIdMapper::instance()->queryId(m_specularReflection_unresolved) << Qt::endl;
@@ -2514,8 +2521,15 @@ void DefaultMaterial::writeQmlProperties(const PropertyChangeList &changeList, Q
             writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("diffuse"), m_diffuse);
         } else if (targetProperty == QStringLiteral("diffusemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("diffuseMap: ") << UniqueIdMapper::instance()->queryId(m_diffuseMap_unresolved) << Qt::endl;
-        } else if (targetProperty == QStringLiteral("emissivecolor")) {
-            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivecolor"), m_emissiveColor.lighter(m_emissiveFactor));
+        } else if (targetProperty == QStringLiteral("emissivepower")) {
+            QVector3D emissiveFactor(1.f, 1.f, 1.f);
+            emissiveFactor *= (m_emissiveFactor / 100.f);
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower.x"),
+                                   emissiveFactor.x() * m_emissiveColor.redF());
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower.y"),
+                                   emissiveFactor.y() * m_emissiveColor.greenF());
+            writeQmlPropertyHelper(output, tabLevel, type(), QStringLiteral("emissivepower.z"),
+                                   emissiveFactor.z() * m_emissiveColor.blueF());
         } else if (targetProperty == QStringLiteral("emissivemap")) {
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("emissiveMap: ") << UniqueIdMapper::instance()->queryId(m_emissiveMap_unresolved) << Qt::endl;
         } else if (targetProperty == QStringLiteral("specularreflection")) {
