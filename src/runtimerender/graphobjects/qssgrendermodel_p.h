@@ -69,6 +69,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     bool castsShadows = true;
     bool receivesShadows = true;
     bool skinningDirty = false;
+    bool skeletonContainsNonJointNodes = false;
     QVector<QMatrix4x4> boneTransforms;
     QVector<QMatrix3x3> boneNormalTransforms;
     QSSGRenderInstanceTable *instanceTable = nullptr;
