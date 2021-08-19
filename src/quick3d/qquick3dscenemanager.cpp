@@ -239,7 +239,12 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
 
 QQuick3DObject *QQuick3DSceneManager::lookUpNode(const QSSGRenderGraphObject *node) const
 {
-    return m_nodeMap[node];
+    /* Check if the node is already in the Clean Up List or not. If it is on the list this means the node is destroyed and the pointer is invalidated */
+    QList<QSSGRenderGraphObject *>::const_iterator it = std::find(cleanupNodeList.begin(), cleanupNodeList.end(), node);
+    if (it != cleanupNodeList.end())
+        return nullptr;
+    else
+        return m_nodeMap[node];
 }
 
 void QQuick3DSceneManager::cleanupNodes()
