@@ -33,6 +33,24 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Quaternion
+    \inqmlmodule QtQuick3D
+    \since 5.15
+
+    \brief Provides utility functions for quaternion.
+
+    The \c Quaternion is a global object with utility functions.
+
+    It is not instantiable; to use it, call the members of the global \c Quaternion object
+    directly. For example:
+
+    \qml
+    Node {
+        rotation: Quaternion.fromAxisAndAngle(Qt.vector3d(1, 0, 0), 45)
+    }
+    \endqml
+*/
 
 /*!
     \qmlmethod quaternion Quick3D::Quaternion::fromAxisAndAngle(vector3d axis, real angle)
