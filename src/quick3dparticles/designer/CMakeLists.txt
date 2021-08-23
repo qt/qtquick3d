@@ -44,3 +44,4 @@ qt_copy_or_install(
 )
 
 add_subdirectory(images)
+add_subdirectory(source)

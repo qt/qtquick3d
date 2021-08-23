@@ -225,6 +225,7 @@ MetaInfo {
             libraryIcon: "images/particle-system-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_template.qml" }
         }
     }
     Type {
