@@ -1,7 +1,56 @@
 qt_copy_or_install(
     FILES
+        attractor-16px.png
+        attractor-24px.png
+        attractor-24px@2x.png
         dummy.png
-        dummy16.png
         dummy@2x.png
+        dummy16.png
+        emit-burst-16px.png
+        emit-burst-24px.png
+        emit-burst-24px@2x.png
+        emitter-16px.png
+        emitter-24px.png
+        emitter-24px@2x.png
+        gravity-16px.png
+        gravity-24px.png
+        gravity-24px@2x.png
+        model-blend-particle-16px.png
+        model-blend-particle-24px.png
+        model-blend-particle-24px@2x.png
+        model-particle-16px.png
+        model-particle-24px.png
+        model-particle-24px@2x.png
+        model-shape-16px.png
+        model-shape-24px.png
+        model-shape-24px@2x.png
+        particle-shape-16px.png
+        particle-shape-24px.png
+        particle-shape-24px@2x.png
+        particle-system-16px.png
+        particle-system-24px.png
+        particle-system-24px@2x.png
+        point-rotator-16px.png
+        point-rotator-24px.png
+        point-rotator-24px@2x.png
+        sprite-particle-16px.png
+        sprite-particle-24px.png
+        sprite-particle-24px@2x.png
+        sprite-sequence-16px.png
+        sprite-sequence-24px.png
+        sprite-sequence-24px@2x.png
+        target-direction-16px.png
+        target-direction-24px.png
+        target-direction-24px@2x.png
+        trail-emitter-16px.png
+        trail-emitter-24px.png
+        trail-emitter-24px@2x.png
+        vector-direction-16px.png
+        vector-direction-24px.png
+        vector-direction-24px@2x.png
+        wander-16px.png
+        wander-24px.png
+        wander-24px@2x.png
+
     DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/Particles3D/designer/images"
 )
