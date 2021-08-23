@@ -1,7 +1,7 @@
 MetaInfo {
     Type {
         name: "QtQuick3D.Particles3D.Attractor3D"
-        icon: "images/dummy16.png"
+        icon: "images/attractor-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -13,14 +13,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Attractor"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/attractor-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.EmitBurst3D"
-        icon: "images/dummy16.png"
+        icon: "images/emit-burst-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -32,14 +32,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Emit Burst"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/emit-burst-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.ParticleEmitter3D"
-        icon: "images/dummy16.png"
+        icon: "images/emitter-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -51,14 +51,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Emitter"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/emitter-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.Gravity3D"
-        icon: "images/dummy16.png"
+        icon: "images/gravity-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -70,14 +70,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Gravity"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/gravity-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.ModelBlendParticle3D"
-        icon: "images/dummy16.png"
+        icon: "images/model-blend-particle-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -89,14 +89,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Model Blend Particle"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/model-blend-particle-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.ModelParticle3D"
-        icon: "images/dummy16.png"
+        icon: "images/model-particle-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -108,14 +108,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Model Particle"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/model-particle-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.ParticleModelShape3D"
-        icon: "images/dummy16.png"
+        icon: "images/model-shape-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -127,14 +127,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Model Shape"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/model-shape-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.PointRotator3D"
-        icon: "images/dummy16.png"
+        icon: "images/point-rotator-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -146,14 +146,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Point Rotator"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/point-rotator-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.ParticleShape3D"
-        icon: "images/dummy16.png"
+        icon: "images/particle-shape-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -165,14 +165,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Particle Shape"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/particle-shape-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.SpriteParticle3D"
-        icon: "images/dummy16.png"
+        icon: "images/sprite-particle-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -184,14 +184,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Sprite Particle"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/sprite-particle-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.SpriteSequence3D"
-        icon: "images/dummy16.png"
+        icon: "images/sprite-sequence-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -203,14 +203,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Sprite Sequence"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/sprite-sequence-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.ParticleSystem3D"
-        icon: "images/dummy16.png"
+        icon: "images/particle-system-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -222,14 +222,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Particle System"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/particle-system-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.TargetDirection3D"
-        icon: "images/dummy16.png"
+        icon: "images/target-direction-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -241,14 +241,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Target Direction"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/target-direction-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.TrailEmitter3D"
-        icon: "images/dummy16.png"
+        icon: "images/trail-emitter-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -260,14 +260,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Trail Emitter"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/trail-emitter-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.VectorDirection3D"
-        icon: "images/dummy16.png"
+        icon: "images/vector-direction-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -279,14 +279,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Vector Direction"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/vector-direction-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
     Type {
         name: "QtQuick3D.Particles3D.Wander3D"
-        icon: "images/dummy16.png"
+        icon: "images/wander-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -298,7 +298,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Wander"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/wander-24px.png"
             version: "6.2"
             requiredImport: "QtQuick3D.Particles3D"
         }
