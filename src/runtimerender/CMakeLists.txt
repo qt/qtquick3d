@@ -72,13 +72,14 @@ qt_internal_add_module(Quick3DRuntimeRender
         Qt::Gui
         Qt::Quick
         Qt::Quick3DUtils
-        Qt::ShaderTools
     PRIVATE_MODULE_INTERFACE
         Qt::Quick3DUtilsPrivate
         Qt::QuickPrivate
 )
 
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
+    PUBLIC_LIBRARIES
+        Qt::ShaderTools
     LIBRARIES
         Qt::ShaderToolsPrivate
     PRIVATE_MODULE_INTERFACE
