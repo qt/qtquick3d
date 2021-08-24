@@ -43,6 +43,5 @@ qt6_add_lightprobe_images(qquick3d_qmlscenegrabber "ibl_assets"
 qt6_add_qml_module(qquick3d_qmlscenegrabber
     URI "QtQuick3D.Lancelot"
     VERSION "${PROJECT_VERSION}"
-    NO_CREATE_PLUGIN_TARGET
     NO_GENERATE_PLUGIN_SOURCE
 )
