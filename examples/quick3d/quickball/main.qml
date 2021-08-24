@@ -52,6 +52,7 @@ import QtQuick
 import QtQuick3D
 import QtQuick.Particles
 import QtQuick3D.Particles3D
+import QtQuick.Controls
 
 Window {
     id: mainWindow
@@ -703,29 +704,23 @@ Window {
         }
     }
 
-    Rectangle {
-        id: startButton
+    RoundButton {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 40 * px
         width: 140 * px
         height: 60 * px
         visible: !gameOn
-        color: "#ffffff"
-        border.color: "#000000"
-        border.width: 2 * px
-        radius: height / 2
-        Text {
-            anchors.centerIn: parent
-            font.pixelSize: 26 * px
-            text: qsTr("START")
+        font.pixelSize: 26 * px
+        text: qsTr("START")
+        onClicked: {
+            view3D.startGame();
         }
-        MouseArea {
-            anchors.fill: parent
-            anchors.margins: -10 * px
-            onClicked: {
-                view3D.startGame();
-            }
+
+        background: Rectangle {
+            border.color: "#000000"
+            border.width: 2 * px
+            radius: height / 2
         }
     }
 }

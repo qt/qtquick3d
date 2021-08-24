@@ -60,11 +60,14 @@ Window {
     height: 800
     title: qsTr("Morphing Example")
 
-    Rectangle {
+    Frame {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 10
+        background: Rectangle {
+            color : "transparent"
+        }
         RowLayout {
             width: parent.width
             spacing: 10

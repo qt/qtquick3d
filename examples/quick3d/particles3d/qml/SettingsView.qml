@@ -49,6 +49,8 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: rootItem
@@ -56,59 +58,65 @@ Item {
 
     default property alias content: settingsArea.children
 
-    width: settingsArea.width
-    height: settingsArea.height
-    x: parent.width - showState * width + (1 - showState) * 30
+    width: settingsDrawer.width
+    height: settingsDrawer.height
 
-    Behavior on showState {
-        NumberAnimation {
-            duration: 800
-            easing.type: Easing.InOutQuad
-        }
-    }
-
-    // Background
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#80404040"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-        MouseArea {
-            anchors.fill: parent
-            onPressed: {}
-        }
-    }
-
-    Item {
-        anchors.right: parent.left
-        anchors.rightMargin: 30
+    Button {
+        x: (settingsDrawer.visible) ? settingsDrawer.x - width : rootWindow.width - width
         anchors.top: parent.top
         width: rootWindow.iconSize
         height: width
         opacity: showState * 0.6 + 0.4
         visible: opacity
-        Image {
-            anchors.centerIn: parent
-            width: parent.width * 0.3
-            height: width
-            source: "images/icon_settings.png"
-            mipmap: true
+        icon.width: width * 0.3
+        icon.height: height * 0.3
+        icon.source: "qrc:/qml/images/icon_settings.png"
+        icon.color: "transparent"
+        background: Rectangle {
+            color: "transparent"
         }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                settings.showSettingsView = !settings.showSettingsView;
-            }
+        onClicked: {
+            settings.showSettingsView = !settings.showSettingsView;
         }
     }
 
-    Column {
-        id: settingsArea
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.right: parent.right
-        anchors.rightMargin: 20
+    Drawer {
+        id: settingsDrawer
+        modal: false
+        edge: Qt.RightEdge
+        interactive: false
+        leftInset: -10
+        topInset: -20
+        bottomInset: -20
+        topMargin: 10
+        visible: settings.showSettingsView
+
+        background: Rectangle {
+            color: "#80404040"
+            border.color: "#000000"
+            border.width: 1
+            opacity: 0.8
+        }
+
+        Column {
+            id: settingsArea
+        }
+        enter: Transition {
+            NumberAnimation {
+                property: "position"
+                to: 1.0
+                duration: 800
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                property: "position"
+                to: 0.0
+                duration: 800
+                easing.type: Easing.InOutQuad
+            }
+        }
     }
 }

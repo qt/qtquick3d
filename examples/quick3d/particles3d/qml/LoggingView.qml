@@ -50,8 +50,9 @@
 
 import QtQuick
 import QtQuick3D.Particles3D
+import QtQuick.Controls
 
-Item {
+Frame {
     property var particleSystems
     readonly property bool loggingEnabled: settings.showLoggingView
     property bool intervalInstant: false
@@ -66,61 +67,51 @@ Item {
     }
 
     // Background
-    Rectangle {
+    background: Rectangle {
         color: "#80000000"
-        anchors.fill: parent
         visible: loggingEnabled
     }
 
-    Item {
+    Button {
         id: loggingButton
-        height: parent.height
-        width: 40
+        anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: 10
-        Image {
-            anchors.centerIn: parent
-            width: 32
-            height: 32
-            source: "images/icon_logging.png"
-            opacity: loggingEnabled ? 1.0 : 0.4
-            mipmap: true
+        opacity: loggingEnabled ? 1.0 : 0.4
+        icon.source: "qrc:/qml/images/icon_logging.png"
+        icon.width: 32
+        icon.height: 32
+        icon.color: "transparent"
+        background: Rectangle {
+            color: "transparent"
         }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                settings.showLoggingView = !settings.showLoggingView
-                for (const psystem of particleSystems) {
-                    psystem.logging = settings.showLoggingView;
-                }
+        onClicked: {
+            settings.showLoggingView = !settings.showLoggingView
+            for (const psystem of particleSystems) {
+                psystem.logging = settings.showLoggingView;
             }
         }
     }
 
-    Item {
+    Button {
         id: intervalButton
-        height: parent.height
-        width: 40
+        anchors.verticalCenter: parent.verticalCenter
         anchors.right: loggingButton.left
         anchors.rightMargin: 0
         visible: loggingEnabled
-        Image {
-            anchors.centerIn: parent
-            width: 32
-            height: 32
-            source: "images/icon_interval.png"
-            opacity: intervalInstant ? 1.0 : 0.2
-            mipmap: true
+        opacity: intervalInstant ? 1.0 : 0.2
+        icon.source: "qrc:/qml/images/icon_interval.png"
+        icon.width: 32
+        icon.height: 32
+        icon.color: "transparent"
+        background: Rectangle {
+            color: "transparent"
         }
-        MouseArea {
-            anchors.fill: parent
-            anchors.margins: -10
-            onClicked: {
-                intervalInstant = !intervalInstant;
-                var interval = intervalInstant ? 0 : 1000;
-                for (const psystem of particleSystems)
-                    psystem.loggingData.loggingInterval = interval;
-            }
+        onClicked: {
+            intervalInstant = !intervalInstant;
+            var interval = intervalInstant ? 0 : 1000;
+            for (const psystem of particleSystems)
+                psystem.loggingData.loggingInterval = interval;
         }
     }
 

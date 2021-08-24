@@ -53,6 +53,7 @@ import QtQuick3D
 import QtQuick3D.Particles3D
 import QtQuick.Controls
 import QtQuick.Timeline
+import QtQuick.Layouts
 
 Item {
     id: mainWindow
@@ -305,7 +306,8 @@ Item {
             }
         }
     }
-    Item {
+
+    Frame {
         id: toolbar
         anchors.left: parent.left
         anchors.leftMargin: 20
@@ -314,23 +316,27 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
         height: 60
-        Rectangle {
-            anchors.fill: parent
+        padding: 0
+        background: Rectangle {
             color: "#ffffff"
             radius: 4
             opacity: 0.2
         }
-        Image {
-            id: playButton
-            anchors.left: parent.left
-            anchors.leftMargin: 14
-            anchors.verticalCenter: parent.verticalCenter
-            height: parent.height - 10
-            width: height
-            source: timelineAnimation.running ? "images/icon_pause.png" : "images/icon_play.png"
-            MouseArea {
-                anchors.fill: parent
-                anchors.margins: -10
+
+        RowLayout {
+            anchors.fill: parent
+            Button {
+                id: playButton
+                Layout.leftMargin: 14
+                Layout.minimumHeight: toolbar.height - 10
+                Layout.minimumWidth: Layout.minimumHeight
+                background: Rectangle {
+                    color : "transparent"
+                }
+                icon.source: timelineAnimation.running ? "qrc:/qml/images/icon_pause.png" : "qrc:/qml/images/icon_play.png"
+                icon.width: Layout.minimumWidth
+                icon.height: Layout.minimumHeight
+                icon.color: "transparent"
                 onClicked: {
                     // If we are close to end, start from the beginning
                     if (timeline.currentFrame >= timeline.endFrame - 1.0)
@@ -339,20 +345,16 @@ Item {
                     timelineAnimation.running = !timelineAnimation.running;
                 }
             }
-        }
 
-        CustomSlider {
-            id: sliderTimelineTime
-            anchors.left: playButton.right
-            anchors.leftMargin: 8
-            anchors.right: parent.right
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            sliderValue: timeline.currentFrame
-            sliderEnabled: !timelineAnimation.running || timelineAnimation.paused
-            fromValue: 0.0
-            toValue: 100.0
-            onSliderValueChanged: timeline.currentFrame = sliderValue;
+            CustomSlider {
+                id: sliderTimelineTime
+                Layout.fillWidth: true
+                sliderValue: timeline.currentFrame
+                sliderEnabled: !timelineAnimation.running || timelineAnimation.paused
+                fromValue: 0.0
+                toValue: 100.0
+                onSliderValueChanged: timeline.currentFrame = sliderValue;
+            }
         }
     }
 
