@@ -96,7 +96,7 @@ Rectangle {
                 x: 35
                 eulerRotation: Qt.vector3d(0, -180, 0)
                 scale: Qt.vector3d(10, 10, 10)
-                source: "../shared/models/CarCombined.mesh"
+                source: "../shared/models/carCombined.mesh"
                 materials: DepthDrawTestMaterial {
                     depthDrawMode: Material.OpaquePrePassDepthDraw
                     fragmentShader: "../custommaterial/depthdraw.frag"
