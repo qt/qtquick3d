@@ -93,7 +93,7 @@ Window {
 
         environment: SceneEnvironment {
             id: sceneEnvironment
-            clearColor: "#f040f0"
+            clearColor: "#09102b"
             backgroundMode: motionBox.checked ? SceneEnvironment.Transparent : SceneEnvironment.Color
 
             antialiasingMode: modeButton1.checked ? SceneEnvironment.NoAA : modeButton2.checked
@@ -203,16 +203,16 @@ Window {
                     id: customBox
                     text: "Custom combination"
                     effect: CustomEffect {
-                        amount: customAmount.value
+                        amount: customAmount.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: customBox.checked
                     EffectSlider {
                         id: customAmount
-                        from: 0.0
-                        to: 0.05
-                        value: 0.01
+                        fromValue: 0.0
+                        toValue: 0.05
+                        sliderValue: 0.01
                         precision: 4
                     }
                 }
@@ -244,33 +244,33 @@ Window {
                     id: brushBox
                     text: "BrushStrokes"
                     effect: BrushStrokes {
-                        brushAngle: brushStrokesAngle.value
-                        brushLength: brushStrokesLength.value
-                        brushSize: brushStrokesSize.value
+                        brushAngle: brushStrokesAngle.sliderValue
+                        brushLength: brushStrokesLength.sliderValue
+                        brushSize: brushStrokesSize.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: brushBox.checked
                     EffectSlider {
                         id: brushStrokesAngle
-                        from: 0.0
-                        to: 360.0
+                        fromValue: 0.0
+                        toValue: 360.0
                         precision: 0
-                        value: 45
+                        sliderValue: 45
                         description: "brush angle"
                     }
                     EffectSlider {
                         id: brushStrokesLength
-                        from: 0.0
-                        to: 3.0
-                        value: 1
+                        fromValue: 0.0
+                        toValue: 3.0
+                        sliderValue: 1
                         description: "stroke length"
                     }
                     EffectSlider {
                         id: brushStrokesSize
-                        from: 10.0
-                        to: 200.0
-                        value: 100
+                        fromValue: 10.0
+                        toValue: 200.0
+                        sliderValue: 100
                         precision: 0
                         description: "stroke size"
                     }
@@ -281,25 +281,25 @@ Window {
                     id: chromaticBox
                     text: "ChromaticAberration"
                     effect: ChromaticAberration {
-                        aberrationAmount: chromaticAmount.value
-                        focusDepth: chromaticDepth.value
+                        aberrationAmount: chromaticAmount.sliderValue
+                        focusDepth: chromaticDepth.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: chromaticBox.checked
                     EffectSlider {
                         id: chromaticAmount
-                        from: -200.0
-                        to: 200.0
-                        value: 50
+                        fromValue: -200.0
+                        toValue: 200.0
+                        sliderValue: 50
                         precision: 0
                         description: "aberration amount"
                     }
                     EffectSlider {
                         id: chromaticDepth
-                        from: 0.0
-                        to: 1000.0
-                        value: 600
+                        fromValue: 0.0
+                        toValue: 1000.0
+                        sliderValue: 600
                         precision: 0
                         description: "focus depth"
                     }
@@ -310,43 +310,43 @@ Window {
                     id: colorMasterBox
                     text: "ColorMaster"
                     effect: ColorMaster {
-                        redStrength: colorMasterRed.value
-                        greenStrength: colorMasterGreen.value
-                        blueStrength: colorMasterBlue.value
-                        saturation: colorMasterSaturation.value
+                        redStrength: colorMasterRed.sliderValue
+                        greenStrength: colorMasterGreen.sliderValue
+                        blueStrength: colorMasterBlue.sliderValue
+                        saturation: colorMasterSaturation.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: colorMasterBox.checked
                     EffectSlider {
                         id: colorMasterRed
-                        from: 0.0
-                        to: 2.0
-                        value: 1
+                        fromValue: 0.0
+                        toValue: 2.0
+                        sliderValue: 1
                         precision: 2
                         description: "red strength"
                     }
                     EffectSlider {
                         id: colorMasterGreen
-                        from: 0.0
-                        to: 2.0
-                        value: 1.5
+                        fromValue: 0.0
+                        toValue: 2.0
+                        sliderValue: 1.5
                         precision: 2
                         description: "green strength"
                     }
                     EffectSlider {
                         id: colorMasterBlue
-                        from: 0.0
-                        to: 2.0
-                        value: 1
+                        fromValue: 0.0
+                        toValue: 2.0
+                        sliderValue: 1
                         precision: 2
                         description: "blue strength"
                     }
                     EffectSlider {
                         id: colorMasterSaturation
-                        from: -1.0
-                        to: 1.0
-                        value: 0
+                        fromValue: -1.0
+                        toValue: 1.0
+                        sliderValue: 0
                         precision: 2
                         description: "saturation"
                     }
@@ -356,34 +356,34 @@ Window {
                     id: dofBox
                     text: "DepthOfFieldHQBlur"
                     effect: DepthOfFieldHQBlur {
-                        focusDistance: dofFocusDistance.value
-                        focusRange: dofFocusRange.value
-                        blurAmount: dofBlurAmount.value
+                        focusDistance: dofFocusDistance.sliderValue
+                        focusRange: dofFocusRange.sliderValue
+                        blurAmount: dofBlurAmount.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: dofBox.checked
                     EffectSlider {
                         id: dofFocusDistance
-                        from: 0.0
-                        to: 1000.0
-                        value: 400
+                        fromValue: 0.0
+                        toValue: 1000.0
+                        sliderValue: 400
                         precision: 0
                         description: "focus distance"
                     }
                     EffectSlider {
                         id: dofFocusRange
-                        from: 0.0
-                        to: 400.0
-                        value: 100
+                        fromValue: 0.0
+                        toValue: 400.0
+                        sliderValue: 100
                         precision: 0
                         description: "focus range"
                     }
                     EffectSlider {
                         id: dofBlurAmount
-                        from: 0.0
-                        to: 10.0
-                        value: 4
+                        fromValue: 0.0
+                        toValue: 10.0
+                        sliderValue: 4
                         precision: 1
                         description: "blur amount"
                     }
@@ -393,16 +393,16 @@ Window {
                     id: desaturateBox
                     text: "Desaturate"
                     effect: Desaturate {
-                        amount: desaturateAmount.value
+                        amount: desaturateAmount.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: desaturateBox.checked
                     EffectSlider {
                         id: desaturateAmount
-                        from: 0.0
-                        to: 1.0
-                        value: 0.7
+                        fromValue: 0.0
+                        toValue: 1.0
+                        sliderValue: 0.7
                     }
                 }
 
@@ -410,10 +410,10 @@ Window {
                     id: rippleBox
                     text: "DistortionRipple"
                     effect: DistortionRipple {
-                        radius: rippleRadius.value
-                        distortionWidth: rippleWidth.value
-                        distortionHeight: rippleHeight.value
-                        distortionPhase: ripplePhase.value
+                        radius: rippleRadius.sliderValue
+                        distortionWidth: rippleWidth.sliderValue
+                        distortionHeight: rippleHeight.sliderValue
+                        distortionPhase: ripplePhase.sliderValue
                         center: Qt.vector2d(0.5, 0.5)
                     }
                 }
@@ -421,33 +421,33 @@ Window {
                     visible: rippleBox.checked
                     EffectSlider {
                         id: rippleRadius
-                        from: 0.0
-                        to: 100
-                        value: 45
+                        fromValue: 0.0
+                        toValue: 100
+                        sliderValue: 45
                         description: "radius"
                         precision: 1
                     }
                     EffectSlider {
                         id: rippleWidth
-                        from: 2.0
-                        to: 100
-                        value: 90
+                        fromValue: 2.0
+                        toValue: 100
+                        sliderValue: 90
                         description: "width"
                         precision: 1
                     }
                     EffectSlider {
                         id: rippleHeight
-                        from: 0.0
-                        to: 100
-                        value: 40
+                        fromValue: 0.0
+                        toValue: 100
+                        sliderValue: 40
                         description: "height"
                         precision: 1
                     }
                     EffectSlider {
                         id: ripplePhase
-                        from: 0.0
-                        to: 360
-                        value: 0
+                        fromValue: 0.0
+                        toValue: 360
+                        sliderValue: 0
                         description: "phase"
                         precision: 1
                     }
@@ -457,8 +457,8 @@ Window {
                     id: sphereBox
                     text: "DistortionSphere"
                     effect: DistortionSphere {
-                        radius: sphereRadius.value
-                        distortionHeight: sphereHeight.value
+                        radius: sphereRadius.sliderValue
+                        distortionHeight: sphereHeight.sliderValue
                         center: Qt.vector2d(0.5, 0.5)
                     }
                 }
@@ -466,16 +466,16 @@ Window {
                     visible: sphereBox.checked
                     EffectSlider {
                         id: sphereRadius
-                        from: 0.0
-                        to: 1.0
-                        value: 0.25
+                        fromValue: 0.0
+                        toValue: 1.0
+                        sliderValue: 0.25
                         description: "radius"
                     }
                     EffectSlider {
                         id: sphereHeight
-                        from: -1.0
-                        to: 1.0
-                        value: 0.5
+                        fromValue: -1.0
+                        toValue: 1.0
+                        sliderValue: 0.5
                         description: "height"
                     }
                 }
@@ -484,8 +484,8 @@ Window {
                     id: spiralBox
                     text: "DistortionSpiral"
                     effect: DistortionSpiral {
-                        radius: spiralRadius.value
-                        distortionStrength: spiralStrength.value
+                        radius: spiralRadius.sliderValue
+                        distortionStrength: spiralStrength.sliderValue
                         center: Qt.vector2d(0.5, 0.5)
                     }
                 }
@@ -493,16 +493,16 @@ Window {
                     visible: spiralBox.checked
                     EffectSlider {
                         id: spiralRadius
-                        from: 0.0
-                        to: 1.0
-                        value: 0.25
+                        fromValue: 0.0
+                        toValue: 1.0
+                        sliderValue: 0.25
                         description: "radius"
                     }
                     EffectSlider {
                         id: spiralStrength
-                        from: -10.0
-                        to: 10.0
-                        value: 1
+                        fromValue: -10.0
+                        toValue: 10.0
+                        sliderValue: 1
                         precision: 1
                         description: "strength"
                     }
@@ -512,16 +512,16 @@ Window {
                     id: edgeBox
                     text: "EdgeDetect"
                     effect: EdgeDetect {
-                        edgeStrength: edgeS.value
+                        edgeStrength: edgeS.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: edgeBox.checked
                     EffectSlider {
                         id: edgeS
-                        from: 0.0
-                        to: 1.0
-                        value: 0.5
+                        fromValue: 0.0
+                        toValue: 1.0
+                        sliderValue: 0.5
                         precision: 2
                     }
                 }
@@ -530,16 +530,16 @@ Window {
                     id: embossBox
                     text: "Emboss"
                     effect: Emboss {
-                        amount: embossAmount.value
+                        amount: embossAmount.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: embossBox.checked
                     EffectSlider {
                         id: embossAmount
-                        from: 0.0
-                        to: 0.01
-                        value: 0.003
+                        fromValue: 0.0
+                        toValue: 0.01
+                        sliderValue: 0.003
                         precision: 4
                     }
                 }
@@ -570,9 +570,9 @@ Window {
                     id: hdrBox
                     text: "HDRBloomTonemap"
                     effect: HDRBloomTonemap {
-                        bloomThreshold: hdrBloomThreshold.value
-                        blurFalloff: hdrBlurFalloff.value
-                        exposure: hdrExposure.value
+                        bloomThreshold: hdrBloomThreshold.sliderValue
+                        blurFalloff: hdrBlurFalloff.sliderValue
+                        exposure: hdrExposure.sliderValue
                         gamma: hdrGamma.expValue
                     }
                 }
@@ -580,35 +580,35 @@ Window {
                     visible: hdrBox.checked
                     EffectSlider {
                         id: hdrBloomThreshold
-                        from: 0.0
-                        to: 1.0
+                        fromValue: 0.0
+                        toValue: 1.0
                         precision: 2
-                        value: 1
+                        sliderValue: 1
                         description: "bloomThreshold"
                     }
                     EffectSlider {
                         id: hdrBlurFalloff
-                        from: 0.0
-                        to: 10.0
+                        fromValue: 0.0
+                        toValue: 10.0
                         precision: 1
-                        value: 0
+                        sliderValue: 0
                         description: "blurFalloff"
                     }
                     EffectSlider {
                         id: hdrExposure
-                        from: -9
-                        to: 9
+                        fromValue: -9
+                        toValue: 9
                         precision: 1
-                        value: 0
+                        sliderValue: 0
                         description: "exposure"
                     }
                     EffectSlider {
                         id: hdrGamma
                         exponential: true
-                        from: Math.log2(0.1)
-                        to: Math.log2(4.0)
+                        fromValue: Math.log2(0.1)
+                        toValue: Math.log2(4.0)
                         precision: 2
-                        value: 0 // i.e. 1
+                        sliderValue: 0 // i.e. 1
                         description: "gamma"
                     }
                 }
@@ -617,26 +617,26 @@ Window {
                     id: motionBox
                     text: "MotionBlur"
                     effect: MotionBlur {
-                        fadeAmount: motionAmount.value
-                        blurQuality: motionQuality.value
+                        fadeAmount: motionAmount.sliderValue
+                        blurQuality: motionQuality.sliderValue
                     }
                 }
                 SettingsGroup {
                     visible: motionBox.checked
                     EffectSlider {
                         id: motionAmount
-                        from: 0.0
-                        to: 1.0
+                        fromValue: 0.0
+                        toValue: 1.0
                         precision: 2
-                        value: 0.25
+                        sliderValue: 0.25
                         description: "fadeAmount"
                     }
                     EffectSlider {
                         id: motionQuality
-                        from: 0.1
-                        to: 1.0
+                        fromValue: 0.1
+                        toValue: 1.0
                         precision: 2
-                        value: 0.25
+                        sliderValue: 0.25
                         description: "blurQuality"
                     }
                 }
@@ -645,7 +645,7 @@ Window {
                     id: scatterBox
                     text: "Scatter"
                     effect: Scatter {
-                        amount: scatterAmount.value
+                        amount: scatterAmount.sliderValue
                         direction: scatterDirection.currentIndex
                         randomize: scatterRandomize.checked
                     }
@@ -654,10 +654,10 @@ Window {
                     visible: scatterBox.checked
                     EffectSlider {
                         id: scatterAmount
-                        from: 0
-                        to: 127
+                        fromValue: 0
+                        toValue: 127
                         precision: 0
-                        value: 10
+                        sliderValue: 10
                         description: "amount"
                     }
                     ComboBox {
@@ -678,12 +678,12 @@ Window {
                     id: sCurveBox
                     text: "SCurveTonemap"
                     effect: SCurveTonemap {
-                        shoulderSlope: sCurveShoulderSlope.value
-                        shoulderEmphasis: sCurveShoulderEmphasis.value
-                        toeSlope: sCurveToeSlope.value
-                        toeEmphasis: sCurveToeEmphasis.value
-                        contrastBoost: sCurveContrast.value
-                        saturationLevel: sCurveSaturation.value
+                        shoulderSlope: sCurveShoulderSlope.sliderValue
+                        shoulderEmphasis: sCurveShoulderEmphasis.sliderValue
+                        toeSlope: sCurveToeSlope.sliderValue
+                        toeEmphasis: sCurveToeEmphasis.sliderValue
+                        contrastBoost: sCurveContrast.sliderValue
+                        saturationLevel: sCurveSaturation.sliderValue
                         gammaValue: sCurveGamma.expValue
                         useExposure: sCurveUseExposure.checked
                         whitePoint: sCurveWhitePoint.expValue
@@ -694,79 +694,79 @@ Window {
                     visible: sCurveBox.checked
                     EffectSlider {
                         id: sCurveShoulderSlope
-                        from: 0.0
-                        to: 3.0
+                        fromValue: 0.0
+                        toValue: 3.0
                         precision: 2
-                        value: 1.0
+                        sliderValue: 1.0
                         description: "shoulderSlope"
                     }
                     EffectSlider {
                         id: sCurveShoulderEmphasis
-                        from: -1.0
-                        to: 1.0
+                        fromValue: -1.0
+                        toValue: 1.0
                         precision: 2
-                        value: 0.0
+                        sliderValue: 0.0
                         description: "shoulderEmphasis"
                     }
                     EffectSlider {
                         id: sCurveToeSlope
-                        from: 0.0
-                        to: 3.0
+                        fromValue: 0.0
+                        toValue: 3.0
                         precision: 2
-                        value: 1.0
+                        sliderValue: 1.0
                         description: "toeSlope"
                     }
                     EffectSlider {
                         id: sCurveToeEmphasis
-                        from: -1.0
-                        to: 1.0
+                        fromValue: -1.0
+                        toValue: 1.0
                         precision: 2
-                        value: 0.0
+                        sliderValue: 0.0
                         description: "toeEmphasis"
                     }
                     EffectSlider {
                         id: sCurveContrast
-                        from: -1.0
-                        to: 2.0
+                        fromValue: -1.0
+                        toValue: 2.0
                         precision: 2
-                        value: 0.0
+                        sliderValue: 0.0
                         description: "contrastBoost"
                     }
                     EffectSlider {
                         id: sCurveSaturation
-                        from: 0.0
-                        to: 1.0
+                        fromValue: 0.0
+                        toValue: 1.0
                         precision: 2
-                        value: 1.0
+                        sliderValue: 1.0
                         description: "saturationLevel"
                     }
                     EffectSlider {
                         id: sCurveGamma
                         exponential: true
-                        from: Math.log2(0.1)
-                        to: Math.log2(8.0)
+                        fromValue: Math.log2(0.1)
+                        toValue: Math.log2(8.0)
                         precision: 2
-                        value: Math.log2(2.2)
+                        sliderValue: Math.log2(2.2)
                         description: "gammaValue"
                     }
                     EffectSlider {
                         id: sCurveWhitePoint
                         visible: !sCurveUseExposure.checked
                         exponential: true
-                        from: Math.log2(0.01)
-                        to: Math.log2(128)
+                        fromValue: Math.log2(0.01)
+                        toValue: Math.log2(128)
                         precision: 2
-                        value: 0 // i.e. 1
+                        sliderValue: 0 // i.e. 1
                         description: "whitePoint"
                     }
                     EffectSlider {
                         id: sCurveExposure
                         visible: sCurveUseExposure.checked
                         exponential: true
-                        from: Math.log2(0.01)
-                        to: Math.log2(16.0)
+                        fromValue: Math.log2(0.01)
+                        toValue: Math.log2(16.0)
                         precision: 2
-                        value: 0 // i.e. 1
+                        sliderValue: 0 // i.e. 1
                         description: "exposureValue"
                     }
                     CheckBox {
@@ -780,9 +780,9 @@ Window {
                     id: tiltBox
                     text: "TiltShift"
                     effect: TiltShift {
-                         focusPosition: tiltPosition.value
-                         focusWidth: tiltWidth.value
-                         blurAmount: tiltBlur.value
+                         focusPosition: tiltPosition.sliderValue
+                         focusWidth: tiltWidth.sliderValue
+                         blurAmount: tiltBlur.sliderValue
                          isVertical: tiltVertical.checked
                          isInverted: tiltInverted.checked
                     }
@@ -791,25 +791,25 @@ Window {
                     visible: tiltBox.checked
                     EffectSlider {
                         id: tiltBlur
-                        from: 0.0
-                        to: 10.0
-                        value: 4
+                        fromValue: 0.0
+                        toValue: 10.0
+                        sliderValue: 4
                         precision: 1
                         description: "blur amount"
                     }
                     EffectSlider {
                         id: tiltPosition
-                        from: 0.0
-                        to: 1.0
-                        value: 0.5
+                        fromValue: 0.0
+                        toValue: 1.0
+                        sliderValue: 0.5
                         precision: 2
                         description: "focus position"
                     }
                     EffectSlider {
                         id: tiltWidth
-                        from: 0.0
-                        to: 1.0
-                        value: 0.2
+                        fromValue: 0.0
+                        toValue: 1.0
+                        sliderValue: 0.2
                         precision: 2
                         description: "focus width"
                     }
@@ -830,8 +830,8 @@ Window {
                     text: "Vignette"
                     effect: Vignette {
                         vignetteColor: vignetteCol.colorVector
-                        vignetteRadius: vignetteR.value
-                        vignetteStrength: vignetteS.value
+                        vignetteRadius: vignetteR.sliderValue
+                        vignetteStrength: vignetteS.sliderValue
                     }
                 }
                 SettingsGroup {
@@ -843,17 +843,17 @@ Window {
                     }
                     EffectSlider {
                         id: vignetteR
-                        from: 0.0
-                        to: 5.0
-                        value: 0.35
+                        fromValue: 0.0
+                        toValue: 5.0
+                        sliderValue: 0.35
                         precision: 2
                         description: "radius"
                     }
                     EffectSlider {
                         id: vignetteS
-                        from: 0.0
-                        to: 15.0
-                        value: 15
+                        fromValue: 0.0
+                        toValue: 15.0
+                        sliderValue: 15
                         precision: 1
                         description: "strength"
                     }
@@ -863,15 +863,15 @@ Window {
                     id: blurBox
                     text: "Simple blur"
                     effect : Blur {
-                        amount: blurEffectAmount.value
+                        amount: blurEffectAmount.sliderValue
                     }
                 }
                 EffectSlider {
                     visible: blurBox.checked
                     id: blurEffectAmount
-                    from: 0.0
-                    to: 0.01
-                    value: 0.003
+                    fromValue: 0.0
+                    toValue: 0.01
+                    sliderValue: 0.003
                     precision: 4
                 }
 
@@ -879,15 +879,15 @@ Window {
                     id: gaussBox
                     text: "Gaussian blur"
                     effect: GaussianBlur {
-                        amount: gaussAmount.value
+                        amount: gaussAmount.sliderValue
                     }
                 }
                 EffectSlider {
                     visible: gaussBox.checked
                     id: gaussAmount
-                    from: 0.0
-                    to: 10.0
-                    value: 2
+                    fromValue: 0.0
+                    toValue: 10.0
+                    sliderValue: 2
                     precision: 1
                 }
 

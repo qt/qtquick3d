@@ -50,22 +50,27 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
-Slider {
+ColumnLayout {
     property string description
     property int precision: 2
     property bool exponential: false
-    property double expValue: exponential ? Math.pow(2.0, value) : value
-    from: 0.0
-    to: 1.0
-    value: 0.5
+    property double expValue: exponential ? Math.pow(2.0, sliderValue) : sliderValue
+    property alias sliderValue: slider.value
+    property alias fromValue: slider.from
+    property alias toValue: slider.to
+
+    Slider {
+        id: slider
+        from: 0.0
+        to: 1.0
+        value: 0.5
+    }
 
     Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.verticalCenter
-        anchors.topMargin: 6
+        Layout.alignment: Qt.AlignHCenter
         text: (parent.description.length == 0 ? "" : parent.description + ": ")
                    + parent.expValue.toFixed(precision);
-        z: 10
     }
 }

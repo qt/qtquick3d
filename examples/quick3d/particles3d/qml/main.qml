@@ -51,6 +51,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
+import QtQuick.Controls
 
 Window {
     id: rootWindow
@@ -86,7 +87,7 @@ Window {
         source: startupView
     }
 
-    Item {
+    Button {
         id: backButton
         anchors.left: parent.left
         anchors.top: parent.top
@@ -94,24 +95,22 @@ Window {
         height: width
         opacity: loader.source !== startupView
         visible: opacity
+        icon.source: "qrc:/qml/images/arrow_icon.png"
+        icon.width: backButton.width * 0.3
+        icon.height: backButton.height * 0.3
+        icon.color: "transparent"
+        background: Rectangle {
+            color: "transparent"
+        }
+        onClicked: {
+            loader.source = startupView;
+        }
         Behavior on opacity {
             NumberAnimation {
                 duration: 400
                 easing.type: Easing.InOutQuad
             }
         }
-        Image {
-            anchors.centerIn: parent
-            width: parent.width * 0.3
-            height: width
-            source: "images/arrow_icon.png"
-            mipmap: true
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                loader.source = startupView;
-            }
-        }
     }
+
 }

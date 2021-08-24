@@ -144,103 +144,103 @@ Window {
         }
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#c0c0c0"
-        border.color: "#202020"
-    }
 
-    ColumnLayout {
-        id: settingsArea
+    Frame {
+        background: Rectangle {
+            color: "#c0c0c0"
+            border.color: "#202020"
+        }
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.margins: 20
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            font.bold: true
-            text: "antialiasingMode"
-        }
-        RadioButton {
-            id: modeButton1
-            checked: true
-            text: qsTr("NoAA")
-        }
-        RadioButton {
-            id: modeButton2
-            text: qsTr("SSAA")
-        }
-        RadioButton {
-            id: modeButton3
-            text: qsTr("MSAA")
-        }
-        RadioButton {
-            id: modeButton4
-            text: qsTr("ProgressiveAA")
-        }
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: "#909090"
-        }
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            font.bold: true
-            text: "antialiasingQuality"
-        }
-        ButtonGroup {
-            buttons: antialiasingQualityColumn.children
-        }
+        anchors.margins: 10
         ColumnLayout {
-            id: antialiasingQualityColumn
-            RadioButton {
-                id: qualityButton1
-                text: qsTr("Medium")
-            }
-            RadioButton {
-                id: qualityButton2
-                checked: true
-                text: qsTr("High")
-            }
-            RadioButton {
-                id: qualityButton3
-                text: qsTr("VeryHigh")
-            }
-        }
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: "#909090"
-        }
-        CheckBox {
-            id: temporalModeButton
-            text: "temporalAAEnabled"
-        }
-        Item { width: 1; height: 10 }
-        Slider {
-            id: temporalStrengthSlider
-            from: 0.0
-            to: 2.0
-            value: 0.3
+            id: settingsArea
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.verticalCenter
-                anchors.bottomMargin: 16
-                text: "temporalAAStrength: " + temporalStrengthSlider.value.toFixed(2);
-                z: 10
+                Layout.alignment: Qt.AlignHCenter
+                font.bold: true
+                text: "antialiasingMode"
             }
-        }
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: "#909090"
-        }
-        Button {
-            id: animationButton
-            Layout.alignment: Qt.AlignHCenter
-            text: "Animate!"
-            onClicked: {
-                modelAnimation.restart();
+            RadioButton {
+                id: modeButton1
+                checked: true
+                text: qsTr("NoAA")
+            }
+            RadioButton {
+                id: modeButton2
+                text: qsTr("SSAA")
+            }
+            RadioButton {
+                id: modeButton3
+                text: qsTr("MSAA")
+            }
+            RadioButton {
+                id: modeButton4
+                text: qsTr("ProgressiveAA")
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: "#909090"
+            }
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                font.bold: true
+                text: "antialiasingQuality"
+            }
+            ButtonGroup {
+                buttons: antialiasingQualityColumn.children
+            }
+            ColumnLayout {
+                id: antialiasingQualityColumn
+                RadioButton {
+                    id: qualityButton1
+                    text: qsTr("Medium")
+                }
+                RadioButton {
+                    id: qualityButton2
+                    checked: true
+                    text: qsTr("High")
+                }
+                RadioButton {
+                    id: qualityButton3
+                    text: qsTr("VeryHigh")
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: "#909090"
+            }
+            CheckBox {
+                id: temporalModeButton
+                text: "temporalAAEnabled"
+            }
+            Item { width: 1; height: 10 }
+            Slider {
+                id: temporalStrengthSlider
+                from: 0.0
+                to: 2.0
+                value: 0.3
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.verticalCenter
+                    anchors.bottomMargin: 16
+                    text: "temporalAAStrength: " + temporalStrengthSlider.value.toFixed(2);
+                    z: 10
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: "#909090"
+            }
+            Button {
+                id: animationButton
+                Layout.alignment: Qt.AlignHCenter
+                text: "Animate!"
+                onClicked: {
+                    modelAnimation.restart();
+                }
             }
         }
     }

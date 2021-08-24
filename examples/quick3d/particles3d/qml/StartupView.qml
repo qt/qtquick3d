@@ -51,6 +51,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Particles3D
+import QtQuick.Controls
 
 Item {
     id: mainView
@@ -253,29 +254,25 @@ Item {
 
     Component {
         id: listComponent
-        Item {
+        Button {
             width: mainView.listItemWidth
             height: mainView.listItemHeight
-            Rectangle {
-                anchors.fill: parent
+            background: Rectangle {
+                id: buttonBackground
                 border.width: 0.5
                 border.color: "#d0808080"
                 color: "#d0404040"
-                opacity: mouseArea.containsMouse ? 1.0 : 0.5
+                opacity: hovered ? 1.0 : 0.5
             }
-            Text {
+            contentItem: Text {
                 anchors.centerIn: parent
                 color: "#f0f0f0"
                 font.pointSize: settings.fontSizeSmall
                 text: name
             }
-            MouseArea {
-                id: mouseArea
-                anchors.fill: parent
-                onClicked: {
-                    loader.source = file
-                }
-                hoverEnabled: true
+
+            onClicked: {
+                loader.source = file
             }
         }
     }

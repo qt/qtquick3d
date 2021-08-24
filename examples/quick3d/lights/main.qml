@@ -50,6 +50,7 @@
 
 import QtQuick
 import QtQuick3D
+import QtQuick.Controls
 
 Window {
     width: 1280
@@ -240,73 +241,72 @@ Window {
         //! [light models]
     }
 
-    Rectangle {
-        anchors.fill: settingsArea
-        anchors.margins: -10
-        color: "#e0e0e0"
-        border.color: "#000000"
-        border.width: 1
-        opacity: 0.8
-    }
-
-    Column {
-        id: settingsArea
+    Frame {
         anchors.top: parent.top
         anchors.topMargin: 20
         anchors.left: parent.left
-        anchors.leftMargin: 20
-        CustomCheckBox {
-            id: checkBoxShadows
-            text: qsTr("Enable Shadows")
-            checked: true
+        anchors.leftMargin: 10
+        background: Rectangle {
+            color: "#e0e0e0"
+            border.color: "#000000"
+            border.width: 1
+            opacity: 0.8
         }
-        Item { width: 1; height: 20 }
-        CustomCheckBox {
-            id: checkBoxAnimate
-            text: qsTr("Rotate Teapot")
-            checked: true
-        }
-        Item { width: 1; height: 20 }
-        CustomCheckBox {
-            id: checkBoxCustomMaterial
-            text: qsTr("Custom Material")
-            checked: false
-        }
-        Item { width: 1; height: 40 }
-        CustomCheckBox {
-            id: checkBox1
-            text: qsTr("Directional Light")
-            checked: true
-        }
-        CustomSlider {
-            id: slider1
-            sliderValue: 0.5
-            fromValue: 0
-            toValue: 1
-        }
-        Item { width: 1; height: 40 }
-        CustomCheckBox {
-            id: checkBox2
-            text: qsTr("Point Light")
-            checked: false
-        }
-        CustomSlider {
-            id: slider2
-            sliderValue: 6
-            fromValue: 0
-            toValue: 10
-        }
-        Item { width: 1; height: 40 }
-        CustomCheckBox {
-            id: checkBox4
-            text: qsTr("Spot Light")
-            checked: false
-        }
-        CustomSlider {
-            id: slider4
-            sliderValue: 10
-            fromValue: 0
-            toValue: 30
+        Column {
+            id: settingsArea
+            CustomCheckBox {
+                id: checkBoxShadows
+                text: qsTr("Enable Shadows")
+                checked: true
+            }
+            Item { width: 1; height: 20 }
+            CustomCheckBox {
+                id: checkBoxAnimate
+                text: qsTr("Rotate Teapot")
+                checked: true
+            }
+            Item { width: 1; height: 20 }
+            CustomCheckBox {
+                id: checkBoxCustomMaterial
+                text: qsTr("Custom Material")
+                checked: false
+            }
+            Item { width: 1; height: 40 }
+            CustomCheckBox {
+                id: checkBox1
+                text: qsTr("Directional Light")
+                checked: true
+            }
+            CustomSlider {
+                id: slider1
+                sliderValue: 0.5
+                fromValue: 0
+                toValue: 1
+            }
+            Item { width: 1; height: 40 }
+            CustomCheckBox {
+                id: checkBox2
+                text: qsTr("Point Light")
+                checked: false
+            }
+            CustomSlider {
+                id: slider2
+                sliderValue: 6
+                fromValue: 0
+                toValue: 10
+            }
+            Item { width: 1; height: 40 }
+            CustomCheckBox {
+                id: checkBox4
+                text: qsTr("Spot Light")
+                checked: false
+            }
+            CustomSlider {
+                id: slider4
+                sliderValue: 10
+                fromValue: 0
+                toValue: 30
+            }
         }
     }
 }
