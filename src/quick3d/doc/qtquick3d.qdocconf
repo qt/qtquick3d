@@ -15,10 +15,6 @@ qhp.QtQuick3D.virtualFolder       = qtquick3d
 qhp.QtQuick3D.indexTitle          = Qt Quick 3D
 qhp.QtQuick3D.indexRoot           =
 
-qhp.QtQuick3D.filterAttributes    = qtquick3d $QT_VERSION qtrefdoc
-qhp.QtQuick3D.customFilters.Qt.name = QtQuick3D $QT_VERSION
-qhp.QtQuick3D.customFilters.Qt.filterAttributes = qtquick3d $QT_VERSION
-
 qhp.QtQuick3D.subprojects = qmltypes examples classes
 qhp.QtQuick3D.subprojects.qmltypes.title = QML Types
 qhp.QtQuick3D.subprojects.qmltypes.indexTitle = Qt Quick 3D QML Types
