@@ -135,7 +135,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
     PRECOMPILE
     OPTIMIZED
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/orthoshadowblurx.vert
         res/rhishaders/orthoshadowblurx.frag
@@ -152,7 +152,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
     OPTIMIZED
     PERTARGETCOMPILE
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/ssaaresolve.vert
         res/rhishaders/ssaaresolve.frag
@@ -165,7 +165,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3"
     OPTIMIZED
     GLSL "300es,120,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/cubeshadowblurx.vert
         res/rhishaders/cubeshadowblurx.frag
@@ -178,7 +178,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/ssao.vert
         res/rhishaders/ssao.frag
@@ -195,17 +195,17 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_lightprobe_rgbe"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/environmentmapprefilter.vert
         res/rhishaders/environmentmapprefilter.frag
         res/rhishaders/environmentmapirradiance.vert
         res/rhishaders/environmentmapirradiance.frag
     OUTPUTS
-        environmentmapprefilter_rgbe.vert.qsb
-        environmentmapprefilter_rgbe.frag.qsb
-        environmentmapirradiance_rgbe.vert.qsb
-        environmentmapirradiance_rgbe.frag.qsb
+        res/rhishaders/environmentmapprefilter_rgbe.vert.qsb
+        res/rhishaders/environmentmapprefilter_rgbe.frag.qsb
+        res/rhishaders/environmentmapirradiance_rgbe.vert.qsb
+        res/rhishaders/environmentmapirradiance_rgbe.frag.qsb
     DEFINES
         QSSG_ENABLE_RGBE_LIGHT_PROBE
 )
@@ -215,13 +215,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_none"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_hdr_none.vert.qsb
-        skybox_hdr_none.frag.qsb
+        res/rhishaders/skybox_hdr_none.vert.qsb
+        res/rhishaders/skybox_hdr_none.frag.qsb
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_none"
     SILENT
@@ -229,13 +229,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_none"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_rgbe_none.vert.qsb
-        skybox_rgbe_none.frag.qsb
+        res/rhishaders/skybox_rgbe_none.vert.qsb
+        res/rhishaders/skybox_rgbe_none.frag.qsb
     DEFINES
         QSSG_ENABLE_RGBE_LIGHT_PROBE
 )
@@ -245,13 +245,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_linear"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_hdr_linear.vert.qsb
-        skybox_hdr_linear.frag.qsb
+        res/rhishaders/skybox_hdr_linear.vert.qsb
+        res/rhishaders/skybox_hdr_linear.frag.qsb
     DEFINES
         QSSG_ENABLE_LINEAR_TONEMAPPING
 )
@@ -261,13 +261,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_linear"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_rgbe_linear.vert.qsb
-        skybox_rgbe_linear.frag.qsb
+        res/rhishaders/skybox_rgbe_linear.vert.qsb
+        res/rhishaders/skybox_rgbe_linear.frag.qsb
     DEFINES
         QSSG_ENABLE_LINEAR_TONEMAPPING
         QSSG_ENABLE_RGBE_LIGHT_PROBE
@@ -278,13 +278,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_aces"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_hdr_aces.vert.qsb
-        skybox_hdr_aces.frag.qsb
+        res/rhishaders/skybox_hdr_aces.vert.qsb
+        res/rhishaders/skybox_hdr_aces.frag.qsb
     DEFINES
         QSSG_ENABLE_ACES_TONEMAPPING
 )
@@ -294,13 +294,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_aces"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_rgbe_aces.vert.qsb
-        skybox_rgbe_aces.frag.qsb
+        res/rhishaders/skybox_rgbe_aces.vert.qsb
+        res/rhishaders/skybox_rgbe_aces.frag.qsb
     DEFINES
         QSSG_ENABLE_ACES_TONEMAPPING
         QSSG_ENABLE_RGBE_LIGHT_PROBE
@@ -311,13 +311,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_hejldawson"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_hdr_hejldawson.vert.qsb
-        skybox_hdr_hejldawson.frag.qsb
+        res/rhishaders/skybox_hdr_hejldawson.vert.qsb
+        res/rhishaders/skybox_hdr_hejldawson.frag.qsb
     DEFINES
         QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
 )
@@ -327,13 +327,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_hejldawson
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_rgbe_hejldawson.vert.qsb
-        skybox_rgbe_hejldawson.frag.qsb
+        res/rhishaders/skybox_rgbe_hejldawson.vert.qsb
+        res/rhishaders/skybox_rgbe_hejldawson.frag.qsb
     DEFINES
         QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
         QSSG_ENABLE_RGBE_LIGHT_PROBE
@@ -344,13 +344,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_filmic"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_hdr_filmic.vert.qsb
-        skybox_hdr_filmic.frag.qsb
+        res/rhishaders/skybox_hdr_filmic.vert.qsb
+        res/rhishaders/skybox_hdr_filmic.frag.qsb
     DEFINES
         QSSG_ENABLE_FILMIC_TONEMAPPING
 )
@@ -360,13 +360,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_filmic"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/skybox.vert
         res/rhishaders/skybox.frag
     OUTPUTS
-        skybox_rgbe_filmic.vert.qsb
-        skybox_rgbe_filmic.frag.qsb
+        res/rhishaders/skybox_rgbe_filmic.vert.qsb
+        res/rhishaders/skybox_rgbe_filmic.frag.qsb
     DEFINES
         QSSG_ENABLE_FILMIC_TONEMAPPING
         QSSG_ENABLE_RGBE_LIGHT_PROBE
@@ -377,13 +377,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight"
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/particles.vert
         res/rhishaders/particles.frag
     OUTPUTS
-        particlesnolightsimple.vert.qsb
-        particlesnolightsimple.frag.qsb
+        res/rhishaders/particlesnolightsimple.vert.qsb
+        res/rhishaders/particlesnolightsimple.frag.qsb
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight_mapped"
     SILENT
@@ -391,13 +391,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight_mapp
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/particles.vert
         res/rhishaders/particles.frag
     OUTPUTS
-        particlesnolightmapped.vert.qsb
-        particlesnolightmapped.frag.qsb
+        res/rhishaders/particlesnolightmapped.vert.qsb
+        res/rhishaders/particlesnolightmapped.frag.qsb
     DEFINES
         QSSG_PARTICLES_ENABLE_MAPPED
 )
@@ -407,13 +407,13 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight_anim
     OPTIMIZED
     GLSL "300es,150"
     PREFIX
-        "/res/rhishaders"
+        "/"
     FILES
         res/rhishaders/particles.vert
         res/rhishaders/particles.frag
     OUTPUTS
-        particlesnolightanimated.vert.qsb
-        particlesnolightanimated.frag.qsb
+        res/rhishaders/particlesnolightanimated.vert.qsb
+        res/rhishaders/particlesnolightanimated.frag.qsb
     DEFINES
         QSSG_PARTICLES_ENABLE_MAPPED
         QSSG_PARTICLES_ENABLE_ANIMATED
