@@ -213,8 +213,41 @@ needs to then reference this file.
     }
 \endcode
 
-\note Setting PREFIX to match the .qml file's location in the resource system
-allows using a relative source path instead of having to provide an absolute
-path with the qrc scheme.
+\note Setting PREFIX so that the final name in the resource system has a path
+matching the .qml file's location allows using a relative source path instead of
+having to provide an absolute path with the qrc scheme.
+
+In addition to PREFIX, the keyword BASE is also available. The behavior follows
+that of qt6_add_resources. For example, the following leads to generating
+\c{:/ibl/maps/environment.ktx}:
+
+\badcode
+    qt6_add_lightprobe_images(application_target "ibl_assets"
+        PREFIX
+            "/ibl"
+        BASE
+            "../data/shared"
+        FILES
+            "../data/shared/maps/environment.hdr"
+    )
+\endcode
+
+Like in qt6_add_shaders, the OUTPUTS keyword is available to allow specifying a
+completely custom name for the file in the resource system. For example, the
+following also generates \c{:/ibl/maps/environment.ktx}:
+
+\badcode
+    qt6_add_lightprobe_images(application_target "ibl_assets"
+        PREFIX
+            "/ibl"
+        FILES
+            "../data/shared/maps/environment.hdr"
+        OUTPUTS
+            "maps/environment.ktx"
+    )
+\endcode
+
+\note For each entry in the FILES list, there must be a corresponding entry in
+OUTPUTS.
 
 */

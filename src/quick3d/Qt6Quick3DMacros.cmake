@@ -62,18 +62,29 @@ endfunction()
 #
 # qt6_add_lightprobe_images(principledmaterial "ibl_assets"
 #    PREFIX
-#        "/maps"
+#        "/"
 #    FILES
 #        "maps/OpenfootageNET_garage-1024.hdr" )
+#
+# In addition to PREFIX, BASE is available as well, and works like in qt6_add_resources:
+# adding BASE "maps" in the above example would lead to getting :/OpenfootageNET_garage-1024.ktx
+#
+# OUTPUTS works like in qt6_add_shaders, allowing to specify an alternative name
+# for the resource system for each entry in FILES. For example, adding
+# OUTPUTS "alt/er/native/image.abc" to the above example would generate :/alt/er/native/image.abc
+#
+# In short, the actual file name in the resource system is
+# either :/PREFIX/FILES[i]-BASE-".hdr"+".ktx" or :/PREFIX/OUTPUTS[i]
 #
 function(qt6_add_lightprobe_images target resource_name)
     cmake_parse_arguments(arg
         ""
-        "PREFIX;_QT_INTERNAL"
-        "FILES"
+        "PREFIX;BASE;_QT_INTERNAL"
+        "FILES;OUTPUTS"
         ${ARGN}
     )
 
+    math(EXPR file_index "0")
     foreach(file IN LISTS arg_FILES)
         get_filename_component(file_name_wo_ext ${file} NAME_WLE)
         get_filename_component(file_ext ${file} EXT)
@@ -81,8 +92,21 @@ function(qt6_add_lightprobe_images target resource_name)
             message(FATAL_ERROR "Light probe HDRI maps must have a .hdr extension, whereas ${file} has something else")
         endif()
 
+        get_filename_component(file_dir "${file}" DIRECTORY)
+        string(JOIN "/" res_name "${file_dir}" "${file_name_wo_ext}")
+        string(JOIN "." res_name "${res_name}" "ktx")
+
+        if(arg_OUTPUTS)
+            list(GET arg_OUTPUTS ${file_index} res_name)
+        elseif(arg_BASE)
+            get_filename_component(abs_base "${arg_BASE}" ABSOLUTE)
+            get_filename_component(abs_res_name "${res_name}" ABSOLUTE)
+            file(RELATIVE_PATH res_name "${abs_base}" "${abs_res_name}")
+        endif()
+
+        # This should be .../.ibl/${res_name} but balsam strips the path so no choice but
+        # to follow suit here and hope that the names of the files won't clash.
         set(ktx_result "${CMAKE_CURRENT_BINARY_DIR}/.ibl/${file_name_wo_ext}.ktx")
-        get_filename_component(ktx_result_name "${ktx_result}" NAME)
 
         get_filename_component(file_absolute ${file} ABSOLUTE)
 
@@ -103,7 +127,9 @@ function(qt6_add_lightprobe_images target resource_name)
         )
 
         list(APPEND ktx_files "${ktx_result}")
-        set_source_files_properties("${ktx_result}" PROPERTIES QT_RESOURCE_ALIAS "${ktx_result_name}")
+        set_source_files_properties("${ktx_result}" PROPERTIES QT_RESOURCE_ALIAS "${res_name}")
+
+        math(EXPR file_index "${file_index}+1")
     endforeach()
 
     if(arg__QT_INTERNAL)

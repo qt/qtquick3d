@@ -35,6 +35,8 @@ qt_internal_add_resource(qquick3d_qmlscenegrabber "scenegrabber"
 qt6_add_lightprobe_images(qquick3d_qmlscenegrabber "ibl_assets"
     PREFIX
         "/"
+    BASE
+        "../data/shared/maps"
     FILES
         "../data/shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
 )
