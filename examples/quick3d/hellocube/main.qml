@@ -58,14 +58,13 @@ Window {
     visible: true
     color: "black"
 
-    Rectangle {
+    Item {
         id: qt_logo
         width: 230
         height: 230
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: 10
-        color: "transparent"
 
         //! [offscreenSurface]
         layer.enabled: true
@@ -74,14 +73,12 @@ Window {
         Rectangle {
             anchors.fill: parent
             color: "black"
-
             //! [2d]
             Image {
                 anchors.fill: parent
                 source: "qt_logo.png"
             }
             Text {
-                id: text
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 color: "white"
@@ -121,11 +118,8 @@ Window {
     View3D {
         id: view
         anchors.fill: parent
-        camera: camera
-        renderMode: View3D.Overlay
 
         PerspectiveCamera {
-            id: camera
             position: Qt.vector3d(0, 200, 300)
             eulerRotation.x: -30
         }
@@ -137,26 +131,20 @@ Window {
         Model {
             //! [3dcube]
             id: cube
-            visible: true
-            position: Qt.vector3d(0, 0, 0)
             source: "#Cube"
-            materials: [ DefaultMaterial {
-                    diffuseMap: Texture {
-                        id: texture
-                        sourceItem: qt_logo
-                    }
+            materials: DefaultMaterial {
+                diffuseMap: Texture {
+                    sourceItem: qt_logo
                 }
-            ]
+            }
             eulerRotation.y: 90
             //! [3dcube]
 
-            SequentialAnimation on eulerRotation {
+            Vector3dAnimation on eulerRotation {
                 loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: 5000
-                    from: Qt.vector3d(0, 0, 0)
-                    to: Qt.vector3d(360, 0, 360)
-                }
+                duration: 5000
+                from: Qt.vector3d(0, 0, 0)
+                to: Qt.vector3d(360, 0, 360)
             }
         }
     }
