@@ -1,8 +1,7 @@
 import QtQuick
-import QtQuick.Window
 import QtQuick3D
 
-Window
+Item
 {
     id: window
     width: 800
