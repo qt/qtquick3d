@@ -16,6 +16,9 @@ qt_copy_or_install(
         ModelBlendParticle3DSpecifics.qml
         ModelParticle3DSection.qml
         ModelParticle3DSpecifics.qml
+        NodeSection.qml
+        NodeSpecifics.qml
+        IdComboBox.qml
         ParticleModelShape3DSection.qml
         ParticleModelShape3DSpecifics.qml
         PointRotator3DSection.qml
