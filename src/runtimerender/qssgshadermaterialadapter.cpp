@@ -423,7 +423,7 @@ namespace {
 
 // Custom material shader substitution table.
 // Must be in sync with the shader generator.
-static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = {
+static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     // uniform (block members)
     { "MODELVIEWPROJECTION_MATRIX", "qt_modelViewProjection" },
     { "VIEWPROJECTION_MATRIX", "qt_viewProjectionMatrix" },
@@ -512,7 +512,7 @@ static std::vector<QSSGCustomMaterialVariableSubstitution> qssg_var_subst_tab = 
 };
 
 // Functions that, if present, get an argument list injected.
-static std::vector<QByteArray> qssg_func_injectarg_tab = {
+static const QByteArrayView qssg_func_injectarg_tab[] = {
     "DIRECTIONAL_LIGHT",
     "POINT_LIGHT",
     "SPOT_LIGHT",
@@ -678,10 +678,10 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 if (funcFinderState == 0 && trimmedId == QByteArrayLiteral("void")) {
                     funcFinderState += 1;
                 } else if (funcFinderState == 1) {
-                    if (std::find_if(qssg_func_injectarg_tab.cbegin(), qssg_func_injectarg_tab.cend(),
-                                 [trimmedId](const QByteArray &entry) { return entry == trimmedId; })
-                            != qssg_func_injectarg_tab.cend())
-                    {
+                    auto begin = qssg_func_injectarg_tab;
+                    const auto end = qssg_func_injectarg_tab + (sizeof(qssg_func_injectarg_tab) / sizeof(qssg_func_injectarg_tab[0]));
+                    const auto foundIt = std::find_if(begin, end, [trimmedId](const QByteArrayView &entry) { return entry == trimmedId; });
+                    if (foundIt != end) {
                         currentShadedFunc = trimmedId;
                         funcFinderState += 1;
                     }
@@ -726,7 +726,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 result += QByteArrayLiteral("%*/");
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (currentShadedFunc == subst.builtin) {
-                        currentShadedFunc = subst.actualName;
+                        currentShadedFunc = subst.actualName.toByteArray();
                         break;
                     }
                 }

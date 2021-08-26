@@ -193,8 +193,8 @@ private:
 
 struct QSSGCustomMaterialVariableSubstitution
 {
-    QByteArray builtin;
-    QByteArray actualName;
+    QByteArrayView builtin;
+    QByteArrayView actualName;
 };
 
 QT_END_NAMESPACE
