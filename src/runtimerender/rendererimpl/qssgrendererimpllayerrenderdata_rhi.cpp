@@ -812,8 +812,8 @@ static QSSGBounds3 calculateSortedObjectBounds(const QVector<QSSGRenderableObjec
         for (const QSSGRenderableObjectHandle &handle : *handles) {
             const QSSGRenderableObject &obj = *handle.obj;
 
-            // We skip objects not receiving shadows since they don't need to be covered by the shadow map
-            if (!obj.renderableFlags.receivesShadows())
+            // We skip objects not casting or receiving shadows since they don't influence or need to be covered by the shadow map
+            if (!(obj.renderableFlags.receivesShadows() || obj.renderableFlags.castsShadows()))
                 continue;
 
             const QVector3D &max = obj.bounds.maximum;
