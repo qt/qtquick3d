@@ -41,44 +41,6 @@ Column {
 
         SectionLayout {
             PropertyLabel {
-                text: qsTr("Unique Amount Variation")
-                tooltip: qsTr("This property defines variation for uniqueAmount between 0.0 and 1.0.")
-            }
-
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 0
-                    maximumValue: 1
-                    decimals: 2
-                    stepSize: 0.01
-                    backendValue: backendValues.uniqueAmountVariation
-                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
-                text: qsTr("Unique Pace Variation")
-                tooltip: qsTr("This property defines the unique pace (frequency) variation for each particle between 0.0 and 1.0.")
-            }
-
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 0
-                    maximumValue: 1
-                    decimals: 2
-                    stepSize: 0.01
-                    backendValue: backendValues.uniquePaceVariation
-                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
                 text: qsTr("Fade In Duration")
                 tooltip: qsTr("This property defines the duration in milliseconds for fading in the affector.")
             }
@@ -335,10 +297,108 @@ Column {
                     ExpandingSpacer {}
                 }
             }
+        }
+    }
+    Section {
+        width: parent.width
+        caption: qsTr("Unique")
+
+        ColumnLayout {
+            spacing: StudioTheme.Values.transform3DSectionSpacing
 
             SectionLayout {
                 PropertyLabel {
-                    text: qsTr("Unique Pace")
+                    text: qsTr("Amount")
+                    tooltip: qsTr("This property defines the unique distance each particle moves at the ends of curves.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.uniqueAmount_x
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "X"
+                        color: StudioTheme.Values.theme3DAxisXColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.uniqueAmount_y
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Y"
+                        color: StudioTheme.Values.theme3DAxisYColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {}
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: -9999999
+                        maximumValue: 9999999
+                        decimals: 2
+                        backendValue: backendValues.uniqueAmount_z
+                        implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                    ControlLabel {
+                        text: "Z"
+                        color: StudioTheme.Values.theme3DAxisZColor
+                    }
+
+                    ExpandingSpacer {}
+                }
+
+                PropertyLabel {
+                    text: qsTr("Amount Variation")
+                    tooltip: qsTr("This property defines variation for uniqueAmount between 0.0 and 1.0.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: 0
+                        maximumValue: 1
+                        decimals: 2
+                        stepSize: 0.01
+                        backendValue: backendValues.uniqueAmountVariation
+                        implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    ExpandingSpacer {}
+                }
+            }
+
+            SectionLayout {
+                PropertyLabel {
+                    text: qsTr("Pace")
                     tooltip: qsTr("This property defines the unique pace (frequency) each particle wanders in curves per second.")
                 }
 
@@ -405,7 +465,27 @@ Column {
 
                     ExpandingSpacer {}
                 }
+
+                PropertyLabel {
+                    text: qsTr("Pace Variation")
+                    tooltip: qsTr("This property defines the unique pace (frequency) variation for each particle between 0.0 and 1.0.")
+                }
+
+                SecondColumnLayout {
+                    SpinBox {
+                        minimumValue: 0
+                        maximumValue: 1
+                        decimals: 2
+                        stepSize: 0.01
+                        backendValue: backendValues.uniquePaceVariation
+                        implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                       + StudioTheme.Values.actionIndicatorWidth
+                    }
+
+                    ExpandingSpacer {}
+                }
             }
         }
     }
+
 }
