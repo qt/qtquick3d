@@ -33,14 +33,14 @@ import QtQuick3D.Particles3D
 
 ParticleSystem3D {
     SpriteParticle3D {
-        id: particle
+        id: spriteParticle
         color: "#ffffff"
         particleScale: 5.0
         maxAmount: 100
     }
     ParticleEmitter3D {
         id: particleEmitter
-        particle: particle
+        particle: spriteParticle
         particleScale: 1.0
         particleEndScale: 1.5
         particleRotationVariation.x: 180
