@@ -150,12 +150,12 @@ function(qt6_add_lightprobe_images target resource_name)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    function(qt_add_materials)
+    macro(qt_add_materials)
         qt6_add_materials(${ARGV})
-    endfunction()
-    function(qt_add_lightprobe_images)
+    endmacro()
+    macro(qt_add_lightprobe_images)
         qt6_add_lightprobe_images(${ARGV})
-    endfunction()
+    endmacro()
 endif()
 
 # for use by Qt modules that need qt_internal_add_resource
