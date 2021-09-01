@@ -155,7 +155,7 @@ int QQuick3DParticleSpriteSequence::durationVariation() const
 */
 bool QQuick3DParticleSpriteSequence::randomStart() const
 {
-    return m_interpolate;
+    return m_randomStart;
 }
 
 /*!
