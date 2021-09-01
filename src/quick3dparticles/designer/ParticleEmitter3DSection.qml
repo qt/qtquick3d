@@ -436,15 +436,6 @@ Column {
                     ExpandingSpacer {}
                 }
             }
-        }
-    }
-
-    Section {
-        width: parent.width
-        caption: qsTr("Particle Velocity")
-
-        ColumnLayout {
-            spacing: StudioTheme.Values.transform3DSectionSpacing
 
             SectionLayout {
                 PropertyLabel {
@@ -519,7 +510,7 @@ Column {
 
             SectionLayout {
                 PropertyLabel {
-                    text: qsTr("Variation")
+                    text: qsTr("Velocity Variation")
                     tooltip: qsTr("This property defines the rotation velocity variation of the particles. Rotation velocity variation is defined as degrees per second in euler angles.")
                 }
 
