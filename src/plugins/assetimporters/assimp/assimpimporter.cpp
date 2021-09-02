@@ -358,6 +358,43 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Materials
 
     // Traverse Node Tree
+    auto findAnimationNodes = [](const aiString& name, const QMap<QString, aiNode *> &nodeMap) {
+        QList<aiNode*> nodes;
+
+        QString originalName(name.C_Str());
+        if (originalName.contains('*')) { // ###TODO also check '?' single character wildcard
+            auto parts = originalName.split('*');
+            bool isAnInt = false;
+            int geometryIndex = parts.last().toInt(&isAnInt);
+            if (isAnInt)
+                originalName.chop(QString::number(geometryIndex).size());
+            QRegularExpression searchPattern(originalName);
+
+            const QList<QString> &nodeNames = nodeMap.keys();
+            for (const auto &key : nodeNames) {
+                QRegularExpressionMatch match = searchPattern.match(key);
+                if (match.hasMatch())
+                    nodes.append(nodeMap.value(key));
+            }
+
+        } else {
+            // There should only be a single node
+            nodes.append(nodeMap.value(originalName));
+        }
+
+        return nodes;
+    };
+
+    std::function<void(aiNode*, QMap<QString, aiNode *>&)> createNodeNameMap = [&createNodeNameMap](aiNode *node, QMap<QString, aiNode *> &map) {
+        if (!node)
+            return;
+        map.insert(QString(node->mName.C_Str()), node);
+        for (unsigned int i = 0; i < node->mNumChildren; ++i)
+            createNodeNameMap(node->mChildren[i], map);
+    };
+    // Create a mapping of node names to nodes
+    QMap<QString, aiNode *> nodeMap;
+    createNodeNameMap(m_scene->mRootNode, nodeMap);
 
     // Animations (timeline based)
     if (m_scene->HasAnimations()) {
@@ -368,7 +405,9 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
             m_animations.push_back(new QHash<aiNode *, aiNodeAnim *>());
             for (uint j = 0; j < animation->mNumChannels; ++j) {
                 aiNodeAnim *channel = animation->mChannels[j];
-                aiNode *node = m_scene->mRootNode->FindNode(channel->mNodeName);
+                auto nodes = findAnimationNodes(channel->mNodeName, nodeMap);
+                // ### TODO Support more than one node
+                aiNode *node = nodes.length() >= 1 ? nodes.first() : nullptr;
                 if (channel && node) {
                     // remove redundant animations
                     // assimp generates animation keys with the transformation
@@ -404,7 +443,9 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
             m_morphAnimations.push_back(new QHash<aiNode *, aiMeshMorphAnim *>());
             for (uint j = 0; j < animation->mNumMorphMeshChannels; ++j) {
                 aiMeshMorphAnim *channel = animation->mMorphMeshChannels[j];
-                aiNode *node = m_scene->mRootNode->FindNode(channel->mName);
+                auto nodes = findAnimationNodes(channel->mName, nodeMap);
+                // ### TODO Support more than one node
+                aiNode *node = nodes.length() >= 1 ? nodes.first() : nullptr;
                 if (channel && node)
                     m_morphAnimations.back()->insert(node, channel);
             }
