@@ -1,3 +1,4 @@
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick3D/designer")
 qt_copy_or_install(
     FILES
         AbstractLightSection.qml
@@ -62,7 +63,7 @@ qt_copy_or_install(
         View3DSection.qml
         View3DSpecifics.qml
         quick3d.metainfo
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/designer"
+    DESTINATION "${destination}"
 )
 
 add_subdirectory(source)

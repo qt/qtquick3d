@@ -1,3 +1,4 @@
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick3D/Particles3D/designer")
 qt_copy_or_install(
     FILES
         Particle3DSection.qml
@@ -40,7 +41,7 @@ qt_copy_or_install(
         Wander3DSection.qml
         Wander3DSpecifics.qml
         particles3d.metainfo
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/Particles3D/designer"
+    DESTINATION "${destination}"
 )
 
 add_subdirectory(images)
