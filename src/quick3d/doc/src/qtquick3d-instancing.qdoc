@@ -68,7 +68,9 @@ Qt provides three QML types that inherit from Instancing:
 
 The \l{Qt Quick 3D - Instanced Rendering Example}{instancing example} shows how to create a scene using the QML API.
 
-Other kinds of instance tables can be defined in C++ by subclassing \l{QQuick3DInstancing}.
+Other kinds of instance tables can be defined in C++ by subclassing \l{QQuick3DInstancing}. For example, the
+\l {ParticleSystem3D}{particle system} uses its own instancing table internally. It is available as
+\l{ModelParticle3D::instanceTable}{ModelParticle3D.instanceTable}.
 
 By writing custom shader code, it is possible to use instancing to control additional properties,
 such as variables for physically based rendering, skeletal animation weights, distortion, or anything

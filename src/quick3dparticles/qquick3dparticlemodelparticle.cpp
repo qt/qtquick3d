@@ -180,6 +180,49 @@ void QQuick3DParticleModelParticle::handleSortModeChanged(QQuick3DParticle::Sort
     }
 }
 
+/*!
+    \qmlproperty Instancing ModelParticle3D::instanceTable
+
+    The instanceTable provides access to the \l Instancing table of the model particle.
+    ModelParticle3D uses an internal instance table to implement efficient rendering.
+    This table can be applied to the \l{Model::instancing}{instancing} property of models
+    that are not part of the particle system.
+
+    It is also possible to use this feature to provide an instancing table without showing any
+    particles. This is done by omitting the \l delegate property. For example:
+
+    \qml
+    ParticleSystem3D {
+        id: psystem
+        ModelParticle3D {
+            id: particleRed
+            maxAmount: 200
+            color: "#ff0000"
+            colorVariation: Qt.vector4d(0.5,0.5,0.5,0.5)
+        }
+
+        ParticleEmitter3D {
+            particle: particleRed
+            velocity: VectorDirection3D {
+                direction: Qt.vector3d(-20, 200, 0)
+                directionVariation: Qt.vector3d(20, 20, 20)
+            }
+            particleScale: 0.2
+            emitRate: 20
+            lifeSpan: 2000
+        }
+    }
+
+    Model {
+        source: "#Sphere"
+        instancing: particleRed.instanceTable
+        materials: PrincipledMaterial {
+            baseColor: "yellow"
+        }
+    }
+    \endqml
+*/
+
 QQuick3DInstancing *QQuick3DParticleModelParticle::instanceTable() const
 {
     return m_instanceTable;
