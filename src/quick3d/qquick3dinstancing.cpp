@@ -51,7 +51,10 @@ QT_BEGIN_NAMESPACE
     \l{Model::instancing}{instancing} property to reference an Instancing object.
 
     An application can define an Instancing object in C++ by subclassing QQuick3DInstancing,
-    or it can use one of the pre-defined QML types: InstanceList or RandomInstancing.
+    or it can use one of the pre-defined QML types: InstanceList FileInstancing, or RandomInstancing.
+    In addition, it is possible to use a \l {ParticleSystem3D}{particle system} to define an
+    instancing table by using the \l{ModelParticle3D::instanceTable}{ModelParticle3D.instanceTable}
+    property.
 */
 
 /*!
