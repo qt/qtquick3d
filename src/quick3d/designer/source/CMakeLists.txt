@@ -1,3 +1,4 @@
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick3D/designer/source")
 qt_copy_or_install(
     FILES
         cone_model_template.qml
@@ -9,5 +10,5 @@ qt_copy_or_install(
         plane_model_template.qml
         sphere_model_template.qml
         view3D_template.qml
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/designer/source"
+    DESTINATION "${destination}"
 )

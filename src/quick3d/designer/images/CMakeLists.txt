@@ -1,3 +1,4 @@
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick3D/designer/images")
 qt_copy_or_install(
     FILES
         camera.png
@@ -58,5 +59,5 @@ qt_copy_or_install(
         view3D.png
         view3D16.png
         view3D@2x.png
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/designer/images"
+    DESTINATION "${destination}"
 )

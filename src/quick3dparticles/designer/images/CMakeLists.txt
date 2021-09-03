@@ -1,3 +1,4 @@
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick3D/Particles3D/designer/images")
 qt_copy_or_install(
     FILES
         attractor-16px.png
@@ -52,5 +53,5 @@ qt_copy_or_install(
         wander-24px.png
         wander-24px@2x.png
 
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/Particles3D/designer/images"
+    DESTINATION "${destination}"
 )

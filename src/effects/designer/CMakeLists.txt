@@ -1,3 +1,4 @@
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick3D/Effects/designer")
 qt_copy_or_install(
     FILES
         AdditiveColorGradientSection.qml
@@ -44,7 +45,7 @@ qt_copy_or_install(
         VignetteSection.qml
         VignetteSpecifics.qml
         effectlib.metainfo
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick3D/Effects/designer"
+    DESTINATION "${destination}"
 )
 
 add_subdirectory(images)
