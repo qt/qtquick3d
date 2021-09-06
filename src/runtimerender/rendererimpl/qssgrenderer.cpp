@@ -271,7 +271,7 @@ QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &la
 {
     PickResultList pickResults;
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        getLayerHitObjectList(layer, bufferManager, ray, false, pickResults);
+        getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
         // Things are rendered in a particular order and we need to respect that ordering.
         std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
             return lhs.m_distanceSq < rhs.m_distanceSq;
@@ -302,7 +302,7 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
             intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
             return processResults(pickResults);
         } else {
-            getLayerHitObjectList(layer, bufferManager, ray, false, pickResults);
+            getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
             QSSGPickResultProcessResult retval = processResults(pickResults);
             if (retval.m_wasPickConsumed)
                 return retval;
@@ -315,6 +315,11 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
 inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
 {
     return lhs.m_distanceSq < rhs.m_distanceSq;
+}
+
+void QSSGRenderer::setGlobalPickingEnabled(bool isEnabled)
+{
+    m_globalPickingEnabled = isEnabled;
 }
 
 QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEverything)

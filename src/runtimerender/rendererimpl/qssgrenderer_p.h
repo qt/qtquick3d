@@ -137,6 +137,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     // Set from the first layer.
     TPickResultArray m_lastPickResults;
 
+    bool m_globalPickingEnabled = false;
+
     // Temporary information stored only when rendering a particular layer.
     QSSGLayerRenderData *m_currentLayer = nullptr;
     QMatrix4x4 m_viewProjection;
@@ -189,6 +191,9 @@ public:
                                   const QSSGRenderRay &ray,
                                   QSSGRenderNode *target = nullptr);
 
+    // Setting this true enables picking for all the models, regardless of
+    // the models pickable property.
+    void setGlobalPickingEnabled(bool isEnabled);
 
     // Return the relative hit position, in UV space, of a mouse pick against this object.
     // We need the node in order to figure out which layer rendered this object.

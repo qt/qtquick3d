@@ -807,6 +807,11 @@ QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const Q
                                                 ray);
 }
 
+void QQuick3DSceneRenderer::setGlobalPickingEnabled(bool isEnabled)
+{
+    m_sgContext->renderer()->setGlobalPickingEnabled(isEnabled);
+}
+
 QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()
 {
     return m_renderStats;
