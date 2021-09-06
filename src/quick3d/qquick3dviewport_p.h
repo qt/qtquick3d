@@ -130,6 +130,10 @@ public Q_SLOTS:
     void setRenderMode(QQuick3DViewport::RenderMode renderMode);
     void cleanupDirectRenderer();
 
+    // Setting this true enables picking for all the models, regardless of
+    // the models pickable property.
+    void setGlobalPickingEnabled(bool isEnabled);
+
 private Q_SLOTS:
     void invalidateSceneGraph();
     void cleanupResources();

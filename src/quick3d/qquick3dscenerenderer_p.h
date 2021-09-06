@@ -82,6 +82,8 @@ protected:
     QSSGRenderPickResult syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node);
     PickResultList syncPickAll(const QSSGRenderRay &ray);
 
+    void setGlobalPickingEnabled(bool isEnabled);
+
     QQuick3DRenderStats *renderStats();
 
 private:

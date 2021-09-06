@@ -878,6 +878,15 @@ void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const
     internalPick(event, origin, direction);
 }
 
+void QQuick3DViewport::setGlobalPickingEnabled(bool isEnabled)
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return;
+
+    renderer->setGlobalPickingEnabled(isEnabled);
+}
+
 void QQuick3DViewport::invalidateSceneGraph()
 {
     m_node = nullptr;
