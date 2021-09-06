@@ -1,7 +1,9 @@
 # Generated from auto.pro.
 
 #add_subdirectory(cmake) # special case
-add_subdirectory(quick3d)
+if(NOT INTEGRITY)
+    add_subdirectory(quick3d)
+endif()
 add_subdirectory(quick3d_particles)
 add_subdirectory(utils)
 add_subdirectory(tools)
