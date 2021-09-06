@@ -66,10 +66,10 @@ Window {
 
     property url importUrl;
 
+    //! [base scene]
     View3D {
         id: view3D
         anchors.fill: parent
-
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.SkyBox
             lightProbe: Texture {
@@ -84,47 +84,50 @@ Window {
 
         PerspectiveCamera {
             id: camera
+            position: "0, 150, 400"
             Component.onCompleted: view3D.resetView()
         }
+
+    //! [base scene]
+
 
         function resetView() {
             camera.position = "0, 150, 400"
             camera.eulerRotation = "-15, 0, 0"
-            import_node.eulerRotation = "0, 0, 0"
-            import_node.resetScale()
-            import_node.resetPosition()
+            importNode.eulerRotation = "0, 0, 0"
+            helper.resetScale()
+            helper.resetPosition()
         }
 
+        //! [instancing]
         RandomInstancing {
-            id: instaTest
+            id: instancing
             instanceCount: 30
             position: InstanceRange {
-                property alias d: import_node.boundsDiameter
-                from: Qt.vector3d(-3*d, -3*d, -3*d);
-                to: Qt.vector3d(3*d, 3*d, 3*d)
+                property alias boundsDiameter: helper.boundsDiameter
+                from: Qt.vector3d(-3*boundsDiameter, -3*boundsDiameter, -3*boundsDiameter);
+                to: Qt.vector3d(3*boundsDiameter, 3*boundsDiameter, 3*boundsDiameter)
             }
             color: InstanceRange { from: "black"; to: "white" }
         }
+        //! [instancing]
 
-        RuntimeLoader {
-            property alias sf: wheelHandler.factor
-            scale: Qt.vector3d(sf, sf, sf)
-            id: import_node
-            source: importUrl
-            instancing: instancingButton.checked ? instaTest : null
-
+        QtObject {
+            id: helper
             property real boundsDiameter: 0
             property vector3d boundsCenter
             property vector3d boundsSize
+            property alias scaleFactor: wheelHandler.factor
+            property alias position: importNode.position
 
             function resetScale() {
                 wheelHandler.factor = boundsDiameter ? 300 / boundsDiameter : 1.0
             }
             function resetPosition() {
-                position = Qt.vector3d(-boundsCenter.x*sf, -boundsCenter.y*sf, -boundsCenter.z*sf)
+                position = Qt.vector3d(-boundsCenter.x*scaleFactor, -boundsCenter.y*scaleFactor, -boundsCenter.z*scaleFactor)
             }
 
-            onBoundsChanged: {
+            function updateBounds(bounds) {
                 boundsSize = Qt.vector3d(bounds.maximum.x - bounds.minimum.x,
                                          bounds.maximum.y - bounds.minimum.y,
                                          bounds.maximum.z - bounds.minimum.z)
@@ -136,41 +139,60 @@ Window {
                             " center:", boundsCenter, "diameter:", boundsDiameter)
                 view3D.resetView()
             }
-
-            Model {
-                id: visualize_bounds
-                source: "#Cube"
-                materials: PrincipledMaterial {
-                    baseColor: "red"
-                }
-                opacity: 0.2
-                visible: visualizeButton.checked && import_node.status === RuntimeLoader.Success
-                position: import_node.boundsCenter
-                scale: Qt.vector3d(import_node.boundsSize.x / 100,
-                                   import_node.boundsSize.y / 100,
-                                   import_node.boundsSize.z / 100)
-            }
         }
 
-        Rectangle {
-            visible: import_node.status !== RuntimeLoader.Success
+        //! [runtimeloader]
+        RuntimeLoader {
+            id: importNode
+            scale: Qt.vector3d(helper.scaleFactor, helper.scaleFactor, helper.scaleFactor)
+            source: importUrl
+            instancing: instancingButton.checked ? instancing : null
+            onBoundsChanged: helper.updateBounds(bounds)
+        }
+        //! [runtimeloader]
 
+        //! [bounds]
+        Model {
+            parent: importNode
+            source: "#Cube"
+            materials: PrincipledMaterial {
+                baseColor: "red"
+            }
+            opacity: 0.2
+            visible: visualizeButton.checked && importNode.status === RuntimeLoader.Success
+            position: helper.boundsCenter
+            scale: Qt.vector3d(helper.boundsSize.x / 100,
+                               helper.boundsSize.y / 100,
+                               helper.boundsSize.z / 100)
+        }
+        //! [bounds]
+
+        //! [status report]
+        Rectangle {
+            id: messageBox
+            visible: importNode.status !== RuntimeLoader.Success
             color: "red"
             width: parent.width * 0.8
             height: parent.height * 0.8
             anchors.centerIn: parent
             radius: Math.min(width, height) / 10
+            opacity: 0.6
             Text {
                 anchors.fill: parent
                 font.pixelSize: 36
-                text: "Status: " + import_node.errorString + "\nPress \"Import...\" to import a model"
+                text: "Status: " + importNode.errorString + "\nPress \"Import...\" to import a model"
                 color: "white"
                 wrapMode: Text.Wrap
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-            opacity: 0.6
         }
+        //! [status report]
+    }
+
+    //! [camera control]
+    WasdController {
+        controlledObject: camera
     }
 
     WheelHandler {
@@ -189,14 +211,12 @@ Window {
         acceptedButtons: Qt.MiddleButton
         onPointChanged: {
             if (Math.abs(point.velocity.x) >= Math.abs(point.velocity.y))
-                import_node.eulerRotation.y += point.velocity.x / 2000
+                importNode.eulerRotation.y += point.velocity.x / 2000
             else
-                import_node.eulerRotation.x += point.velocity.y / 2000
+                importNode.eulerRotation.x += point.velocity.y / 2000
         }
     }
-    WasdController {
-        controlledObject: camera
-    }
+    //! [camera control]
 
     Row {
         RoundButton {
@@ -213,8 +233,8 @@ Window {
         }
         RoundButton {
             id: scaleButton
-            text: "Scale: " + import_node.sf.toPrecision(3)
-            onClicked: import_node.resetScale()
+            text: "Scale: " + helper.scaleFactor.toPrecision(3)
+            onClicked: helper.resetScale()
             focusPolicy: Qt.NoFocus
         }
         RoundButton {
