@@ -129,26 +129,29 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
             auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
             auto skeletonNode = modelNode->skeleton;
             bool hcj = false;
-            const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
-            const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
-                                            && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
-            if (skeletonNode && (modelNode->skinningDirty || hasDirtyNonJoints)) {
-                skeletonNode->boneTransformsDirty = false;
-                if (hasDirtyNonJoints && !dirtySkeleton)
-                    dirtySkeletons.append(skeletonNode);
-                modelNode->skinningDirty = false;
-                // For now, boneTransforms is a QVector<QMatrix4x4>
-                // but it will be efficient to use QVector<float>
-                // to pass it to the shader uniform buffer
-                if (modelNode->boneTransforms.size() < skeletonNode->maxIndex + 1) {
-                    modelNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
-                    modelNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
+            if (skeletonNode) {
+                const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
+                const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
+                                                && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
+                const bool dirtyTransform = skeletonNode->flags.testFlag(QSSGRenderNode::Flag::TransformDirty);
+                if (modelNode->skinningDirty || hasDirtyNonJoints || dirtyTransform) {
+                    skeletonNode->boneTransformsDirty = false;
+                    if (hasDirtyNonJoints && !dirtySkeleton)
+                        dirtySkeletons.append(skeletonNode);
+                    modelNode->skinningDirty = false;
+                    // For now, boneTransforms is a QVector<QMatrix4x4>
+                    // but it will be efficient to use QVector<float>
+                    // to pass it to the shader uniform buffer
+                    if (modelNode->boneTransforms.size() < skeletonNode->maxIndex + 1) {
+                        modelNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
+                        modelNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
+                    }
+                    skeletonNode->calculateGlobalVariables();
+                    const QMatrix4x4 inverseRootM = skeletonNode->globalTransform.inverted();
+                    modelNode->skeletonContainsNonJointNodes = false;
+                    for (auto &child : skeletonNode->children)
+                        collectBoneTransforms(&child, modelNode, inverseRootM, modelNode->inverseBindPoses);
                 }
-                skeletonNode->calculateGlobalVariables();
-                const QMatrix4x4 inverseRootM = skeletonNode->globalTransform.inverted();
-                modelNode->skeletonContainsNonJointNodes = false;
-                for (auto &child : skeletonNode->children)
-                    collectBoneTransforms(&child, modelNode, inverseRootM, modelNode->inverseBindPoses);
             }
             const int numMorphTarget = modelNode->morphTargets.size();
             for (int i = 0; i < numMorphTarget; ++i) {
