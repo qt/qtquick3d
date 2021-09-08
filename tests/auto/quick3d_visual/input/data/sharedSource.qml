@@ -31,11 +31,8 @@ View3D {
             materials: DefaultMaterial {
                 diffuseMap: Texture {
                     sourceItem: BusyBox {
-                        objectName: "left busybox"
-                        layer.enabled: true
-                        layer.textureSize: Qt.size(512, 512)
                         id: sharedItem
-                        x: 10; y: 10
+                        objectName: "shared busybox"
                     }
                 }
             }
@@ -53,13 +50,7 @@ View3D {
             pickable: true
             materials: DefaultMaterial {
                 diffuseMap: Texture {
-                    sourceItem: BusyBox {
-                        objectName: "right busybox"
-                        layer.enabled: true
-                        layer.textureSize: Qt.size(512, 512)
-                        id: sharedItem2
-                        x: 10; y: 10
-                    }
+                    sourceItem: sharedItem
                 }
             }
         }
