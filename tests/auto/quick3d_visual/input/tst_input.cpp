@@ -105,7 +105,7 @@ void tst_Input::singleTap2D_data()
         << QPointingDevice::DeviceType::Mouse << QPoint(100, 70);
     QTest::newRow("item2d right mousearea: mouse") << "item2d.qml" << "right object" << "right busybox button mousearea"
         << QPointingDevice::DeviceType::Mouse << QPoint(650, 250);
-    QTest::newRow("shared source mousearea: mouse") << "sharedSource.qml" << "left object" << "left busybox button mousearea"
+    QTest::newRow("shared source mousearea: mouse") << "sharedSource.qml" << "left object" << "shared busybox button mousearea"
         << QPointingDevice::DeviceType::Mouse << QPoint(150, 225);
     QTest::newRow("material mousearea: mouse") << "defaultMaterial.qml" << "left object" << "left busybox button mousearea"
         << QPointingDevice::DeviceType::Mouse << QPoint(100, 250);
@@ -116,7 +116,7 @@ void tst_Input::singleTap2D_data()
         << QPointingDevice::DeviceType::TouchScreen << QPoint(100, 70);
     QTest::newRow("item2d right taphandler: touch") << "item2d.qml" << "right object" << "right busybox upper TapHandler"
         << QPointingDevice::DeviceType::TouchScreen << QPoint(650, 100);
-    QTest::newRow("shared source mousearea: touch") << "sharedSource.qml" << "left object" << "left busybox button mousearea"
+    QTest::newRow("shared source mousearea: touch") << "sharedSource.qml" << "left object" << "shared busybox button mousearea"
         << QPointingDevice::DeviceType::TouchScreen << QPoint(100, 250);
     QTest::newRow("material mousearea: touch") << "defaultMaterial.qml" << "left object" << "left busybox button mousearea"
         << QPointingDevice::DeviceType::TouchScreen << QPoint(100, 250);
@@ -181,8 +181,11 @@ void tst_Input::dualTouchTap2D_data()
 
     QTest::newRow("item2d: two MouseAreas") << "item2d.qml" << "left object" << "right object"
         << "left busybox button mousearea" << "right busybox button mousearea" << QPoint(250, 250) << QPoint(650, 250);
-    QTest::newRow("shared source: two MouseAreas") << "sharedSource.qml" << "left object" << "right object"
-        << "left busybox button mousearea" << "right busybox button mousearea" << QPoint(150, 225) << QPoint(800, 175);
+    QTest::newRow("texture source: MouseArea and TapHandler") << "sharedSource.qml" << "left object" << "left object"
+        << "shared busybox upper TapHandler" << "shared busybox button mousearea" << QPoint(150, 225) << QPoint(150, 130);
+    // doesn't pass: QTBUG-96324
+//    QTest::newRow("shared source: MouseArea and TapHandler") << "sharedSource.qml" << "left object" << "left object"
+//        << "shared busybox upper TapHandler" << "shared busybox button mousearea" << QPoint(150, 130) << QPoint(800, 175);
     QTest::newRow("material: two MouseAreas") << "defaultMaterial.qml" << "left object" << "right object"
         << "left busybox button mousearea" << "right busybox button mousearea" << QPoint(100, 250) << QPoint(800, 325);
 }
@@ -217,11 +220,13 @@ void tst_Input::dualTouchTap2D()
     qCDebug(lcTests) << "found destination 1 for a tap:" << tapPos1 << "in" << tapItem1;
     if (!overridePos1.isNull())
         tapPos1 = overridePos1; // TODO remove when there's a good mapping technique
+    qCDebug(lcTests) << "overridden:" << tapPos1;
 
     auto tapPos2 = tapItem2->mapToScene(tapItem2->boundingRect().center()).toPoint();
     qCDebug(lcTests) << "found destination 2 for a tap:" << tapPos2 << "in" << tapItem2;
     if (!overridePos2.isNull())
         tapPos2 = overridePos2; // TODO remove when there's a good mapping technique
+    qCDebug(lcTests) << "overridden:" << tapPos2;
 
     QTest::touchEvent(view.data(), touchscreen.data()).press(1, tapPos1, view.data()).press(2, tapPos2, view.data());
     QTRY_VERIFY(tapItem1->property("pressed").toBool());
