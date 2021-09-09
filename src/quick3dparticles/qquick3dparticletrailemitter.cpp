@@ -81,7 +81,7 @@ void QQuick3DParticleTrailEmitter::burst(int count)
     if (!system())
         return;
     QQuick3DParticleEmitBurstData burst;
-    burst.time = system()->time();
+    burst.time = system()->currentTime();
     burst.amount = count;
     m_bursts << burst;
 }
@@ -100,7 +100,7 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
     if (!enabled())
         return;
 
-    const int systemTime = system()->time();
+    const int systemTime = system()->currentTime();
     QVector3D centerPos = d->position;
 
     for (auto particle : qAsConst(m_system->m_particles)) {

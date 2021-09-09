@@ -281,6 +281,15 @@ void QQuick3DParticleSystem::reset()
     m_particleIdIndex = 0;
 }
 
+/*!
+    Returns the current time of the system (m_time + m_startTime).
+    \internal
+*/
+int QQuick3DParticleSystem::currentTime() const
+{
+    return m_currentTime;
+}
+
 void QQuick3DParticleSystem::setRunning(bool running)
 {
     if (m_running != running) {
@@ -386,6 +395,7 @@ void QQuick3DParticleSystem::componentComplete()
         m_rand.init(m_seed);
 
     m_time = 0;
+    m_currentTime = 0;
     Q_EMIT timeChanged();
 
     // Reset restarts the animation (if running)
@@ -499,11 +509,8 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     if (!m_initialized || isGloballyDisabled())
         return;
 
-    if (m_time != currentTime) {
-        m_time = currentTime;
-        Q_EMIT timeChanged();
-    }
-    const float timeS = float(m_time / 1000.0f);
+    m_currentTime = currentTime;
+    const float timeS = float(m_currentTime / 1000.0f);
 
     m_particlesMax = 0;
     m_particlesUsed = 0;

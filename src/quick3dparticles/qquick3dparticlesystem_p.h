@@ -115,6 +115,7 @@ public:
 
     QPRand *rand();
     bool isShared(const QQuick3DParticle *particle) const;
+    int currentTime() const;
 
     struct TrailEmits {
         QQuick3DParticleTrailEmitter *emitter = nullptr;
@@ -185,6 +186,7 @@ private:
     int m_startTime = 0;
     // Current time in ms
     int m_time = 0;
+    int m_currentTime = 0;
     QElapsedTimer m_perfTimer;
     QTimer m_loggingTimer;
     qint64 m_timeAnimation = 0;
@@ -209,6 +211,8 @@ public:
 protected:
     void updateCurrentTime(int t) override
     {
+        // Keep the time property up-to-date
+        m_system->setTime(t);
         m_system->updateCurrentTime(t + m_system->startTime());
     }
 
