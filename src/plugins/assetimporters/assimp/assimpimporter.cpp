@@ -2074,14 +2074,14 @@ void AssimpImporter::generateMorphKeyframes(const QString &id,
                         + QStringLiteral("_weight.qad");
                 m_savePath.mkdir(QStringLiteral("./animations"));
                 QString animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
-                QFile animationFile(animationFilePath);
                 int index = 0;
                 while (m_generatedFiles.contains(animationFilePath)) {
                     outputAnimationFile = QStringLiteral("animations/") + id
                         + QStringLiteral("_morphTarget_%1_%2").arg(i).arg(index++)
-                        + QStringLiteral(".qad");
+                        + QStringLiteral("_weight.qad");
                     animationFilePath = m_savePath.absolutePath() + QLatin1Char('/') + outputAnimationFile;
                 }
+                QFile animationFile(animationFilePath);
                 // Write the binary content
                 if (generateAnimationFile(animationFile, keyframes))
                     m_generatedFiles << animationFilePath;
