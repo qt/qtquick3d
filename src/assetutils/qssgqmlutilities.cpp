@@ -1276,7 +1276,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     indent(output) << blockEnd(output);
 }
 
-void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *parent, bool useBinaryKeyframes)
+void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *parent, bool isEnabled, bool useBinaryKeyframes)
 {
 #ifdef QT_QUICK3D_ENABLE_RT_ANIMATIONS
     auto timeline = new QQuickTimeline(parent);
@@ -1305,7 +1305,7 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
         timelineKeyframeGroup.append(&timelineKeyframeGroup, keyframeGroup);
     }
     timeline->setEndFrame(anim.length);
-    timeline->setEnabled(true);
+    timeline->setEnabled(isEnabled);
 
     auto timelineAnimation = new QQuickTimelineAnimation(timeline);
     timelineAnimation->setDuration(int(anim.length));
