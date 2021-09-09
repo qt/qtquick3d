@@ -191,8 +191,13 @@ QUrl QQuick3DTexture::source() const
     Texture should use one method to provide image data, and set only one of
     source, \l sourceItem, or \l textureData.
 
-    \note Currently there is no way to forward input events to the Item used as
-    a texture source.
+    \note Currently input events are forwarded to the Item used as a texture
+    source only if the user is limited to interacting with one sourceItem
+    instance at a time. In other words: you can share the same Item between
+    multiple Textures, but then you cannot have multi-touch interaction with
+    the same item on multiple textures at the same time. So it's best to use a
+    separate 2D subscene instance for each Texture instance, if you expect to
+    manipulate interactive items inside.
 
     \note Using this property in a Texture that is referenced from multiple
     windows is strongly discouraged. This includes usage via
