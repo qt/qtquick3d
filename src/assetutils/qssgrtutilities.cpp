@@ -250,9 +250,14 @@ QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGScen
 
     createGraphObject(*root, parent);
 
-    // For now, all the animations are enabled like the balsam importer.
-    for (const auto &anim: scene.animations)
-        QSSGQmlUtilities::createTimelineAnimation(*anim, root->obj);
+    // Usually it makes sense to only enable 1 timeline at a time
+    // so for now we just enable the first one.
+    bool isFirstAnimation = true;
+    for (const auto &anim: scene.animations) {
+        QSSGQmlUtilities::createTimelineAnimation(*anim, root->obj, isFirstAnimation);
+        if (isFirstAnimation)
+            isFirstAnimation = false;
+    }
 
     return qobject_cast<QQuick3DNode *>(scene.root->obj);
 }

@@ -1781,6 +1781,7 @@ void AssimpImporter::processSkeleton(aiNode *node, quint32 idx, QTextStream &out
 
 void AssimpImporter::processAnimations(QTextStream &output)
 {
+    bool isFirstAnimation = true;
     for (int idx = 0; idx < m_animations.size(); ++idx) {
         QHash<aiNode *, aiNodeAnim *> *animation = m_animations[idx];
         QHash<aiNode *, aiMeshMorphAnim *> *morphAnimation = m_morphAnimations[idx];
@@ -1858,8 +1859,16 @@ void AssimpImporter::processAnimations(QTextStream &output)
         int endFrameTimeInt = qCeil(endFrameTime);
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("endFrame: ") << endFrameTimeInt << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("currentFrame: 0\n");
-        // all animations are enabled for now.
-        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("enabled: true\n");
+
+        // Usually it makes sense to only enable 1 timeline at a time
+        // so for now we just enable the first one.
+        QString isEnabledString = QStringLiteral("false");
+        if (isFirstAnimation) {
+            isEnabledString = QStringLiteral("true");
+            isFirstAnimation = false;
+        }
+        output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("enabled: ") << isEnabledString << QStringLiteral("\n");
+
         output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("animations: [\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("TimelineAnimation {\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("duration: ") << endFrameTimeInt << QStringLiteral("\n");
