@@ -89,7 +89,7 @@ void QQuick3DParticleEmitter::setEnabled(bool enabled)
     if (enabled && m_system) {
         // When enabling, we need to reset the
         // previous emit time as it might be a long time ago.
-        m_prevEmitTime = m_system->time();
+        m_prevEmitTime = m_system->currentTime();
     }
 
     m_enabled = enabled;
@@ -143,7 +143,7 @@ void QQuick3DParticleEmitter::setSystem(QQuick3DParticleSystem *system)
     if (m_system) {
         m_system->registerParticleEmitter(this);
         // Reset prev emit time to time of the new system
-        m_prevEmitTime = m_system->time();
+        m_prevEmitTime = m_system->currentTime();
     }
 
     if (m_particle)
@@ -182,7 +182,7 @@ void QQuick3DParticleEmitter::setEmitRate(float emitRate)
     if (m_emitRate == 0 && m_system) {
         // When changing emit rate from 0 we need to reset
         // previous emit time as it may be long time ago
-        m_prevEmitTime = m_system->time();
+        m_prevEmitTime = m_system->currentTime();
     }
     m_emitRate = emitRate;
     Q_EMIT emitRateChanged();
@@ -596,7 +596,7 @@ void QQuick3DParticleEmitter::burst(int count, int duration, const QVector3D &po
     if (!m_system)
         return;
     QQuick3DParticleEmitBurstData burst;
-    burst.time = m_system->time();
+    burst.time = m_system->currentTime();
     burst.amount = count;
     burst.duration = duration;
     burst.position = position;
@@ -792,7 +792,7 @@ int QQuick3DParticleEmitter::getEmitAmount()
     if (m_emitRate <= 0.0f)
         return 0;
 
-    float timeChange = m_system->time() - m_prevEmitTime;
+    float timeChange = m_system->currentTime() - m_prevEmitTime;
     float emitAmountF = timeChange / (1000.0f / m_emitRate);
     int emitAmount = floorf(emitAmountF);
     // Store the partly unemitted particles
@@ -851,7 +851,7 @@ void QQuick3DParticleEmitter::emitParticles()
         return;
     }
 
-    const int systemTime = m_system->time();
+    const int systemTime = m_system->currentTime();
 
     // Keep previous emitting time within max the life span.
     // This way emitting is reasonable also with big time jumps.
@@ -891,7 +891,7 @@ void QQuick3DParticleEmitter::emitActivationNodeParticles(QQuick3DParticleModelB
     QVector3D pos = actTransform.column(3).toVector3D();
     float d = QVector3D::dotProduct(pos, front);
 
-    const int systemTime = m_system->time();
+    const int systemTime = m_system->currentTime();
 
     // Keep previous emitting time within max the life span.
     // This way emitting is reasonable also with big time jumps.
@@ -922,7 +922,7 @@ void QQuick3DParticleEmitter::componentComplete()
 
     // When dynamically creating emitters, start from the current time.
     if (m_system)
-        m_prevEmitTime = m_system->time();
+        m_prevEmitTime = m_system->currentTime();
 
     QQuick3DNode::componentComplete();
 }
