@@ -81,10 +81,15 @@ Item {
         }
     }
 
+    TapHandler {
+        onTapped: root.forceActiveFocus()
+    }
+
     Keys.onPressed: (event)=> { if (keysEnabled) handleKeyPress(event) }
     Keys.onReleased: (event)=> { if (keysEnabled) handleKeyRelease(event) }
 
     function mousePressed(newPos) {
+        root.forceActiveFocus()
         status.currentPos = newPos
         status.lastPos = newPos
         status.useMouse = true;
