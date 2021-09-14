@@ -1038,6 +1038,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                 auto item2D = qobject_cast<QQuick3DItem2D *>(frontendObject);
                 if (item2D)
                     subsceneRootItem = item2D->contentItem();
+                if (subsceneRootItem->childItems().isEmpty())
+                    continue; // ignore empty 2D subscenes
                 // In this case the "UV" coordinates are in pixels in the subscene root item, so we can just use them.
                 subscenePosition = pickResult.m_localUVCoords.toPointF();
                 // Even though an Item2D is an "infinite plane" for rendering purposes,
