@@ -1040,6 +1040,11 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                     subsceneRootItem = item2D->contentItem();
                 // In this case the "UV" coordinates are in pixels in the subscene root item, so we can just use them.
                 subscenePosition = pickResult.m_localUVCoords.toPointF();
+                // Even though an Item2D is an "infinite plane" for rendering purposes,
+                // avoid delivering events outside the rectangular area that is occupied by child items,
+                // so that events can "fall through" to other interactive content in the scene or behind it.
+                if (!subsceneRootItem->childrenRect().contains(subscenePosition))
+                    continue;
             } else if (frontendObjectPrivate->type == QQuick3DObjectPrivate::Type::Model) {
                 // Model
                 int materialSubset = pickResult.m_subset;
