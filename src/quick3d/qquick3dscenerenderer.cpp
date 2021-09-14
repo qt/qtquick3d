@@ -987,7 +987,12 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
             QRhiTextureRenderTarget *rt = static_cast<QRhiTextureRenderTarget *>(
                 rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
             if (cb && rt) {
-                rhiCtx->setMainRenderPassDescriptor(rt->renderPassDescriptor());
+                // Check to see if the renderPassDescriptor has changed
+                QRhiRenderPassDescriptor *newRp = rt->renderPassDescriptor();
+                QRhiRenderPassDescriptor *oldRp = rhiCtx->mainRenderPassDescriptor();
+                if (oldRp && oldRp != newRp)
+                    rhiCtx->invalidateCachedReferences(oldRp);
+                rhiCtx->setMainRenderPassDescriptor(newRp);
                 rhiCtx->setCommandBuffer(cb);
                 rhiCtx->setRenderTarget(rt);
                 const QRhiColorAttachment *color0 = rt->description().cbeginColorAttachments();
