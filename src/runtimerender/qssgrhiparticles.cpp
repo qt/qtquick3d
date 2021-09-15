@@ -363,17 +363,21 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
     }
     renderable.rhiRenderData.mainPass.srb = srb;
 
+    const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
     if (dcd.pipeline
             && !srbChanged
-            && dcd.pipelineRpDesc == renderPassDescriptor
+            && dcd.renderTargetDescriptionHash == pipelineKey.extra.renderTargetDescriptionHash
+            && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
             && dcd.ps == *ps)
     {
         renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
     } else {
-        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
-        renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
+        renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                      renderPassDescriptor,
+                                                                      srb);
         dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
-        dcd.pipelineRpDesc = renderPassDescriptor;
+        dcd.renderTargetDescriptionHash = pipelineKey.extra.renderTargetDescriptionHash;
+        dcd.renderTargetDescription = pipelineKey.renderTargetDescription;
         dcd.ps = *ps;
     }
 }

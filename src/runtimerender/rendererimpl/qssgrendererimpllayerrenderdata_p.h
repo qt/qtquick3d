@@ -49,15 +49,12 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRhiRenderableTexture
 {
-    QSSGRhiContext *rhiCtx = nullptr;
     QRhiTexture *texture = nullptr;
     QRhiRenderBuffer *depthStencil = nullptr;
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTextureRenderTarget *rt = nullptr;
     bool isValid() const { return texture && rpDesc && rt; }
     void resetRenderTarget() {
-        if (rhiCtx && rpDesc)
-            rhiCtx->invalidateCachedReferences(rpDesc);
         delete rt;
         rt = nullptr;
         delete rpDesc;

@@ -483,15 +483,27 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
 struct QSSGGraphicsPipelineStateKey
 {
     QSSGRhiGraphicsPipelineState state;
-    QRhiRenderPassDescriptor *compatibleRpDesc;
-    QRhiShaderResourceBindings *layoutCompatibleSrb;
+    QVector<quint32> renderTargetDescription;
+    QVector<quint32> srbLayoutDescription;
+    struct {
+        size_t renderTargetDescriptionHash;
+        size_t srbLayoutDescriptionHash;
+    } extra;
+    static QSSGGraphicsPipelineStateKey create(const QSSGRhiGraphicsPipelineState &state,
+                                               const QRhiRenderPassDescriptor *rpDesc,
+                                               const QRhiShaderResourceBindings *srb)
+    {
+        const QVector<quint32> rtDesc = rpDesc->serializedFormat();
+        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
+        return { state, rtDesc, srbDesc, { qHash(rtDesc), qHash(srbDesc) } };
+    }
 };
 
 inline bool operator==(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
 {
     return a.state == b.state
-            && a.compatibleRpDesc->isCompatible(b.compatibleRpDesc)
-            && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
+        && a.renderTargetDescription == b.renderTargetDescription
+        && a.srbLayoutDescription == b.srbLayoutDescription;
 }
 
 inline bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphicsPipelineStateKey &b) Q_DECL_NOTHROW
@@ -501,18 +513,29 @@ inline bool operator!=(const QSSGGraphicsPipelineStateKey &a, const QSSGGraphics
 
 inline size_t qHash(const QSSGGraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
 {
-    return qHash(k.state, seed); // rp and srb not included, intentionally (see ==, those are based on compatibility, not pointer equivalence)
+    return qHash(k.state, seed)
+        ^ k.extra.renderTargetDescriptionHash
+        ^ k.extra.srbLayoutDescriptionHash;
 }
 
 struct QSSGComputePipelineStateKey
 {
     QShader shader;
-    QRhiShaderResourceBindings *layoutCompatibleSrb;
+    QVector<quint32> srbLayoutDescription;
+    struct {
+        size_t srbLayoutDescriptionHash;
+    } extra;
+    static QSSGComputePipelineStateKey create(const QShader &shader,
+                                              const QRhiShaderResourceBindings *srb)
+    {
+        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
+        return { shader, srbDesc, { qHash(srbDesc) } };
+    }
 };
 
 inline bool operator==(const QSSGComputePipelineStateKey &a, const QSSGComputePipelineStateKey &b) Q_DECL_NOTHROW
 {
-    return a.shader == b.shader && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
+    return a.shader == b.shader && a.srbLayoutDescription == b.srbLayoutDescription;
 }
 
 inline bool operator!=(const QSSGComputePipelineStateKey &a, const QSSGComputePipelineStateKey &b) Q_DECL_NOTHROW
@@ -522,7 +545,7 @@ inline bool operator!=(const QSSGComputePipelineStateKey &a, const QSSGComputePi
 
 inline size_t qHash(const QSSGComputePipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW
 {
-    return qHash(k.shader, seed);
+    return qHash(k.shader, seed) ^ k.extra.srbLayoutDescriptionHash;
 }
 
 struct QSSGRhiShaderResourceBindingList
@@ -676,7 +699,8 @@ struct QSSGRhiDrawCallData
     QRhiShaderResourceBindings *srb = nullptr; // not owned
     QSSGRhiShaderResourceBindingList bindings;
     QRhiGraphicsPipeline *pipeline = nullptr; // not owned
-    QRhiRenderPassDescriptor *pipelineRpDesc = nullptr; // not owned
+    size_t renderTargetDescriptionHash = 0;
+    QVector<quint32> renderTargetDescription;
     QSSGRhiGraphicsPipelineState ps;
 
     void reset() {
@@ -684,7 +708,6 @@ struct QSSGRhiDrawCallData
         ubuf = nullptr;
         srb = nullptr;
         pipeline = nullptr;
-        pipelineRpDesc = nullptr;
     }
 };
 
@@ -891,10 +914,11 @@ public:
     }
 
     QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
-    QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key);
-    QRhiComputePipeline *computePipeline(const QSSGComputePipelineStateKey &key);
-
-    void invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc);
+    QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key,
+                                   QRhiRenderPassDescriptor *rpDesc,
+                                   QRhiShaderResourceBindings *srb);
+    QRhiComputePipeline *computePipeline(const QSSGComputePipelineStateKey &key,
+                                         QRhiShaderResourceBindings *srb);
 
     QSSGRhiDrawCallData &drawCallData(const QSSGRhiDrawCallDataKey &key)
     {

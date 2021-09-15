@@ -300,14 +300,12 @@ void QSSGShadowMapEntry::destroyRhiResources(QSSGRhiContext *rhiContext)
 
     qDeleteAll(m_rhiRenderTargets);
     m_rhiRenderTargets.clear();
-    rhiContext->invalidateCachedReferences(m_rhiRenderPassDesc);
     delete m_rhiRenderPassDesc;
     m_rhiRenderPassDesc = nullptr;
     delete m_rhiBlurRenderTarget0;
     m_rhiBlurRenderTarget0 = nullptr;
     delete m_rhiBlurRenderTarget1;
     m_rhiBlurRenderTarget1 = nullptr;
-    rhiContext->invalidateCachedReferences(m_rhiBlurRenderPassDesc);
     delete m_rhiBlurRenderPassDesc;
     m_rhiBlurRenderPassDesc = nullptr;
 }

@@ -180,7 +180,6 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
     delete m_textureRenderTarget;
     m_textureRenderTarget = nullptr;
 
-    rhiCtx->invalidateCachedReferences(m_textureRenderPassDescriptor);
     delete m_textureRenderPassDescriptor;
     m_textureRenderPassDescriptor = nullptr;
 
@@ -196,7 +195,6 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
     delete m_ssaaTextureToTextureRenderTarget;
     m_ssaaTextureToTextureRenderTarget = nullptr;
 
-    rhiCtx->invalidateCachedReferences(m_ssaaTextureToTextureRenderPassDescriptor);
     delete m_ssaaTextureToTextureRenderPassDescriptor;
     m_ssaaTextureToTextureRenderPassDescriptor = nullptr;
 
@@ -204,7 +202,6 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
     m_temporalAATexture = nullptr;
     delete m_temporalAARenderTarget;
     m_temporalAARenderTarget = nullptr;
-    rhiCtx->invalidateCachedReferences(m_temporalAARenderPassDescriptor);
     delete m_temporalAARenderPassDescriptor;
     m_temporalAARenderPassDescriptor = nullptr;
 
@@ -605,7 +602,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                             // format) and that needs on a different renderpass on
                             // Vulkan. Hence renewing m_textureRenderPassDescriptor as well.
                             if (postProcessingStateDirty) {
-                                rhiCtx->invalidateCachedReferences(m_textureRenderPassDescriptor);
                                 delete m_textureRenderPassDescriptor;
                                 m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
                                 m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
@@ -987,12 +983,7 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
             QRhiTextureRenderTarget *rt = static_cast<QRhiTextureRenderTarget *>(
                 rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
             if (cb && rt) {
-                // Check to see if the renderPassDescriptor has changed
-                QRhiRenderPassDescriptor *newRp = rt->renderPassDescriptor();
-                QRhiRenderPassDescriptor *oldRp = rhiCtx->mainRenderPassDescriptor();
-                if (oldRp && oldRp != newRp)
-                    rhiCtx->invalidateCachedReferences(oldRp);
-                rhiCtx->setMainRenderPassDescriptor(newRp);
+                rhiCtx->setMainRenderPassDescriptor(rt->renderPassDescriptor());
                 rhiCtx->setCommandBuffer(cb);
                 rhiCtx->setRenderTarget(rt);
                 const QRhiColorAttachment *color0 = rt->description().cbeginColorAttachments();

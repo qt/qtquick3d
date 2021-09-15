@@ -116,7 +116,7 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
     }
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->setGraphicsPipeline(rhiCtx->pipeline({ *ps, rpDesc, srb }));
+    cb->setGraphicsPipeline(rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb));
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
     QRhiCommandBuffer::VertexInput vb(m_vbuf->buffer(), 0);
