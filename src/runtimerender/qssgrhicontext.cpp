@@ -960,7 +960,9 @@ QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindi
     return srb;
 }
 
-QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKey &key)
+QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKey &key,
+                                               QRhiRenderPassDescriptor *rpDesc,
+                                               QRhiShaderResourceBindings *srb)
 {
     auto it = m_pipelines.constFind(key);
     if (it != m_pipelines.constEnd())
@@ -971,8 +973,8 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
 
     ps->setShaderStages(key.state.shaderPipeline->cbeginStages(), key.state.shaderPipeline->cendStages());
     ps->setVertexInputLayout(key.state.ia.inputLayout);
-    ps->setShaderResourceBindings(key.layoutCompatibleSrb);
-    ps->setRenderPassDescriptor(key.compatibleRpDesc);
+    ps->setShaderResourceBindings(srb);
+    ps->setRenderPassDescriptor(rpDesc);
 
     QRhiGraphicsPipeline::Flags flags; // ### QRhiGraphicsPipeline::UsesScissor -> we will need setScissor once this flag is set
     static const bool shaderDebugInfo = qEnvironmentVariableIntValue("QT_QUICK3D_SHADER_DEBUG_INFO");
@@ -1011,14 +1013,15 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     return ps;
 }
 
-QRhiComputePipeline *QSSGRhiContext::computePipeline(const QSSGComputePipelineStateKey &key)
+QRhiComputePipeline *QSSGRhiContext::computePipeline(const QSSGComputePipelineStateKey &key,
+                                                     QRhiShaderResourceBindings *srb)
 {
     auto it = m_computePipelines.constFind(key);
     if (it != m_computePipelines.constEnd())
         return it.value();
 
     QRhiComputePipeline *computePipeline = m_rhi->newComputePipeline();
-    computePipeline->setShaderResourceBindings(key.layoutCompatibleSrb);
+    computePipeline->setShaderResourceBindings(srb);
     computePipeline->setShaderStage({ QRhiShaderStage::Compute, key.shader });
     if (!computePipeline->create()) {
         qWarning("Failed to build compute pipeline");
@@ -1027,35 +1030,6 @@ QRhiComputePipeline *QSSGRhiContext::computePipeline(const QSSGComputePipelineSt
     }
     m_computePipelines.insert(key, computePipeline);
     return computePipeline;
-}
-
-void QSSGRhiContext::invalidateCachedReferences(QRhiRenderPassDescriptor *rpDesc)
-{
-    if (!rpDesc)
-        return;
-
-    QVarLengthArray<QRhiGraphicsPipeline *, 16> deletedPipelines;
-
-    for (auto it = m_pipelines.begin(); it != m_pipelines.end(); ) {
-        if (it.key().compatibleRpDesc == rpDesc) {
-            // The QRhiGraphicsPipeline object is kept alive until the current
-            // frame is submitted (by QRhi::endFrame()) The underlying native
-            // graphics object(s) may live even longer in fact, but QRhi takes
-            // care of that so that's no concern for us here.
-            deletedPipelines.append(it.value());
-            it.value()->deleteLater();
-            it = m_pipelines.erase(it);
-        } else {
-            ++it;
-        }
-    }
-
-    for (auto it = m_drawCallData.begin(), end = m_drawCallData.end(); it != end; ++it) {
-        if (deletedPipelines.contains(it->pipeline)) {
-            it->pipeline = nullptr;
-            it->pipelineRpDesc = nullptr;
-        }
-    }
 }
 
 using SamplerInfo = QPair<QSSGRhiSamplerDescription, QRhiSampler*>;

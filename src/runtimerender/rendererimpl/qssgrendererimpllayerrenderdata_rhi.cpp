@@ -443,17 +443,21 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
             subsetRenderable.rhiRenderData.mainPass.srb = srb;
 
+            const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
             if (dcd.pipeline
                     && !srbChanged
-                    && dcd.pipelineRpDesc == renderPassDescriptor
+                    && dcd.renderTargetDescriptionHash == pipelineKey.extra.renderTargetDescriptionHash // we have the hash code anyway, use it to early out upon mismatch
+                    && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
                     && dcd.ps == *ps)
             {
                 subsetRenderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
             } else {
-                const QSSGGraphicsPipelineStateKey pipelineKey { *ps, renderPassDescriptor, srb };
-                subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey);
+                subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                                    renderPassDescriptor,
+                                                                                    srb);
                 dcd.pipeline = subsetRenderable.rhiRenderData.mainPass.pipeline;
-                dcd.pipelineRpDesc = renderPassDescriptor;
+                dcd.renderTargetDescriptionHash = pipelineKey.extra.renderTargetDescriptionHash;
+                dcd.renderTargetDescription = pipelineKey.renderTargetDescription;
                 dcd.ps = *ps;
             }
         }
@@ -646,8 +650,9 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
 
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-        const QSSGGraphicsPipelineStateKey pipelineKey { *ps, rpDesc, srb };
-        subsetRenderable.rhiRenderData.depthPrePass.pipeline = rhiCtx->pipeline(pipelineKey);
+        subsetRenderable.rhiRenderData.depthPrePass.pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb),
+                                                                                rpDesc,
+                                                                                srb);
         subsetRenderable.rhiRenderData.depthPrePass.srb = srb;
     }
 
@@ -695,7 +700,6 @@ static bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QS
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
-    renderableTex->rhiCtx = rhiCtx;
 
     if (!renderableTex->texture) {
         QRhiTexture::Format format = QRhiTexture::D32F;
@@ -1097,10 +1101,9 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             }
 
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
-
-            const QSSGGraphicsPipelineStateKey pipelineKey { *ps, pEntry->m_rhiRenderPassDesc, srb };
-
-            subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtx->pipeline(pipelineKey);
+            subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, pEntry->m_rhiRenderPassDesc, srb),
+                                                                                  pEntry->m_rhiRenderPassDesc,
+                                                                                  srb);
             subsetRenderable.rhiRenderData.shadowPass.srb[cubeFace] = srb;
         }
     }
@@ -1387,7 +1390,6 @@ static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGR
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
-    renderableTex->rhiCtx = rhiCtx;
 
     if (!renderableTex->texture) {
         // the ambient occlusion texture is always non-msaa, even if multisampling is used in the main pass
@@ -1492,7 +1494,6 @@ static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, b
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
-    renderableTex->rhiCtx = rhiCtx;
     QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
     if (mips)
         flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
