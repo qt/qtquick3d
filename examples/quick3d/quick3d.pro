@@ -5,6 +5,7 @@ SUBDIRS += \
     effects \
     hellocube \
     intro \
+    screenspacereflections \
     view3d \
     picking \
     lights \
