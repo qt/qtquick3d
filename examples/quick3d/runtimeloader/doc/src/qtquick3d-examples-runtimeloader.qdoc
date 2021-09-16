@@ -63,7 +63,7 @@
     \section2 Moving the camera
 
     To make it possible to change the position of the camera we use the \l WasdController from the
-    \l Helpers module and bind it to our camera, like this:
+    \l{Qt Quick 3D Helpers QML Types}{Helpers} module and bind it to our camera, like this:
 
     \snippet runtimeloader/main.qml camera control
 
@@ -79,7 +79,7 @@
     RuntimeLoader does not inherit from Model, but it has its own
     \l{RuntimeLoader::instancing}{instancing} property which allows us to instance a complex
     imported asset as if it were a simple model. In this case we use the \l RandomInstancing
-    component from the \l {Qt Quick 3D Helpers QML Types}{Helpers} module to randomly position items
+    component from the \l{Qt Quick 3D Helpers QML Types}{Helpers} module to randomly position items
     within a fixed area and with a random color.
 */
 
