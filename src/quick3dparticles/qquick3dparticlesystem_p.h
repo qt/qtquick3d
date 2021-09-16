@@ -133,6 +133,8 @@ public Q_SLOTS:
     void setSeed(int seed);
     void setLogging(bool logging);
 
+    void setEditorTime(int time);
+
 Q_SIGNALS:
     void runningChanged();
     void pausedChanged();
@@ -161,11 +163,13 @@ private:
     void processParticleFadeInOut(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, float particleTimeS, float particleTimeLeftS);
     void processParticleAlignment(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticle *particle, const QQuick3DParticleData *d);
     static bool isGloballyDisabled();
+    static bool isEditorModeOn();
 
 private:
     friend class QQuick3DParticleEmitter;
     friend class QQuick3DParticleTrailEmitter;
     friend class QQuick3DParticleSystemUpdate;
+    friend class QQuick3DParticleSystemAnimation;
 
     bool m_running;
     bool m_paused;
@@ -187,6 +191,10 @@ private:
     // Current time in ms
     int m_time = 0;
     int m_currentTime = 0;
+
+    // This overrides the time when editor mode is on
+    int m_editorTime = 0;
+
     QElapsedTimer m_perfTimer;
     QTimer m_loggingTimer;
     qint64 m_timeAnimation = 0;
@@ -212,7 +220,9 @@ protected:
     void updateCurrentTime(int t) override
     {
         // Keep the time property up-to-date
-        m_system->setTime(t);
+        if (!m_system->isEditorModeOn() && !m_system->isGloballyDisabled())
+            m_system->setTime(t);
+
         m_system->updateCurrentTime(t + m_system->startTime());
     }
 
