@@ -303,7 +303,7 @@ void QQuick3DParticleSystem::setRunning(bool running)
         if (m_componentComplete && !m_running && m_useRandomSeed)
             doSeedRandomization();
 
-        m_running ? m_animation->start() : m_animation->stop();
+        (m_running && !isEditorModeOn()) ? m_animation->start() : m_animation->stop();
     }
 }
 
@@ -380,6 +380,20 @@ void QQuick3DParticleSystem::setLogging(bool logging)
     Q_EMIT loggingChanged();
 }
 
+/*!
+    Set editor time which in editor mode overwrites the time.
+    \internal
+*/
+void QQuick3DParticleSystem::setEditorTime(int time)
+{
+    if (m_editorTime == time)
+        return;
+
+    // Update the time and mark the system dirty
+    m_editorTime = time;
+    m_updateAnimation->setDirty(true);
+}
+
 void QQuick3DParticleSystem::componentComplete()
 {
     QQuick3DNode::componentComplete();
@@ -396,12 +410,14 @@ void QQuick3DParticleSystem::componentComplete()
 
     m_time = 0;
     m_currentTime = 0;
+    m_editorTime = 0;
+
     Q_EMIT timeChanged();
 
     // Reset restarts the animation (if running)
     if (m_animation->state() == QAbstractAnimation::Running)
         m_animation->stop();
-    if (m_running)
+    if (m_running && !isEditorModeOn())
         m_animation->start();
     if (m_paused)
         m_animation->pause();
@@ -414,8 +430,8 @@ void QQuick3DParticleSystem::refresh()
     // If the system isn't running, force refreshing by calling update
     // with the current time. QAbstractAnimation::setCurrentTime() implementation
     // always calls updateCurrentTime() even if the time would remain the same.
-    if (!m_running || m_paused)
-        m_animation->setCurrentTime(m_time);
+    if (!m_running || m_paused || isEditorModeOn())
+        m_animation->setCurrentTime(isEditorModeOn() ? m_editorTime : m_time);
 }
 
 void QQuick3DParticleSystem::markDirty()
@@ -860,6 +876,12 @@ bool QQuick3DParticleSystem::isGloballyDisabled()
 {
     static const bool disabled = qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_PARTICLE_SYSTEMS");
     return disabled;
+}
+
+bool QQuick3DParticleSystem::isEditorModeOn()
+{
+    static const bool editorMode = qEnvironmentVariableIntValue("QT_QUICK3D_EDITOR_PARTICLE_SYSTEMS");
+    return editorMode;
 }
 
 void QQuick3DParticleSystem::updateLoggingData()
