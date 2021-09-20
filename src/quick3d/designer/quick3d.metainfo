@@ -617,7 +617,7 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
-            name: "Instancing"
+            name: "File Instancing"
             category: "Qt Quick 3D"
             libraryIcon: "images/group.png"
             version: "6.2"
