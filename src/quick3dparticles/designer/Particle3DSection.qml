@@ -73,9 +73,10 @@ Section {
 
         SecondColumnLayout {
             SpinBox {
-                minimumValue: -9999999
-                maximumValue: 9999999
+                minimumValue: 0
+                maximumValue: 1
                 decimals: 2
+                stepSize: 0.01
                 backendValue: backendValues.colorVariation_x
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -95,9 +96,10 @@ Section {
 
         SecondColumnLayout {
             SpinBox {
-                minimumValue: -9999999
-                maximumValue: 9999999
+                minimumValue: 0
+                maximumValue: 1
                 decimals: 2
+                stepSize: 0.01
                 backendValue: backendValues.colorVariation_y
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -117,9 +119,10 @@ Section {
 
         SecondColumnLayout {
             SpinBox {
-                minimumValue: -9999999
-                maximumValue: 9999999
+                minimumValue: 0
+                maximumValue: 1
                 decimals: 2
+                stepSize: 0.01
                 backendValue: backendValues.colorVariation_z
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth

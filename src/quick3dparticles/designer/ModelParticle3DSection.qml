@@ -52,21 +52,5 @@ Section {
 
             ExpandingSpacer {}
         }
-
-        PropertyLabel {
-            text: qsTr("Instance Table")
-            tooltip: qsTr("")
-        }
-
-        SecondColumnLayout {
-            IdComboBox {
-                typeFilter: "QtQuick3D.Instancing"
-                backendValue: backendValues.instanceTable
-                implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                               + StudioTheme.Values.actionIndicatorWidth
-            }
-
-            ExpandingSpacer {}
-        }
     }
 }

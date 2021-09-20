@@ -167,6 +167,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.globalPace_x
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -189,6 +190,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.globalPace_y
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -211,6 +213,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.globalPace_z
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -238,6 +241,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.globalPaceStart_x
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -260,6 +264,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.globalPaceStart_y
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -282,6 +287,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.globalPaceStart_z
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -407,6 +413,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.uniquePace_x
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -429,6 +436,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.uniquePace_y
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth
@@ -451,6 +459,7 @@ Column {
                         minimumValue: -9999999
                         maximumValue: 9999999
                         decimals: 2
+                        stepSize: 0.01
                         backendValue: backendValues.uniquePace_z
                         implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                        + StudioTheme.Values.actionIndicatorWidth

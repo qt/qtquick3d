@@ -233,7 +233,7 @@ Column {
             }
 
             PropertyLabel {
-                text: qsTr("Particle Scale Variation")
+                text: qsTr("Scale Variation")
                 tooltip: qsTr("This property defines the scale variation of the particles.")
             }
 
@@ -251,7 +251,7 @@ Column {
             }
 
             PropertyLabel {
-                text: qsTr("Particle End Scale Variation")
+                text: qsTr("End Scale Variation")
                 tooltip: qsTr("This property defines the scale variation of the particles in the end.")
             }
 
