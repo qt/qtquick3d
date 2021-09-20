@@ -74,7 +74,7 @@ Section {
 
         SecondColumnLayout {
             IdComboBox {
-                typeFilter: "QtQuick3D.QQmlComponent"
+                typeFilter: "Component"
                 backendValue: backendValues.sourceComponent
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth

@@ -39,13 +39,14 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Model")
-            tooltip: qsTr("The model providing data for the repeater.")
+            tooltip: qsTr("The model providing data for the repeater. This can simply specify the number of delegate instances to create or it can be bound to an actual model.")
         }
 
         SecondColumnLayout {
             LineEdit {
                 backendValue: backendValues.model
                 showTranslateCheckBox: false
+                writeAsExpression: true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
                 width: implicitWidth
@@ -61,7 +62,7 @@ Section {
 
         SecondColumnLayout {
             IdComboBox {
-                typeFilter: "QtQuick3D.Object3D"
+                typeFilter: "Component"
                 backendValue: backendValues.delegate
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
