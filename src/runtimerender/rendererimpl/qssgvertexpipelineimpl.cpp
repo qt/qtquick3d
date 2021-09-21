@@ -190,6 +190,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniformArray("qt_morphWeights", "float", morphWeights.mSize);
 
     const bool hasCustomVertexShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
+    const bool hasCustomFragmentShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
     if (hasCustomVertexShader) {
         QByteArray snippet = materialAdapter->customShaderSnippet(QSSGShaderCache::ShaderType::Vertex,
                                                                   shaderLibraryManager);
@@ -256,7 +257,11 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     if (isDepthPass)
         skipCustomFragmentSnippet = !isOpaqueDepthPrePass;
 
-    if (hasCustomVertexShader) { // this is both for unshaded and shaded
+    if (hasCustomVertexShader || hasCustomFragmentShader) {
+        // This is both for unshaded and shaded. Regardless of any other
+        // condition we have to ensure the keywords (VIEW_MATRIX etc.) promised
+        // by the documentation are available in *both* the custom vertex and
+        // fragment shader snippets, even if only one of them is present.
         vertexShader.addUniform("qt_viewProjectionMatrix", "mat4");
         vertexShader.addUniform("qt_modelMatrix", "mat4");
         vertexShader.addUniform("qt_viewMatrix", "mat4");
