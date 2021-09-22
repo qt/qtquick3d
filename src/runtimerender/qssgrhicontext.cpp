@@ -1095,4 +1095,10 @@ QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResource
     return t;
 }
 
+bool QSSGRhiContext::shaderDebuggingEnabled()
+{
+    static const bool isSet = (qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG") != 0);
+    return isSet;
+}
+
 QT_END_NAMESPACE

@@ -241,7 +241,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QShaderBaker baker;
     m_initBaker(&baker, m_rhiContext->rhi()->backend());
 
-   static const bool shaderDebug = qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG");
+   const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
 
     if (shaderDebug) {
         qDebug("VERTEX SHADER:\n*****\n");
@@ -314,7 +314,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
     if (rhiShaders)
         return rhiShaders;
 
-    static const bool shaderDebug = qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG");
+    const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading pregenerated rhi shader(s)");
 
@@ -355,7 +355,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
     if (rhiShaders)
         return rhiShaders;
 
-    static const bool shaderDebug = qEnvironmentVariableIntValue("QT_RHI_SHADER_DEBUG");
+    const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading builtin rhi shader: %s", inKey.constData());
 
