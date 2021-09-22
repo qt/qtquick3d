@@ -639,6 +639,15 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     QSSGCustomShaderMetaData md = {};
     QByteArray result;
     result.reserve(1024);
+    // If shader debugging is not enabled we reset the line count to make error message
+    // when a shader fails more useful. When shader debugging is enabled the whole shader
+    // will be printed and not just the user written part, so in that case we do not want
+    // to adjust the line numbers.
+    //
+    // NOTE: This is not perfect, we do expend the custom material and effect shaders, so
+    // there cane still be cases where the reported line numbers are slightly off.
+    if (!QSSGRhiContext::shaderDebuggingEnabled())
+        result.prepend("#line 1\n");
     const char *lastPos = shaderCode.constData();
 
     int funcFinderState = 0;
