@@ -944,6 +944,8 @@ public:
         return QRhiCommandBuffer::DoNotTrackResourcesForCompute;
     }
 
+    static bool shaderDebuggingEnabled();
+
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable)
     {
         return m_instanceBuffers[instanceTable];
