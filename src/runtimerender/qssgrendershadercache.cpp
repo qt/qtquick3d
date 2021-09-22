@@ -49,6 +49,20 @@
 
 QT_BEGIN_NAMESPACE
 
+static QString dumpFilename(QShader::Stage stage)
+{
+    switch (stage) {
+    case QShader::VertexStage:
+        return QStringLiteral("failedvert.txt");
+        break;
+    case QShader::FragmentStage:
+        return QStringLiteral("failedfrag.txt");
+        break;
+    default:
+        return QStringLiteral("failedshader.txt");
+    }
+}
+
 static const char *defineTable[QSSGShaderDefines::Count] {
     "QSSG_ENABLE_LIGHT_PROBE",
     "QSSG_ENABLE_IBL_ORIENTATION",
@@ -236,56 +250,71 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     // lo and behold the final shader strings are ready
 
     QSSGRef<QSSGRhiShaderPipeline> shaders;
-    bool valid = true;
+    QString err;
 
     QShaderBaker baker;
     m_initBaker(&baker, m_rhiContext->rhi()->backend());
 
    const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
 
-    if (shaderDebug) {
-        qDebug("VERTEX SHADER:\n*****\n");
-        QList<QByteArray> lines = m_vertexCode.split('\n');
-        for (int i = 0; i < lines.size(); i++)
-            qDebug("%3d  %s", i + 1, lines.at(i).constData());
-        qDebug("\n*****\n");
-    }
+   static auto dumpShader = [](QShader::Stage stage, const QByteArray &code) {
+       switch (stage) {
+       case QShader::Stage::VertexStage:
+           qDebug("FRAGMENT SHADER:\n*****\n");
+           break;
+       case QShader::Stage::FragmentStage:
+           qDebug("FRAGMENT SHADER:\n*****\n");
+           break;
+       default:
+           qDebug("SHADER:\n*****\n");
+           break;
+       }
+       const auto lines = code.split('\n');
+       for (int i = 0; i < lines.size(); i++)
+           qDebug("%3d  %s", i + 1, lines.at(i).constData());
+       qDebug("\n*****\n");
+   };
+
+   static auto dumpShaderToFile = [](QShader::Stage stage, const QByteArray &data) {
+       QFile f(dumpFilename(stage));
+       f.open(QIODevice::WriteOnly | QIODevice::Text);
+       f.write(data);
+       f.close();
+   };
+
     baker.setSourceString(m_vertexCode, QShader::VertexStage);
     QShader vertexShader = baker.bake();
-    if (!vertexShader.isValid()) {
-        const QString err = baker.errorMessage();
-        qWarning("Failed to compile vertex shader (%s):\n%s", inKey.constData(), qPrintable(err));
-        valid = false;
-        if (shaderDebug) {
-            QFile f(QLatin1String("failedvert.txt"));
-            f.open(QIODevice::WriteOnly | QIODevice::Text);
-            f.write(m_vertexCode);
-            f.close();
-        }
+    const auto vertShaderValid = vertexShader.isValid();
+    if (!vertShaderValid) {
+        err = baker.errorMessage();
+        qWarning("Failed to compile vertex shader:\n");
+        if (!shaderDebug)
+            qWarning() << inKey << '\n' << err;
     }
 
     if (shaderDebug) {
-        qDebug("FRAGMENT SHADER:\n*****\n");
-        QList<QByteArray> lines = m_fragmentCode.split('\n');
-        for (int i = 0; i < lines.size(); i++)
-            qDebug("%3d  %s", i + 1, lines.at(i).constData());
-        qDebug("\n*****\n");
-    }
-    baker.setSourceString(m_fragmentCode, QShader::FragmentStage);
-    QShader fragmentShader = baker.bake();
-    if (!fragmentShader.isValid()) {
-        const QString err = baker.errorMessage();
-        qWarning("Failed to compile fragment shader (%s):\n%s", inKey.constData(), qPrintable(err));
-        valid = false;
-        if (shaderDebug) {
-            QFile f(QLatin1String("failedfrag.txt"));
-            f.open(QIODevice::WriteOnly | QIODevice::Text);
-            f.write(m_fragmentCode);
-            f.close();
-        }
+        dumpShader(QShader::Stage::VertexStage, m_vertexCode);
+        if (!vertShaderValid)
+            dumpShaderToFile(QShader::Stage::VertexStage, m_vertexCode);
     }
 
-    if (valid) {
+    baker.setSourceString(m_fragmentCode, QShader::FragmentStage);
+    QShader fragmentShader = baker.bake();
+    const bool fragShaderValid = fragmentShader.isValid();
+    if (!fragShaderValid) {
+        const QString err = baker.errorMessage();
+        qWarning("Failed to compile fragment shader \n");
+        if (!shaderDebug)
+            qWarning() << inKey << '\n' << err;
+    }
+
+    if (shaderDebug) {
+        dumpShader(QShader::Stage::FragmentStage, m_fragmentCode);
+        if (!fragShaderValid)
+            dumpShaderToFile(QShader::Stage::FragmentStage, m_fragmentCode);
+    }
+
+    if (vertShaderValid && fragShaderValid) {
         shaders = new QSSGRhiShaderPipeline(*m_rhiContext.data());
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
