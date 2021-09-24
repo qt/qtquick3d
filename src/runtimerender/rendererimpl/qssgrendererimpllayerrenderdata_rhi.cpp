@@ -1130,6 +1130,10 @@ static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
                     ? renderable->subset.rhi.indexBuffer->buffer()
                     : nullptr;
 
+            // Ideally we shouldn't need to deal with this, as only "valid" objects should be processed at this point.
+            if (!renderable->rhiRenderData.shadowPass.pipeline)
+                continue;
+
             cb->setGraphicsPipeline(renderable->rhiRenderData.shadowPass.pipeline);
 
             QRhiShaderResourceBindings *srb = renderable->rhiRenderData.shadowPass.srb[cubeFace];
