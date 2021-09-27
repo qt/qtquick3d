@@ -94,7 +94,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                                                     QSSGMaterialVertexPipeline &vertexGenerator,
                                                                     const QSSGShaderDefaultMaterialKey &key,
                                                                     QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                                                    const ShaderFeatureSetList &inFeatureSet,
+                                                                    const QSSGShaderFeatures &inFeatureSet,
                                                                     const QSSGRenderGraphObject &inMaterial,
                                                                     const QSSGShaderLightList &inLights,
                                                                     QSSGRenderableImage *inFirstImage, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,

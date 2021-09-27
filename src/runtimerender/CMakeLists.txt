@@ -209,7 +209,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_lightprobe_rgbe"
         res/rhishaders/environmentmapirradiance_rgbe.vert.qsb
         res/rhishaders/environmentmapirradiance_rgbe.frag.qsb
     DEFINES
-        QSSG_ENABLE_RGBE_LIGHT_PROBE
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_none"
     SILENT
@@ -239,7 +239,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_none"
         res/rhishaders/skybox_rgbe_none.vert.qsb
         res/rhishaders/skybox_rgbe_none.frag.qsb
     DEFINES
-        QSSG_ENABLE_RGBE_LIGHT_PROBE
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_linear"
     SILENT
@@ -255,7 +255,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_linear"
         res/rhishaders/skybox_hdr_linear.vert.qsb
         res/rhishaders/skybox_hdr_linear.frag.qsb
     DEFINES
-        QSSG_ENABLE_LINEAR_TONEMAPPING
+        QSSG_ENABLE_LINEAR_TONEMAPPING=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_linear"
     SILENT
@@ -271,8 +271,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_linear"
         res/rhishaders/skybox_rgbe_linear.vert.qsb
         res/rhishaders/skybox_rgbe_linear.frag.qsb
     DEFINES
-        QSSG_ENABLE_LINEAR_TONEMAPPING
-        QSSG_ENABLE_RGBE_LIGHT_PROBE
+        QSSG_ENABLE_LINEAR_TONEMAPPING=1
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_aces"
     SILENT
@@ -288,7 +288,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_aces"
         res/rhishaders/skybox_hdr_aces.vert.qsb
         res/rhishaders/skybox_hdr_aces.frag.qsb
     DEFINES
-        QSSG_ENABLE_ACES_TONEMAPPING
+        QSSG_ENABLE_ACES_TONEMAPPING=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_aces"
     SILENT
@@ -304,8 +304,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_aces"
         res/rhishaders/skybox_rgbe_aces.vert.qsb
         res/rhishaders/skybox_rgbe_aces.frag.qsb
     DEFINES
-        QSSG_ENABLE_ACES_TONEMAPPING
-        QSSG_ENABLE_RGBE_LIGHT_PROBE
+        QSSG_ENABLE_ACES_TONEMAPPING=1
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_hejldawson"
     SILENT
@@ -321,7 +321,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_hejldawson"
         res/rhishaders/skybox_hdr_hejldawson.vert.qsb
         res/rhishaders/skybox_hdr_hejldawson.frag.qsb
     DEFINES
-        QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+        QSSG_ENABLE_HEJLDAWSON_TONEMAPPING=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_hejldawson"
     SILENT
@@ -337,8 +337,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_hejldawson
         res/rhishaders/skybox_rgbe_hejldawson.vert.qsb
         res/rhishaders/skybox_rgbe_hejldawson.frag.qsb
     DEFINES
-        QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
-        QSSG_ENABLE_RGBE_LIGHT_PROBE
+        QSSG_ENABLE_HEJLDAWSON_TONEMAPPING=1
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_filmic"
     SILENT
@@ -354,7 +354,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_hdr_filmic"
         res/rhishaders/skybox_hdr_filmic.vert.qsb
         res/rhishaders/skybox_hdr_filmic.frag.qsb
     DEFINES
-        QSSG_ENABLE_FILMIC_TONEMAPPING
+        QSSG_ENABLE_FILMIC_TONEMAPPING=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_filmic"
     SILENT
@@ -370,8 +370,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_filmic"
         res/rhishaders/skybox_rgbe_filmic.vert.qsb
         res/rhishaders/skybox_rgbe_filmic.frag.qsb
     DEFINES
-        QSSG_ENABLE_FILMIC_TONEMAPPING
-        QSSG_ENABLE_RGBE_LIGHT_PROBE
+        QSSG_ENABLE_FILMIC_TONEMAPPING=1
+        QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight"
     SILENT

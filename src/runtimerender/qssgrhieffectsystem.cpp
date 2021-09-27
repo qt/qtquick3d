@@ -421,7 +421,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const Q
     }
 
     return generator->compileGeneratedRhiShader(key,
-                                                ShaderFeatureSetList(),
+                                                QSSGShaderFeatures(),
                                                 shaderLib,
                                                 shaderCache,
                                                 QSSGRhiShaderPipeline::UsedWithoutIa);

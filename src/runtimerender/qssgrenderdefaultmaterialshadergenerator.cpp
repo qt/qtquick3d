@@ -437,7 +437,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    QSSGMaterialVertexPipeline &vertexShader,
                                    const QSSGShaderDefaultMaterialKey &inKey,
                                    const QSSGShaderDefaultMaterialKeyProperties &keyProps,
-                                   const ShaderFeatureSetList &featureSet,
+                                   const QSSGShaderFeatures &featureSet,
                                    const QSSGRenderGraphObject &inMaterial,
                                    const QSSGShaderLightList &lights,
                                    QSSGRenderableImage *firstImage,
@@ -527,31 +527,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
     }
 
-    bool enableSSAO = false;
-    bool enableShadowMaps = false;
-    bool isDepthPass = false;
-    bool isOpaqueDepthPrePass = false;
-    bool isOrthoShadowPass = false;
-    bool isCubeShadowPass = false;
+    const bool isDepthPass = featureSet.isSet(QSSGShaderFeatures::Feature::DepthPass);
+    const bool isOrthoShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::OrthoShadowPass);
+    const bool isCubeShadowPass = featureSet.isSet(QSSGShaderFeatures::Feature::CubeShadowPass);
+    const bool isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
+    bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
+    bool enableSSAO = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
     bool enableBumpNormal = normalImage || bumpImage;
     bool enableParallaxMapping = heightImage != nullptr;
     specularLightingEnabled |= specularAmountImage != nullptr;
 
-    for (qint32 idx = 0; idx < featureSet.size(); ++idx) {
-        const auto &name = featureSet.at(idx).name;
-        if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssao))
-            enableSSAO = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::Ssm))
-            enableShadowMaps = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass))
-            isDepthPass = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::OrthoShadowPass))
-            isOrthoShadowPass = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::CubeShadowPass))
-            isCubeShadowPass = featureSet.at(idx).enabled;
-        else if (name == QSSGShaderDefines::asString(QSSGShaderDefines::OpaqueDepthPrePass))
-            isOpaqueDepthPrePass = featureSet.at(idx).enabled;
-    }
 
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
 
@@ -1304,7 +1289,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGMaterialShaderGenerator::generateMaterialRhiS
                                                                                       QSSGMaterialVertexPipeline &vertexPipeline,
                                                                                       const QSSGShaderDefaultMaterialKey &key,
                                                                                       QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                                                                      const ShaderFeatureSetList &inFeatureSet,
+                                                                                      const QSSGShaderFeatures &inFeatureSet,
                                                                                       const QSSGRenderGraphObject &inMaterial,
                                                                                       const QSSGShaderLightList &inLights,
                                                                                       QSSGRenderableImage *inFirstImage,

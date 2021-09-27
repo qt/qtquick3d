@@ -189,7 +189,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGProgramGenerator
                                           QSSGShaderGeneratorStage stage);
 
     QSSGRef<QSSGRhiShaderPipeline> compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
-                                                             const ShaderFeatureSetList &inFeatureSet,
+                                                             const QSSGShaderFeatures &inFeatureSet,
                                                              const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                              const QSSGRef<QSSGShaderCache> &theCache,
                                                              QSSGRhiShaderPipeline::StageFlags stageFlags);

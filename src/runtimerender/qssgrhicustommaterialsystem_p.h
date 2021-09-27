@@ -101,7 +101,7 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                             const QSSGRenderCustomMaterial &material,
                                                             QSSGSubsetRenderable &renderable,
-                                                            const ShaderFeatureSetList &featureSet);
+                                                            const QSSGShaderFeatures &featureSet);
 
     void updateUniformsForCustomMaterial(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
@@ -116,7 +116,7 @@ public:
 
     void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
                               QSSGSubsetRenderable &renderable,
-                              const ShaderFeatureSetList &featureSet,
+                              const QSSGShaderFeatures &featureSet,
                               const QSSGRenderCustomMaterial &material,
                               QSSGLayerRenderData &layerData,
                               QRhiRenderPassDescriptor *renderPassDescriptor,

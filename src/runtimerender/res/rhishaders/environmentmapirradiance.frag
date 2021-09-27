@@ -1,4 +1,9 @@
 #version 440
+
+#ifndef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#define QSSG_ENABLE_RGBE_LIGHT_PROBE 0
+#endif
+
 layout(location = 0) out vec4 FragColor;
 layout(location = 0) in vec3 localPos;
 
@@ -6,7 +11,7 @@ layout(binding = 1) uniform samplerCube environmentMap;
 
 const float M_PI = 3.14159265359;
 
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
 vec4 decodeRGBE(in vec4 rgbe)
 {
     float f = pow(2.0, 255.0 * rgbe.a - 128.0);
@@ -45,7 +50,7 @@ void main()
             // tangent space to world
             vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal;
             vec4 sampleValue = textureLod(environmentMap, sampleVec, 0);
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
             sampleValue = decodeRGBE(sampleValue);
 #endif
             irradiance += sampleValue.rgb * cos(theta) * sin(theta);
@@ -54,7 +59,7 @@ void main()
     }
 
     irradiance = M_PI * irradiance * (1.0 / float(nrSamples));
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
     FragColor = encodeRGBE(vec4(irradiance, 1.0));
 #else
     FragColor = vec4(irradiance, 1.0);

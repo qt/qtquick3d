@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+size_t qHash(QSSGShaderFeatures features) noexcept { return (features.flags & (~QSSGShaderFeatures::IndexMask)); }
+
 static QString dumpFilename(QShader::Stage stage)
 {
     switch (stage) {
@@ -63,40 +65,42 @@ static QString dumpFilename(QShader::Stage stage)
     }
 }
 
-static const char *defineTable[QSSGShaderDefines::Count] {
-    "QSSG_ENABLE_LIGHT_PROBE",
-    "QSSG_ENABLE_IBL_ORIENTATION",
-    "QSSG_ENABLE_SSM",
-    "QSSG_ENABLE_SSAO",
-    "QSSG_ENABLE_DEPTH_PASS",
-    "QSSG_ENABLE_ORTHO_SHADOW_PASS",
-    "QSSG_ENABLE_CUBE_SHADOW_PASS",
-    "QSSG_ENABLE_LINEAR_TONEMAPPING",
-    "QSSG_ENABLE_ACES_TONEMAPPING",
-    "QSSG_ENABLE_HEJLDAWSON_TONEMAPPING",
-    "QSSG_ENABLE_FILMIC_TONEMAPPING",
-    "QSSG_ENABLE_RGBE_LIGHT_PROBE",
-    "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS"
+struct DefineEntry
+{
+    const char *name = nullptr;
+    QSSGShaderFeatures::Feature feature {};
 };
 
-const char *QSSGShaderDefines::asString(QSSGShaderDefines::Define def) { return defineTable[def]; }
+static constexpr DefineEntry DefineTable[QSSGShaderFeatures::Count] {
+    { "QSSG_ENABLE_LIGHT_PROBE", QSSGShaderFeatures::Feature::LightProbe },
+    { "QSSG_ENABLE_IBL_ORIENTATION", QSSGShaderFeatures::Feature::IblOrientation },
+    { "QSSG_ENABLE_SSM", QSSGShaderFeatures::Feature::Ssm },
+    { "QSSG_ENABLE_SSAO", QSSGShaderFeatures::Feature::Ssao },
+    { "QSSG_ENABLE_DEPTH_PASS", QSSGShaderFeatures::Feature::DepthPass },
+    { "QSSG_ENABLE_ORTHO_SHADOW_PASS", QSSGShaderFeatures::Feature::OrthoShadowPass },
+    { "QSSG_ENABLE_CUBE_SHADOW_PASS", QSSGShaderFeatures::Feature::CubeShadowPass },
+    { "QSSG_ENABLE_LINEAR_TONEMAPPING", QSSGShaderFeatures::Feature::LinearTonemapping },
+    { "QSSG_ENABLE_ACES_TONEMAPPING", QSSGShaderFeatures::Feature::AcesTonemapping },
+    { "QSSG_ENABLE_HEJLDAWSON_TONEMAPPING", QSSGShaderFeatures::Feature::HejlDawsonTonemapping },
+    { "QSSG_ENABLE_FILMIC_TONEMAPPING", QSSGShaderFeatures::Feature::FilmicTonemapping },
+    { "QSSG_ENABLE_RGBE_LIGHT_PROBE", QSSGShaderFeatures::Feature::RGBELightProbe },
+    { "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS", QSSGShaderFeatures::Feature::OpaqueDepthPrePass }
+};
+
+const char *QSSGShaderFeatures::asDefineString(QSSGShaderFeatures::Feature feature) { return DefineTable[static_cast<FlagType>(feature) & QSSGShaderFeatures::IndexMask].name; }
+QSSGShaderFeatures::Feature QSSGShaderFeatures::fromIndex(quint32 idx) { return DefineTable[idx].feature; }
+
+void QSSGShaderFeatures::set(QSSGShaderFeatures::Feature feature, bool val)
+{
+    if (val)
+        flags |= (static_cast<FlagType>(feature) & ~IndexMask);
+    else
+        flags &= ~(static_cast<FlagType>(feature) & ~IndexMask);
+}
 
 size_t qHash(const QSSGShaderCacheKey &key)
 {
     return key.m_hashCode;
-}
-
-size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet)
-{
-    size_t retval(0);
-    for (int idx = 0, end = inFeatureSet.size(); idx < end; ++idx) {
-        // From previous implementation, it seems we need to ignore the order of the features.
-        // But we need to bind the feature flag together with its name, so that the flags will
-        // influence
-        // the final hash not only by the true-value count.
-        retval ^= (qHash(int(inFeatureSet.at(idx).feature)) ^ size_t(inFeatureSet.at(idx).enabled));
-    }
-    return retval;
 }
 
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
@@ -160,7 +164,7 @@ QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
 }
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::getRhiShaderPipeline(const QByteArray &inKey,
-                                                                     const ShaderFeatureSetList &inFeatures)
+                                                                     const QSSGShaderFeatures &inFeatures)
 {
     m_tempKey.m_key = inKey;
     m_tempKey.m_features = inFeatures;
@@ -175,7 +179,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::getRhiShaderPipeline(const QByte
 void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
                                             const QByteArray &inKey,
                                             ShaderType shaderType,
-                                            const ShaderFeatureSetList &inFeatures)
+                                            const QSSGShaderFeatures &inFeatures)
 {
     m_insertStr.clear();
 
@@ -192,22 +196,18 @@ void QSSGShaderCache::addShaderPreprocessor(QByteArray &str,
     str.insert(0, m_insertStr);
     QString::size_type insertPos = int(m_insertStr.size());
 
-    bool fragOutputEnabled = shaderType == ShaderType::Fragment;
-    if (inFeatures.size()) {
-        m_insertStr.clear();
-        for (int idx = 0, end = inFeatures.size(); idx < end; ++idx) {
-            QSSGShaderPreprocessorFeature feature(inFeatures[idx]);
-            m_insertStr.append("#define ");
-            m_insertStr.append(inFeatures[idx].name);
-            m_insertStr.append(" ");
-            m_insertStr.append(feature.enabled ? "1" : "0");
-            m_insertStr.append("\n");
-            if (feature.enabled && inFeatures[idx].name == QSSGShaderDefines::asString(QSSGShaderDefines::DepthPass))
-                fragOutputEnabled = false;
-        }
-        str.insert(insertPos, m_insertStr);
-        insertPos += int(m_insertStr.size());
+    m_insertStr.clear();
+    const bool fragOutputEnabled = (!inFeatures.isSet(QSSGShaderFeatures::Feature::DepthPass)) && shaderType == ShaderType::Fragment;
+    for (const auto &def : DefineTable) {
+        m_insertStr.append("#define ");
+        m_insertStr.append(def.name);
+        m_insertStr.append(" ");
+        m_insertStr.append(inFeatures.isSet(def.feature) ? "1" : "0");
+        m_insertStr.append("\n");
     }
+
+    str.insert(insertPos, m_insertStr);
+    insertPos += int(m_insertStr.size());
 
     m_insertStr.clear();
     if (fragOutputEnabled)
@@ -227,7 +227,7 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
 }
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                              const ShaderFeatureSetList &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
+                                                              const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
     const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, inFeatures);
@@ -339,7 +339,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry)
 {
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, ShaderFeatureSetList());
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, QSSGShaderFeatures());
     if (rhiShaders)
         return rhiShaders;
 
@@ -370,7 +370,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
     }
 
     QSSGShaderCacheKey cacheKey(inKey);
-    cacheKey.m_features = ShaderFeatureSetList();
+    cacheKey.m_features = QSSGShaderFeatures();
     cacheKey.updateHashCode();
 
     const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
@@ -380,7 +380,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
 {
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, ShaderFeatureSetList());
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, QSSGShaderFeatures());
     if (rhiShaders)
         return rhiShaders;
 
@@ -427,7 +427,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
     }
 
     QSSGShaderCacheKey cacheKey(inKey);
-    cacheKey.m_features = ShaderFeatureSetList();
+    cacheKey.m_features = QSSGShaderFeatures();
     cacheKey.updateHashCode();
 
     const auto inserted = m_rhiShaders.insert(cacheKey, shaders);

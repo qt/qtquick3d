@@ -191,7 +191,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
                                                                            const QSSGRef<QSSGShaderCache> &shaderCache,
                                                                            const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
                                                                            QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                           const ShaderFeatureSetList &featureSet,
+                                                                           const QSSGShaderFeatures &featureSet,
                                                                            QByteArray &shaderString)
 {
     shaderString = logPrefix();
@@ -234,7 +234,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
 }
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
-                                                                       const ShaderFeatureSetList &inFeatureSet)
+                                                                       const QSSGShaderFeatures &inFeatureSet)
 {
     const QSSGRef<QSSGShaderCache> &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
@@ -542,7 +542,7 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
 }
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable &inRenderable,
-                                                           const ShaderFeatureSetList &inFeatureSet)
+                                                           const QSSGShaderFeatures &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);

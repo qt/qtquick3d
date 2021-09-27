@@ -49,8 +49,8 @@
 struct QSSGShaderMapKey
 {
     QByteArray m_name;
-    const ShaderFeatureSetList *m_featuresOrig;
-    ShaderFeatureSetList m_featuresCopy;
+    const QSSGShaderFeatures *m_featuresOrig;
+    QSSGShaderFeatures m_featuresCopy;
     QSSGShaderDefaultMaterialKey *m_materialKeyOrig;
     QSSGShaderDefaultMaterialKey m_materialKeyCopy;
     size_t m_hashCode;
@@ -68,11 +68,11 @@ struct QSSGShaderMapKey
     }
 
     QSSGShaderMapKey(const QByteArray &inName,
-                     const ShaderFeatureSetList &inFeatures,
+                     const QSSGShaderFeatures &inFeatures,
                      QSSGShaderDefaultMaterialKey &inMaterialKey)
         : m_name(inName), m_featuresOrig(&inFeatures), m_materialKeyOrig(&inMaterialKey)
     {
-        m_hashCode = qHash(m_name) ^ hashShaderFeatureSet(*m_featuresOrig) ^ qHash(m_materialKeyOrig->hash());
+        m_hashCode = qHash(m_name) ^ qHash(m_featuresOrig) ^ qHash(m_materialKeyOrig->hash());
     }
 };
 
@@ -86,8 +86,8 @@ inline bool operator==(const QSSGShaderMapKey &a, const QSSGShaderMapKey &b) Q_D
     if (!(*keyA == *keyB))
         return false;
 
-    const ShaderFeatureSetList *featuresA = a.m_featuresOrig ? a.m_featuresOrig : &a.m_featuresCopy;
-    const ShaderFeatureSetList *featuresB = b.m_featuresOrig ? b.m_featuresOrig : &b.m_featuresCopy;
+    const QSSGShaderFeatures *featuresA = a.m_featuresOrig ? a.m_featuresOrig : &a.m_featuresCopy;
+    const QSSGShaderFeatures *featuresB = b.m_featuresOrig ? b.m_featuresOrig : &b.m_featuresCopy;
     return *featuresA == *featuresB;
 }
 

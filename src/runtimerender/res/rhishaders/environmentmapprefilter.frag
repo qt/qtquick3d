@@ -1,4 +1,9 @@
 #version 440
+
+#ifndef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#define QSSG_ENABLE_RGBE_LIGHT_PROBE 0
+#endif
+
 layout(location = 0) out vec4 FragColor;
 layout(location = 0) in vec3 localPos;
 
@@ -10,7 +15,7 @@ layout(std140, binding = 2) uniform buf {
 
 const float M_PI = 3.14159265359;
 
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
 vec4 decodeRGBE(in vec4 rgbe)
 {
     float f = pow(2.0, 255.0 * rgbe.a - 128.0);
@@ -62,7 +67,7 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness)
     vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
     return normalize(sampleVec);
 }
-#ifndef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE == 0
 float distributionGGX(float NdotH, float roughness) {
   float a = roughness * roughness;
   float a2 = a * a;
@@ -96,7 +101,7 @@ void main()
         float NdotL = max(dot(N, L), 0.0);
         if(NdotL > 0.0)
         {
-#ifndef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE == 0
             float NdotH = max(dot(N, H), 0.0);
             float D = distributionGGX(NdotH, ubuf2.roughness);
             float HdotV = max(dot(H, V), 0.0);
@@ -106,7 +111,7 @@ void main()
             float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
             float mipLevel = ubuf2.roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
 #endif
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
             prefilteredColor += decodeRGBE(texture(environmentMap, L)).rgb * NdotL;
 #else
             prefilteredColor += textureLod(environmentMap, L, mipLevel).rgb * NdotL;
@@ -115,7 +120,7 @@ void main()
         }
     }
     prefilteredColor = prefilteredColor / totalWeight;
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
     FragColor = encodeRGBE(vec4(prefilteredColor, 1.0));
 #else
     FragColor = vec4(prefilteredColor, 1.0);

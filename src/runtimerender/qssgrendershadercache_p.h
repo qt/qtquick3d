@@ -58,55 +58,75 @@ QT_BEGIN_NAMESPACE
 class QSSGRhiShaderPipeline;
 class QShaderBaker;
 
-namespace QSSGShaderDefines
-{
-enum Define : quint8
-{
-    LightProbe = 0,
-    IblOrientation,
-    Ssm,
-    Ssao,
-    DepthPass,
-    OrthoShadowPass,
-    CubeShadowPass,
-    LinearTonemapping,
-    AcesTonemapping,
-    HejlDawsonTonemapping,
-    FilmicTonemapping,
-    RGBELightProbe,
-    OpaqueDepthPrePass,
-    Count /* New defines are added before this one! */
-};
 
-Q_QUICK3DRUNTIMERENDER_EXPORT const char *asString(QSSGShaderDefines::Define def);
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderFeatures
+{
+
+// There are a number of macros used to turn on or off various features.
+// This allows those features to be propagated into the shader cache's caching mechanism.
+// They will be translated into #define name value where value is 1 or zero depending on
+// if the feature is enabled or not.
+//
+// In snippets that use this feature the code would look something like this:
+
+/*
+#ifndef QSSG_ENABLE_<FEATURE>
+#define QSSG_ENABLE_<FEATURE> 0
+#endif
+
+void func()
+{
+    ...
+#if QSSG_ENABLE_<FEATURE>
+     ...
+#endif
+     ...
 }
+*/
 
-// There are a number of macros used to turn on or off various features.  This allows those
-// features
-// to be propagated into the shader cache's caching mechanism.  They will be translated into
-//#define name value where value is 1 or zero depending on if the feature is enabled or not.
-struct QSSGShaderPreprocessorFeature
+// NOTE: The order of these will affect generated keys, so re-ordering these
+// will break already baked shaders (e.g. shadergen).
+using FlagType = quint32;
+enum class Feature : FlagType
 {
-    QSSGShaderDefines::Define feature;
-    const char *name;
-    mutable bool enabled = false;
-    QSSGShaderPreprocessorFeature() = default;
-    QSSGShaderPreprocessorFeature(QSSGShaderDefines::Define inFeature, bool val)
-        : feature(inFeature), name(QSSGShaderDefines::asString(inFeature)), enabled(val)
-    { }
-    inline bool operator<(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return strcmp(name, other.name) < 0; }
-    inline bool operator==(const QSSGShaderPreprocessorFeature &other) const Q_DECL_NOTHROW { return feature == other.feature && enabled == other.enabled; }
+    LightProbe = (1 << 8),
+    IblOrientation = (1 << 9) + 1,
+    Ssm = (1 << 10) + 2,
+    Ssao = (1 << 11) + 3,
+    DepthPass = (1 << 12) + 4,
+    OrthoShadowPass = (1 << 13) + 5,
+    CubeShadowPass = (1 << 14) + 6,
+    LinearTonemapping = (1 << 15) + 7,
+    AcesTonemapping = (1 << 16) + 8,
+    HejlDawsonTonemapping = (1 << 17) + 9,
+    FilmicTonemapping = (1 << 18) + 10,
+    RGBELightProbe = (1 << 19) + 11,
+    OpaqueDepthPrePass = (1 << 20) + 12
 };
 
-using ShaderFeatureSetList = QVarLengthArray<QSSGShaderPreprocessorFeature, 4>;
+static constexpr FlagType IndexMask = 0xff;
+static constexpr Feature LastFeature = Feature::OpaqueDepthPrePass;
+static constexpr quint32 Count = (static_cast<FlagType>(LastFeature) & IndexMask) + 1;
 
-// Hash is dependent on the order of the keys; so make sure their order is consistent!!
-Q_QUICK3DRUNTIMERENDER_EXPORT size_t hashShaderFeatureSet(const ShaderFeatureSetList &inFeatureSet);
+static const char *asDefineString(QSSGShaderFeatures::Feature feature);
+static Feature fromIndex(quint32 idx);
+
+constexpr bool isNull() const { return flags == 0; }
+constexpr bool isSet(Feature feature) const { return (static_cast<FlagType>(feature) & flags); }
+void set(Feature feature, bool val);
+
+FlagType flags = 0;
+
+inline friend bool operator==(QSSGShaderFeatures a, QSSGShaderFeatures b) { return a.flags == b.flags; }
+
+};
+
+Q_QUICK3DRUNTIMERENDER_EXPORT size_t qHash(QSSGShaderFeatures features) noexcept;
 
 struct QSSGShaderCacheKey
 {
     QByteArray m_key;
-    ShaderFeatureSetList m_features;
+    QSSGShaderFeatures m_features;
     size_t m_hashCode = 0;
 
     explicit QSSGShaderCacheKey(const QByteArray &key = QByteArray()) : m_key(key), m_hashCode(0) {}
@@ -114,12 +134,12 @@ struct QSSGShaderCacheKey
     QSSGShaderCacheKey(const QSSGShaderCacheKey &other) = default;
     QSSGShaderCacheKey &operator=(const QSSGShaderCacheKey &other) = default;
 
-    static inline size_t generateHashCode(const QByteArray &key, const ShaderFeatureSetList &features)
+    static inline size_t generateHashCode(const QByteArray &key, QSSGShaderFeatures features)
     {
-        return qHash(key) ^ hashShaderFeatureSet(features);
+        return qHash(key) ^ qHash(features);
     }
 
-    static QByteArray hashString(const QByteArray &key, const ShaderFeatureSetList &features)
+    static QByteArray hashString(const QByteArray &key, QSSGShaderFeatures features)
     {
         return  QCryptographicHash::hash(QByteArray::number(generateHashCode(key, features)), QCryptographicHash::Algorithm::Sha1).toHex();
     }
@@ -163,7 +183,7 @@ private:
     void addShaderPreprocessor(QByteArray &str,
                                const QByteArray &inKey,
                                ShaderType shaderType,
-                               const ShaderFeatureSetList &inFeatures);
+                               const QSSGShaderFeatures &inFeatures);
 
 public:
     QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
@@ -171,12 +191,12 @@ public:
     ~QSSGShaderCache();
 
     QSSGRef<QSSGRhiShaderPipeline> getRhiShaderPipeline(const QByteArray &inKey,
-                                                        const ShaderFeatureSetList &inFeatures);
+                                                        const QSSGShaderFeatures &inFeatures);
 
     QSSGRef<QSSGRhiShaderPipeline> compileForRhi(const QByteArray &inKey,
                                                const QByteArray &inVert,
                                                const QByteArray &inFrag,
-                                               const ShaderFeatureSetList &inFeatures,
+                                               const QSSGShaderFeatures &inFeatures,
                                                QSSGRhiShaderPipeline::StageFlags stageFlags);
 
     QSSGRef<QSSGRhiShaderPipeline> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry);

@@ -94,7 +94,7 @@ void QSSGLayerRenderData::resetForFrame()
 
 static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                                 QSSGSubsetRenderable &subsetRenderable,
-                                                                const ShaderFeatureSetList &featureSet)
+                                                                const QSSGShaderFeatures &featureSet)
 {
     const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiShaders(subsetRenderable, featureSet);
@@ -321,7 +321,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
-        const ShaderFeatureSetList &featureSet(inData.getShaderFeatureSet());
+        const QSSGShaderFeatures &featureSet(inData.features);
 
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
         if (shaderPipeline) {
@@ -466,9 +466,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         const QSSGRenderCustomMaterial &material(subsetRenderable.customMaterial());
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
 
-        inData.setShaderFeature(QSSGShaderDefines::LightProbe, inData.layer.lightProbe || material.m_iblProbe);
+        inData.features.set(QSSGShaderFeatures::Feature::LightProbe, inData.layer.lightProbe || material.m_iblProbe);
 
-        customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, inData.getShaderFeatureSet(),
+        customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, inData.features,
                                                   material, inData, renderPassDescriptor, samples);
     } else if (inObject.renderableFlags.isParticlesRenderable()) {
         QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
@@ -582,10 +582,10 @@ static bool rhiPrepareDepthPassForObject(QSSGRhiContext *rhiCtx,
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
 
     const bool isOpaqueDepthPrePass = obj->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
-    ShaderFeatureSetList featureSet;
-    featureSet.append({ QSSGShaderDefines::DepthPass, true });
+    QSSGShaderFeatures featureSet;
+    featureSet.set(QSSGShaderFeatures::Feature::DepthPass, true);
     if (isOpaqueDepthPrePass)
-        featureSet.append({ QSSGShaderDefines::OpaqueDepthPrePass, true });
+        featureSet.set(QSSGShaderFeatures::Feature::OpaqueDepthPrePass, true);
 
     QSSGRhiDrawCallData *dcd = nullptr;
     if (obj->renderableFlags.isDefaultMaterialMeshSubset() || obj->renderableFlags.isCustomMaterialMeshSubset()) {
@@ -1021,21 +1021,21 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             bool orthographic,
                                             int cubeFace)
 {
-    ShaderFeatureSetList featureSet;
+    QSSGShaderFeatures featureSet;
     if (orthographic)
-        featureSet.append({ QSSGShaderDefines::OrthoShadowPass, true });
+        featureSet.set(QSSGShaderFeatures::Feature::OrthoShadowPass, true);
     else
-        featureSet.append({ QSSGShaderDefines::CubeShadowPass, true });
+        featureSet.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
         if (!theObject->renderableFlags.castsShadows())
             continue;
 
-        ShaderFeatureSetList objectFeatureSet = featureSet;
+        QSSGShaderFeatures objectFeatureSet = featureSet;
         const bool isOpaqueDepthPrePass = theObject->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
         if (isOpaqueDepthPrePass)
-            objectFeatureSet.append({ QSSGShaderDefines::OpaqueDepthPrePass, true});
+            objectFeatureSet.set(QSSGShaderFeatures::Feature::OpaqueDepthPrePass, true);
 
         QSSGRhiDrawCallData *dcd = nullptr;
         QMatrix4x4 modelViewProjection;

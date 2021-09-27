@@ -71,7 +71,7 @@ void QSSGCustomMaterialSystem::setRenderContextInterface(QSSGRenderContextInterf
 QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                                                   const QSSGRenderCustomMaterial &material,
                                                                                   QSSGSubsetRenderable &renderable,
-                                                                                  const ShaderFeatureSetList &featureSet)
+                                                                                  const QSSGShaderFeatures &featureSet)
 {
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find()
@@ -187,7 +187,7 @@ static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
 
 void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
                                                     QSSGSubsetRenderable &renderable,
-                                                    const ShaderFeatureSetList &featureSet,
+                                                    const QSSGShaderFeatures &featureSet,
                                                     const QSSGRenderCustomMaterial &material,
                                                     QSSGLayerRenderData &layerData,
                                                     QRhiRenderPassDescriptor *renderPassDescriptor,

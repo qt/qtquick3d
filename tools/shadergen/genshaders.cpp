@@ -76,11 +76,14 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
 
-static QQsbShaderFeatureSet toQsbShaderFeatureSet(const ShaderFeatureSetList &featureSet)
+static QQsbShaderFeatureSet toQsbShaderFeatureSet(const QSSGShaderFeatures &featureSet)
 {
     QQsbShaderFeatureSet ret;
-    for (const auto &f : featureSet)
-        ret.insert(f.name, f.enabled);
+    for (quint32 i = 0, end = QSSGShaderFeatures::Count; i != end; ++i) {
+        auto def = QSSGShaderFeatures::fromIndex(i);
+        if (featureSet.isSet(def))
+            ret.insert(QSSGShaderFeatures::asDefineString(def), true);
+    }
     return ret;
 }
 
@@ -236,7 +239,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         layer.addChild(model);
         layerData.prepareForRender(QSize(888, 666));
 
-        const auto &features = layerData.getShaderFeatureSet();
+        const auto &features = layerData.features;
 
         auto &materialPropertis = layerData.renderer->defaultMaterialShaderKeyProperties();
 
@@ -246,7 +249,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         else if (!layerData.transparentObjects.isEmpty())
             renderable = layerData.transparentObjects.at(0).obj;
 
-        auto generateShader = [&](const ShaderFeatureSetList &features) {
+        auto generateShader = [&](const QSSGShaderFeatures &features) {
             if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset)) {
                 auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
                 if (!shaderPipeline.isNull()) {
@@ -289,19 +292,19 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         if (renderable) {
             generateShader(features);
 
-            ShaderFeatureSetList depthPassFeatures;
-            depthPassFeatures.append({ QSSGShaderDefines::DepthPass, true });
+            QSSGShaderFeatures depthPassFeatures;
+            depthPassFeatures.set(QSSGShaderFeatures::Feature::DepthPass, true);
             generateShader(depthPassFeatures);
 
             if (shadowCubePass) {
-                ShaderFeatureSetList shadowPassFeatures;
-                shadowPassFeatures.append({ QSSGShaderDefines::CubeShadowPass, true });
+                QSSGShaderFeatures shadowPassFeatures;
+                shadowPassFeatures.set(QSSGShaderFeatures::Feature::CubeShadowPass, true);
                 generateShader(shadowPassFeatures);
             }
 
             if (shadowMapPass) {
-                ShaderFeatureSetList shadowPassFeatures;
-                shadowPassFeatures.append({ QSSGShaderDefines::OrthoShadowPass, true });
+                QSSGShaderFeatures shadowPassFeatures;
+                shadowPassFeatures.set(QSSGShaderFeatures::Feature::OrthoShadowPass, true);
                 generateShader(shadowPassFeatures);
             }
         }
@@ -351,7 +354,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                             if (dryRun)
                                 qDryRunPrintQsbcAdd(key);
                             else
-                                qsbc.addQsbEntry(key, toQsbShaderFeatureSet(ShaderFeatureSetList()), vertexStage->shader(), fragmentStage->shader(), hkey);
+                                qsbc.addQsbEntry(key, toQsbShaderFeatureSet(QSSGShaderFeatures()), vertexStage->shader(), fragmentStage->shader(), hkey);
                         }
                     }
                 }

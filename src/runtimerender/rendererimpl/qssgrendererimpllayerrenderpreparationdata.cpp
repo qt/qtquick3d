@@ -186,8 +186,6 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
     : layer(inLayer)
     , renderer(inRenderer)
     , camera(nullptr)
-    , featuresDirty(true)
-    , featureSetHash(0)
 {
 }
 
@@ -197,43 +195,6 @@ QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData()
 
     if (renderer)
         renderer->removeLastFrameLayer(this);
-}
-
-void QSSGLayerRenderPreparationData::setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue)
-{
-    auto iter = features.cbegin();
-    const auto end = features.cend();
-
-    while (iter != end && iter->feature != inFeature)
-        ++iter;
-
-    if (iter != end) {
-        if (iter->enabled != inValue) {
-            iter->enabled = inValue;
-            featuresDirty = true;
-            featureSetHash = 0;
-        }
-    } else {
-        features.append({ inFeature, inValue });
-        featuresDirty = true;
-        featureSetHash = 0;
-    }
-}
-
-const ShaderFeatureSetList &QSSGLayerRenderPreparationData::getShaderFeatureSet()
-{
-    if (featuresDirty) {
-        std::sort(features.begin(), features.end());
-        featuresDirty = false;
-    }
-    return features;
-}
-
-size_t QSSGLayerRenderPreparationData::getShaderFeatureSetHash()
-{
-    if (!featureSetHash)
-        featureSetHash = hashShaderFeatureSet(getShaderFeatureSet());
-    return featureSetHash;
 }
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()
@@ -367,8 +328,7 @@ Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Ar
 QSSGShaderDefaultMaterialKey QSSGLayerRenderPreparationData::generateLightingKey(
         QSSGRenderDefaultMaterial::MaterialLighting inLightingType, const QSSGShaderLightList &lights, bool receivesShadows)
 {
-    const size_t features = getShaderFeatureSetHash();
-    QSSGShaderDefaultMaterialKey theGeneratedKey(features);
+    QSSGShaderDefaultMaterialKey theGeneratedKey(qHash(features));
     const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
     renderer->defaultMaterialShaderKeyProperties().m_hasLighting.setValue(theGeneratedKey, lighting);
     if (lighting) {
@@ -599,9 +559,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 //    }
 
     if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
-        setShaderFeature(QSSGShaderDefines::LightProbe, true);
+        features.set(QSSGShaderFeatures::Feature::LightProbe, true);
         renderer->defaultMaterialShaderKeyProperties().m_hasIbl.setValue(theGeneratedKey, true);
-        // setShaderFeature(ShaderFeatureDefines::enableIblFov(),
+        // features.set(ShaderFeatureDefines::enableIblFov(),
         // m_Renderer.GetLayerRenderData()->m_Layer.m_ProbeFov < 180.0f );
     }
 
@@ -1213,8 +1173,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
     if (layerPrepResult.hasValue())
         return;
 
-    features.clear();
-    featureSetHash = 0;
+    features = QSSGShaderFeatures();
     QRect theViewport(renderer->contextInterface()->viewport());
     QRect theScissor(renderer->contextInterface()->scissorRect());
     if (theScissor.isNull() || (theScissor == theViewport))
@@ -1234,7 +1193,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
 
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
     bool requiresDepthTexture = SSAOEnabled;
-    setShaderFeature(QSSGShaderDefines::Ssm, false); // by default no shadow map generation
+    features.set(QSSGShaderFeatures::Feature::Ssm, false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
         // Get the layer's width and height.
@@ -1283,13 +1242,13 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
 
                 lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
 
-                setShaderFeature(QSSGShaderDefines::LightProbe, true);
-                setShaderFeature(QSSGShaderDefines::IblOrientation, !layer.probeOrientation.isIdentity());
+                features.set(QSSGShaderFeatures::Feature::LightProbe, true);
+                features.set(QSSGShaderFeatures::Feature::IblOrientation, !layer.probeOrientation.isIdentity());
 
                 // By this point we will know what the actual texture format of the light probe is
                 // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
                 if (lightProbeTexture.m_flags.isRgbe8())
-                    setShaderFeature(QSSGShaderDefines::RGBELightProbe, true);
+                    features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
             }
 
             // ### TODO: Really this should only be done if renderableNodes is empty or dirty
@@ -1422,7 +1381,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
                     // in the generated shaders. The fact that some (or even
                     // all) objects may opt out from receiving shadows plays no
                     // role here whatsoever.
-                    setShaderFeature(QSSGShaderDefines::Ssm, true);
+                    features.set(QSSGShaderFeatures::Feature::Ssm, true);
                 }
             }
             globalLights = renderableLights;
@@ -1463,16 +1422,16 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
             wasDataDirty = wasDataDirty || renderablesDirty;
         }
 
-        setShaderFeature(QSSGShaderDefines::Ssao, thePrepResult.flags.requiresSsaoPass());
+        features.set(QSSGShaderFeatures::Feature::Ssao, thePrepResult.flags.requiresSsaoPass());
 
         // Tonemapping
-        setShaderFeature(QSSGShaderDefines::LinearTonemapping,
+        features.set(QSSGShaderFeatures::Feature::LinearTonemapping,
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
-        setShaderFeature(QSSGShaderDefines::AcesTonemapping,
+        features.set(QSSGShaderFeatures::Feature::AcesTonemapping,
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
-        setShaderFeature(QSSGShaderDefines::HejlDawsonTonemapping,
+        features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping,
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
-        setShaderFeature(QSSGShaderDefines::FilmicTonemapping,
+        features.set(QSSGShaderFeatures::Feature::FilmicTonemapping,
                          layer.tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
     }
     wasDirty = wasDirty || wasDataDirty;

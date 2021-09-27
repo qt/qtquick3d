@@ -357,7 +357,7 @@ struct QSSGMaterialVertexPipeline
 
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
     void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey,
-                               const ShaderFeatureSetList &inFeatureSet,
+                               const QSSGShaderFeatures &inFeatureSet,
                                const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager);
     // The fragment shader expects a floating point constant, qt_objectOpacity to be defined
     // post this method.

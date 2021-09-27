@@ -31,6 +31,10 @@
 #ifndef SAMPLE_PROBE_GLSLLIB
 #define SAMPLE_PROBE_GLSLLIB 1
 
+#ifndef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#define QSSG_ENABLE_RGBE_LIGHT_PROBE 0
+#endif
+
 #ifdef QQ3D_SHADER_META
 /*{
     "uniforms": [
@@ -43,7 +47,7 @@
 
 vec3 qt_textureProbe(samplerCube lightProbe, vec3 dir, float lod)
 {
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
     vec4 ret = textureLod(lightProbe, dir, lod);
     return ret.rgb * pow(2.0, ret.a * 255.0 - 128.0);
 #else

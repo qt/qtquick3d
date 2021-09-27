@@ -1,5 +1,21 @@
 #version 440
 
+#ifndef QSSG_ENABLE_ACES_TONEMAPPING
+#define QSSG_ENABLE_ACES_TONEMAPPING 0
+#endif
+#ifndef QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+#define QSSG_ENABLE_HEJLDAWSON_TONEMAPPING 0
+#endif
+#ifndef QSSG_ENABLE_FILMIC_TONEMAPPING
+#define QSSG_ENABLE_FILMIC_TONEMAPPING 0
+#endif
+#ifndef QSSG_ENABLE_LINEAR_TONEMAPPING
+#define QSSG_ENABLE_LINEAR_TONEMAPPING 0
+#endif
+#ifndef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#define QSSG_ENABLE_RGBE_LIGHT_PROBE 0
+#endif
+
 #ifndef PI
 #define PI          3.14159265358979
 #define PI_HALF     ( 0.5 * PI )
@@ -27,7 +43,7 @@ vec3 qt_linearTosRGB(vec3 color)
     return 0.585122381 * S1 + 0.783140355 * S2 - 0.368262736 * S3;
 }
 
-#ifdef QSSG_ENABLE_ACES_TONEMAPPING
+#if QSSG_ENABLE_ACES_TONEMAPPING
 vec3 qt_toneMapACES(vec3 color)
 {
 const float A = 2.51;
@@ -39,7 +55,7 @@ const float A = 2.51;
 }
 #endif
 
-#ifdef QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+#if QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
 vec3 qt_tonemapHejlDawson(vec3 color)
 {
     color = max(vec3(0.0), color - vec3(0.004));
@@ -47,7 +63,7 @@ vec3 qt_tonemapHejlDawson(vec3 color)
 }
 #endif
 
-#ifdef QSSG_ENABLE_FILMIC_TONEMAPPING
+#if QSSG_ENABLE_FILMIC_TONEMAPPING
 vec3 qt_toneMapFilmicSub(vec3 color)
 {
     const float A = 0.15;
@@ -71,21 +87,21 @@ vec3 qt_toneMapFilmic(vec3 color)
 vec3 qt_tonemap(vec3 color)
 {
     // ACES
-#ifdef QSSG_ENABLE_ACES_TONEMAPPING
+#if QSSG_ENABLE_ACES_TONEMAPPING
     return qt_toneMapACES(color);
 #endif
     // Hejl-Dawson
-#ifdef QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
+#if QSSG_ENABLE_HEJLDAWSON_TONEMAPPING
     return qt_tonemapHejlDawson(color);
 #endif
 
     // FILMIC
-#ifdef QSSG_ENABLE_FILMIC_TONEMAPPING
+#if QSSG_ENABLE_FILMIC_TONEMAPPING
     return qt_toneMapFilmic(color);
 #endif
 
     // Linear
-#ifdef QSSG_ENABLE_LINEAR_TONEMAPPING
+#if QSSG_ENABLE_LINEAR_TONEMAPPING
     return qt_linearTosRGB(color);
 #endif
 
@@ -96,7 +112,7 @@ void main()
 {
     vec3 eye = normalize(eye_direction);
     vec4 color = textureLod(skybox_image, eye, 0.0);
-#ifdef QSSG_ENABLE_RGBE_LIGHT_PROBE
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
     color = vec4(color.rgb * pow(2.0, color.a * 255.0 - 128.0), 1.0);
 #endif
 

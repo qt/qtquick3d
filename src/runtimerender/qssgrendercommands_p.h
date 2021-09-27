@@ -151,7 +151,7 @@ struct QSSGBindShader : public QSSGCommand
     QSSGBindShader(const QByteArray &inShaderPathKey)
         : QSSGCommand(CommandType::BindShader),
           m_shaderPathKey(inShaderPathKey),
-          m_hkey(QSSGShaderCacheKey::generateHashCode(inShaderPathKey, ShaderFeatureSetList()))
+          m_hkey(QSSGShaderCacheKey::generateHashCode(inShaderPathKey, QSSGShaderFeatures()))
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}

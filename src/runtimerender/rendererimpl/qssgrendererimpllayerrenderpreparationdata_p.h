@@ -216,9 +216,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
 
     TModelContextPtrList modelContexts;
 
-    ShaderFeatureSetList features;
-    bool featuresDirty;
-    size_t featureSetHash;
+    QSSGShaderFeatures features;
     bool tooManyLightsWarningShown = false;
     bool tooManyShadowLightsWarningShown = false;
     bool particlesNotSupportedWarningShown = false;
@@ -269,9 +267,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                      QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     virtual void prepareForRender(const QSize &outputSize);
-    void setShaderFeature(QSSGShaderDefines::Define inFeature, bool inValue);
-    const ShaderFeatureSetList &getShaderFeatureSet();
-    size_t getShaderFeatureSetHash();
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.

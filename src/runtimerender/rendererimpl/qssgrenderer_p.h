@@ -230,13 +230,13 @@ public:
                                                                         const QSSGRef<QSSGShaderCache> &shaderCache,
                                                                         const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
                                                                         QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                        const ShaderFeatureSetList &featureSet,
+                                                                        const QSSGShaderFeatures &featureSet,
                                                                         QByteArray &shaderString);
 
     QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
-                                                             const ShaderFeatureSetList &inFeatureSet);
+                                                             const QSSGShaderFeatures &inFeatureSet);
     QSSGRef<QSSGRhiShaderPipeline> getRhiShaders(QSSGSubsetRenderable &inRenderable,
-                                               const ShaderFeatureSetList &inFeatureSet);
+                                               const QSSGShaderFeatures &inFeatureSet);
 
 public:
     QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
