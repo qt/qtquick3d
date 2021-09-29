@@ -54,6 +54,7 @@ struct QSSGRenderableImage;
 struct QSSGRenderLayer;
 struct QSSGRenderLight;
 struct QSSGRenderCamera;
+struct QSSGReflectionMapEntry;
 class QRhiTexture;
 
 class QSSGParticleRenderer
@@ -74,11 +75,16 @@ public:
                                      QSSGParticlesRenderable &renderable,
                                      QSSGLayerRenderData &inData,
                                      QRhiRenderPassDescriptor *renderPassDescriptor,
-                                     int samples);
+                                     int samples,
+                                     QSSGRenderCamera *camera = nullptr,
+                                     int cubeFace = -1,
+                                     QSSGReflectionMapEntry *entry = nullptr);
     static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                     QSSGParticlesRenderable &renderable,
                                     QSSGLayerRenderData &inData,
-                                    bool *needsSetViewport);
+                                    bool *needsSetViewport,
+                                    int cubeFace,
+                                    QSSGRhiGraphicsPipelineState *state);
     static void prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
                                          QSSGRhiShaderResourceBindingList &bindings,

@@ -98,6 +98,22 @@ Section {
         }
 
         PropertyLabel {
+            text: qsTr("Receives Reflections")
+            tooltip: qsTr("Enables the geometry of this model to receive reflections from the nearest reflection probe. The model must be inside at least one reflection probe to start receiving reflections.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.receivesReflections.valueToString
+                backendValue: backendValues.receivesReflections
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Pickable")
             tooltip: qsTr("Controls whether the model is pickable or not.")
         }

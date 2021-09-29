@@ -24,6 +24,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrendertexturedata.cpp graphobjects/qssgrendertexturedata_p.h
         graphobjects/qssgrendermorphtarget.cpp graphobjects/qssgrendermorphtarget_p.h
         graphobjects/qssgrenderresourceloader.cpp graphobjects/qssgrenderresourceloader_p.h
+        graphobjects/qssgrenderreflectionprobe.cpp graphobjects/qssgrenderreflectionprobe_p.h
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h
@@ -41,6 +42,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrendershaderkeys_p.h
         qssgrendershadermetadata.cpp qssgrendershadermetadata_p.h
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
+        qssgrenderreflectionmap.cpp qssgrenderreflectionmap_p.h
         qssgrhiparticles.cpp qssgrhiparticles_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h
         qssgrhicustommaterialsystem.cpp qssgrhicustommaterialsystem_p.h
@@ -108,6 +110,7 @@ set(res_resource_files
     "res/effectlib/physGlossyBSDF.glsllib"
     "res/effectlib/principledMaterialFresnel.glsllib"
     "res/effectlib/sampleProbe.glsllib"
+    "res/effectlib/sampleReflectionProbe.glsllib"
     "res/effectlib/shadowMapping.glsllib"
     "res/effectlib/skinanim.glsllib"
     "res/effectlib/ssao.glsllib"
@@ -192,6 +195,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
         res/rhishaders/environmentmapprefilter.frag
         res/rhishaders/environmentmapirradiance.vert
         res/rhishaders/environmentmapirradiance.frag
+        res/rhishaders/reflectionprobeprefilter.vert
+        res/rhishaders/reflectionprobeprefilter.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_lightprobe_rgbe"
     SILENT

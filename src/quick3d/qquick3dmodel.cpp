@@ -378,6 +378,19 @@ float QQuick3DModel::depthBias() const
     return m_depthBias;
 }
 
+/*!
+    \qmlproperty bool Model::receivesReflections
+
+    When this property is set to \c true, the model's materials take reflections contribution from
+    a reflection probe. If the model is inside more than one reflection probe at the same time,
+    the nearest reflection probe is taken into account.
+*/
+
+bool QQuick3DModel::receivesReflections() const
+{
+    return m_receivesReflections;
+}
+
 void QQuick3DModel::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -529,6 +542,16 @@ void QQuick3DModel::setDepthBias(float bias)
     emit depthBiasChanged();
 }
 
+void QQuick3DModel::setReceivesReflections(bool receivesReflections)
+{
+    if (m_receivesReflections == receivesReflections)
+        return;
+
+    m_receivesReflections = receivesReflections;
+    emit receivesReflectionsChanged();
+    markDirty(ReflectionDirty);
+}
+
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
@@ -646,6 +669,9 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 
     if (m_dirtyAttributes & PropertyDirty)
         modelNode->m_depthBias = m_depthBias;
+
+    if (m_dirtyAttributes & ReflectionDirty)
+        modelNode->receivesReflections = m_receivesReflections;
 
     m_dirtyAttributes = dirtyAttribute;
 

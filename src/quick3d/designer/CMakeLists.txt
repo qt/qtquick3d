@@ -62,6 +62,8 @@ qt_copy_or_install(
         TextureSpecifics.qml
         View3DSection.qml
         View3DSpecifics.qml
+        ReflectionProbeSection.qml
+        ReflectionProbeSpecifics.qml
         quick3d.metainfo
     DESTINATION "${destination}"
 )

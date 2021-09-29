@@ -73,6 +73,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Joint, // Node
         Skeleton, // Node (A resource to the model node)
         ImportScene, // Node
+        ReflectionProbe,
         // Light nodes
         DirectionalLight = BaseType::Light | BaseType::Node,
         PointLight,

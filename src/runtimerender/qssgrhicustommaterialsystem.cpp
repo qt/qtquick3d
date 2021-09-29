@@ -177,7 +177,9 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           renderable.opacity,
                                                           globalProperties,
                                                           renderable.lights,
+                                                          renderable.reflectionProbe,
                                                           true,
+                                                          renderable.renderableFlags.receivesReflections(),
                                                           depthAdjust);
 }
 
@@ -190,7 +192,11 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     const QSSGRenderCustomMaterial &material,
                                                     QSSGLayerRenderData &layerData,
                                                     QRhiRenderPassDescriptor *renderPassDescriptor,
-                                                    int samples)
+                                                    int samples,
+                                                    QSSGRenderCamera *camera,
+                                                    int cubeFace,
+                                                    QMatrix4x4 *modelViewProjection,
+                                                    QSSGReflectionMapEntry *entry)
 {
     QSSGRhiContext *rhiCtx = context->rhiContext().data();
 
@@ -211,22 +217,34 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
     if (shaderPipeline) {
         QSSGRhiShaderResourceBindingList bindings;
-        QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layerData.layer,
+
+        QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ &layerData.layer,
                                                         &renderable.modelContext.model,
                                                         &material,
                                                         0,
-                                                        QSSGRhiDrawCallDataKey::Main }));
+                                                        QSSGRhiDrawCallDataKey::Main })
+                                              : rhiCtx->drawCallData({ &layerData.layer,
+                                                                       &renderable.modelContext.model,
+                                                                       entry, cubeFace + int(renderable.subset.offset << 3),
+                                                                       QSSGRhiDrawCallDataKey::Reflection }));
 
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-        updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, layerData, *layerData.camera, nullptr, nullptr);
+        if (!camera)
+            updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, layerData, *layerData.camera, nullptr, nullptr);
+        else
+            updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, layerData, *camera, nullptr, modelViewProjection);
         if (blendParticles)
             QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &renderable.modelContext.model, renderable.subset.offset);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         if (blendParticles)
             QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
-        const bool instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraDirection);
+        bool instancing = false;
+        if (!camera)
+            instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraDirection);
+        else
+            instancing = renderable.prepareInstancing(rhiCtx, camera->getScalingCorrectDirection());
 
         ps->samples = samples;
 
@@ -287,7 +305,19 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         if (blendParticles)
             samplerBindingsSpecified.setBit(shaderPipeline->bindingForTexture("qt_particleTexture"));
 
-        if (shaderPipeline->lightProbeTexture()) {
+        // Prioritize reflection texture over Light Probe texture because
+        // reflection texture also contains the irradiance and pre filtered
+        // values for the light probe.
+        if (featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe)) {
+            int reflectionSampler = shaderPipeline->bindingForTexture("qt_reflectionMap");
+            QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
+                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+            QRhiTexture* reflectionTexture = layerData.reflectionMapManager->reflectionMapEntry(renderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
+            if (reflectionSampler >= 0 && reflectionTexture) {
+                bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
+                samplerBindingsSpecified.setBit(reflectionSampler);
+            }
+        } else if (shaderPipeline->lightProbeTexture()) {
             int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
             if (binding >= 0) {
                 samplerBindingsSpecified.setBit(binding);
@@ -421,7 +451,11 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             dcd.bindings = bindings;
             srbChanged = true;
         }
-        renderable.rhiRenderData.mainPass.srb = srb;
+
+        if (cubeFace < 0)
+            renderable.rhiRenderData.mainPass.srb = srb;
+        else
+            renderable.rhiRenderData.reflectionPass.srb[cubeFace] = srb;
 
         const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
         if (dcd.pipeline
@@ -430,12 +464,23 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
                 && dcd.ps == *ps)
         {
-            renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
+            if (cubeFace < 0)
+                renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
+            else
+                renderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
         } else {
-            renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
-                                                                          renderPassDescriptor,
-                                                                          srb);
-            dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
+            if (cubeFace < 0) {
+                renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                              renderPassDescriptor,
+                                                                              srb);
+                dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
+            } else {
+                renderable.rhiRenderData.reflectionPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                                    renderPassDescriptor,
+                                                                                    srb);
+                dcd.pipeline = renderable.rhiRenderData.reflectionPass.pipeline;
+            }
+
             dcd.renderTargetDescriptionHash = pipelineKey.extra.renderTargetDescriptionHash;
             dcd.renderTargetDescription = pipelineKey.renderTargetDescription;
             dcd.ps = *ps;
@@ -500,10 +545,18 @@ void QSSGCustomMaterialSystem::applyRhiShaderPropertyValues(char *ubufData,
 void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                              QSSGSubsetRenderable &renderable,
                                              QSSGLayerRenderData &inData,
-                                             bool *needsSetViewport)
+                                             bool *needsSetViewport,
+                                             int cubeFace,
+                                             QSSGRhiGraphicsPipelineState *state)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
+
+    if (cubeFace >= 0) {
+        ps = renderable.rhiRenderData.reflectionPass.pipeline;
+        srb = renderable.rhiRenderData.reflectionPass.srb[cubeFace];
+    }
+
     if (!ps || !srb)
         return;
 
@@ -515,7 +568,10 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     cb->setShaderResources(srb);
 
     if (*needsSetViewport) {
-        cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+        if (!state)
+            cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+        else
+            cb->setViewport(state->viewport);
         *needsSetViewport = false;
     }
 

@@ -102,6 +102,7 @@ enum class Feature : FlagType
     FilmicTonemapping = (1 << 18) + 10,
     RGBELightProbe = (1 << 19) + 11,
     OpaqueDepthPrePass = (1 << 20) + 12,
+    ReflectionProbe = (1 << 21) + 13,
     LastFeature
 };
 

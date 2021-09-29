@@ -51,6 +51,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderreflectionprobe_p.h>
 
 #include <QtQuick3DUtils/private/qssginvasivelinkedlist_p.h>
 
@@ -80,7 +81,8 @@ enum class QSSGRenderableObjectFlag
     // to store in a renderable flag.
     // They will be recorded in shaderKey.
     HasAttributeMorphTarget = 1 << 20,
-    RequiresScreenTexture = 1 << 21
+    RequiresScreenTexture = 1 << 21,
+    ReceivesReflections = 1 << 22
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -108,6 +110,9 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
 
     void setReceivesShadows(bool inReceivesShadows) { setFlag(QSSGRenderableObjectFlag::ReceivesShadows, inReceivesShadows); }
     bool receivesShadows() const { return this->operator&(QSSGRenderableObjectFlag::ReceivesShadows); }
+
+    void setReceivesReflections(bool inReceivesReflections) { setFlag(QSSGRenderableObjectFlag::ReceivesReflections, inReceivesReflections); }
+    bool receivesReflections() const { return this->operator&(QSSGRenderableObjectFlag::ReceivesReflections); }
 
     void setHasAttributePosition(bool b) { setFlag(QSSGRenderableObjectFlag::HasAttributePosition, b); }
     bool hasAttributePosition() const { return this->operator&(QSSGRenderableObjectFlag::HasAttributePosition); }
@@ -202,6 +207,15 @@ struct QSSGShaderLight
     }
 };
 
+struct QSSGShaderReflectionProbe
+{
+    QVector3D probeBoxCenter;
+    QVector3D probeBoxMax;
+    QVector3D probeBoxMin;
+    bool enabled = false;
+    int parallaxCorrection = 0;
+};
+
 // Having this as a QVLA is beneficial mainly because QVector would need to
 // detach somewhere in QSSGLayerRenderPreparationData::prepareForRender so the
 // implicit sharing's benefits do not outweigh the cost of allocations in this case.
@@ -283,6 +297,9 @@ struct QSSGShadowMapEntry;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject
 {
+    int reflectionProbeIndex = -1;
+    float distanceFromReflectionProbe;
+    QSSGShaderReflectionProbe reflectionProbe;
     const QSSGRef<QSSGRenderer> &generator;
     const QSSGModelContext &modelContext;
     QSSGRenderSubset &subset;
@@ -312,6 +329,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb[6] = {};
         } shadowPass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb[6] = {};
+        } reflectionPass;
     } rhiRenderData;
 
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
@@ -371,6 +392,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
             QRhiGraphicsPipeline *pipeline = nullptr;
             QRhiShaderResourceBindings *srb[6] = {};
         } shadowPass;
+        struct {
+            QRhiGraphicsPipeline *pipeline = nullptr;
+            QRhiShaderResourceBindings *srb[6] = {};
+        } reflectionPass;
     } rhiRenderData;
 
     QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,

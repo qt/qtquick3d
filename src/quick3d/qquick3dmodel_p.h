@@ -96,6 +96,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QList<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
     Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
+    Q_PROPERTY(bool receivesReflections READ receivesReflections WRITE setReceivesReflections NOTIFY receivesReflectionsChanged REVISION(6, 3))
 
     QML_NAMED_ELEMENT(Model)
 
@@ -119,6 +120,8 @@ public:
     QQuick3DInstancing *instancing() const;
     QQuick3DNode *instanceRoot() const;
 
+    Q_REVISION(6, 3)  bool receivesReflections() const;
+
     static QString translateMeshSource(const QUrl &source, QObject *contextObject);
 
 public Q_SLOTS:
@@ -133,6 +136,7 @@ public Q_SLOTS:
     void setInstancing(QQuick3DInstancing *instancing);
     void setInstanceRoot(QQuick3DNode *instanceRoot);
     void setDepthBias(float bias);
+    Q_REVISION(6, 3)  void setReceivesReflections(bool receivesReflections);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -147,6 +151,7 @@ Q_SIGNALS:
     void instanceRootChanged();
     void morphTargetsChanged();
     void depthBiasChanged();
+    Q_REVISION(6, 3)  void receivesReflectionsChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -169,6 +174,7 @@ private:
         InstancesDirty =         0x00000080,
         MorphTargetsDirty =      0x00000100,
         PropertyDirty =          0x00000200,
+        ReflectionDirty =        0x00000400
     };
 
     QUrl m_source;
@@ -207,6 +213,7 @@ private:
     bool m_castsShadows = true;
     bool m_receivesShadows = true;
     bool m_pickable = false;
+    bool m_receivesReflections = false;
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;
 };

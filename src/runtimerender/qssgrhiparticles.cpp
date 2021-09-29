@@ -289,17 +289,25 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                 QSSGParticlesRenderable &renderable,
                                                 QSSGLayerRenderData &inData,
                                                 QRhiRenderPassDescriptor *renderPassDescriptor,
-                                                int samples)
+                                                int samples,
+                                                QSSGRenderCamera *camera,
+                                                int cubeFace,
+                                                QSSGReflectionMapEntry *entry)
 {
     const void *layerNode = &inData.layer;
     const void *node = &renderable.particles;
 
-    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, node,
-                                                    nullptr, 0, QSSGRhiDrawCallDataKey::Main }));
+    QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ layerNode, node,
+                                                    nullptr, 0, QSSGRhiDrawCallDataKey::Main })
+                                          : rhiCtx->drawCallData({ layerNode, node,
+                                                                   entry, cubeFace, QSSGRhiDrawCallDataKey::Reflection }));
     shaderPipeline->ensureUniformBuffer(&dcd.ubuf);
 
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-    updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, *inData.camera);
+    if (!camera)
+        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, *inData.camera);
+    else
+        updateUniformsForParticles(shaderPipeline, rhiCtx, ubufData, renderable, *camera);
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
     QSSGRhiParticleData &particleData = rhiCtx->particleData(&renderable.particles);
@@ -328,7 +336,10 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
 
     if (renderable.particles.m_depthSorting) {
         bool animatedParticles = renderable.particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Animated;
-        sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, *inData.cameraDirection, animatedParticles);
+        if (!camera)
+            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, *inData.cameraDirection, animatedParticles);
+        else
+            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, camera->getScalingCorrectDirection(), animatedParticles);
         uploadData = particleData.sortedData;
     } else {
         uploadData = particleBuffer.data();
@@ -433,7 +444,11 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
         dcd.bindings = bindings;
         srbChanged = true;
     }
-    renderable.rhiRenderData.mainPass.srb = srb;
+
+    if (cubeFace < 0)
+        renderable.rhiRenderData.mainPass.srb = srb;
+    else
+        renderable.rhiRenderData.reflectionPass.srb[cubeFace] = srb;
 
     const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
     if (dcd.pipeline
@@ -442,12 +457,22 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
             && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
             && dcd.ps == *ps)
     {
-        renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
+        if (cubeFace < 0)
+            renderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
+        else
+            renderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
     } else {
-        renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
-                                                                      renderPassDescriptor,
-                                                                      srb);
-        dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
+        if (cubeFace < 0) {
+            renderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                          renderPassDescriptor,
+                                                                          srb);
+            dcd.pipeline = renderable.rhiRenderData.mainPass.pipeline;
+        } else {
+            renderable.rhiRenderData.reflectionPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                          renderPassDescriptor,
+                                                                          srb);
+            dcd.pipeline = renderable.rhiRenderData.reflectionPass.pipeline;
+        }
         dcd.renderTargetDescriptionHash = pipelineKey.extra.renderTargetDescriptionHash;
         dcd.renderTargetDescription = pipelineKey.renderTargetDescription;
         dcd.ps = *ps;
@@ -502,10 +527,18 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
 void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                QSSGParticlesRenderable &renderable,
                                                QSSGLayerRenderData &inData,
-                                               bool *needsSetViewport)
+                                               bool *needsSetViewport,
+                                               int cubeFace,
+                                               QSSGRhiGraphicsPipelineState *state)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
+
+    if (cubeFace >= 0) {
+        ps = renderable.rhiRenderData.reflectionPass.pipeline;
+        srb = renderable.rhiRenderData.reflectionPass.srb[cubeFace];
+    }
+
     if (!ps || !srb)
         return;
 
@@ -516,7 +549,10 @@ void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     cb->setShaderResources(srb);
 
     if (needsSetViewport && *needsSetViewport) {
-        cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+        if (!state)
+            cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+        else
+            cb->setViewport(state->viewport);
         *needsSetViewport = false;
     }
     // draw triangle strip with 2 triangles N times

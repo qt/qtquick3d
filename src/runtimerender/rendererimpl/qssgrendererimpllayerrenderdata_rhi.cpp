@@ -146,7 +146,9 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           subsetRenderable.opacity,
                                                           generator->getLayerGlobalRenderProperties(),
                                                           subsetRenderable.lights,
+                                                          subsetRenderable.reflectionProbe,
                                                           subsetRenderable.renderableFlags.receivesShadows(),
+                                                          subsetRenderable.renderableFlags.receivesReflections(),
                                                           depthAdjust);
 }
 
@@ -307,12 +309,34 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                  QSSGLayerRenderData &inData,
                                  QSSGRenderableObject &inObject,
                                  QRhiRenderPassDescriptor *renderPassDescriptor,
-                                 int samples)
+                                 int samples,
+                                 QSSGRenderCamera *inCamera = nullptr,
+                                 QMatrix4x4 *alteredModelViewProjection = nullptr,
+                                 int cubeFace = -1,
+                                 QSSGReflectionMapEntry *entry = nullptr,
+                                 QSSGRhiGraphicsPipelineState *inPs = nullptr)
 {
+    QSSGRenderCamera *camera = inData.camera;
+    if (inCamera)
+        camera = inCamera;
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(&inData);
+    if (inPs)
+        ps = inPs;
     if (inObject.renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
-        const QSSGShaderFeatures &featureSet(inData.features);
+
+        QSSGShaderFeatures featureSet(inData.features);
+
+        if (cubeFace < 0 && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
+            featureSet.set(QSSGShaderFeatures::Feature::ReflectionProbe, true);
+
+        if (cubeFace >= 0) {
+            // Disable tonemapping for the reflection pass
+            featureSet.set(QSSGShaderFeatures::Feature::LinearTonemapping, false);
+            featureSet.set(QSSGShaderFeatures::Feature::AcesTonemapping, false);
+            featureSet.set(QSSGShaderFeatures::Feature::FilmicTonemapping, false);
+            featureSet.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping, false);
+        }
 
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
         if (shaderPipeline) {
@@ -328,12 +352,15 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             const void *modelNode = &subsetRenderable.modelContext.model;
             const bool blendParticles = subsetRenderable.generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
-            QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ layerNode, modelNode,
-                                                            &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
+            QSSGRhiDrawCallData &dcd(cubeFace >= 0 ? rhiCtx->drawCallData({ layerNode, modelNode,
+                                                                            entry, cubeFace + int(subsetRenderable.subset.offset << 3),
+                                                                            QSSGRhiDrawCallDataKey::Reflection })
+                                                   : rhiCtx->drawCallData({ layerNode, modelNode,
+                                                                            &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
 
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
+            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *camera, nullptr, alteredModelViewProjection);
             if (blendParticles)
                 QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -347,9 +374,11 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             fillTargetBlend(&ps->targetBlend, subsetRenderable.defaultMaterial().blendMode);
 
             ps->ia = subsetRenderable.subset.rhi.ia;
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraDirection);
+            QVector3D cameraDirection = inData.cameraDirection;
+            if (inCamera)
+                cameraDirection = inCamera->getScalingCorrectDirection();
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
-
 
             bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
 
@@ -400,8 +429,17 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                                texture, sampler);
                 }
 
-                // Light probe texture
-                if (shaderPipeline->lightProbeTexture()) {
+                // Prioritize reflection texture over Light Probe texture because
+                // reflection texture also contains the irradiance and pre filtered
+                // values for the light probe.
+                if (featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe)) {
+                    int reflectionSampler = shaderPipeline->bindingForTexture("qt_reflectionMap");
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
+                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                    QRhiTexture* reflectionTexture = inData.reflectionMapManager->reflectionMapEntry(subsetRenderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
+                    if (reflectionSampler >= 0 && reflectionTexture)
+                        bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
+                } else if (shaderPipeline->lightProbeTexture()) {
                     int binding = shaderPipeline->bindingForTexture("qt_lightProbe", int(QSSGRhiSamplerBindingHints::LightProbe));
                     if (binding >= 0) {
                         auto tiling = shaderPipeline->lightProbeTiling();
@@ -450,7 +488,11 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 dcd.bindings = bindings;
                 srbChanged = true;
             }
-            subsetRenderable.rhiRenderData.mainPass.srb = srb;
+
+            if (cubeFace >= 0)
+                subsetRenderable.rhiRenderData.reflectionPass.srb[cubeFace] = srb;
+            else
+                subsetRenderable.rhiRenderData.mainPass.srb = srb;
 
             const QSSGGraphicsPipelineStateKey pipelineKey = QSSGGraphicsPipelineStateKey::create(*ps, renderPassDescriptor, srb);
             if (dcd.pipeline
@@ -459,12 +501,22 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     && dcd.renderTargetDescription == pipelineKey.renderTargetDescription
                     && dcd.ps == *ps)
             {
-                subsetRenderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
+                if (cubeFace >= 0)
+                    subsetRenderable.rhiRenderData.reflectionPass.pipeline = dcd.pipeline;
+                else
+                    subsetRenderable.rhiRenderData.mainPass.pipeline = dcd.pipeline;
             } else {
-                subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
-                                                                                    renderPassDescriptor,
-                                                                                    srb);
-                dcd.pipeline = subsetRenderable.rhiRenderData.mainPass.pipeline;
+                if (cubeFace >= 0) {
+                    subsetRenderable.rhiRenderData.reflectionPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                                              renderPassDescriptor,
+                                                                                              srb);
+                    dcd.pipeline = subsetRenderable.rhiRenderData.reflectionPass.pipeline;
+                } else {
+                    subsetRenderable.rhiRenderData.mainPass.pipeline = rhiCtx->pipeline(pipelineKey,
+                                                                                        renderPassDescriptor,
+                                                                                        srb);
+                    dcd.pipeline = subsetRenderable.rhiRenderData.mainPass.pipeline;
+                }
                 dcd.renderTargetDescriptionHash = pipelineKey.extra.renderTargetDescriptionHash;
                 dcd.renderTargetDescription = pipelineKey.renderTargetDescription;
                 dcd.ps = *ps;
@@ -477,13 +529,28 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         inData.features.set(QSSGShaderFeatures::Feature::LightProbe, inData.layer.lightProbe || material.m_iblProbe);
 
-        customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, inData.features,
-                                                  material, inData, renderPassDescriptor, samples);
+        QSSGShaderFeatures featureSet(inData.features);
+        if (cubeFace < 0 && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
+            featureSet.set(QSSGShaderFeatures::Feature::ReflectionProbe, true);
+
+        if (cubeFace >= 0) {
+            // Disable tonemapping for the reflection pass
+            featureSet.set(QSSGShaderFeatures::Feature::LinearTonemapping, false);
+            featureSet.set(QSSGShaderFeatures::Feature::AcesTonemapping, false);
+            featureSet.set(QSSGShaderFeatures::Feature::FilmicTonemapping, false);
+            featureSet.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping, false);
+        }
+
+        customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, featureSet,
+                                                  material, inData, renderPassDescriptor, samples,
+                                                  inCamera, cubeFace, alteredModelViewProjection, entry);
     } else if (inObject.renderableFlags.isParticlesRenderable()) {
         QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
-        if (shaderPipeline)
-            QSSGParticleRenderer::rhiPrepareRenderable(shaderPipeline, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples);
+        if (shaderPipeline) {
+            QSSGParticleRenderer::rhiPrepareRenderable(shaderPipeline, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples,
+                                                       inCamera, cubeFace, entry);
+        }
     } else {
         Q_ASSERT(false);
     }
@@ -903,6 +970,37 @@ static BoxPoints computeFrustumBounds(const QSSGRenderCamera &inCamera)
                        inv.map(QVector3D(+1, +1, +1)), inv.map(QVector3D(-1, +1, +1)) };
 }
 
+static void setupCubeReflectionCameras(const QSSGRenderReflectionProbe *inProbe, QSSGRenderCamera inCameras[6])
+{
+    Q_ASSERT(inProbe != nullptr);
+
+    // setup light matrix
+    quint32 mapRes = 1 << inProbe->reflectionMapRes;
+    QRectF theViewport(0.0f, 0.0f, (float)mapRes, (float)mapRes);
+    static const QQuaternion rotOfs[6] {
+        QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(-QSSG_HALFPI), qRadiansToDegrees(QSSG_PI)),
+        QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(QSSG_HALFPI), qRadiansToDegrees(QSSG_PI)),
+        QQuaternion::fromEulerAngles(qRadiansToDegrees(QSSG_HALFPI), 0.f, 0.f),
+        QQuaternion::fromEulerAngles(qRadiansToDegrees(-QSSG_HALFPI), 0.f, 0.f),
+        QQuaternion::fromEulerAngles(0.f, qRadiansToDegrees(QSSG_PI), qRadiansToDegrees(-QSSG_PI)),
+        QQuaternion::fromEulerAngles(0.f, 0.f, qRadiansToDegrees(QSSG_PI)),
+    };
+
+    const QVector3D inProbePos = inProbe->getGlobalPos();
+
+    for (int i = 0; i < 6; ++i) {
+        inCameras[i].parent = nullptr;
+        inCameras[i].pivot = inProbe->pivot;
+        inCameras[i].clipNear = 1.0f;
+        inCameras[i].clipFar = qMax<float>(2.0f, 10000.0f);
+        inCameras[i].fov = qDegreesToRadians(90.f);
+
+        inCameras[i].position = inProbePos;
+        inCameras[i].rotation = rotOfs[i];
+        inCameras[i].calculateGlobalVariables(theViewport);
+    }
+}
+
 static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
                                     const QSSGRenderLight *inLight,
                                     QSSGRenderCamera &theCamera,
@@ -1087,6 +1185,97 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
         */
 }
 
+static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
+                             QSSGRenderLayer &layer,
+                             QSSGRhiGraphicsPipelineState *ps,
+                             QSSGRenderCamera &inCamera,
+                             const QSSGRef<QSSGRenderer> &renderer,
+                             QSSGReflectionMapEntry *entry = nullptr,
+                             int cubeFace = -1)
+{
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
+
+    const QSSGRenderImageTexture lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe,
+                                                                                                                    QSSGBufferManager::MipModeBsdf);
+    const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
+    if (hasValidTexture) {
+        if (cubeFace < 0)
+            layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
+
+        QSSGRhiShaderResourceBindingList bindings;
+
+        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
+                                                 QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
+        int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
+        const int ubufSize = 3 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 3x mat4 + 2 floats
+        bindings.addTexture(samplerBinding,
+                            QRhiShaderResourceBinding::FragmentStage,
+                            lightProbeTexture.m_texture, sampler);
+
+        QSSGRhiDrawCallData &dcd(cubeFace >= 0 ? rhiCtx->drawCallData({ &layer, nullptr, entry, cubeFace, QSSGRhiDrawCallDataKey::Reflection })
+                                               : rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
+
+        QRhi *rhi = rhiCtx->rhi();
+        if (!dcd.ubuf) {
+            dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+            dcd.ubuf->create();
+        }
+
+        const QMatrix4x4 &inverseProjection = inCamera.projection.inverted();
+        const QMatrix4x4 &viewMatrix = inCamera.globalTransform;
+        float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
+        const float exposure = layer.probeExposure;
+        // orientation
+        const QMatrix4x4 &rotationMatrix(layer.probeOrientation);
+
+        char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+        memcpy(ubufData, viewMatrix.constData(), 64);
+        memcpy(ubufData + 64, inverseProjection.constData(), 64);
+        memcpy(ubufData + 128, rotationMatrix.constData(), 64);
+        memcpy(ubufData + 192, &adjustY, 4);
+        memcpy(ubufData + 196, &exposure, 4);
+        dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+        bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+
+        if (cubeFace >= 0)
+            entry->m_skyBoxSrbs[cubeFace] = rhiCtx->srb(bindings);
+        else
+            layer.skyBoxSrb = rhiCtx->srb(bindings);
+
+        renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+    }
+
+    cb->debugMarkEnd();
+}
+
+static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
+                                                QSSGLayerRenderData &inData,
+                                                QSSGReflectionMapEntry *pEntry,
+                                                QSSGRhiGraphicsPipelineState *ps,
+                                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                                                QSSGRenderCamera &inCamera,
+                                                const QSSGRef<QSSGRenderer> &renderer,
+                                                int cubeFace)
+{
+    if (inData.layer.background == QSSGRenderLayer::Background::SkyBox && inData.layer.lightProbe)
+        rhiPrepareSkyBox(rhiCtx, inData.layer, ps, inCamera, renderer, pEntry, cubeFace);
+
+    for (const auto &handle : sortedOpaqueObjects) {
+        QSSGRenderableObject &inObject = *handle.obj;
+
+        QMatrix4x4 modelViewProjection;
+        if (inObject.renderableFlags.isDefaultMaterialMeshSubset() || inObject.renderableFlags.isCustomMaterialMeshSubset()) {
+            QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(inObject));
+            modelViewProjection = pEntry->m_viewProjection * renderable.globalTransform;
+        }
+
+        rhiPrepareRenderable(rhiCtx, inData, inObject, pEntry->m_rhiRenderPassDesc, 1,
+                             &inCamera, &modelViewProjection, cubeFace, pEntry, ps);
+    }
+}
+
 static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                             QSSGLayerRenderData &inData,
                                             QSSGShadowMapEntry *pEntry,
@@ -1184,6 +1373,13 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         }
     }
 }
+
+static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                                QSSGLayerRenderData &inData,
+                                QSSGRenderableObject &object,
+                                bool *needsSetViewport,
+                                int cubeFace = -1,
+                                QSSGRhiGraphicsPipelineState *state = nullptr);
 
 static void rhiRenderOneShadowMap(QSSGRhiContext *rhiCtx,
                                   QSSGRhiGraphicsPipelineState *ps,
@@ -1458,6 +1654,104 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     }
 }
 
+static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
+                               QSSGLayerRenderData &inData,
+                               QSSGRenderReflectionMap *reflectionMapManager,
+                               const QSSGRenderCamera &camera,
+                               const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
+                               const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
+                               const QSSGRef<QSSGRenderer> &renderer)
+{
+    QRhi *rhi = rhiCtx->rhi();
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    QSSGRhiGraphicsPipelineState ps;
+    ps.depthTestEnable = true;
+    ps.depthWriteEnable = true;
+    ps.blendEnable = true;
+
+    for (int i = 0, ie = reflectionProbes.count(); i != ie; ++i) {
+        QSSGReflectionMapEntry *pEntry = reflectionMapManager->reflectionMapEntry(i);
+        if (!pEntry)
+            continue;
+
+        if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame && !pEntry->m_needsRender)
+            continue;
+
+        Q_ASSERT(pEntry->m_rhiDepthStencil);
+        Q_ASSERT(pEntry->m_rhiCube);
+
+        const QSize size = pEntry->m_rhiCube->pixelSize();
+        ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
+
+        QSSGRenderCamera theCameras[6] { QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                         QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                         QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                         QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                         QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera},
+                                         QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera} };
+        setupCubeReflectionCameras(reflectionProbes[i], theCameras);
+        const bool swapYFaces = !rhi->isYUpInFramebuffer();
+        for (int face = 0; face < 6; ++face) {
+            theCameras[face].calculateViewProjectionMatrix(pEntry->m_viewProjection);
+
+            rhiPrepareResourcesForReflectionMap(rhiCtx, inData, pEntry, &ps,
+                                                reflectionPassObjects, theCameras[face], renderer, face);
+        }
+
+        for (int face = 0; face < 6; ++face) {
+            if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
+                face = pEntry->m_timeSliceFace;
+
+            int outFace = face;
+            // Faces are swapped similarly to shadow maps due to differences in backends
+            // Prefilter step handles correcting orientation differences in the final render
+            if (swapYFaces) {
+                if (outFace == 2)
+                    outFace = 3;
+                else if (outFace == 3)
+                    outFace = 2;
+            }
+            QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
+            cb->beginPass(rt, reflectionProbes[i]->clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
+
+            if (inData.layer.background == QSSGRenderLayer::Background::SkyBox
+                    && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
+                    && pEntry->m_skyBoxSrbs[face])
+            {
+                auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
+                Q_ASSERT(shaderPipeline);
+                ps.shaderPipeline = shaderPipeline.data();
+                QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[face];
+                QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+                renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, rpDesc, {});
+            }
+
+            bool needsSetViewport = true;
+            for (const auto &handle : reflectionPassObjects)
+                rhiRenderRenderable(rhiCtx, inData, *handle.obj, &needsSetViewport, face, &ps);
+
+            cb->endPass();
+            QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+
+            if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
+                break;
+        }
+
+        pEntry->renderMips(rhiCtx);
+
+        if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces) {
+            pEntry->m_timeSliceFace++;
+            if (pEntry->m_timeSliceFace >= 6)
+                pEntry->m_timeSliceFace = 0;
+        }
+
+        if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame)
+            pEntry->m_needsRender = false;
+    }
+}
+
 static bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex)
 {
     QRhi *rhi = rhiCtx->rhi();
@@ -1642,11 +1936,6 @@ static inline QRect correctViewportCoordinates(const QRectF &layerViewport, cons
     return QRect(layerViewport.x(), y, layerViewport.width(), layerViewport.height());
 }
 
-static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
-                                QSSGLayerRenderData &inData,
-                                QSSGRenderableObject &object,
-                                bool *needsSetViewport);
-
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
 {
@@ -1817,6 +2106,28 @@ void QSSGLayerRenderData::rhiPrepare()
             }
         }
 
+        // Reflections.
+        {
+            if (!reflectionMapManager)
+                reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
+
+            const TRenderableObjectList reflectionPassObjects = sortedOpaqueObjects + sortedTransparentObjects;
+
+            if (!reflectionPassObjects.isEmpty() || !reflectionProbes.isEmpty()) {
+                cb->debugMarkBegin(QByteArrayLiteral("Quick3D reflection map"));
+
+                rhiRenderReflectionMap(rhiCtx,
+                                   *this,
+                                   reflectionMapManager,
+                                   *camera,
+                                   reflectionProbes,
+                                   reflectionPassObjects,
+                                   renderer);
+
+                cb->debugMarkEnd();
+            }
+        }
+
         // Z (depth) pre-pass, if enabled, is part of the main render pass. (opaque + pre-pass transparent objects)
         // Prepare the data for it.
         bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
@@ -1847,57 +2158,9 @@ void QSSGLayerRenderData::rhiPrepare()
         ps->depthFunc = QRhiGraphicsPipeline::LessOrEqual;
         ps->blendEnable = false;
 
-        if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) {
-            cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
+        if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+            rhiPrepareSkyBox(rhiCtx, layer, ps, *camera, renderer);
 
-            const QSSGRenderImageTexture lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe,
-                                                                                                                            QSSGBufferManager::MipModeBsdf);
-            const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
-            if (hasValidTexture) {
-                layer.skyBoxIsRgbe8 = lightProbeTexture.m_flags.isRgbe8();
-
-                QSSGRhiShaderResourceBindingList bindings;
-
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
-                                                         QRhiSampler::Repeat, QRhiSampler::ClampToEdge });
-                int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-                const int ubufSize = 3 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 3x mat4 + 2 floats
-                bindings.addTexture(samplerBinding,
-                                    QRhiShaderResourceBinding::FragmentStage,
-                                    lightProbeTexture.m_texture, sampler);
-
-                QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::SkyBox }));
-
-                QRhi *rhi = rhiCtx->rhi();
-                if (!dcd.ubuf) {
-                    dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                    dcd.ubuf->create();
-                }
-
-                const QMatrix4x4 &inverseProjection = camera->projection.inverted();
-                const QMatrix4x4 &viewMatrix = camera->globalTransform;
-                float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
-                const float exposure = layer.probeExposure;
-                // orientation
-                const QMatrix4x4 &rotationMatrix(layer.probeOrientation);
-
-                char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                memcpy(ubufData, viewMatrix.constData(), 64);
-                memcpy(ubufData + 64, inverseProjection.constData(), 64);
-                memcpy(ubufData + 128, rotationMatrix.constData(), 64);
-                memcpy(ubufData + 192, &adjustY, 4);
-                memcpy(ubufData + 196, &exposure, 4);
-                dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-
-                bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
-
-                layer.skyBoxSrb = rhiCtx->srb(bindings);
-
-                renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-            }
-
-            cb->debugMarkEnd();
-        }
         const bool layerEnableDepthTest = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest);
         bool depthTestEnableDefault = false;
         bool depthWriteEnableDefault = false;
@@ -2055,13 +2318,21 @@ void QSSGLayerRenderData::rhiPrepare()
 static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                 QSSGLayerRenderData &inData,
                                 QSSGRenderableObject &object,
-                                bool *needsSetViewport)
+                                bool *needsSetViewport,
+                                int cubeFace,
+                                QSSGRhiGraphicsPipelineState *state)
 {
     if (object.renderableFlags.isDefaultMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
 
         QRhiGraphicsPipeline *ps = subsetRenderable.rhiRenderData.mainPass.pipeline;
         QRhiShaderResourceBindings *srb = subsetRenderable.rhiRenderData.mainPass.srb;
+
+        if (cubeFace >= 0) {
+            ps = subsetRenderable.rhiRenderData.reflectionPass.pipeline;
+            srb = subsetRenderable.rhiRenderData.reflectionPass.srb[cubeFace];
+        }
+
         if (!ps || !srb)
             return;
 
@@ -2074,7 +2345,10 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         cb->setShaderResources(srb);
 
         if (*needsSetViewport) {
-            cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+            if (!state)
+                cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
+            else
+                cb->setViewport(state->viewport);
             *needsSetViewport = false;
         }
 
@@ -2099,10 +2373,10 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     } else if (object.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
-        customMaterialSystem.rhiRenderRenderable(rhiCtx, subsetRenderable, inData, needsSetViewport);
+        customMaterialSystem.rhiRenderRenderable(rhiCtx, subsetRenderable, inData, needsSetViewport, cubeFace, state);
     } else if (object.renderableFlags.isParticlesRenderable()) {
         QSSGParticlesRenderable &renderable(static_cast<QSSGParticlesRenderable &>(object));
-        QSSGParticleRenderer::rhiRenderRenderable(rhiCtx, renderable, inData, needsSetViewport);
+        QSSGParticleRenderer::rhiRenderRenderable(rhiCtx, renderable, inData, needsSetViewport, cubeFace, state);
     } else {
         Q_ASSERT(false);
     }

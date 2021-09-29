@@ -50,6 +50,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderreflectionmap_p.h>
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
@@ -196,6 +197,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     QVector<QSSGRenderableNodeEntry> renderableNodes;
     QVector<QSSGRenderCamera *> cameras;
     QVector<QSSGRenderLight *> lights;
+    QVector<QSSGRenderReflectionProbe *> reflectionProbes;
     QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
     QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
 
@@ -225,6 +227,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     bool particlesNotSupportedWarningShown = false;
 
     QSSGRenderShadowMap *shadowMapManager = nullptr;
+    QSSGRenderReflectionMap *reflectionMapManager = nullptr;
 
     QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
     virtual ~QSSGLayerRenderPreparationData();
@@ -274,6 +277,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     void prepareResourceLoaders();
 
     virtual void prepareForRender();
+    // Helper function used during prepareForRender
+    void prepareReflectionProbesForRender();
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.

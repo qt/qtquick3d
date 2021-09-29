@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDER_MODEL_H
-#define QSSG_RENDER_MODEL_H
+#ifndef QSSG_RENDER_REFLECTION_PROBE_H
+#define QSSG_RENDER_REFLECTION_PROBE_H
 
 //
 //  W A R N I N G
@@ -43,50 +42,35 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderinstancetable_p.h>
-
-#include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtCore/QVector>
+#include <QColor>
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGRenderDefaultMaterial;
-struct QSSGParticleBuffer;
-class QSSGBufferManager;
-
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderReflectionProbe : public QSSGRenderNode
 {
-    QVector<QSSGRenderGraphObject *> materials;
-    QVector<QSSGRenderGraphObject *> morphTargets;
-    QSSGRenderGeometry *geometry = nullptr;
-    QSSGRenderPath meshPath;
-    QSSGRenderSkeleton *skeleton = nullptr;
-    QVector<QMatrix4x4> inverseBindPoses;
-    float m_depthBias = 0.0f;
-    bool castsShadows = true;
-    bool receivesShadows = true;
-    bool skinningDirty = false;
-    bool skeletonContainsNonJointNodes = false;
-    QVector<QMatrix4x4> boneTransforms;
-    QVector<QMatrix3x3> boneNormalTransforms;
-    QSSGRenderInstanceTable *instanceTable = nullptr;
-    int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }
-    bool instancing() const { return instanceTable;}
+    enum class ReflectionRefreshMode
+    {
+        FirstFrame,
+        EveryFrame
+    };
 
-    QSSGParticleBuffer *particleBuffer = nullptr;
-    QMatrix4x4 particleMatrix;
-    bool hasTransparency = false;
+    enum class ReflectionTimeSlicing
+    {
+        None,
+        AllFacesAtOnce,
+        IndividualFaces
+    };
 
-    QVector<float> morphWeights;
-    QVector<quint32> morphAttributes;
+    quint32 reflectionMapRes = 8;
+    QColor clearColor = Qt::transparent;
+    ReflectionRefreshMode refreshMode = ReflectionRefreshMode::FirstFrame;
+    ReflectionTimeSlicing timeSlicing = ReflectionTimeSlicing::None;
+    bool parallaxCorrection = false;
+    QVector3D boxSize { 0.0, 0.0, 0.0 };
 
-    bool receivesReflections = false;
-
-    QSSGRenderModel();
+    explicit QSSGRenderReflectionProbe();
 };
+
 QT_END_NAMESPACE
 
 #endif

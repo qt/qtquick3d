@@ -117,6 +117,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     int &ioCameraCount,
                                     QVector<QSSGRenderLight *> &outLights,
                                     int &ioLightCount,
+                                    QVector<QSSGRenderReflectionProbe *> &outReflectionProbes,
+                                    int &ioReflectionProbeCount,
                                     quint32 &ioDFSIndex,
                                     QVector<QSSGRenderSkeleton*> &dirtySkeletons)
 {
@@ -167,6 +169,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
     } else if (QSSGRenderGraphObject::isLight(inNode.type)) {
         collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
+    } else if (inNode.type == QSSGRenderGraphObject::Type::ReflectionProbe) {
+        collectNode(static_cast<QSSGRenderReflectionProbe *>(&inNode), outReflectionProbes, ioReflectionProbeCount);
     }
 
     for (auto &theChild : inNode.children)
@@ -177,6 +181,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                 ioCameraCount,
                                 outLights,
                                 ioLightCount,
+                                outReflectionProbes,
+                                ioReflectionProbeCount,
                                 ioDFSIndex,
                                 dirtySkeletons);
 }
@@ -199,6 +205,7 @@ QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &
 QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData()
 {
     delete shadowMapManager;
+    delete reflectionMapManager;
 
     if (renderer)
         renderer->removeLastFrameLayer(this);
@@ -874,6 +881,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
         renderableFlagsForModel.setPickable(canModelBePickable);
         renderableFlagsForModel.setCastsShadows(inModel.castsShadows);
         renderableFlagsForModel.setReceivesShadows(inModel.receivesShadows);
+        renderableFlagsForModel.setReceivesReflections(inModel.receivesReflections);
 
         // With the RHI we need to be able to tell the material shader
         // generator to not generate vertex input attributes that are not
@@ -1232,6 +1240,53 @@ void QSSGLayerRenderPreparationData::prepareResourceLoaders()
         bufferManager->processResourceLoader(static_cast<QSSGRenderResourceLoader *>(resourceLoader));
 }
 
+void QSSGLayerRenderPreparationData::prepareReflectionProbesForRender()
+{
+    const auto probeCount = reflectionProbes.size();
+    for (int probeIdx = 0; probeIdx < probeCount; probeIdx++) {
+        if (!reflectionMapManager)
+            reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
+
+        reflectionProbes[probeIdx]->calculateGlobalVariables();
+        reflectionMapManager->addReflectionMapEntry(probeIdx, *reflectionProbes[probeIdx]);
+    }
+
+    TRenderableObjectList combinedList = transparentObjects + opaqueObjects;
+    for (int i = 0; i < probeCount; i++) {
+        QSSGRenderReflectionProbe* probe = reflectionProbes[i];
+        QVector3D probeExtent = probe->boxSize / 2;
+        QSSGBounds3 probeBound = QSSGBounds3::centerExtents(probe->getGlobalPos(), probeExtent);
+        for (QSSGRenderableObjectHandle handle : combinedList) {
+            if (!handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections)
+                    || handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::Particles))
+                continue;
+
+            QSSGSubsetRenderable* renderableObj = static_cast<QSSGSubsetRenderable*>(handle.obj);
+            QSSGBounds3 nodeBound = renderableObj->bounds;
+            QVector4D vmin(nodeBound.minimum, 1.0);
+            QVector4D vmax(nodeBound.maximum, 1.0);
+            vmin = renderableObj->globalTransform * vmin;
+            vmax = renderableObj->globalTransform * vmax;
+            nodeBound.minimum = vmin.toVector3D();
+            nodeBound.maximum = vmax.toVector3D();
+            if (probeBound.intersects(nodeBound)) {
+                QVector3D nodeBoundCenter = nodeBound.center();
+                QVector3D probeBoundCenter = probeBound.center();
+                float distance = nodeBoundCenter.distanceToPoint(probeBoundCenter);
+                if (renderableObj->reflectionProbeIndex == -1 || distance < renderableObj->distanceFromReflectionProbe) {
+                    renderableObj->reflectionProbeIndex = i;
+                    renderableObj->distanceFromReflectionProbe = distance;
+                    renderableObj->reflectionProbe.parallaxCorrection = probe->parallaxCorrection;
+                    renderableObj->reflectionProbe.probeBoxCenter = probeBoundCenter;
+                    renderableObj->reflectionProbe.probeBoxMax = probeExtent;
+                    renderableObj->reflectionProbe.probeBoxMin = probeExtent * -1;
+                    renderableObj->reflectionProbe.enabled = true;
+                }
+            }
+        }
+    }
+}
+
 static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
 {
     // check if the node is parent of the lightScope
@@ -1336,6 +1391,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
             int renderableNodeCount = 0;
             int cameraNodeCount = 0;
             int lightNodeCount = 0;
+            int reflectionProbeCount = 0;
             quint32 dfsIndex = 0;
             // First model using skeleton clears the dirty flag so we need another mechanism
             // to tell to the other models the skeleton is dirty.
@@ -1348,6 +1404,8 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                                         cameraNodeCount,
                                         lights,
                                         lightNodeCount,
+                                        reflectionProbes,
+                                        reflectionProbeCount,
                                         dfsIndex,
                                         dirtySkeletons);
             dirtySkeletons.clear();
@@ -1506,6 +1564,8 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                                                                 clippingFrustum,
                                                                 thePrepResult.flags);
             wasDataDirty = wasDataDirty || renderablesDirty;
+
+            prepareReflectionProbesForRender();
         }
 
         features.set(QSSGShaderFeatures::Feature::Ssao, thePrepResult.flags.requiresSsaoPass());
@@ -1532,6 +1592,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
     getTransparentRenderableObjects();
 
     getCameraDirection();
+
 }
 
 void QSSGLayerRenderPreparationData::resetForFrame()

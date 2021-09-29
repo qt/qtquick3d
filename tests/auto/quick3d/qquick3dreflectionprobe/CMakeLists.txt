@@ -1,0 +1,16 @@
+# Generated from qquick3dreflectionprobe.pro.
+
+#####################################################################
+## qquick3dreflectionprobe Test:
+#####################################################################
+
+qt_internal_add_test(tst_qquick3dreflectionprobe
+    SOURCES
+        tst_qquick3dreflectionprobe.cpp
+    PUBLIC_LIBRARIES
+        Qt::Quick3DPrivate
+        Qt::Quick3DRuntimeRenderPrivate
+)
+
+#### Keys ignored in scope 1:.:.:qquick3dreflectionprobe.pro:<TRUE>:
+# TEMPLATE = "app"

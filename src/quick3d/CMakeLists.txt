@@ -41,6 +41,7 @@ qt_internal_add_qml_module(Quick3D
         qquick3dprincipledmaterial.cpp qquick3dprincipledmaterial_p.h
         qquick3dquaternionanimation.cpp qquick3dquaternionanimation_p.h
         qquick3dquaternionutils.cpp qquick3dquaternionutils_p.h
+        qquick3dreflectionprobe.cpp qquick3dreflectionprobe_p.h
         qquick3drenderstats.cpp qquick3drenderstats_p.h
         qquick3drepeater.cpp qquick3drepeater_p.h
         qquick3dresourceloader.cpp qquick3dresourceloader_p.h

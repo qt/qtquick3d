@@ -642,4 +642,23 @@ MetaInfo {
             requiredImport: "QtQuick3D"
         }
     }
+    Type {
+        name: "QtQuick3D.ReflectionProbe"
+        icon: "images/cube16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+        }
+
+        ItemLibraryEntry {
+            name: "Reflection Probe"
+            category: "Qt Quick 3D"
+            libraryIcon: "images/cube.png"
+            version: "6.3"
+            requiredImport: "QtQuick3D"
+        }
+    }
 }

@@ -551,13 +551,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     const bool isOpaqueDepthPrePass = featureSet.isSet(QSSGShaderFeatures::Feature::OpaqueDepthPrePass);
     bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
     bool enableSSAO = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
+    bool hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
     bool enableBumpNormal = normalImage || bumpImage;
     bool enableParallaxMapping = heightImage != nullptr;
     const bool enableClearcoat = materialAdapter->isClearcoatEnabled();
     const bool enableTransmission = materialAdapter->isTransmissionEnabled();
     specularLightingEnabled |= specularAmountImage != nullptr;
 
-
+    specularLightingEnabled |= hasReflectionProbe;
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
 
     // Morphing
@@ -724,9 +725,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (hasLighting) {
         if (includeSSAOVars)
             fragmentShader.addInclude("ssao.glsllib");
-
-        if (hasIblProbe)
-            fragmentShader.addInclude("sampleProbe.glsllib");
 
         fragmentShader.addFunction("sampleLightVars");
         if (materialAdapter->isPrincipled())
@@ -1262,13 +1260,68 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // multiplied by the alpha from the material color and/or the vertex colors.
         fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * qt_aoFactor, qt_objectOpacity * qt_diffuseColor.a);\n";
 
-        if (hasIblProbe) {
+        // Occlusion Map
+        if (occlusionImage) {
+            if (hasIblProbe || hasReflectionProbe) {
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
+                const bool hasIdentityMap = identityImages.contains(occlusionImage);
+                if (hasIdentityMap)
+                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
+                else
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
+                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
+                fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
+                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+            }
+        }
+
+        if (hasReflectionProbe) {
             vertexShader.generateWorldNormal(inKey);
+            fragmentShader.addInclude("sampleReflectionProbe.glsllib");
+
+            fragmentShader << "    vec3 qt_reflectionDiffuse = vec3(0.0);\n";
+            if (materialAdapter->isPrincipled()) {
+                fragmentShader << "    qt_reflectionDiffuse = qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuseReflection(qt_reflectionMap, qt_world_normal).rgb;\n";
+            } else {
+                fragmentShader << "    qt_reflectionDiffuse = qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuseReflection(qt_reflectionMap, qt_world_normal).rgb;\n";
+            }
+
+            if (specularLightingEnabled) {
+                fragmentShader << "    vec3 qt_reflectionSpecular = vec3(0.0);\n";
+                if (materialAdapter->isPrincipled()) {
+                    fragmentShader << "    qt_reflectionSpecular = "
+                                   << "qt_specularTint * qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_specularAmount, qt_roughnessAmount).rgb;\n";
+                } else {
+                    fragmentShader << "    qt_reflectionSpecular = qt_specularAmount * "
+                                   << "qt_specularTint * qt_sampleGlossyReflection(qt_reflectionMap, qt_world_normal, qt_view_vector, qt_roughnessAmount).rgb;\n";
+                }
+            }
+            if (enableClearcoat) {
+                fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyReflectionPrincipled(qt_reflectionMap, qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
+            }
+
+            if (occlusionImage) {
+                fragmentShader << "    qt_reflectionDiffuse = mix(qt_reflectionDiffuse, qt_reflectionDiffuse * qt_ao, qt_material_properties3.x);\n";
+                if (specularLightingEnabled)
+                    fragmentShader << "    qt_reflectionSpecular = mix(qt_reflectionSpecular, qt_reflectionSpecular * qt_ao, qt_material_properties3.x);\n";
+                if (enableClearcoat)
+                   fragmentShader << "     qt_iblClearcoat = mix(qt_iblClearcoat, qt_iblClearcoat * qt_ao, qt_material_properties3.x);\n";
+            }
+
+            fragmentShader << "    global_diffuse_light.rgb += qt_reflectionDiffuse;\n";
+            if (specularLightingEnabled)
+                fragmentShader << "    global_specular_light += qt_reflectionSpecular;\n";
+            if (enableClearcoat)
+                fragmentShader << "    qt_global_clearcoat += qt_iblClearcoat;\n";
+        } else if (hasIblProbe) {
+            vertexShader.generateWorldNormal(inKey);
+            fragmentShader.addInclude("sampleProbe.glsllib");
             if (materialAdapter->isPrincipled()) {
                 fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * (1.0 - qt_specularAmount) * qt_sampleDiffuse(qt_world_normal).rgb;\n";
             } else {
                 fragmentShader << "    vec3 qt_iblDiffuse = qt_diffuseColor.rgb * qt_aoFactor * qt_sampleDiffuse(qt_world_normal).rgb;\n";
             }
+
             if (specularLightingEnabled) {
                 if (materialAdapter->isPrincipled()) {
                     fragmentShader << "    vec3 qt_iblSpecular = "
@@ -1282,21 +1335,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "   vec3 qt_iblClearcoat = qt_sampleGlossyPrincipled(qt_clearcoatNormal, qt_view_vector, qt_clearcoatF0, qt_clearcoatRoughness).rgb;\n";
             }
 
-            // Occlusion Map
             if (occlusionImage) {
-                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
-                const bool hasIdentityMap = identityImages.contains(occlusionImage);
-                if (hasIdentityMap)
-                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
-                else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
-                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
-                fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
-                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
                 fragmentShader << "    qt_iblDiffuse = mix(qt_iblDiffuse, qt_iblDiffuse * qt_ao, qt_material_properties3.x);\n";
-                fragmentShader << "    qt_iblSpecular = mix(qt_iblSpecular, qt_iblSpecular * qt_ao, qt_material_properties3.x);\n";
+                if (specularLightingEnabled)
+                    fragmentShader << "    qt_iblSpecular = mix(qt_iblSpecular, qt_iblSpecular * qt_ao, qt_material_properties3.x);\n";
                 if (enableClearcoat)
-                    fragmentShader << "    qt_iblClearcoat = mix(qt_iblClearcoat, qt_iblClearcoat * qt_ao, qt_material_properties3.x);\n";
+                   fragmentShader << "     qt_iblClearcoat = mix(qt_iblClearcoat, qt_iblClearcoat * qt_ao, qt_material_properties3.x);\n";
             }
 
             fragmentShader << "    global_diffuse_light.rgb += qt_iblDiffuse;\n";
@@ -1500,7 +1544,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            float inOpacity,
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
                                                            const QSSGShaderLightList &inLights,
+                                                           const QSSGShaderReflectionProbe &reflectionProbe,
                                                            bool receivesShadows,
+                                                           bool receivesReflections,
                                                            const QVector2D *shadowDepthAdjust)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
@@ -1734,6 +1780,13 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders->setUniform(ubufData, "qt_lightProbeProperties", emptyProps, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
         shaders->setLightProbeTexture(nullptr);
+    }
+
+    if (receivesReflections && reflectionProbe.enabled) {
+        shaders->setUniform(ubufData, "qt_reflectionProbeBoxCenter", &reflectionProbe.probeBoxCenter, 3 * sizeof(float), &cui.reflectionProbeBoxCenter);
+        shaders->setUniform(ubufData, "qt_reflectionProbeBoxMin", &reflectionProbe.probeBoxMin, 3 * sizeof(float), &cui.reflectionProbeBoxMin);
+        shaders->setUniform(ubufData, "qt_reflectionProbeBoxMax", &reflectionProbe.probeBoxMax, 3 * sizeof(float), &cui.reflectionProbeBoxMax);
+        shaders->setUniform(ubufData, "qt_reflectionProbeCorrection", &reflectionProbe.parallaxCorrection, sizeof(int), &cui.reflectionProbeCorrection);
     }
 
     const QVector3D emissiveColor = materialAdapter->emissiveColor();

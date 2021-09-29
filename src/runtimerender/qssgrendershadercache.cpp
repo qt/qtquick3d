@@ -84,7 +84,8 @@ static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_HEJLDAWSON_TONEMAPPING", QSSGShaderFeatures::Feature::HejlDawsonTonemapping },
     { "QSSG_ENABLE_FILMIC_TONEMAPPING", QSSGShaderFeatures::Feature::FilmicTonemapping },
     { "QSSG_ENABLE_RGBE_LIGHT_PROBE", QSSGShaderFeatures::Feature::RGBELightProbe },
-    { "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS", QSSGShaderFeatures::Feature::OpaqueDepthPrePass }
+    { "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS", QSSGShaderFeatures::Feature::OpaqueDepthPrePass },
+    { "QSSG_ENABLE_REFLECTION_PROBE", QSSGShaderFeatures::Feature::ReflectionProbe }
 };
 
 static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");

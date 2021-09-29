@@ -75,6 +75,15 @@ void tst_QQuick3DModel::testProperties()
     QVERIFY(!model.receivesShadows());
     QVERIFY(!node->receivesShadows);
 
+    model.setReceivesReflections(true);
+    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
+    QVERIFY(model.receivesReflections());
+    QVERIFY(node->receivesReflections);
+    model.setReceivesReflections(false);
+    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
+    QVERIFY(!model.receivesReflections());
+    QVERIFY(!node->receivesReflections);
+
     model.setPickable(true);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
     QVERIFY(model.pickable());

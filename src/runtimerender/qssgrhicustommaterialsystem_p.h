@@ -63,6 +63,7 @@ struct QSSGRenderableImage;
 struct QSSGRenderLayer;
 struct QSSGRenderLight;
 struct QSSGRenderCamera;
+struct QSSGReflectionMapEntry;
 class QRhiTexture;
 
 
@@ -120,14 +121,20 @@ public:
                               const QSSGRenderCustomMaterial &material,
                               QSSGLayerRenderData &layerData,
                               QRhiRenderPassDescriptor *renderPassDescriptor,
-                              int samples);
+                              int samples,
+                              QSSGRenderCamera *camera = nullptr,
+                              int cubeFace = -1,
+                              QMatrix4x4 *modelViewProjection = nullptr,
+                              QSSGReflectionMapEntry *entry = nullptr);
     void applyRhiShaderPropertyValues(char *ubufData,
                                       const QSSGRenderCustomMaterial &inMaterial,
                                       const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                              QSSGSubsetRenderable &renderable,
                              QSSGLayerRenderData &inData,
-                             bool *needsSetViewport);
+                             bool *needsSetViewport,
+                             int cubeFace,
+                             QSSGRhiGraphicsPipelineState *state);
 };
 
 QT_END_NAMESPACE

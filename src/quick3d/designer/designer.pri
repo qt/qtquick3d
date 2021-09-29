@@ -60,7 +60,8 @@ AUX_QML_FILES += \
     $$PWD/Loader3DSpecifics.qml \
     $$PWD/Repeater3DSection.qml \
     $$PWD/Repeater3DSpecifics.qml \
-
+    $$PWD/ReflectionProbeSection.qml \
+    $$PWD/ReflectionProbeSpecifics.qml \
 
 
 AUX_QML_FILES += \

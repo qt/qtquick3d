@@ -307,6 +307,10 @@ public:
         int shadowDepthAdjustIdx = -1;
         int pointSizeIdx = -1;
         int morphWeightsIdx = -1;
+        int reflectionProbeBoxCenter = -1;
+        int reflectionProbeBoxMax = -1;
+        int reflectionProbeBoxMin = -1;
+        int reflectionProbeCorrection = -1;
 
         struct ImageIndices
         {
@@ -665,7 +669,8 @@ struct QSSGRhiDrawCallDataKey
         SkyBox,
         ProgressiveAA,
         Effects,
-        Item2D
+        Item2D,
+        Reflection
     };
     const void *layer;
     const void *model;
