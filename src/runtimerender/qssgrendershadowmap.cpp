@@ -44,7 +44,7 @@ QSSGRenderShadowMap::QSSGRenderShadowMap(const QSSGRenderContextInterface &inCon
 QSSGRenderShadowMap::~QSSGRenderShadowMap()
 {
     for (QSSGShadowMapEntry &entry : m_shadowMapList)
-        entry.destroyRhiResources(m_context.rhiContext().data());
+        entry.destroyRhiResources();
 
     m_shadowMapList.clear();
 }
@@ -91,22 +91,22 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
     if (pEntry) {
         if (pEntry->m_rhiDepthMap && mode == ShadowMapModes::CUBE) {
             // previously VSM now CUBE
-            pEntry->destroyRhiResources(m_context.rhiContext().data());
+            pEntry->destroyRhiResources();
             setupForRhiDepthCube(theManager, pEntry, width, height, rhiFormat);
         } else if (pEntry->m_rhiDepthCube && mode != ShadowMapModes::CUBE) {
             // previously CUBE now VSM
-            pEntry->destroyRhiResources(m_context.rhiContext().data());
+            pEntry->destroyRhiResources();
             setupForRhiDepth(theManager, pEntry, width, height, rhiFormat);
         } else if (pEntry->m_rhiDepthMap) {
             // VSM before and now, see if size has changed
             if (pEntry->m_rhiDepthMap->pixelSize() != QSize(width, height)) {
-                pEntry->destroyRhiResources(m_context.rhiContext().data());
+                pEntry->destroyRhiResources();
                 setupForRhiDepth(theManager, pEntry, width, height, rhiFormat);
             }
         } else if (pEntry->m_rhiDepthCube) {
             // CUBE before and now, see if size has changed
             if (pEntry->m_rhiDepthCube->pixelSize() != QSize(width, height)) {
-                pEntry->destroyRhiResources(m_context.rhiContext().data());
+                pEntry->destroyRhiResources();
                 setupForRhiDepthCube(theManager, pEntry, width, height, rhiFormat);
             }
         }
@@ -285,7 +285,7 @@ QSSGShadowMapEntry QSSGShadowMapEntry::withRhiDepthCubeMap(quint32 lightIdx,
     return e;
 }
 
-void QSSGShadowMapEntry::destroyRhiResources(QSSGRhiContext *rhiContext)
+void QSSGShadowMapEntry::destroyRhiResources()
 {
     delete m_rhiDepthMap;
     m_rhiDepthMap = nullptr;
