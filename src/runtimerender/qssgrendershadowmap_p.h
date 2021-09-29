@@ -78,7 +78,7 @@ struct QSSGShadowMapEntry
                                                   QRhiTexture *cubeCopy,
                                                   QRhiRenderBuffer *depthStencil);
 
-    void destroyRhiResources(QSSGRhiContext *rhiCtx);
+    void destroyRhiResources();
 
     quint32 m_lightIndex; ///< the light index it belongs to
     ShadowMapModes m_shadowMapMode; ///< shadow map method
