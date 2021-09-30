@@ -157,7 +157,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
     if (image.uvCoordsGenerated)
         return;
 
-    const auto &names = imageStringTable[int(image.m_mapType)];
+    const auto &names = imageStringTable[int(image.m_imageStringTableIndex)];
     char textureCoordName[TEXCOORD_VAR_LEN];
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     if (!forceFragmentShader) {
@@ -204,7 +204,7 @@ static void generateImageUVSampler(QSSGMaterialVertexPipeline &vertexGenerator,
                                    char (&outString)[TEXCOORD_VAR_LEN],
                                    quint8 uvSet = 0)
 {
-    const auto &names = imageStringTable[int(image.m_mapType)];
+    const auto &names = imageStringTable[int(image.m_imageStringTableIndex)];
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     // NOTE: Actually update the uniform name here
     textureCoordVariableName(outString, uvSet);
@@ -477,7 +477,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     QSSGRenderableImage *heightImage = nullptr;
 
     QSSGRenderableImage *baseImage = nullptr;
-
+    // Used to check if Principled Material roughness, metalness, opacity and
+    // occlusion maps share the same sampler or not.
+    QHash<QRhiTexture*, int> effectiveImageStringIndex;
     // Use shared texcoord when transforms are identity
     QVector<QSSGRenderableImage *> identityImages;
     char imageFragCoords[TEXCOORD_VAR_LEN];
@@ -524,6 +526,24 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             opacityImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Height) {
             heightImage = img;
+        }
+    }
+
+    // In the case of using Principled Material, there are some maps that may use the
+    // same texture. So instead of creating a sampler for each map, the maps can share the
+    // same sampler. The loop goes through the images and make them have the same index
+    // that access the imageStringTable.
+    for (QSSGRenderableImage *img = firstImage; img != nullptr; img = img->m_nextImage) {
+        if ((img->m_mapType == QSSGRenderableImage::Type::Roughness
+             || img->m_mapType == QSSGRenderableImage::Type::Metalness
+             || img->m_mapType == QSSGRenderableImage::Type::Occlusion
+             || img->m_mapType == QSSGRenderableImage::Type::Opacity)
+                && materialAdapter->isPrincipled()) {
+            auto it = effectiveImageStringIndex.constFind(img->m_texture.m_texture);
+            if (it != effectiveImageStringIndex.cend())
+                img->m_imageStringTableIndex = *it;
+            else
+                effectiveImageStringIndex.insert(img->m_texture.m_texture, img->m_imageStringTableIndex);
         }
     }
 
@@ -809,8 +829,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         else
             generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *opacityImage, enableParallaxMapping, opacityImage->m_imageNode.m_indexUV);
 
-        const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Opacity)];
+        const auto &names = imageStringTable[opacityImage->m_imageStringTableIndex];
         const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OpacityChannel];
+        if (opacityImage->m_imageStringTableIndex != int(opacityImage->m_mapType))
+            fragmentShader << "    //opacity shares the sampler with " << names.imageSampler << "\n";
         fragmentShader << "    qt_objectOpacity *= texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
     }
 
@@ -843,7 +865,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             else
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *metalnessImage, enableParallaxMapping, metalnessImage->m_imageNode.m_indexUV);
 
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Metalness)];
+            const auto &names = imageStringTable[metalnessImage->m_imageStringTableIndex];
+            if (metalnessImage->m_imageStringTableIndex != int(metalnessImage->m_mapType))
+                fragmentShader << "    //metalness shares the sampler with " << names.imageSampler << "\n";
             fragmentShader << "    float qt_sampledMetalness = texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
             fragmentShader << "    qt_metalnessAmount = clamp(qt_metalnessAmount * qt_sampledMetalness, 0.0, 1.0);\n";
@@ -920,7 +944,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             else
                 generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *roughnessImage, enableParallaxMapping, roughnessImage->m_imageNode.m_indexUV);
 
-            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Roughness)];
+            const auto &names = imageStringTable[roughnessImage->m_imageStringTableIndex];
+            if (roughnessImage->m_imageStringTableIndex != int(roughnessImage->m_mapType))
+                fragmentShader << "    //roughness shares the sampler with " << names.imageSampler << "\n";
             fragmentShader << "    qt_roughnessAmount *= texture2D(" << names.imageSampler << ", "
                            << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
         }
@@ -1161,7 +1187,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
                 else
                     generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
-                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
+                const auto &names = imageStringTable[occlusionImage->m_imageStringTableIndex];
+                if (occlusionImage->m_imageStringTableIndex != int(occlusionImage->m_mapType))
+                    fragmentShader << "    //occlusion shares the sampler with " << names.imageSampler << "\n";
                 fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
                                << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
                 fragmentShader << "    qt_iblDiffuse = mix(qt_iblDiffuse, qt_iblDiffuse * qt_ao, qt_material_properties3.x);\n";
