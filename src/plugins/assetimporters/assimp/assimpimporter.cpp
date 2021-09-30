@@ -1368,12 +1368,12 @@ namespace {
 
 QString convertToQString(const aiVector3D &vec)
 {
-    return QString("Qt.vector3d(%1, %2, %3)").arg(vec.x, vec.y, vec.z);
+    return QString("Qt.vector3d(%1, %2, %3)").arg(vec.x).arg(vec.y).arg(vec.z);
 }
 
 QString convertToQString(const aiQuaternion &q)
 {
-    return QString("Qt.quaternion(%1, %2, %3, %4)").arg(q.w, q.x, q.y, q.z);
+    return QString("Qt.quaternion(%1, %2, %3, %4)").arg(q.w).arg(q.x).arg(q.y).arg(q.z);
 }
 
 }
