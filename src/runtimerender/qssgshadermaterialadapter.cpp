@@ -900,4 +900,14 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     return { result, md };
 }
 
+QList<QByteArrayView> QtQuick3DEditorHelpers::CustomMaterial::preprocessorVars()
+{
+    QList<QByteArrayView> k;
+    k.reserve(std::size(qssg_var_subst_tab));
+    for (const auto &v : qssg_var_subst_tab)
+        k.push_back(v.builtin);
+    return k;
+}
+
 QT_END_NAMESPACE
+

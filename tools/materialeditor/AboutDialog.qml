@@ -27,40 +27,32 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RUNTIME_UTILITIES_H
-#define QSSG_RUNTIME_UTILITIES_H
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Window
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Dialog {
+    id: root
+    title: qsTr("About Material Editor")
+    modal: true
+    dim: false
+    focus: true
+    standardButtons: Dialog.Ok
+    width: Math.max(implicitWidth, 340)
 
-#include <QtQuick3DAssetUtils/private/qtquick3dassetutilsglobal_p.h>
+    ColumnLayout {
+        spacing: 12
 
-QT_BEGIN_NAMESPACE
+        Label {
+            text: qsTr("Material Editor %1").arg(Qt.application.version)
+            font.bold: true
+            font.pixelSize: Qt.application.font.pixelSize * 1.1
+            Layout.fillWidth: true
+        }
 
-class QQuick3DNode;
-class QQuick3DObject;
-namespace QSSGSceneDesc
-{
-struct Scene;
-struct Node;
+        Label {
+            text: qsTr("Copyright (C) 2021 The Qt Company Ltd.")
+        }
+    }
 }
-
-namespace QSSGRuntimeUtils
-{
-
-Q_QUICK3DASSETUTILS_EXPORT QQuick3DNode *createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene);
-Q_QUICK3DASSETUTILS_EXPORT void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverse = true);
-
-}
-
-QT_END_NAMESPACE
-
-#endif // QSSG_RUNTIME_UTILITIES_H

@@ -27,55 +27,46 @@
 **
 ****************************************************************************/
 
-#include "qssgscenedesc_p.h"
+#ifndef UNIFORMMODEL_H
+#define UNIFORMMODEL_H
+
+#include <QAbstractTableModel>
+#include <QtQml/qqmlregistration.h>
+#include "custommaterial.h"
 
 QT_BEGIN_NAMESPACE
 
-bool QSSGSceneDesc::PropertyCall::set(QQuick3DObject &, const char *, const void *) { return false; }
-bool QSSGSceneDesc::PropertyCall::get(const QQuick3DObject &, const void *[]) const { return false; }
-
-static inline quint16 getNextNodeId(QSSGSceneDesc::Scene &scene)
+class UniformModel : public QAbstractListModel
 {
-    /* root node uses the default value 0 */
-    return ++scene.nodeId;
-}
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    using UniformType = CustomMaterial::Uniform::Type;
+    Q_ENUM(UniformType)
+    using UniformTable = CustomMaterial::UniformTable;
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Node &parent, QSSGSceneDesc::Node &node)
-{
-    Q_ASSERT(parent.scene);
-    node.scene = parent.scene;
-    node.id = getNextNodeId(*parent.scene);
+    enum UniformModelRoles {
+        Type = Qt::UserRole + 1,
+        Name,
+        Value
+    };
 
-    if (QSSGRenderGraphObject::isResource(node.runtimeType) || node.nodeType == Node::Type::Mesh || node.nodeType == Node::Type::Skeleton)
-        node.scene->resources.push_back(&node);
+    explicit UniformModel(QObject *parent = nullptr);
 
-    parent.children.push_back(node);
-}
+    void setModelData(UniformTable *data);
+    int rowCount(const QModelIndex & = QModelIndex()) const final;
+    QVariant data(const QModelIndex &index, int role) const final;
+    QHash<int, QByteArray> roleNames() const final;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) final;
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &node)
-{
-    if (scene.root) {
-        addNode(*scene.root, node);
-    } else {
-        Q_ASSERT(node.id == 0);
-        node.scene = &scene;
-        scene.root = &node;
-    }
-}
+    Q_INVOKABLE bool insertRow(int rowIndex, int type, const QString &id);
+    Q_INVOKABLE void removeRow(int rowIndex, int rows = 1);
 
-void QSSGSceneDesc::Scene::reset()
-{
-    id.clear();
-    nodeId = 0;
-    root = nullptr;
-    resources.clear();
-    meshStorage.clear();
-    allocator.reset();
-}
-
-QMetaType QSSGSceneDesc::listViewMetaType()
-{
-    return QMetaType::fromType<QSSGSceneDesc::ListView>();
-}
+private:
+    bool validateUniformName(const QString &uniformName);
+    UniformTable *m_uniformTable = nullptr;
+};
 
 QT_END_NAMESPACE
+
+#endif // UNIFORMMODEL_H

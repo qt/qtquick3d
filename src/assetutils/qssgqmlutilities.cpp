@@ -482,6 +482,7 @@ template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Node>() 
 
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::DefaultMaterial>() { return "DefaultMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial>() { return "PrincipledMaterial"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::CustomMaterial>() { return "CustomMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::OrthographicCamera>() { return "OrthographicCamera"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::PerspectiveCamera>() { return "PerspectiveCamera"; }
 
@@ -507,6 +508,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::PrincipledMaterial>();
     case RuntimeType::DefaultMaterial:
         return qmlElementName<RuntimeType::DefaultMaterial>();
+    case RuntimeType::CustomMaterial:
+        return qmlElementName<RuntimeType::CustomMaterial>();
     case RuntimeType::Image:
         return qmlElementName<RuntimeType::Image>();
     case RuntimeType::TextureData:
@@ -529,6 +532,116 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Joint>();
     default:
         return "UNKNOWN_TYPE";
+    }
+}
+
+enum QMLBasicType
+{
+    Bool,
+    Dobule,
+    Int,
+    List,
+    Real,
+    String,
+    Url,
+    Var,
+    Color,
+    Date,
+    Font,
+    Mat44,
+    Point,
+    Quaternion,
+    Rect,
+    Size,
+    Vector2D,
+    Vector3D,
+    Vector4D,
+    Unknown_Count
+};
+
+static constexpr QByteArrayView qml_basic_types[] {
+    "bool",
+    "double",
+    "int",
+    "list",
+    "real",
+    "string",
+    "url",
+    "var",
+    "color",
+    "date",
+    "font",
+    "matrix4x4",
+    "point",
+    "quaternion",
+    "rect",
+    "size",
+    "vector2d",
+    "vector3d",
+    "vector4d"
+};
+
+static_assert(std::size(qml_basic_types) == QMLBasicType::Unknown_Count, "Missing type?");
+
+static QByteArrayView typeName(QMetaType mt)
+{
+    switch (mt.id()) {
+    case QMetaType::Bool:
+        return qml_basic_types[QMLBasicType::Bool];
+    case QMetaType::Char:
+    case QMetaType::SChar:
+    case QMetaType::UChar:
+    case QMetaType::Char16:
+    case QMetaType::Char32:
+    case QMetaType::QChar:
+    case QMetaType::Short:
+    case QMetaType::UShort:
+    case QMetaType::Int:
+    case QMetaType::UInt:
+    case QMetaType::Long:
+    case QMetaType::ULong:
+    case QMetaType::LongLong:
+    case QMetaType::ULongLong:
+        return qml_basic_types[QMLBasicType::Int];
+    case QMetaType::Float:
+    case QMetaType::Double:
+        return qml_basic_types[QMLBasicType::Real];
+    case QMetaType::QByteArray:
+    case QMetaType::QString:
+        return qml_basic_types[QMLBasicType::String];
+    case QMetaType::QDate:
+    case QMetaType::QTime:
+    case QMetaType::QDateTime:
+        return qml_basic_types[QMLBasicType::Date];
+    case QMetaType::QUrl:
+        return qml_basic_types[QMLBasicType::Url];
+    case QMetaType::QRect:
+    case QMetaType::QRectF:
+        return qml_basic_types[QMLBasicType::Rect];
+    case QMetaType::QSize:
+    case QMetaType::QSizeF:
+        return qml_basic_types[QMLBasicType::Size];
+    case QMetaType::QPoint:
+    case QMetaType::QPointF:
+        return qml_basic_types[QMLBasicType::Point];
+    case QMetaType::QVariant:
+        return qml_basic_types[QMLBasicType::Var];
+    case QMetaType::QColor:
+        return qml_basic_types[QMLBasicType::Color];
+    case QMetaType::QMatrix4x4:
+        return qml_basic_types[QMLBasicType::Mat44];
+    case QMetaType::QVector2D:
+        return qml_basic_types[QMLBasicType::Vector2D];
+    case QMetaType::QVector3D:
+        return qml_basic_types[QMLBasicType::Vector3D];
+    case QMetaType::QVector4D:
+        return qml_basic_types[QMLBasicType::Vector4D];
+    case QMetaType::QQuaternion:
+        return qml_basic_types[QMLBasicType::Quaternion];
+    case QMetaType::QFont:
+        return qml_basic_types[QMLBasicType::Font];
+    default:
+        return qml_basic_types[QMLBasicType::Var];
     }
 }
 
@@ -750,6 +863,8 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                     return { property.name, QLatin1String(qmlElementName<RuntimeType::PrincipledMaterial>()) + QLatin1Char('.') + asString(value) };
                 case RuntimeType::DefaultMaterial:
                     return { property.name, QLatin1String(qmlElementName<RuntimeType::DefaultMaterial>()) + QLatin1Char('.') + asString(value) };
+                case RuntimeType::CustomMaterial:
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::CustomMaterial>()) + QLatin1Char('.') + asString(value) };
                 default:
                     Q_UNREACHABLE();
                 }
@@ -862,11 +977,13 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
             if (const auto urlView = reinterpret_cast<const UrlView *>(value.dptr)) {
                 // We need to adjust source url(s) as those should contain the canonical path
+                const auto &path = urlView->view;
                 if (target.runtimeType == RuntimeType::Image) {
-                    const auto &path = urlView->view;
                     const auto sourcePath = copyTextureAsset(path, output.outdir);
                     return { property.name, toQuotedString(sourcePath) };
                 }
+
+                return { property.name, toQuotedString(QString::fromUtf8(path)) };
             }
         }
     }
@@ -891,9 +1008,13 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     bool ok = false;
     for (; it != end; ++it) {
         const auto ret = valueToQml(node, (*it), output, &ok);
-        if (!ok)
-            indent(output) << comment();
-        indent(output) << ret.first << ": " << ret.second << "\n";
+        if (it->type != Property::Type::Dynamic) {
+            if (!ok)
+                indent(output) << comment();
+            indent(output) << ret.first << ": " << ret.second << "\n";
+        } else if (ok && it->type == Property::Type::Dynamic) {
+            indent(output) << "property " << typeName(it->value.mt).toByteArray() << ' ' << ret.first << ": " << ret.second << "\n";
+        }
     }
 }
 
@@ -905,7 +1026,7 @@ static void writeQml(const QSSGSceneDesc::Node &transform, OutputContext &output
     writeNodeProperties(transform, output);
 }
 
-static void writeQml(const QSSGSceneDesc::Material &material, OutputContext &output)
+void writeQml(const QSSGSceneDesc::Material &material, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(material.nodeType == QSSGSceneDesc::Model::Type::Material);
@@ -913,6 +1034,8 @@ static void writeQml(const QSSGSceneDesc::Material &material, OutputContext &out
         indent(output) << qmlElementName<Material::RuntimeType::DefaultMaterial>() << blockBegin(output);
     } else if (material.runtimeType == Model::RuntimeType::PrincipledMaterial) {
         indent(output) << qmlElementName<Material::RuntimeType::PrincipledMaterial>() << blockBegin(output);
+    } else if (material.runtimeType == Material::RuntimeType::CustomMaterial) {
+        indent(output) << qmlElementName<Material::RuntimeType::CustomMaterial>() << blockBegin(output);
     } else {
         Q_UNREACHABLE();
     }
@@ -1329,6 +1452,45 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
     Q_UNUSED(parent)
     Q_UNUSED(useBinaryKeyframes)
 #endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
+}
+
+void writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream)
+{
+    static const auto writeResourceProperties = [](const QSSGSceneDesc::Node &node, const char *uniformName, OutputContext &output) {
+        if (node.name.size() > 0) {
+            const auto typeName = node.name.toByteArray();
+            indent(output) << "property " << typeName << " " << uniformName << ": " << typeName << " {\n";
+            writeNodeProperties(node, output);
+            indent(output) << "}\n";
+        }
+    };
+
+    using namespace QSSGSceneDesc;
+    if (node.runtimeType == Material::RuntimeType::CustomMaterial) {
+        OutputContext output { stream, QDir(), 0, OutputContext::Resource };
+        writeImportHeader(output);
+        writeQml(static_cast<const Material &>(node), output);
+        // Resources, if any, are written out as properties on the component
+        if (node.scene && node.scene->resources.size()) {
+            const auto &resources = node.scene->resources;
+            QSSGQmlScopedIndent scopedIndent(output);
+            for (auto res : resources) {
+                auto it = node.properties.begin();
+                const auto end = node.properties.end();
+                for (; it != end; ++it) {
+                    if (it->value.dptr == res)
+                        break;
+                }
+
+                if (it != end && it.m_obj->name)
+                    writeResourceProperties(*res, it.m_obj->name, output);
+            }
+        }
+
+        indent(output) << blockEnd(output);
+    } else {
+        Q_UNREACHABLE(); // Only implemented for Custom material at this point.
+    }
 }
 
 }

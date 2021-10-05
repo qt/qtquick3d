@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>ShaderEditor.qml</file>
+        <file>EditorView.qml</file>
+        <file>Preview.qml</file>
+        <file>PreviewControls.qml</file>
+        <file>OrbitCameraController.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>FrostedGlass.qml</file>
+        <file>AboutDialog.qml</file>
+        <file>MaterialPropertiesPane.qml</file>
+        <file>SaveChangesDialog.qml</file>
+        <file>UniformManagerPane.qml</file>
+    </qresource>
+</RCC>

@@ -56,15 +56,22 @@ class QQuick3DShaderUtilsShader;
 class QQmlContext;
 
 namespace QSSGShaderUtils {
-QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey);
+
+using MetaTypeList = QList<QMetaType::Type>;
+using ResolveFunction = bool (*)(const QUrl &url, const QQmlContext *context, QByteArray &shaderData, QByteArray &shaderPathKey);
+Q_QUICK3D_EXPORT void setResolveFunction(ResolveFunction fn);
+Q_QUICK3D_EXPORT QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey);
+Q_QUICK3D_EXPORT MetaTypeList supportedMetatypes();
+
 
 template<QMetaType::Type>
 struct ShaderType
 {
 };
 
-QByteArray uniformTypeName(QMetaType type);
-QSSGRenderShaderDataType uniformType(QMetaType type);
+Q_QUICK3D_EXPORT QByteArray uniformTypeName(QMetaType type);
+Q_QUICK3D_EXPORT QByteArray uniformTypeName(QSSGRenderShaderDataType type);
+Q_QUICK3D_EXPORT QSSGRenderShaderDataType uniformType(QMetaType type);
 }
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
@@ -76,7 +83,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
     QML_NAMED_ELEMENT(TextureInput)
 
 public:
-    QQuick3DShaderUtilsTextureInput() = default;
+    explicit QQuick3DShaderUtilsTextureInput(QObject *p = nullptr);
     virtual ~QQuick3DShaderUtilsTextureInput() = default;
     QQuick3DTexture *m_texture = nullptr;
     bool enabled = true;

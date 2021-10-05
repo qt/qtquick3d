@@ -1,0 +1,181 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef MATERIALADAPTER_H
+#define MATERIALADAPTER_H
+
+#include <QtCore/qstring.h>
+#include <QtCore/qvariant.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
+
+#include <QtQml/qqmlregistration.h>
+
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
+
+#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
+#include <QtQuick3D/private/qquick3dmodel_p.h>
+
+#include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qstringlistmodel.h>
+
+#include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
+
+#include "custommaterial.h"
+#include "buildmessage.h"
+#include "uniformmodel.h"
+
+QT_BEGIN_NAMESPACE
+
+class MaterialAdapter : public QObject
+{
+    Q_OBJECT
+
+    using CullMode = QQuick3DCustomMaterial::CullMode;
+    using DepthDrawMode = QQuick3DCustomMaterial::DepthDrawMode;
+    using ShadingMode = QQuick3DCustomMaterial::ShadingMode;
+    using BlendMode = QQuick3DCustomMaterial::BlendMode;
+
+    Q_PROPERTY(QQuick3DCustomMaterial * material READ material NOTIFY materialChanged)
+    Q_PROPERTY(QQuick3DObject * resourceRoot READ resourceRoot WRITE setResourceRoot NOTIFY resourceRootChanged)
+    Q_PROPERTY(QString fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
+    Q_PROPERTY(QString vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
+    Q_PROPERTY(ShaderBuildMessage vertexStatus READ vertexStatus NOTIFY vertexStatusChanged)
+    Q_PROPERTY(ShaderBuildMessage fragmentStatus READ fragmentStatus NOTIFY fragmentStatusChanged)
+    Q_PROPERTY(UniformModel * uniformModel READ uniformModel WRITE setUniformModel NOTIFY uniformModelChanged)
+    Q_PROPERTY(bool unsavedChanges READ unsavedChanges WRITE setUnsavedChanges NOTIFY unsavedChangesChanged)
+    Q_PROPERTY(QUrl materialSaveFile READ materialSaveFile WRITE setMaterialSaveFile NOTIFY materialSaveFileChanged)
+
+    Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
+    Q_PROPERTY(DepthDrawMode depthDrawMode READ depthDrawMode WRITE setDepthDrawMode NOTIFY depthDrawModeChanged)
+    Q_PROPERTY(ShadingMode shadingMode READ shadingMode WRITE setShadingMode NOTIFY shadingModeChanged)
+    Q_PROPERTY(BlendMode sourceBlend READ srcBlend WRITE setSrcBlend NOTIFY srcBlendChanged)
+    Q_PROPERTY(BlendMode destinationBlend READ dstBlend WRITE setDstBlend NOTIFY dstBlendChanged)
+
+    QML_ELEMENT
+public:
+    explicit MaterialAdapter(QObject *parent = nullptr);
+
+    QQuick3DCustomMaterial *material() const;
+    QString fragmentShader() const;
+    void setFragmentShader(const QString &newFragmentShader);
+
+    QString vertexShader() const;
+    void setVertexShader(const QString &newVertexShader);
+
+    UniformModel *uniformModel() const;
+
+    ShaderBuildMessage vertexStatus() const;
+    ShaderBuildMessage fragmentStatus() const;
+
+    bool unsavedChanges() const;
+    void setUnsavedChanges(bool newUnsavedChanges);
+
+    const QUrl &materialSaveFile() const;
+    void setMaterialSaveFile(const QUrl &newMaterialSaveFile);
+
+    QQuick3DObject *resourceRoot() const;
+    void setResourceRoot(QQuick3DObject *newResourceNode);
+
+    CullMode cullMode() const;
+    void setCullMode(CullMode newCullMode);
+
+    DepthDrawMode depthDrawMode() const;
+    void setDepthDrawMode(DepthDrawMode newDepthDrawMode);
+
+    ShadingMode shadingMode() const;
+    void setShadingMode(ShadingMode newShadingMode);
+
+    BlendMode srcBlend() const;
+    void setSrcBlend(BlendMode newSourceBlend);
+
+    BlendMode dstBlend() const;
+    void setDstBlend(BlendMode newDestinationBlend);
+
+    void setUniformModel(UniformModel *newUniformModel);
+
+    Q_INVOKABLE QString getSupportedImageFormatsFilter() const;
+
+public Q_SLOTS:
+    void importFragmentShader(const QUrl &shaderFile);
+    void importVertexShader(const QUrl &shaderFile);
+    bool save();
+    bool saveMaterial(const QUrl &materialFile);
+    bool loadMaterial(const QUrl &materialFile);
+    bool exportQmlComponent(const QUrl &componentFile, const QString &vertName, const QString &fragName);
+    void reset();
+
+Q_SIGNALS:
+    void materialChanged();
+    void fragmentShaderChanged();
+    void vertexShaderChanged();
+    void vertexStatusChanged();
+    void uniformModelChanged();
+    void fragmentStatusChanged();
+    void unsavedChangesChanged();
+    void materialSaveFileChanged();
+
+    void errorOccurred();
+    void postMaterialSaved();
+    void resourceRootChanged();
+    void cullModeChanged();
+    void depthDrawModeChanged();
+    void shadingModeChanged();
+    void srcBlendChanged();
+    void dstBlendChanged();
+
+private:
+    static void updateShader(QQuick3DMaterial &target);
+    static void bakerStatusCallback(const QByteArray &descKey, QtQuick3DEditorHelpers::ShaderBaker::Status status, const QString &err, QShader::Stage stage);
+    void updateMaterialDescription();
+
+    QString importShader(const QUrl &shaderFile);
+    QFile resolveFileFromUrl(const QUrl &fileUrl);
+    QPointer<QQuick3DCustomMaterial> m_material;
+    UniformModel *m_uniformModel = nullptr;
+    QUrl m_vertexUrl;
+    QUrl m_fragUrl;
+    QString m_fragmentShader;
+    QString m_vertexShader;
+    ShaderBuildMessage m_vertexMsg;
+    ShaderBuildMessage m_fragmentMsg;
+    bool m_ready = false;
+    bool m_unsavedChanges = true;
+    QUrl m_materialSaveFile;
+    QPointer<QQuick3DObject> m_resourceRoot;
+    CustomMaterial m_materialDescr;
+    CustomMaterial::UniformTable uniformTable;
+    CustomMaterial::Properties m_properties;
+    DepthDrawMode m_depthDrawMode;
+};
+
+QT_END_NAMESPACE
+
+#endif // MATERIALADAPTER_H

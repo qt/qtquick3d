@@ -1101,4 +1101,10 @@ bool QSSGRhiContext::shaderDebuggingEnabled()
     return isSet;
 }
 
+bool QSSGRhiContext::editorMode()
+{
+    static const bool isSet = (qEnvironmentVariableIntValue("QT_QUICK3D_EDITORMODE") != 0);
+    return isSet;
+}
+
 QT_END_NAMESPACE

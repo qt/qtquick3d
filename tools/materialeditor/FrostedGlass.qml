@@ -27,40 +27,51 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RUNTIME_UTILITIES_H
-#define QSSG_RUNTIME_UTILITIES_H
+import QtQuick
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Item {
+    id: root
+    required property Item backgroundItem
+    property alias range: glassEffect.range
+    property alias blur: glassEffect.blur
+    property alias color: glassEffect.color
+    property alias backgroundRect: backgroundSourceImage.sourceRect
 
-#include <QtQuick3DAssetUtils/private/qtquick3dassetutilsglobal_p.h>
+    ShaderEffectSource {
+        anchors.fill: parent
+        id: backgroundSourceImage
+        sourceRect: Qt.rect(0, 0, width, height)
+        sourceItem: targetView
+        visible: false
+    }
 
-QT_BEGIN_NAMESPACE
 
-class QQuick3DNode;
-class QQuick3DObject;
-namespace QSSGSceneDesc
-{
-struct Scene;
-struct Node;
+    ShaderEffectSource {
+        anchors.fill: parent
+        id: noiseImageSource
+        sourceRect: Qt.rect(0, 0, width, height)
+        sourceItem: noiseImage
+        visible: false
+    }
+
+    Image {
+        anchors.fill: parent
+        id: noiseImage
+        fillMode: Image.Tile
+        horizontalAlignment: Image.AlignLeft
+        verticalAlignment: Image.AlignTop
+        visible: false
+        source: "qrc:/assets/images/noise.png"
+    }
+
+    ShaderEffect {
+        id: glassEffect
+        property variant sourceTex: backgroundSourceImage
+        property variant noiseTex: noiseImageSource
+        property real range: 0.25;
+        property real blur: 0.05;
+        property color color: "white"
+        anchors.fill: parent
+        fragmentShader: "qrc:/assets/shaders/frostedGlass.frag.qsb"
+    }
 }
-
-namespace QSSGRuntimeUtils
-{
-
-Q_QUICK3DASSETUTILS_EXPORT QQuick3DNode *createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene);
-Q_QUICK3DASSETUTILS_EXPORT void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverse = true);
-
-}
-
-QT_END_NAMESPACE
-
-#endif // QSSG_RUNTIME_UTILITIES_H

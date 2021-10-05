@@ -260,8 +260,21 @@ QT_BEGIN_NAMESPACE
 
 namespace QSSGShaderUtils {
 
+ResolveFunction resolveShaderOverride = nullptr;
+
+void setResolveFunction(ResolveFunction fn)
+{
+    resolveShaderOverride = fn;
+}
+
 QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteArray &shaderPathKey)
 {
+    if (resolveShaderOverride) {
+        QByteArray shaderData;
+        if (resolveShaderOverride(fileUrl, context, shaderData, shaderPathKey))
+            return shaderData;
+    }
+
     if (!shaderPathKey.isEmpty())
         shaderPathKey.append('>');
 
@@ -278,6 +291,25 @@ QByteArray resolveShader(const QUrl &fileUrl, const QQmlContext *context, QByteA
 
     return QByteArray();
 }
+
+// These are the QMetaTypes that we convert into uniforms.
+static constexpr QMetaType::Type qssg_metatype_list[] {
+        QMetaType::Double,
+        QMetaType::Bool,
+        QMetaType::QVector2D,
+        QMetaType::QVector3D,
+        QMetaType::QVector4D,
+        QMetaType::Int,
+        QMetaType::QColor,
+        QMetaType::QSize,
+        QMetaType::QSizeF,
+        QMetaType::QPoint,
+        QMetaType::QPointF,
+        QMetaType::QRect,
+        QMetaType::QRectF,
+        QMetaType::QQuaternion,
+        QMetaType::QMatrix4x4
+};
 
 template<>
 struct ShaderType<QMetaType::Double>
@@ -388,6 +420,7 @@ QByteArray uniformTypeName(QMetaType type)
 {
     switch (type.id()) {
     case QMetaType::Double:
+    case QMetaType::Float:
         return ShaderType<QMetaType::Double>::name();
     case QMetaType::Bool:
         return ShaderType<QMetaType::Bool>::name();
@@ -422,10 +455,49 @@ QByteArray uniformTypeName(QMetaType type)
     }
 }
 
+QByteArray uniformTypeName(QSSGRenderShaderDataType type)
+{
+    switch (type) {
+    case QSSGRenderShaderDataType::Float:
+        return ShaderType<QMetaType::Double>::name();
+    case QSSGRenderShaderDataType::Boolean:
+        return ShaderType<QMetaType::Bool>::name();
+    case QSSGRenderShaderDataType::Integer:
+        return ShaderType<QMetaType::Int>::name();
+    case QSSGRenderShaderDataType::Vec2:
+        return ShaderType<QMetaType::QVector2D>::name();
+    case QSSGRenderShaderDataType::Vec3:
+        return ShaderType<QMetaType::QVector3D>::name();
+    case QSSGRenderShaderDataType::Vec4:
+        return ShaderType<QMetaType::QVector4D>::name();
+    case QSSGRenderShaderDataType::Rgba:
+        return ShaderType<QMetaType::QColor>::name();
+    case QSSGRenderShaderDataType::Size:
+        return ShaderType<QMetaType::QSize>::name();
+    case QSSGRenderShaderDataType::SizeF:
+        return ShaderType<QMetaType::QSizeF>::name();
+    case QSSGRenderShaderDataType::Point:
+        return ShaderType<QMetaType::QPoint>::name();
+    case QSSGRenderShaderDataType::PointF:
+        return ShaderType<QMetaType::QPointF>::name();
+    case QSSGRenderShaderDataType::Rect:
+        return ShaderType<QMetaType::QRect>::name();
+    case QSSGRenderShaderDataType::RectF:
+        return ShaderType<QMetaType::QRectF>::name();
+    case QSSGRenderShaderDataType::Quaternion:
+        return ShaderType<QMetaType::QQuaternion>::name();
+    case QSSGRenderShaderDataType::Matrix4x4:
+        return ShaderType<QMetaType::QMatrix4x4>::name();
+    default:
+        return QByteArray();
+    }
+}
+
 QSSGRenderShaderDataType uniformType(QMetaType type)
 {
     switch (type.id()) {
     case QMetaType::Double:
+    case QMetaType::Float:
         return ShaderType<QMetaType::Double>::type();
     case QMetaType::Bool:
         return ShaderType<QMetaType::Bool>::type();
@@ -458,6 +530,11 @@ QSSGRenderShaderDataType uniformType(QMetaType type)
     default:
         return QSSGRenderShaderDataType::Unknown;
     }
+}
+
+MetaTypeList supportedMetatypes()
+{
+    return {std::begin(qssg_metatype_list), std::end(qssg_metatype_list)};
 }
 
 }
@@ -591,6 +668,8 @@ QQmlListProperty<QQuick3DShaderUtilsShader> QQuick3DShaderUtilsRenderPass::shade
                                                       QQuick3DShaderUtilsRenderPass::qmlShaderAt,
                                                       QQuick3DShaderUtilsRenderPass::qmlShaderClear);
 }
+
+QQuick3DShaderUtilsTextureInput::QQuick3DShaderUtilsTextureInput(QObject *p) : QObject(p) {}
 
 void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
 {

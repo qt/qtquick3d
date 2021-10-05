@@ -27,55 +27,43 @@
 **
 ****************************************************************************/
 
-#include "qssgscenedesc_p.h"
+#include "resourceclient.h"
+
+// Messages:
+// Uniforms []
+// Filenames (vert, frag)
 
 QT_BEGIN_NAMESPACE
 
-bool QSSGSceneDesc::PropertyCall::set(QQuick3DObject &, const char *, const void *) { return false; }
-bool QSSGSceneDesc::PropertyCall::get(const QQuick3DObject &, const void *[]) const { return false; }
-
-static inline quint16 getNextNodeId(QSSGSceneDesc::Scene &scene)
+ResourceClient::ResourceClient(const QString &serverName)
+    : m_serverName(serverName)
 {
-    /* root node uses the default value 0 */
-    return ++scene.nodeId;
+
 }
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Node &parent, QSSGSceneDesc::Node &node)
+void ResourceClient::init()
 {
-    Q_ASSERT(parent.scene);
-    node.scene = parent.scene;
-    node.id = getNextNodeId(*parent.scene);
+    const int timeout = 10000;
+    QObject::connect(&m_socket, &QLocalSocket::readyRead, [this]() {
+        const auto message = Message::getMessage(m_socket);
+        if (message->type() != Message::Type::Invalid)
+            Q_EMIT messageReceived(message);
+    });
+    QObject::connect(&m_socket, &QLocalSocket::errorOccurred, [this]() {
+        qDebug("client: Error occurred when connecting to: \'%s\'\n - %s", qPrintable(m_serverName), qPrintable(m_socket.errorString()));
+    });
 
-    if (QSSGRenderGraphObject::isResource(node.runtimeType) || node.nodeType == Node::Type::Mesh || node.nodeType == Node::Type::Skeleton)
-        node.scene->resources.push_back(&node);
-
-    parent.children.push_back(node);
-}
-
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &node)
-{
-    if (scene.root) {
-        addNode(*scene.root, node);
-    } else {
-        Q_ASSERT(node.id == 0);
-        node.scene = &scene;
-        scene.root = &node;
+    m_socket.connectToServer(m_serverName); // ReadWrite
+    if (m_socket.waitForConnected(timeout)) {
+        qDebug("client: Connected to: %s", qPrintable(m_serverName));
+        Q_EMIT connected();
     }
 }
 
-void QSSGSceneDesc::Scene::reset()
+void ResourceClient::sendMessage(const Message::MessagePtr &message)
 {
-    id.clear();
-    nodeId = 0;
-    root = nullptr;
-    resources.clear();
-    meshStorage.clear();
-    allocator.reset();
-}
-
-QMetaType QSSGSceneDesc::listViewMetaType()
-{
-    return QMetaType::fromType<QSSGSceneDesc::ListView>();
+    if (message != nullptr)
+        Message::postMessage(m_socket, *message);
 }
 
 QT_END_NAMESPACE

@@ -141,5 +141,12 @@ private:
     Q_DISABLE_COPY(QSSGMaterialShaderGenerator)
 };
 
+namespace QtQuick3DEditorHelpers {
+namespace CustomMaterial {
+// NOTE: Returns a copy of the actual list, cache as needed!
+[[nodiscard]] Q_QUICK3DRUNTIMERENDER_EXPORT QList<QByteArrayView> reservedArgumentNames();
+}
+}
+
 QT_END_NAMESPACE
 #endif

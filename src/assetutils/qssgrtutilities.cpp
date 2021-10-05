@@ -55,7 +55,7 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
         if (v.value.mt.id() == qMetaTypeId<Node *>()) {
             if (const auto *node = reinterpret_cast<Node *>(v.value.dptr)) {
                 Q_ASSERT(node->obj);
-                v.call->set(obj, node->obj);
+                v.call->set(obj, v.name, node->obj);
             }
         } else if (v.value.mt == QMetaType::fromType<Mesh>()) { // Special handling for mesh nodes.
             // Mesh nodes does not have an equivalent in the QtQuick3D scene, but is registered
@@ -63,25 +63,25 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
             // be a usable source url now.
             if (const auto meshNode = reinterpret_cast<const Mesh *>(v.value.dptr)) {
                 const auto url = QUrl(QSSGBufferManager::runtimeMeshSourceName(node.scene->id, meshNode->idx));
-                v.call->set(obj, &url);
+                v.call->set(obj, v.name, &url);
             }
         } else if (v.value.mt == QMetaType::fromType<BufferView>()) {
             if (const auto buffer = reinterpret_cast<const BufferView *>(v.value.dptr)) {
                 const QByteArray qbuffer = buffer->view.toByteArray();
-                v.call->set(obj, &qbuffer);
+                v.call->set(obj, v.name, &qbuffer);
             }
         } else if (v.value.mt == QMetaType::fromType<UrlView>()) {
             if (const auto url = reinterpret_cast<const UrlView *>(v.value.dptr)) {
                 const QUrl qurl = QUrl::fromUserInput(QString::fromUtf8(url->view));
-                v.call->set(obj, &qurl);
+                v.call->set(obj, v.name, &qurl);
             }
         } else if (v.value.mt == QMetaType::fromType<StringView>()) {
             if (const auto string = reinterpret_cast<const StringView *>(v.value.dptr)) {
                 const QString qstring(QString::fromUtf8(string->view));
-                v.call->set(obj, &qstring);
+                v.call->set(obj, v.name, &qstring);
             }
         } else {
-            v.call->set(obj, v.value.dptr);
+            v.call->set(obj, v.name, v.value.dptr);
         }
     }
 }
@@ -155,7 +155,7 @@ QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::Tex
     return obj;
 }
 
-static void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverse = true)
+void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverse)
 {
     using namespace QSSGSceneDesc;
 
@@ -219,6 +219,8 @@ static void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent,
             obj = createRuntimeObject<QQuick3DPrincipledMaterial>(static_cast<Material &>(node), parent);
         else if (node.runtimeType == Node::RuntimeType::DefaultMaterial)
             obj = createRuntimeObject<QQuick3DDefaultMaterial>(static_cast<Material &>(node), parent);
+        else if (node.runtimeType == Node::RuntimeType::CustomMaterial)
+            obj = createRuntimeObject<QQuick3DCustomMaterial>(static_cast<Material &>(node), parent);
         else
             Q_UNREACHABLE();
     }

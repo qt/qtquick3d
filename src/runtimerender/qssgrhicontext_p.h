@@ -954,6 +954,7 @@ public:
     }
 
     static bool shaderDebuggingEnabled();
+    static bool editorMode();
 
     QSSGRhiInstanceBufferData &instanceBufferData(QSSGRenderInstanceTable *instanceTable)
     {

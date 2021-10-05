@@ -209,6 +209,19 @@ public:
     static QByteArray shaderCollectionFile();
 };
 
+namespace QtQuick3DEditorHelpers {
+namespace ShaderBaker
+{
+    enum class Status : quint8
+    {
+        Success,
+        Error
+    };
+    using StatusCallback = void(*)(const QByteArray &descKey, Status status, const QString &err, QShader::Stage stage);
+    Q_QUICK3DRUNTIMERENDER_EXPORT void setStatusCallback(StatusCallback cb);
+}
+}
+
 QT_END_NAMESPACE
 
 #endif

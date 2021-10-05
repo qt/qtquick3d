@@ -47,7 +47,12 @@
 #include <QtShaderTools/private/qshaderbaker_p.h>
 #endif
 
+#include <QtCore/qmutex.h>
+
 QT_BEGIN_NAMESPACE
+
+static QtQuick3DEditorHelpers::ShaderBaker::StatusCallback s_statusCallback = nullptr;
+Q_GLOBAL_STATIC(QMutex, s_statusMutex);
 
 size_t qHash(QSSGShaderFeatures features) noexcept { return (features.flags & (~QSSGShaderFeatures::IndexMask)); }
 
@@ -254,12 +259,14 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     // lo and behold the final shader strings are ready
 
     QSSGRef<QSSGRhiShaderPipeline> shaders;
-    QString err;
+    QString vertErr, fragErr;
 
     QShaderBaker baker;
     m_initBaker(&baker, m_rhiContext->rhi()->backend());
 
-   const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
+    const bool editorMode = QSSGRhiContext::editorMode();
+    // Shader debug is disabled in editor mode
+    const bool shaderDebug = !editorMode && QSSGRhiContext::shaderDebuggingEnabled();
 
    static auto dumpShader = [](QShader::Stage stage, const QByteArray &code) {
        switch (stage) {
@@ -290,10 +297,12 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QShader vertexShader = baker.bake();
     const auto vertShaderValid = vertexShader.isValid();
     if (!vertShaderValid) {
-        err = baker.errorMessage();
-        qWarning("Failed to compile vertex shader:\n");
-        if (!shaderDebug)
-            qWarning() << inKey << '\n' << err;
+        vertErr = baker.errorMessage();
+        if (!editorMode) {
+            qWarning("Failed to compile vertex shader:\n");
+            if (!shaderDebug)
+                qWarning() << inKey << '\n' << vertErr;
+        }
     }
 
     if (shaderDebug) {
@@ -306,10 +315,12 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QShader fragmentShader = baker.bake();
     const bool fragShaderValid = fragmentShader.isValid();
     if (!fragShaderValid) {
-        const QString err = baker.errorMessage();
-        qWarning("Failed to compile fragment shader \n");
-        if (!shaderDebug)
-            qWarning() << inKey << '\n' << err;
+        fragErr = baker.errorMessage();
+        if (!editorMode) {
+            qWarning("Failed to compile fragment shader \n");
+            if (!shaderDebug)
+                qWarning() << inKey << '\n' << fragErr;
+        }
     }
 
     if (shaderDebug) {
@@ -324,6 +335,15 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
         if (shaderDebug)
             qDebug("Compilation for vertex and fragment stages succeeded");
+    }
+
+    if (editorMode && s_statusCallback) {
+        using namespace QtQuick3DEditorHelpers::ShaderBaker;
+        const auto vertStatus = vertShaderValid ? Status::Success : Status::Error;
+        const auto fragStatus = fragShaderValid ? Status::Success : Status::Error;
+        QMutexLocker locker(&*s_statusMutex);
+        s_statusCallback(inKey, vertStatus, vertErr, QShader::VertexStage);
+        s_statusCallback(inKey, fragStatus, fragErr, QShader::FragmentStage);
     }
 
     const auto inserted = m_rhiShaders.insert(tempKey, shaders);
@@ -436,6 +456,14 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
 
     const auto inserted = m_rhiShaders.insert(cacheKey, shaders);
     return inserted.value();
+}
+
+namespace QtQuick3DEditorHelpers {
+void ShaderBaker::setStatusCallback(StatusCallback cb)
+{
+    QMutexLocker locker(&*s_statusMutex);
+    s_statusCallback = cb;
+}
 }
 
 QT_END_NAMESPACE

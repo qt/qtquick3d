@@ -392,6 +392,34 @@ static inline QSSGShaderMaterialAdapter *getMaterialAdapter(const QSSGRenderGrap
     return nullptr;
 }
 
+// NOTE!!!: PLEASE ADD NEW VARS HERE!
+static constexpr QByteArrayView qssg_shader_arg_names[] {
+    { "DIFFUSE" },
+    { "BASE_COLOR" },
+    { "METALNESS" },
+    { "ROUGHNESS" },
+    { "EMISSIVE" },
+    { "SPECULAR_AMOUNT" },
+    { "EMISSIVE_COLOR" },
+    { "LIGHT_COLOR" },
+    { "LIGHT_ATTENUATION" },
+    { "SPOT_FACTOR" },
+    { "SHADOW_CONTRIB" },
+    { "FRESNEL_CONTRIB" },
+    { "TO_LIGHT_DIR" },
+    { "NORMAL" },
+    { "VIEW_VECTOR" },
+    { "TOTAL_AMBIENT_COLOR" },
+    { "COLOR_SUM" },
+    { "BINORMAL" },
+    { "TANGENT" },
+    { "FRESNEL_POWER" },
+    { "INSTANCE_MODEL_MATRIX" },
+    { "INSTANCE_MODELVIEWPROJECTION_MATRIX" },
+    { "UV0" },
+    { "UV1" }
+};
+
 const char *QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList()
 {
     return "inout vec3 DIFFUSE, in vec3 LIGHT_COLOR, in float SHADOW_CONTRIB, in vec3 TO_LIGHT_DIR, in vec3 NORMAL, in vec4 BASE_COLOR, in float METALNESS, in float ROUGHNESS, in vec3 VIEW_VECTOR";
@@ -1948,3 +1976,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
 }
 
 QT_END_NAMESPACE
+
+QList<QByteArrayView> QtQuick3DEditorHelpers::CustomMaterial::reservedArgumentNames()
+{
+    return {std::begin(qssg_shader_arg_names), std::end(qssg_shader_arg_names) };;
+}

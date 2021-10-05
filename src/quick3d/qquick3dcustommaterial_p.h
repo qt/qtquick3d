@@ -133,11 +133,13 @@ private Q_SLOTS:
     void onTextureDirty();
 
 private:
+    friend class MaterialAdapter;
     friend class QQuick3DShaderUtilsTextureInput;
     enum Dirty {
         TextureDirty = 0x1,
         PropertyDirty = 0x2,
-        ShaderSettingsDirty = 0x4
+        ShaderSettingsDirty = 0x4,
+        DynamicPropertiesDirty = 0x8
     };
 
     void markDirty(QQuick3DCustomMaterial::Dirty type)

@@ -221,6 +221,13 @@ struct QSSGCustomMaterialVariableSubstitution
     QByteArrayView actualName;
 };
 
+namespace QtQuick3DEditorHelpers {
+// NOTE: Returns a copy of the actual list, cache as needed!
+namespace CustomMaterial {
+[[nodiscard]] Q_QUICK3DRUNTIMERENDER_EXPORT QList<QByteArrayView> preprocessorVars();
+}
+}
+
 QT_END_NAMESPACE
 
 #endif

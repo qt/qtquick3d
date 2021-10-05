@@ -71,6 +71,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderTextureCoordOp horizontalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
         QSSGRenderTextureCoordOp verticalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
     };
+    using TexturePropertyList = QList<TextureProperty>;
 
     struct Property
     {
@@ -83,6 +84,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderShaderDataType shaderDataType;
         int pid;
     };
+    using PropertyList = QList<Property>;
 
     enum class ShadingMode // must match QQuick3DCustomMaterial::ShadingMode
     {
@@ -115,8 +117,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     QByteArray m_shaderPathKey;
     CustomShaderPresence m_customShaderPresence;
 
-    QVector<TextureProperty> m_textureProperties;
-    QVector<Property> m_properties;
+    TexturePropertyList m_textureProperties;
+    PropertyList m_properties;
 
     QSSGRenderImage *m_iblProbe = nullptr;
     QSSGRenderImage *m_emissiveMap = nullptr;

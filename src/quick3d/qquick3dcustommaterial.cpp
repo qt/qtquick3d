@@ -1514,7 +1514,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         for (const auto &textureProperty : qAsConst(textureProperties))
             processTextureProperty(*textureProperty.first, textureProperty.second);
 
-        if (customMaterial->incompleteBuildTimeObject) { // This object came from the shadergen tool
+        if (customMaterial->incompleteBuildTimeObject || (m_dirtyAttributes & DynamicPropertiesDirty)) { // This object came from the shadergen tool
             const auto names = dynamicPropertyNames();
             for (const auto &name : names) {
                 QVariant propValue = property(name.constData());

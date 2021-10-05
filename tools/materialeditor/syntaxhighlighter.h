@@ -27,55 +27,47 @@
 **
 ****************************************************************************/
 
-#include "qssgscenedesc_p.h"
+#ifndef SYNTAXHIGHLIGHTER_H
+#define SYNTAXHIGHLIGHTER_H
+
+#include <QtQml/qqmlregistration.h>
+
+#include <QtGui/qsyntaxhighlighter.h>
+#include <QtQuick/qquicktextdocument.h>
 
 QT_BEGIN_NAMESPACE
 
-bool QSSGSceneDesc::PropertyCall::set(QQuick3DObject &, const char *, const void *) { return false; }
-bool QSSGSceneDesc::PropertyCall::get(const QQuick3DObject &, const void *[]) const { return false; }
-
-static inline quint16 getNextNodeId(QSSGSceneDesc::Scene &scene)
+class SyntaxHighlighter : public QSyntaxHighlighter
 {
-    /* root node uses the default value 0 */
-    return ++scene.nodeId;
-}
+    Q_OBJECT
+    Q_PROPERTY(QQuickTextDocument * document READ document WRITE setDocument NOTIFY documentChanged)
+    QML_ELEMENT
+public:
+    enum BlockState
+    {
+        None,
+        Comment
+    };
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Node &parent, QSSGSceneDesc::Node &node)
-{
-    Q_ASSERT(parent.scene);
-    node.scene = parent.scene;
-    node.id = getNextNodeId(*parent.scene);
+    explicit SyntaxHighlighter(QObject *p = nullptr);
 
-    if (QSSGRenderGraphObject::isResource(node.runtimeType) || node.nodeType == Node::Type::Mesh || node.nodeType == Node::Type::Skeleton)
-        node.scene->resources.push_back(&node);
+    // Shadows
+    QQuickTextDocument *document() const;
+    void setDocument(QQuickTextDocument *newDocument);
 
-    parent.children.push_back(node);
-}
+signals:
+    void documentChanged();
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &node)
-{
-    if (scene.root) {
-        addNode(*scene.root, node);
-    } else {
-        Q_ASSERT(node.id == 0);
-        node.scene = &scene;
-        scene.root = &node;
-    }
-}
+protected:
+    void highlightBlock(const QString &text) final;
+    QPointer<QQuickTextDocument> m_quickTextDocument;
+    QSet<QByteArrayView> m_keywords;
+    QSet<QByteArrayView> m_argumentKeywords;
 
-void QSSGSceneDesc::Scene::reset()
-{
-    id.clear();
-    nodeId = 0;
-    root = nullptr;
-    resources.clear();
-    meshStorage.clear();
-    allocator.reset();
-}
-
-QMetaType QSSGSceneDesc::listViewMetaType()
-{
-    return QMetaType::fromType<QSSGSceneDesc::ListView>();
-}
+private:
+    void highlightLine(const QString &text, int position, int length, const QTextCharFormat &format);
+};
 
 QT_END_NAMESPACE
+
+#endif // SYNTAXHIGHLIGHTER_H

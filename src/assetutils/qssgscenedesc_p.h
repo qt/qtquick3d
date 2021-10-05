@@ -43,6 +43,7 @@
 // QtQuick3D
 #include <QtQuick3D/private/qquick3dobject_p.h>
 // Materials
+#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
@@ -87,7 +88,7 @@ struct Animation;
 template<typename T>
 using rm_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-struct Scene
+struct Q_QUICK3DASSETUTILS_EXPORT Scene
 {
     using ResourceNodes = QVarLengthArray<Node *>;
     using MeshStorage = QVector<QSSGMesh::Mesh>;
@@ -115,7 +116,7 @@ struct Scene
 
 struct Q_QUICK3DASSETUTILS_EXPORT PropertyCall
 {
-    virtual bool set(QQuick3DObject &, const void *) = 0;
+    virtual bool set(QQuick3DObject &, const char *, const void *) = 0;
     virtual bool get(const QQuick3DObject &, const void *[]) const = 0;
 };
 
@@ -134,10 +135,12 @@ struct StringView : BufferView { using type = QString; };
 
 struct Property
 {
+    enum class Type { Static, Dynamic };
     Value value;
     const char *name = nullptr;
     QSSGSceneDesc::PropertyCall *call = nullptr;
     Property *next = nullptr;
+    Type type = Type::Static;
 };
 
 struct NodeList
@@ -412,6 +415,17 @@ struct FuncType
     enum { value = 0 };
 };
 
+template <typename R, typename... A>
+struct FuncType<R (*)(A...)>
+{
+    enum { value = sizeof...(A) == 3 };
+    using Ret = R;
+    using Arg0 = std::tuple_element_t<0, std::tuple<A...>>;
+    using Arg1 = std::tuple_element_t<1, std::tuple<A...>>;
+    using Arg2 = std::tuple_element_t<2, std::tuple<A...>>;
+    using Arg2Base = rm_cvref_t<Arg2>;
+};
+
 template <typename R, typename C, typename... A>
 struct FuncType<R (C::*)(A...)>
 {
@@ -433,6 +447,27 @@ struct FuncType<QQmlListProperty<T> (C::*)()>
     using Arg0Base = Arg0;
 };
 
+template <typename Ret, typename Arg>
+struct PropertyProxySetter : PropertyCall
+{
+    using Setter = Ret (*)(QQuick3DObject &, const char *, Arg);
+    constexpr explicit PropertyProxySetter(Setter fn) : call(fn) {}
+    Setter call = nullptr;
+    bool get(const QQuick3DObject &, const void *[]) const override { return false; }
+    bool set(QQuick3DObject &that, const char *name, const void *value) override
+    {
+        if (value) {
+            if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg2>)
+                call(that, name, reinterpret_cast<typename FuncType<Setter>::Arg2>(const_cast<void *>(value)));
+            else
+                call(that, name, *reinterpret_cast<typename FuncType<Setter>::Arg2Base *>(const_cast<void *>(value)));
+            return true;
+        }
+
+        return false;
+    }
+};
+
 template <typename Ret, typename Class, typename Arg>
 struct PropertySetter : PropertyCall
 {
@@ -440,7 +475,7 @@ struct PropertySetter : PropertyCall
     constexpr explicit PropertySetter(Setter fn) : call(fn) {}
     Setter call = nullptr;
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &that, const void *value) override
+    bool set(QQuick3DObject &that, const char *, const void *value) override
     {
         if (value) {
             if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg0>)
@@ -463,7 +498,7 @@ struct PropertyListSetter : PropertyCall
     constexpr explicit PropertyListSetter(Setter fn) : call(fn) {}
     Setter call = nullptr;
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &that, const void *value) override
+    bool set(QQuick3DObject &that, const char *, const void *value) override
     {
         if (const auto listView = reinterpret_cast<const ListView *>(value)) {
             const auto begin = reinterpret_cast<It *>(listView->head);
@@ -487,7 +522,7 @@ struct PropertyList : PropertyCall
     static_assert(std::is_same_v<ListType, QQmlListProperty<T>>, "Expected QQmlListProperty!");
 
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &that, const void *value) override
+    bool set(QQuick3DObject &that, const char *, const void *value) override
     {
         if (value) {
             ListType list = (qobject_cast<Class *>(&that)->*listfn)();
@@ -509,7 +544,7 @@ struct PropertyGetter : PropertyCall
     constexpr explicit PropertyGetter(Getter fn) : call(fn) {}
     Getter call = nullptr;
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &, const void *) override { return false; }
+    bool set(QQuick3DObject &, const char *, const void *) override { return false; }
 };
 
 template <typename T, typename Class>
@@ -519,7 +554,7 @@ struct PropertyMember : PropertyCall
     constexpr explicit PropertyMember(Getter fn) : call(fn) {}
     Getter call = nullptr;
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &that, const void *value) override {
+    bool set(QQuick3DObject &that, const char *, const void *value) override {
         if (value) {
             (qobject_cast<Class *>(&that)->*call) = (*reinterpret_cast<const T *>(value));
             return true;
@@ -535,6 +570,8 @@ template <typename Setter, typename Value>
 using if_compatible_t = typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Arg0Base, rm_cvref_t<Value>>, bool>;
 template <typename Setter, typename T>
 using if_compatible_node_list_t = typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Ret, QQmlListProperty<as_scene_type_t<T>>>, bool>;
+template <typename Setter, typename Value>
+using if_compatible_proxy_t = typename std::enable_if_t<std::is_same_v<typename FuncType<Setter>::Arg2Base, rm_cvref_t<Value>>, bool>;
 
 // Sets a property on a node, the property is a name map to struct containing a pointer to the value and a function
 // to set the value on an runtime object (QtQuick3DObject). The type is verified at compile-time, so we can assume
@@ -583,6 +620,23 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value = value;
+    node.properties.push_back(*prop);
+}
+
+template<typename Setter, typename Value, if_compatible_proxy_t<Setter, Value> = true>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, Value &&value, QSSGSceneDesc::Property::Type type = QSSGSceneDesc::Property::Type::Static)
+{
+    Q_ASSERT(node.scene);
+    static_assert(std::is_trivially_destructible_v<rm_cvref_t<Value>>, "Value needs to be trivially destructible!");
+    Property *prop = node.scene->create<Property>();
+    prop->name = name;
+    prop->call = node.scene->create<decltype(PropertyProxySetter(setter))>(setter);
+    prop->value.mt = QMetaType::fromType<Value>();
+    if constexpr (std::is_pointer_v<rm_cvref_t<Value>>)
+        prop->value.dptr = value;
+    else
+       prop->value.dptr = node.scene->create<Value>(std::forward<Value>(value));
+    prop->type = type;
     node.properties.push_back(*prop);
 }
 

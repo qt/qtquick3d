@@ -27,55 +27,34 @@
 **
 ****************************************************************************/
 
-#include "qssgscenedesc_p.h"
+#ifndef RESOURCECLIENT_H
+#define RESOURCECLIENT_H
+
+#include "message.h"
+#include <QtNetwork/qlocalsocket.h>
 
 QT_BEGIN_NAMESPACE
 
-bool QSSGSceneDesc::PropertyCall::set(QQuick3DObject &, const char *, const void *) { return false; }
-bool QSSGSceneDesc::PropertyCall::get(const QQuick3DObject &, const void *[]) const { return false; }
-
-static inline quint16 getNextNodeId(QSSGSceneDesc::Scene &scene)
+class ResourceClient : public QObject
 {
-    /* root node uses the default value 0 */
-    return ++scene.nodeId;
-}
+    Q_OBJECT
+public:
+    ResourceClient(const QString &serverName);
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Node &parent, QSSGSceneDesc::Node &node)
-{
-    Q_ASSERT(parent.scene);
-    node.scene = parent.scene;
-    node.id = getNextNodeId(*parent.scene);
+    void init();
 
-    if (QSSGRenderGraphObject::isResource(node.runtimeType) || node.nodeType == Node::Type::Mesh || node.nodeType == Node::Type::Skeleton)
-        node.scene->resources.push_back(&node);
+Q_SIGNALS:
+    void messageReceived(Message::MessagePtr message);
+    void connected();
 
-    parent.children.push_back(node);
-}
+public Q_SLOTS:
+    void sendMessage(const Message::MessagePtr &message);
 
-void QSSGSceneDesc::addNode(QSSGSceneDesc::Scene &scene, QSSGSceneDesc::Node &node)
-{
-    if (scene.root) {
-        addNode(*scene.root, node);
-    } else {
-        Q_ASSERT(node.id == 0);
-        node.scene = &scene;
-        scene.root = &node;
-    }
-}
-
-void QSSGSceneDesc::Scene::reset()
-{
-    id.clear();
-    nodeId = 0;
-    root = nullptr;
-    resources.clear();
-    meshStorage.clear();
-    allocator.reset();
-}
-
-QMetaType QSSGSceneDesc::listViewMetaType()
-{
-    return QMetaType::fromType<QSSGSceneDesc::ListView>();
-}
+private:
+    QString m_serverName;
+    QLocalSocket m_socket;
+};
 
 QT_END_NAMESPACE
+
+#endif // RESOURCECLIENT_H
