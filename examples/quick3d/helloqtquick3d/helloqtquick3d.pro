@@ -17,5 +17,5 @@ OTHER_FILES += \
     doc/src/*.*
 
 CONFIG += qmltypes
-QML_IMPORT_NAME = InstancingExample
+QML_IMPORT_NAME = HelloExample
 QML_IMPORT_MAJOR_VERSION = 1
