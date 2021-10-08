@@ -540,19 +540,23 @@ QSSGRenderGraphObject *QQuick3DParticleModelBlendParticle::updateSpatialNode(QSS
     if (!m_model)
         return node;
     auto *spatialNode = QQuick3DObjectPrivate::get(m_model)->spatialNode;
-    if (spatialNode) {
-        QSSGRenderModel *model = static_cast<QSSGRenderModel *>(spatialNode);
-
-        if (!model->particleBuffer) {
-            QSSGParticleBuffer *buffer = model->particleBuffer = new QSSGParticleBuffer;
-            buffer->resize(m_particleCount, sizeof(QSSGTriangleParticle));
-        }
-        QQuick3DParticleSystem *psystem = QQuick3DParticle::system();
-        QMatrix4x4 particleMatrix = psystem->sceneTransform().inverted() * m_model->sceneTransform();
-        model->particleMatrix = particleMatrix.inverted();
-        model->hasTransparency = fadeInEffect() == QQuick3DParticle::FadeOpacity || fadeOutEffect() == QQuick3DParticle::FadeOpacity;
-        updateParticleBuffer(model->particleBuffer);
+    if (!spatialNode) {
+        spatialNode = QQuick3DObjectPrivate::updateSpatialNode(m_model, nullptr);
+        QQuick3DObjectPrivate::get(m_model)->spatialNode = spatialNode;
     }
+
+    QSSGRenderModel *model = static_cast<QSSGRenderModel *>(spatialNode);
+
+    if (!model->particleBuffer) {
+        QSSGParticleBuffer *buffer = model->particleBuffer = new QSSGParticleBuffer;
+        buffer->resize(m_particleCount, sizeof(QSSGTriangleParticle));
+    }
+    QQuick3DParticleSystem *psystem = QQuick3DParticle::system();
+    QMatrix4x4 particleMatrix = psystem->sceneTransform().inverted() * m_model->sceneTransform();
+    model->particleMatrix = particleMatrix.inverted();
+    model->hasTransparency = fadeInEffect() == QQuick3DParticle::FadeOpacity || fadeOutEffect() == QQuick3DParticle::FadeOpacity;
+    updateParticleBuffer(model->particleBuffer);
+
     return node;
 }
 
