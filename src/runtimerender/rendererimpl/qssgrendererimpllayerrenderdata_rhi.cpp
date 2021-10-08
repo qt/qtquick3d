@@ -39,6 +39,8 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 
 #include <QtCore/QBitArray>
+#include <array>
+using BoxPoints = std::array<QVector3D, 8>;
 
 QT_BEGIN_NAMESPACE
 
@@ -805,10 +807,22 @@ static void rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
         rhiRenderDepthPassForObject(rhiCtx, inData, handle.obj, needsSetViewport);
 }
 
-static QSSGBounds3 calculateSortedObjectBounds(const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
-                                               const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects)
+static BoxPoints boundsToBoxPoints(const QSSGBounds3 &bounds)
 {
-    QSSGBounds3 bounds;
+    return BoxPoints { bounds.minimum,
+                       QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.minimum.z()),
+                       QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.minimum.z()),
+                       QVector3D(bounds.maximum.x(), bounds.maximum.y(), bounds.minimum.z()),
+                       QVector3D(bounds.minimum.x(), bounds.minimum.y(), bounds.maximum.z()),
+                       QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.maximum.z()),
+                       QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.maximum.z()),
+                       bounds.maximum };
+}
+static std::pair<BoxPoints, BoxPoints> calculateSortedObjectBounds(const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                                                                   const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects)
+{
+    QSSGBounds3 boundsCasting;
+    QSSGBounds3 boundsReceiving;
     for (const auto handles : { &sortedOpaqueObjects, &sortedTransparentObjects }) {
         // Since we may have nodes that are not a child of the camera parent we go through all
         // the opaque objects and include them in the bounds. Failing to do this can result in
@@ -817,27 +831,35 @@ static QSSGBounds3 calculateSortedObjectBounds(const QVector<QSSGRenderableObjec
             const QSSGRenderableObject &obj = *handle.obj;
 
             // We skip objects not casting or receiving shadows since they don't influence or need to be covered by the shadow map
-            if (!(obj.renderableFlags.receivesShadows() || obj.renderableFlags.castsShadows()))
-                continue;
+            if (obj.renderableFlags.castsShadows() || obj.renderableFlags.receivesShadows()) {
+                QSSGBounds3 bounds;
+                const QVector3D &max = obj.bounds.maximum;
+                const QVector3D &min = obj.bounds.minimum;
 
-            const QVector3D &max = obj.bounds.maximum;
-            const QVector3D &min = obj.bounds.minimum;
+                // Take all corners of the bounding box to make sure the transformed bounding box is big enough
+                bounds.include(obj.globalTransform.map(min));
+                bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), min.z())));
+                bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), min.z())));
+                bounds.include(obj.globalTransform.map(QVector3D(max.x(), max.y(), min.z())));
+                bounds.include(obj.globalTransform.map(QVector3D(min.x(), min.y(), max.z())));
+                bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), max.z())));
+                bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), max.z())));
+                bounds.include(obj.globalTransform.map(max));
 
-            // Take all corners of the bounding box to make sure the transformed bounding box is big enough
-            bounds.include(obj.globalTransform.map(min));
-            bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), min.z())));
-            bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), min.z())));
-            bounds.include(obj.globalTransform.map(QVector3D(max.x(), max.y(), min.z())));
-            bounds.include(obj.globalTransform.map(QVector3D(min.x(), min.y(), max.z())));
-            bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), max.z())));
-            bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), max.z())));
-            bounds.include(obj.globalTransform.map(max));
+                if (obj.renderableFlags.castsShadows()) {
+                    boundsCasting.include(bounds);
+                }
+                if (obj.renderableFlags.receivesShadows()) {
+                    boundsReceiving.include(bounds);
+                }
+            }
         }
     }
-    return bounds;
+
+    return { boundsToBoxPoints(boundsCasting), boundsToBoxPoints(boundsReceiving) };
 }
 
-static QVector3D calcCenter(QVector3D vertices[8])
+static QVector3D calcCenter(const BoxPoints &vertices)
 {
     QVector3D center = vertices[0];
     for (int i = 1; i < 8; ++i) {
@@ -846,29 +868,7 @@ static QVector3D calcCenter(QVector3D vertices[8])
     return center * 0.125f;
 }
 
-static void computeFrustumBounds(const QSSGRenderCamera &inCamera, QVector3D camVerts[8])
-{
-    QMatrix4x4 viewProjection;
-    inCamera.calculateViewProjectionMatrix(viewProjection);
-
-    bool invertible = false;
-    QMatrix4x4 inv = viewProjection.inverted(&invertible);
-    Q_ASSERT(invertible);
-
-    camVerts[0] = inv.map(QVector3D(-1, -1, -1));
-    camVerts[1] = inv.map(QVector3D(-1, -1, +1));
-    camVerts[2] = inv.map(QVector3D(-1, +1, -1));
-    camVerts[3] = inv.map(QVector3D(-1, +1, +1));
-    camVerts[4] = inv.map(QVector3D(+1, -1, -1));
-    camVerts[5] = inv.map(QVector3D(+1, -1, +1));
-    camVerts[6] = inv.map(QVector3D(+1, +1, -1));
-    camVerts[7] = inv.map(QVector3D(+1, +1, +1));
-}
-
-static QSSGBounds3 calculateShadowCameraBoundingBox(const QVector3D *points,
-                                                    const QVector3D &forward,
-                                                    const QVector3D &up,
-                                                    const QVector3D &right)
+static QSSGBounds3 calculateShadowCameraBoundingBox(const BoxPoints &points, const QVector3D &forward, const QVector3D &up, const QVector3D &right)
 {
     QSSGBounds3 bounds;
     for (int i = 0; i < 8; ++i) {
@@ -880,10 +880,25 @@ static QSSGBounds3 calculateShadowCameraBoundingBox(const QVector3D *points,
     return bounds;
 }
 
+static BoxPoints computeFrustumBounds(const QSSGRenderCamera &inCamera)
+{
+    QMatrix4x4 viewProjection;
+    inCamera.calculateViewProjectionMatrix(viewProjection);
+
+    bool invertible = false;
+    QMatrix4x4 inv = viewProjection.inverted(&invertible);
+    Q_ASSERT(invertible);
+
+    return BoxPoints { inv.map(QVector3D(-1, -1, -1)), inv.map(QVector3D(+1, -1, -1)), inv.map(QVector3D(+1, +1, -1)),
+                       inv.map(QVector3D(-1, +1, -1)), inv.map(QVector3D(-1, -1, +1)), inv.map(QVector3D(+1, -1, +1)),
+                       inv.map(QVector3D(+1, +1, +1)), inv.map(QVector3D(-1, +1, +1)) };
+}
+
 static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
                                     const QSSGRenderLight *inLight,
                                     QSSGRenderCamera &theCamera,
-                                    QVector3D *scenePoints = nullptr)
+                                    const BoxPoints &castingBox,
+                                    const BoxPoints &receivingBox)
 {
     // setup light matrix
     quint32 mapRes = 1 << inLight->m_shadowMapRes;
@@ -897,44 +912,91 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
     inLightPos -= inLightDir * inCamera.clipNear;
     theCamera.fov = qDegreesToRadians(90.f);
 
+    QMatrix4x4 transformDirectionalLight;
     if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
         Q_ASSERT(theCamera.type == QSSGRenderCamera::Type::OrthographicCamera);
-        QVector3D frustumPoints[8];
-        computeFrustumBounds(inCamera, frustumPoints);
-        QVector3D forward = inLightDir;
-        forward.normalize();
-        QVector3D right;
-        if (!qFuzzyCompare(qAbs(forward.y()), 1.0f))
-            right = QVector3D::crossProduct(forward, QVector3D(0, 1, 0));
-        else
-            right = QVector3D::crossProduct(forward, QVector3D(1, 0, 0));
-        right.normalize();
-        QVector3D up = QVector3D::crossProduct(right, forward);
-        up.normalize();
+        const QVector3D forward = inLightDir.normalized();
+        const QVector3D right = qFuzzyCompare(qAbs(forward.y()), 1.0f)
+                ? QVector3D::crossProduct(forward, QVector3D(1, 0, 0)).normalized()
+                : QVector3D::crossProduct(forward, QVector3D(0, 1, 0)).normalized();
+        const QVector3D up = QVector3D::crossProduct(right, forward).normalized();
 
         // Calculate bounding box of the scene camera frustum
-        QSSGBounds3 bounds = calculateShadowCameraBoundingBox(frustumPoints, forward, up, right);
-        inLightPos = calcCenter(frustumPoints);
-        if (scenePoints) {
-            QSSGBounds3 sceneBounds = calculateShadowCameraBoundingBox(scenePoints, forward, up,
-                                                                       right);
+        const BoxPoints frustumPoints = computeFrustumBounds(inCamera);
+        const QSSGBounds3 frustumBounds = calculateShadowCameraBoundingBox(frustumPoints, forward, up, right);
+        const QSSGBounds3 sceneCastingBounds = calculateShadowCameraBoundingBox(castingBox, forward, up, right);
 
-            if (sceneBounds.isFinite() // handle empty scene
-                && sceneBounds.extents().x() * sceneBounds.extents().y() * sceneBounds.extents().z()
-                        < bounds.extents().x() * bounds.extents().y() * bounds.extents().z()) {
-                // Scene is smaller than frustum, set bounds to scene
-                bounds = sceneBounds;
-                inLightPos = calcCenter(scenePoints);
-            }
+        QVector3D finalDims;
+        QVector3D center;
+        // Select smallest bounds from either scene or camera frustum
+        if (sceneCastingBounds.isFinite() // handle empty scene
+            && sceneCastingBounds.extents().lengthSquared() < frustumBounds.extents().lengthSquared()) {
+            center = calcCenter(castingBox);
+            const QSSGBounds3 boundsReceiving = calculateShadowCameraBoundingBox(receivingBox, forward, up, right);
+            const QVector3D centerReceiving = calcCenter(receivingBox);
+
+            // Since we need to make sure every rendered geometry can get a valid depth value from the shadow map
+            // we need to expand the scene bounding box along its z-axis so that it covers also receiving objects in the scene.
+            //
+            // We take the z dimensions of the casting bounds and expand it to include the z dimensions of the receiving objects.
+            // We call the casting bounding box 'a' and the receiving bounding box 'b'.
+
+            // length of boxes
+            const float aLength = sceneCastingBounds.dimensions().z();
+            const float bLength = boundsReceiving.dimensions().z();
+
+            // center position of boxes
+            const float aCenter = QVector3D::dotProduct(center, forward);
+            const float bCenter = QVector3D::dotProduct(centerReceiving, forward);
+
+            // distance between boxes
+            const float d = bCenter - aCenter;
+
+            // start/end positions
+            const float a0 = 0.f;
+            const float a1 = aLength;
+            const float b0 = (aLength * 0.5f) + d - (bLength * 0.5f);
+            const float b1 = (aLength * 0.5f) + d + (bLength * 0.5f);
+
+            // goal start/end position
+            const float ap0 = qMin(a0, b0);
+            const float ap1 = qMax(a1, b1);
+            // goal length
+            const float length = ap1 - ap0;
+            // goal center postion
+            const float c = (ap1 + ap0) * 0.5f;
+
+            // how much to move in forward direction
+            const float move = c - aLength * 0.5f;
+
+            center = center + forward * move;
+            finalDims = sceneCastingBounds.dimensions();
+            finalDims.setZ(length);
+        } else {
+            center = calcCenter(frustumPoints);
+            finalDims = frustumBounds.dimensions();
         }
+
+        // Expand dimensions a little bit to avoid precision problems
+        finalDims *= 1.05f;
+
+        // HACK(QTBUG-97381): We calculate the transformation matrix by hand since calling lookAt does not work properly
+        QMatrix4x4 posMatrix;
+        posMatrix.setColumn(3, QVector4D(-center, 1.0f));
+        QMatrix4x4 rotMatrix;
+        rotMatrix.setRow(0, QVector4D(right, 0.0f));
+        rotMatrix.setRow(1, QVector4D(up, 0.0f));
+        rotMatrix.setRow(2, QVector4D(forward, 0.0f));
+        transformDirectionalLight = (rotMatrix * posMatrix).inverted();
 
         // Apply bounding box parameters to shadow map camera projection matrix
         // so that the whole scene is fit inside the shadow map
-        const QVector3D dims = bounds.dimensions();
-        theViewport.setHeight(dims.y());
-        theViewport.setWidth(dims.x());
-        theCamera.clipNear = -dims.z();
-        theCamera.clipFar = dims.z();
+        theViewport.setHeight(finalDims.y());
+        theViewport.setWidth(finalDims.x());
+        theCamera.clipNear = -0.5f * finalDims.z();
+        theCamera.clipFar = 0.5f * finalDims.z();
+
+        inLightPos = center;
     }
 
     theCamera.parent = nullptr;
@@ -947,6 +1009,11 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
     }
 
     theCamera.calculateGlobalVariables(theViewport);
+
+    // HACK(QTBUG-97381): Special case for broken lookAt
+    if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
+        theCamera.globalTransform = transformDirectionalLight;
+    }
 }
 
 static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inCameras[6])
@@ -1257,7 +1324,8 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                const QSSGShaderLightList &globalLights,
                                const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                const QSSGRef<QSSGRenderer> &renderer,
-                               const QSSGBounds3 &bounds)
+                               const BoxPoints &castingObjectsBox,
+                               const BoxPoints &receivingObjectsBox)
 {
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -1283,15 +1351,6 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     ps.depthBias = 2;
     ps.slopeScaledDepthBias = 1.5f;
 
-    QVector3D scenePoints[8];
-    scenePoints[0] = bounds.minimum;
-    scenePoints[1] = QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.minimum.z());
-    scenePoints[2] = QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.minimum.z());
-    scenePoints[3] = QVector3D(bounds.maximum.x(), bounds.maximum.y(), bounds.minimum.z());
-    scenePoints[4] = QVector3D(bounds.minimum.x(), bounds.minimum.y(), bounds.maximum.z());
-    scenePoints[5] = QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.maximum.z());
-    scenePoints[6] = QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.maximum.z());
-    scenePoints[7] = bounds.maximum;
 
     for (int i = 0, ie = globalLights.count(); i != ie; ++i) {
         if (!globalLights[i].shadows)
@@ -1310,7 +1369,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             const auto &light = globalLights[i].light;
             const auto cameraType = (light->type == QSSGRenderLight::Type::DirectionalLight) ? QSSGRenderCamera::Type::OrthographicCamera : QSSGRenderCamera::Type::CustomCamera;
             QSSGRenderCamera theCamera(cameraType);
-            setupCameraForShadowMap(camera, light, theCamera, scenePoints);
+            setupCameraForShadowMap(camera, light, theCamera, castingObjectsBox, receivingObjectsBox);
             theCamera.calculateViewProjectionMatrix(pEntry->m_lightVP);
             pEntry->m_lightView = theCamera.globalTransform.inverted(); // pre-calculate this for the material
 
@@ -1724,7 +1783,8 @@ void QSSGLayerRenderData::rhiPrepare()
             if (!shadowPassObjects.isEmpty() || !globalLights.isEmpty()) {
                 cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
 
-                const auto bounds = calculateSortedObjectBounds(sortedOpaqueObjects, sortedTransparentObjects);
+                const auto [castingObjectsBox, receivingObjectsBox] = calculateSortedObjectBounds(sortedOpaqueObjects,
+                                                                                                  sortedTransparentObjects);
 
                 rhiRenderShadowMap(rhiCtx,
                                    *this,
@@ -1733,7 +1793,8 @@ void QSSGLayerRenderData::rhiPrepare()
                                    globalLights, // scoped lights are not relevant here
                                    shadowPassObjects,
                                    renderer,
-                                   bounds);
+                                   castingObjectsBox,
+                                   receivingObjectsBox);
 
                 cb->debugMarkEnd();
             }

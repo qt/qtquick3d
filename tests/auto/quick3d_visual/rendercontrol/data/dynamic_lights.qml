@@ -36,14 +36,17 @@ View3D {
 
     function addDirectionalLight() {
         var comp = Qt.createComponent("TestDirLight.qml");
-        return comp.createObject(lightContainer, {});
+        return comp.createObject(lightContainer, {
+            "shadowFactor": 80
+        });
     }
 
     function addShadowCastingDirectionalLight() {
         var comp = Qt.createComponent("TestDirLight.qml");
         return comp.createObject(lightContainer, {
             "castsShadow": true,
-            "eulerRotation.x": -90
+            "eulerRotation.x": -90,
+            "shadowFactor": 80
         });
     }
 
