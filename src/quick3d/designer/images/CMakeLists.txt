@@ -22,9 +22,21 @@ qt_copy_or_install(
         effect.png
         effect16.png
         effect@2x.png
+        fileinstancing.png
+        fileinstancing16.png
+        fileinstancing@2x.png
         group.png
         group16.png
         group@2x.png
+        instancelist.png
+        instancelist16.png
+        instancelist@2x.png
+        instancelistentry.png
+        instancelistentry16.png
+        instancelistentry@2x.png
+        joint.png
+        joint16.png
+        joint@2x.png
         lightdirectional.png
         lightdirectional16.png
         lightdirectional@2x.png
@@ -34,13 +46,22 @@ qt_copy_or_install(
         lightspot.png
         lightspot16.png
         lightspot@2x.png
+        loader3d.png
+        loader3d16.png
+        loader3d@2x.png
         material.png
         material16.png
         material@2x.png
         model16.png
+        morphtarget.png
+        morphtarget16.png
+        morphtarget@2x.png
         plane.png
         plane16.png
         plane@2x.png
+        repeater3d.png
+        repeater3d16.png
+        repeater3d@2x.png
         scene.png
         scene16.png
         scene@2x.png
@@ -50,6 +71,9 @@ qt_copy_or_install(
         shaderutil.png
         shaderutil16.png
         shaderutil@2x.png
+        skeleton.png
+        skeleton16.png
+        skeleton@2x.png
         sphere.png
         sphere16.png
         sphere@2x.png
