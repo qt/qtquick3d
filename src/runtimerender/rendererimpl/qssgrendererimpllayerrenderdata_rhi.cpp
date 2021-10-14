@@ -852,6 +852,8 @@ static std::pair<BoxPoints, BoxPoints> calculateSortedObjectBounds(const QVector
                 bounds.include(obj.globalTransform.map(QVector3D(max.x(), min.y(), max.z())));
                 bounds.include(obj.globalTransform.map(QVector3D(min.x(), max.y(), max.z())));
                 bounds.include(obj.globalTransform.map(max));
+                // Model particles are in world space
+                bounds.include(obj.particleBounds);
 
                 if (obj.renderableFlags.castsShadows()) {
                     boundsCasting.include(bounds);

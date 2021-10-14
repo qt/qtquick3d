@@ -52,7 +52,13 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                            const QSSGShaderLightList &inLights,
                                            const QSSGDataView<float> &inMorphWeights)
-    : QSSGRenderableObject(inFlags, inWorldCenterPt, inModelContext.model.globalTransform, inSubset.bounds, inModelContext.model.m_depthBias)
+    : QSSGRenderableObject(inFlags,
+                           inWorldCenterPt,
+                           inModelContext.model.globalTransform,
+                           inSubset.bounds,
+                           inModelContext.model.particleBuffer != nullptr ? inModelContext.model.particleBuffer->bounds()
+                                                                          : QSSGBounds3(),
+                           inModelContext.model.m_depthBias)
     , generator(gen)
     , modelContext(inModelContext)
     , subset(inSubset)
@@ -82,7 +88,12 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                                                  QSSGRenderableImage *inColorTable,
                                                  const QSSGShaderLightList &inLights,
                                                  float inOpacity)
-    : QSSGRenderableObject(inFlags, inWorldCenterPt, inParticles.globalTransform, inParticles.m_particleBuffer.bounds(), inParticles.m_depthBias)
+    : QSSGRenderableObject(inFlags,
+                           inWorldCenterPt,
+                           inParticles.globalTransform,
+                           QSSGBounds3(),
+                           inParticles.m_particleBuffer.bounds(),
+                           inParticles.m_depthBias)
     , generator(gen)
     , particles(inParticles)
     , firstImage(inFirstImage)

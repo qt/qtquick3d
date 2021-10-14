@@ -227,19 +227,25 @@ struct QSSGRenderableObject
     // Variables used for picking
     const QMatrix4x4 &globalTransform;
     const QSSGBounds3 &bounds;
+    // Special bounds variable for models with blend particles (in world-space)
+    QSSGBounds3 particleBounds;
+
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
     float depthBias;
     QSSGDepthDrawMode depthWriteMode = QSSGDepthDrawMode::OpaqueOnly;
+
     QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QMatrix4x4 &inGlobalTransform,
                          const QSSGBounds3 &inBounds,
+                         const QSSGBounds3 &inParticleBounds,
                          float inDepthBias)
 
         : globalTransform(inGlobalTransform)
         , bounds(inBounds)
+        , particleBounds(inParticleBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
         , depthBias(inDepthBias)
