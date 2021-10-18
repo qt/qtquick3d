@@ -44,7 +44,7 @@
 
 #include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qbytearray.h>
 
 QT_BEGIN_NAMESPACE
@@ -55,7 +55,7 @@ struct QSSGDataView
     const T *mData;
     qsizetype mSize;
 
-    explicit QSSGDataView(const QVector<T> &data) : mData(data.constBegin()), mSize(data.size()) { Q_ASSERT(mSize >= 0); }
+    explicit QSSGDataView(const QList<T> &data) : mData(data.constData()), mSize(data.size()) { Q_ASSERT(mSize >= 0); }
     QSSGDataView(const T *inData, qsizetype inSize) : mData(inData), mSize(inSize) { Q_ASSERT(mSize >= 0); }
     constexpr QSSGDataView() : mData(nullptr), mSize(0) {}
 
@@ -90,7 +90,7 @@ struct QSSGDataView<quint8>
         : mData(reinterpret_cast<const quint8 *>(data.constBegin())), mSize(data.size())
     { Q_ASSERT(mSize >= 0); }
     template<typename T>
-    explicit QSSGDataView(const QVector<T> &data)
+    explicit QSSGDataView(const QList<T> &data)
         : mData(reinterpret_cast<const quint8 *>(data.constData())), mSize(data.size()*sizeof(T))
     { Q_ASSERT(mSize >= 0); }
     QSSGDataView(const quint8 *inData, qsizetype inSize) : mData(inData), mSize(inSize) { Q_ASSERT(mSize >= 0); }
@@ -130,7 +130,7 @@ inline QSSGDataView<T> toDataView(const T &type)
 }
 
 template<typename T>
-inline QSSGDataView<T> toDataView(const QVector<T> &type)
+inline QSSGDataView<T> toDataView(const QList<T> &type)
 {
     return QSSGDataView<T>(type);
 }
@@ -142,7 +142,7 @@ inline QSSGByteView toByteView(const T &type)
 }
 
 template<typename T>
-inline QSSGByteView toByteView(const QVector<T> &type)
+inline QSSGByteView toByteView(const QList<T> &type)
 {
     return QSSGByteView(type);
 }

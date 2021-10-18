@@ -149,9 +149,9 @@ public:
     PropertyChangeList(std::initializer_list<PropertyChange> args);
 #endif
 
-    const_iterator begin() const Q_DECL_NOTHROW { return m_changes.begin(); }
+    const_iterator begin() const Q_DECL_NOTHROW { return m_changes.constData(); }
     const_iterator cbegin() const Q_DECL_NOTHROW { return begin(); }
-    const_iterator end() const Q_DECL_NOTHROW { return m_changes.end(); }
+    const_iterator end() const Q_DECL_NOTHROW { return m_changes.constData() + m_changes.size(); }
     const_iterator cend() const Q_DECL_NOTHROW { return end(); }
     const_reverse_iterator rbegin() const Q_DECL_NOTHROW { return const_reverse_iterator(end()); }
     const_reverse_iterator crbegin() const Q_DECL_NOTHROW { return rbegin(); }
@@ -167,7 +167,7 @@ public:
     typedef PropertyChange value_type;
 
 private:
-    QVector<PropertyChange> m_changes;
+    QList<PropertyChange> m_changes;
     QSet<QString> m_keys;
 };
 
@@ -260,8 +260,8 @@ private:
     struct ObjectExtraMetaData
     {
         struct Data {
-            QVector<QByteArray> propertyNames;
-            QVector<QVariant> propertyValues;
+            QList<QByteArray> propertyNames;
+            QList<QVariant> propertyValues;
         };
         QScopedPointer<Data> data;
     } metaData;
@@ -328,7 +328,7 @@ public:
         float c1time;
         float c1value;
     };
-    using KeyFrameList = QVector<KeyFrame>;
+    using KeyFrameList = QList<KeyFrame>;
 
     AnimationTrack() = default;
     AnimationTrack(AnimationType type_, GraphObject *target_, const QString &property_)
@@ -388,7 +388,7 @@ public:
     };
 
     using PropertyChanges = QHash<GraphObject *, PropertyChangeList *>;
-    using AnimationTrackList = QVector<AnimationTrack>;
+    using AnimationTrackList = QList<AnimationTrack>;
 
     Slide();
     ~Slide() override;
