@@ -1,5 +1,8 @@
 # Generated from auto.pro.
-
+# exclude for CI build
+if(QT_BUILD_MINIMAL_STATIC_TESTS)
+    return()
+endif()
 #add_subdirectory(cmake) # special case
 if(NOT INTEGRITY)
     add_subdirectory(quick3d)
