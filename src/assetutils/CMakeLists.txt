@@ -29,7 +29,6 @@ qt_internal_add_qml_module(Quick3DAssetUtils
         Qt::GuiPrivate
         Qt::Quick3DRuntimeRenderPrivate
         Qt::Quick3DPrivate
-        Qt::Quick3DAssetUtilsPrivate
         Qt::Quick3DAssetImportPrivate
 )
 
