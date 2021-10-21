@@ -839,6 +839,9 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
         layerNode.tempAAPassIndex = 0;
         aaIsDirty = true;
     }
+    layerNode.ssaaEnabled = view3D.environment()->antialiasingMode()
+            == QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues::SSAA;
+
     layerNode.temporalAAStrength = view3D.environment()->temporalAAStrength();
 
     layerNode.background = QSSGRenderLayer::Background(view3D.environment()->backgroundMode());

@@ -63,7 +63,19 @@ QSize QSSGLayerRenderHelper::textureDimensions() const
 
 QSSGCameraGlobalCalculationResult QSSGLayerRenderHelper::setupCameraForRender(QSSGRenderCamera &inCamera)
 {
-    return inCamera.calculateGlobalVariables(layerRenderViewport());
+    // When using ssaa we need to zoom with the ssaa multiplier since otherwise the
+    // orthographic camera will be zoomed out due to the bigger viewport. We therefore
+    // scale the magnification before calulating the camera variables and then revert.
+    // Since the same camera can be used in several View3Ds with or without ssaa we
+    // cannot store the magnification permanently.
+    const float horizontalMagnification = inCamera.horizontalMagnification;
+    const float verticalMagnification = inCamera.verticalMagnification;
+    inCamera.horizontalMagnification *= m_layer->ssaaEnabled ? m_layer->ssaaMultiplier : 1.0f;
+    inCamera.verticalMagnification *= m_layer->ssaaEnabled ? m_layer->ssaaMultiplier : 1.0f;
+    const auto result = inCamera.calculateGlobalVariables(layerRenderViewport());
+    inCamera.horizontalMagnification = horizontalMagnification;
+    inCamera.verticalMagnification = verticalMagnification;
+    return result;
 }
 
 QSSGOption<QVector2D> QSSGLayerRenderHelper::layerMouseCoords(const QRectF &viewport,
