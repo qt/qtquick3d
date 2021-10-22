@@ -316,8 +316,14 @@ static QVector3D getPosition(const quint8 *srcVertices, quint32 idx, quint32 ver
     return *reinterpret_cast<const QVector3D *>(vertex + posOffset);
 }
 
+static float calcTriangleRadius(const QVector3D &center, const QVector3D &p0, const QVector3D &p1, const QVector3D &p2)
+{
+    return qMax(center.distanceToPoint(p1), qMax(center.distanceToPoint(p2), center.distanceToPoint(p0)));
+}
+
 static void copyToUnindexedVertices(QByteArray &unindexedVertexData,
                                     QVector<QVector3D> &centerData,
+                                    float &maxTriangleRadius,
                                     const QByteArray &vertexBufferData,
                                     quint32 vertexStride,
                                     quint32 posOffset,
@@ -346,6 +352,7 @@ static void copyToUnindexedVertices(QByteArray &unindexedVertexData,
         QVector3D p2 = getPosition(srcVertices, i2, vertexStride, posOffset);
         QVector3D center = (p0 + p1 + p2) * c_div3;
         centerData[i] = center;
+        maxTriangleRadius = qMax(maxTriangleRadius, calcTriangleRadius(center, p0, p1, p2));
         memcpy(dst, srcVertices + i0 * vertexStride, vertexStride);
         dst += vertexStride;
         memcpy(dst, srcVertices + i1 * vertexStride, vertexStride);
@@ -356,6 +363,7 @@ static void copyToUnindexedVertices(QByteArray &unindexedVertexData,
 }
 
 static void getVertexCenterData(QVector<QVector3D> &centerData,
+                                float &maxTriangleRadius,
                                 const QByteArray &vertexBufferData,
                                 quint32 vertexStride,
                                 quint32 posOffset,
@@ -369,11 +377,14 @@ static void getVertexCenterData(QVector<QVector3D> &centerData,
         QVector3D p2 = getPosition(srcVertices, 3 * i + 2, vertexStride, posOffset);
         QVector3D center = (p0 + p1 + p2) * c_div3;
         centerData[i] = center;
+        maxTriangleRadius = qMax(maxTriangleRadius, calcTriangleRadius(center, p0, p1, p2));
     }
 }
 
 void QQuick3DParticleModelBlendParticle::updateParticles()
 {
+    m_maxTriangleRadius = 0.f;
+
     // The primitives needs to be triangle list without indexing, because each triangle
     // needs to be it's own primitive and we need vertex index to get the particle index,
     // which we don't get with indexed primitives
@@ -427,7 +438,15 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             unindexedVertexData.resize(geometry->stride() * primitiveCount * 3);
             m_centerData.resize(primitiveCount);
             m_particleCount = primitiveCount;
-            copyToUnindexedVertices(unindexedVertexData, m_centerData, vertexBuffer, geometry->stride(), attributeBySemantic(geometry, QQuick3DGeometry::Attribute::PositionSemantic).offset, indexBuffer, u16IndexType, primitiveCount);
+            copyToUnindexedVertices(unindexedVertexData,
+                                    m_centerData,
+                                    m_maxTriangleRadius,
+                                    vertexBuffer,
+                                    geometry->stride(),
+                                    attributeBySemantic(geometry, QQuick3DGeometry::Attribute::PositionSemantic).offset,
+                                    indexBuffer,
+                                    u16IndexType,
+                                    primitiveCount);
 
             m_modelGeometry->setVertexData(unindexedVertexData);
             m_model->setGeometry(m_modelGeometry);
@@ -436,7 +455,12 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             quint32 primitiveCount = vertexBuffer.size() / geometry->stride() / 3;
             m_centerData.resize(primitiveCount);
             m_particleCount = primitiveCount;
-            getVertexCenterData(m_centerData, vertexBuffer, geometry->stride(), attributeBySemantic(geometry, QQuick3DGeometry::Attribute::PositionSemantic).offset, primitiveCount);
+            getVertexCenterData(m_centerData,
+                                m_maxTriangleRadius,
+                                vertexBuffer,
+                                geometry->stride(),
+                                attributeBySemantic(geometry, QQuick3DGeometry::Attribute::PositionSemantic).offset,
+                                primitiveCount);
         }
     } else {
         const QQmlContext *context = qmlContext(this);
@@ -491,7 +515,15 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             m_centerData.resize(primitiveCount);
             m_particleCount = primitiveCount;
 
-            copyToUnindexedVertices(unindexedVertexData, m_centerData, vertexBuffer.data, vertexBuffer.stride, entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())), indexBuffer.data, u16IndexType, primitiveCount);
+            copyToUnindexedVertices(unindexedVertexData,
+                                    m_centerData,
+                                    m_maxTriangleRadius,
+                                    vertexBuffer.data,
+                                    vertexBuffer.stride,
+                                    entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())),
+                                    indexBuffer.data,
+                                    u16IndexType,
+                                    primitiveCount);
             m_modelGeometry->setBounds(mesh.subsets().first().bounds.min, mesh.subsets().first().bounds.max);
             m_modelGeometry->setStride(vertexBuffer.stride);
             m_modelGeometry->setVertexData(unindexedVertexData);
@@ -501,7 +533,12 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
             quint32 primitiveCount = vertexBuffer.data.size() / vertexBuffer.stride / 3;
             m_centerData.resize(primitiveCount);
             m_particleCount = primitiveCount;
-            getVertexCenterData(m_centerData, vertexBuffer.data, vertexBuffer.stride, entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())), primitiveCount);
+            getVertexCenterData(m_centerData,
+                                m_maxTriangleRadius,
+                                vertexBuffer.data,
+                                vertexBuffer.stride,
+                                entryOffset(vertexBuffer, QByteArray(QSSGMesh::MeshInternal::getPositionAttrName())),
+                                primitiveCount);
             m_modelGeometry->setBounds(mesh.subsets().first().bounds.min, mesh.subsets().first().bounds.max);
             m_modelGeometry->setStride(vertexBuffer.stride);
             m_modelGeometry->setVertexData(vertexBuffer.data);
@@ -519,6 +556,11 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
     QMatrix4x4 transform = m_model->sceneTransform();
     if (m_model->parentNode())
         transform = m_model->parentNode()->sceneTransform().inverted() * transform;
+    const QVector3D scale = mat44::getScale(transform);
+    // Take max component scale for a conservative bounds estimation
+    const float scaleMax = qMax(scale.x(), qMax(scale.y(), scale.z()));
+    m_maxTriangleRadius *= scaleMax;
+
     m_triangleParticleData.resize(m_particleCount);
     m_particleData.resize(m_particleCount);
     m_particleData.fill({});
@@ -555,7 +597,7 @@ QSSGRenderGraphObject *QQuick3DParticleModelBlendParticle::updateSpatialNode(QSS
     QMatrix4x4 particleMatrix = psystem->sceneTransform().inverted() * m_model->sceneTransform();
     model->particleMatrix = particleMatrix.inverted();
     model->hasTransparency = fadeInEffect() == QQuick3DParticle::FadeOpacity || fadeOutEffect() == QQuick3DParticle::FadeOpacity;
-    updateParticleBuffer(model->particleBuffer);
+    updateParticleBuffer(model->particleBuffer, psystem->sceneTransform());
 
     return node;
 }
@@ -616,7 +658,7 @@ QQuick3DParticleModelBlendParticle::PerEmitterData &QQuick3DParticleModelBlendPa
     return n_noPerEmitterData;
 }
 
-void QQuick3DParticleModelBlendParticle::updateParticleBuffer(QSSGParticleBuffer *buffer)
+void QQuick3DParticleModelBlendParticle::updateParticleBuffer(QSSGParticleBuffer *buffer, const QMatrix4x4 &sceneTransform)
 {
     const auto &particles = m_triangleParticleData;
 
@@ -651,6 +693,9 @@ void QQuick3DParticleModelBlendParticle::updateParticleBuffer(QSSGParticleBuffer
         }
         dest += ss;
     }
+
+    bounds.fatten(m_maxTriangleRadius);
+    bounds.transform(sceneTransform);
     buffer->setBounds(bounds);
     m_dataChanged = false;
 }

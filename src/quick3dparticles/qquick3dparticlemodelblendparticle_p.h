@@ -147,7 +147,7 @@ private:
     };
 
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
-    void updateParticleBuffer(QSSGParticleBuffer *buffer);
+    void updateParticleBuffer(QSSGParticleBuffer *buffer, const QMatrix4x4 &sceneTransform);
     void regenerate();
     void updateParticles();
     void handleEndNodeChanged();
@@ -175,6 +175,7 @@ private:
     bool m_dataChanged = true;
     bool m_random = false;
     QQuick3DNode *m_activationNode = nullptr;
+    float m_maxTriangleRadius = 0.f;
 };
 
 QT_END_NAMESPACE
