@@ -44,8 +44,6 @@
 
 #include <QtGui/qwindow.h>
 
-#include <QtCore/qthread.h>
-
 QT_BEGIN_NAMESPACE
 
 using Binding = QPair<const QWindow *, QSSGRenderContextInterface *>;
@@ -134,33 +132,44 @@ QSSGRenderContextInterface::~QSSGRenderContextInterface()
     g_windowReg->removeIf([this](const Binding &b) { return (b.second == this); });
 }
 
-const QSSGRef<QSSGRenderer> &QSSGRenderContextInterface::renderer() const { return m_renderer; }
+const QSSGRef<QSSGRenderer> &QSSGRenderContextInterface::renderer() const
+{
+    return m_renderer;
+}
 
-const QSSGRef<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() const { return m_bufferManager; }
+const QSSGRef<QSSGBufferManager> &QSSGRenderContextInterface::bufferManager() const
+{
+    return m_bufferManager;
+}
 
-const QSSGRef<QSSGResourceManager> &QSSGRenderContextInterface::resourceManager() const { return m_resourceManager; }
+const QSSGRef<QSSGResourceManager> &QSSGRenderContextInterface::resourceManager() const
+{
+    return m_resourceManager;
+}
 
-const QSSGRef<QSSGRhiContext> &QSSGRenderContextInterface::rhiContext() const { return m_rhiContext; }
+const QSSGRef<QSSGRhiContext> &QSSGRenderContextInterface::rhiContext() const
+{
+    return m_rhiContext;
+}
 
-const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const { return m_shaderCache; }
+const QSSGRef<QSSGShaderCache> &QSSGRenderContextInterface::shaderCache() const
+{
+    return m_shaderCache;
+}
 
-const QSSGRef<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const { return m_shaderLibraryManager; }
+const QSSGRef<QSSGShaderLibraryManager> &QSSGRenderContextInterface::shaderLibraryManager() const
+{
+    return m_shaderLibraryManager;
+}
 
-const QSSGRef<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const { return m_customMaterialSystem; }
+const QSSGRef<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMaterialSystem() const
+{
+    return m_customMaterialSystem;
+}
 
 const QSSGRef<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
     return m_shaderProgramGenerator;
-}
-
-QVector2D QSSGRenderContextInterface::mousePickViewport() const
-{
-    return QVector2D((float)m_windowDimensions.width(), (float)m_windowDimensions.height());
-}
-
-QVector2D QSSGRenderContextInterface::mousePickMouseCoords(const QVector2D &inMouseCoords) const
-{
-    return inMouseCoords;
 }
 
 void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
