@@ -66,27 +66,16 @@ QSSGLayerRenderData::~QSSGLayerRenderData()
     m_rhiScreenTexture.reset();
 }
 
-void QSSGLayerRenderData::prepareForRender(const QSize &outputSize)
+void QSSGLayerRenderData::prepareForRender()
 {
-    QSSGLayerRenderPreparationData::prepareForRender(outputSize);
+    QSSGLayerRenderPreparationData::prepareForRender();
     QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-    const QSSGRef<QSSGResourceManager> &theResourceManager(renderer->contextInterface()->resourceManager());
-
-    // Generate all necessary lighting keys
 
     if (thePrepResult.flags.wasLayerDataDirty()) {
         m_progressiveAAPassIndex = 0;
     }
 
     renderer->layerNeedsFrameClear(*this);
-
-    // Clean up the texture cache (only used for depth-stencil buffers atm) if
-    // the layer dimensions changed. Not strictly necessary, but useful as
-    // most of these textures/renderbuffers depend on the output size.
-    if (outputSize != m_previousOutputSize) {
-        m_previousOutputSize = outputSize;
-        theResourceManager->destroyFreeSizedResources();
-    }
 }
 
 void QSSGLayerRenderData::resetForFrame()

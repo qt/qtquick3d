@@ -36,7 +36,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercodegenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
@@ -92,12 +91,11 @@ void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)
     m_contextInterface = ctx;
 }
 
-bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer,
-                                         const QSize &surfaceSize)
+bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
     Q_ASSERT(theRenderData);
-    theRenderData->prepareForRender(surfaceSize);
+    theRenderData->prepareForRender();
     return theRenderData->layerPrepResult->flags.wasDirty();
 }
 

@@ -102,7 +102,6 @@ GenShaders::GenShaders()
     auto shaderCache = new QSSGShaderCache(rhiContext, &initBaker);
     renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
                                                                                        new QSSGBufferManager(rhiContext, shaderCache),
-                                                                                       new QSSGResourceManager(rhiContext),
                                                                                        new QSSGRenderer,
                                                                                        new QSSGShaderLibraryManager,
                                                                                        shaderCache,
@@ -237,7 +236,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     const auto generateShaderForModel = [&](QSSGRenderModel &model) {
         layerData.resetForFrame();
         layer.addChild(model);
-        layerData.prepareForRender(QSize(888, 666));
+        layerData.prepareForRender();
 
         const auto &features = layerData.features;
 

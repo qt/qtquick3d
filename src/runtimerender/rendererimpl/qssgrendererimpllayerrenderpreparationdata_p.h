@@ -266,7 +266,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                      QSSGLayerRenderPreparationResultFlags &ioFlags);
 
-    virtual void prepareForRender(const QSize &outputSize);
+    virtual void prepareForRender();
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.

@@ -30,7 +30,6 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
@@ -49,22 +48,45 @@ QSSGRenderShadowMap::~QSSGRenderShadowMap()
     m_shadowMapList.clear();
 }
 
-static inline void setupForRhiDepthCube(const QSSGRef<QSSGResourceManager> &resMgr,
-                                        QSSGShadowMapEntry *entry,
-                                        qint32 width, qint32 height, QRhiTexture::Format format)
+static QRhiTexture *allocateRhiTexture(QRhi *rhi,
+                                       QRhiTexture::Format format,
+                                       const QSize &size,
+                                       QRhiTexture::Flags flags = {})
 {
-    entry->m_rhiDepthCube = resMgr->allocateRhiTexture(width, height, format, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
-    entry->m_rhiCubeCopy = resMgr->allocateRhiTexture(width, height, format, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
-    entry->m_rhiDepthStencil = resMgr->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
+    auto texture = rhi->newTexture(format, size, 1, flags);
+    if (!texture->create())
+        qWarning("Failed to create shadow map texture of size %dx%d", size.width(), size.height());
+    return texture;
 }
 
-static inline void setupForRhiDepth(const QSSGRef<QSSGResourceManager> &resMgr,
-                                    QSSGShadowMapEntry *entry,
-                                    qint32 width, qint32 height, QRhiTexture::Format format)
+static QRhiRenderBuffer *allocateRhiRenderBuffer(QRhi *rhi,
+                                                 QRhiRenderBuffer::Type type,
+                                                 const QSize &size)
 {
-    entry->m_rhiDepthMap = resMgr->allocateRhiTexture(width, height, format, QRhiTexture::RenderTarget);
-    entry->m_rhiDepthCopy = resMgr->allocateRhiTexture(width, height, format, QRhiTexture::RenderTarget);
-    entry->m_rhiDepthStencil = resMgr->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
+    auto renderBuffer = rhi->newRenderBuffer(type, size, 1);
+    if (!renderBuffer->create())
+        qWarning("Failed to build depth-stencil buffer of size %dx%d", size.width(), size.height());
+    return renderBuffer;
+}
+
+static inline void setupForRhiDepthCube(QRhi *rhi,
+                                        QSSGShadowMapEntry *entry,
+                                        const QSize &size,
+                                        QRhiTexture::Format format)
+{
+    entry->m_rhiDepthCube = allocateRhiTexture(rhi, format, size, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
+    entry->m_rhiCubeCopy = allocateRhiTexture(rhi, format, size, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
+    entry->m_rhiDepthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, size);
+}
+
+static inline void setupForRhiDepth(QRhi *rhi,
+                                    QSSGShadowMapEntry *entry,
+                                    const QSize &size,
+                                    QRhiTexture::Format format)
+{
+    entry->m_rhiDepthMap = allocateRhiTexture(rhi, format, size, QRhiTexture::RenderTarget);
+    entry->m_rhiDepthCopy = allocateRhiTexture(rhi, format, size, QRhiTexture::RenderTarget);
+    entry->m_rhiDepthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, size);
 }
 
 void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
@@ -72,11 +94,12 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                                             qint32 height,
                                             ShadowMapModes mode)
 {
-    const QSSGRef<QSSGResourceManager> &theManager(m_context.resourceManager());
     QRhi *rhi = m_context.rhiContext()->rhi();
     // Bail out if there is no QRhi, since we can't add entries without it
     if (!rhi)
         return;
+
+    const QSize pixelSize(width, height);
 
     QRhiTexture::Format rhiFormat = QRhiTexture::R16F;
     if (!rhi->isTextureFormatSupported(rhiFormat))
@@ -92,37 +115,37 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
         if (pEntry->m_rhiDepthMap && mode == ShadowMapModes::CUBE) {
             // previously VSM now CUBE
             pEntry->destroyRhiResources();
-            setupForRhiDepthCube(theManager, pEntry, width, height, rhiFormat);
+            setupForRhiDepthCube(rhi, pEntry, pixelSize, rhiFormat);
         } else if (pEntry->m_rhiDepthCube && mode != ShadowMapModes::CUBE) {
             // previously CUBE now VSM
             pEntry->destroyRhiResources();
-            setupForRhiDepth(theManager, pEntry, width, height, rhiFormat);
+            setupForRhiDepth(rhi, pEntry, pixelSize, rhiFormat);
         } else if (pEntry->m_rhiDepthMap) {
             // VSM before and now, see if size has changed
-            if (pEntry->m_rhiDepthMap->pixelSize() != QSize(width, height)) {
+            if (pEntry->m_rhiDepthMap->pixelSize() != pixelSize) {
                 pEntry->destroyRhiResources();
-                setupForRhiDepth(theManager, pEntry, width, height, rhiFormat);
+                setupForRhiDepth(rhi, pEntry, pixelSize, rhiFormat);
             }
         } else if (pEntry->m_rhiDepthCube) {
             // CUBE before and now, see if size has changed
-            if (pEntry->m_rhiDepthCube->pixelSize() != QSize(width, height)) {
+            if (pEntry->m_rhiDepthCube->pixelSize() != pixelSize) {
                 pEntry->destroyRhiResources();
-                setupForRhiDepthCube(theManager, pEntry, width, height, rhiFormat);
+                setupForRhiDepthCube(rhi, pEntry, pixelSize, rhiFormat);
             }
         }
         pEntry->m_shadowMapMode = mode;
     } else if (mode == ShadowMapModes::CUBE) {
-        QRhiTexture *depthMap = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
-        QRhiTexture *depthCopy = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
-        QRhiRenderBuffer *depthStencil = theManager->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
+        QRhiTexture *depthMap = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
+        QRhiTexture *depthCopy = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap);
+        QRhiRenderBuffer *depthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
         m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthCubeMap(lightIdx, mode, depthMap, depthCopy, depthStencil));
 
         pEntry = &m_shadowMapList.back();
     } else { // VSM
         Q_ASSERT(mode == ShadowMapModes::VSM);
-        QRhiTexture *depthMap = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget);
-        QRhiTexture *depthCopy = theManager->allocateRhiTexture(width, height, rhiFormat, QRhiTexture::RenderTarget);
-        QRhiRenderBuffer *depthStencil = theManager->allocateRhiRenderBuffer(width, height, QRhiRenderBuffer::DepthStencil);
+        QRhiTexture *depthMap = allocateRhiTexture(rhi, rhiFormat, QSize(width, height), QRhiTexture::RenderTarget);
+        QRhiTexture *depthCopy = allocateRhiTexture(rhi, rhiFormat, QSize(width, height), QRhiTexture::RenderTarget);
+        QRhiRenderBuffer *depthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
         m_shadowMapList.push_back(QSSGShadowMapEntry::withRhiDepthMap(lightIdx, mode, depthMap, depthCopy, depthStencil));
 
         pEntry = &m_shadowMapList.back();

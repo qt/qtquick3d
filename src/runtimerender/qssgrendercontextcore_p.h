@@ -47,7 +47,6 @@
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
@@ -75,7 +74,6 @@ public:
     // This overload must only be used in special cases, e.g. by the genshaders tool.
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
                                const QSSGRef<QSSGBufferManager> &bufferManager,
-                               const QSSGRef<QSSGResourceManager> &resourceManager,
                                const QSSGRef<QSSGRenderer> &renderer,
                                const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                const QSSGRef<QSSGShaderCache> &shaderCache,
@@ -86,7 +84,6 @@ public:
 
     const QSSGRef<QSSGRenderer> &renderer() const;
     const QSSGRef<QSSGBufferManager> &bufferManager() const;
-    const QSSGRef<QSSGResourceManager> &resourceManager() const;
     const QSSGRef<QSSGRhiContext> &rhiContext() const;
     const QSSGRef<QSSGShaderCache> &shaderCache() const;
     const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager() const;
@@ -102,15 +99,6 @@ public:
 
     void setSceneColor(const QColor &inSceneColor) { m_sceneColor = inSceneColor; }
 
-    // The reason you can set both window dimensions and an overall viewport is
-    // that the mouse needs to be inverted which requires the window height,
-    // and then the rest of the system really requires the viewport.
-    void setWindowDimensions(const QSize &inWindowDimensions) { m_windowDimensions = inWindowDimensions; }
-    QSize windowDimensions() { return m_windowDimensions; }
-
-    // In addition to the window dimensions which really have to be set, you can optionally
-    // set the viewport which will force the entire viewer to render specifically to this
-    // viewport.
     void setViewport(QRect inViewport) { m_viewport = inViewport; }
     QRect viewport() const { return m_viewport; }
 
@@ -150,7 +138,6 @@ private:
     const QSSGRef<QSSGRhiContext> m_rhiContext;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
     const QSSGRef<QSSGBufferManager> m_bufferManager;
-    const QSSGRef<QSSGResourceManager> m_resourceManager;
     const QSSGRef<QSSGRenderer> m_renderer;
     const QSSGRef<QSSGShaderLibraryManager> m_shaderLibraryManager;
     const QSSGRef<QSSGCustomMaterialSystem> m_customMaterialSystem;
@@ -164,7 +151,6 @@ private:
     QRect m_viewport;
     float m_dpr = 1.0;
     QRect m_scissorRect;
-    QSize m_windowDimensions {800, 480};
     QColor m_sceneColor;
 };
 QT_END_NAMESPACE

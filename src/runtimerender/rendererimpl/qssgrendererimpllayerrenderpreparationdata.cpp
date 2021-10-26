@@ -38,7 +38,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermorphtarget_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrenderresourcemanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicustommaterialsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -1185,9 +1184,8 @@ static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
     return false;
 }
 
-void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
+void QSSGLayerRenderPreparationData::prepareForRender()
 {
-    Q_UNUSED(outputSize);
     if (layerPrepResult.hasValue())
         return;
 

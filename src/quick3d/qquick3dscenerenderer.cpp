@@ -432,7 +432,6 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixel
 
     m_sgContext->setDpr(displayPixelRatio);
 
-    m_sgContext->setWindowDimensions(m_surfaceSize);
     m_sgContext->setViewport(viewport);
     m_sgContext->setScissorRect(viewport);
 

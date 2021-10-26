@@ -93,7 +93,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRende
     virtual ~QSSGLayerRenderData() override;
 
     // Internal Call
-    void prepareForRender(const QSize &outputSize) override;
+    void prepareForRender() override;
     void resetForFrame() final;
 
     // RHI-only

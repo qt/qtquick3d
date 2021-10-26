@@ -168,7 +168,7 @@ public:
     void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
     // Returns true if this layer or a sibling was dirty.
-    bool prepareLayerForRender(QSSGRenderLayer &inLayer, const QSize &surfaceSize);
+    bool prepareLayerForRender(QSSGRenderLayer &inLayer);
 
     void rhiPrepare(QSSGRenderLayer &inLayer);
     void rhiRender(QSSGRenderLayer &inLayer);
@@ -221,7 +221,6 @@ public:
     void endLayerDepthPassRender();
     void beginLayerRender(QSSGLayerRenderData &inLayer);
     void endLayerRender();
-    //void prepareImageForIbl(QSSGRenderImage &inImage);
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
     void removeLastFrameLayer(QSSGLayerRenderPreparationData *layerData);
