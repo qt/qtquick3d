@@ -99,12 +99,11 @@ GenShaders::GenShaders()
     rhiContext->initialize(rhi);
     rhiContext->setCommandBuffer(cb);
 
-    auto shaderCache = new QSSGShaderCache(rhiContext, &initBaker);
     renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
-                                                                                       new QSSGBufferManager(rhiContext, shaderCache),
+                                                                                       new QSSGBufferManager,
                                                                                        new QSSGRenderer,
                                                                                        new QSSGShaderLibraryManager,
-                                                                                       shaderCache,
+                                                                                       new QSSGShaderCache(rhiContext, &initBaker),
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator));
     sceneManager->rci = renderContext.data();

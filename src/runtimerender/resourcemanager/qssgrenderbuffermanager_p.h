@@ -70,6 +70,7 @@ struct QSSGRenderImage;
 // between different threads (and so windows). This is ensured by design, by
 // having a dedicated BufferManager for each render thread (window).
 
+class QSSGRenderContextInterface;
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 {
 public:
@@ -80,39 +81,6 @@ public:
         int mipMode;
     };
 
-private:
-    typedef QHash<ImageCacheKey, QSSGRenderImageTexture> ImageMap;
-    typedef QHash<QSGTexture *, QSSGRenderImageTexture> QSGImageMap;
-    typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
-    typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
-    typedef QHash<QSSGRenderTextureData *, QSSGRenderImageTexture> CustomTextureMap;
-
-    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
-    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
-    typedef QHash<const QSSGRenderModel *, QSSGRenderPath> ModelPathMap;
-    typedef QHash<const QSSGRenderImage *, QSSGRenderPath> ImagePathMap;
-
-
-    QSSGRef<QSSGRhiContext> context;
-    QSSGRef<QSSGShaderCache> shaderCache;
-    ImageMap imageMap;
-    QSGImageMap qsgImageMap;
-    MeshMap meshMap;
-    CustomMeshMap customMeshMap;
-    CustomTextureMap customTextureMap;
-    QVector<QSSGRenderVertexBufferEntry> entryBuffer;
-    ModelPathRefereneMap modelRefMap;
-    ImagePathReferenceMap imageRefMap;
-    ModelPathMap cachedModelPathMap;
-    ImagePathMap cachedImagePathMap;
-    QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
-    QMutex meshBufferMutex;
-
-    void clear();
-
-    QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath) const;
-
-public:
     enum MipMode {
         MipModeNone = 0,
         MipModeBsdf,
@@ -124,9 +92,10 @@ public:
     };
     Q_DECLARE_FLAGS(LoadRenderImageFlags, LoadRenderImageFlag)
 
-    QSSGBufferManager(const QSSGRef<QSSGRhiContext> &inRenderContext,
-                      const QSSGRef<QSSGShaderCache> &inShaderContext);
+    QSSGBufferManager();
     ~QSSGBufferManager();
+
+    void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeNone,
@@ -165,6 +134,20 @@ public:
     QMutex *meshUpdateMutex();
 
 private:
+    typedef QHash<ImageCacheKey, QSSGRenderImageTexture> ImageMap;
+    typedef QHash<QSGTexture *, QSSGRenderImageTexture> QSGImageMap;
+    typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
+    typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
+    typedef QHash<QSSGRenderTextureData *, QSSGRenderImageTexture> CustomTextureMap;
+
+    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
+    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
+    typedef QHash<const QSSGRenderModel *, QSSGRenderPath> ModelPathMap;
+    typedef QHash<const QSSGRenderImage *, QSSGRenderPath> ImagePathMap;
+
+    void clear();
+
+    QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath) const;
     bool createRhiTexture(QSSGRenderImageTexture &texture,
                           const QSSGLoadedTexture *inTexture,
                           bool inForceScanForTransparency = false,
@@ -174,6 +157,20 @@ private:
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);
+
+    QSSGRenderContextInterface *m_contextInterface = nullptr; // ContextInterfaces owns BufferManager
+    ImageMap imageMap;
+    QSGImageMap qsgImageMap;
+    MeshMap meshMap;
+    CustomMeshMap customMeshMap;
+    CustomTextureMap customTextureMap;
+    QVector<QSSGRenderVertexBufferEntry> entryBuffer;
+    ModelPathRefereneMap modelRefMap;
+    ImagePathReferenceMap imageRefMap;
+    ModelPathMap cachedModelPathMap;
+    ImagePathMap cachedImagePathMap;
+    QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
+    QMutex meshBufferMutex;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)

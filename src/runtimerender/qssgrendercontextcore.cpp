@@ -58,6 +58,8 @@ void QSSGRenderContextInterface::init()
 {
     m_renderer->setRenderContextInterface(this);
 
+    m_bufferManager->setRenderContextInterface(this);
+
     m_customMaterialSystem->setRenderContextInterface(this);
     if (loadPregenratedShaders())
         m_shaderLibraryManager->loadPregeneratedShaderInfo();
@@ -107,7 +109,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QWindow *window,
                                                        const QSSGRef<QSSGRhiContext> &ctx)
     : m_rhiContext(ctx)
     , m_shaderCache(new QSSGShaderCache(ctx))
-    , m_bufferManager(new QSSGBufferManager(ctx, m_shaderCache))
+    , m_bufferManager(new QSSGBufferManager)
     , m_renderer(new QSSGRenderer)
     , m_shaderLibraryManager(q3ds_shaderLibraryManager())
     , m_customMaterialSystem(new QSSGCustomMaterialSystem)
