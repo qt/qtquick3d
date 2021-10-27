@@ -370,31 +370,22 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             // Texture maps
             QSSGRenderableImage *renderableImage = subsetRenderable.firstImage;
-            // Need to check if texture is already bound or not in the case of
-            // some maps are sharing the same sampler. This prevent binding
-            // more than once. This case can happen when roughness, metalness,
-            // opacity and occlusion share the same sampler.
-            QVarLengthArray<int, 16> boundTextures;
             while (renderableImage) {
-                int tableIndex = renderableImage->m_imageStringTableIndex;
-                if (!boundTextures.contains(tableIndex)) {
-                    boundTextures.append(tableIndex);
-                    const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(QSSGRenderableImage::Type(tableIndex));
-                    const int samplerHint = tableIndex;
-                    int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
-                    if (samplerBinding >= 0) {
-                        QRhiTexture *texture = renderableImage->m_texture.m_texture;
-                        if (samplerBinding >= 0 && texture) {
-                            const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                            QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
-                                                                     toRhi(renderableImage->m_imageNode.m_magFilterType),
-                                                                     mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
-                                                                     toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
-                                                                     toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
-                            bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
-                        }
-                    } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
-                }
+                const char *samplerName = QSSGMaterialShaderGenerator::getSamplerName(renderableImage->m_mapType);
+                const int samplerHint = int(renderableImage->m_mapType);
+                int samplerBinding = shaderPipeline->bindingForTexture(samplerName, samplerHint);
+                if (samplerBinding >= 0) {
+                    QRhiTexture *texture = renderableImage->m_texture.m_texture;
+                    if (samplerBinding >= 0 && texture) {
+                        const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
+                        QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
+                                                                 toRhi(renderableImage->m_imageNode.m_magFilterType),
+                                                                 mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                                                                 toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                                                                 toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
+                        bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
+                    }
+                } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
                 renderableImage = renderableImage->m_nextImage;
             }
 

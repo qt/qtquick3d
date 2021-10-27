@@ -78,10 +78,9 @@ struct QSSGRenderableImage
     QSSGRenderImageTexture m_texture;
     QSSGRenderableImage *m_nextImage;
     Type m_mapType;
-    int m_imageStringTableIndex;
     bool uvCoordsGenerated = false;
     QSSGRenderableImage(Type inMapType, const QSSGRenderImage &inImageNode, const QSSGRenderImageTexture &inTexture)
-        : m_imageNode(inImageNode), m_texture(inTexture), m_nextImage(nullptr),  m_mapType(inMapType), m_imageStringTableIndex(int(inMapType))
+        : m_imageNode(inImageNode), m_texture(inTexture), m_nextImage(nullptr),  m_mapType(inMapType)
     {
     }
 };
