@@ -940,7 +940,7 @@ QMutex *QSSGBufferManager::meshUpdateMutex()
     return &meshBufferMutex;
 }
 
-QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath) const
+QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath)
 {
     QString path = primitivePath(inRelativePath);
     const quint32 id = 1;
@@ -1037,7 +1037,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh)
                                             rhiIndexFormat);
         rub->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBuffer.data);
     }
-
+    QVector<QSSGRenderVertexBufferEntry> entryBuffer;
     entryBuffer.resize(vertexBuffer.entries.size());
     for (quint32 entryIdx = 0, entryEnd = vertexBuffer.entries.size(); entryIdx < entryEnd; ++entryIdx)
         entryBuffer[entryIdx] = vertexBuffer.entries[entryIdx].toRenderVertexBufferEntry();
@@ -1342,7 +1342,7 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry,
 
 QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(const QSSGRenderPath &inSourcePath)
 {
-    QSSGMesh::Mesh mesh = loadMeshData(inSourcePath);
+    const QSSGMesh::Mesh mesh = loadMeshData(inSourcePath);
     if (!mesh.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inSourcePath.path()));
         return nullptr;
@@ -1397,7 +1397,7 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
     return meshBVHBuilder.buildTree();
 }
 
-QSSGMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath) const
+QSSGMesh::Mesh QSSGBufferManager::loadMeshData(const QSSGRenderPath &inMeshPath)
 {
     QSSGMesh::Mesh result;
 

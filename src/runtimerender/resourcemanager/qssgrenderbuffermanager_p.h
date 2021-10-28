@@ -101,30 +101,32 @@ public:
                                            MipMode inMipMode = MipModeNone,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
     QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
+
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
     QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry,
                                    const QSSGMesh::Mesh &mesh,
                                    bool update = false);
-    QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
-    QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
-    QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath) const;
 
-    QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh);
-
+    // Reference Counting for Meshes and Images
     void addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
     void addImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
     void removeMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
     void removeImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
+
+    // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers();
+
     void releaseGeometry(QSSGRenderGeometry *geometry);
     void releaseTextureData(QSSGRenderTextureData *textureData);
 
-    static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
-
-    QRhiResourceUpdateBatch *meshBufferUpdateBatch();
     void commitBufferResourceUpdates();
+
+    static QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
+    static QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
+
+    static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
     static void registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData);
     static void unregisterMeshData(const QString &assetId);
@@ -146,29 +148,37 @@ private:
     typedef QHash<const QSSGRenderImage *, QSSGRenderPath> ImagePathMap;
 
     void clear();
+    QRhiResourceUpdateBatch *meshBufferUpdateBatch();
 
-    QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath) const;
+    static QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath);
     bool createRhiTexture(QSSGRenderImageTexture &texture,
                           const QSSGLoadedTexture *inTexture,
                           bool inForceScanForTransparency = false,
                           MipMode inMipMode = MipModeNone);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
+    static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
+    QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh);
     bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture);
+
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
     void releaseImage(const QSSGRenderPath &sourcePath);
 
     QSSGRenderContextInterface *m_contextInterface = nullptr; // ContextInterfaces owns BufferManager
-    ImageMap imageMap;
-    QSGImageMap qsgImageMap;
-    MeshMap meshMap;
-    CustomMeshMap customMeshMap;
-    CustomTextureMap customTextureMap;
-    QVector<QSSGRenderVertexBufferEntry> entryBuffer;
+
+    // These store the actual buffer handles
+    ImageMap imageMap;                  // Textures (specificed by path)
+    QSGImageMap qsgImageMap;            // Textures (from Qt Quick)
+    MeshMap meshMap;                    // Meshes (specififed by path)
+    CustomMeshMap customMeshMap;        // Meshes (QQuick3DGeometry)
+    CustomTextureMap customTextureMap;  // Textures (QQuick3DTextureData)
+
+    // These are the reference lookup tables
     ModelPathRefereneMap modelRefMap;
     ImagePathReferenceMap imageRefMap;
     ModelPathMap cachedModelPathMap;
     ImagePathMap cachedImagePathMap;
+
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;
 };
