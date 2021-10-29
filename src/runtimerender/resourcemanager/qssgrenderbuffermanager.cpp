@@ -187,12 +187,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             const bool flipY = flags.testFlag(LoadWithFlippedY);
             theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, flipY));
             if (theLoadedTexture) {
-                ImageMap::iterator theImage = imageMap.find({ image->m_imagePath, inMipMode });
-                const bool notFound = theImage == imageMap.end();
-                if (notFound)
-                    theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
-                const bool checkTransp = notFound;
-
+                ImageMap::iterator theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
+                const bool checkTransp = true;
                 if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), checkTransp, inMipMode))
                     theImage.value() = QSSGRenderImageTexture();
                 result = theImage.value();
