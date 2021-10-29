@@ -55,7 +55,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml
 import QtQuick3D.Helpers
-
 import io.qt.tests.manual.dynamic3DTest
 
 Window {
@@ -100,7 +99,7 @@ Window {
                 from: 0
                 to: 50
                 duration: 10000
-                running: true
+                running: enableAnimationCheckbox.checked
                 loops: -1
             }
         }
@@ -116,6 +115,8 @@ Window {
             property var dynamicModels: []
             property var textures: []
             property var dynamicTextures: []
+            property var qmlTextures: []
+            property var item2Ds: []
 
             property int directionLightsCount: 0
             property int pointLightsCount: 0
@@ -125,24 +126,27 @@ Window {
             property int dynamicModelsCount: 0
             property int texturesCount: 0
             property int dynamicTexturesCount: 0
+            property int qmlTexturesCount: 0
+            property int item2DsCount: 0
 
             Component {
                 id: directionalLight
                 DirectionalLight {
+                    ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
                 }
             }
 
             Component {
                 id: pointLight
                 PointLight {
-
+                    ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
                 }
             }
 
             Component {
                 id: spotLight
                 SpotLight {
-
+                    ambientColor: Qt.rgba(0.1, 0.1, 0.1, 1.0)
                 }
             }
 
@@ -201,6 +205,45 @@ Window {
                     textureData: GradientTexture {
                         id: gradientTexture
 
+                    }
+                }
+            }
+
+            Component {
+                id: qmlTexture
+                Model {
+                    property alias color: sourceItemRect.color
+                    property alias text: textLabel.text
+                    source: "#Rectangle"
+                    materials: PrincipledMaterial {
+                        lighting: PrincipledMaterial.NoLighting
+                        baseColorMap: Texture {
+                            sourceItem: Rectangle {
+                                id: sourceItemRect
+                                width: 256
+                                height: 256
+                                color: "black"
+                                Text {
+                                    id: textLabel
+                                    anchors.centerIn: parent
+                                    color: "white"
+                                    font.pointSize: 64
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Component {
+                id: item2D
+                Node {
+                    property alias text: textLabel.text
+                    Text {
+                        id: textLabel
+                        anchors.centerIn: parent
+                        font.pointSize: 64
+                        color: "black"
                     }
                 }
             }
@@ -384,6 +427,39 @@ Window {
                 }
             }
 
+            function addQmlTexture() {
+                let rectColor = getRandomColor()
+                let position = getRandomVector3d(objectSpawner.range * 2)
+                let labelText = qmlTexturesCount + 1
+                let instance = qmlTexture.createObject(objectSpawner, {"position": position, "color": rectColor, "text": labelText})
+                qmlTextures.push(instance)
+                qmlTexturesCount++
+            }
+
+            function removeQmlTexture() {
+                if (qmlTextures.length > 0) {
+                    let instance = qmlTextures.pop()
+                    instance.destroy()
+                    qmlTexturesCount--
+                }
+            }
+
+            function addItem2D() {
+                let position = getRandomVector3d(objectSpawner.range * 2)
+                let labelText = item2DsCount + 1
+                let instance = item2D.createObject(objectSpawner, {"position": position, "text":labelText})
+                item2Ds.push(instance);
+                item2DsCount++
+            }
+
+            function removeItem2D() {
+                if (item2Ds.length > 0) {
+                    let instance = item2Ds.pop()
+                    instance.destroy()
+                    item2DsCount--
+                }
+            }
+
             function changeModels() {
                 // reset the model sources
                 models.forEach(model => model.source = getMeshSource())
@@ -417,6 +493,8 @@ Window {
         anchors.right: controlsContainer.left
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+
+        property var windowView: undefined
 
         View3D {
             id: view1
@@ -457,6 +535,25 @@ Window {
         }
     }
 
+    Component {
+        id: windowComponent
+        Window {
+            id: subWindow
+            visible: true
+            height: 400
+            width: 400
+            View3D {
+                id: view3
+                anchors.fill: parent
+                importScene: sceneRoot
+                environment: SceneEnvironment {
+                    clearColor: "orange"
+                    backgroundMode: SceneEnvironment.Color
+                }
+            }
+        }
+    }
+
     Rectangle {
         id: controlsContainer
         width: 300
@@ -465,6 +562,27 @@ Window {
         anchors.bottom: parent.bottom
         color: "grey"
         ColumnLayout {
+            CheckBox {
+                id: enableAnimationCheckbox
+                checked: false
+                text: "Enable Animation"
+            }
+
+            CheckBox {
+                id: enableWindowCheckbox
+                checked: false
+                text: "Enable Window View"
+                onCheckedChanged: {
+                    if (checked) {
+                        // Create Window component
+                        viewsContainer.windowView = windowComponent.createObject(viewsContainer)
+                    } else {
+                        // Delete Window component
+                        viewsContainer.windowView.destroy();
+                        viewsContainer.windowView = undefined
+                    }
+                }
+            }
             RowLayout {
                 Label {
                     text: "Directional Light"
@@ -673,6 +791,54 @@ Window {
                     text: "-"
                     onClicked: {
                         objectSpawner.removeDynamicTexture()
+                    }
+                }
+            }
+            RowLayout {
+                Label {
+                    text: "QML Texture"
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: objectSpawner.qmlTexturesCount
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                ToolButton {
+                    text: "+"
+                    onClicked: {
+                        objectSpawner.addQmlTexture()
+                    }
+                }
+                ToolButton {
+                    text: "-"
+                    onClicked: {
+                        objectSpawner.removeQmlTexture()
+                    }
+                }
+            }
+            RowLayout {
+                Label {
+                    text: "Item 2D"
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: objectSpawner.item2DsCount
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                ToolButton {
+                    text: "+"
+                    onClicked: {
+                        objectSpawner.addItem2D()
+                    }
+                }
+                ToolButton {
+                    text: "-"
+                    onClicked: {
+                        objectSpawner.removeItem2D()
                     }
                 }
             }
