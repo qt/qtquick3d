@@ -68,6 +68,7 @@ public:
 private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
     void invalidated();
+    void updatePicking();
 
 Q_SIGNALS:
     void allChildrenRemoved();
@@ -85,6 +86,7 @@ private:
     QQuickWindow *m_window = nullptr;
     QQuickItem *m_contentItem = nullptr;
     bool m_sceneManagerValid = false;
+    bool m_pickingDirty = true;
     QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
 };
 

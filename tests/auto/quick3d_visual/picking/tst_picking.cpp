@@ -27,10 +27,12 @@
 ****************************************************************************/
 #include <QSignalSpy>
 #include <QTest>
+#include <QtQuick/QQuickItem>
 
 #include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3dpickresult_p.h>
+#include <QtQuick3D/private/qquick3ditem2d_p.h>
 
 #include "../shared/util.h"
 
@@ -41,6 +43,9 @@ private Q_SLOTS:
     void initTestCase() override;
     void test_object_picking();
 
+private:
+    QQuickItem *find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemName);
+
 };
 
 void tst_Picking::initTestCase()
@@ -48,6 +53,20 @@ void tst_Picking::initTestCase()
     QQuick3DDataTest::initTestCase();
     if (!initialized())
         return;
+}
+
+QQuickItem *tst_Picking::find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemName)
+{
+    QQuick3DNode *obj = view->rootObject()->findChild<QQuick3DNode*>(objectName);
+    if (!obj)
+        return nullptr;
+    QQuickItem *subsceneRoot = obj->findChild<QQuickItem *>();
+    if (!subsceneRoot)
+        subsceneRoot = obj->findChild<QQuick3DItem2D *>()->contentItem();
+    if (!subsceneRoot)
+        return nullptr;
+    QObject *child = subsceneRoot->findChild<QObject *>(itemName);
+    return static_cast<QQuickItem *>(child);
 }
 
 void tst_Picking::test_object_picking()
@@ -62,6 +81,8 @@ void tst_Picking::test_object_picking()
     QVERIFY(model1);
     QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
     QVERIFY(model2);
+    QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
+    QVERIFY(item2d);
 
     // Pick nearest based on viewport position
 
@@ -88,6 +109,20 @@ void tst_Picking::test_object_picking()
     // Just outside model2's upper right corner, so there should be no hit
     result = view3d->pick(301, 99);
     QCOMPARE(result.objectHit(), nullptr);
+
+    // Enable the 2D item
+    item2d->setEnabled(true);
+    QTest::qWait(100);
+    // Then picking on top of model1 should not pick it anymore
+    result = view3d->pick(200, 200);
+    QVERIFY(result.objectHit() != model1);
+    // Hide the 2D item
+    item2d->setVisible(false);
+    QTest::qWait(100);
+    // Then picking on top of model1 should pick it again
+    result = view3d->pick(200, 200);
+    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.objectHit(), model1);
 
     // Pick all based on viewport position
 
