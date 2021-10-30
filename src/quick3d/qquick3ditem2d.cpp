@@ -84,6 +84,8 @@ void QQuick3DItem2D::addChildItem(QQuickItem *item)
     item->setParent(m_contentItem);
     item->setParentItem(m_contentItem);
     connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+    connect(item, &QQuickItem::enabledChanged, this, &QQuick3DItem2D::updatePicking);
+    connect(item, &QQuickItem::visibleChanged, this, &QQuick3DItem2D::updatePicking);
     m_sourceItems.append(item);
     update();
 }
@@ -115,6 +117,12 @@ void QQuick3DItem2D::invalidated()
         delete m_renderer;
         m_renderer = nullptr;
     }
+}
+
+void QQuick3DItem2D::updatePicking()
+{
+    m_pickingDirty = true;
+    update();
 }
 
 QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -151,6 +159,19 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     m_renderer->setRootNode(m_rootNode);
     m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
     m_renderer->nodeChanged(m_rootNode, QSGNode::DirtyForceUpdate); // Force render list update.
+
+    if (m_pickingDirty) {
+        m_pickingDirty = false;
+        bool isPickable = false;
+        for (auto item : m_sourceItems) {
+            // Enable picking for Item2D if any of its child is visible and enabled.
+            if (item->isVisible() && item->isEnabled()) {
+                isPickable = true;
+                break;
+            }
+        }
+        itemNode->flags.setFlag(QSSGRenderNode::Flag::LocallyPickable, isPickable);
+    }
 
     itemNode->m_renderer = m_renderer;
     if (m_sceneManagerValid) {

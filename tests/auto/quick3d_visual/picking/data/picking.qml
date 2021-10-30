@@ -30,4 +30,26 @@ View3D {
             baseColor: "green"
         }
     }
+    Node {
+        objectName: "item2dNode"
+        z: 200
+        Rectangle {
+            id: item2d
+            objectName: "item2d"
+            anchors.centerIn: parent
+            width: 150
+            height: 150
+            border.width: 2
+            border.color: "#ffffff"
+            color: "#808080"
+            opacity: 0.5
+            // Not enabled, so by default picking goes through
+            enabled: false
+            Text {
+                anchors.centerIn: parent
+                font.pixelSize: 20
+                text: "Rectangle"
+            }
+        }
+    }
 }

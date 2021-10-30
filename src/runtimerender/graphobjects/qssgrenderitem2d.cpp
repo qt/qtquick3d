@@ -37,8 +37,6 @@ QT_BEGIN_NAMESPACE
 QSSGRenderItem2D::QSSGRenderItem2D()
     : QSSGRenderNode(QSSGRenderGraphObject::Type::Item2D)
 {
-    // Item2D's are always pickable
-    flags.setFlag(Flag::LocallyPickable, true);
 }
 
 QSSGRenderItem2D::~QSSGRenderItem2D()
