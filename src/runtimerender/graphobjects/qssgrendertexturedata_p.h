@@ -68,18 +68,18 @@ public:
     bool hasTransparancy() const;
     void setHasTransparency(bool hasTransparency);
 
-    QSSGRenderImageTexture createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager,
-                                          QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone);
+    uint32_t generationId() const;
 
 protected:
     Q_DISABLE_COPY(QSSGRenderTextureData)
 
-    QSSGRenderImageTexture m_texture;
+    void markDirty();
+
     QByteArray m_textureData;
     QSize m_size;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
-    bool m_dirty = true;
     bool m_hasTransparency = false;
+    uint32_t m_generationId = 1;
 };
 
 QT_END_NAMESPACE

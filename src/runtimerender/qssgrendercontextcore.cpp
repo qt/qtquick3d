@@ -204,6 +204,9 @@ bool QSSGRenderContextInterface::endFrame(bool allowRecursion)
             return false;
     }
 
+    // Now check for unreferenced buffers and release them if necessary
+    m_bufferManager->cleanupUnreferencedBuffers();
+
     m_renderer->endFrame();
     ++m_frameCount;
 

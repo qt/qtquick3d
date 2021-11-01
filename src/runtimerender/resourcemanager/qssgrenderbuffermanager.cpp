@@ -150,11 +150,11 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             context->commandBuffer()->resourceUpdate(rub);
             auto theImage = qsgImageMap.find(qsgTexture);
             if (theImage == qsgImageMap.end())
-                theImage = qsgImageMap.insert(qsgTexture, QSSGRenderImageTexture());
-            theImage.value().m_texture = qsgTexture->rhiTexture();
-            theImage.value().m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
-            result = theImage.value();
-            registerUsage(qsgTexture);
+                theImage = qsgImageMap.insert(qsgTexture, ImageData());
+            theImage.value().renderImageTexture.m_texture = qsgTexture->rhiTexture();
+            theImage.value().renderImageTexture.m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
+            theImage.value().usageCount++;
+            result = theImage.value().renderImageTexture;
             // inMipMode is ignored completely when sourcing the texture from a
             // QSGTexture. Mipmap generation is not supported, whereas
             // attempting to use such a texture as a light probe will fail. (no
@@ -174,67 +174,67 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         // QSSGRenderImage can override the mipmode for its texture data
         if (inMipMode == MipModeNone && image->m_generateMipmaps)
             inMipMode = MipModeGenerated;
-        return image->m_rawTextureData->createOrUpdate(this, inMipMode);
+
+        return loadTextureData(image->m_rawTextureData, inMipMode);
 
     } else if (!image->m_imagePath.isEmpty()) {
-
-        const auto foundIt = imageMap.constFind({ image->m_imagePath, inMipMode });
+        const ImageCacheKey imageKey = { image->m_imagePath, inMipMode };
+        auto foundIt = imageMap.find(imageKey);
         if (foundIt != imageMap.cend()) {
-            result = foundIt.value();
+            result = foundIt.value().renderImageTexture;
         } else {
             QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
             const auto &path = image->m_imagePath.path();
             const bool flipY = flags.testFlag(LoadWithFlippedY);
             theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, flipY));
             if (theLoadedTexture) {
-                ImageMap::iterator theImage = imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
+                foundIt = imageMap.insert(imageKey, ImageData());
                 const bool checkTransp = true;
-                if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), checkTransp, inMipMode))
-                    theImage.value() = QSSGRenderImageTexture();
-                result = theImage.value();
+                if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), checkTransp, inMipMode))
+                    foundIt.value() = ImageData();
+                result = foundIt.value().renderImageTexture;
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
                 // again
                 // which could slow down the system quite a bit.
-                imageMap.insert({ image->m_imagePath, inMipMode }, QSSGRenderImageTexture());
+                foundIt = imageMap.insert(imageKey, ImageData());
                 qCWarning(WARNING, "Failed to load image: %s", qPrintable(path));
             }
         }
-
-        // Check if the source path has changed since the last load
-        auto imagePathItr = cachedImagePathMap.constFind(image);
-        if (imagePathItr != cachedImagePathMap.cend())
-            if (!(imagePathItr.value() == image->m_imagePath))
-                removeImageReference(imagePathItr.value(), imagePathItr.key());
-
-        addImageReference(image->m_imagePath, image);
+        foundIt.value().usageCount++;
     }
     return result;
 }
 
 QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
 {
-    Q_ASSERT(data);
-
-    auto theImage = customTextureMap.find(data);
-    if (theImage == customTextureMap.end()) {
-        theImage = customTextureMap.insert(data, QSSGRenderImageTexture());
-    } else {
+    auto theImageData = customTextureMap.find(data);
+    if (theImageData == customTextureMap.end()) {
+        theImageData = customTextureMap.insert(data, ImageData());
+    } else if (data->generationId() != theImageData->generationId) {
         // release first
         releaseTextureData(data);
         // reinsert the placeholder since releaseTextureData removed from map
-        theImage = customTextureMap.insert(data, QSSGRenderImageTexture());
+        theImageData = customTextureMap.insert(data, ImageData());
+    } else {
+        // Return the currently loaded texture
+        theImageData.value().usageCount++;
+        return theImageData.value().renderImageTexture;
     }
 
+    // Load the texture
     QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
     if (!data->textureData().isNull()) {
         theLoadedTexture.reset(QSSGLoadedTexture::loadTextureData(data));
         theLoadedTexture->ownsData = false;
-        if (!createRhiTexture(theImage.value(), theLoadedTexture.data(), false, inMipMode))
-            theImage.value() = QSSGRenderImageTexture();
+        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), false, inMipMode))
+            theImageData.value().generationId = data->generationId();
+        else
+            theImageData.value() = ImageData();
     }
 
-    return theImage.value();
+    theImageData.value().usageCount++;
+    return theImageData.value().renderImageTexture;
 }
 
 QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat format)
@@ -1173,7 +1173,7 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
 {
     const auto textureDataItr = customTextureMap.constFind(textureData);
     if (textureDataItr != customTextureMap.cend()) {
-        auto rhiTexture = textureDataItr.value().m_texture;
+        auto rhiTexture = textureDataItr.value().renderImageTexture.m_texture;
         if (rhiTexture)
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
         customTextureMap.erase(textureDataItr);
@@ -1194,7 +1194,7 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
 {
     const auto imageItr = imageMap.constFind(key);
     if (imageItr != imageMap.cend()) {
-        auto rhiTexture = imageItr.value().m_texture;
+        auto rhiTexture = imageItr.value().renderImageTexture.m_texture;
         if (rhiTexture)
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
         imageMap.erase(imageItr);
@@ -1205,7 +1205,7 @@ void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
 {
     for (auto it = imageMap.begin(); it != imageMap.end(); ) {
         if (it.key().path == sourcePath) {
-            auto rhiTexture = it.value().m_texture;
+            auto rhiTexture = it.value().renderImageTexture.m_texture;
             if (rhiTexture)
                 m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             it = imageMap.erase(it);
@@ -1213,15 +1213,6 @@ void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
             ++it;
         }
     }
-}
-
-void QSSGBufferManager::registerUsage(QSGTexture *texture)
-{
-    auto sgIterator = qsgImageUsageMap.find(texture);
-    if (sgIterator == qsgImageUsageMap.end())
-        qsgImageUsageMap.insert(texture, 1);
-    else
-        sgIterator.value()++;
 }
 
 void QSSGBufferManager::addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model)
@@ -1233,16 +1224,6 @@ void QSSGBufferManager::addMeshReference(const QSSGRenderPath &sourcePath, const
         meshItr.value().insert(model);
     }
     cachedModelPathMap.insert(model, sourcePath);
-}
-
-void QSSGBufferManager::addImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image)
-{
-    auto imageItr = imageRefMap.find(sourcePath);
-    if (imageItr == imageRefMap.cend())
-        imageRefMap.insert(sourcePath, {image});
-    else
-        imageItr.value().insert(image);
-    cachedImagePathMap.insert(image, sourcePath);
 }
 
 void QSSGBufferManager::removeMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model)
@@ -1257,25 +1238,8 @@ void QSSGBufferManager::removeMeshReference(const QSSGRenderPath &sourcePath, co
     cachedModelPathMap.remove(model);
 }
 
-void QSSGBufferManager::removeImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image)
-{
-    auto imageItr = imageRefMap.find(sourcePath);
-    if (imageItr != imageRefMap.cend())
-        imageItr.value().remove(image);
-    cachedImagePathMap.remove(image);
-}
-
 void QSSGBufferManager::cleanupUnreferencedBuffers()
 {
-    // Release all images who are not referenced
-    const auto &imageRefMapKeys = imageRefMap.keys();
-    for (const auto &imagePath : imageRefMapKeys) {
-        if (imageRefMap[imagePath].count() > 0)
-            continue;
-        releaseImage(imagePath);
-        imageRefMap.remove(imagePath);
-    }
-
     // Release all meshes who are not referenced
     const auto &modelRefMapKeys = modelRefMap.keys();
     for (const auto &meshPath : modelRefMapKeys) {
@@ -1286,18 +1250,44 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
     }
 
     // SG Textures
-    auto sgIterator = qsgImageUsageMap.cbegin();
-    while (sgIterator != qsgImageUsageMap.cend()) {
-        if (sgIterator.value() == 0) {
+    auto sgIterator = qsgImageMap.cbegin();
+    while (sgIterator != qsgImageMap.cend()) {
+        if (sgIterator.value().usageCount == 0) {
             // Texture is no longer uses, so stop tracking
             // We do not need to delete/release the texture
             // because we don't own it.
-            qsgImageMap.remove(sgIterator.key());
-            sgIterator = qsgImageUsageMap.erase(sgIterator);
+            sgIterator = qsgImageMap.erase(sgIterator);
         } else {
             ++sgIterator;
         }
     }
+
+    // Images
+    auto imageKeyIterator = imageMap.cbegin();
+    while (imageKeyIterator != imageMap.cend()) {
+        if (imageKeyIterator.value().usageCount == 0) {
+            auto rhiTexture = imageKeyIterator.value().renderImageTexture.m_texture;
+            if (rhiTexture)
+                m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            imageKeyIterator = imageMap.erase(imageKeyIterator);
+        } else {
+            ++imageKeyIterator;
+        }
+    }
+
+    // Custom Texture Data
+    auto textureDataIterator = customTextureMap.cbegin();
+    while (textureDataIterator != customTextureMap.cend()) {
+        if (textureDataIterator.value().usageCount == 0) {
+            auto rhiTexture = textureDataIterator.value().renderImageTexture.m_texture;
+            if (rhiTexture)
+                m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            textureDataIterator = customTextureMap.erase(textureDataIterator);
+        } else {
+            ++textureDataIterator;
+        }
+    }
+
 // Resource Tracking Debug Code
 //    qDebug() << "QSSGBufferManager::cleanupUnreferencedBuffers()" << this << "frame:" << frameIndex++;
 //    qDebug() << "Textures(by path): " << imageMap.count();
@@ -1310,8 +1300,16 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
 void QSSGBufferManager::resetUsageCounters()
 {
     // SG Textures
-    for(auto &value : qsgImageUsageMap)
-        value = 0;
+    for (auto &imageData : qsgImageMap)
+        imageData.usageCount = 0;
+
+    // Images
+    for (auto &imageData : imageMap)
+        imageData.usageCount = 0;
+
+    // TextureDatas
+    for (auto &imageData : customTextureMap)
+        imageData.usageCount = 0;
 }
 
 void QSSGBufferManager::registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData)
@@ -1501,8 +1499,6 @@ void QSSGBufferManager::clear()
 
     modelRefMap.clear();
     cachedModelPathMap.clear();
-    imageRefMap.clear();
-    cachedImagePathMap.clear();
 }
 
 QRhiResourceUpdateBatch *QSSGBufferManager::meshBufferUpdateBatch()

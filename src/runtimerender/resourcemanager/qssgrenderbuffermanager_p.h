@@ -81,6 +81,12 @@ public:
         int mipMode;
     };
 
+    struct ImageData {
+        QSSGRenderImageTexture renderImageTexture;
+        uint32_t usageCount = 0;
+        uint32_t generationId = 0;
+    };
+
     enum MipMode {
         MipModeNone = 0,
         MipModeBsdf,
@@ -100,7 +106,8 @@ public:
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeNone,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
-    QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
+    QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data,
+                                           MipMode inMipMode);
 
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
@@ -111,9 +118,7 @@ public:
 
     // Reference Counting for Meshes and Images
     void addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
-    void addImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
     void removeMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
-    void removeImageReference(const QSSGRenderPath &sourcePath, const QSSGRenderImage *image);
 
     // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers();
@@ -137,11 +142,11 @@ public:
     QMutex *meshUpdateMutex();
 
 private:
-    typedef QHash<ImageCacheKey, QSSGRenderImageTexture> ImageMap;
-    typedef QHash<QSGTexture *, QSSGRenderImageTexture> QSGImageMap;
+    typedef QHash<ImageCacheKey, ImageData> ImageMap;
+    typedef QHash<QSGTexture *, ImageData> QSGImageMap;
     typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
     typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
-    typedef QHash<QSSGRenderTextureData *, QSSGRenderImageTexture> CustomTextureMap;
+    typedef QHash<QSSGRenderTextureData *, ImageData> CustomTextureMap;
 
     typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
     typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
@@ -176,13 +181,7 @@ private:
 
     // These are the reference lookup tables
     ModelPathRefereneMap modelRefMap;
-    ImagePathReferenceMap imageRefMap;
     ModelPathMap cachedModelPathMap;
-    ImagePathMap cachedImagePathMap;
-
-    // Resources usage counters (per frame)
-    void registerUsage(QSGTexture *texture);
-    QHash<QSGTexture *, uint32_t> qsgImageUsageMap;
 
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;

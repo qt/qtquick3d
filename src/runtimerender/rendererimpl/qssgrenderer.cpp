@@ -127,10 +127,6 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
         if (resource->type == QSSGRenderGraphObject::Type::Geometry) {
             auto geometry = static_cast<QSSGRenderGeometry*>(resource);
             bufferManager->releaseGeometry(geometry);
-        } else if (resource->type == QSSGRenderGraphObject::Type::Image) {
-            auto image = static_cast<QSSGRenderImage*>(resource);
-            if (!image->m_qsgTexture)
-                bufferManager->removeImageReference(image->m_imagePath, image);
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
             if (!model->geometry)
@@ -146,8 +142,6 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
 
         delete resource;
     }
-    // Now check for unreferenced buffers and release them if necessary
-    bufferManager->cleanupUnreferencedBuffers();
     resources.clear();
 }
 
