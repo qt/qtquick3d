@@ -116,6 +116,7 @@ Window {
             property var textures: []
             property var dynamicTextures: []
             property var qmlTextures: []
+            property var qmlSharedTextures: []
             property var item2Ds: []
 
             property int directionLightsCount: 0
@@ -127,6 +128,7 @@ Window {
             property int texturesCount: 0
             property int dynamicTexturesCount: 0
             property int qmlTexturesCount: 0
+            property int qmlSharedTexturesCount: 0
             property int item2DsCount: 0
 
             Component {
@@ -230,6 +232,19 @@ Window {
                                     font.pointSize: 64
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            Component {
+                id: qmlTextureShared
+                Model {
+                    property alias sharedItem: texture.sourceItem
+                    source: "#Rectangle"
+                    materials: PrincipledMaterial {
+                        lighting: PrincipledMaterial.NoLighting
+                        baseColorMap: Texture {
+                            id: texture
                         }
                     }
                 }
@@ -444,6 +459,21 @@ Window {
                 }
             }
 
+            function addQmlSharedTexture() {
+                let position = getRandomVector3d(objectSpawner.range * 2)
+                let instance = qmlTextureShared.createObject(objectSpawner, {"sharedItem": sharedItem, "position": position})
+                qmlSharedTextures.push(instance)
+                qmlSharedTexturesCount++
+            }
+
+            function removeQmlSharedTexture() {
+                if (qmlSharedTextures.length > 0) {
+                    let instance = qmlSharedTextures.pop()
+                    instance.destroy()
+                    qmlSharedTexturesCount--
+                }
+            }
+
             function addItem2D() {
                 let position = getRandomVector3d(objectSpawner.range * 2)
                 let labelText = item2DsCount + 1
@@ -495,6 +525,13 @@ Window {
         anchors.left: parent.left
 
         property var windowView: undefined
+
+        Image {
+            id: sharedItem
+            source: "noise1.jpg"
+            width: 256
+            height: 256
+        }
 
         View3D {
             id: view1
@@ -815,6 +852,30 @@ Window {
                     text: "-"
                     onClicked: {
                         objectSpawner.removeQmlTexture()
+                    }
+                }
+            }
+            RowLayout {
+                Label {
+                    text: "QML Texture (Shared)"
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: objectSpawner.qmlSharedTexturesCount
+                    color: "white"
+                    Layout.fillWidth: true
+                }
+                ToolButton {
+                    text: "+"
+                    onClicked: {
+                        objectSpawner.addQmlSharedTexture()
+                    }
+                }
+                ToolButton {
+                    text: "-"
+                    onClicked: {
+                        objectSpawner.removeQmlSharedTexture()
                     }
                 }
             }

@@ -117,6 +117,7 @@ public:
 
     // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers();
+    void resetUsageCounters();
 
     void releaseGeometry(QSSGRenderGeometry *geometry);
     void releaseTextureData(QSSGRenderTextureData *textureData);
@@ -178,6 +179,10 @@ private:
     ImagePathReferenceMap imageRefMap;
     ModelPathMap cachedModelPathMap;
     ImagePathMap cachedImagePathMap;
+
+    // Resources usage counters (per frame)
+    void registerUsage(QSGTexture *texture);
+    QHash<QSGTexture *, uint32_t> qsgImageUsageMap;
 
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;

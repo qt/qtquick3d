@@ -129,9 +129,8 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
             bufferManager->releaseGeometry(geometry);
         } else if (resource->type == QSSGRenderGraphObject::Type::Image) {
             auto image = static_cast<QSSGRenderImage*>(resource);
-            if (!image->m_qsgTexture) {
+            if (!image->m_qsgTexture)
                 bufferManager->removeImageReference(image->m_imagePath, image);
-            }
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
             if (!model->geometry)

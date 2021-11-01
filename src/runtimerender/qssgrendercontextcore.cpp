@@ -178,6 +178,7 @@ void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
     }
 
     m_perFrameAllocator.reset();
+    m_bufferManager->resetUsageCounters();
     m_renderer->beginFrame();
 }
 

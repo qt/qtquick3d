@@ -154,7 +154,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             theImage.value().m_texture = qsgTexture->rhiTexture();
             theImage.value().m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
             result = theImage.value();
-
+            registerUsage(qsgTexture);
             // inMipMode is ignored completely when sourcing the texture from a
             // QSGTexture. Mipmap generation is not supported, whereas
             // attempting to use such a texture as a light probe will fail. (no
@@ -1215,6 +1215,15 @@ void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
     }
 }
 
+void QSSGBufferManager::registerUsage(QSGTexture *texture)
+{
+    auto sgIterator = qsgImageUsageMap.find(texture);
+    if (sgIterator == qsgImageUsageMap.end())
+        qsgImageUsageMap.insert(texture, 1);
+    else
+        sgIterator.value()++;
+}
+
 void QSSGBufferManager::addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model)
 {
     auto meshItr = modelRefMap.find(sourcePath);
@@ -1275,6 +1284,34 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
         releaseMesh(meshPath);
         modelRefMap.remove(meshPath);
     }
+
+    // SG Textures
+    auto sgIterator = qsgImageUsageMap.cbegin();
+    while (sgIterator != qsgImageUsageMap.cend()) {
+        if (sgIterator.value() == 0) {
+            // Texture is no longer uses, so stop tracking
+            // We do not need to delete/release the texture
+            // because we don't own it.
+            qsgImageMap.remove(sgIterator.key());
+            sgIterator = qsgImageUsageMap.erase(sgIterator);
+        } else {
+            ++sgIterator;
+        }
+    }
+// Resource Tracking Debug Code
+//    qDebug() << "QSSGBufferManager::cleanupUnreferencedBuffers()" << this << "frame:" << frameIndex++;
+//    qDebug() << "Textures(by path): " << imageMap.count();
+//    qDebug() << "Textures(custom):  " << customTextureMap.count();
+//    qDebug() << "Textures(qsg):     " << qsgImageMap.count();
+//    qDebug() << "Geometry(by path): " << meshMap.count();
+//    qDebug() << "Geometry(custom):  " << customMeshMap.count();
+}
+
+void QSSGBufferManager::resetUsageCounters()
+{
+    // SG Textures
+    for(auto &value : qsgImageUsageMap)
+        value = 0;
 }
 
 void QSSGBufferManager::registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData)
