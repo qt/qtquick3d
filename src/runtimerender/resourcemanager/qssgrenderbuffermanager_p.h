@@ -87,6 +87,12 @@ public:
         uint32_t generationId = 0;
     };
 
+    struct MeshData {
+        QSSGRenderMesh *mesh = nullptr;
+        uint32_t usageCount = 0;
+        uint32_t generationId = 0;
+    };
+
     enum MipMode {
         MipModeNone = 0,
         MipModeBsdf,
@@ -112,13 +118,7 @@ public:
     QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
     QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
-    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry,
-                                   const QSSGMesh::Mesh &mesh,
-                                   bool update = false);
-
-    // Reference Counting for Meshes and Images
-    void addMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
-    void removeMeshReference(const QSSGRenderPath &sourcePath, const QSSGRenderModel *model);
+    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry);
 
     // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers();
@@ -142,17 +142,6 @@ public:
     QMutex *meshUpdateMutex();
 
 private:
-    typedef QHash<ImageCacheKey, ImageData> ImageMap;
-    typedef QHash<QSGTexture *, ImageData> QSGImageMap;
-    typedef QHash<QSSGRenderPath, QSSGRenderMesh *> MeshMap;
-    typedef QHash<QSSGRenderGeometry *, QSSGRenderMesh *> CustomMeshMap;
-    typedef QHash<QSSGRenderTextureData *, ImageData> CustomTextureMap;
-
-    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderModel *>> ModelPathRefereneMap;
-    typedef QHash<QSSGRenderPath, QSet<const QSSGRenderImage *>> ImagePathReferenceMap;
-    typedef QHash<const QSSGRenderModel *, QSSGRenderPath> ModelPathMap;
-    typedef QHash<const QSSGRenderImage *, QSSGRenderPath> ImagePathMap;
-
     void clear();
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();
 
@@ -173,15 +162,11 @@ private:
     QSSGRenderContextInterface *m_contextInterface = nullptr; // ContextInterfaces owns BufferManager
 
     // These store the actual buffer handles
-    ImageMap imageMap;                  // Textures (specificed by path)
-    QSGImageMap qsgImageMap;            // Textures (from Qt Quick)
-    MeshMap meshMap;                    // Meshes (specififed by path)
-    CustomMeshMap customMeshMap;        // Meshes (QQuick3DGeometry)
-    CustomTextureMap customTextureMap;  // Textures (QQuick3DTextureData)
-
-    // These are the reference lookup tables
-    ModelPathRefereneMap modelRefMap;
-    ModelPathMap cachedModelPathMap;
+    QHash<ImageCacheKey, ImageData> imageMap;                   // Textures (specificed by path)
+    QHash<QSGTexture *, ImageData> qsgImageMap;                 // Textures (from Qt Quick)
+    QHash<QSSGRenderPath, MeshData> meshMap;                    // Meshes (specififed by path)
+    QHash<QSSGRenderGeometry *, MeshData> customMeshMap;        // Meshes (QQuick3DGeometry)
+    QHash<QSSGRenderTextureData *, ImageData> customTextureMap; // Textures (QQuick3DTextureData)
 
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;

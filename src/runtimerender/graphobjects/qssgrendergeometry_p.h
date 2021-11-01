@@ -89,12 +89,15 @@ public:
     void clear();
     void clearAttributes();
 
-    QSSGRenderMesh *createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager);
+    uint32_t generationId() const;
+    const QSSGMesh::RuntimeMeshData &meshData() const;
 
 protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 
-    bool m_dirty = true;
+    void markDirty();
+
+    uint32_t m_generationId = 1;
     QSSGMesh::RuntimeMeshData m_meshData;
     QSSGBounds3 m_bounds;
 };

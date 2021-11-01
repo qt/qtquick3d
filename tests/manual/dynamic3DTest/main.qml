@@ -113,6 +113,7 @@ Window {
             property var cameras: []
             property var models: []
             property var dynamicModels: []
+            property var dynamicGeometries: []
             property var textures: []
             property var dynamicTextures: []
             property var qmlTextures: []
@@ -174,20 +175,24 @@ Window {
             Component {
                 id: dynamicModel
                 Model {
-                    property alias color: material.diffuseColor
+                    property alias color: material.baseColor
+                    materials: PrincipledMaterial {
+                        lighting: PrincipledMaterial.NoLighting
+                        id: material
+                        baseColor: "red"
+
+                    }
+                }
+            }
+
+            Component {
+                id: dynamicGeometry
+                GridGeometry {
                     property alias lines: gridGeometry.horizontalLines
                     property alias step: gridGeometry.horizontalStep
-
-                    geometry: GridGeometry {
-                        id: gridGeometry
-                        verticalLines: horizontalLines
-                        verticalStep: horizontalStep
-                    }
-
-                    materials: DefaultMaterial {
-                        id: material
-                        diffuseColor: "red"
-                    }
+                    id: gridGeometry
+                    verticalLines: horizontalLines
+                    verticalStep: horizontalStep
                 }
             }
 
@@ -389,7 +394,9 @@ Window {
                 let color = getRandomColor();
                 let lines = getRandomInt(100, 1000);
                 let steps = getRandomInt(1, 25);
-                let instance = dynamicModel.createObject(objectSpawner, {"position": position, "eulerRotation": rotation, "color": color, "lines": lines, "step": steps})
+                let geometry = dynamicGeometry.createObject(objectSpawner, {"lines": lines, "step": steps})
+                dynamicGeometries.push(geometry)
+                let instance = dynamicModel.createObject(objectSpawner, {"position": position, "eulerRotation": rotation, "color": color, "geometry": geometry})
                 dynamicModels.push(instance)
                 dynamicModelsCount++
             }
@@ -398,6 +405,11 @@ Window {
                 if (dynamicModels.length > 0) {
                     let instance = dynamicModels.pop();
                     instance.destroy();
+                    // Reset the dynamicGeometries
+                    for (var i = 0; i < dynamicModels.length; i++)
+                        dynamicModels[i].geometry = dynamicGeometries[i]
+                    let geometryInstance = dynamicGeometries.pop();
+                    geometryInstance.destroy()
                     dynamicModelsCount--
                 }
             }
@@ -508,10 +520,8 @@ Window {
                     return a;
                 }
                 shuffleIndexs = shuffle(shuffleIndexs);
-                var newSources = []
-                shuffleIndexs.forEach(index => newSources.push(dynamicModels[index].geometry));
                 for (var i = 0; i < dynamicModels.length; i++)
-                    dynamicModels[i].geometry = newSources[i]
+                    dynamicModels[i].geometry = dynamicGeometries[shuffleIndexs[i]]
             }
         }
 

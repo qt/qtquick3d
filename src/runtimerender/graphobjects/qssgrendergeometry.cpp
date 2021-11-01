@@ -119,7 +119,7 @@ void QSSGRenderGeometry::addAttribute(const Attribute &att)
     m_meshData.m_attributes[index].offset = att.offset;
     m_meshData.m_attributes[index].componentType = att.componentType;
     ++m_meshData.m_attributeCount;
-    m_dirty = true;
+    markDirty();
 }
 
 void QSSGRenderGeometry::addSubset(quint32 offset, quint32 count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name)
@@ -130,26 +130,26 @@ void QSSGRenderGeometry::addSubset(quint32 offset, quint32 count, const QVector3
 void QSSGRenderGeometry::setStride(int stride)
 {
     m_meshData.m_stride = stride;
-    m_dirty = true;
+    markDirty();
 }
 
 void QSSGRenderGeometry::setPrimitiveType(QSSGMesh::Mesh::DrawMode type)
 {
     m_meshData.m_primitiveType = type;
-    m_dirty = true;
+    markDirty();
 }
 
 void QSSGRenderGeometry::setBounds(const QVector3D &min, const QVector3D &max)
 {
     m_bounds = QSSGBounds3(min, max);
-    m_dirty = true;
+    markDirty();
 }
 
 void QSSGRenderGeometry::clear()
 {
     m_meshData.clear();
     m_bounds.setEmpty();
-    m_dirty = true;
+    markDirty();
 }
 
 void QSSGRenderGeometry::clearAttributes()
@@ -157,32 +157,29 @@ void QSSGRenderGeometry::clearAttributes()
     m_meshData.m_attributeCount = 0;
 }
 
+uint32_t QSSGRenderGeometry::generationId() const
+{
+    return m_generationId;
+}
+
+const QSSGMesh::RuntimeMeshData &QSSGRenderGeometry::meshData() const
+{
+    return m_meshData;
+}
+
 void QSSGRenderGeometry::setVertexData(const QByteArray &data)
 {
     m_meshData.m_vertexBuffer = data;
-    m_dirty = true;
+    markDirty();
 }
 
 void QSSGRenderGeometry::setIndexData(const QByteArray &data)
 {
     m_meshData.m_indexBuffer = data;
-    m_dirty = true;
+    markDirty();
 }
 
-QSSGRenderMesh *QSSGRenderGeometry::createOrUpdate(const QSSGRef<QSSGBufferManager> &bufferManager)
+void QSSGRenderGeometry::markDirty()
 {
-    if (m_dirty) {
-        QSSGRenderMesh *renderMesh = nullptr;
-        QString error;
-        QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(m_meshData, &error);
-        if (mesh.isValid())
-            renderMesh = bufferManager->loadCustomMesh(this, mesh, true);
-        else
-            qWarning("Mesh building failed: %s", qPrintable(error));
-
-        m_dirty = false;
-        return renderMesh;
-    }
-
-    return bufferManager->getMesh(this);
+    m_generationId++;
 }

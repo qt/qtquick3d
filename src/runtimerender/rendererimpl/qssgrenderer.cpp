@@ -129,10 +129,7 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
             bufferManager->releaseGeometry(geometry);
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
-            if (!model->geometry)
-                bufferManager->removeMeshReference(model->meshPath, model);
-            else // Models with geometry should be cleaned up here
-                rhi->cleanupDrawCallData(model);
+            rhi->cleanupDrawCallData(model);
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
             bufferManager->releaseTextureData(textureData);
