@@ -52,7 +52,7 @@ import QtQuick
 import QtQuick3D
 import QtQuick.Controls
 
-Window {
+Rectangle {
     id: window
     width: 640
     height: 360
