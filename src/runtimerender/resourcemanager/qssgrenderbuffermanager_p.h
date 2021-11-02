@@ -112,13 +112,10 @@ public:
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeNone,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
-    QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data,
-                                           MipMode inMipMode);
 
-    QSSGRenderMesh *getMesh(const QSSGRenderPath &inSourcePath) const;
-    QSSGRenderMesh *getMesh(QSSGRenderGeometry *geometry) const;
+    QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
+
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
-    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry);
 
     // Called at the end of the frame to release unreferenced geometry and textures
     void cleanupUnreferencedBuffers();
@@ -151,8 +148,10 @@ private:
                           bool inForceScanForTransparency = false,
                           MipMode inMipMode = MipModeNone);
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
+    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry);
     static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
     QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh);
+    QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
     bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture);
 
     void releaseMesh(const QSSGRenderPath &inSourcePath);

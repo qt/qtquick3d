@@ -427,16 +427,9 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     // guard should really only be locked whenever a custom geometry buffer is being updated
     // on the render thread.  Still naughty though because this can block the render thread.
     QMutexLocker mutexLocker(bufferManager->meshUpdateMutex());
-    auto mesh = bufferManager->getMesh(model.meshPath);
-    if (!mesh) {
-        // Check if there is custom geometry before bailing out
-        if (model.geometry)
-            mesh = bufferManager->getMesh(model.geometry);
-
-        // If there is still no geometry bail out
-        if (!mesh)
-            return;
-    }
+    auto mesh = bufferManager->getMeshForPicking(model);
+    if (!mesh)
+        return;
 
     const auto &globalTransform = model.globalTransform;
     auto rayData = QSSGRenderRay::createRayData(globalTransform, inRay);

@@ -237,6 +237,23 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
     return theImageData.value().renderImageTexture;
 }
 
+QSSGRenderMesh *QSSGBufferManager::getMeshForPicking(const QSSGRenderModel &model) const
+{
+    if (!model.meshPath.isNull()) {
+        const auto foundIt = meshMap.constFind(model.meshPath);
+        if (foundIt != meshMap.constEnd())
+            return foundIt->mesh;
+    }
+
+    if (model.geometry) {
+        const auto foundIt = customMeshMap.constFind(model.geometry);
+        if (foundIt != customMeshMap.constEnd())
+            return foundIt->mesh;
+    }
+
+    return nullptr;
+}
+
 QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat format)
 {
     switch (format.format) {
@@ -951,30 +968,6 @@ QSSGMesh::Mesh QSSGBufferManager::loadPrimitive(const QString &inRelativePath)
     return QSSGMesh::Mesh();
 }
 
-QSSGRenderMesh *QSSGBufferManager::getMesh(const QSSGRenderPath &inSourcePath) const
-{
-    if (inSourcePath.isNull())
-        return nullptr;
-
-    const auto foundIt = meshMap.constFind(inSourcePath);
-    if (foundIt != meshMap.constEnd())
-        return foundIt->mesh;
-
-    return nullptr;
-}
-
-QSSGRenderMesh *QSSGBufferManager::getMesh(QSSGRenderGeometry *geometry) const
-{
-    if (!geometry)
-        return nullptr;
-
-    const auto foundIt = customMeshMap.constFind(geometry);
-    if (foundIt != customMeshMap.constEnd())
-        return foundIt->mesh;
-
-    return nullptr;
-}
-
 QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel *model)
 {
     QSSGRenderMesh *theMesh = nullptr;
@@ -1164,6 +1157,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh)
 
 void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
 {
+    QMutexLocker meshMutexLocker(&meshBufferMutex);
     const auto meshItr = customMeshMap.constFind(geometry);
     if (meshItr != customMeshMap.cend()) {
         delete meshItr.value().mesh;
@@ -1184,7 +1178,7 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
 
 void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
 {
-
+    QMutexLocker meshMutexLocker(&meshBufferMutex);
     const auto meshItr = meshMap.constFind(inSourcePath);
     if (meshItr != meshMap.cend()) {
         delete meshItr.value().mesh;
@@ -1219,25 +1213,28 @@ void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
 
 void QSSGBufferManager::cleanupUnreferencedBuffers()
 {
-    // Meshes (by path)
-    auto meshIterator = meshMap.cbegin();
-    while (meshIterator != meshMap.cend()) {
-        if (meshIterator.value().usageCount == 0) {
-            delete meshIterator.value().mesh;
-            meshIterator = meshMap.erase(meshIterator);
-        } else {
-            ++meshIterator;
+    {
+        QMutexLocker meshMutexLocker(&meshBufferMutex);
+        // Meshes (by path)
+        auto meshIterator = meshMap.cbegin();
+        while (meshIterator != meshMap.cend()) {
+            if (meshIterator.value().usageCount == 0) {
+                delete meshIterator.value().mesh;
+                meshIterator = meshMap.erase(meshIterator);
+            } else {
+                ++meshIterator;
+            }
         }
-    }
 
-    // Meshes (custom)
-    auto customMeshIterator = customMeshMap.cbegin();
-    while (customMeshIterator != customMeshMap.cend()) {
-        if (customMeshIterator.value().usageCount == 0) {
-            delete customMeshIterator.value().mesh;
-            customMeshIterator = customMeshMap.erase(customMeshIterator);
-        } else {
-            ++customMeshIterator;
+        // Meshes (custom)
+        auto customMeshIterator = customMeshMap.cbegin();
+        while (customMeshIterator != customMeshMap.cend()) {
+            if (customMeshIterator.value().usageCount == 0) {
+                delete customMeshIterator.value().mesh;
+                customMeshIterator = customMeshMap.erase(customMeshIterator);
+            } else {
+                ++customMeshIterator;
+            }
         }
     }
 
@@ -1495,21 +1492,24 @@ void QSSGBufferManager::clear()
         meshBufferUpdates = nullptr;
     }
 
-    // Meshes (by path)
-    for (auto iter = meshMap.begin(), end = meshMap.end(); iter != end; ++iter) {
-        QSSGRenderMesh *theMesh = iter.value().mesh;
-        if (theMesh)
-            delete theMesh;
-    }
-    meshMap.clear();
+    {
+        QMutexLocker meshMutexLocker(&meshBufferMutex);
+        // Meshes (by path)
+        for (auto iter = meshMap.begin(), end = meshMap.end(); iter != end; ++iter) {
+            QSSGRenderMesh *theMesh = iter.value().mesh;
+            if (theMesh)
+                delete theMesh;
+        }
+        meshMap.clear();
 
-    // Meshes (custom)
-    for (auto iter = customMeshMap.begin(), end = customMeshMap.end(); iter != end; ++iter) {
-        QSSGRenderMesh *theMesh = iter.value().mesh;
-        if (theMesh)
-            delete theMesh;
+        // Meshes (custom)
+        for (auto iter = customMeshMap.begin(), end = customMeshMap.end(); iter != end; ++iter) {
+            QSSGRenderMesh *theMesh = iter.value().mesh;
+            if (theMesh)
+                delete theMesh;
+        }
+        customMeshMap.clear();
     }
-    customMeshMap.clear();
 
     // Textures (by path)
     for (auto iter = imageMap.begin(), end = imageMap.end(); iter != end; ++iter) {
