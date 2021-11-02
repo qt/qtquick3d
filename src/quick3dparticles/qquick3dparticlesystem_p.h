@@ -170,6 +170,7 @@ private:
     friend class QQuick3DParticleTrailEmitter;
     friend class QQuick3DParticleSystemUpdate;
     friend class QQuick3DParticleSystemAnimation;
+    friend class QQuick3DParticleModelBlendParticle;
 
     bool m_running;
     bool m_paused;

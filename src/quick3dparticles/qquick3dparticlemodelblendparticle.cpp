@@ -275,6 +275,9 @@ void QQuick3DParticleModelBlendParticle::regenerate()
     if (!m_delegate)
         return;
 
+    if (QQuick3DParticleSystem::isGloballyDisabled())
+        return;
+
     auto *obj = m_delegate->create(m_delegate->creationContext());
 
     m_model = qobject_cast<QQuick3DModel *>(obj);
