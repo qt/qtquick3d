@@ -42,19 +42,6 @@
 //
 
 #include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DRUNTIMERENDER_LIB)
-#define Q_QUICK3DRUNTIMERENDER_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DRUNTIMERENDER_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DRUNTIMERENDER_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderexports_p.h>
 
 #endif // QTQUICK3DRUNTIMERENDERGLOBAL_H

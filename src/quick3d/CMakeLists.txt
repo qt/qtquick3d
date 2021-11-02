@@ -76,6 +76,8 @@ qt_internal_add_qml_module(Quick3D
         Qt::QmlPrivate
         Qt::Quick3DRuntimeRenderPrivate
         Qt::QuickPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )
 
 qt_internal_extend_target(qquick3dplugin

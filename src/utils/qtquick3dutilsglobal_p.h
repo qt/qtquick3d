@@ -42,20 +42,9 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsexports_p.h>
 
 QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DUTILS_LIB)
-#define Q_QUICK3DUTILS_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DUTILS_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DUTILS_EXPORT
-#endif
-
-#define Q_QUICK3DUTILS_PRIVATE_EXPORT Q_QUICK3DUTILS_EXPORT
 
 template<typename T>
 class QSSGRef

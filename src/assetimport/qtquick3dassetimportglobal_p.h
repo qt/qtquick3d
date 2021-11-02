@@ -42,21 +42,6 @@
 //
 
 #include <QtGui/qtguiglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef Q_QUICK3DASSETIMPORT_EXPORT
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DASSETIMPORT_LIB)
-#define Q_QUICK3DASSETIMPORT_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DASSETIMPORT_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DASSETIMPORT_EXPORT
-#endif
-#endif
-
-QT_END_NAMESPACE
+#include <QtQuick3DAssetImport/private/qtquick3dassetimportexports_p.h>
 
 #endif // QTQUICK3DASSETIMPORTGLOBAL_H

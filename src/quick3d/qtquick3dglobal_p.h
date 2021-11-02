@@ -42,7 +42,6 @@
 //
 
 #include <QtQuick3D/qtquick3dglobal.h>
-
-#define Q_QUICK3D_PRIVATE_EXPORT Q_QUICK3D_EXPORT
+#include <QtQuick3D/private/qtquick3dexports_p.h>
 
 #endif // QTQUICK3DGLOBAL_P_H

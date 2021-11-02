@@ -15,4 +15,6 @@ qt_internal_add_module(Quick3DIblBaker
     PRIVATE_MODULE_INTERFACE
         Qt::Quick3DRuntimeRenderPrivate
         Qt::GuiPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )

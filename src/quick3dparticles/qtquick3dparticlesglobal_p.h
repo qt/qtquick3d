@@ -42,7 +42,6 @@
 //
 
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
-
-#define Q_QUICK3DPARTICLES_PRIVATE_EXPORT Q_QUICK3DPARTICLES_EXPORT
+#include <QtQuick3DParticles/private/qtquick3dparticlesexports_p.h>
 
 #endif // QTQUICK3DPARTICLESGLOBAL_P_H

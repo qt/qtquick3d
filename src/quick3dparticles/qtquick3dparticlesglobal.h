@@ -31,20 +31,7 @@
 #define QTQUICK3DPARTICLESGLOBAL_H
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DPARTICLES_LIB)
-#define Q_QUICK3DPARTICLES_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DPARTICLES_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DPARTICLES_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtQuick3DParticles/qtquick3dparticlesexports.h>
 
 void Q_QUICK3DPARTICLES_EXPORT qml_register_types_QtQuick3D_Particles3D();
 

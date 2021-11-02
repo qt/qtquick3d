@@ -42,19 +42,6 @@
 //
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DIBLBAKER_LIB)
-#define Q_QUICK3DIBLBAKER_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DIBLBAKER_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DIBLBAKER_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtQuick3DIblBaker/private/qtquick3diblbakerexports_p.h>
 
 #endif // QTQUICK3DIBLBAKERGLOBAL_H

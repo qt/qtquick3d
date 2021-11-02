@@ -30,6 +30,8 @@ qt_internal_add_qml_module(Quick3DAssetUtils
         Qt::Quick3DRuntimeRenderPrivate
         Qt::Quick3DPrivate
         Qt::Quick3DAssetImportPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )
 
 qt_internal_extend_target(Quick3DAssetUtils CONDITION TARGET Qt::QuickTimeline

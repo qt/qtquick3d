@@ -29,4 +29,6 @@ qt_internal_add_qml_module(Quick3DHelpers
         Qt::Qml
         Qt::Quick
         Qt::Quick3DPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )

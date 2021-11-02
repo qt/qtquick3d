@@ -42,23 +42,8 @@
 //
 
 #include <QtGui/qtguiglobal.h>
+#include <QtQuick3DHelpers/private/qtquick3dhelpersexports_p.h>
 
-QT_BEGIN_NAMESPACE
-
-#ifndef Q_QUICK3DHELPERS_EXPORT
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DHELPERS_LIB)
-#define Q_QUICK3DHELPERS_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DHELPERS_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DHELPERS_EXPORT
-#endif
-#endif
-
-QT_END_NAMESPACE
-
-void Q_QUICK3DHELPERS_EXPORT qml_register_types_QtQuick3D_Helpers();
+void Q_QUICK3DHELPERS_PRIVATE_EXPORT qml_register_types_QtQuick3D_Helpers();
 
 #endif // QTQUICK3DHELPERSGLOBAL_P_H

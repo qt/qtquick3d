@@ -42,23 +42,8 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtQuick3DAssetUtils/private/qtquick3dassetutilsexports_p.h>
 
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#if defined(QT_BUILD_QUICK3DASSETUTILS_LIB)
-#define Q_QUICK3DASSETUTILS_EXPORT Q_DECL_EXPORT
-#else
-#define Q_QUICK3DASSETUTILS_EXPORT Q_DECL_IMPORT
-#endif
-#else
-#define Q_QUICK3DASSETUTILS_EXPORT
-#endif
-
-#define Q_QUICK3DASSETUTILS_EXPORT_PRIVATE_EXPORT Q_QUICK3DASSETUTILS_EXPORT
-
-QT_END_NAMESPACE
-
-void Q_QUICK3DASSETUTILS_EXPORT_PRIVATE_EXPORT qml_register_types_QtQuick3D_AssetUtils();
+void Q_QUICK3DASSETUTILS_PRIVATE_EXPORT qml_register_types_QtQuick3D_AssetUtils();
 
 #endif // QTQUICK3DASSETUTILSGLOBAL_P_H
