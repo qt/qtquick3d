@@ -148,7 +148,7 @@ Section {
 
                 Connections {
                     target: geometryComboBox.backendValue
-                    onExpressionChanged: {
+                    function onExpressionChanged() {
                         if (geometryComboBox.backendValue.expression !== "" &&
                                 sourceUrlChooser.backendValue.expression !== "")
                             sourceUrlChooser.backendValue.resetValue()
