@@ -30,6 +30,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
 #include <QtCore/QHashFunctions>
+#include <private/qabstractanimation_p.h>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
 #include <QtGui/QFontDatabase>
@@ -169,6 +170,8 @@ int main(int argc, char *argv[])
     QFont commonFont("Trim");
     commonFont.setHintingPreference(QFont::PreferNoHinting);
     a.setFont(commonFont);
+
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 
     QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
 
