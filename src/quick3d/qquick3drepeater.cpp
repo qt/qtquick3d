@@ -217,6 +217,8 @@ void QQuick3DRepeater::setDelegate(QQmlComponent *delegate)
     if (!m_ownModel) {
         m_model = new QQmlDelegateModel(qmlContext(this));
         m_ownModel = true;
+        if (isComponentComplete())
+            static_cast<QQmlDelegateModel *>(m_model.data())->componentComplete();
     }
 
     if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(m_model)) {
