@@ -139,6 +139,13 @@ public:
 
     QMutex *meshUpdateMutex();
 
+    // Views for testing
+    const QHash<ImageCacheKey, ImageData> &getImageMap() const { return imageMap; }
+    const QHash<QSGTexture *, ImageData> &getSGImageMap() const { return qsgImageMap; }
+    const QHash<QSSGRenderPath, MeshData> &getMeshMap() const { return meshMap; }
+    const QHash<QSSGRenderGeometry *, MeshData> &getCustomMeshMap() const { return customMeshMap; }
+    const QHash<QSSGRenderTextureData *, ImageData> &getCustomTextureMap() const { return customTextureMap; }
+
 private:
     void clear();
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();

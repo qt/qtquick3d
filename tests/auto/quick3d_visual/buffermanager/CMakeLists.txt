@@ -1,0 +1,31 @@
+#####################################################################
+## tst_qquick3dbuffermanager Test:
+#####################################################################
+
+qt_internal_add_test(tst_qquick3dbuffermanager
+    SOURCES
+        ../shared/util.cpp ../shared/util.h
+        tst_buffermanager.cpp
+        gradienttexture.cpp gradienttexture.h
+    INCLUDE_DIRECTORIES
+        ../shared
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Quick3DPrivate
+        Qt::Quick3DRuntimeRenderPrivate
+)
+
+qt_internal_extend_target(tst_qquick3dbuffermanager CONDITION ANDROID OR IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\":/data\\\"
+)
+
+qt_internal_extend_target(tst_qquick3dbuffermanager CONDITION NOT ANDROID AND NOT IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+)
+
+qt6_add_qml_module(tst_qquick3dbuffermanager
+    VERSION 1.0
+    URI io.qt.tests.auto.BufferManager
+)
