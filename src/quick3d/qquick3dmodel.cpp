@@ -128,6 +128,7 @@ QQuick3DModel::QQuick3DModel(QQuick3DNode *parent)
 
 QQuick3DModel::~QQuick3DModel()
 {
+    disconnect(m_geometryConnection);
     for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
 
