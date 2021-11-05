@@ -51,8 +51,8 @@ class QSSGAssetImporter;
 class Q_QUICK3DASSETIMPORT_EXPORT QSSGAssetImporterFactory
 {
 public:
-    static QStringList keys(const QString &pluginPath = QString());
-    static QSSGAssetImporter *create(const QString &name, const QStringList &args, const QString &pluginPath = QString());
+    static QStringList keys();
+    static QSSGAssetImporter *create(const QString &name, const QStringList &args);
 };
 
 QT_END_NAMESPACE
