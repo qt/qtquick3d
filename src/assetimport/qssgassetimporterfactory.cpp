@@ -39,47 +39,15 @@
 QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader, (QSSGAssetImporterFactoryInterface_iid, QLatin1String("/assetimporters"), Qt::CaseInsensitive))
-#if QT_CONFIG(library)
-Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, directLoader, (QSSGAssetImporterFactoryInterface_iid, QLatin1String(""), Qt::CaseInsensitive))
-#endif
 
-QStringList QSSGAssetImporterFactory::keys(const QString &pluginPath)
+QStringList QSSGAssetImporterFactory::keys()
 {
-    QStringList list;
-    if (!pluginPath.isEmpty()) {
-#if QT_CONFIG(library)
-        QCoreApplication::addLibraryPath(pluginPath);
-        list = directLoader()->keyMap().values();
-        if (!list.isEmpty()) {
-            const QString postFix = QStringLiteral(" (from ") + QDir::toNativeSeparators(pluginPath) + QLatin1Char(')');
-            const QStringList::iterator end = list.end();
-            for (QStringList::iterator it = list.begin(); it != end; ++it)
-                (*it).append(postFix);
-        }
-#else
-        qWarning("Cannot query QSSGAssetImporter plugins at %s: Library loading is disabled.",
-                 pluginPath.toLocal8Bit().constData());
-#endif
-    }
-    list.append(loader()->keyMap().values());
-    return list;
+    return loader->keyMap().values();
 }
 
-QSSGAssetImporter *QSSGAssetImporterFactory::create(const QString &name, const QStringList &args, const QString &pluginPath)
+QSSGAssetImporter *QSSGAssetImporterFactory::create(const QString &name, const QStringList &args)
 {
-    if (!pluginPath.isEmpty()) {
-#if QT_CONFIG(library)
-        QCoreApplication::addLibraryPath(pluginPath);
-        if (QSSGAssetImporter *ret = qLoadPlugin<QSSGAssetImporter, QSSGAssetImporterPlugin>(directLoader(), name, args))
-            return ret;
-#else
-        qWarning("Cannot load QSSGAssetImporter plugin from %s. Library loading is disabled.",
-                 pluginPath.toLocal8Bit().constData());
-#endif
-    }
-    if (QSSGAssetImporter *ret = qLoadPlugin<QSSGAssetImporter, QSSGAssetImporterPlugin>(loader(), name, args))
-        return ret;
-    return nullptr;
+    return qLoadPlugin<QSSGAssetImporter, QSSGAssetImporterPlugin>(loader(), name, args);
 }
 
 QT_END_NAMESPACE
