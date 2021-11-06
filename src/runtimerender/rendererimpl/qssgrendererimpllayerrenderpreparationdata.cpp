@@ -464,6 +464,13 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
                 break;
             case QSSGShaderDefaultMaterialKeyProperties::HeightMap:
                 value = inMaterial->heightChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::ClearcoatMap:
+                value = inMaterial->clearcoatChannel;
+                break;
+            case QSSGShaderDefaultMaterialKeyProperties::ClearcoatRoughnessMap:
+                value = inMaterial->clearcoatRoughnessChannel;
+                break;
             default:
                 break;
             }
@@ -598,6 +605,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
 
         renderer->defaultMaterialShaderKeyProperties().m_vertexColorsEnabled.setValue(theGeneratedKey,
                                                                                       theMaterial->isVertexColorsEnabled());
+        renderer->defaultMaterialShaderKeyProperties().m_clearcoatEnabled.setValue(theGeneratedKey,
+                                                                                   theMaterial->isClearcoatEnabled());
 
         // Run through the material's images and prepare them for render.
         // this may in fact set pickable on the renderable flags if one of the images
@@ -621,6 +630,15 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
             CHECK_IMAGE_AND_PREPARE(theMaterial->heightMap,
                                     QSSGRenderableImage::Type::Height,
                                     QSSGShaderDefaultMaterialKeyProperties::HeightMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->clearcoatMap,
+                                    QSSGRenderableImage::Type::Clearcoat,
+                                    QSSGShaderDefaultMaterialKeyProperties::ClearcoatMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->clearcoatRoughnessMap,
+                                    QSSGRenderableImage::Type::ClearcoatRoughness,
+                                    QSSGShaderDefaultMaterialKeyProperties::ClearcoatRoughnessMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->clearcoatNormalMap,
+                                    QSSGRenderableImage::Type::ClearcoatNormal,
+                                    QSSGShaderDefaultMaterialKeyProperties::ClearcoatNormalMap);
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGRenderableImage::Type::Diffuse,

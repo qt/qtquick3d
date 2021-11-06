@@ -115,6 +115,11 @@ bool QSSGShaderDefaultMaterialAdapter::isVertexColorsEnabled()
     return m_material.isVertexColorsEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isClearcoatEnabled()
+{
+    return m_material.isClearcoatEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::hasLighting()
 {
     return m_material.hasLighting();
@@ -225,6 +230,16 @@ float QSSGShaderDefaultMaterialAdapter::maxHeightSamples()
     return m_material.maxHeightSamples;
 }
 
+float QSSGShaderDefaultMaterialAdapter::clearcoatAmount()
+{
+    return m_material.clearcoatAmount;
+}
+
+float QSSGShaderDefaultMaterialAdapter::clearcoatRoughnessAmount()
+{
+    return m_material.clearcoatRoughnessAmount;
+}
+
 
 
 QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRenderCustomMaterial &material)
@@ -256,6 +271,12 @@ bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
     // qt_varColor must always be present. Works also if the mesh does not have
     // colors, it will assume vec4(1.0).
     return true;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()
+{
+    // TODO: Expose Clearcoat properties to custom material
+    return false;
 }
 
 bool QSSGShaderCustomMaterialAdapter::hasLighting()
@@ -371,6 +392,16 @@ float QSSGShaderCustomMaterialAdapter::minHeightSamples()
 }
 
 float QSSGShaderCustomMaterialAdapter::maxHeightSamples()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::clearcoatAmount()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::clearcoatRoughnessAmount()
 {
     return 0.0f;
 }

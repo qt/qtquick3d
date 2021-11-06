@@ -1471,6 +1471,61 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                     output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << QStringLiteral("\n");
             }
         }
+
+        // Clearcoat Properties (KHR_materials_clearcoat)
+        bool hasClearcoat = false;
+        result = material->Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT, hasClearcoat);
+        if (result == aiReturn_SUCCESS && hasClearcoat) {
+            // factor
+            {
+                ai_real clearcoatFactor = 0.0f;
+                result = material->Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_FACTOR, clearcoatFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("clearcoatAmount"),
+                                                             clearcoatFactor);
+            }
+
+            // roughness
+            {
+                ai_real clearcoatRoughnessFactor = 0.0f;
+                result = material->Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_ROUGHNESS_FACTOR, clearcoatRoughnessFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("clearcoatRoughnessAmount"),
+                                                             clearcoatRoughnessFactor);
+            }
+
+            // texture
+            {
+                QString clearcoatImage = generateImage(material, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_TEXTURE, tabLevel + 1);
+                if (!clearcoatImage.isNull())
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatMap: ")
+                           << clearcoatImage << QStringLiteral("\n");
+            }
+
+            // roughness texture
+            {
+                QString clearcoatRoughnessImage = generateImage(material,
+                                                                AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_ROUGHNESS_TEXTURE,
+                                                                tabLevel + 1);
+                if (!clearcoatRoughnessImage.isNull())
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatRoughnessMap: ")
+                           << clearcoatRoughnessImage << QStringLiteral("\n");
+            }
+
+            // normal texture
+            {
+                QString clearcoatNormalImage = generateImage(material, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_NORMAL_TEXTURE, tabLevel + 1);
+                if (!clearcoatNormalImage.isNull())
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatNormalMap: ")
+                           << clearcoatNormalImage << QStringLiteral("\n");
+            }
+        }
     }
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");

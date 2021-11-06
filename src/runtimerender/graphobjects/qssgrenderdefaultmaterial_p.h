@@ -105,6 +105,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *metalnessMap = nullptr;
     QSSGRenderImage *occlusionMap = nullptr;
     QSSGRenderImage *heightMap = nullptr;
+    QSSGRenderImage *clearcoatMap = nullptr;
+    QSSGRenderImage *clearcoatRoughnessMap = nullptr;
+    QSSGRenderImage *clearcoatNormalMap = nullptr;
 
     // Note that most default values here are irrelevant as the material
     // (Default or Principled) will write its own defaults or actual values
@@ -126,6 +129,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float heightAmount = 0.0f; // 0 - 1
     int minHeightSamples = 8;
     int maxHeightSamples = 32;
+    float clearcoatAmount = 0.0f; // 0 - 1
+    float clearcoatRoughnessAmount = 0.0f; // 0 - 1
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::FragmentLighting;
@@ -141,6 +146,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping metalnessChannel = TextureChannelMapping::R;
     TextureChannelMapping occlusionChannel = TextureChannelMapping::R;
     TextureChannelMapping heightChannel = TextureChannelMapping::R;
+    TextureChannelMapping clearcoatChannel = TextureChannelMapping::R;
+    TextureChannelMapping clearcoatRoughnessChannel = TextureChannelMapping::G;
     float pointSize = 1.0f;
     float lineWidth = 1.0f;
 
@@ -152,6 +159,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool isFresnelEnabled() const { return fresnelPower > 0.0f; }
     bool isVertexColorsEnabled() const { return vertexColorsEnabled; }
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
+    bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
 
     QSSGShaderMaterialAdapter *adapter = nullptr;
 };

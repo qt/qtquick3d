@@ -98,6 +98,19 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(int minHeightMapSamples READ minHeightMapSamples WRITE setMinHeightMapSamples NOTIFY minHeightMapSamplesChanged REVISION(6, 2))
     Q_PROPERTY(int maxHeightMapSamples READ maxHeightMapSamples WRITE setMaxHeightMapSamples NOTIFY maxHeightMapSamplesChanged REVISION(6, 2))
 
+    Q_PROPERTY(float clearcoatAmount READ clearcoatAmount WRITE setClearcoatAmount NOTIFY clearcoatAmountChanged REVISION(6, 3))
+    Q_PROPERTY(QQuick3DTexture *clearcoatMap READ clearcoatMap WRITE setClearcoatMap NOTIFY clearcoatMapChanged REVISION(6, 3))
+    Q_PROPERTY(TextureChannelMapping clearcoatChannel READ clearcoatChannel WRITE setClearcoatChannel NOTIFY
+                       clearcoatChannelChanged REVISION(6, 3))
+    Q_PROPERTY(float clearcoatRoughnessAmount READ clearcoatRoughnessAmount WRITE setClearcoatRoughnessAmount NOTIFY
+                       clearcoatRoughnessAmountChanged REVISION(6, 3))
+    Q_PROPERTY(TextureChannelMapping clearcoatRoughnessChannel READ clearcoatRoughnessChannel WRITE
+                       setClearcoatRoughnessChannel NOTIFY clearcoatRoughnessChannelChanged REVISION(6, 3))
+    Q_PROPERTY(QQuick3DTexture *clearcoatRoughnessMap READ clearcoatRoughnessMap WRITE setClearcoatRoughnessMap NOTIFY
+                       clearcoatRoughnessMapChanged REVISION(6, 3))
+    Q_PROPERTY(QQuick3DTexture *clearcoatNormalMap READ clearcoatNormalMap WRITE setClearcoatNormalMap NOTIFY
+                       clearcoatNormalMapChanged REVISION(6, 3))
+
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
 public:
@@ -159,6 +172,14 @@ public:
     Q_REVISION(6, 2) int minHeightMapSamples() const;
     Q_REVISION(6, 2) int maxHeightMapSamples() const;
 
+    Q_REVISION(6, 3) float clearcoatAmount() const;
+    Q_REVISION(6, 3) QQuick3DTexture *clearcoatMap() const;
+    Q_REVISION(6, 3) TextureChannelMapping clearcoatChannel() const;
+    Q_REVISION(6, 3) float clearcoatRoughnessAmount() const;
+    Q_REVISION(6, 3) TextureChannelMapping clearcoatRoughnessChannel() const;
+    Q_REVISION(6, 3) QQuick3DTexture *clearcoatRoughnessMap() const;
+    Q_REVISION(6, 3) QQuick3DTexture *clearcoatNormalMap() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
     void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
@@ -193,6 +214,14 @@ public Q_SLOTS:
     Q_REVISION(6, 2) void setHeightAmount(float heightAmount);
     Q_REVISION(6, 2) void setMinHeightMapSamples(int samples);
     Q_REVISION(6, 2) void setMaxHeightMapSamples(int samples);
+
+    Q_REVISION(6, 3) void setClearcoatAmount(float newClearcoatAmount);
+    Q_REVISION(6, 3) void setClearcoatMap(QQuick3DTexture *newClearcoatMap);
+    Q_REVISION(6, 3) void setClearcoatChannel(QQuick3DMaterial::TextureChannelMapping newClearcoatChannel);
+    Q_REVISION(6, 3) void setClearcoatRoughnessAmount(float newClearcoatRoughnessAmount);
+    Q_REVISION(6, 3) void setClearcoatRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newClearcoatRoughnessChannel);
+    Q_REVISION(6, 3) void setClearcoatRoughnessMap(QQuick3DTexture *newClearcoatRoughnessMap);
+    Q_REVISION(6, 3) void setClearcoatNormalMap(QQuick3DTexture *newClearcoatNormalMap);
 
 Q_SIGNALS:
     void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -229,6 +258,14 @@ Q_SIGNALS:
     Q_REVISION(6, 2) void minHeightMapSamplesChanged(int samples);
     Q_REVISION(6, 2) void maxHeightMapSamplesChanged(int samples);
 
+    Q_REVISION(6, 3) void clearcoatAmountChanged(float amount);
+    Q_REVISION(6, 3) void clearcoatMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 3) void clearcoatChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(6, 3) void clearcoatRoughnessAmountChanged(float amount);
+    Q_REVISION(6, 3) void clearcoatRoughnessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(6, 3) void clearcoatRoughnessMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 3) void clearcoatNormalMapChanged(QQuick3DTexture *texture);
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -250,7 +287,8 @@ private:
         AlphaModeDirty = 0x00000400,
         PointSizeDirty = 0x00000800,
         LineWidthDirty = 0x00001000,
-        HeightDirty = 0x00002000
+        HeightDirty = 0x00002000,
+        ClearcoatDirty = 0x00004000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -295,6 +333,13 @@ private:
     float m_heightAmount = 0.0f;
     int m_minHeightMapSamples = 8;
     int m_maxHeightMapSamples = 32;
+    float m_clearcoatAmount = 0.0f;
+    QQuick3DTexture *m_clearcoatMap = nullptr;
+    TextureChannelMapping m_clearcoatChannel = QQuick3DMaterial::R;
+    float m_clearcoatRoughnessAmount = 0.0f;
+    TextureChannelMapping m_clearcoatRoughnessChannel = QQuick3DMaterial::G;
+    QQuick3DTexture *m_clearcoatRoughnessMap = nullptr;
+    QQuick3DTexture *m_clearcoatNormalMap = nullptr;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

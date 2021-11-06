@@ -522,7 +522,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         LightCount = QSSG_MAX_NUM_LIGHTS,
     };
     enum {
-        SingleChannelImageCount = 6,
+        SingleChannelImageCount = 8,
     };
     enum ImageMapNames {
         DiffuseMap = 0,
@@ -532,6 +532,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         BumpMap,
         SpecularAmountMap,
         NormalMap,
+        ClearcoatNormalMap,
         // single channel images
         OpacityMap,
         RoughnessMap,
@@ -539,6 +540,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         OcclusionMap,
         TranslucencyMap,
         HeightMap,
+        ClearcoatMap,
+        ClearcoatRoughnessMap,
 
         ImageMapCount,
         SingleChannelImagesFirst = OpacityMap
@@ -549,7 +552,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
         MetalnessChannel,
         OcclusionChannel,
         TranslucencyChannel,
-        HeightChannel
+        HeightChannel,
+        ClearcoatChannel,
+        ClearcoatRoughnessChannel
     };
     enum {
         MorphTargetCount = 8,
@@ -583,6 +588,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyUnsigned<4> m_morphTargetCount;
     QSSGShaderKeyVertexAttribute m_morphTargetAttributes[MorphTargetCount];
     QSSGShaderKeyBoolean m_blendParticles;
+    QSSGShaderKeyBoolean m_clearcoatEnabled;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -605,6 +611,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_usesInstancing("usesInstancing")
         , m_morphTargetCount("morphTargetCount")
         , m_blendParticles("blendParticles")
+        , m_clearcoatEnabled("clearcoatEnabled")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -677,12 +684,15 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_imageMaps[4].name = "bumpMap";
         m_imageMaps[5].name = "specularAmountMap";
         m_imageMaps[6].name = "normalMap";
-        m_imageMaps[7].name = "opacityMap";
-        m_imageMaps[8].name = "roughnessMap";
-        m_imageMaps[9].name = "metalnessMap";
-        m_imageMaps[10].name = "occlusionMap";
-        m_imageMaps[11].name = "translucencyMap";
-        m_imageMaps[12].name = "heightMap";
+        m_imageMaps[7].name = "clearcoatNormalMap";
+        m_imageMaps[8].name = "opacityMap";
+        m_imageMaps[9].name = "roughnessMap";
+        m_imageMaps[10].name = "metalnessMap";
+        m_imageMaps[11].name = "occlusionMap";
+        m_imageMaps[12].name = "translucencyMap";
+        m_imageMaps[13].name = "heightMap";
+        m_imageMaps[14].name = "clearcoatMap";
+        m_imageMaps[15].name = "clearcoatRoughnessMap";
 
         m_textureChannels[0].name = "opacityMap_channel";
         m_textureChannels[1].name = "roughnessMap_channel";
@@ -690,6 +700,8 @@ struct QSSGShaderDefaultMaterialKeyProperties
         m_textureChannels[3].name = "occlusionMap_channel";
         m_textureChannels[4].name = "translucencyMap_channel";
         m_textureChannels[5].name = "heightMap_channel";
+        m_textureChannels[6].name = "clearcoatMap_channel";
+        m_textureChannels[7].name = "clearcoatRoughnessMap_channel";
 
         m_morphTargetAttributes[0].name = "morphTarget0Attributes";
         m_morphTargetAttributes[1].name = "morphTarget1Attributes";
@@ -748,6 +760,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         for (quint32 idx = 0, end = MorphTargetCount; idx < end; ++idx)
             inVisitor.visit(m_morphTargetAttributes[idx]);
         inVisitor.visit(m_blendParticles);
+        inVisitor.visit(m_clearcoatEnabled);
     }
 
     struct OffsetVisitor

@@ -57,8 +57,7 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableImage
 {
-    enum class Type : quint8
-    {
+    enum class Type : quint8 {
         Unknown = 0,
         Diffuse,
         Opacity,
@@ -72,7 +71,10 @@ struct QSSGRenderableImage
         BaseColor,
         Metalness,
         Occlusion,
-        Height
+        Height,
+        Clearcoat,
+        ClearcoatRoughness,
+        ClearcoatNormal
     };
     const QSSGRenderImage &m_imageNode;
     QSSGRenderImageTexture m_texture;
