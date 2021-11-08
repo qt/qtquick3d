@@ -307,6 +307,24 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     QCOMPARE(color1Vec4, node->color);
     // Note: emissiveColor doesn't contain alpha
     QCOMPARE(color2Vec3, node->emissiveColor);
+
+    const float heightAmount = 0.2f;
+    material.setHeightAmount(heightAmount);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(heightAmount, material.heightAmount());
+    QCOMPARE(heightAmount, node->heightAmount);
+
+    const int minHeightMapSamples = 11;
+    material.setMinHeightMapSamples(minHeightMapSamples);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(minHeightMapSamples, material.minHeightMapSamples());
+    QCOMPARE(minHeightMapSamples, node->minHeightSamples);
+
+    const int maxHeightMapSamples = 33;
+    material.setMaxHeightMapSamples(maxHeightMapSamples);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(maxHeightMapSamples, material.maxHeightMapSamples());
+    QCOMPARE(maxHeightMapSamples, node->maxHeightSamples);
 }
 
 void tst_QQuick3DMaterials::testPrincipledTextures()
@@ -391,6 +409,18 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QVERIFY(material.occlusionMap());
     QCOMPARE(texture1.getRenderImage(), node->occlusionMap);
+
+    // HeightMap
+    QVERIFY(!material.heightMap());
+    material.setHeightMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.heightMap());
+    QCOMPARE(texture1.getRenderImage(), node->heightMap);
+    const QQuick3DMaterial::TextureChannelMapping channelMapping1 = QQuick3DMaterial::A;
+    material.setHeightChannel(channelMapping1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(channelMapping1, material.heightChannel());
+    QCOMPARE(channelMapping1, node->heightChannel);
 }
 
 void tst_QQuick3DMaterials::testPrincipledEnums()

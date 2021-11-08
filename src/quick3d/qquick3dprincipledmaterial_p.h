@@ -189,7 +189,7 @@ public Q_SLOTS:
     void setPointSize(float size);
     void setLineWidth(float width);
     Q_REVISION(6, 2) void setHeightMap(QQuick3DTexture *heightMap);
-    Q_REVISION(6, 2) void setHeightChannel(TextureChannelMapping channel);
+    Q_REVISION(6, 2) void setHeightChannel(QQuick3DMaterial::TextureChannelMapping channel);
     Q_REVISION(6, 2) void setHeightAmount(float heightAmount);
     Q_REVISION(6, 2) void setMinHeightMapSamples(int samples);
     Q_REVISION(6, 2) void setMaxHeightMapSamples(int samples);
@@ -224,7 +224,7 @@ Q_SIGNALS:
     void pointSizeChanged();
     void lineWidthChanged();
     Q_REVISION(6, 2) void heightMapChanged(QQuick3DTexture *heightMap);
-    Q_REVISION(6, 2) void heightChannelChanged(TextureChannelMapping channel);
+    Q_REVISION(6, 2) void heightChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
     Q_REVISION(6, 2) void heightAmountChanged(float heightAmount);
     Q_REVISION(6, 2) void minHeightMapSamplesChanged(int samples);
     Q_REVISION(6, 2) void maxHeightMapSamplesChanged(int samples);

@@ -1257,6 +1257,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::refSceneManager(m_normalMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_metalnessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_occlusionMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_heightMap, *sceneManager);
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_baseColorMap);
         QQuick3DObjectPrivate::derefSceneManager(m_emissiveMap);
@@ -1267,6 +1268,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::derefSceneManager(m_normalMap);
         QQuick3DObjectPrivate::derefSceneManager(m_metalnessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_occlusionMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_heightMap);
     }
 }
 
