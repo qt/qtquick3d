@@ -155,7 +155,6 @@ protected:
     virtual void reset();
     virtual void doSetMaxAmount(int amount);
 
-    void updateBurstIndex(int amount);
     // This will return the next available index
     virtual int nextCurrentIndex(const QQuick3DParticleEmitter *emitter);
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override
@@ -168,7 +167,6 @@ protected:
 
     int m_maxAmount = 100;
     int m_currentIndex = -1;
-    int m_lastBurstIndex = 0;
     AlignMode m_alignMode = AlignNone;
     QVector3D m_alignTarget;
     virtual void setDepthBias(float bias)
