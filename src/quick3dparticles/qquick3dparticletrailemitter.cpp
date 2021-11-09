@@ -105,6 +105,7 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
 
     for (auto particle : qAsConst(m_system->m_particles)) {
         if (particle == m_particle) {
+            emitAmount += getEmitAmountFromBursts();
             emitAmount = std::min(emitAmount, int(particle->maxAmount()));
             for (int i = 0; i < emitAmount; i++) {
                 // Distribute evenly between previous and current time, important especially

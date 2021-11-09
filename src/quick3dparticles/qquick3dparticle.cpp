@@ -467,14 +467,9 @@ void QQuick3DParticle::setSortMode(QQuick3DParticle::SortMode mode)
     Q_EMIT sortModeChanged();
 }
 
-void QQuick3DParticle::updateBurstIndex(int amount)
-{
-    m_lastBurstIndex += amount;
-}
-
 int QQuick3DParticle::nextCurrentIndex(const QQuick3DParticleEmitter *)
 {
-    m_currentIndex = (m_currentIndex < m_maxAmount - 1) ? m_currentIndex + 1 : m_lastBurstIndex;
+    m_currentIndex = (m_currentIndex < m_maxAmount - 1) ? m_currentIndex + 1 : 0;
     return m_currentIndex;
 }
 
@@ -487,7 +482,6 @@ void QQuick3DParticle::componentComplete()
 
 void QQuick3DParticle::reset() {
     m_currentIndex = -1;
-    m_lastBurstIndex = 0;
 
     // Reset all particles data
     m_particleData.fill({});
