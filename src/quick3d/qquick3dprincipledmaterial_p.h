@@ -111,6 +111,10 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *clearcoatNormalMap READ clearcoatNormalMap WRITE setClearcoatNormalMap NOTIFY
                        clearcoatNormalMapChanged REVISION(6, 3))
 
+    Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
+    Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
+    Q_PROPERTY(TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
+
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
 public:
@@ -180,6 +184,10 @@ public:
     Q_REVISION(6, 3) QQuick3DTexture *clearcoatRoughnessMap() const;
     Q_REVISION(6, 3) QQuick3DTexture *clearcoatNormalMap() const;
 
+    Q_REVISION(6, 3) float transmissionFactor() const;
+    Q_REVISION(6, 3) QQuick3DTexture *transmissionMap() const;
+    Q_REVISION(6, 3) TextureChannelMapping transmissionChannel() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
     void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
@@ -222,6 +230,10 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setClearcoatRoughnessChannel(QQuick3DMaterial::TextureChannelMapping newClearcoatRoughnessChannel);
     Q_REVISION(6, 3) void setClearcoatRoughnessMap(QQuick3DTexture *newClearcoatRoughnessMap);
     Q_REVISION(6, 3) void setClearcoatNormalMap(QQuick3DTexture *newClearcoatNormalMap);
+
+    Q_REVISION(6, 3) void setTransmissionFactor(float newTransmissionFactor);
+    Q_REVISION(6, 3) void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
+    Q_REVISION(6, 3) void setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel);
 
 Q_SIGNALS:
     void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -266,6 +278,10 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void clearcoatRoughnessMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 3) void clearcoatNormalMapChanged(QQuick3DTexture *texture);
 
+    Q_REVISION(6, 3) void transmissionFactorChanged(float amount);
+    Q_REVISION(6, 3) void transmissionMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 3) void transmissionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -288,7 +304,8 @@ private:
         PointSizeDirty = 0x00000800,
         LineWidthDirty = 0x00001000,
         HeightDirty = 0x00002000,
-        ClearcoatDirty = 0x00004000
+        ClearcoatDirty = 0x00004000,
+        TransmissionDirty = 0x00008000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -340,6 +357,9 @@ private:
     TextureChannelMapping m_clearcoatRoughnessChannel = QQuick3DMaterial::G;
     QQuick3DTexture *m_clearcoatRoughnessMap = nullptr;
     QQuick3DTexture *m_clearcoatNormalMap = nullptr;
+    float m_transmissionFactor = 0.0f;
+    QQuick3DTexture *m_transmissionMap = nullptr;
+    TextureChannelMapping m_transmissionChannel = QQuick3DMaterial::R;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

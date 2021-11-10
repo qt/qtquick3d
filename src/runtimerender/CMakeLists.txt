@@ -91,6 +91,7 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
 
 # Resources:
 set(res_resource_files
+    "res/effectlib/bsdf.glsllib"
     "res/effectlib/defaultMaterialBumpNoLod.glsllib"
     "res/effectlib/defaultMaterialFresnel.glsllib"
     "res/effectlib/depthpass.glsllib"
@@ -110,6 +111,7 @@ set(res_resource_files
     "res/effectlib/skinanim.glsllib"
     "res/effectlib/ssao.glsllib"
     "res/effectlib/tonemapping.glsllib"
+    "res/effectlib/transmission.glsllib"
     "res/effectlib/viewProperties.glsllib"
     "res/effectlib/morphanim.glsllib"
     "res/effectlib/parallaxMapping.glsllib"

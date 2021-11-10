@@ -1526,6 +1526,31 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                            << clearcoatNormalImage << QStringLiteral("\n");
             }
         }
+
+        // Transmission Properties (KHR_materials_transmission)
+        bool hasTransmission = false;
+        result = material->Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION, hasTransmission);
+        if (result == aiReturn_SUCCESS && hasTransmission) {
+            // factor
+            {
+                ai_real transmissionFactor = 0.0f;
+                result = material->Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_FACTOR, transmissionFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                             tabLevel + 1,
+                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                             QStringLiteral("transmissionFactor"),
+                                                             transmissionFactor);
+            }
+
+            // texture
+            {
+                QString transmissionImage = generateImage(material, AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_TEXTURE, tabLevel + 1);
+                if (!transmissionImage.isNull())
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("transmissionMap: ")
+                           << transmissionImage << QStringLiteral("\n");
+            }
+        }
     }
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");

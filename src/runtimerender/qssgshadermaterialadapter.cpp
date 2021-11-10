@@ -120,6 +120,11 @@ bool QSSGShaderDefaultMaterialAdapter::isClearcoatEnabled()
     return m_material.isClearcoatEnabled();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::isTransmissionEnabled()
+{
+    return m_material.isTransmissionEnabled();
+}
+
 bool QSSGShaderDefaultMaterialAdapter::hasLighting()
 {
     return m_material.hasLighting();
@@ -240,6 +245,11 @@ float QSSGShaderDefaultMaterialAdapter::clearcoatRoughnessAmount()
     return m_material.clearcoatRoughnessAmount;
 }
 
+float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
+{
+    return m_material.transmissionFactor;
+}
+
 
 
 QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRenderCustomMaterial &material)
@@ -276,6 +286,12 @@ bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
 bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()
 {
     // TODO: Expose Clearcoat properties to custom material
+    return false;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
+{
+    // TODO: Expose Transmission to custom material
     return false;
 }
 
@@ -402,6 +418,11 @@ float QSSGShaderCustomMaterialAdapter::clearcoatAmount()
 }
 
 float QSSGShaderCustomMaterialAdapter::clearcoatRoughnessAmount()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::transmissionFactor()
 {
     return 0.0f;
 }

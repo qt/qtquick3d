@@ -494,6 +494,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             case QSSGShaderDefaultMaterialKeyProperties::ClearcoatRoughnessMap:
                 value = inMaterial->clearcoatRoughnessChannel;
                 break;
+            case QSSGShaderDefaultMaterialKeyProperties::TransmissionMap:
+                value = inMaterial->transmissionChannel;
+                break;
             default:
                 break;
             }
@@ -546,7 +549,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         QSSGRenderDefaultMaterial &inMaterial,
         QSSGRenderableObjectFlags &inExistingFlags,
         float inOpacity,
-        const QSSGShaderLightList &lights)
+        const QSSGShaderLightList &lights,
+        QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
     QSSGDefaultMaterialPreparationResult retval(generateLightingKey(theMaterial->lighting, lights, inExistingFlags.receivesShadows()));
@@ -630,6 +634,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
                                                                                       theMaterial->isVertexColorsEnabled());
         renderer->defaultMaterialShaderKeyProperties().m_clearcoatEnabled.setValue(theGeneratedKey,
                                                                                    theMaterial->isClearcoatEnabled());
+        renderer->defaultMaterialShaderKeyProperties().m_transmissionEnabled.setValue(theGeneratedKey,
+                                                                                      theMaterial->isTransmissionEnabled());
 
         // Run through the material's images and prepare them for render.
         // this may in fact set pickable on the renderable flags if one of the images
@@ -662,6 +668,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
             CHECK_IMAGE_AND_PREPARE(theMaterial->clearcoatNormalMap,
                                     QSSGRenderableImage::Type::ClearcoatNormal,
                                     QSSGShaderDefaultMaterialKeyProperties::ClearcoatNormalMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->transmissionMap,
+                                    QSSGRenderableImage::Type::Transmission,
+                                    QSSGShaderDefaultMaterialKeyProperties::TransmissionMap);
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGRenderableImage::Type::Diffuse,
@@ -699,6 +708,12 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
         subsetOpacity = 1.f;
     else
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
+    if (inMaterial.isTransmissionEnabled()) {
+        ioFlags.setRequiresScreenTexture(true);
+        ioFlags.setRequiresMipmapsForScreenTexture(true);
+        renderableFlags |= QSSGRenderableObjectFlag::RequiresScreenTexture;
+    }
 
     retval.firstImage = firstImage;
     if (retval.renderableFlags.isDirty())
@@ -952,7 +967,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
             // if the mesh has it.
             theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing || usesBlendParticles;
             QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                    prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights));
+                    prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights, ioFlags));
             QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
             subsetOpacity = theMaterialPrepResult.opacity;
             QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);

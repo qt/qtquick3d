@@ -613,6 +613,39 @@ QT_BEGIN_NAMESPACE
 
 */
 
+/*!
+    \qmlproperty float PrincipledMaterial::transmissionFactor
+
+    This property defines the percentage of light that is transmitted through
+    the material's surface.
+    The default value is \c 0.0
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::transmissionMap
+
+    This property defines a texture used to determine percentage of light that
+    is transmitted through the surface..  The value of
+    \l transmissionFactor will be multiplied by the value read from this
+    texture.
+
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::transmissionChannel
+
+    This property defines the texture channel used to read the transmission
+    percentage from \l transmissionMap.
+    The default value is \c Material.R.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+
+*/
+
+
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
 QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
@@ -1320,6 +1353,15 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
             material->clearcoatNormalMap = m_clearcoatNormalMap->getRenderImage();
     }
 
+    if (m_dirtyAttributes & TransmissionDirty) {
+        material->transmissionFactor = m_transmissionFactor;
+        if (!m_transmissionMap)
+            material->transmissionMap = nullptr;
+        else
+            material->transmissionMap = m_transmissionMap->getRenderImage();
+        material->transmissionChannel = channelMapping(m_transmissionChannel);
+    }
+
     m_dirtyAttributes = 0;
 
     return node;
@@ -1348,6 +1390,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatRoughnessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatNormalMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_transmissionMap, *sceneManager);
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_baseColorMap);
         QQuick3DObjectPrivate::derefSceneManager(m_emissiveMap);
@@ -1362,6 +1405,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatMap);
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatRoughnessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatNormalMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_transmissionMap);
     }
 }
 
@@ -1469,6 +1513,48 @@ void QQuick3DPrincipledMaterial::setClearcoatNormalMap(QQuick3DTexture *newClear
     m_clearcoatNormalMap = newClearcoatNormalMap;
     emit clearcoatNormalMapChanged(m_clearcoatNormalMap);
     markDirty(ClearcoatDirty);
+}
+
+float QQuick3DPrincipledMaterial::transmissionFactor() const
+{
+    return m_transmissionFactor;
+}
+
+void QQuick3DPrincipledMaterial::setTransmissionFactor(float newTransmissionFactor)
+{
+    if (qFuzzyCompare(m_transmissionFactor, newTransmissionFactor))
+        return;
+    m_transmissionFactor = newTransmissionFactor;
+    emit transmissionFactorChanged(m_transmissionFactor);
+    markDirty(TransmissionDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::transmissionMap() const
+{
+    return m_transmissionMap;
+}
+
+void QQuick3DPrincipledMaterial::setTransmissionMap(QQuick3DTexture *newTransmissionMap)
+{
+    if (m_transmissionMap == newTransmissionMap)
+        return;
+    m_transmissionMap = newTransmissionMap;
+    emit transmissionMapChanged(m_transmissionMap);
+    markDirty(TransmissionDirty);
+}
+
+QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::transmissionChannel() const
+{
+    return m_transmissionChannel;
+}
+
+void QQuick3DPrincipledMaterial::setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel)
+{
+    if (m_transmissionChannel == newTransmissionChannel)
+        return;
+    m_transmissionChannel = newTransmissionChannel;
+    emit transmissionChannelChanged(m_transmissionChannel);
+    markDirty(TransmissionDirty);
 }
 
 QT_END_NAMESPACE

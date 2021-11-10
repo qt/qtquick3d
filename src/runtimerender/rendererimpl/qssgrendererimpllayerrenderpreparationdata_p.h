@@ -245,7 +245,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
                                                                            QSSGRenderableObjectFlags &inExistingFlags,
-                                                                           float inOpacity, const QSSGShaderLightList &lights);
+                                                                           float inOpacity,
+                                                                         const QSSGShaderLightList &lights,
+                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
                                                                         QSSGRenderableObjectFlags &inExistingFlags,

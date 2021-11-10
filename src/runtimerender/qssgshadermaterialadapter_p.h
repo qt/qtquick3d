@@ -61,6 +61,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isSpecularEnabled() = 0;
     virtual bool isVertexColorsEnabled() = 0;
     virtual bool isClearcoatEnabled() = 0;
+    virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
     virtual QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() = 0;
     virtual QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() = 0;
@@ -86,6 +87,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual float maxHeightSamples() = 0;
     virtual float clearcoatAmount() = 0;
     virtual float clearcoatRoughnessAmount() = 0;
+    virtual float transmissionFactor() = 0;
 
     virtual bool isUnshaded();
     virtual bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type);
@@ -109,6 +111,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isSpecularEnabled() override;
     bool isVertexColorsEnabled() override;
     bool isClearcoatEnabled() override;
+    bool isTransmissionEnabled() override;
     bool hasLighting() override;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() override;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() override;
@@ -134,6 +137,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     float maxHeightSamples() override;
     float clearcoatAmount() override;
     float clearcoatRoughnessAmount() override;
+    float transmissionFactor() override;
 
 private:
     const QSSGRenderDefaultMaterial &m_material;
@@ -148,6 +152,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isSpecularEnabled() override;
     bool isVertexColorsEnabled() override;
     bool isClearcoatEnabled() override;
+    bool isTransmissionEnabled() override;
     bool hasLighting() override;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() override;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() override;
@@ -173,6 +178,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     float maxHeightSamples() override;
     float clearcoatAmount() override;
     float clearcoatRoughnessAmount() override;
+    float transmissionFactor() override;
 
     bool isUnshaded() override;
     bool hasCustomShaderSnippet(QSSGShaderCache::ShaderType type) override;

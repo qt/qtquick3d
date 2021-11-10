@@ -646,6 +646,65 @@ Column {
     }
 
     Section {
+        caption: qsTr("Transmission")
+        width: parent.width
+
+        SectionLayout {
+
+            PropertyLabel {
+                text: qsTr("Transmission Factor")
+                tooltip: qsTr("This property contains the base percentage of light that is transmitted through the surface.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1
+                    decimals: 2
+                    backendValue: backendValues.transmissionFactor
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Transmission Map")
+                tooltip: qsTr("This property defines a texture that contains the transmission percentage of a the surface.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.transmissionMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Transmission Channel")
+                tooltip: qsTr("This property defines the texture channel used to read the transmission percentage from transmissionMap.")
+            }
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Material"
+                    model: ["R", "G", "B", "A"]
+                    backendValue: backendValues.transmissionChannel
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
         caption: qsTr("Specular")
         width: parent.width
 

@@ -28,6 +28,8 @@
 **
 ****************************************************************************/
 
+#include "bsdf.glsllib"
+
 #ifndef SAMPLE_PROBE_GLSLLIB
 #define SAMPLE_PROBE_GLSLLIB 1
 
@@ -107,18 +109,6 @@ vec4 qt_sampleGlossy(vec3 normal, vec3 viewDir, float rough)
     }
 
     return vec4(qt_lightProbeProperties.w * Gl * outColor, 1.0);
-}
-
-// An alternative to using a LUT is to use this function
-// see: https://www.unrealengine.com/en-US/blog/physically-based-shading-on-mobile
-vec2 qt_brdfApproximation(in vec3 N, in vec3 viewDir, in float roughness)
-{
-    float nDotV = clamp(dot(N, viewDir), 0.0, 1.0);
-    const vec4 c0 = vec4(-1.0, -0.0275, -0.572, 0.022);
-    const vec4 c1 = vec4(1.0, 0.0425, 1.04, -0.04);
-    vec4 r = roughness * c0 + c1;
-    float a004 = min(r.x * r.x, exp2(-9.28 * nDotV)) * r.x + r.y;
-    return vec2(-1.04, 1.04) * a004 + r.zw;
 }
 
 // This method is used by the PrincipledMaterial for the IBL specular term.

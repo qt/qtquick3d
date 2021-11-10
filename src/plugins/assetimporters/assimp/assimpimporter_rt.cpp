@@ -559,6 +559,33 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             }
         }
 
+        {
+            // Transmission Properties (KHR_materials_transmission)
+            bool hasTransmission = false;
+            result = source.Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION, hasTransmission);
+            if (result == aiReturn_SUCCESS && hasTransmission) {
+                // factor
+                {
+                    ai_real transmissionFactor = 0.0f;
+                    result = source.Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_FACTOR, transmissionFactor);
+                    if (result == aiReturn_SUCCESS)
+                        QSSGSceneDesc::setProperty(target,
+                                                   "transmissionFactor",
+                                                   &QQuick3DPrincipledMaterial::setTransmissionFactor,
+                                                   float(transmissionFactor));
+                }
+
+                // texture
+                {
+                    if (auto transmissionImage = createTextureNode(source, AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_TEXTURE))
+                        QSSGSceneDesc::setProperty(target,
+                                                   "transmissionMap",
+                                                   &QQuick3DPrincipledMaterial::setTransmissionMap,
+                                                   transmissionImage);
+                }
+            }
+        }
+
     } else { // Ver1
         int shadingModel = 0;
         aiReturn result;
