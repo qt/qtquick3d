@@ -650,7 +650,7 @@ QString QQuick3DModel::translateSource()
     const QQmlContext *context = qmlContext(this);
     const auto resolvedUrl = context ? context->resolvedUrl(m_source) : m_source;
     const auto qmlSource = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
-    return (qmlSource.isEmpty() ? m_source.toString() : qmlSource) + fragment;
+    return (qmlSource.isEmpty() ? m_source.path() : qmlSource) + fragment;
 }
 
 void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)
