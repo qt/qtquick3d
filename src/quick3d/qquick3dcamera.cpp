@@ -248,7 +248,7 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos,
     // We can be called before a spatial node is created, if that is the case, create the node now.
     if (QSSGRenderCamera *cameraNode = static_cast<QSSGRenderCamera *>(updateSpatialNode(QQuick3DObjectPrivate::get(this)->spatialNode))) {
         QQuick3DObjectPrivate::get(this)->spatialNode = cameraNode;
-        cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
+        cameraNode->calculateGlobalVariables(QRect(0, 0, width * cameraNode->dpr, height * cameraNode->dpr));
     }
 
     return QQuick3DCamera::mapToViewport(scenePos);
@@ -264,7 +264,7 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos,
     // We can be called before a spatial node is created, if that is the case, create the node now.
     if (QSSGRenderCamera *cameraNode = static_cast<QSSGRenderCamera *>(updateSpatialNode(QQuick3DObjectPrivate::get(this)->spatialNode))) {
         QQuick3DObjectPrivate::get(this)->spatialNode = cameraNode;
-        cameraNode->calculateGlobalVariables(QRect(0, 0, width, height));
+        cameraNode->calculateGlobalVariables(QRect(0, 0, width * cameraNode->dpr, height * cameraNode->dpr));
     }
 
     return QQuick3DCamera::mapFromViewport(viewportPos);
