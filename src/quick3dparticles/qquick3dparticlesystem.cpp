@@ -522,7 +522,7 @@ void QQuick3DParticleSystem::unRegisterParticleAffector(QQuick3DParticleAffector
 
 void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 {
-    if (!m_initialized || isGloballyDisabled())
+    if (!m_initialized || isGloballyDisabled() || (isEditorModeOn() && !visible()))
         return;
 
     m_currentTime = currentTime;
