@@ -59,5 +59,7 @@ CustomMaterial {
     property double specular: 0.3
     property color materialColor: "transparent"
 
+    sourceBlend: CustomMaterial.One
+    destinationBlend: CustomMaterial.OneMinusSrcAlpha
     fragmentShader: "material_screenspacereflections.frag"
 }

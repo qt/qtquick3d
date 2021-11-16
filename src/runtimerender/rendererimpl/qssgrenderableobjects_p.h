@@ -79,7 +79,8 @@ enum class QSSGRenderableObjectFlag
     // The number of target models' attributes are too many
     // to store in a renderable flag.
     // They will be recorded in shaderKey.
-    HasAttributeMorphTarget = 1 << 20
+    HasAttributeMorphTarget = 1 << 20,
+    RequiresScreenTexture = 1 << 21
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -172,6 +173,13 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     bool isPointsTopology() const
     {
         return this->operator&(QSSGRenderableObjectFlag::IsPointsTopology);
+    }
+    void setRequiresScreenTexture(bool v)
+    {
+        setFlag(QSSGRenderableObjectFlag::RequiresScreenTexture, v);
+    }
+    bool requiresScreenTexture() const {
+        return this->operator&(QSSGRenderableObjectFlag::RequiresScreenTexture);
     }
 };
 

@@ -110,6 +110,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer:
         }
 
         result = m_contextInterface->shaderCache()->loadBuiltinForRhi(name);
+        m_skyboxTonemapMode = tonemapMode;
+        m_isSkyboxRGBE = isRGBE;
     }
     return result;
 }

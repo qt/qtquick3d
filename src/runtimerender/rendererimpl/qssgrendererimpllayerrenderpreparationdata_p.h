@@ -203,10 +203,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     QSSGShaderLightList globalLights; // Contains all lights
     TRenderableObjectList opaqueObjects;
     TRenderableObjectList transparentObjects;
+    TRenderableObjectList screenTextureObjects;
     // Sorted lists of the rendered objects.  There may be other transforms applied so
     // it is simplest to duplicate the lists.
     TRenderableObjectList renderedOpaqueObjects;
     TRenderableObjectList renderedTransparentObjects;
+    TRenderableObjectList renderedScreenTextureObjects;
     TRenderableObjectList renderedOpaqueDepthPrepassObjects;
     TRenderableObjectList renderedDepthWriteObjects;
     QMatrix4x4 viewProjection;
@@ -273,6 +275,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     const QVector<QSSGRenderableObjectHandle> &getOpaqueRenderableObjects(bool performSort = true);
     // If layer depth test is false, this may also contain opaque objects.
     const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
+    const QVector<QSSGRenderableObjectHandle> &getScreenTextureRenderableObjects();
     const QVector<QSSGRenderableNodeEntry> &getRenderableItem2Ds();
 
     virtual void resetForFrame();

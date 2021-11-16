@@ -54,15 +54,14 @@ import QtQuick
 Rectangle {
     width: 400
     height: 400
-    color: Qt.rgba(0, 0, 0, 1)
+    color: "#444845"
 
     View3D {
         id: v3d
         anchors.fill: parent
 
         environment: SceneEnvironment {
-            clearColor: "#444845"
-            backgroundMode: SceneEnvironment.Color
+            backgroundMode: SceneEnvironment.Transparent
         }
 
         camera: camera

@@ -271,6 +271,30 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getTr
     return renderedTransparentObjects;
 }
 
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderPreparationData::getScreenTextureRenderableObjects()
+{
+    if (!renderedScreenTextureObjects.empty() || camera == nullptr)
+        return renderedScreenTextureObjects;
+    renderedScreenTextureObjects = screenTextureObjects;
+    if (!renderedScreenTextureObjects.empty()) {
+        QVector3D theCameraDirection(getCameraDirection());
+        QVector3D theCameraPosition = camera->getGlobalPos();
+        // Setup the object's sorting information
+        for (quint32 idx = 0, end = renderedScreenTextureObjects.size(); idx < end; ++idx) {
+            QSSGRenderableObjectHandle &theInfo = renderedScreenTextureObjects[idx];
+            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
+            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection) + signedSquare(theInfo.obj->depthBias);
+        }
+        static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs,
+                                                          const QSSGRenderableObjectHandle &rhs) {
+            return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
+        };
+        // render furthest to nearest.
+        std::sort(renderedScreenTextureObjects.begin(), renderedScreenTextureObjects.end(), iSRenderObjectPtrGreatThan);
+    }
+    return renderedScreenTextureObjects;
+}
+
 const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRenderableItem2Ds()
 {
     if (!renderedItem2Ds.isEmpty() || camera == nullptr)
@@ -743,13 +767,13 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareCust
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenTexture)) {
         ioFlags.setRequiresScreenTexture(true);
-        renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+        renderableFlags |= QSSGRenderableObjectFlag::RequiresScreenTexture;
     }
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ScreenMipTexture)) {
         ioFlags.setRequiresScreenTexture(true);
         ioFlags.setRequiresMipmapsForScreenTexture(true);
-        renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+        renderableFlags |= QSSGRenderableObjectFlag::RequiresScreenTexture;
     }
 
     if (inMaterial.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::DepthTexture))
@@ -1019,8 +1043,9 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
                                                                          morphWeights);
         }
         if (theRenderableObject) {
-
-            if (theRenderableObject->renderableFlags.hasTransparency())
+            if (theRenderableObject->renderableFlags.requiresScreenTexture())
+                screenTextureObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
+            else if (theRenderableObject->renderableFlags.hasTransparency())
                 transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
             else
                 opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
@@ -1112,7 +1137,9 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
                                                                               lights,
                                                                               opacity);
         if (theRenderableObject) {
-            if (theRenderableObject->renderableFlags.hasTransparency())
+            if (theRenderableObject->renderableFlags.requiresScreenTexture())
+                screenTextureObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
+            else if (theRenderableObject->renderableFlags.hasTransparency())
                 transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
             else
                 opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
@@ -1467,6 +1494,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
 void QSSGLayerRenderPreparationData::resetForFrame()
 {
     transparentObjects.clear();
+    screenTextureObjects.clear();
     opaqueObjects.clear();
     layerPrepResult.setEmpty();
     // The check for if the camera is or is not null is used
@@ -1475,6 +1503,7 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     cameraDirection.setEmpty();
     renderedOpaqueObjects.clear();
     renderedTransparentObjects.clear();
+    renderedScreenTextureObjects.clear();
     renderedItem2Ds.clear();
     renderedOpaqueDepthPrepassObjects.clear();
     renderedDepthWriteObjects.clear();

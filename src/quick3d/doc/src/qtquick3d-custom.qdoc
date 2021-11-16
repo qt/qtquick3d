@@ -1204,13 +1204,11 @@ refraction for glass-like materials.
 
 \c DEPTH_TEXTURE is a \c sampler2D that allows sampling a texture with the contents of the
 depth buffer with all the \c opaque objects in the scene rendered. Similarly, \c
-SCREEN_TEXTURE is a \c sampler2D that allows sampling a texture that has all \c opaque
-objects in the scene rendered to it, without anything else, meaning no skybox, no shadows,
-no effects, and no objects that have any transparency in some form (\l{Node::opacity}
-smaller than 1, textures maps for the material from images with semi-transparent pixels in
-them, etc.)  are present. The texture is cleared to \c{vec4(0.0)} meaning it has an alpha
-value of 0 for fragments that are not covered by objects in the scene. The size of these
-textures matches the size of the View3D in pixels.
+SCREEN_TEXTURE is a \c sampler2D that allows sampling a texture containing the contents of
+the scene excluding any transparent materials or any materials also using the
+SCREEN_TEXTURE. The texture can be used for materials that require the contents of the
+framebuffer they are being rendered to. The SCREEN_TEXTURE texture uses the same clear mode
+as the View3D. The size of these textures matches the size of the View3D in pixels.
 
 Let's have a simple demonstration by visualizing the depth buffer contents via \c
 DEPTH_TEXTURE. The camera's \l{PerspectiveCamera::clipFar}{far clip value} is reduced here from the
@@ -1227,13 +1225,12 @@ depth buffer for the scene over its surface.
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
-Item {
+Rectangle {
+    width: 400
+    height: 400
+    color: "black"
     View3D {
         anchors.fill: parent
-        environment: SceneEnvironment {
-            backgroundMode: SceneEnvironment.Color
-            clearColor: "black"
-        }
         PerspectiveCamera {
             id: camera
             z: 600

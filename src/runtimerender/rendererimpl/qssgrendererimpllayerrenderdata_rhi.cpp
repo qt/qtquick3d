@@ -413,6 +413,24 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                         qWarning("Could not find sampler for lightprobe");
                     }
                 }
+
+                // Screen Texture
+                if (shaderPipeline->screenTexture()) {
+                    int binding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
+                    if (binding >= 0) {
+                        // linear min/mag, mipmap filtering depends on the
+                        // texture, with SCREEN_TEXTURE there are no mipmaps, but
+                        // once SCREEN_MIP_TEXTURE is seen the texture (the same
+                        // one) has mipmaps generated.
+                        QRhiSampler::Filter mipFilter = shaderPipeline->screenTexture()->flags().testFlag(QRhiTexture::MipMapped)
+                                ? QRhiSampler::Linear : QRhiSampler::None;
+                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, mipFilter,
+                                                                 QRhiSampler::Repeat, QRhiSampler::Repeat });
+                        bindings.addTexture(binding,
+                                            QRhiShaderResourceBinding::FragmentStage,
+                                            shaderPipeline->screenTexture(), sampler);
+                    } // else ignore, not an error
+                }
             }
 
             // Depth and SSAO textures
@@ -1684,6 +1702,7 @@ void QSSGLayerRenderData::rhiPrepare()
 
         const auto &sortedOpaqueObjects = getOpaqueRenderableObjects(true); // front to back
         const auto &sortedTransparentObjects = getTransparentRenderableObjects(); // back to front
+        const auto &sortedScreenTextureObjects = getScreenTextureRenderableObjects(); // back to front
         const auto &item2Ds = getRenderableItem2Ds();
 
         // Verify that the depth write list(s) were cleared between frames
@@ -1705,6 +1724,13 @@ void QSSGLayerRenderData::rhiPrepare()
                     renderedDepthWriteObjects.append(transparentObject);
                 else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
                     renderedOpaqueDepthPrepassObjects.append(transparentObject);
+            }
+            for (const auto &screenTextureObject : sortedScreenTextureObjects) {
+                const auto depthMode = screenTextureObject.obj->depthWriteMode;
+                if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
+                    renderedDepthWriteObjects.append(screenTextureObject);
+                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                    renderedOpaqueDepthPrepassObjects.append(screenTextureObject);
             }
         }
 
@@ -1892,11 +1918,26 @@ void QSSGLayerRenderData::rhiPrepare()
                 // because there are effectively no "opaque" objects then.
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
-                cb->beginPass(m_rhiScreenTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+                QColor clearColor(Qt::transparent);
+                if (layer.background == QSSGRenderLayer::Background::Color)
+                    clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
+                cb->beginPass(m_rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_rhiScreenTexture.rt));
+                if (layer.background == QSSGRenderLayer::Background::SkyBox
+                        && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
+                    // This is offscreen, so rendered untonemapped
+                    auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, layer.skyBoxIsRgbe8);
+                    Q_ASSERT(shaderPipeline);
+                    QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
+                    ps->shaderPipeline = shaderPipeline.data();
+                    QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+                    QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+                    renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, {});
+                }
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiRenderRenderable(rhiCtx, *this, *handle.obj, &needsSetViewport);
+
                 QRhiResourceUpdateBatch *rub = nullptr;
                 if (wantsMips) {
                     rub = rhiCtx->rhi()->nextResourceUpdateBatch();
@@ -1918,6 +1959,9 @@ void QSSGLayerRenderData::rhiPrepare()
         QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
         const int samples = rhiCtx->mainPassSampleCount();
 
+        ps->depthTestEnable = depthTestEnableDefault;
+        ps->depthWriteEnable = depthWriteEnableDefault;
+
         // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
@@ -1928,9 +1972,22 @@ void QSSGLayerRenderData::rhiPrepare()
             rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
         }
 
-        // Reset depth state to defaults for item2Ds
+        // objects that requires the screen texture
         ps->depthTestEnable = depthTestEnableDefault;
         ps->depthWriteEnable = depthWriteEnableDefault;
+        for (const auto &handle : sortedScreenTextureObjects) {
+            QSSGRenderableObject *theObject = handle.obj;
+            const auto depthWriteMode = theObject->depthWriteMode;
+            ps->blendEnable = theObject->renderableFlags.hasTransparency();
+            ps->depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never || depthWriteMode == QSSGDepthDrawMode::OpaquePrePass
+                                     || m_globalZPrePassActive || !layerEnableDepthTest);
+            rhiPrepareRenderable(rhiCtx, *this, *theObject, mainRpDesc, samples);
+        }
+
+        // objects rendered by Qt Quick 2D
+        ps->depthTestEnable = depthTestEnableDefault;
+        ps->depthWriteEnable = depthWriteEnableDefault;
+        ps->blendEnable = false;
 
         for (const auto &item: item2Ds) {
             QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item.node);
@@ -2096,6 +2153,13 @@ void QSSGLayerRenderData::rhiRender()
         }
         cb->debugMarkEnd();
 
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render screen texture dependent"));
+        const auto &theScreenTextureObjects = getScreenTextureRenderableObjects();
+        for (const auto &handle : theScreenTextureObjects) {
+            QSSGRenderableObject *theObject = handle.obj;
+            rhiRenderRenderable(rhiCtx, *this, *theObject, &needsSetViewport);
+        }
+        cb->debugMarkEnd();
 
         if (!item2Ds.isEmpty()) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));

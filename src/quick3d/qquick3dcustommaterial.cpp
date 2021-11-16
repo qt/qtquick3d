@@ -1041,16 +1041,13 @@ QT_BEGIN_NAMESPACE
     \list
 
     \li \c SCREEN_TEXTURE - When present, a texture (sampler2D) with the color
-    buffer from a rendering pass containing the opaque objects in the scene is
-    exposed to the shader under this name. This also implies that any object
-    with a custom material where the shaders sample \c SCREEN_TEXTURE will be
-    treated as if it had semi-transparency enabled on it, even when the object
-    opacity is 1.0 and blending was not enabled on the CustomMaterial.
-    This is because such an object cannot be part of the opaque rendering
-    lists, because it itself depends on the rendering results of those objects
-    and thus cannot be rendered in line together with those. Pixels that are
-    not covered by opaque objects will be set to transparent (\c{vec4(0.0)}) in
-    the texture. For example, a fragment shader could contain the following:
+    buffer from a rendering pass containing the contents of the scene excluding
+    any transparent materials or any materials also using the SCREEN_TEXTURE is
+    exposed to the shader under this name. The texture can be used for techniques
+    that require the contents of the framebuffer they are being rendered to. The
+    SCREEN_TEXTURE texture uses the same clear mode as the View3D. The size of
+    these textures matches the size of the View3D in pixels. For example, a
+    fragment shader could contain the following:
     \badcode
         vec2 uv = FRAGCOORD.xy / vec2(textureSize(SCREEN_TEXTURE, 0));
         vec2 displace = vec2(0.1);
