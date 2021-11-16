@@ -1453,46 +1453,67 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders->setUniform(ubufData, "qt_cameraDirection", &inRenderProperties.cameraDirection, 3 * sizeof(float), &cui.cameraDirectionIdx);
     shaders->setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
-    // Projection and view matrices are only needed by CustomMaterial shaders
+    // Only calculate and update Matrix uniforms if they are needed
+    bool usesProjectionMatrix = false;
+    bool usesInvProjectionMatrix = false;
+    bool usesViewMatrix = false;
+    bool usesViewProjectionMatrix = false;
+    bool usesModelViewProjectionMatrix = false;
+    bool usesNormalMatrix = false;
+    bool usesParentMatrix = false;
+
     if (inMaterial.type == QSSGRenderGraphObject::Type::CustomMaterial) {
         const auto *customMaterial = static_cast<const QSSGRenderCustomMaterial *>(&inMaterial);
-        const bool usesProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
-        const bool usesInvProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix);
-
-        if (usesProjectionMatrix || usesInvProjectionMatrix) {
-            const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
-            if (usesProjectionMatrix)
-                shaders->setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
-            if (usesInvProjectionMatrix)
-                shaders->setUniform(ubufData, "qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
-        }
-
+        usesProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::ProjectionMatrix);
+        usesInvProjectionMatrix = customMaterial->m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::InverseProjectionMatrix);
         // ### these should use flags like the above two
-        QMatrix4x4 viewProj;
-        inCamera.calculateViewProjectionMatrix(viewProj);
-        viewProj = clipSpaceCorrMatrix * viewProj;
-        shaders->setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
+        usesViewMatrix = true;
+        usesViewProjectionMatrix = true;
+    }
+    const bool usesInstancing = inProperties.m_usesInstancing.getValue(inKey);
+    if (usesInstancing) {
+        // Instanced calls have to calculate MVP and normalMatrix in the vertex shader
+        usesViewProjectionMatrix = true;
+        usesParentMatrix = true;
+    } else {
+        usesModelViewProjectionMatrix = true;
+        usesNormalMatrix = true;
+    }
+
+    // Update matrix uniforms
+    if (usesProjectionMatrix || usesInvProjectionMatrix) {
+        const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
+        if (usesProjectionMatrix)
+            shaders->setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
+        if (usesInvProjectionMatrix)
+            shaders->setUniform(ubufData, "qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
+    }
+    if (usesViewMatrix) {
         const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
         shaders->setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     }
-
-    const bool usesInstancing = inProperties.m_usesInstancing.getValue(inKey);
-    if (!usesInstancing) {
-        const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
-        shaders->setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
-
-        shaders->setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
-                            QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
-        shaders->setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
-    } else {
-        // Instanced calls have to calculate MVP and normalMatrix in the vertex shader
+    if (usesViewProjectionMatrix) {
         QMatrix4x4 viewProj;
         inCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;
         shaders->setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
-        shaders->setUniform(ubufData, "qt_modelMatrix", localInstanceTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
-        shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
     }
+
+    // qt_modelMatrix is always available, but differnt when using instancing
+    if (usesInstancing)
+        shaders->setUniform(ubufData, "qt_modelMatrix", localInstanceTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
+    else
+        shaders->setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
+
+    if (usesModelViewProjectionMatrix) {
+        const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
+        shaders->setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
+    }
+    if (usesNormalMatrix)
+        shaders->setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
+                            QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
+    if (usesParentMatrix)
+        shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
 
     // Skinning
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
