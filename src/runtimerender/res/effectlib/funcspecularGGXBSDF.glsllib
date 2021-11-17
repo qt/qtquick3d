@@ -33,10 +33,3 @@ vec4 qt_specularGGXBSDF(in vec3 normal, in vec3 L, in vec3 V, in vec3 lightSpecu
     return vec4(specular_brdf_NL * lightSpecular, 1.0);
 }
 
-vec4 qt_specularGGXBSDF(in vec3 normal, in vec3 L, in vec3 V, in vec3 lightSpecular, in float specularAmount, in float roughness, in float metalness, in vec3 baseColor)
-{
-    vec3 F0 = qt_F0(metalness, specularAmount, baseColor);
-    vec3 F90 = vec3(1.0);
-    return qt_specularGGXBSDF(normal, L, V, lightSpecular, F0, F90, roughness);
-}
-
