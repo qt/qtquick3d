@@ -171,6 +171,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuick3DViewport)
-
 #endif // QSSGVIEW3D_H

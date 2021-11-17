@@ -118,12 +118,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
     init();
     if (window) {
         g_windowReg->append({ window, this });
-        m_beforeFrameConnection = QObject::connect(window, &QQuickWindow::beforeFrameBegin, [this] {
-           resetResourceCounters();
-        });
-        m_afterFrameConnection = QObject::connect(window, &QQuickWindow::afterFrameEnd, [this] {
-           cleanupUnreferencedBuffers();
-        });
         QObject::connect(window, &QWindow::destroyed, [&](QObject *o){
             g_windowReg->removeIf([o](const Binding &b) { return (b.first == o); });
         });
@@ -132,8 +126,6 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
-    QObject::disconnect(m_beforeFrameConnection);
-    QObject::disconnect(m_afterFrameConnection);
     m_renderer->releaseResources();
     g_windowReg->removeIf([this](const Binding &b) { return (b.second == this); });
 }
@@ -178,19 +170,19 @@ void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *>
     m_renderer->cleanupResources(resources);
 }
 
-void QSSGRenderContextInterface::cleanupUnreferencedBuffers()
+void QSSGRenderContextInterface::cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer)
 {
     // Now check for unreferenced buffers and release them if necessary
-    m_bufferManager->cleanupUnreferencedBuffers(m_frameCount);
+    m_bufferManager->cleanupUnreferencedBuffers(m_frameCount, inLayer);
 }
 
 
-void QSSGRenderContextInterface::resetResourceCounters()
+void QSSGRenderContextInterface::resetResourceCounters(QSSGRenderLayer *inLayer)
 {
-    m_bufferManager->resetUsageCounters(m_frameCount);
+    m_bufferManager->resetUsageCounters(m_frameCount, inLayer);
 }
 
-void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
+void QSSGRenderContextInterface::beginFrame(QSSGRenderLayer *layer, bool allowRecursion)
 {
     if (allowRecursion) {
         if (m_activeFrameRef++ != 0)
@@ -199,6 +191,7 @@ void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
 
     m_perFrameAllocator.reset();
     m_renderer->beginFrame();
+    resetResourceCounters(layer);
 }
 
 bool QSSGRenderContextInterface::prepareLayerForRender(QSSGRenderLayer &inLayer)
@@ -216,12 +209,14 @@ void QSSGRenderContextInterface::rhiRender(QSSGRenderLayer &inLayer)
     m_renderer->rhiRender(inLayer);
 }
 
-bool QSSGRenderContextInterface::endFrame(bool allowRecursion)
+bool QSSGRenderContextInterface::endFrame(QSSGRenderLayer *layer, bool allowRecursion)
 {
     if (allowRecursion) {
         if (--m_activeFrameRef != 0)
             return false;
     }
+
+    cleanupUnreferencedBuffers(layer);
 
     m_renderer->endFrame();
     ++m_frameCount;

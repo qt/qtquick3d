@@ -110,8 +110,8 @@ public:
     QRect scissorRect() const { return m_scissorRect; }
 
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
-    void cleanupUnreferencedBuffers();
-    void resetResourceCounters();
+    void cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer);
+    void resetResourceCounters(QSSGRenderLayer *inLayer);
 
     // Steps needed to render:
     // 1.  beginFrame - Reset the per-frame allocator
@@ -123,7 +123,7 @@ public:
 
     // Clients need to call this every frame in order for various subsystems to release
     // temporary per-frame allocated objects.
-    void beginFrame(bool allowRecursion = true);
+    void beginFrame(QSSGRenderLayer *layer, bool allowRecursion = true);
 
     bool prepareLayerForRender(QSSGRenderLayer &inLayer);
 
@@ -133,7 +133,7 @@ public:
     // When allowRecursion is true, the cleanup is only done when all
     // beginFrames got their corresponding endFrame. This is indicated by the
     // return value (false if nothing's been done due to pending "frames")
-    bool endFrame(bool allowRecursion = true);
+    bool endFrame(QSSGRenderLayer *layer, bool allowRecursion = true);
 
 private:
     void init();
