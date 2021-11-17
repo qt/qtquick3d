@@ -136,6 +136,13 @@ Item {
                 color: "#00ff00"
                 colorVariation: Qt.vector4d(0, 0, 0, 0.8)
             }
+            ModelParticle3D {
+                id: particleWhite
+                delegate: particleComponent
+                maxAmount: 1000
+                color: "#ffffff"
+                colorVariation: Qt.vector4d(0, 0, 0, 0.8)
+            }
 
             Model {
                 id: emittingSphere
@@ -178,6 +185,18 @@ Item {
                     directionVariation: Qt.vector3d(50, 50, 50)
                 }
                 particleRotationVelocityVariation: Qt.vector3d(500.0, 500.0, 500.0)
+            }
+
+            ParticleEmitter3D {
+                system: psystem
+                particle: particleWhite
+                position: Qt.vector3d(100, 50, 0)
+                scale: Qt.vector3d(5.0, 5.0, 5.0)
+                shape: ParticleCustomShape3D {
+                    source: "qt_logo_in_4096.cbor"
+                }
+                emitRate: 500
+                lifeSpan: 5000
             }
 
             Model {
