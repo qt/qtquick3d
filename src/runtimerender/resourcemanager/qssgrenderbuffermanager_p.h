@@ -65,6 +65,7 @@ class QSSGRenderTextureData;
 struct QSSGRenderModel;
 struct QSSGRenderImage;
 struct QSSGRenderResourceLoader;
+struct QSSGRenderLayer;
 
 // There is one QSSGBufferManager per QSSGRenderContextInterface, and so per
 // QQuickWindow, and by extension, per scenegraph render thread. This is
@@ -86,13 +87,13 @@ public:
 
     struct ImageData {
         QSSGRenderImageTexture renderImageTexture;
-        uint32_t usageCount = 0;
+        QHash<QSSGRenderLayer*, uint32_t> usageCounts;
         uint32_t generationId = 0;
     };
 
     struct MeshData {
         QSSGRenderMesh *mesh = nullptr;
-        uint32_t usageCount = 0;
+        QHash<QSSGRenderLayer*, uint32_t> usageCounts;
         uint32_t generationId = 0;
     };
 
@@ -122,8 +123,8 @@ public:
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
 
     // Called at the end of the frame to release unreferenced geometry and textures
-    void cleanupUnreferencedBuffers(quint32 frameId);
-    void resetUsageCounters(quint32 frameId);
+    void cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *layer);
+    void resetUsageCounters(quint32 frameId, QSSGRenderLayer *layer);
 
     void releaseGeometry(QSSGRenderGeometry *geometry);
     void releaseTextureData(QSSGRenderTextureData *textureData);
@@ -184,7 +185,7 @@ private:
 
     quint32 frameCleanupIndex = 0;
     quint32 frameResetIndex = 0;
-
+    QSSGRenderLayer *currentLayer = nullptr;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)

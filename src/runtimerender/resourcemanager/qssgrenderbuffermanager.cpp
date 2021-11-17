@@ -52,6 +52,9 @@
 
 QT_BEGIN_NAMESPACE
 
+//#define QSSG_RENDERBUFFER_DEBUGGING
+//#define QSSG_RENDERBUFFER_DEBUGGING_USAGES
+
 struct MeshStorageRef
 {
     QVector<QSSGMesh::Mesh> meshes;
@@ -156,7 +159,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 theImage = qsgImageMap.insert(qsgTexture, ImageData());
             theImage.value().renderImageTexture.m_texture = qsgTexture->rhiTexture();
             theImage.value().renderImageTexture.m_flags.setHasTransparency(qsgTexture->hasAlphaChannel());
-            theImage.value().usageCount++;
+            theImage.value().usageCounts[currentLayer]++;
             result = theImage.value().renderImageTexture;
             // inMipMode is ignored completely when sourcing the texture from a
             // QSGTexture. Mipmap generation is not supported, whereas
@@ -193,8 +196,13 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             if (theLoadedTexture) {
                 foundIt = imageMap.insert(imageKey, ImageData());
                 const bool checkTransp = true;
-                if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), checkTransp, inMipMode))
+                if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), checkTransp, inMipMode)) {
                     foundIt.value() = ImageData();
+                } else {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                    qDebug() << "+ uploadTexture: " << image->m_imagePath.path() << currentLayer;
+#endif
+                }
                 result = foundIt.value().renderImageTexture;
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
@@ -204,7 +212,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 qCWarning(WARNING, "Failed to load image: %s", qPrintable(path));
             }
         }
-        foundIt.value().usageCount++;
+        foundIt.value().usageCounts[currentLayer]++;
     }
     Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DTextureLoad,
                              QQuick3DProfiler::Quick3DStageEnd);
@@ -223,7 +231,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
         theImageData = customTextureMap.insert(data, ImageData());
     } else {
         // Return the currently loaded texture
-        theImageData.value().usageCount++;
+        theImageData.value().usageCounts[currentLayer]++;
         return theImageData.value().renderImageTexture;
     }
 
@@ -232,13 +240,17 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
     if (!data->textureData().isNull()) {
         theLoadedTexture.reset(QSSGLoadedTexture::loadTextureData(data));
         theLoadedTexture->ownsData = false;
-        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), false, inMipMode))
+        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), false, inMipMode)) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "+ uploadTexture: " << data << currentLayer;
+#endif
             theImageData.value().generationId = data->generationId();
-        else
+        } else {
             theImageData.value() = ImageData();
+        }
     }
 
-    theImageData.value().usageCount++;
+    theImageData.value().usageCounts[currentLayer]++;
     return theImageData.value().renderImageTexture;
 }
 
@@ -1183,6 +1195,9 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
     QMutexLocker meshMutexLocker(&meshBufferMutex);
     const auto meshItr = customMeshMap.constFind(geometry);
     if (meshItr != customMeshMap.cend()) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+        qDebug() << "- releaseGeometry: " << geometry << currentLayer;
+#endif
         delete meshItr.value().mesh;
         customMeshMap.erase(meshItr);
     }
@@ -1193,8 +1208,12 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
     const auto textureDataItr = customTextureMap.constFind(textureData);
     if (textureDataItr != customTextureMap.cend()) {
         auto rhiTexture = textureDataItr.value().renderImageTexture.m_texture;
-        if (rhiTexture)
+        if (rhiTexture) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+            qDebug() << "- releaseTextureData: " << textureData << currentLayer;
+#endif
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+        }
         customTextureMap.erase(textureDataItr);
     }
 }
@@ -1204,6 +1223,9 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
     QMutexLocker meshMutexLocker(&meshBufferMutex);
     const auto meshItr = meshMap.constFind(inSourcePath);
     if (meshItr != meshMap.cend()) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+        qDebug() << "- releaseMesh: " << inSourcePath.path() << currentLayer;
+#endif
         delete meshItr.value().mesh;
         meshMap.erase(meshItr);
     }
@@ -1214,24 +1236,38 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
     const auto imageItr = imageMap.constFind(key);
     if (imageItr != imageMap.cend()) {
         auto rhiTexture = imageItr.value().renderImageTexture.m_texture;
-        if (rhiTexture)
+        if (rhiTexture) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+            qDebug() << "- releaseTexture: " << key.path.path() << currentLayer;
+#endif
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+        }
         imageMap.erase(imageItr);
     }
 }
 
-void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
+void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *layer)
 {
     // Don't cleanup if
     if (frameId == frameCleanupIndex)
         return;
+
+    auto isUnused = [] (const QHash<QSSGRenderLayer*, uint32_t> &usages) -> bool {
+        for (const auto &value : qAsConst(usages))
+            if (value != 0)
+                return false;
+        return true;
+    };
 
     {
         QMutexLocker meshMutexLocker(&meshBufferMutex);
         // Meshes (by path)
         auto meshIterator = meshMap.cbegin();
         while (meshIterator != meshMap.cend()) {
-            if (meshIterator.value().usageCount == 0) {
+            if (isUnused(meshIterator.value().usageCounts)) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseGeometry: " << meshIterator.key().path() << currentLayer;
+#endif
                 delete meshIterator.value().mesh;
                 meshIterator = meshMap.erase(meshIterator);
             } else {
@@ -1242,7 +1278,10 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
         // Meshes (custom)
         auto customMeshIterator = customMeshMap.cbegin();
         while (customMeshIterator != customMeshMap.cend()) {
-            if (customMeshIterator.value().usageCount == 0) {
+            if (isUnused(customMeshIterator.value().usageCounts)) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseGeometry: " << customMeshIterator.key() << currentLayer;
+#endif
                 delete customMeshIterator.value().mesh;
                 customMeshIterator = customMeshMap.erase(customMeshIterator);
             } else {
@@ -1254,7 +1293,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
     // SG Textures
     auto sgIterator = qsgImageMap.cbegin();
     while (sgIterator != qsgImageMap.cend()) {
-        if (sgIterator.value().usageCount == 0) {
+        if (isUnused(sgIterator.value().usageCounts)) {
             // Texture is no longer uses, so stop tracking
             // We do not need to delete/release the texture
             // because we don't own it.
@@ -1267,10 +1306,14 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
     // Images
     auto imageKeyIterator = imageMap.cbegin();
     while (imageKeyIterator != imageMap.cend()) {
-        if (imageKeyIterator.value().usageCount == 0) {
+        if (isUnused(imageKeyIterator.value().usageCounts)) {
             auto rhiTexture = imageKeyIterator.value().renderImageTexture.m_texture;
-            if (rhiTexture)
+            if (rhiTexture) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseTexture: " << imageKeyIterator.key().path.path() << currentLayer;
+#endif
                 m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            }
             imageKeyIterator = imageMap.erase(imageKeyIterator);
         } else {
             ++imageKeyIterator;
@@ -1280,10 +1323,14 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
     // Custom Texture Data
     auto textureDataIterator = customTextureMap.cbegin();
     while (textureDataIterator != customTextureMap.cend()) {
-        if (textureDataIterator.value().usageCount == 0) {
+        if (isUnused(textureDataIterator.value().usageCounts)) {
             auto rhiTexture = textureDataIterator.value().renderImageTexture.m_texture;
-            if (rhiTexture)
+            if (rhiTexture) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseTextureData: " << textureDataIterator.key() << currentLayer;
+#endif
                 m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            }
             textureDataIterator = customTextureMap.erase(textureDataIterator);
         } else {
             ++textureDataIterator;
@@ -1292,33 +1339,42 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
 
     // Resource Tracking Debug Code
     frameCleanupIndex = frameId;
+#ifdef QSSG_RENDERBUFFER_DEBUGGING_USAGES
+    qDebug() << "QSSGBufferManager::cleanupUnreferencedBuffers()" << this << "frame:" << frameCleanupIndex << currentLayer;
+    qDebug() << "Textures(by path): " << imageMap.count();
+    qDebug() << "Textures(custom):  " << customTextureMap.count();
+    qDebug() << "Textures(qsg):     " << qsgImageMap.count();
+    qDebug() << "Geometry(by path): " << meshMap.count();
+    qDebug() << "Geometry(custom):  " << customMeshMap.count();
+#endif
 }
 
-void QSSGBufferManager::resetUsageCounters(quint32 frameId)
+void QSSGBufferManager::resetUsageCounters(quint32 frameId, QSSGRenderLayer *layer)
 {
     if (frameResetIndex == frameId)
         return;
 
     // SG Textures
     for (auto &imageData : qsgImageMap)
-        imageData.usageCount = 0;
+        imageData.usageCounts[layer] = 0;
 
     // Images
     for (auto &imageData : imageMap)
-        imageData.usageCount = 0;
+        imageData.usageCounts[layer] = 0;
 
     // TextureDatas
     for (auto &imageData : customTextureMap)
-        imageData.usageCount = 0;
+        imageData.usageCounts[layer] = 0;
     // Meshes
     for (auto &meshData : meshMap)
-        meshData.usageCount = 0;
+        meshData.usageCounts[layer] = 0;
 
     // Meshes (custom)
     for (auto &meshData : customMeshMap)
-        meshData.usageCount = 0;
+        meshData.usageCounts[layer] = 0;
 
     frameResetIndex = frameId;
+    currentLayer = layer;
 }
 
 void QSSGBufferManager::registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData)
@@ -1345,7 +1401,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
     // check if it is already loaded
     auto meshItr = meshMap.find(inMeshPath);
     if (meshItr != meshMap.cend()) {
-        meshItr.value().usageCount++;
+        meshItr.value().usageCounts[currentLayer]++;
         return meshItr.value().mesh;
     }
 
@@ -1360,9 +1416,11 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
                                  QQuick3DProfiler::Quick3DStageEnd);
         return nullptr;
     }
-
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+    qDebug() << "+ uploadGeometry: " << inMeshPath.path() << currentLayer;
+#endif
     auto ret = createRenderMesh(result);
-    meshMap.insert(inMeshPath, { ret, 1 });
+    meshMap.insert(inMeshPath, { ret, {{currentLayer, 1}} });
 
     Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DMeshLoad,
                              QQuick3DProfiler::Quick3DStageEnd);
@@ -1380,7 +1438,7 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
         meshIterator = customMeshMap.insert(geometry, MeshData());
     } else {
         // An up-to-date mesh was found
-        meshIterator.value().usageCount++;
+        meshIterator.value().usageCounts[currentLayer]++;
         return meshIterator.value().mesh;
     }
 
@@ -1392,8 +1450,11 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
     QString error;
     QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(geometry->meshData(), &error);
     if (mesh.isValid()) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+        qDebug() << "+ uploadGeometry: " << geometry << currentLayer;
+#endif
         meshIterator->mesh = createRenderMesh(mesh);
-        meshIterator->usageCount = 1;
+        meshIterator->usageCounts[currentLayer] = 1;
         meshIterator->generationId = geometry->generationId();
     } else {
         qWarning("Mesh building failed: %s", qPrintable(error));
@@ -1518,16 +1579,24 @@ void QSSGBufferManager::clear()
         // Meshes (by path)
         for (auto iter = meshMap.begin(), end = meshMap.end(); iter != end; ++iter) {
             QSSGRenderMesh *theMesh = iter.value().mesh;
-            if (theMesh)
+            if (theMesh) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseGeometry: " << iter.key().path() << currentLayer;
+#endif
                 delete theMesh;
+            }
         }
         meshMap.clear();
 
         // Meshes (custom)
         for (auto iter = customMeshMap.begin(), end = customMeshMap.end(); iter != end; ++iter) {
             QSSGRenderMesh *theMesh = iter.value().mesh;
-            if (theMesh)
+            if (theMesh) {
+#ifdef QSSG_RENDERBUFFER_DEBUGGING
+                qDebug() << "- releaseGeometry: " << iter.key() << currentLayer;
+#endif
                 delete theMesh;
+            }
         }
         customMeshMap.clear();
     }

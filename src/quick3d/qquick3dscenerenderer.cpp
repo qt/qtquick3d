@@ -442,12 +442,12 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
 void QQuick3DSceneRenderer::beginFrame()
 {
-    m_sgContext->beginFrame();
+    m_sgContext->beginFrame(m_layer);
 }
 
 void QQuick3DSceneRenderer::endFrame()
 {
-    m_sgContext->endFrame();
+    m_sgContext->endFrame(m_layer);
 }
 
 void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixelRatio)
