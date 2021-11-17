@@ -70,6 +70,8 @@ public:
 
 protected:
     QRhiTexture *renderToRhiTexture(QQuickWindow *qw);
+    void beginFrame();
+    void endFrame();
     void rhiPrepare(const QRect &viewport, qreal displayPixelRatio);
     void rhiRender();
     void synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO = true);
