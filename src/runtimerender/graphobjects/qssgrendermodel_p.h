@@ -84,8 +84,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QVector<quint32> morphAttributes;
 
     QSSGRenderModel();
-
-    QSSGBounds3 getModelBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
 };
 QT_END_NAMESPACE
 

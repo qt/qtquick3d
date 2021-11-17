@@ -114,6 +114,7 @@ public:
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
 
     QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
+    QSSGBounds3 getModelBounds(const QSSGRenderModel *model) const;
 
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
 

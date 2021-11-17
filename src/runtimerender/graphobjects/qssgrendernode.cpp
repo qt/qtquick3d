@@ -252,8 +252,10 @@ QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManage
     if (inIncludeChildren)
         retval = getChildBounds(inManager);
 
-    if (type == QSSGRenderGraphObject::Type::Model)
-        retval.include(static_cast<const QSSGRenderModel *>(this)->getModelBounds(inManager));
+    if (type == QSSGRenderGraphObject::Type::Model) {
+        auto model = static_cast<const QSSGRenderModel *>(this);
+        retval.include(inManager->getModelBounds(model));
+    }
     return retval;
 }
 

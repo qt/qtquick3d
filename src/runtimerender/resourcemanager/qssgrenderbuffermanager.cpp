@@ -979,6 +979,38 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel *model)
     return theMesh;
 }
 
+QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model) const
+{
+    QSSGBounds3 retval;
+    // Custom Geometry
+    if (model->geometry) {
+        retval = QSSGBounds3(model->geometry->boundsMin(), model->geometry->boundsMax());
+    } else if (!model->meshPath.isNull()){
+        // Check if the Mesh is already loaded
+        QSSGRenderMesh *theMesh = nullptr;
+        auto meshItr = meshMap.constFind(model->meshPath);
+        if (meshItr != meshMap.cend())
+            theMesh = meshItr.value().mesh;
+        if (theMesh) {
+            // The mesh was already loaded, so calculate the
+            // bounds from subsets of the QSSGRenderMesh
+            const auto &subSets = theMesh->subsets;
+            for (const auto &subSet : subSets)
+                retval.include(subSet.bounds);
+        } else {
+            // The model has not been loaded yet, load it without uploading the geometry
+            // TODO: Try to do this without loading the whole mesh struct
+            QSSGMesh::Mesh mesh = loadMeshData(model->meshPath);
+            if (mesh.isValid()) {
+               auto const &subsets = mesh.subsets();
+               for (const auto &subset : subsets)
+                   retval.include(QSSGBounds3(subset.bounds.min, subset.bounds.max));
+            }
+        }
+    }
+    return retval;
+}
+
 QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh)
 {
     QSSGRenderMesh *newMesh = new QSSGRenderMesh(QSSGRenderDrawMode(mesh.drawMode()),
