@@ -1197,20 +1197,6 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
     }
 }
 
-void QSSGBufferManager::releaseImage(const QSSGRenderPath &sourcePath)
-{
-    for (auto it = imageMap.begin(); it != imageMap.end(); ) {
-        if (it.key().path == sourcePath) {
-            auto rhiTexture = it.value().renderImageTexture.m_texture;
-            if (rhiTexture)
-                m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
-            it = imageMap.erase(it);
-        } else {
-            ++it;
-        }
-    }
-}
-
 void QSSGBufferManager::cleanupUnreferencedBuffers()
 {
     {

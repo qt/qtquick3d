@@ -156,7 +156,6 @@ private:
 
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
-    void releaseImage(const QSSGRenderPath &sourcePath);
 
     QSSGRenderContextInterface *m_contextInterface = nullptr; // ContextInterfaces owns BufferManager
 
