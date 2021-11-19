@@ -1563,4 +1563,21 @@ void QSSGBufferManager::commitBufferResourceUpdates()
     }
 }
 
+void QSSGBufferManager::processResourceLoader(const QSSGRenderResourceLoader *loader)
+{
+    for (auto &mesh : qAsConst(loader->meshes))
+        loadMesh(mesh);
+
+    for (auto customMesh : qAsConst(loader->geometries))
+        loadCustomMesh(static_cast<QSSGRenderGeometry*>(customMesh));
+
+    for (auto texture : qAsConst(loader->textures)) {
+        const auto image = static_cast<QSSGRenderImage *>(texture);
+        loadRenderImage(image, image->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+    }
+
+    // Make sure the uploads occur
+    commitBufferResourceUpdates();
+}
+
 QT_END_NAMESPACE

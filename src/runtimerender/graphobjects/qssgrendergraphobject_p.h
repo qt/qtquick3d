@@ -95,6 +95,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         MorphTarget, // Resource
         ModelInstance, // Resource
         ModelBlendParticle, // Resource
+        ResourceLoader, // Resource [meta]
         // Materials
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource
@@ -137,7 +138,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         return ((type == Type::Model)
                 || (type == Type::Image)
                 || (type == Type::Geometry)
-                || (type == Type::TextureData));
+                || (type == Type::TextureData)
+                || (type == Type::ResourceLoader));
     }
 
     QAtomicInt ref;

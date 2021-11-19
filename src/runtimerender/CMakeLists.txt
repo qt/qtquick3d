@@ -23,6 +23,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrenderskeleton.cpp graphobjects/qssgrenderskeleton_p.h
         graphobjects/qssgrendertexturedata.cpp graphobjects/qssgrendertexturedata_p.h
         graphobjects/qssgrendermorphtarget.cpp graphobjects/qssgrendermorphtarget_p.h
+        graphobjects/qssgrenderresourceloader.cpp graphobjects/qssgrenderresourceloader_p.h
         qssgperframeallocator_p.h
         qssgrenderableimage_p.h
         qssgrenderclippingfrustum.cpp qssgrenderclippingfrustum_p.h

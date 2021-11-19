@@ -475,10 +475,13 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
+    QList<QSSGRenderGraphObject *> resourceLoaders;
+
     if (auto sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager) {
         sceneManager->rci = m_sgContext.data();
         sceneManager->updateDirtyNodes();
         sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+        resourceLoaders.append(sceneManager->resourceLoaders.values());
     }
 
     QQuick3DNode *importScene = view3D->importScene();
@@ -488,6 +491,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 importSceneManager->rci = m_sgContext.data();
             importSceneManager->updateDirtyNodes();
             importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+            resourceLoaders.append(importSceneManager->resourceLoaders.values());
         }
     }
 
@@ -496,7 +500,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_layer = new QSSGRenderLayer();
 
     // Update the layer node properties
-    updateLayerNode(view3D);
+    updateLayerNode(view3D, resourceLoaders);
 
     bool postProcessingNeeded = m_layer->firstEffect;
     bool postProcessingWasActive = m_effectSystem;
@@ -895,7 +899,7 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     layerNode.markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 }
 
-void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
+void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders)
 {
     QSSGRenderLayer *layerNode = m_layer;
 
@@ -935,6 +939,10 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D)
             layerNode->addEffect(*effectNode);
         }
     }
+
+    // ResourceLoaders
+    layerNode->resourceLoaders.clear();
+    layerNode->resourceLoaders = resourceLoaders;
 }
 
 void QQuick3DSceneRenderer::removeNodeFromLayer(QSSGRenderNode *node)

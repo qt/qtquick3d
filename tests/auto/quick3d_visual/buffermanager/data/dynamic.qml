@@ -94,6 +94,10 @@ Item {
             }
         }
 
+        GridGeometry {
+            id: unusedStaticGeometry
+        }
+
         Node {
             id: objectSpawner
             property real range: 300
@@ -250,6 +254,46 @@ Item {
                         font.pointSize: 64
                         color: "black"
                     }
+                }
+            }
+
+            Component {
+                id: resourceLoader
+                ResourceLoader {
+                    meshSources: [
+                        "#Cube",
+                        "#Sphere",
+                        "#Cone",
+                        "random1.mesh",
+                        "random2.mesh"
+                    ]
+                    textures: [
+                        Texture {
+                            source: "noise1.jpg"
+                        },
+                        Texture {
+                            source: "noise2.jpg"
+                        },
+                        Texture {
+                            source: "noise1.jpg"
+                            generateMipmaps: true
+                        },
+                        Texture {
+                            sourceItem: Rectangle {
+                                width: 200
+                                height: 200
+                                color: "pink"
+                            }
+                        },
+                        Texture {
+                            textureData: GradientTexture {
+
+                            }
+                        }
+                    ]
+                    geometries: [
+                        unusedStaticGeometry
+                    ]
                 }
             }
 
@@ -482,6 +526,10 @@ Item {
                     instance.destroy()
                     item2DsCount--
                 }
+            }
+
+            function addResourceLoader(): ResourceLoader {
+                return resourceLoader.createObject(objectSpawner);
             }
 
             function changeModels() {

@@ -50,6 +50,7 @@ struct QSSGRenderPresentation;
 struct QSSGRenderEffect;
 struct QSSGRenderImage;
 struct QSSGLayerRenderData;
+struct QSSGRenderResourceLoader;
 
 class QRhiShaderResourceBindings;
 
@@ -183,6 +184,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QRhiShaderResourceBindings *skyBoxSrb = nullptr;
     QVarLengthArray<QRhiShaderResourceBindings *, 4> item2DSrbs;
     bool skyBoxIsRgbe8 = false;
+
+    QVector<QSSGRenderGraphObject *> resourceLoaders;
 
     QSSGRenderLayer();
     ~QSSGRenderLayer();

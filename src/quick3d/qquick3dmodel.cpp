@@ -237,6 +237,28 @@ QQuick3DNode *QQuick3DModel::instanceRoot() const
     return m_instanceRoot;
 }
 
+// Source URL's need a bit of translation for the engine because of the
+// use of fragment syntax for specifiying primitives and sub-meshes
+// So we need to check for the fragment before translating to a qmlfile
+
+QString QQuick3DModel::translateMeshSource(const QUrl &source, QObject *contextObject)
+{
+    QString fragment;
+    if (source.hasFragment()) {
+        // Check if this is an index, or primitive
+        bool isNumber = false;
+        source.fragment().toInt(&isNumber);
+        fragment = QStringLiteral("#") + source.fragment();
+        // If it wasn't an index, then it was a primitive
+        if (!isNumber)
+            return fragment;
+    }
+
+    const QQmlContext *context = qmlContext(contextObject);
+    const auto resolvedUrl = context ? context->resolvedUrl(source) : source;
+    const auto qmlSource = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
+    return (qmlSource.isEmpty() ? source.path() : qmlSource) + fragment;
+}
 
 void QQuick3DModel::markAllDirty()
 {
@@ -525,7 +547,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 
     auto modelNode = static_cast<QSSGRenderModel *>(node);
     if (m_dirtyAttributes & SourceDirty)
-        modelNode->meshPath = QSSGRenderPath(translateSource());
+        modelNode->meshPath = QSSGRenderPath(translateMeshSource(m_source, this));
     if (m_dirtyAttributes & PickingDirty)
         modelNode->flags.setFlag(QSSGRenderModel::Flag::LocallyPickable, m_pickable);
 
@@ -628,29 +650,6 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     m_dirtyAttributes = dirtyAttribute;
 
     return modelNode;
-}
-
-// Source URL's need a bit of translation for the engine because of the
-// use of fragment syntax for specifiying primitives and sub-meshes
-// So we need to check for the fragment before translating to a qmlfile
-
-QString QQuick3DModel::translateSource()
-{
-    QString fragment;
-    if (m_source.hasFragment()) {
-        // Check if this is an index, or primitive
-        bool isNumber = false;
-        m_source.fragment().toInt(&isNumber);
-        fragment = QStringLiteral("#") + m_source.fragment();
-        // If it wasn't an index, then it was a primitive
-        if (!isNumber)
-            return fragment;
-    }
-
-    const QQmlContext *context = qmlContext(this);
-    const auto resolvedUrl = context ? context->resolvedUrl(m_source) : m_source;
-    const auto qmlSource = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
-    return (qmlSource.isEmpty() ? m_source.path() : qmlSource) + fragment;
 }
 
 void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)

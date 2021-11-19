@@ -43,6 +43,7 @@ qt_internal_add_qml_module(Quick3D
         qquick3dquaternionutils.cpp qquick3dquaternionutils_p.h
         qquick3drenderstats.cpp qquick3drenderstats_p.h
         qquick3drepeater.cpp qquick3drepeater_p.h
+        qquick3dresourceloader.cpp qquick3dresourceloader_p.h
         qquick3dsceneenvironment.cpp qquick3dsceneenvironment_p.h
         qquick3dscenemanager.cpp qquick3dscenemanager_p.h
         qquick3dscenerenderer.cpp qquick3dscenerenderer_p.h

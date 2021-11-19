@@ -119,6 +119,8 @@ public:
     QQuick3DInstancing *instancing() const;
     QQuick3DNode *instanceRoot() const;
 
+    static QString translateMeshSource(const QUrl &source, QObject *contextObject);
+
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setCastsShadows(bool castsShadows);
@@ -169,7 +171,6 @@ private:
         PropertyDirty =          0x00000200,
     };
 
-    QString translateSource();
     QUrl m_source;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default

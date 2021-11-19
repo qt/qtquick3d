@@ -168,8 +168,11 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
     Q_UNUSED(dirty);
     itemPriv->dirtyAttributes = 0;
     itemPriv->spatialNode = resourceObject->updateSpatialNode(itemPriv->spatialNode);
-    if (itemPriv->spatialNode)
+    if (itemPriv->spatialNode) {
         m_nodeMap.insert(itemPriv->spatialNode, resourceObject);
+        if (itemPriv->spatialNode->type == QSSGRenderGraphObject::Type::ResourceLoader)
+            resourceLoaders.insert(itemPriv->spatialNode);
+    }
 
     // resource nodes dont go in the tree, so we dont need to parent them
 }
@@ -263,10 +266,13 @@ void QQuick3DSceneManager::cleanupNodes()
         // Some nodes will trigger resource cleanups that need to
         // happen at a specified time (when graphics backend is active)
         // So build another queue for graphics assets marked for removal
-        if (QSSGRenderGraphObject::hasGraphicsResources(node->type))
+        if (QSSGRenderGraphObject::hasGraphicsResources(node->type)) {
             resourceCleanupQueue.append(node);
-        else
+            if (node->type == QSSGRenderGraphObject::Type::ResourceLoader)
+                resourceLoaders.remove(node);
+        } else {
             delete node;
+        }
     }
 
     // Nodes are now "cleaned up" so clear the cleanup list

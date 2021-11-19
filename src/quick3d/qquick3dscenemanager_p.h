@@ -94,6 +94,7 @@ public:
     QSet<QQuick3DObject *> parentlessItems;
     QVector<QSGDynamicTexture *> qsgDynamicTextures;
     QHash<const QSSGRenderGraphObject *, QQuick3DObject *> m_nodeMap;
+    QSet<QSSGRenderGraphObject *> resourceLoaders;
     QQuickWindow *m_window = nullptr;
     QSSGRenderContextInterface *rci = nullptr;
     friend QQuick3DObject;

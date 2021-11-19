@@ -170,7 +170,15 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
     }
 
     for (auto &theChild : inNode.children)
-        maybeQueueNodeForRender(theChild, outRenderables, ioRenderableCount, outCameras, ioCameraCount, outLights, ioLightCount, ioDFSIndex, dirtySkeletons);
+        maybeQueueNodeForRender(theChild,
+                                outRenderables,
+                                ioRenderableCount,
+                                outCameras,
+                                ioCameraCount,
+                                outLights,
+                                ioLightCount,
+                                ioDFSIndex,
+                                dirtySkeletons);
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
@@ -1215,6 +1223,15 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
     return wasDataDirty;
 }
 
+void QSSGLayerRenderPreparationData::prepareResourceLoaders()
+{
+    QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
+    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+
+    for (const auto resourceLoader : qAsConst(layer.resourceLoaders))
+        bufferManager->processResourceLoader(static_cast<QSSGRenderResourceLoader *>(resourceLoader));
+}
+
 static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
 {
     // check if the node is parent of the lightScope
@@ -1324,7 +1341,15 @@ void QSSGLayerRenderPreparationData::prepareForRender()
             // to tell to the other models the skeleton is dirty.
             QVector<QSSGRenderSkeleton*> dirtySkeletons;
             for (auto &theChild : layer.children)
-                maybeQueueNodeForRender(theChild, renderableNodes, renderableNodeCount, cameras, cameraNodeCount, lights, lightNodeCount, dfsIndex, dirtySkeletons);
+                maybeQueueNodeForRender(theChild,
+                                        renderableNodes,
+                                        renderableNodeCount,
+                                        cameras,
+                                        cameraNodeCount,
+                                        lights,
+                                        lightNodeCount,
+                                        dfsIndex,
+                                        dirtySkeletons);
             dirtySkeletons.clear();
 
             if (renderableNodes.size() != renderableNodeCount)
@@ -1378,6 +1403,9 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                 }
             }
             layer.renderedCamera = camera;
+
+            // ResourceLoaders
+            prepareResourceLoaders();
 
             QSSGShaderLightList renderableLights;
             int shadowMapCount = 0;

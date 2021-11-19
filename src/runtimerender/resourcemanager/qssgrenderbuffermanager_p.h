@@ -62,6 +62,7 @@ class QSSGRenderGeometry;
 class QSSGRenderTextureData;
 struct QSSGRenderModel;
 struct QSSGRenderImage;
+struct QSSGRenderResourceLoader;
 
 // There is one QSSGBufferManager per QSSGRenderContextInterface, and so per
 // QQuickWindow, and by extension, per scenegraph render thread. This is
@@ -126,6 +127,8 @@ public:
     void releaseTextureData(QSSGRenderTextureData *textureData);
 
     void commitBufferResourceUpdates();
+
+    void processResourceLoader(const QSSGRenderResourceLoader *loader);
 
     static QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
     static QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);

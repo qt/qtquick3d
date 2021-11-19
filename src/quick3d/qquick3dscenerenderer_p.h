@@ -90,7 +90,7 @@ protected:
 
 private:
     void releaseAaDependentRhiResources();
-    void updateLayerNode(QQuick3DViewport *view3D);
+    void updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
     QSSGRef<QSSGRenderContextInterface> m_sgContext;

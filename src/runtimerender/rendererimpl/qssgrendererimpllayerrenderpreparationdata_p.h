@@ -49,6 +49,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadowmap_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
@@ -269,6 +270,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
                                      const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                      QSSGLayerRenderPreparationResultFlags &ioFlags);
+
+    void prepareResourceLoaders();
 
     virtual void prepareForRender();
 
