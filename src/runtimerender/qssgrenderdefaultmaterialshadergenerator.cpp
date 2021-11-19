@@ -160,9 +160,6 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
                                        bool forceFragmentShader = false,
                                        quint32 uvSet = 0)
 {
-    if (image.uvCoordsGenerated)
-        return;
-
     const auto &names = imageStringTable[int(image.m_mapType)];
     char textureCoordName[TEXCOORD_VAR_LEN];
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
@@ -200,7 +197,6 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
         fragmentShader.addFunction("getTransformedUVCoords");
         fragmentShader << "    vec2 " << names.imageFragCoords << " = qt_getTransformedUVCoords(environment_map_reflection, qt_uTransform, qt_vTransform);\n";
     }
-    image.uvCoordsGenerated = true;
 }
 
 static void generateImageUVSampler(QSSGMaterialVertexPipeline &vertexGenerator,
