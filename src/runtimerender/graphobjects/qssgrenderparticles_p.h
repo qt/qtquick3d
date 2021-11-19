@@ -43,6 +43,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -114,12 +115,6 @@ private:
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
 {
-    enum class ParticleLighting : quint8
-    {
-        NoLighting = 0,
-        VertexLighting,
-        FragmentLighting
-    };
     enum class BlendMode : quint8
     {
         SourceOver = 0,
@@ -130,14 +125,18 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     {
         Simple = 0,
         Mapped,
-        Animated
+        Animated,
+        SimpleVLight,
+        MappedVLight,
+        AnimatedVLight
     };
 
     Q_DISABLE_COPY(QSSGRenderParticles)
 
     QSSGParticleBuffer m_particleBuffer;
 
-    QSSGRenderParticles::ParticleLighting m_lighting = ParticleLighting::NoLighting;
+    QVarLengthArray<QSSGRenderLight *, 4> m_lights;
+
     QSSGRenderParticles::BlendMode m_blendMode = BlendMode::SourceOver;
     QVector4D m_diffuseColor{1.0f, 1.0f, 1.0f, 1.0f};
     QSSGRenderImage *m_sprite = nullptr;

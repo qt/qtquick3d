@@ -43,11 +43,14 @@
 
 #include <QColor>
 #include <QVector4D>
+#include <QtQml/QQmlListProperty>
 
 #include <QtQuick3DParticles/private/qquick3dparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlesystem_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticledata_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticlespritesequence_p.h>
+#include <QtQuick3D/private/qquick3dabstractlight_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,19 +63,13 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_PROPERTY(bool billboard READ billboard WRITE setBillboard NOTIFY billboardChanged)
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(QQuick3DTexture *colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
+    Q_PROPERTY(QQmlListProperty<QQuick3DAbstractLight> lights READ lights NOTIFY lightsChanged REVISION(6, 3))
     QML_NAMED_ELEMENT(SpriteParticle3D)
     QML_ADDED_IN_VERSION(6, 2)
 
 public:
     enum BlendMode { SourceOver = 0, Screen, Multiply };
     Q_ENUM(BlendMode)
-
-    enum FeatureLevel
-    {
-        Simple = 0,
-        Mapped,
-        Animated
-    };
 
     QQuick3DParticleSpriteParticle(QQuick3DNode *parent = nullptr);
     ~QQuick3DParticleSpriteParticle() override;
@@ -83,6 +80,7 @@ public:
     bool billboard() const;
     float particleScale() const;
     QQuick3DTexture *colorTable() const;
+    Q_REVISION(6, 3) QQmlListProperty<QQuick3DAbstractLight> lights();
 
 public Q_SLOTS:
     void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
@@ -99,6 +97,7 @@ Q_SIGNALS:
     void billboardChanged();
     void particleScaleChanged();
     void colorTableChanged();
+    Q_REVISION(6, 3) void lightsChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -118,10 +117,23 @@ protected:
         markNodesDirty();
     }
 
+private Q_SLOTS:
+    void onLightDestroyed(QObject *object);
+
 private:
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitter;
     friend class QQuick3DParticleSpriteSequence;
+
+    enum FeatureLevel
+    {
+        Simple = 0,
+        Mapped,
+        Animated,
+        SimpleVLight,
+        MappedVLight,
+        AnimatedVLight
+    };
 
     struct SpriteParticleData
     {
@@ -156,6 +168,8 @@ private:
         const QQuick3DParticleEmitter *emitter = nullptr;
     };
 
+    static QSSGRenderParticles::FeatureLevel mapFeatureLevel(QQuick3DParticleSpriteParticle::FeatureLevel level);
+
     void updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
     void updateAnimatedParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
     QSSGRenderGraphObject *updateParticleNode(const ParticleUpdateNode *updateNode, QSSGRenderGraphObject *node);
@@ -182,6 +196,13 @@ private:
     bool m_billboard = false;
     FeatureLevel m_featureLevel = FeatureLevel::Simple;
     bool m_useAnimatedParticle = false;
+
+    // Lights
+    Q_REVISION(6, 3) static void qmlAppendLight(QQmlListProperty<QQuick3DAbstractLight> *list, QQuick3DAbstractLight *light);
+    Q_REVISION(6, 3) static QQuick3DAbstractLight *qmlLightAt(QQmlListProperty<QQuick3DAbstractLight> *list, qsizetype index);
+    Q_REVISION(6, 3) static qsizetype qmlLightsCount(QQmlListProperty<QQuick3DAbstractLight> *list);
+    Q_REVISION(6, 3) static void qmlClearLights(QQmlListProperty<QQuick3DAbstractLight> *list);
+    QVector<QQuick3DAbstractLight *> m_lights;
 };
 
 QT_END_NAMESPACE

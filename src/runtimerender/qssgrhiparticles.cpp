@@ -40,6 +40,23 @@ QT_BEGIN_NAMESPACE
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
+struct ParticleLightData
+{
+    QVector4D pointLightPos[4];
+    float pointLightConstantAtt[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    float pointLightLinearAtt[4] = {0.0f};
+    float pointLightQuadAtt[4] = {0.0f};
+    QVector4D pointLightColor[4];
+    QVector4D spotLightPos[4];
+    float spotLightConstantAtt[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    float spotLightLinearAtt[4] = {0.0f};
+    float spotLightQuadAtt[4] = {0.0f};
+    QVector4D spotLightColor[4];
+    QVector4D spotLightDir[4];
+    float spotLightConeAngle[4] = {0.0f};
+    float spotLightInnerConeAngle[4] = {0.0f};
+};
+
 void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipeline> &shaders,
                                                       QSSGRhiContext *rhiCtx,
                                                       char *ubufData,
@@ -79,6 +96,61 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
 
     const float billboard = renderable.particles.m_billboard ? 1.0f : 0.0f;
     shaders->setUniform(ubufData, "qt_billboard", &billboard, 1 * sizeof(float));
+
+    // Lights
+    QVector3D theLightAmbientTotal;
+    bool hasLights = !renderable.particles.m_lights.isEmpty();
+    int pointLight = 0;
+    int spotLight = 0;
+    if (hasLights) {
+        ParticleLightData lightData;
+        auto &lights = renderable.lights;
+        for (quint32 lightIdx = 0, lightEnd = lights.size();
+             lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx) {
+            QSSGRenderLight *theLight(lights[lightIdx].light);
+            // Ignore lights which are not specified for the particle
+            if (!renderable.particles.m_lights.contains(theLight))
+                continue;
+            const bool lightEnabled = lights[lightIdx].enabled;
+            if (lightEnabled) {
+                if (theLight->m_brightness > 0.0f) {
+                    if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
+                        theLightAmbientTotal += theLight->m_diffuseColor * theLight->m_brightness;
+                    } else if (theLight->type == QSSGRenderLight::Type::PointLight && pointLight < 4) {
+                        lightData.pointLightColor[pointLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
+                        lightData.pointLightPos[pointLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
+                        lightData.pointLightConstantAtt[pointLight] = aux::translateConstantAttenuation(theLight->m_constantFade);
+                        lightData.pointLightLinearAtt[pointLight] = aux::translateLinearAttenuation(theLight->m_linearFade);
+                        lightData.pointLightQuadAtt[pointLight] = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+                        pointLight++;
+                    } else if (theLight->type == QSSGRenderLight::Type::SpotLight && spotLight < 4) {
+                        lightData.spotLightColor[spotLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
+                        lightData.spotLightPos[spotLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
+                        lightData.spotLightDir[spotLight] = QVector4D(lights[lightIdx].direction, 0.0f);
+                        lightData.spotLightConstantAtt[spotLight] = aux::translateConstantAttenuation(theLight->m_constantFade);
+                        lightData.spotLightLinearAtt[spotLight] = aux::translateLinearAttenuation(theLight->m_linearFade);
+                        lightData.spotLightQuadAtt[spotLight] = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+                        float coneAngle = theLight->m_coneAngle;
+                        // Inner cone angle must always be < cone angle, to not have possible undefined behavior for shader smoothstep
+                        float innerConeAngle = std::min(theLight->m_innerConeAngle, coneAngle - 0.01f);
+                        lightData.spotLightConeAngle[spotLight] = qDegreesToRadians(coneAngle);
+                        lightData.spotLightInnerConeAngle[spotLight] = qDegreesToRadians(innerConeAngle);
+                        spotLight++;
+                    }
+                }
+                theLightAmbientTotal += theLight->m_ambientColor;
+            }
+        }
+        // Copy light data
+        int lightOffset = shaders->offsetOfUniform("qt_pointLightPosition");
+        if (lightOffset >= 0)
+            memcpy(ubufData + lightOffset, &lightData, sizeof(ParticleLightData));
+    }
+    shaders->setUniform(ubufData, "qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);
+    int enablePointLights = pointLight > 0 ? 1 : 0;
+    int enableSpotLights = spotLight > 0 ? 1 : 0;
+    shaders->setUniform(ubufData, "qt_pointLights", &enablePointLights, sizeof(int));
+    shaders->setUniform(ubufData, "qt_spotLights", &enableSpotLights, sizeof(int));
 }
 
 void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,

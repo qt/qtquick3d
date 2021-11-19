@@ -131,6 +131,9 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingMappedRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingAnimatedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
 
     TLayerRenderList m_lastFrameLayers;
 

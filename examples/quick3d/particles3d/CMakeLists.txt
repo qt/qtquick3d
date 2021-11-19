@@ -52,6 +52,7 @@ qt_add_qml_module(particles3d
         qml/FadingInOut.qml
         qml/Fire.qml
         qml/HeartTrail.qml
+        qml/Lights.qml
         qml/LoggingView.qml
         qml/ModelBlendParticles.qml
         qml/OceanSpider.qml

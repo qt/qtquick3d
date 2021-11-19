@@ -98,6 +98,10 @@ Item {
             name: "Model-Blend Particles"
             file: "ModelBlendParticles.qml"
         }
+        ListElement {
+            name: "Lights"
+            file: "Lights.qml"
+        }
     }
 
     ListModel {

@@ -375,6 +375,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_skybox_rgbe_filmic"
         QSSG_ENABLE_FILMIC_TONEMAPPING=1
         QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )
+# Shaders without lights
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight"
     SILENT
     PRECOMPILE
@@ -422,6 +423,59 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_nolight_anim
         QSSG_PARTICLES_ENABLE_MAPPED
         QSSG_PARTICLES_ENABLE_ANIMATED
 )
+# Shaders with lights
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_vlight"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/particles.vert
+        res/rhishaders/particles.frag
+    OUTPUTS
+        res/rhishaders/particlesvlightsimple.vert.qsb
+        res/rhishaders/particlesvlightsimple.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_vlight_mapped"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/particles.vert
+        res/rhishaders/particles.frag
+    OUTPUTS
+        res/rhishaders/particlesvlightmapped.vert.qsb
+        res/rhishaders/particlesvlightmapped.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+        QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_vlight_animated"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/particles.vert
+        res/rhishaders/particles.frag
+    OUTPUTS
+        res/rhishaders/particlesvlightanimated.vert.qsb
+        res/rhishaders/particlesvlightanimated.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+        QSSG_PARTICLES_ENABLE_ANIMATED
+        QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
+
 # special case end
 
 #### Keys ignored in scope 1:.:.:runtimerender.pro:<TRUE>:

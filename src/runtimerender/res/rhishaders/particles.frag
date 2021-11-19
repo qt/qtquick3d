@@ -4,13 +4,31 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_modelMatrix;
     mat4 qt_viewMatrix;
     mat4 qt_projectionMatrix;
-    vec4 qt_material_base_color;
+#ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+    // ParticleLightData struct
+    vec4 qt_pointLightPosition[4];
+    vec4 qt_pointLightConstantAtt;
+    vec4 qt_pointLightLinearAtt;
+    vec4 qt_pointLightQuadAtt;
+    vec4 qt_pointLightColor[4];
+    vec4 qt_spotLightPosition[4];
+    vec4 qt_spotLightConstantAtt;
+    vec4 qt_spotLightLinearAtt;
+    vec4 qt_spotLightQuadAtt;
+    vec4 qt_spotLightColor[4];
+    vec4 qt_spotLightDirection[4];
+    vec4 qt_spotLightConeAngle;
+    vec4 qt_spotLightInnerConeAngle;
+#endif
     vec4 qt_spriteConfig;
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
-    vec2 qt_cameraProps;
     uint qt_countPerSlice;
     float qt_billboard;
+#ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+    bool qt_pointLights;
+    bool qt_spotLights;
+#endif
 } ubuf;
 
 

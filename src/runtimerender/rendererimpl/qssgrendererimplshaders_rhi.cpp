@@ -141,10 +141,19 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiParticleShader(QSSGRenderPart
         return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightmapped"), m_particlesNoLightingMappedRhiShader);
         break;
     case QSSGRenderParticles::FeatureLevel::Animated:
-    default:
         return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader);
         break;
+    case QSSGRenderParticles::FeatureLevel::SimpleVLight:
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightsimple"), m_particlesVLightingSimpleRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::MappedVLight:
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightmapped"), m_particlesVLightingMappedRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::AnimatedVLight:
+        return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightanimated"), m_particlesVLightingAnimatedRhiShader);
+        break;
     }
+    return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader);
 }
 
 QT_END_NAMESPACE

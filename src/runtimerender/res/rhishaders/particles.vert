@@ -4,14 +4,83 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_modelMatrix;
     mat4 qt_viewMatrix;
     mat4 qt_projectionMatrix;
-    vec4 qt_material_base_color;
+#ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+    // ParticleLightData struct
+    vec4 qt_pointLightPosition[4];
+    vec4 qt_pointLightConstantAtt;
+    vec4 qt_pointLightLinearAtt;
+    vec4 qt_pointLightQuadAtt;
+    vec4 qt_pointLightColor[4];
+    vec4 qt_spotLightPosition[4];
+    vec4 qt_spotLightConstantAtt;
+    vec4 qt_spotLightLinearAtt;
+    vec4 qt_spotLightQuadAtt;
+    vec4 qt_spotLightColor[4];
+    vec4 qt_spotLightDirection[4];
+    vec4 qt_spotLightConeAngle;
+    vec4 qt_spotLightInnerConeAngle;
+#endif
     vec4 qt_spriteConfig;
     vec3 qt_light_ambient_total;
     vec2 qt_oneOverParticleImageSize;
-    vec2 qt_cameraProps;
     uint qt_countPerSlice;
     float qt_billboard;
+#ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+    bool qt_pointLights;
+    bool qt_spotLights;
+#endif
 } ubuf;
+
+#ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+/* Simplified lighting for particles
+ *
+ * Treat particles as points -> do not take normal into account
+ * -> directional lights become ambient
+ * -> point lights only account for attenuation
+ * -> spotlights only account for attenuation and spot angles
+ */
+vec4 qt_attenuate4(in vec4 dist, in vec4 catt, in vec4 latt, in vec4 qatt)
+{
+    vec4 factors = catt + dist * latt + dist * dist * qatt;
+    return vec4(1.0) / factors;
+}
+vec3 qt_calcPointLights(in vec3 position)
+{
+    vec4 lengths = vec4(length(position - ubuf.qt_pointLightPosition[0].xyz),
+                        length(position - ubuf.qt_pointLightPosition[1].xyz),
+                        length(position - ubuf.qt_pointLightPosition[2].xyz),
+                        length(position - ubuf.qt_pointLightPosition[3].xyz));
+    vec4 attenuations = qt_attenuate4(lengths, ubuf.qt_pointLightConstantAtt, ubuf.qt_pointLightLinearAtt, ubuf.qt_pointLightQuadAtt);
+
+    return ubuf.qt_pointLightColor[0].rgb * attenuations.x + ubuf.qt_pointLightColor[1].rgb * attenuations.y + ubuf.qt_pointLightColor[2].rgb * attenuations.z + ubuf.qt_pointLightColor[3].rgb * attenuations.w;
+}
+vec3 qt_calcSpotLights(in vec3 position)
+{
+    vec3 lightVector0 = position - ubuf.qt_spotLightPosition[0].xyz;
+    vec3 lightVector1 = position - ubuf.qt_spotLightPosition[1].xyz;
+    vec3 lightVector2 = position - ubuf.qt_spotLightPosition[2].xyz;
+    vec3 lightVector3 = position - ubuf.qt_spotLightPosition[3].xyz;
+    vec4 lengths = vec4(length(lightVector0), length(lightVector1), length(lightVector2), length(lightVector3));
+    vec4 attenuations = qt_attenuate4(lengths, ubuf.qt_spotLightConstantAtt, ubuf.qt_spotLightLinearAtt, ubuf.qt_spotLightQuadAtt);
+    vec4 spots = vec4(acos(dot(normalize(lightVector0), normalize(ubuf.qt_spotLightDirection[0].xyz))),
+                      acos(dot(normalize(lightVector1), normalize(ubuf.qt_spotLightDirection[1].xyz))),
+                      acos(dot(normalize(lightVector2), normalize(ubuf.qt_spotLightDirection[2].xyz))),
+                      acos(dot(normalize(lightVector3), normalize(ubuf.qt_spotLightDirection[3].xyz))));
+    vec4 cones = vec4(1.0 - smoothstep(ubuf.qt_spotLightInnerConeAngle, ubuf.qt_spotLightConeAngle, spots));
+    attenuations *= cones;
+    return ubuf.qt_spotLightColor[0].rgb * attenuations.x + ubuf.qt_spotLightColor[1].rgb * attenuations.y + ubuf.qt_spotLightColor[2].rgb * attenuations.z + ubuf.qt_spotLightColor[3].rgb * attenuations.w;
+}
+vec3 qt_calcLightColor(in vec3 position)
+{
+    vec3 color = vec3(0.0);
+
+    if (ubuf.qt_pointLights)
+        color += qt_calcPointLights(position);
+    if (ubuf.qt_spotLights)
+        color += qt_calcSpotLights(position);
+    return color + ubuf.qt_light_ambient_total;
+}
+#endif // QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
 
 layout(binding = 2) uniform sampler2D qt_particleTexture;
 
@@ -118,6 +187,11 @@ void main()
     viewPos.xyz += rotMat * offset * ubuf.qt_billboard;
     texcoord = corner;
     color = p.color;
+
+#ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+    color.rgb *= qt_calcLightColor(worldPos.xyz);
+#endif
+
     gl_Position = ubuf.qt_projectionMatrix * viewPos;
 #ifdef QSSG_PARTICLES_ENABLE_MAPPED
     spriteData.x = qt_ageToSpriteFactor(p.age);
