@@ -846,12 +846,15 @@ void QQuick3DParticleEmitter::emitParticles()
     }
 
     const int systemTime = m_system->currentTime();
-
-    // Keep previous emitting time within max the life span.
-    // This way emitting is reasonable also with big time jumps.
-    const int maxLifeSpan = m_lifeSpan + m_lifeSpanVariation;
-    m_prevEmitTime = std::max(m_prevEmitTime, systemTime - maxLifeSpan);
-
+    if (systemTime < m_prevEmitTime) {
+        // If we are goint backwards, reset previous emit time to current time.
+        m_prevEmitTime = systemTime;
+    } else {
+        // Keep previous emitting time within max the life span.
+        // This way emitting is reasonable also with big time jumps.
+        const int maxLifeSpan = m_lifeSpan + m_lifeSpanVariation;
+        m_prevEmitTime = std::max(m_prevEmitTime, systemTime - maxLifeSpan);
+    }
     int emitAmount = getEmitAmount() + getEmitAmountFromBursts();
 
     // With lower emitRates, let timeChange grow until at least 1 particle is emitted
