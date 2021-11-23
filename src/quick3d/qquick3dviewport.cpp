@@ -404,6 +404,13 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 rhiContext->initialize(rhi);
                 rci = new QSSGRenderContextInterface(qw, rhiContext);
                 renderer = new QQuick3DSceneRenderer(rci);
+
+                QObject::connect(qw, &QQuickWindow::beforeFrameBegin, [rci] {
+                   rci->resetResourceCounters();
+                });
+                QObject::connect(qw, &QQuickWindow::afterFrameEnd, [rci] {
+                   rci->cleanupUnreferencedBuffers();
+                });
             }
 
             QObject::connect(qw, &QQuickWindow::afterFrameEnd, this, &QQuick3DViewport::cleanupResources);

@@ -109,6 +109,8 @@ public:
     QRect scissorRect() const { return m_scissorRect; }
 
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
+    void cleanupUnreferencedBuffers();
+    void resetResourceCounters();
 
     // Steps needed to render:
     // 1.  beginFrame - Reset the per-frame allocator

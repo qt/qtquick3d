@@ -170,6 +170,18 @@ void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *>
     m_renderer->cleanupResources(resources);
 }
 
+void QSSGRenderContextInterface::cleanupUnreferencedBuffers()
+{
+    // Now check for unreferenced buffers and release them if necessary
+    m_bufferManager->cleanupUnreferencedBuffers(m_frameCount);
+}
+
+
+void QSSGRenderContextInterface::resetResourceCounters()
+{
+    m_bufferManager->resetUsageCounters(m_frameCount);
+}
+
 void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
 {
     if (allowRecursion) {
@@ -178,7 +190,6 @@ void QSSGRenderContextInterface::beginFrame(bool allowRecursion)
     }
 
     m_perFrameAllocator.reset();
-    m_bufferManager->resetUsageCounters();
     m_renderer->beginFrame();
 }
 
@@ -203,9 +214,6 @@ bool QSSGRenderContextInterface::endFrame(bool allowRecursion)
         if (--m_activeFrameRef != 0)
             return false;
     }
-
-    // Now check for unreferenced buffers and release them if necessary
-    m_bufferManager->cleanupUnreferencedBuffers();
 
     m_renderer->endFrame();
     ++m_frameCount;

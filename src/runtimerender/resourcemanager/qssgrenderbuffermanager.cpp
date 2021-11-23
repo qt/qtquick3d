@@ -1229,8 +1229,12 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
     }
 }
 
-void QSSGBufferManager::cleanupUnreferencedBuffers()
+void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId)
 {
+    // Don't cleanup if
+    if (frameId == frameCleanupIndex)
+        return;
+
     {
         QMutexLocker meshMutexLocker(&meshBufferMutex);
         // Meshes (by path)
@@ -1296,22 +1300,14 @@ void QSSGBufferManager::cleanupUnreferencedBuffers()
     }
 
     // Resource Tracking Debug Code
-    //    qDebug() << "QSSGBufferManager::cleanupUnreferencedBuffers()" << this << "frame:" << frameIndex++;
-    //    qDebug() << "Textures(by path): " << imageMap.count();
-    //    const auto &texturePaths = imageMap.keys();
-    //    for (const auto &key : texturePaths)
-    //        qDebug() << "\t" << key.path.path() << " - " << imageMap.value(key).usageCount;
-    //    qDebug() << "Textures(custom):  " << customTextureMap.count();
-    //    qDebug() << "Textures(qsg):     " << qsgImageMap.count();
-    //    qDebug() << "Geometry(by path): " << meshMap.count();
-    //    const auto &meshPaths = meshMap.keys();
-    //    for (const auto &key : meshPaths)
-    //        qDebug() << "\t" << key.path() << " - " << meshMap.value(key).usageCount;
-    //    qDebug() << "Geometry(custom):  " << customMeshMap.count();
+    frameCleanupIndex = frameId;
 }
 
-void QSSGBufferManager::resetUsageCounters()
+void QSSGBufferManager::resetUsageCounters(quint32 frameId)
 {
+    if (frameResetIndex == frameId)
+        return;
+
     // SG Textures
     for (auto &imageData : qsgImageMap)
         imageData.usageCount = 0;
@@ -1330,6 +1326,8 @@ void QSSGBufferManager::resetUsageCounters()
     // Meshes (custom)
     for (auto &meshData : customMeshMap)
         meshData.usageCount = 0;
+
+    frameResetIndex = frameId;
 }
 
 void QSSGBufferManager::registerMeshData(const QString &assetId, const QVector<QSSGMesh::Mesh> &meshData)

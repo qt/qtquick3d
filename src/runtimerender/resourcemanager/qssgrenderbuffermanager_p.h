@@ -119,8 +119,8 @@ public:
     QSSGRenderMesh *loadMesh(const QSSGRenderModel *model);
 
     // Called at the end of the frame to release unreferenced geometry and textures
-    void cleanupUnreferencedBuffers();
-    void resetUsageCounters();
+    void cleanupUnreferencedBuffers(quint32 frameId);
+    void resetUsageCounters(quint32 frameId);
 
     void releaseGeometry(QSSGRenderGeometry *geometry);
     void releaseTextureData(QSSGRenderTextureData *textureData);
@@ -176,6 +176,10 @@ private:
 
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;
+
+    quint32 frameCleanupIndex = 0;
+    quint32 frameResetIndex = 0;
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
