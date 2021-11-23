@@ -7,6 +7,7 @@
     "QtQuick3DIblBaker" => "$basedir/src/iblbaker",
     "QtQuick3DAssetUtils" => "$basedir/src/assetutils",
     "QtQuick3DHelpers" => "$basedir/src/helpers",
+    "QtQuick3DGlslParser" => "$basedir/src/glslparser",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
