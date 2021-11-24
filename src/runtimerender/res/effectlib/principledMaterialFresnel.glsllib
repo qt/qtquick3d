@@ -8,10 +8,9 @@ float qt_schlick(float value)
     return n2 * n2 * n;
 }
 
-vec3 qt_F0(float metalness, float specular, vec3 baseColor) {
-    // A default specular value of 0.5 should lead to a dielectric value of 0.04
-    float dielectric = 0.16 * specular * specular;
-    return mix(vec3(dielectric), baseColor, vec3(metalness));
+vec3 qt_F0_ior(float ior, float metalness, vec3 baseColor) {
+    vec3 f0 = vec3(pow(( ior - 1.0) /  (ior + 1.0), 2.0));
+    return mix(f0, baseColor, metalness);
 }
 
 vec3 qt_principledMaterialFresnel(in vec3 N, in vec3 viewDir, in vec3 f0, in float roughness, in float fresnelPower)

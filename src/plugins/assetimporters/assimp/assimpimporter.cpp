@@ -1559,6 +1559,18 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                                                          QStringLiteral("attenuationColor"),
                                                          aiColorToQColor(attenuationColor));
         }
+
+        // ior
+        {
+            ai_real ior = 0.0f;
+            result = material->Get(AI_MATKEY_REFRACTI, ior);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("indexOfRefraction"),
+                                                         ior);
+        }
     }
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}");

@@ -122,6 +122,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(float attenuationDistance READ attenuationDistance WRITE setAttenuationDistance NOTIFY attenuationDistanceChanged REVISION(6, 3))
     Q_PROPERTY(QColor attenuationColor READ attenuationColor WRITE setAttenuationColor NOTIFY attenuationColorChanged REVISION(6, 3))
 
+    Q_PROPERTY(float indexOfRefraction READ indexOfRefraction WRITE setIndexOfRefraction NOTIFY indexOfRefractionChanged REVISION(6, 3))
+
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
 public:
@@ -201,6 +203,8 @@ public:
     Q_REVISION(6, 3) float attenuationDistance() const;
     Q_REVISION(6, 3) const QColor &attenuationColor() const;
 
+    Q_REVISION(6, 3) float indexOfRefraction() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
     void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
@@ -253,6 +257,8 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setThicknessChannel(const QQuick3DMaterial::TextureChannelMapping &newThicknessChannel);
     Q_REVISION(6, 3) void setAttenuationDistance(float newAttenuationDistance);
     Q_REVISION(6, 3) void setAttenuationColor(const QColor &newAttenuationColor);
+
+    Q_REVISION(6, 3) void setIndexOfRefraction(float indexOfRefraction);
 
 Q_SIGNALS:
     void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -307,6 +313,8 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void attenuationDistanceChanged(float distance);
     Q_REVISION(6, 3) void attenuationColorChanged(QColor color);
 
+    Q_REVISION(6, 3) void indexOfRefractionChanged(float indexOfRefraction);
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -358,7 +366,7 @@ private:
     QQuick3DTexture *m_metalnessMap = nullptr;
     QQuick3DTexture *m_occlusionMap = nullptr;
     float m_specularTint = 0.0f;
-    float m_specularAmount = 0.5f;
+    float m_specularAmount = 1.0f;
     float m_roughness = 0.0f;
     float m_opacity = 1.0f;
     float m_metalnessAmount = 0.0f;
@@ -391,6 +399,7 @@ private:
     TextureChannelMapping m_thicknessChannel = QQuick3DMaterial::G;
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
+    float m_indexOfRefraction = 1.5f;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

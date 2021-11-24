@@ -275,16 +275,12 @@ QT_BEGIN_NAMESPACE
     This property controls the strength of specularity (highlights and
     reflections).
 
-    The range is [0.0, 1.0]. The default value is \c 0.5.
+    The range is [0.0, 1.0]. The default value is \c 1.0.
 
     \note For non-dielectrics (metals) this property has no effect.
 
     \note This property does not affect the specularReflectionMap, but does affect the amount of
     reflections from a scenes SceneEnvironment::lightProbe.
-
-    \note Unless your mesh is high resolution, you may need to use
-    \c PrincipledMaterial.FragmentLighting to get good specular highlights from scene
-    lights.
 */
 
 /*!
@@ -695,6 +691,41 @@ QT_BEGIN_NAMESPACE
     absorption when reaching the attenuation distance.
     The default value is \c Qt.White
 
+*/
+
+/*!
+    \qmlproperty real PrincipledMaterial::indexOfRefraction
+
+    This property defines the index of refraction of the material. The default
+    value of \c 1.5 will be the ideal value for materials like plastics or glass
+    but other materials like water, asphalt, sapphire, or diamond would require
+    and adjusted value to look more realistic. For realistic materials the
+    indexOfRefraction should usually be between \c 1.0 and \c 3.0
+
+    Some examples of common materials' index of refractions are:
+
+    \table
+    \header
+        \li Material
+        \li Index of Refraction
+    \row
+        \li Air
+        \li 1.0
+    \row
+        \li Water
+        \li 1.33
+    \row
+        \li Glass
+        \li 1.55
+    \row
+        \li Sapphire
+        \li 1.76
+    \row
+        \li Diamond
+        \li 2.42
+    \endtable
+
+    \note No known material in the world have ior much greater than \c 3.0.
 */
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
@@ -1332,6 +1363,7 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
 
         material->specularAmount = m_specularAmount;
         material->specularTint = QVector3D(m_specularTint, m_specularTint, m_specularTint);
+        material->ior = m_indexOfRefraction;
     }
 
     if (m_dirtyAttributes & OpacityDirty) {
@@ -1613,6 +1645,11 @@ QQuick3DMaterial::TextureChannelMapping QQuick3DPrincipledMaterial::transmission
     return m_transmissionChannel;
 }
 
+float QQuick3DPrincipledMaterial::indexOfRefraction() const
+{
+    return m_indexOfRefraction;
+}
+
 void QQuick3DPrincipledMaterial::setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel)
 {
     if (m_transmissionChannel == newTransmissionChannel)
@@ -1690,6 +1727,16 @@ void QQuick3DPrincipledMaterial::setAttenuationColor(const QColor &newAttenuatio
     m_attenuationColor = newAttenuationColor;
     emit attenuationColorChanged(m_attenuationColor);
     markDirty(VolumeDirty);
+}
+
+void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
+{
+    if (qFuzzyCompare(m_indexOfRefraction, indexOfRefraction))
+        return;
+
+    m_indexOfRefraction = indexOfRefraction;
+    emit indexOfRefractionChanged(m_indexOfRefraction);
+    markDirty(SpecularDirty);
 }
 
 QT_END_NAMESPACE

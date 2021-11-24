@@ -967,7 +967,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
             fragmentShader << "    qt_clearcoatAmount = qt_material_properties3.z;\n";
             fragmentShader << "    qt_clearcoatRoughness = qt_material_properties3.w;\n";
-            fragmentShader << "    qt_clearcoatF0 = vec3(0.16 * qt_specularFactor * qt_specularFactor);\n"; // qt_specularFactor of 0.5 == 0.04
+            fragmentShader << "    qt_clearcoatF0 = vec3(((1.0-qt_material_specular.w) * (1.0-qt_material_specular.w)) / ((1.0+qt_material_specular.w) * (1.0+qt_material_specular.w)));\n";
             fragmentShader << "    qt_clearcoatF90 = vec3(1.0);\n";
             fragmentShader << "    qt_global_clearcoat = vec3(0.0);\n";
 
@@ -1042,7 +1042,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             if (materialAdapter->isPrincipled()) {
                 fragmentShader.addInclude("principledMaterialFresnel.glsllib");
                 addLocalVariable(fragmentShader, "qt_f0", "vec3");
-                fragmentShader << "    qt_f0 = qt_F0(qt_metalnessAmount, qt_specularFactor, qt_diffuseColor.rgb);\n";
+                fragmentShader << "    qt_f0 = qt_F0_ior(qt_material_specular.w, qt_metalnessAmount, qt_diffuseColor.rgb);\n";
                 if (hasCustomFrag)
                     fragmentShader << "    float qt_fresnelPower = qt_customFresnelPower;\n";
                 else
@@ -1140,13 +1140,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                         if (enableTransmission) {
                             fragmentShader << "    {\n";
-                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, qt_thicknessFactor, 1.5);\n";
+                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, qt_thicknessFactor, qt_material_specular.w);\n";
                             fragmentShader << "        vec3 pointToLight = -" << lightVarNames.lightDirection << ".xyz;\n";
                             fragmentShader << "        pointToLight -= transmissionRay;\n";
                             fragmentShader << "        vec3 l = normalize(pointToLight);\n";
                             fragmentShader << "        vec3 intensity = vec3(1.0);\n"; // Directional light is always 1.0
                             fragmentShader << "        vec3 transmittedLight = intensity * qt_getPunctualRadianceTransmission(qt_world_normal, "
-                                              "qt_view_vector, l, qt_roughnessAmount, qt_f0, vec3(1.0), qt_diffuseColor.rgb, 1.5);\n";
+                                              "qt_view_vector, l, qt_roughnessAmount, qt_f0, vec3(1.0), qt_diffuseColor.rgb, qt_material_specular.w);\n";
 
                             // Volume
                             fragmentShader << "        transmittedLight = qt_applyVolumeAttenuation(transmittedLight, length(transmissionRay), "
@@ -1271,13 +1271,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                         if (enableTransmission) {
                             fragmentShader << "    {\n";
-                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, qt_thicknessFactor, 1.5);\n";
+                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, qt_thicknessFactor, qt_material_specular.w);\n";
                             fragmentShader << "        vec3 pointToLight = -" << lightVarNames.normalizedDirection << ".xyz;\n";
                             fragmentShader << "        pointToLight -= transmissionRay;\n";
                             fragmentShader << "        vec3 l = normalize(pointToLight);\n";
                             fragmentShader << "        vec3 intensity = vec3(1.0);\n"; // Directional light is always 1.0
                             fragmentShader << "        vec3 transmittedLight = intensity * qt_getPunctualRadianceTransmission(qt_world_normal, "
-                                              "qt_view_vector, l, qt_roughnessAmount, qt_f0, vec3(1.0), qt_diffuseColor.rgb, 1.5);\n";
+                                              "qt_view_vector, l, qt_roughnessAmount, qt_f0, vec3(1.0), qt_diffuseColor.rgb, qt_material_specular.w);\n";
                             fragmentShader << "        transmittedLight = qt_applyVolumeAttenuation(transmittedLight, length(transmissionRay), "
                                               "qt_attenuationColor, qt_attenuationDistance);\n";
                             fragmentShader << "        qt_global_transmission += qt_transmissionFactor * transmittedLight;\n";
@@ -1391,7 +1391,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // This can run even without a IBL probe
         if (enableTransmission) {
             fragmentShader << "    qt_global_transmission += qt_transmissionFactor * qt_getIBLVolumeRefraction(qt_world_normal, qt_view_vector, qt_roughnessAmount, "
-                              "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, 1.5, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance);\n";
+                              "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, qt_material_specular.w, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance);\n";
         }
 
 

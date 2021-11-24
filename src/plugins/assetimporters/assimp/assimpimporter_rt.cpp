@@ -618,6 +618,21 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                                                aiColorToQColor(attenuationColor));
             }
         }
+
+
+        // KHR_materials_ior
+        {
+            ai_real ior = 0.0f;
+            result = source.Get(AI_MATKEY_REFRACTI, ior);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target,
+                                           "indexOfRefraction",
+                                           &QQuick3DPrincipledMaterial::setIndexOfRefraction,
+                                           float(ior));
+        }
+
+
+
     } else { // Ver1
         int shadingModel = 0;
         aiReturn result;

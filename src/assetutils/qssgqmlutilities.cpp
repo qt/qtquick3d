@@ -422,7 +422,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Default"));
     principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
     principledMaterial->insert(QStringLiteral("metalness"), 0.0f);
-    principledMaterial->insert(QStringLiteral("specularAmount"), 0.5f);
+    principledMaterial->insert(QStringLiteral("specularAmount"), 1.0f);
     principledMaterial->insert(QStringLiteral("specularTint"), 0.0f);
     principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
     principledMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
@@ -436,6 +436,7 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("thicknessFactor"), 0.0f);
     principledMaterial->insert(QStringLiteral("attenuationDistance"), std::numeric_limits<float>::infinity());
     principledMaterial->insert(QStringLiteral("attenuationColor"), QColor(Qt::white));
+    principledMaterial->insert(QStringLiteral("indexOfRefraction"), 1.5f);
 
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 

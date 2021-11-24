@@ -373,6 +373,12 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(attenuationColor, material.attenuationColor());
     QCOMPARE(attenuationColorVector, node->attenuationColor);
+
+    const float ior = 1.45f;
+    material.setIndexOfRefraction(ior);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(ior, material.indexOfRefraction());
+    QCOMPARE(ior, node->ior);
 }
 
 void tst_QQuick3DMaterials::testPrincipledTextures()

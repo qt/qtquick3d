@@ -120,7 +120,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QVector4D color{ 1.0f, 1.0f, 1.0f, 1.0f }; // colors are 0-1 normalized
     float diffuseLightWrap = 0.0f; // 0 - 1
     float fresnelPower = 0.0f;
-    float specularAmount = 0.0f; // 0-1
+    float specularAmount = 1.0f; // 0-1
     float specularRoughness = 0.0f; // 0-1
     float metalnessAmount = 0.0f;
     float opacity = 1.0f; // 0-1
