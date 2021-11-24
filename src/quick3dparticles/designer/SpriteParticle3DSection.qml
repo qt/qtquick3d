@@ -136,5 +136,25 @@ Section {
 
             ExpandingSpacer {}
         }
+
+        PropertyLabel {
+            text: qsTr("Lights")
+            tooltip: qsTr("This property defines the lights used for the particles.")
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 5
+        }
+
+        SecondColumnLayout {
+            EditableListView {
+                backendValue: backendValues.lights
+                model: backendValues.lights.expressionAsList
+                Layout.fillWidth: true
+                typeFilter: "QtQuick3D.Light"
+                onAdd: function(value) { backendValues.lights.idListAdd(value) }
+                onRemove: function(idx) { backendValues.lights.idListRemove(idx) }
+                onReplace: function (idx, value) { backendValues.lights.idListReplace(idx, value) }
+            }
+            ExpandingSpacer {}
+        }
     }
 }
