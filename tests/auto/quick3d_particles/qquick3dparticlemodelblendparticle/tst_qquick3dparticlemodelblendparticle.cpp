@@ -53,7 +53,7 @@ void tst_QQuick3DParticleModelBlendParticle::testParticle()
     QCOMPARE(particle->modelBlendMode(), QQuick3DParticleModelBlendParticle::Explode);
     QCOMPARE(particle->endTime(), 0);
     QCOMPARE(particle->activationNode(), nullptr);
-    QCOMPARE(particle->random(), false);
+    QCOMPARE(particle->emitMode(), QQuick3DParticleModelBlendParticle::Sequential);
     QCOMPARE(particle->fadeInEffect(), QQuick3DParticle::FadeNone);
     QCOMPARE(particle->fadeOutEffect(), QQuick3DParticle::FadeNone);
 
@@ -77,8 +77,8 @@ void tst_QQuick3DParticleModelBlendParticle::testParticleProperties()
     particle->setActivationNode(node);
     QCOMPARE(particle->activationNode(), node);
 
-    particle->setRandom(true);
-    QCOMPARE(particle->random(), true);
+    particle->setEmitMode(QQuick3DParticleModelBlendParticle::Random);
+    QCOMPARE(particle->emitMode(), QQuick3DParticleModelBlendParticle::Random);
 
     particle->setFadeInEffect(QQuick3DParticle::FadeOpacity);
     QCOMPARE(particle->fadeInEffect(), QQuick3DParticle::FadeOpacity);

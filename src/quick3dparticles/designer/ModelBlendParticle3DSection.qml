@@ -106,7 +106,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Activation Node")
-            tooltip: qsTr("This property holds a node that activates particles and overrides the reqular emit routine.")
+            tooltip: qsTr("This property holds a node that activates particles.")
         }
 
         SecondColumnLayout {
@@ -121,15 +121,15 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Random")
-            tooltip: qsTr("This property holds whether the particles are emitted in random order instead of in the order they are specified in the model.")
+            text: qsTr("Emit Mode")
+            tooltip: qsTr("This property holds emit mode of the particles.")
         }
 
         SecondColumnLayout {
-            CheckBox {
+            ComboBox {
                 id: randomCheckBox
-                text: backendValues.random.valueToString
-                backendValue: backendValues.random
+                model: ["Sequential", "Random", "Activation"]
+                backendValue: backendValues.emitMode
                 implicitWidth: StudioTheme.Values.twoControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
             }

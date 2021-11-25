@@ -630,7 +630,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         return;
 
     int particleDataIndex = index == -1 ? particle->nextCurrentIndex(this) : index;
-    if (index == -1 && mbp && mbp->random())
+    if (index == -1 && mbp && mbp->emitMode() == QQuick3DParticleModelBlendParticle::Random)
         particleDataIndex = mbp->randomIndex(particleDataIndex);
 
     auto d = &particle->m_particleData[particleDataIndex];
@@ -839,7 +839,7 @@ void QQuick3DParticleEmitter::emitParticles()
         return;
 
     auto *mbp = qobject_cast<QQuick3DParticleModelBlendParticle *>(m_particle);
-    if (mbp && mbp->activationNode()) {
+    if (mbp && mbp->activationNode() && mbp->emitMode() == QQuick3DParticleModelBlendParticle::Activation) {
         // The particles are emitted using the activationNode instead of regular emit
         emitActivationNodeParticles(mbp);
         return;

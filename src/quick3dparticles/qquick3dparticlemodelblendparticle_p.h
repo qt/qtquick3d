@@ -62,7 +62,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleModelBlendParticle : public QQui
     Q_PROPERTY(ModelBlendMode modelBlendMode READ modelBlendMode WRITE setModelBlendMode NOTIFY modelBlendModeChanged)
     Q_PROPERTY(int endTime READ endTime WRITE setEndTime NOTIFY endTimeChanged)
     Q_PROPERTY(QQuick3DNode *activationNode READ activationNode WRITE setActivationNode NOTIFY activationNodeChanged)
-    Q_PROPERTY(bool random READ random WRITE setRandom NOTIFY randomChanged)
+    Q_PROPERTY(ModelBlendEmitMode emitMode READ emitMode WRITE setEmitMode NOTIFY emitModeChanged)
     QML_NAMED_ELEMENT(ModelBlendParticle3D)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -78,12 +78,20 @@ public:
     };
     Q_ENUM(ModelBlendMode)
 
+    enum ModelBlendEmitMode
+    {
+        Sequential,
+        Random,
+        Activation
+    };
+    Q_ENUM(ModelBlendEmitMode)
+
     QQmlComponent *delegate() const;
     QQuick3DNode *endNode() const;
     ModelBlendMode modelBlendMode() const;
     int endTime() const;
     QQuick3DNode *activationNode() const;
-    bool random() const;
+    ModelBlendEmitMode emitMode() const;
 
 public Q_SLOTS:
     void setDelegate(QQmlComponent *setDelegate);
@@ -91,7 +99,7 @@ public Q_SLOTS:
     void setEndTime(int endTime);
     void setModelBlendMode(ModelBlendMode mode);
     void setActivationNode(QQuick3DNode *activationNode);
-    void setRandom(bool random);
+    void setEmitMode(ModelBlendEmitMode emitMode);
 
 Q_SIGNALS:
     void delegateChanged();
@@ -100,7 +108,7 @@ Q_SIGNALS:
     void modelBlendModeChanged();
     void endTimeChanged();
     void activationNodeChanged();
-    void randomChanged();
+    void emitModeChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -173,7 +181,7 @@ private:
     ModelBlendMode m_modelBlendMode = Explode;
     int m_endTime = 0;
     bool m_dataChanged = true;
-    bool m_random = false;
+    ModelBlendEmitMode m_emitMode = Sequential;
     QQuick3DNode *m_activationNode = nullptr;
     float m_maxTriangleRadius = 0.f;
 };

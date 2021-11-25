@@ -157,7 +157,7 @@ Item {
                 eulerRotation: Qt.vector3d(-90, 0, 0)
 
                 Model {
-                    visible: enableActivationPlane.checked
+                    visible: particle.emitMode === ModelBlendParticle3D.Activation
                     source: "#Rectangle"
                     scale: Qt.vector3d(0.5, 0.5, 1)
                     receivesShadows: false
@@ -200,8 +200,8 @@ Item {
                 endNode: translateNode
                 modelBlendMode: blendModeSelectionBox.selection
                 endTime: 1500
-                activationNode: enableActivationPlane.checked ? actNode : null
-                random: enableRandom.checked
+                activationNode: actNode
+                emitMode: emitModeSelectionBox.selection
             }
 
             ParticleEmitter3D {
@@ -225,33 +225,24 @@ Item {
     SettingsView {
         id: settingsView
         CustomCheckBox {
-            id: enableActivationPlane
-            text: "Enable activation plane"
-            checked: false
-            onCheckedChanged: {
-                timeline.currentFrame = 0
-                psystem.reset()
-            }
-        }
-        CustomCheckBox {
-            id: enableRandom
-            text: "Random"
-            checked: false
-            enabled: !enableActivationPlane.checked
-            onCheckedChanged: {
-                timeline.currentFrame = 0
-                psystem.reset()
-            }
-        }
-        CustomCheckBox {
             id: cullingModelBox
             text: "Enable culling"
             checked: false
         }
         CustomSelectionBox {
             id: blendModeSelectionBox
-            text: "Mode"
+            text: "Blend Mode"
             values: ["Explode", "Construct", "Transfer"]
+            parentWidth: settingsView.width
+            onSelectionChanged: {
+                timeline.currentFrame = 0
+                psystem.reset()
+            }
+        }
+        CustomSelectionBox {
+            id: emitModeSelectionBox
+            text: "Emit Mode"
+            values: ["Sequential", "Random", "Activation"]
             parentWidth: settingsView.width
             onSelectionChanged: {
                 timeline.currentFrame = 0

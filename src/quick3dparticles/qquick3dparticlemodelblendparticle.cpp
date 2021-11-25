@@ -67,8 +67,8 @@ QT_BEGIN_NAMESPACE
     transferred from one place to another.
     \endlist
 
-    The particles are emitted in the order they are specified in the model unless \l activationNode is set
-    or \l random is set to \c true.
+    By default the particles are emitted in the order they are specified in the model unless \l emitMode is set
+    to \c Random or \l emitMode is set to \c Activation and \l activationNode is set.
 
     Some features defined in base class and emitters are not functional with this type:
     \list
@@ -200,15 +200,25 @@ QQuick3DNode *QQuick3DParticleModelBlendParticle::activationNode() const
 }
 
 /*!
-    \qmlproperty bool ModelBlendParticle3D::random
+    \qmlproperty enumeration ModelBlendParticle3D::ModelBlendEmitMode
     \preliminary
-    This property holds whether the particles are emitted in random order instead of in the order
-    they are specified in the model. The default is \c false.
-    \note This property is ignored if \l activationNode is set.
+    Defines the emit mode of the particles
+
+    \value ModelBlendParticle3D.Sequential
+        The particles are emitted in the order they are defined in the model.
+    \value ModelBlendParticle3D.Random
+        The particles are emitted in random order.
+    \value ModelBlendParticle3D.Activation
+        The particles are emitted when they are activated by the \l activationNode.
 */
-bool QQuick3DParticleModelBlendParticle::random() const
+/*!
+    \qmlproperty bool ModelBlendParticle3D::emitMode
+    \preliminary
+    This property holds the emit mode of the particles.
+*/
+QQuick3DParticleModelBlendParticle::ModelBlendEmitMode QQuick3DParticleModelBlendParticle::emitMode() const
 {
-    return m_random;
+    return m_emitMode;
 }
 
 void QQuick3DParticleModelBlendParticle::setEndNode(QQuick3DNode *node)
@@ -255,13 +265,13 @@ void QQuick3DParticleModelBlendParticle::setActivationNode(QQuick3DNode *activat
     Q_EMIT activationNodeChanged();
 }
 
-void QQuick3DParticleModelBlendParticle::setRandom(bool random)
+void QQuick3DParticleModelBlendParticle::setEmitMode(ModelBlendEmitMode emitMode)
 {
-    if (m_random == random)
+    if (m_emitMode == emitMode)
         return;
 
-    m_random = random;
-    Q_EMIT randomChanged();
+    m_emitMode = emitMode;
+    Q_EMIT emitModeChanged();
 }
 
 void QQuick3DParticleModelBlendParticle::regenerate()
