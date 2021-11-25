@@ -1,6 +1,10 @@
 // RHI version, note the explicit binding (1)
 
+#if QSSG_REDUCE_MAX_NUM_LIGHTS
+#define MAX_NUM_LIGHTS 5
+#else
 #define MAX_NUM_LIGHTS 15
+#endif
 
 struct LightSource
 {

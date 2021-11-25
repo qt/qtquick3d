@@ -195,6 +195,7 @@ enum class QSSGRhiSamplerBindingHints
 
 // these are our current shader limits
 #define QSSG_MAX_NUM_LIGHTS 15
+#define QSSG_REDUCED_MAX_NUM_LIGHTS 5
 #define QSSG_MAX_NUM_SHADOW_MAPS 8
 
 // note this struct must exactly match the memory layout of the uniform block in
@@ -961,6 +962,8 @@ public:
     }
 
     QSSGRhiContextStats &stats() { return m_stats; }
+
+    int maxUniformBufferRange() const { return m_rhi->resourceLimit(QRhi::MaxUniformBufferRange); }
 
 private:
     QRhi *m_rhi = nullptr;

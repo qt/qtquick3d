@@ -103,6 +103,8 @@ enum class Feature : FlagType
     RGBELightProbe = (1 << 19) + 11,
     OpaqueDepthPrePass = (1 << 20) + 12,
     ReflectionProbe = (1 << 21) + 13,
+    ReduceMaxNumLights = (1 << 22) + 14,
+
     LastFeature
 };
 
