@@ -45,7 +45,8 @@
 #include <assimp/Logger.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/postprocess.h>
-#include <assimp/pbrmaterial.h>
+#include <assimp/material.h>
+#include <assimp/GltfMaterial.h>
 #include <assimp/importerdesc.h>
 
 // ASSIMP INC
@@ -344,7 +345,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                     texInfo.transform = &transform;
 
                 if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
-                    material.Get(AI_MATKEY_GLTF_TEXTURE_TEXCOORD(textureType, index), texInfo.uvIndex);
+                    material.Get(AI_MATKEY_UVWSRC(textureType, index), texInfo.uvIndex);
                     material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), texInfo.minFilter);
                     material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), texInfo.magFilter);
                 }
@@ -414,12 +415,12 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         aiReturn result;
         {
             aiColor4D baseColorFactor;
-            result = source.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+            result = source.Get(AI_MATKEY_BASE_COLOR, baseColorFactor);
             if (result == aiReturn_SUCCESS)
                 QSSGSceneDesc::setProperty(target, "baseColor", &QQuick3DPrincipledMaterial::setBaseColor, aiColorToQColor(baseColorFactor));
         }
 
-        if (auto baseColorTexture = createTextureNode(source, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE)) {
+        if (auto baseColorTexture = createTextureNode(source, AI_MATKEY_BASE_COLOR_TEXTURE)) {
             QSSGSceneDesc::setProperty(target, "baseColorMap", &QQuick3DPrincipledMaterial::setBaseColorMap, baseColorTexture);
             QSSGSceneDesc::setProperty(target, "opacityChannel", &QQuick3DPrincipledMaterial::setOpacityChannel, QQuick3DPrincipledMaterial::TextureChannelMapping::A);
         }
@@ -433,14 +434,14 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 
         {
             ai_real metallicFactor;
-            result = source.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
+            result = source.Get(AI_MATKEY_METALLIC_FACTOR, metallicFactor);
             if (result == aiReturn_SUCCESS)
                 QSSGSceneDesc::setProperty(target, "metalness", &QQuick3DPrincipledMaterial::setMetalness, float(metallicFactor));
         }
 
         {
             ai_real roughnessFactor;
-            result = source.Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
+            result = source.Get(AI_MATKEY_ROUGHNESS_FACTOR, roughnessFactor);
             if (result == aiReturn_SUCCESS)
                 QSSGSceneDesc::setProperty(target, "roughness", &QQuick3DPrincipledMaterial::setRoughness, float(roughnessFactor));
         }
@@ -509,81 +510,74 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         }
 
         {
-            bool isUnlit = false;
-            result = source.Get(AI_MATKEY_GLTF_UNLIT, isUnlit);
-            if (result == aiReturn_SUCCESS && isUnlit)
+            int shadingModel = 0;
+            result = source.Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+            if (result == aiReturn_SUCCESS && shadingModel == aiShadingMode_Unlit)
                 QSSGSceneDesc::setProperty(target, "lighting", &QQuick3DPrincipledMaterial::setLighting, QQuick3DPrincipledMaterial::Lighting::NoLighting);
         }
 
         {
             // Clearcoat Properties (KHR_materials_clearcoat)
-            bool hasClearcoat = false;
-            result = source.Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT, hasClearcoat);
-            if (result == aiReturn_SUCCESS && hasClearcoat) {
-                // factor
-                {
-                    ai_real clearcoatFactor = 0.0f;
-                    result = source.Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_FACTOR, clearcoatFactor);
-                    if (result == aiReturn_SUCCESS)
-                        QSSGSceneDesc::setProperty(target,
-                                                   "clearcoatAmount",
-                                                   &QQuick3DPrincipledMaterial::setClearcoatAmount,
-                                                   float(clearcoatFactor));
-                }
-
-                // roughness
-                {
-                    ai_real clearcoatRoughnessFactor = 0.0f;
-                    result = source.Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_ROUGHNESS_FACTOR, clearcoatRoughnessFactor);
-                    if (result == aiReturn_SUCCESS)
-                        QSSGSceneDesc::setProperty(target,
-                                                   "clearcoatRoughnessAmount",
-                                                   &QQuick3DPrincipledMaterial::setClearcoatRoughnessAmount,
-                                                   float(clearcoatRoughnessFactor));
-                }
-
-                // texture
-                if (auto clearcoatTexture = createTextureNode(source, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_TEXTURE))
-                    QSSGSceneDesc::setProperty(target, "clearcoatMap", &QQuick3DPrincipledMaterial::setClearcoatMap, clearcoatTexture);
-
-                // roughness texture
-                if (auto clearcoatRoughnessTexture = createTextureNode(source, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_ROUGHNESS_TEXTURE))
+            // factor
+            {
+                ai_real clearcoatFactor = 0.0f;
+                result = source.Get(AI_MATKEY_CLEARCOAT_FACTOR, clearcoatFactor);
+                if (result == aiReturn_SUCCESS)
                     QSSGSceneDesc::setProperty(target,
-                                               "clearcoatRoughnessMap",
-                                               &QQuick3DPrincipledMaterial::setClearcoatRoughnessMap,
-                                               clearcoatRoughnessTexture);
-
-                // normal texture
-                if (auto clearcoatNormalTexture = createTextureNode(source, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_NORMAL_TEXTURE))
-                    QSSGSceneDesc::setProperty(target, "clearcoatNormalMap", &QQuick3DPrincipledMaterial::setClearcoatNormalMap, clearcoatNormalTexture);
+                                               "clearcoatAmount",
+                                               &QQuick3DPrincipledMaterial::setClearcoatAmount,
+                                               float(clearcoatFactor));
             }
+
+            // roughness
+            {
+                ai_real clearcoatRoughnessFactor = 0.0f;
+                result = source.Get(AI_MATKEY_CLEARCOAT_ROUGHNESS_FACTOR, clearcoatRoughnessFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "clearcoatRoughnessAmount",
+                                               &QQuick3DPrincipledMaterial::setClearcoatRoughnessAmount,
+                                               float(clearcoatRoughnessFactor));
+            }
+
+            // texture
+            if (auto clearcoatTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_TEXTURE))
+                QSSGSceneDesc::setProperty(target, "clearcoatMap", &QQuick3DPrincipledMaterial::setClearcoatMap, clearcoatTexture);
+
+            // roughness texture
+            if (auto clearcoatRoughnessTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_ROUGHNESS_TEXTURE))
+                QSSGSceneDesc::setProperty(target,
+                                           "clearcoatRoughnessMap",
+                                           &QQuick3DPrincipledMaterial::setClearcoatRoughnessMap,
+                                           clearcoatRoughnessTexture);
+
+            // normal texture
+            if (auto clearcoatNormalTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_NORMAL_TEXTURE))
+                QSSGSceneDesc::setProperty(target, "clearcoatNormalMap", &QQuick3DPrincipledMaterial::setClearcoatNormalMap, clearcoatNormalTexture);
         }
 
         {
             // Transmission Properties (KHR_materials_transmission)
-            bool hasTransmission = false;
-            result = source.Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION, hasTransmission);
-            if (result == aiReturn_SUCCESS && hasTransmission) {
-                // factor
-                {
-                    ai_real transmissionFactor = 0.0f;
-                    result = source.Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_FACTOR, transmissionFactor);
-                    if (result == aiReturn_SUCCESS)
-                        QSSGSceneDesc::setProperty(target,
-                                                   "transmissionFactor",
-                                                   &QQuick3DPrincipledMaterial::setTransmissionFactor,
-                                                   float(transmissionFactor));
-                }
-
-                // texture
-                {
-                    if (auto transmissionImage = createTextureNode(source, AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_TEXTURE))
-                        QSSGSceneDesc::setProperty(target,
-                                                   "transmissionMap",
-                                                   &QQuick3DPrincipledMaterial::setTransmissionMap,
-                                                   transmissionImage);
-                }
+            // factor
+            {
+                ai_real transmissionFactor = 0.0f;
+                result = source.Get(AI_MATKEY_TRANSMISSION_FACTOR, transmissionFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "transmissionFactor",
+                                               &QQuick3DPrincipledMaterial::setTransmissionFactor,
+                                               float(transmissionFactor));
             }
+
+            // texture
+            {
+                if (auto transmissionImage = createTextureNode(source, AI_MATKEY_TRANSMISSION_TEXTURE))
+                    QSSGSceneDesc::setProperty(target,
+                                               "transmissionMap",
+                                               &QQuick3DPrincipledMaterial::setTransmissionMap,
+                                               transmissionImage);
+            }
+
         }
 
     } else { // Ver1

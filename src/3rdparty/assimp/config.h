@@ -558,6 +558,15 @@ enum aiComponent
 // Various stuff to fine-tune the behaviour of specific importer plugins.
 // ###########################################################################
 
+// ---------------------------------------------------------------------------
+/** @brief Importers which parse JSON may use this to obtain a pointer to a
+ * rapidjson::IRemoteSchemaDocumentProvider.
+ *
+ * The default value is nullptr
+ * Property type: void*
+ */
+#define AI_CONFIG_IMPORT_SCHEMA_DOCUMENT_PROVIDER \
+    "IMPORT_SCHEMA_DOCUMENT_PROVIDER"
 
 // ---------------------------------------------------------------------------
 /** @brief Set whether the fbx importer will merge all geometry layers present
@@ -866,6 +875,15 @@ enum aiComponent
     "IMPORT_MD3_SKIN_NAME"
 
 // ---------------------------------------------------------------------------
+/** @brief  Specify if to try load Quake 3 shader files. This also controls
+ *  original surface name handling: when disabled it will be used unchanged.
+ *
+ * Property type: bool. Default value: true.
+ */
+#define AI_CONFIG_IMPORT_MD3_LOAD_SHADERS \
+    "IMPORT_MD3_LOAD_SHADERS"
+
+// ---------------------------------------------------------------------------
 /** @brief  Specify the Quake 3 shader file to be used for a particular
  *  MD3 file. This can also be a search path.
  *
@@ -1078,6 +1096,23 @@ enum aiComponent
 #define AI_CONFIG_EXPORT_POINT_CLOUDS "EXPORT_POINT_CLOUDS"
 
 /**
+ * @brief Specifies the blob name, assimp uses for exporting.
+ * 
+ * Some formats require auxiliary files to be written, that need to be linked back into 
+ * the original file. For example, OBJ files export materials to a separate MTL file and
+ * use the `mtllib` keyword to reference this file.
+ * 
+ * When exporting blobs using #ExportToBlob, assimp does not know the name of the blob
+ * file and thus outputs `mtllib $blobfile.mtl`, which might not be desired, since the 
+ * MTL file might be called differently. 
+ * 
+ * This property can be used to give the exporter a hint on how to use the magic 
+ * `$blobfile` keyword. If the exporter detects the keyword and is provided with a name
+ * for the blob, it instead uses this name.
+ */
+#define AI_CONFIG_EXPORT_BLOB_NAME "EXPORT_BLOB_NAME"
+
+/**
  *  @brief  Specifies a gobal key factor for scale, float value
  */
 #define AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY "GLOBAL_SCALE_FACTOR"
@@ -1100,6 +1135,6 @@ enum aiComponent
  * Property type: Bool. Default value: undefined.
  */
 
-/* #undef ASSIMP_DOUBLE_PRECISION */
+
 
 #endif // !! AI_CONFIG_H_INC

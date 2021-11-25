@@ -33,6 +33,7 @@
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/anim.h>
 #include <assimp/material.h>
+#include <assimp/GltfMaterial.h>
 #include <assimp/camera.h>
 
 int main(int , char **)

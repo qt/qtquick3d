@@ -34,7 +34,8 @@
 #include <assimp/Logger.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/postprocess.h>
-#include <assimp/pbrmaterial.h>
+#include <assimp/material.h>
+#include <assimp/GltfMaterial.h>
 #include <assimp/importerdesc.h>
 
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
@@ -1268,7 +1269,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         // GLTF Mode
         {
             aiColor4D baseColorFactor;
-            result = material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_FACTOR, baseColorFactor);
+            result = material->Get(AI_MATKEY_BASE_COLOR, baseColorFactor);
             if (result == aiReturn_SUCCESS)
                 QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                          tabLevel + 1,
@@ -1276,7 +1277,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                                                          QStringLiteral("baseColor"),
                                                          aiColorToQColor(baseColorFactor));
 
-            QString baseColorImage = generateImage(material, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, tabLevel + 1);
+            QString baseColorImage = generateImage(material, AI_MATKEY_BASE_COLOR_TEXTURE, tabLevel + 1);
             if (!baseColorImage.isNull()) {
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("baseColorMap: ") << baseColorImage << QStringLiteral("\n");
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("opacityChannel: Material.A\n");
@@ -1294,7 +1295,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             }
 
             ai_real metallicFactor;
-            result = material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, metallicFactor);
+            result = material->Get(AI_MATKEY_METALLIC_FACTOR, metallicFactor);
             if (result == aiReturn_SUCCESS) {
                 QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                          tabLevel + 1,
@@ -1304,7 +1305,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             }
 
             ai_real roughnessFactor;
-            result = material->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, roughnessFactor);
+            result = material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughnessFactor);
             if (result == aiReturn_SUCCESS) {
                 QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                          tabLevel + 1,
@@ -1410,146 +1411,108 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
         }
 
         {
-            bool isUnlit;
-            result = material->Get(AI_MATKEY_GLTF_UNLIT, isUnlit);
-            if (result == aiReturn_SUCCESS && isUnlit)
+            int shadingModel = 0;
+            result = material->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+            if (result == aiReturn_SUCCESS && shadingModel == aiShadingMode_Unlit)
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("lighting: PrincipledMaterial.NoLighting\n");
         }
 
         // SpecularGlossiness Properties
-        bool hasSpecularGlossiness;
-        result = material->Get(AI_MATKEY_GLTF_PBRSPECULARGLOSSINESS, hasSpecularGlossiness);
-        if (result == aiReturn_SUCCESS && hasSpecularGlossiness) {
-
-            // diffuseFactor (color) // not used (yet), but ends up being diffuseColor
-//            {
-//                aiColor4D diffuseColor;
-//                result = material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
-//                if (result == aiReturn_SUCCESS)
-//                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
-//                                                             tabLevel + 1,
-//                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-//                                                             QStringLiteral("diffuseColor"),
-//                                                             aiColorToQColor(diffuseColor));
-//            }
-
-            // specularColor (color) (our property is a float?)
-//            {
-//                aiColor3D specularColor;
-//                result = material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
-//                if (result == aiReturn_SUCCESS)
-//                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
-//                                                             tabLevel + 1,
-//                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-//                                                             QStringLiteral("specularTint"),
-//                                                             aiColorToQColor(specularColor));
-//            }
-
-            // glossinessFactor (float)
+        // If AI_MATKEY_GLOSSINESS_FACTOR is set, then a Specular/Glossiness is available
+        // NOTE: this isn't in assimpimporter_rt
+        {
+            ai_real glossiness;
+            result = material->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossiness);
+            if (result == aiReturn_SUCCESS)
             {
                 ai_real glossiness;
-                result = material->Get(AI_MATKEY_GLTF_PBRSPECULARGLOSSINESS_GLOSSINESS_FACTOR, glossiness);
+                result = material->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossiness);
                 if (result == aiReturn_SUCCESS)
                     QSSGQmlUtilities::writeQmlPropertyHelper(output,
                                                              tabLevel + 1,
                                                              QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
                                                              QStringLiteral("specularAmount"),
                                                              glossiness);
-            }
 
-            // diffuseTexture // not used (yet), but ends up being diffuseMap(1)
-//            {
-//                QString diffuseMapImage = generateImage(material, aiTextureType_DIFFUSE, 0, tabLevel + 1);
-//                if (!diffuseMapImage.isNull())
-//                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("diffuseMap: ") << diffuseMapImage << QStringLiteral("\n");
-//            }
-
-            // specularGlossinessTexture
-            {
-                QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
-                if (!specularMapImage.isNull())
-                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << QStringLiteral("\n");
+                // specularGlossinessTexture
+                {
+                    QString specularMapImage = generateImage(material, aiTextureType_SPECULAR, 0, tabLevel + 1);
+                    if (!specularMapImage.isNull())
+                        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("specularMap: ") << specularMapImage << QStringLiteral("\n");
+                }
             }
         }
 
         // Clearcoat Properties (KHR_materials_clearcoat)
-        bool hasClearcoat = false;
-        result = material->Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT, hasClearcoat);
-        if (result == aiReturn_SUCCESS && hasClearcoat) {
-            // factor
-            {
-                ai_real clearcoatFactor = 0.0f;
-                result = material->Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_FACTOR, clearcoatFactor);
-                if (result == aiReturn_SUCCESS)
-                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                             tabLevel + 1,
-                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-                                                             QStringLiteral("clearcoatAmount"),
-                                                             clearcoatFactor);
-            }
-
-            // roughness
-            {
-                ai_real clearcoatRoughnessFactor = 0.0f;
-                result = material->Get(AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_ROUGHNESS_FACTOR, clearcoatRoughnessFactor);
-                if (result == aiReturn_SUCCESS)
-                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                             tabLevel + 1,
-                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-                                                             QStringLiteral("clearcoatRoughnessAmount"),
-                                                             clearcoatRoughnessFactor);
-            }
-
-            // texture
-            {
-                QString clearcoatImage = generateImage(material, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_TEXTURE, tabLevel + 1);
-                if (!clearcoatImage.isNull())
-                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatMap: ")
-                           << clearcoatImage << QStringLiteral("\n");
-            }
-
-            // roughness texture
-            {
-                QString clearcoatRoughnessImage = generateImage(material,
-                                                                AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_ROUGHNESS_TEXTURE,
-                                                                tabLevel + 1);
-                if (!clearcoatRoughnessImage.isNull())
-                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatRoughnessMap: ")
-                           << clearcoatRoughnessImage << QStringLiteral("\n");
-            }
-
-            // normal texture
-            {
-                QString clearcoatNormalImage = generateImage(material, AI_MATKEY_GLTF_MATERIAL_CLEARCOAT_NORMAL_TEXTURE, tabLevel + 1);
-                if (!clearcoatNormalImage.isNull())
-                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatNormalMap: ")
-                           << clearcoatNormalImage << QStringLiteral("\n");
-            }
+        // factor
+        {
+            ai_real clearcoatFactor = 0.0f;
+            result = material->Get(AI_MATKEY_CLEARCOAT_FACTOR, clearcoatFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("clearcoatAmount"),
+                                                         clearcoatFactor);
         }
 
-        // Transmission Properties (KHR_materials_transmission)
-        bool hasTransmission = false;
-        result = material->Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION, hasTransmission);
-        if (result == aiReturn_SUCCESS && hasTransmission) {
-            // factor
-            {
-                ai_real transmissionFactor = 0.0f;
-                result = material->Get(AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_FACTOR, transmissionFactor);
-                if (result == aiReturn_SUCCESS)
-                    QSSGQmlUtilities::writeQmlPropertyHelper(output,
-                                                             tabLevel + 1,
-                                                             QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
-                                                             QStringLiteral("transmissionFactor"),
-                                                             transmissionFactor);
-            }
+        // roughness
+        {
+            ai_real clearcoatRoughnessFactor = 0.0f;
+            result = material->Get(AI_MATKEY_CLEARCOAT_ROUGHNESS_FACTOR, clearcoatRoughnessFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("clearcoatRoughnessAmount"),
+                                                         clearcoatRoughnessFactor);
+        }
 
-            // texture
-            {
-                QString transmissionImage = generateImage(material, AI_MATKEY_GLTF_MATERIAL_TRANSMISSION_TEXTURE, tabLevel + 1);
-                if (!transmissionImage.isNull())
-                    output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("transmissionMap: ")
-                           << transmissionImage << QStringLiteral("\n");
-            }
+        // texture
+        {
+            QString clearcoatImage = generateImage(material, AI_MATKEY_CLEARCOAT_TEXTURE, tabLevel + 1);
+            if (!clearcoatImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatMap: ")
+                       << clearcoatImage << QStringLiteral("\n");
+        }
+
+        // roughness texture
+        {
+            QString clearcoatRoughnessImage = generateImage(material,
+                                                            AI_MATKEY_CLEARCOAT_ROUGHNESS_TEXTURE,
+                                                            tabLevel + 1);
+            if (!clearcoatRoughnessImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatRoughnessMap: ")
+                       << clearcoatRoughnessImage << QStringLiteral("\n");
+        }
+
+        // normal texture
+        {
+            QString clearcoatNormalImage = generateImage(material, AI_MATKEY_CLEARCOAT_NORMAL_TEXTURE, tabLevel + 1);
+            if (!clearcoatNormalImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("clearcoatNormalMap: ")
+                       << clearcoatNormalImage << QStringLiteral("\n");
+        }
+
+
+        // factor
+        {
+            ai_real transmissionFactor = 0.0f;
+            result = material->Get(AI_MATKEY_TRANSMISSION_FACTOR, transmissionFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("transmissionFactor"),
+                                                         transmissionFactor);
+        }
+
+        // texture
+        {
+            QString transmissionImage = generateImage(material, AI_MATKEY_TRANSMISSION_TEXTURE, tabLevel + 1);
+            if (!transmissionImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("transmissionMap: ")
+                       << transmissionImage << QStringLiteral("\n");
         }
     }
 
@@ -1640,7 +1603,7 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
 
     if (m_gltfMode) {
         uint gltfUvIndex = 0;
-        result = material->Get(AI_MATKEY_GLTF_TEXTURE_TEXCOORD(textureType, index), gltfUvIndex);
+        result = material->Get(AI_MATKEY_UVWSRC(textureType, index), gltfUvIndex);
         if (result == aiReturn_SUCCESS)
             uvIndex = gltfUvIndex;
     }

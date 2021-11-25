@@ -34,7 +34,6 @@
 #include <assimp/Logger.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/postprocess.h>
-#include <assimp/pbrmaterial.h>
 #include <assimp/importerdesc.h>
 
 #include <QtCore/qstring.h>

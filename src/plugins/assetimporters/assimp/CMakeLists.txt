@@ -204,7 +204,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/include/assimp/DefaultIOStream.h
         ../../../3rdparty/assimp/src/include/assimp/DefaultIOSystem.h
         ../../../3rdparty/assimp/src/include/assimp/DefaultLogger.hpp
-        ../../../3rdparty/assimp/src/include/assimp/Defines.h
         ../../../3rdparty/assimp/src/include/assimp/Exceptional.h
         ../../../3rdparty/assimp/src/include/assimp/Exporter.hpp
         ../../../3rdparty/assimp/src/include/assimp/GenericProperty.h
