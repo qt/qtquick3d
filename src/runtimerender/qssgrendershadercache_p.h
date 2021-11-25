@@ -75,6 +75,7 @@ enum Define : quint8
     FilmicTonemapping,
     RGBELightProbe,
     OpaqueDepthPrePass,
+    ReduceMaxNumLights,
     Count /* New defines are added before this one! */
 };
 

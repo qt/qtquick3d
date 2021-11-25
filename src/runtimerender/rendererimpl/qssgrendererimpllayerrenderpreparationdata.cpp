@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
+
 static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QMatrix4x4 &inverseRootM, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
@@ -1207,6 +1209,16 @@ static bool scopeLight(QSSGRenderNode *node, QSSGRenderNode *lightScope)
     return false;
 }
 
+static const int REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES = 4096; // 256 vec4
+
+static inline int effectiveMaxLightCount(const ShaderFeatureSetList &features)
+{
+    if (features.contains({ QSSGShaderDefines::ReduceMaxNumLights, true }))
+        return QSSG_REDUCED_MAX_NUM_LIGHTS;
+
+    return QSSG_MAX_NUM_LIGHTS;
+}
+
 void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
 {
     Q_UNUSED(outputSize);
@@ -1252,6 +1264,23 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
             wasDirty = true;
             layer.calculateGlobalVariables();
+        }
+
+        const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+
+        // We may not be able to have an array of 15 light struct elements in
+        // the shaders. Switch on the reduced-max-number-of-lights feature
+        // if necessary. In practice this is relevant with OpenGL ES 3.0 or
+        // 2.0, because there are still implementations in use that only
+        // support the spec mandated minimum of 224 vec4s (so 3584 bytes).
+        if (rhiCtx->maxUniformBufferRange() <= REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
+            setShaderFeature(QSSGShaderDefines::ReduceMaxNumLights, true);
+            static bool notified = false;
+            if (!notified) {
+                notified = true;
+                qCDebug(lcQuick3DRender, "Qt Quick 3D maximum number of lights has been reduced from %d to %d due to the graphics driver's limitations",
+                        QSSG_MAX_NUM_LIGHTS, QSSG_REDUCED_MAX_NUM_LIGHTS);
+            }
         }
 
         thePrepResult = QSSGLayerRenderPreparationResult(
@@ -1365,10 +1394,11 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
             QSSGShaderLightList renderableLights;
             int shadowMapCount = 0;
             // Lights
+            const int maxLightCount = effectiveMaxLightCount(features);
             for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
-                if (renderableLights.count() == QSSG_MAX_NUM_LIGHTS) {
+                if (renderableLights.count() == maxLightCount) {
                     if (!tooManyLightsWarningShown) {
-                        qWarning("Too many lights in scene, maximum is %d", QSSG_MAX_NUM_LIGHTS);
+                        qWarning("Too many lights in scene, maximum is %d", maxLightCount);
                         tooManyLightsWarningShown = true;
                     }
                     break;
