@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QSSGCustomMaterialSystem;
 class QSSGRendererInterface;
+class QQuickWindow;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 {
@@ -65,11 +66,11 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 public:
     QAtomicInt ref;
 
-    static QSSGRenderContextInterface *renderContextForWindow(const QWindow &window);
+    static QSSGRenderContextInterface *renderContextForWindow(const QQuickWindow &window);
 
     // The commonly used version (from QQuick3DSceneRenderer). There is one
     // rendercontext per QQuickWindow (and so scenegraph render thread).
-    QSSGRenderContextInterface(QWindow *window, const QSSGRef<QSSGRhiContext> &ctx);
+    QSSGRenderContextInterface(QQuickWindow *window, const QSSGRef<QSSGRhiContext> &ctx);
 
     // This overload must only be used in special cases, e.g. by the genshaders tool.
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
@@ -154,6 +155,9 @@ private:
     float m_dpr = 1.0;
     QRect m_scissorRect;
     QColor m_sceneColor;
+
+    QMetaObject::Connection m_beforeFrameConnection;
+    QMetaObject::Connection m_afterFrameConnection;
 };
 QT_END_NAMESPACE
 

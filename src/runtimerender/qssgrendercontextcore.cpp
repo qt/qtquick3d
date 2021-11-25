@@ -41,11 +41,11 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 
-#include <QtGui/qwindow.h>
+#include <QtQuick/QQuickWindow>
 
 QT_BEGIN_NAMESPACE
 
-using Binding = QPair<const QWindow *, QSSGRenderContextInterface *>;
+using Binding = QPair<const QQuickWindow *, QSSGRenderContextInterface *>;
 using Bindings = QVarLengthArray<Binding, 32>;
 Q_GLOBAL_STATIC(Bindings, g_windowReg)
 
@@ -65,7 +65,7 @@ void QSSGRenderContextInterface::init()
         m_shaderLibraryManager->loadPregeneratedShaderInfo();
 }
 
-QSSGRenderContextInterface *QSSGRenderContextInterface::renderContextForWindow(const QWindow &window)
+QSSGRenderContextInterface *QSSGRenderContextInterface::renderContextForWindow(const QQuickWindow &window)
 {
     auto it = g_windowReg->cbegin();
     const auto end = g_windowReg->cend();
@@ -105,7 +105,7 @@ static const QSSGRef<QSSGShaderLibraryManager> &q3ds_shaderLibraryManager()
     return shaderLibraryManager;
 }
 
-QSSGRenderContextInterface::QSSGRenderContextInterface(QWindow *window,
+QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
                                                        const QSSGRef<QSSGRhiContext> &ctx)
     : m_rhiContext(ctx)
     , m_shaderCache(new QSSGShaderCache(ctx))
@@ -118,6 +118,12 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QWindow *window,
     init();
     if (window) {
         g_windowReg->append({ window, this });
+        m_beforeFrameConnection = QObject::connect(window, &QQuickWindow::beforeFrameBegin, [this] {
+           resetResourceCounters();
+        });
+        m_afterFrameConnection = QObject::connect(window, &QQuickWindow::afterFrameEnd, [this] {
+           cleanupUnreferencedBuffers();
+        });
         QObject::connect(window, &QWindow::destroyed, [&](QObject *o){
             g_windowReg->removeIf([o](const Binding &b) { return (b.first == o); });
         });
@@ -126,6 +132,8 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QWindow *window,
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
+    QObject::disconnect(m_beforeFrameConnection);
+    QObject::disconnect(m_afterFrameConnection);
     m_renderer->releaseResources();
     g_windowReg->removeIf([this](const Binding &b) { return (b.second == this); });
 }
