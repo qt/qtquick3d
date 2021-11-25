@@ -273,6 +273,10 @@ QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat
         return QRhiTexture::RGBA16F;
     case QSSGRenderTextureFormat::RGBA32F:
         return QRhiTexture::RGBA32F;
+    case QSSGRenderTextureFormat::R16F:
+        return QRhiTexture::R16F;
+    case QSSGRenderTextureFormat::R32F:
+        return QRhiTexture::R32F;
     case QSSGRenderTextureFormat::RGBE8:
         return QRhiTexture::RGBA8;
     case QSSGRenderTextureFormat::RGB_DXT1:
