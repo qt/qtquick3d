@@ -79,6 +79,7 @@ DefineImageStrings(Clearcoat);
 DefineImageStrings(ClearcoatRoughness);
 DefineImageStrings(ClearcoatNormal);
 DefineImageStrings(Transmission);
+DefineImageStrings(Thickness);
 
 struct ImageStringSet
 {
@@ -112,7 +113,8 @@ constexpr ImageStringSet imageStringTable[] {
     DefineImageStringTableEntry(Clearcoat),
     DefineImageStringTableEntry(ClearcoatRoughness),
     DefineImageStringTableEntry(ClearcoatNormal),
-    DefineImageStringTableEntry(Transmission)
+    DefineImageStringTableEntry(Transmission),
+    DefineImageStringTableEntry(Thickness)
 };
 
 const int TEXCOORD_VAR_LEN = 16;
@@ -485,6 +487,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     QSSGRenderableImage *clearcoatNormalImage = nullptr;
     // transmission map
     QSSGRenderableImage *transmissionImage = nullptr;
+    // thickness
+    QSSGRenderableImage *thicknessImage = nullptr;
 
     QSSGRenderableImage *baseImage = nullptr;
 
@@ -542,6 +546,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             clearcoatNormalImage = img;
         } else if (img->m_mapType == QSSGRenderableImage::Type::Transmission) {
             transmissionImage = img;
+        } else if (img->m_mapType == QSSGRenderableImage::Type::Thickness) {
+            thicknessImage = img;
         }
     }
 
@@ -626,6 +632,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     fragmentShader.addUniform("qt_material_properties3", "vec4");
     if (enableParallaxMapping || enableTransmission)
         fragmentShader.addUniform("qt_material_properties4", "vec4");
+    if (enableTransmission) {
+        fragmentShader.addUniform("qt_material_attenuation", "vec4");
+        fragmentShader.addUniform("qt_material_thickness", "float");
+    }
 
     if (vertexColorsEnabled)
         vertexShader.generateVertexColor(inKey);
@@ -1005,6 +1015,27 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader << "    qt_transmissionFactor *= texture2D(" << names.imageSampler << ", "
                                << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
             }
+
+            // Volume
+            addLocalVariable(fragmentShader, "qt_thicknessFactor", "float");
+            addLocalVariable(fragmentShader, "qt_attenuationColor", "vec3");
+            addLocalVariable(fragmentShader, "qt_attenuationDistance", "float");
+
+            fragmentShader << "    qt_thicknessFactor = qt_material_thickness;\n";
+            fragmentShader << "    qt_attenuationColor = qt_material_attenuation.xyz;\n";
+            fragmentShader << "    qt_attenuationDistance = qt_material_attenuation.w;\n";
+
+            if (thicknessImage) {
+                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::ThicknessChannel];
+                const bool hasIdentityMap = identityImages.contains(thicknessImage);
+                if (hasIdentityMap)
+                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *thicknessImage, imageFragCoords, thicknessImage->m_imageNode.m_indexUV);
+                else
+                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *thicknessImage, enableParallaxMapping, thicknessImage->m_imageNode.m_indexUV);
+                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Thickness)];
+                fragmentShader << "    qt_thicknessFactor *= texture2D(" << names.imageSampler << ", "
+                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+            }
         }
 
         if (specularLightingEnabled) {
@@ -1109,13 +1140,18 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                         if (enableTransmission) {
                             fragmentShader << "    {\n";
-                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, 0.0, 1.5);\n";
+                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, qt_thicknessFactor, 1.5);\n";
                             fragmentShader << "        vec3 pointToLight = -" << lightVarNames.lightDirection << ".xyz;\n";
                             fragmentShader << "        pointToLight -= transmissionRay;\n";
                             fragmentShader << "        vec3 l = normalize(pointToLight);\n";
                             fragmentShader << "        vec3 intensity = vec3(1.0);\n"; // Directional light is always 1.0
                             fragmentShader << "        vec3 transmittedLight = intensity * qt_getPunctualRadianceTransmission(qt_world_normal, "
                                               "qt_view_vector, l, qt_roughnessAmount, qt_f0, vec3(1.0), qt_diffuseColor.rgb, 1.5);\n";
+
+                            // Volume
+                            fragmentShader << "        transmittedLight = qt_applyVolumeAttenuation(transmittedLight, length(transmissionRay), "
+                                              "qt_attenuationColor, qt_attenuationDistance);\n";
+
                             fragmentShader << "        qt_global_transmission += qt_transmissionFactor * transmittedLight;\n";
                             fragmentShader << "    }\n";
                         }
@@ -1235,13 +1271,15 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
                         if (enableTransmission) {
                             fragmentShader << "    {\n";
-                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, 0.0, 1.5);\n";
+                            fragmentShader << "        vec3 transmissionRay = qt_getVolumeTransmissionRay(qt_world_normal, qt_view_vector, qt_thicknessFactor, 1.5);\n";
                             fragmentShader << "        vec3 pointToLight = -" << lightVarNames.normalizedDirection << ".xyz;\n";
                             fragmentShader << "        pointToLight -= transmissionRay;\n";
                             fragmentShader << "        vec3 l = normalize(pointToLight);\n";
                             fragmentShader << "        vec3 intensity = vec3(1.0);\n"; // Directional light is always 1.0
                             fragmentShader << "        vec3 transmittedLight = intensity * qt_getPunctualRadianceTransmission(qt_world_normal, "
                                               "qt_view_vector, l, qt_roughnessAmount, qt_f0, vec3(1.0), qt_diffuseColor.rgb, 1.5);\n";
+                            fragmentShader << "        transmittedLight = qt_applyVolumeAttenuation(transmittedLight, length(transmissionRay), "
+                                              "qt_attenuationColor, qt_attenuationDistance);\n";
                             fragmentShader << "        qt_global_transmission += qt_transmissionFactor * transmittedLight;\n";
                             fragmentShader << "    }\n";
                         }
@@ -1353,7 +1391,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // This can run even without a IBL probe
         if (enableTransmission) {
             fragmentShader << "    qt_global_transmission += qt_transmissionFactor * qt_getIBLVolumeRefraction(qt_world_normal, qt_view_vector, qt_roughnessAmount, "
-                              "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, 1.5, 0.0, vec3(0.0), 0.0);\n";
+                              "qt_diffuseColor.rgb, qt_specularAmount, qt_varWorldPos, 1.5, qt_thicknessFactor, qt_attenuationColor, qt_attenuationDistance);\n";
         }
 
 
@@ -1857,6 +1895,15 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->transmissionFactor()
     };
     shaders->setUniform(ubufData, "qt_material_properties4", materialProperties4, 4 * sizeof(float), &cui.material_properties4Idx);
+
+    // We only ever use attenuation and thickness uniforms when using transmission
+    if (materialAdapter->isTransmissionEnabled()) {
+        const QVector4D attenuationProperties(materialAdapter->attenuationColor(), materialAdapter->attenuationDistance());
+        shaders->setUniform(ubufData, "qt_material_attenuation", &attenuationProperties, 4 * sizeof(float), &cui.material_attenuationIdx);
+
+        const float thickness = materialAdapter->thicknessFactor();
+        shaders->setUniform(ubufData, "qt_material_thickness", &thickness, sizeof(float), &cui.thicknessFactorIdx);
+    }
 
     const float rhiProperties[4] = {
         inRenderProperties.isYUpInFramebuffer ? 1.0f : -1.0f,

@@ -356,6 +356,23 @@ void tst_QQuick3DMaterials::testPrincipledProperties()
     material.setTransmissionFactor(0.0f);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QVERIFY(!node->isTransmissionEnabled());
+
+    const float thicknessFactor = 0.6f;
+    material.setThicknessFactor(thicknessFactor);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(thicknessFactor, material.thicknessFactor());
+    QCOMPARE(thicknessFactor, node->thicknessFactor);
+    const float attenuationDistance = 0.7f;
+    material.setAttenuationDistance(attenuationDistance);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(attenuationDistance, material.attenuationDistance());
+    QCOMPARE(attenuationDistance, node->attenuationDistance);
+    const QColor attenuationColor = QColor(Qt::green);
+    const QVector3D attenuationColorVector = color::sRGBToLinear(attenuationColor).toVector3D();
+    material.setAttenuationColor(attenuationColor);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(attenuationColor, material.attenuationColor());
+    QCOMPARE(attenuationColorVector, node->attenuationColor);
 }
 
 void tst_QQuick3DMaterials::testPrincipledTextures()
@@ -496,6 +513,18 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(channelMapping3, material.transmissionChannel());
     QCOMPARE(channelMapping3, node->transmissionChannel);
+
+    // Thickness Map
+    QVERIFY(!material.thicknessMap());
+    material.setThicknessMap(&texture1);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QVERIFY(material.thicknessMap());
+    QCOMPARE(texture1.getRenderImage(), node->thicknessMap);
+    const QQuick3DMaterial::TextureChannelMapping channelMapping4 = QQuick3DMaterial::A;
+    material.setThicknessChannel(channelMapping4);
+    node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
+    QCOMPARE(channelMapping4, material.thicknessChannel());
+    QCOMPARE(channelMapping4, node->thicknessChannel);
 }
 
 void tst_QQuick3DMaterials::testPrincipledEnums()

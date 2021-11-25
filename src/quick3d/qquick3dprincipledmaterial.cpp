@@ -645,6 +645,57 @@ QT_BEGIN_NAMESPACE
 
 */
 
+/*!
+    \qmlproperty float PrincipledMaterial::thicknessFactor
+
+    This property defines the thickness of the volume beneath the surface.
+    Unlike many other properties of PrincipledMaterial, the value in defined
+    in thicknessFactor is a value from 0.0 to +infinity for thickness in the
+    models coordinate space.  A value of 0.0 means that the material is
+    thin-walled.
+    The default value is \c 0.0
+*/
+
+/*!
+    \qmlproperty Texture PrincipledMaterial::thicknessMap
+
+    This property defines a texture used to define the thickness of a
+    material volume.  The value of \l thicknessFactor will be multiplied by the
+    value read from this texture.
+
+*/
+
+/*!
+    \qmlproperty enumeration PrincipledMaterial::thicknessChannel
+
+    This property defines the texture channel used to read the thickness
+    amount from \l transmissionMap.
+    The default value is \c Material.G.
+
+    \value Material.R Read value from texture R channel.
+    \value Material.G Read value from texture G channel.
+    \value Material.B Read value from texture B channel.
+    \value Material.A Read value from texture A channel.
+
+*/
+
+/*!
+    \qmlproperty float PrincipledMaterial::attenuationDistance
+
+    This property defines the Density of the medium given as the average
+    distance that light travels in the medium before interacting with a
+    particle. The value is given in world space.
+    The default value is \c +infinity.
+*/
+
+/*!
+    \qmlproperty color PrincipledMaterial::attenuationColor
+
+    This property defines the color that white lights turns into due to
+    absorption when reaching the attenuation distance.
+    The default value is \c Qt.White
+
+*/
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
@@ -1362,6 +1413,18 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->transmissionChannel = channelMapping(m_transmissionChannel);
     }
 
+    if (m_dirtyAttributes & VolumeDirty) {
+        material->thicknessFactor = m_thicknessFactor;
+        if (!m_thicknessMap)
+            material->thicknessMap = nullptr;
+        else
+            material->thicknessMap = m_thicknessMap->getRenderImage();
+        material->thicknessChannel = channelMapping(m_thicknessChannel);
+
+        material->attenuationDistance = m_attenuationDistance;
+        material->attenuationColor = color::sRGBToLinear(m_attenuationColor).toVector3D();
+    }
+
     m_dirtyAttributes = 0;
 
     return node;
@@ -1391,6 +1454,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatRoughnessMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_clearcoatNormalMap, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_transmissionMap, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_thicknessMap, *sceneManager);
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_baseColorMap);
         QQuick3DObjectPrivate::derefSceneManager(m_emissiveMap);
@@ -1406,6 +1470,7 @@ void QQuick3DPrincipledMaterial::updateSceneManager(QQuick3DSceneManager *sceneM
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatRoughnessMap);
         QQuick3DObjectPrivate::derefSceneManager(m_clearcoatNormalMap);
         QQuick3DObjectPrivate::derefSceneManager(m_transmissionMap);
+        QQuick3DObjectPrivate::derefSceneManager(m_thicknessMap);
     }
 }
 
@@ -1555,6 +1620,76 @@ void QQuick3DPrincipledMaterial::setTransmissionChannel(QQuick3DMaterial::Textur
     m_transmissionChannel = newTransmissionChannel;
     emit transmissionChannelChanged(m_transmissionChannel);
     markDirty(TransmissionDirty);
+}
+
+float QQuick3DPrincipledMaterial::thicknessFactor() const
+{
+    return m_thicknessFactor;
+}
+
+void QQuick3DPrincipledMaterial::setThicknessFactor(float newThicknessFactor)
+{
+    if (qFuzzyCompare(m_thicknessFactor, newThicknessFactor))
+        return;
+    m_thicknessFactor = newThicknessFactor;
+    emit thicknessFactorChanged(m_thicknessFactor);
+    markDirty(VolumeDirty);
+}
+
+QQuick3DTexture *QQuick3DPrincipledMaterial::thicknessMap() const
+{
+    return m_thicknessMap;
+}
+
+void QQuick3DPrincipledMaterial::setThicknessMap(QQuick3DTexture *newThicknessMap)
+{
+    if (m_thicknessMap == newThicknessMap)
+        return;
+    m_thicknessMap = newThicknessMap;
+    emit thicknessMapChanged(m_thicknessMap);
+    markDirty(VolumeDirty);
+}
+
+const QQuick3DMaterial::TextureChannelMapping &QQuick3DPrincipledMaterial::thicknessChannel() const
+{
+    return m_thicknessChannel;
+}
+
+void QQuick3DPrincipledMaterial::setThicknessChannel(const QQuick3DMaterial::TextureChannelMapping &newThicknessChannel)
+{
+    if (m_thicknessChannel == newThicknessChannel)
+        return;
+    m_thicknessChannel = newThicknessChannel;
+    emit thicknessChannelChanged(m_thicknessChannel);
+    markDirty(VolumeDirty);
+}
+
+float QQuick3DPrincipledMaterial::attenuationDistance() const
+{
+    return m_attenuationDistance;
+}
+
+void QQuick3DPrincipledMaterial::setAttenuationDistance(float newAttenuationDistance)
+{
+    if (qFuzzyCompare(m_attenuationDistance, newAttenuationDistance))
+        return;
+    m_attenuationDistance = newAttenuationDistance;
+    emit attenuationDistanceChanged(m_attenuationDistance);
+    markDirty(VolumeDirty);
+}
+
+const QColor &QQuick3DPrincipledMaterial::attenuationColor() const
+{
+    return m_attenuationColor;
+}
+
+void QQuick3DPrincipledMaterial::setAttenuationColor(const QColor &newAttenuationColor)
+{
+    if (m_attenuationColor == newAttenuationColor)
+        return;
+    m_attenuationColor = newAttenuationColor;
+    emit attenuationColorChanged(m_attenuationColor);
+    markDirty(VolumeDirty);
 }
 
 QT_END_NAMESPACE

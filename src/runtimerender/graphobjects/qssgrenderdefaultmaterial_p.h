@@ -109,6 +109,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGRenderImage *clearcoatRoughnessMap = nullptr;
     QSSGRenderImage *clearcoatNormalMap = nullptr;
     QSSGRenderImage *transmissionMap = nullptr;
+    QSSGRenderImage *thicknessMap = nullptr;
 
     // Note that most default values here are irrelevant as the material
     // (Default or Principled) will write its own defaults or actual values
@@ -133,6 +134,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float clearcoatAmount = 0.0f; // 0 - 1
     float clearcoatRoughnessAmount = 0.0f; // 0 - 1
     float transmissionFactor = 0.0f; // 0 - 1
+    float thicknessFactor = 0.0f; // 0 - 1
+    float attenuationDistance = std::numeric_limits<float>::infinity();
+    QVector3D attenuationColor { 1.0f, 1.0f, 1.0f };
 
     QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::FragmentLighting;
@@ -151,6 +155,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     TextureChannelMapping clearcoatChannel = TextureChannelMapping::R;
     TextureChannelMapping clearcoatRoughnessChannel = TextureChannelMapping::G;
     TextureChannelMapping transmissionChannel = TextureChannelMapping::R;
+    TextureChannelMapping thicknessChannel = TextureChannelMapping::G;
     float pointSize = 1.0f;
     float lineWidth = 1.0f;
 

@@ -580,6 +580,44 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 
         }
 
+        {
+            // Volume Properties (KHR_materials_volume) [only used with transmission]
+            // thicknessFactor
+            {
+                ai_real thicknessFactor = 0.0f;
+                result = source.Get(AI_MATKEY_VOLUME_THICKNESS_FACTOR, thicknessFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target, "thicknessFactor", &QQuick3DPrincipledMaterial::setThicknessFactor, float(thicknessFactor));
+            }
+
+            // thicknessMap
+            {
+                if (auto thicknessImage = createTextureNode(source, AI_MATKEY_VOLUME_THICKNESS_TEXTURE))
+                    QSSGSceneDesc::setProperty(target, "thicknessMap", &QQuick3DPrincipledMaterial::setThicknessMap, thicknessImage);
+            }
+
+            // attenuationDistance
+            {
+                ai_real attenuationDistance = 0.0f;
+                result = source.Get(AI_MATKEY_VOLUME_ATTENUATION_DISTANCE, attenuationDistance);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "attenuationDistance",
+                                               &QQuick3DPrincipledMaterial::setAttenuationDistance,
+                                               float(attenuationDistance));
+            }
+
+            // attenuationColor
+            {
+                aiColor3D attenuationColor;
+                result = source.Get(AI_MATKEY_VOLUME_ATTENUATION_COLOR, attenuationColor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "attenuationColor",
+                                               &QQuick3DPrincipledMaterial::setAttenuationColor,
+                                               aiColorToQColor(attenuationColor));
+            }
+        }
     } else { // Ver1
         int shadingModel = 0;
         aiReturn result;

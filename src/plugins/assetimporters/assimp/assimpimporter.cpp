@@ -1494,7 +1494,7 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
                        << clearcoatNormalImage << QStringLiteral("\n");
         }
 
-
+        // Transmission
         // factor
         {
             ai_real transmissionFactor = 0.0f;
@@ -1513,6 +1513,51 @@ void AssimpImporter::generateMaterial(aiMaterial *material, QTextStream &output,
             if (!transmissionImage.isNull())
                 output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("transmissionMap: ")
                        << transmissionImage << QStringLiteral("\n");
+        }
+
+        // Volume Properties (KHR_materials_volume) [only used with transmission]
+        // thicknessFactor
+        {
+            ai_real thicknessFactor = 0.0f;
+            result = material->Get(AI_MATKEY_VOLUME_THICKNESS_FACTOR, thicknessFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("thicknessFactor"),
+                                                         thicknessFactor);
+        }
+
+        // thicknessMap
+        {
+            QString thicknessImage = generateImage(material, AI_MATKEY_VOLUME_THICKNESS_TEXTURE, tabLevel + 1);
+            if (!thicknessImage.isNull())
+                output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("thicknessMap: ")
+                       << thicknessImage << QStringLiteral("\n");
+        }
+
+        // attenuationDistance
+        {
+            ai_real attenuationDistance = 0.0f;
+            result = material->Get(AI_MATKEY_VOLUME_ATTENUATION_DISTANCE, attenuationDistance);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("attenuationDistance"),
+                                                         attenuationDistance);
+        }
+
+        // attenuationColor
+        {
+            aiColor3D attenuationColor;
+            result = material->Get(AI_MATKEY_VOLUME_ATTENUATION_COLOR, attenuationColor);
+            if (result == aiReturn_SUCCESS)
+                QSSGQmlUtilities::writeQmlPropertyHelper(output,
+                                                         tabLevel + 1,
+                                                         QSSGQmlUtilities::PropertyMap::PrincipledMaterial,
+                                                         QStringLiteral("attenuationColor"),
+                                                         aiColorToQColor(attenuationColor));
         }
     }
 

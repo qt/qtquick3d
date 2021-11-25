@@ -250,7 +250,20 @@ float QSSGShaderDefaultMaterialAdapter::transmissionFactor()
     return m_material.transmissionFactor;
 }
 
+float QSSGShaderDefaultMaterialAdapter::thicknessFactor()
+{
+    return m_material.thicknessFactor;
+}
 
+float QSSGShaderDefaultMaterialAdapter::attenuationDistance()
+{
+    return m_material.attenuationDistance;
+}
+
+QVector3D QSSGShaderDefaultMaterialAdapter::attenuationColor()
+{
+    return m_material.attenuationColor;
+}
 
 QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRenderCustomMaterial &material)
     : m_material(material)
@@ -425,6 +438,21 @@ float QSSGShaderCustomMaterialAdapter::clearcoatRoughnessAmount()
 float QSSGShaderCustomMaterialAdapter::transmissionFactor()
 {
     return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::thicknessFactor()
+{
+    return 0.0f;
+}
+
+float QSSGShaderCustomMaterialAdapter::attenuationDistance()
+{
+    return std::numeric_limits<float>::infinity();
+}
+
+QVector3D QSSGShaderCustomMaterialAdapter::attenuationColor()
+{
+    return { 1.0f, 1.0f, 1.0f };
 }
 
 bool QSSGShaderCustomMaterialAdapter::isUnshaded()

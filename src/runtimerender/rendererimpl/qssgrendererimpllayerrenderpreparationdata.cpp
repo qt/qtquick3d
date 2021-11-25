@@ -514,6 +514,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
             case QSSGShaderDefaultMaterialKeyProperties::TransmissionMap:
                 value = inMaterial->transmissionChannel;
                 break;
+            case QSSGShaderDefaultMaterialKeyProperties::ThicknessMap:
+                value = inMaterial->thicknessChannel;
+                break;
             default:
                 break;
             }
@@ -688,6 +691,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderPreparationData::prepareDefa
             CHECK_IMAGE_AND_PREPARE(theMaterial->transmissionMap,
                                     QSSGRenderableImage::Type::Transmission,
                                     QSSGShaderDefaultMaterialKeyProperties::TransmissionMap);
+            CHECK_IMAGE_AND_PREPARE(theMaterial->thicknessMap,
+                                    QSSGRenderableImage::Type::Thickness,
+                                    QSSGShaderDefaultMaterialKeyProperties::ThicknessMap);
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGRenderableImage::Type::Diffuse,

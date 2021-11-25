@@ -433,6 +433,9 @@ PropertyMap::PropertyMap()
     principledMaterial->insert(QStringLiteral("clearcoatAmount"), 0.0f);
     principledMaterial->insert(QStringLiteral("clearcoatRoughnessAmount"), 0.0f);
     principledMaterial->insert(QStringLiteral("transmissionFactor"), 0.0f);
+    principledMaterial->insert(QStringLiteral("thicknessFactor"), 0.0f);
+    principledMaterial->insert(QStringLiteral("attenuationDistance"), std::numeric_limits<float>::infinity());
+    principledMaterial->insert(QStringLiteral("attenuationColor"), QColor(Qt::white));
 
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 

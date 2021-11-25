@@ -115,6 +115,13 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
     Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
 
+    Q_PROPERTY(float thicknessFactor READ thicknessFactor WRITE setThicknessFactor NOTIFY thicknessFactorChanged REVISION(6, 3))
+    Q_PROPERTY(QQuick3DTexture *thicknessMap READ thicknessMap WRITE setThicknessMap NOTIFY thicknessMapChanged REVISION(6, 3))
+    Q_PROPERTY(TextureChannelMapping thicknessChannel READ thicknessChannel WRITE setThicknessChannel NOTIFY
+                       thicknessChannelChanged REVISION(6, 3))
+    Q_PROPERTY(float attenuationDistance READ attenuationDistance WRITE setAttenuationDistance NOTIFY attenuationDistanceChanged REVISION(6, 3))
+    Q_PROPERTY(QColor attenuationColor READ attenuationColor WRITE setAttenuationColor NOTIFY attenuationColorChanged REVISION(6, 3))
+
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
 public:
@@ -188,6 +195,12 @@ public:
     Q_REVISION(6, 3) QQuick3DTexture *transmissionMap() const;
     Q_REVISION(6, 3) TextureChannelMapping transmissionChannel() const;
 
+    Q_REVISION(6, 3) float thicknessFactor() const;
+    Q_REVISION(6, 3) QQuick3DTexture *thicknessMap() const;
+    Q_REVISION(6, 3) const TextureChannelMapping &thicknessChannel() const;
+    Q_REVISION(6, 3) float attenuationDistance() const;
+    Q_REVISION(6, 3) const QColor &attenuationColor() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
     void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
@@ -234,6 +247,12 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setTransmissionFactor(float newTransmissionFactor);
     Q_REVISION(6, 3) void setTransmissionMap(QQuick3DTexture *newTransmissionMap);
     Q_REVISION(6, 3) void setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel);
+
+    Q_REVISION(6, 3) void setThicknessFactor(float newThicknessFactor);
+    Q_REVISION(6, 3) void setThicknessMap(QQuick3DTexture *newThicknessMap);
+    Q_REVISION(6, 3) void setThicknessChannel(const QQuick3DMaterial::TextureChannelMapping &newThicknessChannel);
+    Q_REVISION(6, 3) void setAttenuationDistance(float newAttenuationDistance);
+    Q_REVISION(6, 3) void setAttenuationColor(const QColor &newAttenuationColor);
 
 Q_SIGNALS:
     void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -282,6 +301,12 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void transmissionMapChanged(QQuick3DTexture *texture);
     Q_REVISION(6, 3) void transmissionChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
 
+    Q_REVISION(6, 3) void thicknessFactorChanged(float amount);
+    Q_REVISION(6, 3) void thicknessMapChanged(QQuick3DTexture *texture);
+    Q_REVISION(6, 3) void thicknessChannelChanged(QQuick3DMaterial::TextureChannelMapping channel);
+    Q_REVISION(6, 3) void attenuationDistanceChanged(float distance);
+    Q_REVISION(6, 3) void attenuationColorChanged(QColor color);
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -305,7 +330,8 @@ private:
         LineWidthDirty = 0x00001000,
         HeightDirty = 0x00002000,
         ClearcoatDirty = 0x00004000,
-        TransmissionDirty = 0x00008000
+        TransmissionDirty = 0x00008000,
+        VolumeDirty = 0x00010000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -360,6 +386,11 @@ private:
     float m_transmissionFactor = 0.0f;
     QQuick3DTexture *m_transmissionMap = nullptr;
     TextureChannelMapping m_transmissionChannel = QQuick3DMaterial::R;
+    float m_thicknessFactor = 0.0f;
+    QQuick3DTexture *m_thicknessMap = nullptr;
+    TextureChannelMapping m_thicknessChannel = QQuick3DMaterial::G;
+    float m_attenuationDistance = std::numeric_limits<float>::infinity();
+    QColor m_attenuationColor = Qt::white;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
