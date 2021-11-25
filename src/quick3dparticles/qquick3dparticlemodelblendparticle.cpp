@@ -50,9 +50,6 @@ QT_BEGIN_NAMESPACE
     \inherits Particle3D
     \inqmlmodule QtQuick3D.Particles3D
     \brief Blends particle effect with a 3D model.
-    \preliminary
-
-    \note This type is in tech preview in 6.2. \b {The API is under development and subject to change.}
 
     The type provides a way to blend particle effect with a 3D model. The provided model needs to be
     triangle-based. Each triangle in the model is converted into a particle, which are then used by
@@ -99,7 +96,7 @@ QQuick3DParticleModelBlendParticle::~QQuick3DParticleModelBlendParticle()
 
 /*!
     \qmlproperty Component ModelBlendParticle3D::delegate
-    \preliminary
+
     The delegate provides a template defining the model for the ModelBlendParticle3D.
 
     For example, using the default sphere model with default material
@@ -138,7 +135,7 @@ void QQuick3DParticleModelBlendParticle::setDelegate(QQmlComponent *delegate)
 
 /*!
     \qmlproperty Node ModelBlendParticle3D::endNode
-    \preliminary
+
     This property holds the node that specifies the transformation for the model at the end
     of particle effect. It defines the size, position and rotation where the model is constructed
     when using the \c ModelBlendParticle3D.Construct and \c ModelBlendParticle3D.Transfer blend modes.
@@ -150,7 +147,7 @@ QQuick3DNode *QQuick3DParticleModelBlendParticle::endNode() const
 
 /*!
     \qmlproperty enumeration ModelBlendParticle3D::ModelBlendMode
-    \preliminary
+
     Defines the blending mode for the particle effect.
 
     \value ModelBlendParticle3D.Explode
@@ -162,7 +159,7 @@ QQuick3DNode *QQuick3DParticleModelBlendParticle::endNode() const
 */
 /*!
     \qmlproperty ModelBlendMode ModelBlendParticle3D::modelBlendMode
-    \preliminary
+
     This property holds blending mode for the particle effect.
 */
 QQuick3DParticleModelBlendParticle::ModelBlendMode QQuick3DParticleModelBlendParticle::modelBlendMode() const
@@ -172,7 +169,7 @@ QQuick3DParticleModelBlendParticle::ModelBlendMode QQuick3DParticleModelBlendPar
 
 /*!
     \qmlproperty int ModelBlendParticle3D::endTime
-    \preliminary
+
     This property holds the end time of the particle in milliseconds. The end time is used during construction
     and defines duration from particle lifetime at the end where the effect is blended with
     the model positions. Before the end time the particles positions are defined only by the
@@ -186,7 +183,7 @@ int QQuick3DParticleModelBlendParticle::endTime() const
 
 /*!
     \qmlproperty Node ModelBlendParticle3D::activationNode
-    \preliminary
+
     This property holds a node that activates particles and overrides the reqular emit routine.
     The activation node can be used to control how the particles are emitted spatially when the
     model is exploded/constructed from the particles.
@@ -201,7 +198,7 @@ QQuick3DNode *QQuick3DParticleModelBlendParticle::activationNode() const
 
 /*!
     \qmlproperty enumeration ModelBlendParticle3D::ModelBlendEmitMode
-    \preliminary
+
     Defines the emit mode of the particles
 
     \value ModelBlendParticle3D.Sequential
@@ -213,7 +210,7 @@ QQuick3DNode *QQuick3DParticleModelBlendParticle::activationNode() const
 */
 /*!
     \qmlproperty bool ModelBlendParticle3D::emitMode
-    \preliminary
+
     This property holds the emit mode of the particles.
 */
 QQuick3DParticleModelBlendParticle::ModelBlendEmitMode QQuick3DParticleModelBlendParticle::emitMode() const
