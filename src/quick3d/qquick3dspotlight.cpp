@@ -254,8 +254,10 @@ void QQuick3DSpotLight::setInnerConeAngle(float innerConeAngle)
 
 QSSGRenderGraphObject *QQuick3DSpotLight::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node)
+    if (!node) {
+        markAllDirty();
         node = new QSSGRenderLight(QSSGRenderLight::Type::SpotLight);
+    }
 
     QQuick3DAbstractLight::updateSpatialNode(node);
 
