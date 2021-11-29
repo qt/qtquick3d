@@ -71,7 +71,7 @@ struct DefineEntry
     QSSGShaderFeatures::Feature feature {};
 };
 
-static constexpr DefineEntry DefineTable[QSSGShaderFeatures::Count] {
+static constexpr DefineEntry DefineTable[] {
     { "QSSG_ENABLE_LIGHT_PROBE", QSSGShaderFeatures::Feature::LightProbe },
     { "QSSG_ENABLE_IBL_ORIENTATION", QSSGShaderFeatures::Feature::IblOrientation },
     { "QSSG_ENABLE_SSM", QSSGShaderFeatures::Feature::Ssm },
@@ -86,6 +86,8 @@ static constexpr DefineEntry DefineTable[QSSGShaderFeatures::Count] {
     { "QSSG_ENABLE_RGBE_LIGHT_PROBE", QSSGShaderFeatures::Feature::RGBELightProbe },
     { "QSSG_ENABLE_OPAQUE_DEPTH_PRE_PASS", QSSGShaderFeatures::Feature::OpaqueDepthPrePass }
 };
+
+static_assert(std::size(DefineTable) == QSSGShaderFeatures::Count, "Missing feature define?");
 
 const char *QSSGShaderFeatures::asDefineString(QSSGShaderFeatures::Feature feature) { return DefineTable[static_cast<FlagType>(feature) & QSSGShaderFeatures::IndexMask].name; }
 QSSGShaderFeatures::Feature QSSGShaderFeatures::fromIndex(quint32 idx) { return DefineTable[idx].feature; }

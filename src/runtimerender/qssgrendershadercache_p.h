@@ -101,12 +101,12 @@ enum class Feature : FlagType
     HejlDawsonTonemapping = (1 << 17) + 9,
     FilmicTonemapping = (1 << 18) + 10,
     RGBELightProbe = (1 << 19) + 11,
-    OpaqueDepthPrePass = (1 << 20) + 12
+    OpaqueDepthPrePass = (1 << 20) + 12,
+    LastFeature
 };
 
 static constexpr FlagType IndexMask = 0xff;
-static constexpr Feature LastFeature = Feature::OpaqueDepthPrePass;
-static constexpr quint32 Count = (static_cast<FlagType>(LastFeature) & IndexMask) + 1;
+static constexpr quint32 Count = (static_cast<FlagType>(Feature::LastFeature) & IndexMask);
 
 static const char *asDefineString(QSSGShaderFeatures::Feature feature);
 static Feature fromIndex(quint32 idx);
