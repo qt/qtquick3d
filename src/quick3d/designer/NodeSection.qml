@@ -37,9 +37,26 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Node")
+        caption: qsTr("Visibility")
 
         SectionLayout {
+            PropertyLabel {
+                text: qsTr("Visibility")
+                tooltip: qsTr("Sets the local visibility of the node.")
+            }
+
+            SecondColumnLayout {
+                // ### should be a slider
+                CheckBox {
+                    text: qsTr("Visible")
+                    backendValue: backendValues.visible
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
             PropertyLabel {
                 text: qsTr("Opacity")
                 tooltip: qsTr("Controls the local opacity value of the node.")
@@ -56,40 +73,6 @@ Column {
                     sliderIndicatorVisible: true
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
-                text: qsTr("Visibility")
-                tooltip: qsTr("Sets the local visibility of the node.")
-            }
-
-            SecondColumnLayout {
-                // ### should be a slider
-                CheckBox {
-                    text: qsTr("Is Visible")
-                    backendValue: backendValues.visible
-                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
-                text: qsTr("Static flags")
-                tooltip: qsTr("This property defines the static flags that are used to evaluate how the node is rendered.")
-            }
-
-            SecondColumnLayout {
-                LineEdit {
-                    backendValue: backendValues.staticFlags
-                    showTranslateCheckBox: false
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                    width: implicitWidth
                 }
 
                 ExpandingSpacer {}
