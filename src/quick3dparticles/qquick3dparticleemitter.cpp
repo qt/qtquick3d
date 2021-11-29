@@ -677,7 +677,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     // Rotation
     if (!m_particleRotation.isNull() || !m_particleRotationVariation.isNull()) {
         Vector3b rot;
-        const float step = 127.0f / 360.0f; // +/- 360-degrees as qint8 (-127..127)
+        constexpr float step = 127.0f / 360.0f; // +/- 360-degrees as qint8 (-127..127)
         rot.x = m_particleRotation.x() * step;
         rot.y = m_particleRotation.y() * step;
         rot.z = m_particleRotation.z() * step;

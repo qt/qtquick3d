@@ -611,7 +611,8 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
         processParticleCommon(currentData, d, particleTimeS);
 
         // Add a base rotation if alignment requested
-        processParticleAlignment(currentData, modelParticle, d);
+        if (modelParticle->m_alignMode != QQuick3DParticle::AlignNone)
+            processParticleAlignment(currentData, modelParticle, d);
 
         // 0.0 -> 1.0 during the particle lifetime
         const float timeChange = std::max(0.0f, std::min(1.0f, particleTimeS / d->lifetime));
@@ -759,7 +760,7 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
         processParticleCommon(currentData, d, particleTimeS);
 
         // Add a base rotation if alignment requested
-        if (!spriteParticle->m_billboard)
+        if (!spriteParticle->m_billboard && spriteParticle->m_alignMode != QQuick3DParticle::AlignNone)
             processParticleAlignment(currentData, spriteParticle, d);
 
         // 0.0 -> 1.0 during the particle lifetime
@@ -832,7 +833,7 @@ void QQuick3DParticleSystem::processParticleCommon(QQuick3DParticleDataCurrent &
     currentData.position += d->startVelocity * particleTimeS;
 
     // Initial rotation from start velocity
-    const float step = 360.0f / 127.0f;
+    constexpr float step = 360.0f / 127.0f;
     currentData.rotation = QVector3D(
                 d->startRotation.x * step + abs(d->startRotationVelocity.x) * d->startRotationVelocity.x * particleTimeS,
                 d->startRotation.y * step + abs(d->startRotationVelocity.y) * d->startRotationVelocity.y * particleTimeS,
