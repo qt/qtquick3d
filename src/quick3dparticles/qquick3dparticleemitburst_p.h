@@ -85,13 +85,10 @@ protected:
     void classBegin() override {}
 
 private:
-    friend class QQuick3DParticleEmitter;
     QQuick3DParticleEmitter *m_parentEmitter = nullptr;
     int m_time = 0;
     int m_amount = 0;
     int m_duration = 0;
-    int m_aggregateBurstTime = 0;
-    int m_emittedAmount = 0;
 };
 
 QT_END_NAMESPACE

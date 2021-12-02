@@ -561,8 +561,6 @@ void QQuick3DParticleEmitter::reset()
 {
     m_prevEmitTime = 0;
     m_unemittedF = 0.0f;
-    for (auto *burst : m_emitBursts)
-        burst->m_emittedAmount = 0;
 }
 
 /*!
@@ -605,18 +603,60 @@ void QQuick3DParticleEmitter::burst(int count, int duration, const QVector3D &po
     emitParticlesBurst(burst);
 }
 
+void QQuick3DParticleEmitter::generateEmitBursts()
+{
+    if (!m_system)
+        return;
+
+    if (!m_particle)
+        return;
+
+    if (m_emitBursts.isEmpty()) {
+        m_burstGenerated = true;
+        return;
+    }
+
+    // Generating burst causes all particle data reseting
+    // as bursts take first particles in the list.
+    m_particle->reset();
+
+    // TODO: In trail emitter case centerPos should be calculated
+    // taking into account each particle position at emitburst time
+    QMatrix4x4 transform = calculateParticleTransform(parentNode(), m_systemSharedParent);
+    QQuaternion rotation = calculateParticleRotation(parentNode(), m_systemSharedParent);
+    QVector3D centerPos = position();
+
+    for (auto emitBurst : qAsConst(m_emitBursts)) {
+        int emitAmount = emitBurst->amount();
+        if (emitAmount <= 0)
+            return;
+        // Distribute start times between burst time and time+duration.
+        float startTime = float(emitBurst->time() / 1000.0f);
+        float timeStep = float(emitBurst->duration() / 1000.0f) / emitAmount;
+        for (int i = 0; i < emitAmount; i++) {
+            emitParticle(m_particle, startTime, transform, rotation, centerPos);
+            startTime += timeStep;
+        }
+        // Increase burst index (for statically allocated particles)
+        m_particle->updateBurstIndex(emitBurst->amount());
+    }
+    m_burstGenerated = true;
+}
+
 void QQuick3DParticleEmitter::registerEmitBurst(QQuick3DParticleEmitBurst* emitBurst)
 {
     if (m_emitBursts.contains(emitBurst))
         m_emitBursts.removeAll(emitBurst);
 
     m_emitBursts << emitBurst;
+    m_burstGenerated = false;
 }
 
 void QQuick3DParticleEmitter::unRegisterEmitBurst(QQuick3DParticleEmitBurst* emitBurst)
 {
     if (m_emitBursts.contains(emitBurst))
         m_emitBursts.removeAll(emitBurst);
+    m_burstGenerated = false;
 }
 
 void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float startTime, const QMatrix4x4 &transform, const QQuaternion &parentRotation, const QVector3D &centerPos, int index)
@@ -741,40 +781,6 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     }
 }
 
-int QQuick3DParticleEmitter::getEmitAmountFromBursts()
-{
-    int amount = 0;
-    const int prevTime = m_prevEmitTime;
-    const int currentTime = m_system->currentTime();
-    const int deltaTime = currentTime - prevTime;
-    if (!deltaTime)
-        return 0;
-    for (auto *burstPtr : m_emitBursts) {
-        const auto &burst = *burstPtr;
-        const int burstEndTime = burst.time() + burst.duration();
-        if ((currentTime < burst.time() || currentTime > burstEndTime)
-                && (prevTime < burst.time() || prevTime > burstEndTime)) {
-            continue;
-        }
-        int burstTime = qMin(deltaTime, burst.duration());
-        if (prevTime < burst.time())
-            burstTime = qMin(burstTime, currentTime - burst.time());
-        if (currentTime > burstEndTime)
-            burstTime = qMin(burstTime, burstEndTime - prevTime);
-        int c = burst.amount() * (burstTime + burst.m_aggregateBurstTime) / burst.duration();
-        // Make sure we do not emit more particles than burst amount
-        c = qMin(c, burst.amount() - burstPtr->m_emittedAmount);
-        // If no particles in burst, aggregate the time so that next frame has more time
-        if (!c)
-            burstPtr->m_aggregateBurstTime += burstTime;
-        else
-            burstPtr->m_aggregateBurstTime = 0;
-        burstPtr->m_emittedAmount += c;
-        amount += c;
-    }
-    return amount;
-}
-
 int QQuick3DParticleEmitter::getEmitAmount()
 {
     if (!m_system)
@@ -846,6 +852,7 @@ void QQuick3DParticleEmitter::emitParticles()
     }
 
     const int systemTime = m_system->currentTime();
+
     if (systemTime < m_prevEmitTime) {
         // If we are goint backwards, reset previous emit time to current time.
         m_prevEmitTime = systemTime;
@@ -855,7 +862,12 @@ void QQuick3DParticleEmitter::emitParticles()
         const int maxLifeSpan = m_lifeSpan + m_lifeSpanVariation;
         m_prevEmitTime = std::max(m_prevEmitTime, systemTime - maxLifeSpan);
     }
-    int emitAmount = getEmitAmount() + getEmitAmountFromBursts();
+
+    // If bursts have changed, generate them first in the beginning
+    if (!m_burstGenerated)
+       generateEmitBursts();
+
+    int emitAmount = getEmitAmount();
 
     // With lower emitRates, let timeChange grow until at least 1 particle is emitted
     if (emitAmount < 1)
