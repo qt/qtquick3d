@@ -68,12 +68,19 @@ public:
     bool hasTransparency() const;
     bool depthSortingEnabled() const;
 
+    Q_REVISION(6, 3) Q_INVOKABLE QVector3D instancePosition(int index);
+    Q_REVISION(6, 3) Q_INVOKABLE QVector3D instanceScale(int index);
+    Q_REVISION(6, 3) Q_INVOKABLE QQuaternion instanceRotation(int index);
+    Q_REVISION(6, 3) Q_INVOKABLE QColor instanceColor(int index);
+    Q_REVISION(6, 3) Q_INVOKABLE QVector4D instanceCustomData(int index);
+
 public Q_SLOTS:
     void setInstanceCountOverride(int instanceCountOverride);
     void setHasTransparency(bool hasTransparency);
     void setDepthSortingEnabled(bool enabled);
 
 Q_SIGNALS:
+    void instanceTableChanged();
     void instanceNodeDirty();
     void instanceCountOverrideChanged();
     void hasTransparencyChanged();
@@ -89,6 +96,9 @@ protected:
                           const QVector3D &scale, const QQuaternion &rotation,
                                                   const QColor &color, const QVector4D &customData = {});
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+
+private:
+    const InstanceTableEntry *getInstanceEntry(int index);
 };
 
 QT_END_NAMESPACE

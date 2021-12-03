@@ -144,6 +144,7 @@ class Q_QUICK3D_EXPORT QQuick3DInstanceList : public QQuick3DInstancing
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuick3DInstanceListEntry> instances READ instances)
+    Q_PROPERTY(int instanceCount READ instanceCount NOTIFY instanceCountChanged)
     QML_NAMED_ELEMENT(InstanceList)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -153,6 +154,10 @@ public:
 
     QByteArray getInstanceBuffer(int *instanceCount) override;
     QQmlListProperty<QQuick3DInstanceListEntry> instances();
+    int instanceCount() const;
+
+Q_SIGNALS:
+    void instanceCountChanged();
 
 private Q_SLOTS:
     void handleInstanceChange();
@@ -177,6 +182,7 @@ class Q_QUICK3D_EXPORT QQuick3DFileInstancing : public QQuick3DInstancing
     QML_NAMED_ELEMENT(FileInstancing)
     QML_ADDED_IN_VERSION(6, 2)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    Q_PROPERTY(int instanceCount READ instanceCount NOTIFY instanceCountChanged)
 
 public:
     explicit QQuick3DFileInstancing(QQuick3DObject *parent = nullptr);
@@ -189,7 +195,10 @@ public:
     bool loadFromXmlFile(const QString &filename);
     int writeToBinaryFile(QIODevice *out);
 
-signals:
+    int instanceCount() const;
+
+Q_SIGNALS:
+    void instanceCountChanged();
     void sourceChanged();
 
 protected:

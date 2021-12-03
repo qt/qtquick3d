@@ -187,6 +187,120 @@ bool QQuick3DInstancing::depthSortingEnabled() const
     return d->m_depthSortingEnabled;
 }
 
+const QQuick3DInstancing::InstanceTableEntry *QQuick3DInstancing::getInstanceEntry(int index)
+{
+    const QByteArray data = getInstanceBuffer(nullptr);
+    if (index >= int(data.count() / sizeof(InstanceTableEntry)))
+        return nullptr;
+    return reinterpret_cast<const QQuick3DInstancing::InstanceTableEntry*>(data.constData()) + index;
+}
+
+/*!
+    \qmlmethod vector3d QtQuick3D::Instancing::instancePosition(int index)
+    \since 6.3
+
+    Returns the position of the instance at \a index
+
+    \sa instanceScale, instanceRotation, instanceColor, instanceCustomData
+*/
+
+QVector3D QQuick3DInstancing::instancePosition(int index)
+{
+    auto *entry = getInstanceEntry(index);
+    if (!entry)
+        return {};
+
+    return QVector3D{ entry->row0[3], entry->row1[3], entry->row2[3] };
+}
+
+/*!
+    \qmlmethod vector3d QtQuick3D::Instancing::instanceScale(int index)
+    \since 6.3
+
+    Returns the scale of the instance at \a index
+
+    \sa instancePosition, instanceScale, instanceRotation, instanceColor, instanceCustomData
+*/
+
+QVector3D QQuick3DInstancing::instanceScale(int index)
+{
+    auto *entry = getInstanceEntry(index);
+    if (!entry)
+        return {};
+    auto &t = *entry;
+    const QVector3D column0{t.row0[0], t.row1[0], t.row2[0]};
+    const QVector3D column1{t.row0[1], t.row1[1], t.row2[1]};
+    const QVector3D column2{t.row0[2], t.row1[2], t.row2[2]};
+    const float scaleX = column0.length();
+    const float scaleY = column1.length();
+    const float scaleZ = column2.length();
+
+    return QVector3D(scaleX, scaleY, scaleZ);
+}
+
+/*!
+    \qmlmethod quaternion QtQuick3D::Instancing::instanceRotation(int index)
+    \since 6.3
+
+    Returns a quaternion representing the rotation of the instance at \a index
+
+    \sa instancePosition, instanceScale, instanceRotation, instanceColor, instanceCustomData
+*/
+
+QQuaternion QQuick3DInstancing::instanceRotation(int index)
+{
+    const auto *entry = getInstanceEntry(index);
+    if (!entry)
+        return {};
+
+    auto &t = *entry;
+    const QVector3D col0 = QVector3D(t.row0[0], t.row1[0], t.row2[0]).normalized();
+    const QVector3D col1 = QVector3D(t.row0[1], t.row1[1], t.row2[1]).normalized();
+    const QVector3D col2 = QVector3D(t.row0[2], t.row1[2], t.row2[2]).normalized();
+
+    const float data3x3[3*3] { // row-major order, of course! Why would it be convenient...
+        col0[0], col1[0], col2[0],
+        col0[1], col1[1], col2[1],
+        col0[2], col1[2], col2[2],
+    };
+    QMatrix3x3 rot(data3x3);
+    return QQuaternion::fromRotationMatrix(rot).normalized();
+}
+
+/*!
+    \qmlmethod color QtQuick3D::Instancing::instanceColor(int index)
+    \since 6.3
+
+    Returns the color of the instance at \a index
+
+    \sa instancePosition, instanceScale, instanceRotation, instanceColor, instanceCustomData
+*/
+
+QColor QQuick3DInstancing::instanceColor(int index)
+{
+    const auto *entry = getInstanceEntry(index);
+    if (!entry)
+        return {};
+    return QColor::fromRgbF(entry->color[0], entry->color[1], entry->color[2], entry->color[3]);
+}
+
+/*!
+    \qmlmethod vector3d QtQuick3D::Instancing::instanceCustomData(int index)
+    \since 6.3
+
+    Returns the custom data for the instance at \a index
+
+    \sa instancePosition, instanceScale, instanceRotation, instanceColor, instanceCustomData
+*/
+
+QVector4D QQuick3DInstancing::instanceCustomData(int index)
+{
+    const auto *entry = getInstanceEntry(index);
+    if (!entry)
+        return {};
+    return entry->instanceData;
+}
+
 void QQuick3DInstancing::setInstanceCountOverride(int instanceCountOverride)
 {
     Q_D(QQuick3DInstancing);
@@ -232,6 +346,7 @@ void QQuick3DInstancing::markDirty()
     Q_D(QQuick3DInstancing);
     d->dirty(QQuick3DObjectPrivate::DirtyType::Content);
     d->m_instanceDataChanged = true;
+    emit instanceTableChanged();
 }
 
 QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -423,6 +538,18 @@ QQmlListProperty<QQuick3DInstanceListEntry> QQuick3DInstanceList::instances()
                                                           qmlClearInstanceListEntries);
 }
 
+/*!
+    \qmlproperty int QtQuick3D::InstanceList::instanceCount
+    \since 6.3
+
+    This read-only property contains the number of instances in the list.
+*/
+
+int QQuick3DInstanceList::instanceCount() const
+{
+    return m_instances.count();
+}
+
 void QQuick3DInstanceList::onInstanceDestroyed(QObject *object)
 {
     if (m_instances.removeAll(object))
@@ -470,6 +597,7 @@ void QQuick3DInstanceList::handleInstanceChange()
 {
     m_dirty = true;
     markDirty();
+    emit instanceCountChanged();
 }
 
 void QQuick3DInstanceList::generateInstanceData()
@@ -668,6 +796,14 @@ void QQuick3DInstanceListEntry::setCustomData(QVector4D customData)
     Otherwise it is assumed to refer to an XML file. If an XML file \e{foo.xml} is specified, and
     the file \e{foo.xml.bin} exists, the binary file \e{foo.xml.bin} will be loaded instead.
 */
+
+/*!
+    \qmlproperty int QtQuick3D::FileInstancing::instanceCount
+    \since 6.3
+
+    This read-only property contains the number of instances in the instance table.
+*/
+
 static constexpr quint16 currentMajorVersion = 1;
 
 struct QQuick3DInstancingBinaryFileHeader
@@ -816,6 +952,11 @@ int QQuick3DFileInstancing::writeToBinaryFile(QIODevice *out)
     return success ? m_instanceCount : -1;
 }
 
+int QQuick3DFileInstancing::instanceCount() const
+{
+    return m_instanceCount;
+}
+
 bool QQuick3DFileInstancing::loadFromFile(const QUrl &source)
 {
     const QQmlContext *context = qmlContext(this);
@@ -827,10 +968,12 @@ bool QQuick3DFileInstancing::loadFromFile(const QUrl &source)
 
     const QString binaryFilePath = filePath + QStringLiteral(".bin");
 
-    if (loadFromBinaryFile(binaryFilePath))
-        return true;
+    int oldCount = m_instanceCount;
+    bool success = loadFromBinaryFile(binaryFilePath) || loadFromXmlFile(filePath);
+    if (m_instanceCount != oldCount)
+        emit instanceCountChanged();
 
-    return loadFromXmlFile(filePath);
+    return success;
 }
 
 QQuick3DFileInstancing::QQuick3DFileInstancing(QQuick3DObject *parent) : QQuick3DInstancing(parent) { }
