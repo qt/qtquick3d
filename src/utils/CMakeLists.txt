@@ -18,17 +18,21 @@ qt_internal_add_module(Quick3DUtils
         qssgmeshbvhbuilder.cpp qssgmeshbvhbuilder_p.h
         qssgmesh.cpp qssgmesh_p.h
         qtquick3dutilsglobal_p.h
+        qquick3dprofiler.cpp
+        qquick3dprofiler_p.h
     DEFINES
         QT_BUILD_QUICK3DUTILS_LIB
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
+        Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
         Qt::GuiPrivate
+        Qt::QuickPrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
