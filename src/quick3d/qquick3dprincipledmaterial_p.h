@@ -60,7 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float metalness READ metalness WRITE setMetalness NOTIFY metalnessChanged)
     Q_PROPERTY(QQuick3DTexture *metalnessMap READ metalnessMap WRITE setMetalnessMap NOTIFY metalnessMapChanged)
-    Q_PROPERTY(TextureChannelMapping metalnessChannel READ metalnessChannel WRITE setMetalnessChannel NOTIFY metalnessChannelChanged)
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping metalnessChannel READ metalnessChannel WRITE setMetalnessChannel NOTIFY metalnessChannelChanged)
 
     Q_PROPERTY(float specularAmount READ specularAmount WRITE setSpecularAmount NOTIFY specularAmountChanged)
     Q_PROPERTY(QQuick3DTexture *specularMap READ specularMap WRITE setSpecularMap NOTIFY specularMapChanged)
@@ -68,14 +68,14 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float roughness READ roughness WRITE setRoughness NOTIFY roughnessChanged)
     Q_PROPERTY(QQuick3DTexture *roughnessMap READ roughnessMap WRITE setRoughnessMap NOTIFY roughnessMapChanged)
-    Q_PROPERTY(TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged)
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping roughnessChannel READ roughnessChannel WRITE setRoughnessChannel NOTIFY roughnessChannelChanged)
 
     Q_PROPERTY(QVector3D emissiveFactor READ emissiveFactor WRITE setEmissiveFactor NOTIFY emissiveFactorChanged)
     Q_PROPERTY(QQuick3DTexture *emissiveMap READ emissiveMap WRITE setEmissiveMap NOTIFY emissiveMapChanged)
 
     Q_PROPERTY(float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
     Q_PROPERTY(QQuick3DTexture *opacityMap READ opacityMap WRITE setOpacityMap NOTIFY opacityMapChanged)
-    Q_PROPERTY(TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged)
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping opacityChannel READ opacityChannel WRITE setOpacityChannel NOTIFY opacityChannelChanged)
 
     Q_PROPERTY(QQuick3DTexture *normalMap READ normalMap WRITE setNormalMap NOTIFY normalMapChanged)
     Q_PROPERTY(float normalStrength READ normalStrength WRITE setNormalStrength NOTIFY normalStrengthChanged)
@@ -83,7 +83,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(QQuick3DTexture *specularReflectionMap READ specularReflectionMap WRITE setSpecularReflectionMap NOTIFY specularReflectionMapChanged)
 
     Q_PROPERTY(QQuick3DTexture *occlusionMap READ occlusionMap WRITE setOcclusionMap NOTIFY occlusionMapChanged)
-    Q_PROPERTY(TextureChannelMapping occlusionChannel READ occlusionChannel WRITE setOcclusionChannel NOTIFY occlusionChannelChanged)
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping occlusionChannel READ occlusionChannel WRITE setOcclusionChannel NOTIFY occlusionChannelChanged)
     Q_PROPERTY(float occlusionAmount READ occlusionAmount WRITE setOcclusionAmount NOTIFY occlusionAmountChanged)
 
     Q_PROPERTY(AlphaMode alphaMode READ alphaMode WRITE setAlphaMode NOTIFY alphaModeChanged)
@@ -93,18 +93,18 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
     Q_PROPERTY(float lineWidth READ lineWidth WRITE setLineWidth NOTIFY lineWidthChanged)
 
     Q_PROPERTY(QQuick3DTexture *heightMap READ heightMap WRITE setHeightMap NOTIFY heightMapChanged REVISION(6, 2))
-    Q_PROPERTY(TextureChannelMapping heightChannel READ heightChannel WRITE setHeightChannel NOTIFY heightChannelChanged REVISION(6, 2))
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping heightChannel READ heightChannel WRITE setHeightChannel NOTIFY heightChannelChanged REVISION(6, 2))
     Q_PROPERTY(float heightAmount READ heightAmount WRITE setHeightAmount NOTIFY heightAmountChanged REVISION(6, 2))
     Q_PROPERTY(int minHeightMapSamples READ minHeightMapSamples WRITE setMinHeightMapSamples NOTIFY minHeightMapSamplesChanged REVISION(6, 2))
     Q_PROPERTY(int maxHeightMapSamples READ maxHeightMapSamples WRITE setMaxHeightMapSamples NOTIFY maxHeightMapSamplesChanged REVISION(6, 2))
 
     Q_PROPERTY(float clearcoatAmount READ clearcoatAmount WRITE setClearcoatAmount NOTIFY clearcoatAmountChanged REVISION(6, 3))
     Q_PROPERTY(QQuick3DTexture *clearcoatMap READ clearcoatMap WRITE setClearcoatMap NOTIFY clearcoatMapChanged REVISION(6, 3))
-    Q_PROPERTY(TextureChannelMapping clearcoatChannel READ clearcoatChannel WRITE setClearcoatChannel NOTIFY
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping clearcoatChannel READ clearcoatChannel WRITE setClearcoatChannel NOTIFY
                        clearcoatChannelChanged REVISION(6, 3))
     Q_PROPERTY(float clearcoatRoughnessAmount READ clearcoatRoughnessAmount WRITE setClearcoatRoughnessAmount NOTIFY
                        clearcoatRoughnessAmountChanged REVISION(6, 3))
-    Q_PROPERTY(TextureChannelMapping clearcoatRoughnessChannel READ clearcoatRoughnessChannel WRITE
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping clearcoatRoughnessChannel READ clearcoatRoughnessChannel WRITE
                        setClearcoatRoughnessChannel NOTIFY clearcoatRoughnessChannelChanged REVISION(6, 3))
     Q_PROPERTY(QQuick3DTexture *clearcoatRoughnessMap READ clearcoatRoughnessMap WRITE setClearcoatRoughnessMap NOTIFY
                        clearcoatRoughnessMapChanged REVISION(6, 3))
@@ -113,7 +113,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float transmissionFactor READ transmissionFactor WRITE setTransmissionFactor NOTIFY transmissionFactorChanged)
     Q_PROPERTY(QQuick3DTexture * transmissionMap READ transmissionMap WRITE setTransmissionMap NOTIFY transmissionMapChanged)
-    Q_PROPERTY(TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping transmissionChannel READ transmissionChannel WRITE setTransmissionChannel NOTIFY transmissionChannelChanged)
 
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
