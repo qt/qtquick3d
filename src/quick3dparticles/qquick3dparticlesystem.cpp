@@ -835,8 +835,9 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
                               float(currentData.color.g) / 255.0f,
                               float(currentData.color.b) / 255.0f,
                               float(currentData.color.a) / 255.0f);
-        spriteParticle->setParticleData(i, currentData.position, currentData.rotation,
-                                        color, currentData.scale.x(), timeChange,
+        const QVector3D offset(spriteParticle->offsetX(), spriteParticle->offsetY(), 0);
+        spriteParticle->setParticleData(i, currentData.position + (offset * currentData.scale.x()),
+                                        currentData.rotation, color, currentData.scale.x(), timeChange,
                                         animationFrame);
     }
     spriteParticle->commitParticles();

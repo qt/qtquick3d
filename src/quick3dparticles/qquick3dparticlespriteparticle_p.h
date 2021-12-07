@@ -64,6 +64,8 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_PROPERTY(float particleScale READ particleScale WRITE setParticleScale NOTIFY particleScaleChanged)
     Q_PROPERTY(QQuick3DTexture *colorTable READ colorTable WRITE setColorTable NOTIFY colorTableChanged)
     Q_PROPERTY(QQmlListProperty<QQuick3DAbstractLight> lights READ lights NOTIFY lightsChanged REVISION(6, 3))
+    Q_PROPERTY(float offsetX READ offsetX WRITE setOffsetX NOTIFY offsetXChanged REVISION(6, 3))
+    Q_PROPERTY(float offsetY READ offsetY WRITE setOffsetY NOTIFY offsetYChanged REVISION(6, 3))
     QML_NAMED_ELEMENT(SpriteParticle3D)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -81,6 +83,8 @@ public:
     float particleScale() const;
     QQuick3DTexture *colorTable() const;
     Q_REVISION(6, 3) QQmlListProperty<QQuick3DAbstractLight> lights();
+    float offsetX() const;
+    float offsetY() const;
 
 public Q_SLOTS:
     void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
@@ -89,6 +93,8 @@ public Q_SLOTS:
     void setBillboard(bool billboard);
     void setParticleScale(float scale);
     void setColorTable(QQuick3DTexture *colorTable);
+    void setOffsetX(float value);
+    void setOffsetY(float value);
 
 Q_SIGNALS:
     void blendModeChanged();
@@ -98,6 +104,8 @@ Q_SIGNALS:
     void particleScaleChanged();
     void colorTableChanged();
     Q_REVISION(6, 3) void lightsChanged();
+    Q_REVISION(6, 3) void offsetXChanged();
+    Q_REVISION(6, 3) void offsetYChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -203,6 +211,7 @@ private:
     Q_REVISION(6, 3) static qsizetype qmlLightsCount(QQmlListProperty<QQuick3DAbstractLight> *list);
     Q_REVISION(6, 3) static void qmlClearLights(QQmlListProperty<QQuick3DAbstractLight> *list);
     QVector<QQuick3DAbstractLight *> m_lights;
+    QVector3D m_offset = {};
 };
 
 QT_END_NAMESPACE

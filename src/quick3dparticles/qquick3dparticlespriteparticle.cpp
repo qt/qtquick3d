@@ -209,6 +209,28 @@ QQmlListProperty<QQuick3DAbstractLight> QQuick3DParticleSpriteParticle::lights()
                                             QQuick3DParticleSpriteParticle::qmlClearLights);
 }
 
+/*!
+    \qmlproperty float QQuick3DParticleSpriteParticle::offsetX
+    \since 6.3
+
+    This property defines the particles offset in the X axis
+*/
+float QQuick3DParticleSpriteParticle::offsetX() const
+{
+    return m_offset.x();
+}
+
+/*!
+    \qmlproperty float QQuick3DParticleSpriteParticle::offsetY
+    \since 6.3
+
+    This property defines the particles offset in the Y axis
+*/
+float QQuick3DParticleSpriteParticle::offsetY() const
+{
+    return m_offset.y();
+}
+
 void QQuick3DParticleSpriteParticle::setBlendMode(BlendMode blendMode)
 {
     if (m_blendMode == blendMode)
@@ -280,6 +302,24 @@ void QQuick3DParticleSpriteParticle::setColorTable(QQuick3DTexture *colorTable)
     updateFeatureLevel();
     markNodesDirty();
     Q_EMIT colorTableChanged();
+}
+
+void QQuick3DParticleSpriteParticle::setOffsetX(float value)
+{
+    if (qFuzzyCompare(value, m_offset.x()))
+        return;
+
+    m_offset.setX(value);
+    emit offsetXChanged();
+}
+
+void QQuick3DParticleSpriteParticle::setOffsetY(float value)
+{
+    if (qFuzzyCompare(value, m_offset.y()))
+        return;
+
+    m_offset.setY(value);
+    emit offsetYChanged();
 }
 
 void QQuick3DParticleSpriteParticle::itemChange(QQuick3DObject::ItemChange change,

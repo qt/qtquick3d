@@ -156,5 +156,49 @@ Section {
             }
             ExpandingSpacer {}
         }
+
+        PropertyLabel {
+            text: qsTr("Offset")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 999999
+                minimumValue: -999999
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.offsetX
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Offset X"
+                tooltip: qsTr("Offsets the X coordinate.")
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
+            SpinBox {
+                maximumValue: 999999
+                minimumValue: -999999
+                decimals: 2
+                stepSize: 0.1
+                backendValue: backendValues.offsetY
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "Offset Y"
+                tooltip: qsTr("Offsets the Y coordinate.")
+            }
+
+            ExpandingSpacer {}
+        }
     }
 }
