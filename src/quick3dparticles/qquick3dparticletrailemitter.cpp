@@ -88,11 +88,11 @@ void QQuick3DParticleTrailEmitter::burst(int count)
 
 bool QQuick3DParticleTrailEmitter::hasBursts() const
 {
-    return !m_bursts.isEmpty();
+    return !m_bursts.empty() | !m_emitBursts.empty();
 }
 
 // Called to emit set of particles
-void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurrent *d, int emitAmount)
+void QQuick3DParticleTrailEmitter::emitTrailParticles(QVector3D centerPos, int emitAmount, int triggerType)
 {
     if (!system())
         return;
@@ -101,15 +101,15 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QQuick3DParticleDataCurren
         return;
 
     const int systemTime = system()->currentTime();
-    QVector3D centerPos = d->position;
-
     for (auto particle : qAsConst(m_system->m_particles)) {
         if (particle == m_particle) {
+            emitAmount += getEmitAmountFromBursts(triggerType);
             emitAmount = std::min(emitAmount, int(particle->maxAmount()));
+            float addTime = ((systemTime - m_prevEmitTime) / 1000.0f) / emitAmount;
             for (int i = 0; i < emitAmount; i++) {
                 // Distribute evenly between previous and current time, important especially
                 // when time has jumped a lot (like a starttime).
-                float startTime = (m_prevEmitTime / 1000.0f) + (float(1 + i) / emitAmount) * ((systemTime - m_prevEmitTime) / 1000.0f);
+                float startTime = (m_prevEmitTime / 1000.0f) + addTime * float(i);
                 emitParticle(particle, startTime, QMatrix4x4(), QQuaternion(), centerPos);
             }
             // Emit bursts, if any

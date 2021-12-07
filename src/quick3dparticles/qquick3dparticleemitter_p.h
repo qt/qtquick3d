@@ -155,6 +155,7 @@ protected:
     void emitActivationNodeParticles(QQuick3DParticleModelBlendParticle *particle);
     void emitParticlesBurst(const QQuick3DParticleEmitBurstData &burst);
     int getEmitAmount();
+    int getEmitAmountFromBursts(int triggerType);
 
     void reset();
 

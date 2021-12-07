@@ -600,13 +600,20 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
         const float particleTimeEnd = d->startTime + d->lifetime;
 
         if (timeS < d->startTime || timeS > particleTimeEnd) {
+            if (timeS > particleTimeEnd && d->lifetime > 0.0f) {
+                for (auto trailEmit : qAsConst(trailEmits))
+                    trailEmit.emitter->emitTrailParticles(d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime)), 0, QQuick3DParticleEmitBurst::TriggerEnd);
+            }
             // Particle not alive currently
             continue;
         }
 
         const float particleTimeS = timeS - d->startTime;
         QQuick3DParticleDataCurrent currentData;
-
+        if (timeS >= d->startTime && d->lifetime <= 0.0f) {
+            for (auto trailEmit : qAsConst(trailEmits))
+                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleEmitBurst::TriggerStart);
+        }
         // Process features shared for both model & sprite particles
         processParticleCommon(currentData, d, particleTimeS);
 
@@ -633,7 +640,7 @@ void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle 
 
         // Emit new particles from trails
         for (auto trailEmit : qAsConst(trailEmits))
-            trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleEmitBurst::TriggerEmit);
 
         const QColor color(currentData.color.r, currentData.color.g, currentData.color.b, currentData.color.a);
         // Set current particle properties
@@ -657,6 +664,10 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
         const float particleTimeEnd = d->startTime + d->lifetime;
 
         if (timeS < d->startTime || timeS > particleTimeEnd) {
+            if (timeS > particleTimeEnd && d->lifetime > 0.0f) {
+                for (auto trailEmit : qAsConst(trailEmits))
+                    trailEmit.emitter->emitTrailParticles(d->startPosition + (d->startVelocity * (particleTimeEnd - d->startTime)), 0, QQuick3DParticleEmitBurst::TriggerEnd);
+            }
             // Particle not alive currently
             float age = 0.0f;
             float size = 0.0f;
@@ -689,6 +700,10 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
 
         const float particleTimeS = timeS - d->startTime;
         QQuick3DParticleDataCurrent currentData;
+        if (timeS >= d->startTime && d->lifetime <= 0.0f) {
+            for (auto trailEmit : qAsConst(trailEmits))
+                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleEmitBurst::TriggerStart);
+        }
 
         // Process features shared for both model & sprite particles
         processParticleCommon(currentData, d, particleTimeS);
@@ -713,7 +728,7 @@ void QQuick3DParticleSystem::processModelBlendParticle(QQuick3DParticleModelBlen
 
         // Emit new particles from trails
         for (auto trailEmit : qAsConst(trailEmits))
-            trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleEmitBurst::TriggerEmit);
 
         // Set current particle properties
         const QVector4D color(float(currentData.color.r) / 255.0f,
@@ -744,18 +759,24 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
         const auto d = &spriteParticle->m_particleData.at(i);
 
         const float particleTimeEnd = d->startTime + d->lifetime;
-
+        auto &particleData = spriteParticle->m_spriteParticleData[i];
         if (timeS < d->startTime || timeS > particleTimeEnd) {
+            if (timeS > particleTimeEnd && particleData.age > 0.0f) {
+                for (auto trailEmit : qAsConst(trailEmits))
+                    trailEmit.emitter->emitTrailParticles(particleData.position, 0, QQuick3DParticleEmitBurst::TriggerEnd);
+            }
             // Particle not alive currently
             spriteParticle->setParticleData(i, {}, {},
                                             {}, 0.0f, 0.0f,
                                             0.0f);
             continue;
         }
-
         const float particleTimeS = timeS - d->startTime;
         QQuick3DParticleDataCurrent currentData;
-
+        if (timeS >= d->startTime && timeS < particleTimeEnd && particleData.age == 0.0f) {
+            for (auto trailEmit : qAsConst(trailEmits))
+                trailEmit.emitter->emitTrailParticles(d->startPosition, 0, QQuick3DParticleEmitBurst::TriggerStart);
+        }
         // Process features shared for both model & sprite particles
         processParticleCommon(currentData, d, particleTimeS);
 
@@ -806,7 +827,8 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
 
         // Emit new particles from trails
         for (auto trailEmit : qAsConst(trailEmits))
-            trailEmit.emitter->emitTrailParticles(&currentData, trailEmit.amount);
+            trailEmit.emitter->emitTrailParticles(currentData.position, trailEmit.amount, QQuick3DParticleEmitBurst::TriggerEmit);
+
 
         // Set current particle properties
         const QVector4D color(float(currentData.color.r) / 255.0f,

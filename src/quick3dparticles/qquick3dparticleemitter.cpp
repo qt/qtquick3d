@@ -561,6 +561,9 @@ void QQuick3DParticleEmitter::reset()
 {
     m_prevEmitTime = 0;
     m_unemittedF = 0.0f;
+
+    for (auto *burst : qAsConst(m_emitBursts))
+        burst->m_burstEmitData.clear();
 }
 
 /*!
@@ -781,6 +784,59 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
     }
 }
 
+int QQuick3DParticleEmitter::getEmitAmountFromBursts(int triggerType)
+{
+    int amount = 0;
+    const int currentTime = m_system->time();
+    const int prevTime = m_prevEmitTime;
+    for (auto *burstPtr : qAsConst(m_emitBursts)) {
+        // trigger burst and add it to the emit list
+        if (burstPtr->m_triggerType & triggerType) {
+            QQuick3DParticleEmitBurst::BurstEmitData data = {};
+            bool isTrigger = triggerType > QQuick3DParticleEmitBurst::TriggerEmit;
+            if (isTrigger)
+                data.startTime = currentTime;
+            else if (triggerType == QQuick3DParticleEmitBurst::TriggerEmit)
+                data.startTime = burstPtr->m_repeatStartTime + burstPtr->m_time;
+            if (isTrigger || (burstPtr->m_repeat && currentTime >= data.startTime && prevTime <= data.startTime)) {
+                data.endTime = data.startTime + burstPtr->m_duration;
+                data.emitAmount = std::max(0, (burstPtr->m_amount - burstPtr->m_amountVariation) + (rand() % ((burstPtr->m_amountVariation * 2) + 1)));
+                data.emitTimePerParticle = float(burstPtr->m_duration) / float(data.emitAmount);
+                burstPtr->m_burstEmitData.append(data);
+                if (burstPtr->m_repeat)
+                    burstPtr->m_repeatStartTime += burstPtr->m_repeatDelay;
+                else
+                    burstPtr->m_repeatStartTime += 1;
+            }
+        }
+        // check bursts progress and add emittable particles to amount
+        for (int burstIndex = 0; burstIndex < burstPtr->m_burstEmitData.count(); ++burstIndex) {
+            QQuick3DParticleEmitBurst::BurstEmitData &burstData = burstPtr->m_burstEmitData[burstIndex];
+            int burstStartTime = burstData.startTime;
+            int burstEndTime = burstData.endTime;
+            if (currentTime >= burstStartTime && prevTime <= burstEndTime) {
+                int burstPrevTime = burstData.aggregateTime;
+                float emitTimePerParticle = burstData.emitTimePerParticle;
+                if (currentTime >= burstEndTime) {
+                    amount += burstData.emitAmount - burstData.emitCounter;
+                    burstPtr->m_burstEmitData.removeAt(burstIndex--);
+                } else {
+                    int deltaTime = (currentTime - burstStartTime) - burstPrevTime;
+                    int addAmount = int(float(deltaTime) / emitTimePerParticle);
+
+                    burstData.aggregateTime += emitTimePerParticle * addAmount;
+                    burstData.emitCounter += addAmount;
+                    amount += addAmount;
+                }
+
+                if (amount && prevTime < burstStartTime)
+                    m_prevEmitTime = burstStartTime;
+            }
+        }
+    }
+    return amount;
+}
+
 int QQuick3DParticleEmitter::getEmitAmount()
 {
     if (!m_system)
@@ -867,7 +923,7 @@ void QQuick3DParticleEmitter::emitParticles()
     if (!m_burstGenerated)
        generateEmitBursts();
 
-    int emitAmount = getEmitAmount();
+    int emitAmount = getEmitAmount() + getEmitAmountFromBursts(QQuick3DParticleEmitBurst::TriggerEmit);
 
     // With lower emitRates, let timeChange grow until at least 1 particle is emitted
     if (emitAmount < 1)

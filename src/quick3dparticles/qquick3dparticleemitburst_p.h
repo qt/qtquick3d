@@ -56,6 +56,12 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitBurst : public QObject, publ
     Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
     Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(bool repeat READ repeat WRITE setRepeat NOTIFY repeatChanged REVISION(6, 3))
+    Q_PROPERTY(int repeatDelay READ repeatDelay WRITE setRepeatDelay NOTIFY repeatDelayChanged REVISION(6, 3))
+    Q_PROPERTY(int amountVariation READ amountVariation WRITE setAmountVariation NOTIFY amountVariationChanged REVISION(6, 3))
+    Q_PROPERTY(bool startTrigger READ startTrigger WRITE setStartTrigger NOTIFY startTriggerChanged REVISION(6, 3))
+    Q_PROPERTY(bool endTrigger READ endTrigger WRITE setEndTrigger NOTIFY endTriggerChanged REVISION(6, 3))
+    Q_PROPERTY(bool triggerOnly READ triggerOnly WRITE setTriggerOnly NOTIFY triggerOnlyChanged REVISION(6, 3))
 
     QML_NAMED_ELEMENT(EmitBurst3D)
     Q_INTERFACES(QQmlParserStatus)
@@ -68,16 +74,35 @@ public:
     int time() const;
     int amount() const;
     int duration() const;
-
+    bool repeat() const;
+    int repeatDelay() const;
+    int repeatStartTime() const { return m_repeatStartTime; }
+    int amountVariation() const;
+    bool startTrigger() const;
+    bool endTrigger() const;
+    bool triggerOnly() const;
 public Q_SLOTS:
     void setTime(int time);
     void setAmount(int amount);
     void setDuration(int duration);
+    void setRepeat(bool repeat);
+    void setRepeatDelay(int delay);
+    void setRepeatStartTime(int time) { m_repeatStartTime = time; }
+    void setAmountVariation(int value);
+    void setEndTrigger(bool value);
+    void setStartTrigger(bool value);
+    void setTriggerOnly(bool value);
 
 Q_SIGNALS:
     void timeChanged();
     void amountChanged();
     void durationChanged();
+    Q_REVISION(6, 3) void repeatChanged();
+    Q_REVISION(6, 3) void repeatDelayChanged();
+    Q_REVISION(6, 3) void amountVariationChanged();
+    Q_REVISION(6, 3) void endTriggerChanged();
+    Q_REVISION(6, 3) void startTriggerChanged();
+    Q_REVISION(6, 3) void triggerOnlyChanged();
 
 protected:
     // From QQmlParserStatus
@@ -85,10 +110,39 @@ protected:
     void classBegin() override {}
 
 private:
+    friend class QQuick3DParticleEmitter;
+    friend class QQuick3DParticleSystem;
+
+    enum TriggerType
+    {
+        TriggerNone = 0,
+        TriggerEmit = 1,
+        TriggerStart = 2,
+        TriggerEnd = 4
+    };
+
+    struct BurstEmitData
+    {
+        int startTime;
+        int endTime;
+        int aggregateTime;
+        int emitAmount;
+        int emitCounter;
+        int emitTimePerParticle;
+    };
+
     QQuick3DParticleEmitter *m_parentEmitter = nullptr;
     int m_time = 0;
     int m_amount = 0;
     int m_duration = 0;
+
+    int m_repeatDelay = 0;
+    int m_repeatStartTime = 0;
+    int m_amountVariation = 0;
+
+    bool m_repeat = false;
+    TriggerType m_triggerType = TriggerEmit;
+    QList<BurstEmitData> m_burstEmitData;
 };
 
 QT_END_NAMESPACE
