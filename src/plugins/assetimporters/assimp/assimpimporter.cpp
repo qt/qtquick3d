@@ -450,6 +450,9 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
                 if (channel && node)
                     m_morphAnimations.back()->insert(node, channel);
             }
+            qreal freq = qFuzzyIsNull(animation->mTicksPerSecond) ? 1.0
+                                            : 1000.0 / animation->mTicksPerSecond;
+            m_animFreqs.push_back(freq);
         }
         // Morph Animations (timeline based)
     }
@@ -1885,6 +1888,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
     for (int idx = 0; idx < m_animations.size(); ++idx) {
         QHash<aiNode *, aiNodeAnim *> *animation = m_animations[idx];
         QHash<aiNode *, aiMeshMorphAnim *> *morphAnimation = m_morphAnimations[idx];
+        const qreal &animFreq = m_animFreqs[idx];
         // skip empty animations
         if (animation->count() == 0 && morphAnimation->count() == 0)
             continue;
@@ -1914,7 +1918,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
 
             aiMeshMorphAnim *morphAnim = itr.value();
             generateMorphKeyframes(*idItr, morphAnim->mNumKeys, morphAnim->mKeys,
-                                   keyframeStream, endFrameTime);
+                                   keyframeStream, animFreq, endFrameTime);
         }
         for (auto itr = animation->begin(); itr != animation->end(); ++itr) {
             aiNode *node = itr.key();
@@ -1942,17 +1946,17 @@ void AssimpImporter::processAnimations(QTextStream &output)
             if (nodeAnim->mNumPositionKeys > 0) {
                 generateKeyframes(*idItr, "position", nodeAnim->mNumPositionKeys,
                                   nodeAnim->mPositionKeys,
-                                  keyframeStream, endFrameTime);
+                                  keyframeStream, animFreq, endFrameTime);
             }
             if (nodeAnim->mNumRotationKeys > 0) {
                 generateKeyframes(*idItr, "rotation", nodeAnim->mNumRotationKeys,
                                   nodeAnim->mRotationKeys,
-                                  keyframeStream, endFrameTime);
+                                  keyframeStream, animFreq, endFrameTime);
             }
             if (nodeAnim->mNumScalingKeys > 0) {
                 generateKeyframes(*idItr, "scale", nodeAnim->mNumScalingKeys,
                                   nodeAnim->mScalingKeys,
-                                  keyframeStream, endFrameTime);
+                                  keyframeStream, animFreq, endFrameTime);
             }
         }
 
@@ -2040,8 +2044,10 @@ int getTypeValue(const double &data)
 }
 
 template <typename T>
-void AssimpImporter::generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
-                                       QTextStream &output, qreal &maxKeyframeTime)
+void AssimpImporter::generateKeyframes(const QString &id, const QString &propertyName,
+                                       uint numKeys, const T *keys,
+                                       QTextStream &output,
+                                       qreal animFreq, qreal &maxKeyframeTime)
 {
     output << QStringLiteral("\n");
     output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("KeyframeGroup {\n");
@@ -2055,11 +2061,11 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
             if (i == numKeys - 1 || fuzzyCompare(keys[i].mValue, keys[i+1].mValue))
                 continue;
         }
-        keyframes.push_back(keys[i]);
+        keyframes.push_back(T(keys[i].mTime * animFreq, keys[i].mValue));
     }
 
     if (numKeys > 0)
-        maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime);
+        maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime * animFreq);
 
 
     if (!keyframes.isEmpty()) {
@@ -2140,7 +2146,8 @@ bool AssimpImporter::generateAnimationFile(QFile &file, const QList<T> &keyframe
 // This function is made based on GLTF2
 void AssimpImporter::generateMorphKeyframes(const QString &id,
                                             uint numKeys, const aiMeshMorphKey *keys,
-                                            QTextStream &output, qreal &maxKeyframeTime)
+                                            QTextStream &output,
+                                            qreal animFreq, qreal &maxKeyframeTime)
 {
     Q_ASSERT(numKeys > 0);
 
@@ -2154,17 +2161,17 @@ void AssimpImporter::generateMorphKeyframes(const QString &id,
                << QStringLiteral("]\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("property: \"weight\"\n");
         QList<weightKey> keyframes;
-        keyframes.push_back(weightKey(keys[0].mTime, keys[0].mWeights[i]));
+        keyframes.push_back(weightKey(keys[0].mTime * animFreq, keys[0].mWeights[i]));
         for (uint j = 1; j < numKeys; ++j) {
             if (qFuzzyCompare(keyframes.back().mValue, keys[j].mWeights[i])) {
                 if (j == numKeys - 1 || qFuzzyCompare(keys[j].mWeights[i], keys[j+1].mWeights[i]))
                     continue;
             }
 
-            keyframes.push_back(weightKey(keys[j].mTime, keys[j].mWeights[i]));
+            keyframes.push_back(weightKey(keys[j].mTime * animFreq, keys[j].mWeights[i]));
         }
         if (numKeys > 0)
-            maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime);
+            maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime * animFreq);
 
         if (!keyframes.isEmpty()) {
             if (m_binaryKeyframes && keyframes.size() != 1) {

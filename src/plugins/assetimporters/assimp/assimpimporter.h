@@ -105,13 +105,15 @@ private:
     void processSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
     void processAnimations(QTextStream &output);
     template <typename T>
-    void generateKeyframes(const QString &id, const QString &propertyName, uint numKeys, const T *keys,
-                           QTextStream &output, qreal &maxKeyframeTime);
+    void generateKeyframes(const QString &id, const QString &propertyName,
+                           uint numKeys, const T *keys,
+                           QTextStream &output, qreal animFreq, qreal &maxKeyframeTime);
     template <typename T>
     bool generateAnimationFile(QFile &file, const QList<T> &keyframes);
     void generateMorphKeyframes(const QString &id,
                                 uint numKeys, const aiMeshMorphKey *keys,
-                                QTextStream &output, qreal &maxKeyframeTime);
+                                QTextStream &output,
+                                qreal animFreq, qreal &maxKeyframeTime);
 
     bool isModel(aiNode *node);
     bool isLight(aiNode *node);
@@ -131,6 +133,10 @@ private:
 
     QVector<QHash<aiNode *, aiNodeAnim *> *> m_animations;
     QVector<QHash<aiNode *, aiMeshMorphAnim *> *> m_morphAnimations;
+    // aiAnimation has mTicksPerSecond in order to correct the timing.
+    // m_animFreqs[i] stores (1000 / mTicksPerSecond)
+    //                   for m_animations[i] and m_morphAnimations[i]
+    QVector<qreal> m_animFreqs;
     QHash<aiMaterial *, QString> m_materialIdMap;
     QSet<QString> m_uniqueIds;
     QHash<aiNode *, QString> m_nodeIdMap;
