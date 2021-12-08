@@ -672,6 +672,7 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
 
     QSSGRenderGeometry *geometry = static_cast<QSSGRenderGeometry *>(node);
     if (d->m_geometryChanged) {
+        geometry->clear();
         geometry->setBounds(d->m_min, d->m_max);
         geometry->setStride(d->m_stride);
         if (d->m_stride < 1)
@@ -679,7 +680,6 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
         geometry->setIndexData(d->m_indexBuffer);
         geometry->setVertexData(d->m_vertexBuffer);
         geometry->setPrimitiveType(mapPrimitiveType(d->m_primitiveType));
-        geometry->clearAttributes();
         quint32 indexBufferComponentSize = 0;
         for (int i = 0; i < d->m_attributeCount; ++i) {
             const auto componentType = mapComponentType(d->m_attributes[i].componentType);

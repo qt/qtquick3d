@@ -236,6 +236,7 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
     {
         m_vertexBuffer.clear();
         m_indexBuffer.clear();
+        m_subsets.clear();
         m_attributeCount = 0;
         m_primitiveType = Mesh::DrawMode::Triangles;
     }
