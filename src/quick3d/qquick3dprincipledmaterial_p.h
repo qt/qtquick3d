@@ -117,7 +117,7 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float thicknessFactor READ thicknessFactor WRITE setThicknessFactor NOTIFY thicknessFactorChanged REVISION(6, 3))
     Q_PROPERTY(QQuick3DTexture *thicknessMap READ thicknessMap WRITE setThicknessMap NOTIFY thicknessMapChanged REVISION(6, 3))
-    Q_PROPERTY(TextureChannelMapping thicknessChannel READ thicknessChannel WRITE setThicknessChannel NOTIFY
+    Q_PROPERTY(QQuick3DMaterial::TextureChannelMapping thicknessChannel READ thicknessChannel WRITE setThicknessChannel NOTIFY
                        thicknessChannelChanged REVISION(6, 3))
     Q_PROPERTY(float attenuationDistance READ attenuationDistance WRITE setAttenuationDistance NOTIFY attenuationDistanceChanged REVISION(6, 3))
     Q_PROPERTY(QColor attenuationColor READ attenuationColor WRITE setAttenuationColor NOTIFY attenuationColorChanged REVISION(6, 3))
