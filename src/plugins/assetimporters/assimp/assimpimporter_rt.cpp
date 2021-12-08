@@ -1109,14 +1109,14 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
         processNode(sceneInfo, **(source.mChildren + i), *node, nodeMap, animationNodes);
 }
 
-static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiVectorKey &key) {
+static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiVectorKey &key, qreal freq) {
     const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Vec3);
-    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, 0.0f }, float(key.mTime), flag };
+    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, 0.0f }, float(key.mTime * freq), flag };
 }
 
-static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiQuatKey &key) {
+static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiQuatKey &key, qreal freq) {
     const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Quaternion);
-    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w }, float(key.mTime), flag };
+    return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w }, float(key.mTime * freq), flag };
 }
 
 // This function updates skeletonMap and index of nodeMap as joint index for a Joint hierarchy
@@ -1338,6 +1338,8 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         using namespace QSSGSceneDesc;
         Animation targetAnimation;
         auto &channels = targetAnimation.channels;
+        qreal freq = qFuzzyIsNull(srcAnim.mTicksPerSecond) ? 1.0
+                                        : 1000.0 / srcAnim.mTicksPerSecond;
         // Process property channels
         for (It i = 0, end = srcAnim.mNumChannels; i != end; ++i) {
             const auto &srcChannel = *srcAnim.mChannels[i];
@@ -1357,7 +1359,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         targetChannel.target = targetNode;
                         for (It posKeyIdx = 0; posKeyIdx != posKeyEnd; ++posKeyIdx) {
                             const auto &posKey = srcChannel.mPositionKeys[posKeyIdx];
-                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(posKey));
+                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(posKey, freq));
                             targetChannel.keys.push_back(*animationKey);
                         }
 
@@ -1376,7 +1378,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         targetChannel.target = targetNode;
                         for (It rotKeyIdx = 0; rotKeyIdx != rotKeyEnd; ++rotKeyIdx) {
                             const auto &rotKey = srcChannel.mRotationKeys[rotKeyIdx];
-                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(rotKey));
+                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(rotKey, freq));
                             targetChannel.keys.push_back(*animationKey);
                         }
 
@@ -1395,7 +1397,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         targetChannel.target = targetNode;
                         for (It scaleKeyIdx = 0; scaleKeyIdx != scaleKeyEnd; ++scaleKeyIdx) {
                             const auto &scaleKey = srcChannel.mScalingKeys[scaleKeyIdx];
-                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(scaleKey));
+                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(scaleKey, freq));
                             targetChannel.keys.push_back(*animationKey);
                         }
 
