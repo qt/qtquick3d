@@ -27,4 +27,5 @@ SUBDIRS += \
     morphing \
     custommorphing \
     particles3d \
-    runtimeloader
+    runtimeloader \
+    reflectionprobes
