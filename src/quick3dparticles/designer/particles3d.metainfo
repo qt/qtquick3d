@@ -304,4 +304,164 @@ MetaInfo {
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Animated Sprite"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_animatedsprite_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Attractor"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_attractor_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Burst"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_burst_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Model Blend"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_modelblend_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Model Shape"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_modelshape_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Particle Trail"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_particletrail_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Sprite"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_sprite_template.qml" }
+        }
+    }
+    Type {
+        name: "QtQuick3D.Particles3D.ParticleSystem3D"
+        icon: "images/particle-system-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Wander"
+            category: "Qt Quick 3D Particle System Templates"
+            libraryIcon: "images/particle-system-24px.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D.Particles3D"
+            QmlSource { source: "./source/particlesystem_wander_template.qml" }
+        }
+    }
 }
