@@ -195,6 +195,42 @@ const QQuick3DInstancing::InstanceTableEntry *QQuick3DInstancing::getInstanceEnt
     return reinterpret_cast<const QQuick3DInstancing::InstanceTableEntry*>(data.constData()) + index;
 }
 
+QVector3D QQuick3DInstancing::InstanceTableEntry::getPosition() const
+{
+    return QVector3D{ row0[3], row1[3], row2[3] };
+}
+
+QVector3D QQuick3DInstancing::InstanceTableEntry::getScale() const
+{
+    const QVector3D col0{row0[0], row1[0], row2[0]};
+    const QVector3D col1{row0[1], row1[1], row2[1]};
+    const QVector3D col2{row0[2], row1[2], row2[2]};
+    const float scaleX = col0.length();
+    const float scaleY = col1.length();
+    const float scaleZ = col2.length();
+    return QVector3D(scaleX, scaleY, scaleZ);
+}
+
+QQuaternion QQuick3DInstancing::InstanceTableEntry::getRotation() const
+{
+    const QVector3D col0 = QVector3D(row0[0], row1[0], row2[0]).normalized();
+    const QVector3D col1 = QVector3D(row0[1], row1[1], row2[1]).normalized();
+    const QVector3D col2 = QVector3D(row0[2], row1[2], row2[2]).normalized();
+
+    const float data3x3[3*3] { // row-major order
+        col0[0], col1[0], col2[0],
+        col0[1], col1[1], col2[1],
+        col0[2], col1[2], col2[2],
+    };
+    QMatrix3x3 rot(data3x3);
+    return QQuaternion::fromRotationMatrix(rot).normalized();
+}
+
+QColor QQuick3DInstancing::InstanceTableEntry::getColor() const
+{
+    return QColor::fromRgbF(color[0], color[1], color[2], color[3]);
+}
+
 /*!
     \qmlmethod vector3d QtQuick3D::Instancing::instancePosition(int index)
     \since 6.3
@@ -227,15 +263,7 @@ QVector3D QQuick3DInstancing::instanceScale(int index)
     auto *entry = getInstanceEntry(index);
     if (!entry)
         return {};
-    auto &t = *entry;
-    const QVector3D column0{t.row0[0], t.row1[0], t.row2[0]};
-    const QVector3D column1{t.row0[1], t.row1[1], t.row2[1]};
-    const QVector3D column2{t.row0[2], t.row1[2], t.row2[2]};
-    const float scaleX = column0.length();
-    const float scaleY = column1.length();
-    const float scaleZ = column2.length();
-
-    return QVector3D(scaleX, scaleY, scaleZ);
+    return entry->getScale();
 }
 
 /*!
@@ -252,19 +280,7 @@ QQuaternion QQuick3DInstancing::instanceRotation(int index)
     const auto *entry = getInstanceEntry(index);
     if (!entry)
         return {};
-
-    auto &t = *entry;
-    const QVector3D col0 = QVector3D(t.row0[0], t.row1[0], t.row2[0]).normalized();
-    const QVector3D col1 = QVector3D(t.row0[1], t.row1[1], t.row2[1]).normalized();
-    const QVector3D col2 = QVector3D(t.row0[2], t.row1[2], t.row2[2]).normalized();
-
-    const float data3x3[3*3] { // row-major order, of course! Why would it be convenient...
-        col0[0], col1[0], col2[0],
-        col0[1], col1[1], col2[1],
-        col0[2], col1[2], col2[2],
-    };
-    QMatrix3x3 rot(data3x3);
-    return QQuaternion::fromRotationMatrix(rot).normalized();
+    return entry->getRotation();
 }
 
 /*!
@@ -281,7 +297,7 @@ QColor QQuick3DInstancing::instanceColor(int index)
     const auto *entry = getInstanceEntry(index);
     if (!entry)
         return {};
-    return QColor::fromRgbF(entry->color[0], entry->color[1], entry->color[2], entry->color[3]);
+    return entry->getColor();
 }
 
 /*!

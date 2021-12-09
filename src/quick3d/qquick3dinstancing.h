@@ -52,12 +52,17 @@ class Q_QUICK3D_EXPORT QQuick3DInstancing : public QQuick3DObject
     Q_PROPERTY(bool depthSortingEnabled READ depthSortingEnabled WRITE setDepthSortingEnabled NOTIFY depthSortingEnabledChanged)
 
 public:
-    struct InstanceTableEntry {
+    struct Q_QUICK3D_EXPORT InstanceTableEntry {
         QVector4D row0;
         QVector4D row1;
         QVector4D row2;
         QVector4D color;
         QVector4D instanceData;
+
+        QVector3D getPosition() const;
+        QVector3D getScale() const;
+        QQuaternion getRotation() const;
+        QColor getColor() const;
     };
 
     explicit QQuick3DInstancing(QQuick3DObject *parent = nullptr);

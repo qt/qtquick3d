@@ -1,0 +1,243 @@
+/****************************************************************************
+**
+** Copyright (C) 2022 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of Qt Quick 3D.
+**
+** $QT_BEGIN_LICENSE:GPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 or (at your option) any later version
+** approved by the KDE Free Qt Foundation. The licenses are as published by
+** the Free Software Foundation and appearing in the file LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "instancerepeater_p.h"
+#include <math.h>
+#include <QMatrix4x4>
+
+QT_BEGIN_NAMESPACE
+
+
+/*!
+    \qmltype InstanceModel
+    \inherits Object3D
+    \inqmlmodule QtQuick3D.Helpers
+    \since 6.4
+    \brief Defines a data model based on an instance table.
+
+    The InstanceModel QML type is a data model that provides access to the elements of an \l Instancing table.
+
+    The following roles are available:
+    \table
+        \header
+            \li Role name
+            \li Description
+        \row
+            \li \c modelPosition
+            \li The position of the instance as a \l vector3d
+        \row
+            \li \c modelRotation
+            \li The rotation of the instance as a \l quaternion
+        \row
+            \li \c modelScale
+            \li The scale of the instance  as a \l vector3d
+        \row
+            \li \c modelColor
+            \li The \l color of the instance
+        \row
+            \li \c modelData
+            \li The custom data of the instance as a \l vector4d
+    \endtable
+
+    \sa InstanceRepeater
+*/
+
+
+/*
+ \table
+    \header
+        \li Qt Core Feature
+        \li Brief Description
+    \row
+        \li \l {Signal and Slots}
+        \li Signals and slots are used for communication
+           between objects.
+    \row
+        \li \l {Layout Management}
+        \li The Qt layout system provides a simple
+           and powerful way of specifying the layout
+           of child widgets.
+    \row
+        \li \l {Drag and Drop}
+        \li Drag and drop provides a simple visual
+           mechanism which users can use to transfer
+           information between and within applications.
+    \endtable
+
+   */
+
+/*!
+    \qmlproperty Instancing InstanceModel::instancingTable
+
+    This property specifies the underlying instance table of the model.
+*/
+
+InstanceModel::InstanceModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+}
+
+QVariant InstanceModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+    ensureTable();
+
+
+    int idx = index.row();
+
+    if (idx >= m_count) {
+        qWarning("That's not supposed to happen...");
+        return QVariant();
+    }
+
+    auto *instanceData = reinterpret_cast<const QQuick3DInstancing::InstanceTableEntry*>(m_instanceData.data()) + idx;
+
+    switch (role) {
+    case ColorRole:
+        return instanceData->getColor();
+    case PositionRole:
+        return instanceData->getPosition();
+    case RotationRole:
+        return instanceData->getRotation();
+    case ScaleRole:
+        return instanceData->getScale();
+    case CustomDataRole:
+        return instanceData->instanceData;
+    }
+    return QVariant();
+}
+
+int InstanceModel::rowCount(const QModelIndex &) const
+{
+    ensureTable();
+    return m_count;
+}
+
+void InstanceModel::setInstancing(QQuick3DInstancing *instancing)
+{
+    if (m_instancing == instancing)
+        return;
+    QObject::disconnect(m_tableConnection);
+    m_instancing = instancing;
+    m_tableConnection = QObject::connect(instancing, &QQuick3DInstancing::instanceTableChanged, this, &InstanceModel::reset);
+    emit instancingChanged();
+}
+
+const QQuick3DInstancing::InstanceTableEntry *InstanceModel::instanceData(int index) const
+{
+    if (index >= m_count)
+        return nullptr;
+    return reinterpret_cast<const QQuick3DInstancing::InstanceTableEntry*>(m_instanceData.constData()) + index;
+}
+
+void InstanceModel::ensureTable() const
+{
+    auto *that = const_cast<InstanceModel*>(this);
+    that->m_instanceData = m_instancing->instanceBuffer(&that->m_count);
+}
+
+void InstanceModel::reset()
+{
+    m_instanceData.clear();
+}
+
+
+/*!
+    \qmltype InstanceRepeater
+    \inherits Repeater3D
+    \inqmlmodule QtQuick3D.Helpers
+    \since 6.4
+    \brief Instantiates components based on an instance table.
+
+    The InstanceRepeater type is used to create a number of objects based on an
+    \l Instancing table.  The primary use case is to implement \l {View3D::pick}{picking}.
+
+    Instances do not exist as individual objects in the scene graph, so they cannot be
+    discovered by picking, and they are not individual objects, so there is nothing that
+    can be returned from a picking API. The solution is to create invisible dummy objects
+    that match the rendered instances.
+
+    \c InstanceRepeater is a \l Repeater3D subtype that takes an \l Instancing table instead
+    of a data model, and automatically applies \c position, \c scale, and \c rotation.
+
+    For example:
+    \qml
+        InstanceRepeater {
+            instancingTable: myInstanceTable
+            Model {
+                source: "#Cube"
+                pickable: true
+                property int instanceIndex: index // expose the index, so we can identify the instance
+                opacity: 0
+            }
+        }
+    \endqml
+
+    \sa InstanceModel
+*/
+
+/*!
+    \qmlproperty Instancing InstanceRepeater::instancingTable
+
+    This property specifies the instance table used by the repeater.
+*/
+
+InstanceRepeater::InstanceRepeater(QQuick3DNode *parent)
+    : QQuick3DRepeater(parent)
+{
+}
+
+QQuick3DInstancing *InstanceRepeater::instancing() const
+{
+    return m_model ? m_model->instancing() : nullptr;
+}
+
+void InstanceRepeater::setInstancing(QQuick3DInstancing *instancing)
+{
+    if (m_model && m_model->instancing() == instancing)
+        return;
+    if (!m_model)
+        m_model = new InstanceModel(this);
+    m_model->setInstancing(instancing);
+    setModel(QVariant::fromValue(m_model));
+    emit instancingChanged();
+}
+
+void InstanceRepeater::initDelegate(int index, QQuick3DNode *node)
+{
+    Q_ASSERT(m_model);
+    auto *entry = m_model->instanceData(index);
+    Q_ASSERT(entry);
+    node->setPosition(entry->getPosition());
+    node->setScale(entry->getScale());
+    node->setRotation(entry->getRotation());
+}
+
+QT_END_NAMESPACE

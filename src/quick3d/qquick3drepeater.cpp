@@ -343,6 +343,7 @@ void QQuick3DRepeater::initObject(int index, QObject *object)
         m_deletables[index] = item;
         item->setParent(this);
         item->setParentItem(static_cast<QQuick3DNode*>(this));
+        initDelegate(index, item);
     }
 }
 

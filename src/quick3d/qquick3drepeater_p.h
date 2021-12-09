@@ -92,6 +92,7 @@ private:
 protected:
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
+    virtual void initDelegate(int, QQuick3DNode *) {}
 
 private Q_SLOTS:
     void createdObject(int index, QObject *item);
