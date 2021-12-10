@@ -34,36 +34,118 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 QT_BEGIN_NAMESPACE
+
+/*!
+    \qmltype ReflectionProbe
+    \inherits Node
+    \inqmlmodule QtQuick3D
+    \brief Defines a reflection probe in the scene.
+
+    A reflection probe is used to provide reflections of the current scene to the objects. The probe
+    provides properties to the runtime which are then used to render the scene to a cube map. The cube map
+    is then used as the reflection information for the reflecting objects.
+
+    \sa {Qt Quick 3D - ReflectionProbe Example}
+*/
+
 QQuick3DReflectionProbe::QQuick3DReflectionProbe(QQuick3DNode *parent)
     : QQuick3DNode(*(new QQuick3DNodePrivate(QQuick3DNodePrivate::Type::ReflectionProbe)), parent)
 {
 }
 
+/*!
+    \qmlproperty ReflectionQuality ReflectionProbe::quality
+
+    Quality determines the resolution of the cube map.
+    The qualities are \c {ReflectionQuality.Low}, \c {ReflectionQuality.Medium},
+    \c {ReflectionQuality.High} and \c {ReflectionQuality.VeryHigh} corresponding
+    to 256x256, 512x512, 1024x1024 and 2048x2048 resolutions.
+*/
 QQuick3DReflectionProbe::ReflectionQuality QQuick3DReflectionProbe::quality() const
 {
     return m_quality;
 }
 
+/*!
+    \qmlproperty Color ReflectionProbe::clearColor
+
+    Clear color is the color used to clear the cube map prior rendering the scene.
+*/
 QColor QQuick3DReflectionProbe::clearColor() const
 {
     return m_clearColor;
 }
 
+/*!
+    \qmlproperty ReflectionRefreshMode ReflectionProbe::refreshMode
+
+    Refresh mode tells the runtime how many times the cube map is rendered.
+    The settings are \c {ReflectionRefreshMode.FirstFrame} and \c {ReflectionRefreshMode.EveryFrame}.
+    With \c {ReflectionRefreshMode.FirstFrame} the scene is rendered once and with
+    \c {ReflectionRefreshMode.EveryFrame} the scene is rendered every frame.
+
+    \note Use \c {ReflectionRefreshMode.FirstFrame} for improved performance.
+*/
 QQuick3DReflectionProbe::ReflectionRefreshMode QQuick3DReflectionProbe::refreshMode() const
 {
     return m_refreshMode;
 }
 
+/*!
+    \qmlproperty ReflectionTimeSlicing ReflectionProbe::timeSlicing
+
+    Time slicing determines how the cube map render is timed.
+    Options are \c {ReflectionTimeSlicing.None}, \c {ReflectionTimeSlicing.AllFacesAtOnce} and
+    \c {ReflectionTimeSlicing.IndividualFaces}.
+
+    \value ReflectionTimeSlicing.None
+        All faces of the cube map are rendered and prefiltered during one frame.
+
+    \value ReflectionTimeSlicing.AllFacesAtOnce
+        All faces are rendered during one frame but the prefiltering
+        is divided to subsquent frames with each mip level handled on
+        their own frame. Rough surface reflections are thus refreshed
+        every sixth frame while smooth surfaces have reflections
+        that refresh every frame.
+
+    \value ReflectionTimeSlicing.IndividualFaces
+        Each face is rendered and prefiltered in a separate frame.
+        Thus all reflections are refreshed every sixth frame.
+
+    \note Use \c {ReflectionTimeSlicing.AllFacesAtOnce} or
+    \c {ReflectionTimeSlicing.IndividualFaces} to increase performance.
+*/
 QQuick3DReflectionProbe::ReflectionTimeSlicing QQuick3DReflectionProbe::timeSlicing() const
 {
     return m_timeSlicing;
 }
 
+/*!
+    \qmlproperty bool ReflectionProbe::parallaxCorrection
+
+    By default the reflections provided by the reflection probe are assumed to be from an infinite distance similar
+    to the skybox. This works fine for environmental reflections but for tight spaces this causes perspective errors
+    in the reflections. To fix this parallax correction can be turned on. The distance of the reflection is then
+    determined by the \l ReflectionProbe::boxSize property.
+
+    \sa boxSize
+*/
 bool QQuick3DReflectionProbe::parallaxCorrection() const
 {
     return m_parallaxCorrection;
 }
 
+/*!
+    \qmlproperty vector3d ReflectionProbe::boxSize
+
+    Box size is used to determine which objects get their reflections from this ReflectionProbe. Objects that are
+    inside the box are under the influence of this ReflectionProbe. If an object lies inside more than one reflection
+    probe at the same time, the object is considered to be inside the nearest reflection probe.
+    With \l ReflectionProbe::parallaxCorrection turned on the size is also used to calculate the distance of
+    the reflections in the cube map.
+
+    \sa parallaxCorrection
+*/
 QVector3D QQuick3DReflectionProbe::boxSize() const
 {
     return m_boxSize;
