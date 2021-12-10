@@ -57,9 +57,9 @@ QQuick3DReflectionProbe::QQuick3DReflectionProbe(QQuick3DNode *parent)
     \qmlproperty ReflectionQuality ReflectionProbe::quality
 
     Quality determines the resolution of the cube map.
-    The qualities are \c {ReflectionQuality.Low}, \c {ReflectionQuality.Medium},
-    \c {ReflectionQuality.High} and \c {ReflectionQuality.VeryHigh} corresponding
-    to 256x256, 512x512, 1024x1024 and 2048x2048 resolutions.
+    The qualities are \c {ReflectionQuality.VeryLow}, \c {ReflectionQuality.Low},
+    \c {ReflectionQuality.Medium}, \c {ReflectionQuality.High} and \c {ReflectionQuality.VeryHigh}
+    corresponding to 128x128, 256x256, 512x512, 1024x1024 and 2048x2048 resolutions.
 */
 QQuick3DReflectionProbe::ReflectionQuality QQuick3DReflectionProbe::quality() const
 {
@@ -287,6 +287,8 @@ void QQuick3DReflectionProbe::markAllDirty()
 quint32 QQuick3DReflectionProbe::mapToReflectionResolution(ReflectionQuality quality)
 {
     switch (quality) {
+    case ReflectionQuality::Low:
+        return 8;
     case ReflectionQuality::Medium:
         return 9;
     case ReflectionQuality::High:
@@ -296,7 +298,7 @@ quint32 QQuick3DReflectionProbe::mapToReflectionResolution(ReflectionQuality qua
     default:
         break;
     }
-    return 8;
+    return 7;
 }
 
 QT_END_NAMESPACE

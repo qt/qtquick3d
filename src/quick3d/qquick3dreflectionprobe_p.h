@@ -59,6 +59,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
 
 public:
     enum class ReflectionQuality {
+        VeryLow,
         Low,
         Medium,
         High,

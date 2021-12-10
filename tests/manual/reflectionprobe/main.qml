@@ -133,9 +133,10 @@ Window {
                     else ReflectionProbe.FirstFrame
                 }
                 quality: {
-                    if (comboQuality.currentIndex === 0) ReflectionProbe.Low
-                    else if (comboQuality.currentIndex === 1) ReflectionProbe.Medium
-                    else if (comboQuality.currentIndex === 2) ReflectionProbe.High
+                    if (comboQuality.currentIndex === 0) ReflectionProbe.VeryLow
+                    else if (comboQuality.currentIndex === 1) ReflectionProbe.Low
+                    else if (comboQuality.currentIndex === 2) ReflectionProbe.Medium
+                    else if (comboQuality.currentIndex === 3) ReflectionProbe.High
                     else ReflectionProbe.VeryHigh
                 }
                 parallaxCorrection: checkParallax.checked
@@ -227,7 +228,7 @@ Window {
             ComboBox {
                 id: comboQuality
                 width: 200
-                model: [ "Low", "Medium", "High", "Very High" ]
+                model: [ "Very Low", "Low", "Medium", "High", "Very High" ]
             }
             CheckBox {
                 id: checkParallax

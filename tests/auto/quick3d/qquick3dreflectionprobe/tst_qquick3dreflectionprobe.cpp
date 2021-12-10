@@ -86,11 +86,12 @@ void tst_QQuick3DReflectionProbe::testEnums()
     auto node = static_cast<QSSGRenderReflectionProbe*>(probe.updateSpatialNode(nullptr));
     QVERIFY(node);
 
-    auto reflectionQualities = { QQuick3DReflectionProbe::ReflectionQuality::Low,
+    auto reflectionQualities = { QQuick3DReflectionProbe::ReflectionQuality::VeryLow,
+                                 QQuick3DReflectionProbe::ReflectionQuality::Low,
                                  QQuick3DReflectionProbe::ReflectionQuality::Medium,
                                  QQuick3DReflectionProbe::ReflectionQuality::High,
                                  QQuick3DReflectionProbe::ReflectionQuality::VeryHigh };
-    const unsigned int mappedResolutions[] = {8, 9, 10, 11};
+    const unsigned int mappedResolutions[] = {7, 8, 9, 10, 11};
     int idx = 0;
     for (const auto quality : reflectionQualities) {
         probe.setQuality(quality);
