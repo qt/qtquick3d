@@ -139,7 +139,7 @@ Section {
         SecondColumnLayout {
             ComboBox {
                 scope: "ReflectionProbe"
-                model: ["ReflectionQualityLow", "ReflectionQualityMedium", "ReflectionQualityHigh", "ReflectionQualityVeryHigh"]
+                model: ["VeryLow", "Low", "Medium", "High", "VeryHigh"]
                 backendValue: backendValues.quality
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -156,7 +156,7 @@ Section {
         SecondColumnLayout {
             ComboBox {
                 scope: "ReflectionProbe"
-                model: ["ReflectionRefreshModeFirstFrame", "ReflectionRefreshModeEveryFrame"]
+                model: ["FirstFrame", "EveryFrame"]
                 backendValue: backendValues.refreshMode
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -173,7 +173,7 @@ Section {
         SecondColumnLayout {
             ComboBox {
                 scope: "ReflectionProbe"
-                model: ["ReflectionTimeSlicingNone", "ReflectionTimeSlicingAllFacesAtOnce", "ReflectionTimeSlicingIndividualFaces"]
+                model: ["None", "AllFacesAtOnce", "IndividualFaces"]
                 backendValue: backendValues.timeSlicing
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
