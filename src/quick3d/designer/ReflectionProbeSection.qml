@@ -122,6 +122,22 @@ Section {
         }
 
         PropertyLabel {
+            text: qsTr("Debug View")
+            tooltip: qsTr("Render a wireframe to visualize the reflection probe box.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.debugView.valueToString
+                backendValue: backendValues.debugView
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Clear Color")
             tooltip: qsTr("The property defines the color that will be used to clear the reflection map.")
         }

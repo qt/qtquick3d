@@ -65,6 +65,11 @@ void tst_QQuick3DReflectionProbe::testProperties()
     QVERIFY(!probe.parallaxCorrection());
     QVERIFY(!node->parallaxCorrection);
 
+    probe.setDebugView(true);
+    QVERIFY(probe.debugView());
+    probe.setDebugView(false);
+    QVERIFY(!probe.debugView());
+
     QVector3D size(20, 40, 60);
     probe.setBoxSize(size);
     node = static_cast<QSSGRenderReflectionProbe*>(probe.updateSpatialNode(node));

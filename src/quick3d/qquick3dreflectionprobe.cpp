@@ -151,6 +151,16 @@ QVector3D QQuick3DReflectionProbe::boxSize() const
     return m_boxSize;
 }
 
+/*!
+    \qmlproperty bool ReflectionProbe::debugView
+
+    If this property is set to true, a wireframe is rendered to visualize the reflection probe box.
+*/
+bool QQuick3DReflectionProbe::debugView() const
+{
+    return m_debugView;
+}
+
 void QQuick3DReflectionProbe::setQuality(QQuick3DReflectionProbe::ReflectionQuality reflectionQuality)
 {
     if (m_quality == reflectionQuality)
@@ -209,7 +219,17 @@ void QQuick3DReflectionProbe::setBoxSize(const QVector3D &boxSize)
     m_boxSize = boxSize;
     m_dirtyFlags.setFlag(DirtyFlag::BoxDirty);
     emit boxSizeChanged();
+    updateDebugView();
     update();
+}
+
+void QQuick3DReflectionProbe::setDebugView(bool debugView)
+{
+    if (m_debugView == debugView)
+        return;
+    m_debugView = debugView;
+    emit debugViewChanged();
+    updateDebugView();
 }
 
 QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -282,6 +302,103 @@ void QQuick3DReflectionProbe::markAllDirty()
             | DirtyFlags(DirtyFlag::BoxDirty)
             | DirtyFlags(DirtyFlag::TimeSlicingDirty);
     QQuick3DNode::markAllDirty();
+}
+
+void QQuick3DReflectionProbe::updateDebugView()
+{
+    if (m_debugView) {
+        if (!m_debugViewGeometry)
+            m_debugViewGeometry = new QQuick3DGeometry(this);
+
+        m_debugViewGeometry->clear();
+        m_debugViewGeometry->addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, 0,
+                                          QQuick3DGeometry::Attribute::ComponentType::F32Type);
+        m_debugViewGeometry->setStride(12);
+        m_debugViewGeometry->setPrimitiveType(QQuick3DGeometry::PrimitiveType::Lines);
+        m_debugViewGeometry->setBounds(-boxSize() / 2, boxSize() / 2);
+
+        QVector<QVector3D> m_vertices;
+
+        //Lines
+        m_vertices.append(QVector3D(-boxSize().x() / 2, -boxSize().y() / 2, boxSize().z() / 2));
+        m_vertices.append(QVector3D(boxSize().x() / 2, -boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(boxSize().x() / 2, -boxSize().y() / 2, boxSize().z() / 2));
+        m_vertices.append(QVector3D(boxSize().x() / 2, boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(boxSize().x() / 2, boxSize().y() / 2, boxSize().z() / 2));
+        m_vertices.append(QVector3D(-boxSize().x() / 2, boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(-boxSize().x() / 2, boxSize().y() / 2, boxSize().z() / 2));
+        m_vertices.append(QVector3D(-boxSize().x() / 2, -boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(-boxSize().x() / 2, -boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(boxSize().x() / 2, -boxSize().y() / 2, -boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(boxSize().x() / 2, -boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(boxSize().x() / 2, boxSize().y() / 2, -boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(boxSize().x() / 2, boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(-boxSize().x() / 2, boxSize().y() / 2, -boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(-boxSize().x() / 2, boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(-boxSize().x() / 2, -boxSize().y() / 2, -boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(-boxSize().x() / 2, boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(-boxSize().x() / 2, boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(boxSize().x() / 2, boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(boxSize().x() / 2, boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(-boxSize().x() / 2, -boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(-boxSize().x() / 2, -boxSize().y() / 2, boxSize().z() / 2));
+
+        m_vertices.append(QVector3D(boxSize().x() / 2, -boxSize().y() / 2, -boxSize().z() / 2));
+        m_vertices.append(QVector3D(boxSize().x() / 2, -boxSize().y() / 2, boxSize().z() / 2));
+
+        QByteArray vertexData;
+        vertexData.resize(m_vertices.size() * 3 * sizeof(float));
+        float *data = reinterpret_cast<float *>(vertexData.data());
+        for (int i = 0; i < m_vertices.size(); i++) {
+            data[0] = m_vertices[i].x();
+            data[1] = m_vertices[i].y();
+            data[2] = m_vertices[i].z();
+            data += 3;
+        }
+
+        m_debugViewGeometry->setVertexData(vertexData);
+        m_debugViewGeometry->update();
+
+        if (!m_debugViewModel) {
+            m_debugViewModel = new QQuick3DModel();
+            m_debugViewModel->setParentItem(this);
+            m_debugViewModel->setParent(this);
+            m_debugViewModel->setCastsShadows(false);
+            m_debugViewModel->setGeometry(m_debugViewGeometry);
+        }
+
+        if (!m_debugViewMaterial) {
+            m_debugViewMaterial = new QQuick3DDefaultMaterial();
+            m_debugViewMaterial->setParentItem(m_debugViewModel);
+            m_debugViewMaterial->setParent(m_debugViewModel);
+            m_debugViewMaterial->setDiffuseColor(QColor(3, 252, 219));
+            m_debugViewMaterial->setLighting(QQuick3DDefaultMaterial::NoLighting);
+            m_debugViewMaterial->setCullMode(QQuick3DMaterial::NoCulling);
+            QQmlListReference materialsRef(m_debugViewModel, "materials");
+            materialsRef.append(m_debugViewMaterial);
+        }
+    } else {
+        if (m_debugViewModel) {
+            delete m_debugViewModel;
+            m_debugViewModel = nullptr;
+            m_debugViewMaterial = nullptr;
+        }
+
+        if (m_debugViewGeometry) {
+            delete m_debugViewGeometry;
+            m_debugViewGeometry = nullptr;
+        }
+    }
 }
 
 quint32 QQuick3DReflectionProbe::mapToReflectionResolution(ReflectionQuality quality)

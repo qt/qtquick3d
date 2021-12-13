@@ -42,6 +42,9 @@
 //
 
 #include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtQuick3D/private/qquick3dgeometry_p.h>
+#include <QtQuick3D/private/qquick3dmodel_p.h>
+#include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QColor>
 
 QT_BEGIN_NAMESPACE
@@ -55,6 +58,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
     Q_PROPERTY(ReflectionTimeSlicing timeSlicing READ timeSlicing WRITE setTimeSlicing NOTIFY timeSlicingChanged)
     Q_PROPERTY(bool parallaxCorrection READ parallaxCorrection WRITE setParallaxCorrection NOTIFY parallaxCorrectionChanged)
     Q_PROPERTY(QVector3D boxSize READ boxSize WRITE setBoxSize NOTIFY boxSizeChanged)
+    Q_PROPERTY(bool debugView READ debugView WRITE setDebugView NOTIFY debugViewChanged)
     QML_NAMED_ELEMENT(ReflectionProbe)
 
 public:
@@ -89,6 +93,7 @@ public:
     ReflectionTimeSlicing timeSlicing() const;
     bool parallaxCorrection() const;
     QVector3D boxSize() const;
+    bool debugView() const;
 
 public Q_SLOTS:
     void setQuality(ReflectionQuality reflectionQuality);
@@ -97,6 +102,7 @@ public Q_SLOTS:
     void setTimeSlicing(ReflectionTimeSlicing newTimeSlicing);
     void setParallaxCorrection(bool parallaxCorrection);
     void setBoxSize(const QVector3D &newBoxSize);
+    void setDebugView(bool debugView);
 
 Q_SIGNALS:
     void qualityChanged();
@@ -106,6 +112,7 @@ Q_SIGNALS:
     void parallaxCorrectionChanged();
 
     void boxSizeChanged();
+    void debugViewChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -130,12 +137,18 @@ protected:
 
 private:
     quint32 mapToReflectionResolution(ReflectionQuality quality);
+    void updateDebugView();
     ReflectionQuality m_quality = ReflectionQuality::Low;
     QColor m_clearColor = Qt::transparent;
     ReflectionRefreshMode m_refreshMode = ReflectionRefreshMode::EveryFrame;
     bool m_parallaxCorrection = false;
     QVector3D m_boxSize = QVector3D(0, 0, 0);
     ReflectionTimeSlicing m_timeSlicing = ReflectionTimeSlicing::None;
+    bool m_debugView = false;
+    // These objects are used to visualize the reflection probe box.
+    QQuick3DGeometry *m_debugViewGeometry = nullptr;
+    QQuick3DModel *m_debugViewModel = nullptr;
+    QQuick3DDefaultMaterial *m_debugViewMaterial = nullptr;
 };
 
 QT_END_NAMESPACE
