@@ -851,6 +851,8 @@ void QQuick3DFileInstancing::setSource(const QUrl &newSource)
         return;
     m_source = newSource;
     m_dirty = true;
+    markDirty();
+
     emit sourceChanged();
 }
 
