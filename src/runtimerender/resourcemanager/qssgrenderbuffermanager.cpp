@@ -129,6 +129,9 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 {
     auto context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
+    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DTextureLoad,
+                             QQuick3DProfiler::Quick3DStageBegin);
     if (image->m_qsgTexture) {
         QSGTexture *qsgTexture = image->m_qsgTexture;
         if (qsgTexture->thread() == QThread::currentThread()) {
@@ -203,6 +206,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         }
         foundIt.value().usageCount++;
     }
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DTextureLoad,
+                             QQuick3DProfiler::Quick3DStageEnd);
     return result;
 }
 
@@ -1332,15 +1337,23 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
         return meshItr.value().mesh;
     }
 
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
+    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DMeshLoad,
+                             QQuick3DProfiler::Quick3DStageBegin);
+
     QSSGMesh::Mesh result = loadMeshData(inMeshPath);
     if (!result.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DMeshLoad,
+                                 QQuick3DProfiler::Quick3DStageEnd);
         return nullptr;
     }
 
     auto ret = createRenderMesh(result);
     meshMap.insert(inMeshPath, { ret, 1 });
 
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DMeshLoad,
+                             QQuick3DProfiler::Quick3DStageEnd);
     return ret;
 }
 
@@ -1359,6 +1372,10 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
         return meshIterator.value().mesh;
     }
 
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
+    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DCustomMeshLoad,
+                             QQuick3DProfiler::Quick3DStageBegin);
+
     // Mesh data needs to be loaded
     QString error;
     QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(geometry->meshData(), &error);
@@ -1370,6 +1387,8 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
         qWarning("Mesh building failed: %s", qPrintable(error));
     }
 
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DCustomMeshLoad,
+                          QQuick3DProfiler::Quick3DStageEnd);
     return meshIterator->mesh;
 }
 

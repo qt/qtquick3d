@@ -49,6 +49,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
+#include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
+
 #include <QtCore/QMutex>
 
 QT_BEGIN_NAMESPACE

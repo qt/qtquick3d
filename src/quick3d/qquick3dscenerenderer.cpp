@@ -37,6 +37,7 @@
 #include "qquick3dpickresult_p.h"
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
+#include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
@@ -234,6 +235,11 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         if (m_renderStats)
             m_renderStats->startRenderPrepare();
 
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
+
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
+                                 QQuick3DProfiler::Quick3DStageBegin);
+
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
 
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
@@ -275,6 +281,14 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         if (m_renderStats)
             m_renderStats->endRenderPrepare();
+
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
+                              QQuick3DProfiler::Quick3DStageEnd);
+
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DRenderFrame,
+                                 QQuick3DProfiler::Quick3DStageBegin);
 
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
@@ -418,6 +432,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             currentTexture = m_texture;
         }
         endFrame();
+
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DRenderFrame,
+                              QQuick3DProfiler::Quick3DStageEnd);
     }
 
     return currentTexture;
@@ -470,6 +487,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     if (m_renderStats)
         m_renderStats->startSync();
+
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DSynchronizeFrame);
+    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DSynchronizeFrame,
+                             QQuick3DProfiler::Quick3DStageBegin);
 
     m_sgContext->setDpr(dpr);
     bool layerSizeIsDirty = m_surfaceSize != size;
@@ -751,6 +772,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     if (m_renderStats)
         m_renderStats->endSync(dumpRenderTimes);
+
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DSynchronizeFrame,
+                          QQuick3DProfiler::Quick3DStageEnd);
 }
 
 void QQuick3DSceneRenderer::update()
@@ -1029,7 +1053,10 @@ void QQuick3DSGRenderNode::prepare()
 {
     if (!renderer->m_sgContext->rhiContext()->isValid())
         return;
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
+    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
+                             QQuick3DProfiler::Quick3DStageBegin);
     // this is outside the main renderpass
     queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
     qreal dpr = window->devicePixelRatio();
@@ -1039,6 +1066,8 @@ void QQuick3DSGRenderNode::prepare()
     const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
     renderer->beginFrame();
     renderer->rhiPrepare(vp, dpr);
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
+                          QQuick3DProfiler::Quick3DStageEnd);
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
@@ -1046,9 +1075,15 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     Q_UNUSED(state);
 
     if (renderer->m_sgContext->rhiContext()->isValid()) {
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DRenderFrame,
+                                 QQuick3DProfiler::Quick3DStageBegin);
         queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
         renderer->rhiRender();
         renderer->endFrame();
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DRenderFrame,
+                              QQuick3DProfiler::Quick3DStageEnd);
     }
 }
 
@@ -1111,6 +1146,11 @@ void QQuick3DSGDirectRenderer::prepare()
             renderStats->startRenderPrepare();
         }
 
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
+
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
+                                 QQuick3DProfiler::Quick3DStageBegin);
+
         // this is outside the main renderpass
 
         queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
@@ -1119,6 +1159,8 @@ void QQuick3DSGDirectRenderer::prepare()
         m_renderer->beginFrame();
         m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
 
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
+                              QQuick3DProfiler::Quick3DStageEnd);
         if (renderStats)
             renderStats->endRenderPrepare();
     }
@@ -1130,6 +1172,12 @@ void QQuick3DSGDirectRenderer::render()
         return;
 
     if (m_renderer->m_sgContext->rhiContext()->isValid()) {
+
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DRenderFrame,
+                                 QQuick3DProfiler::Quick3DStageBegin);
+
         // the command buffer is recording the main renderpass at this point
 
         // No m_window->beginExternalCommands() must be done here. When the
@@ -1144,6 +1192,9 @@ void QQuick3DSGDirectRenderer::render()
 
         m_renderer->rhiRender();
         m_renderer->endFrame();
+
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DRenderFrame,
+                              QQuick3DProfiler::Quick3DStageEnd);
 
         if (m_renderer->renderStats())
             m_renderer->renderStats()->endRender(dumpRenderTimes);
