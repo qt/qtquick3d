@@ -1721,6 +1721,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // For all disabled lights, the shader code will be generated as the same as enabled.
         // but the light color will be zero, and shadows will not be affected
         const bool lightEnabled = inLights[lightIdx].enabled;
+        const bool lightShadows = inLights[lightIdx].shadows;
         const float brightness = lightEnabled ? theLight->m_brightness : 0.0f;
         lightColor[lightIdx][0] = theLight->m_diffuseColor.x() * brightness;
         lightColor[lightIdx][1] = theLight->m_diffuseColor.y() * brightness;
@@ -1747,7 +1748,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (lightEnabled && theLight->m_castShadow && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
+        if (lightEnabled && lightShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
             ++shadowMapCount;
 
