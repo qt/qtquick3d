@@ -42,7 +42,7 @@
     "uniforms": [
         { "type": "samplerCube", "name": "qt_lightProbe" },
         { "type": "vec4", "name": "qt_lightProbeProperties" },
-        { "type": "mat4", "name": "qt_lightProbeOrientation", "condition": "QSSG_ENABLE_IBL_ORIENTATION" }
+        { "type": "mat3", "name": "qt_lightProbeOrientation", "condition": "QSSG_ENABLE_IBL_ORIENTATION" }
     ]
 }*/
 #endif // QQ3D_SHADER_META
@@ -64,7 +64,7 @@ vec4 qt_sampleDiffuse(vec3 normal)
         return vec4(0.0);
     vec3 smpDir = normal;
     #if QSSG_ENABLE_IBL_ORIENTATION
-        smpDir = mat3(qt_lightProbeOrientation) * smpDir;
+        smpDir = qt_lightProbeOrientation * smpDir;
     #endif
     float baseLevel = qt_lightProbeProperties.y;
     // Irradiance map is contained in mip at baseLevel
@@ -91,7 +91,7 @@ vec4 qt_sampleGlossy(vec3 normal, vec3 viewDir, float rough)
     vec3 ret = vec3(0, 0, 0);
     vec3 smpDir = reflect(-viewDir, normal);
 #if QSSG_ENABLE_IBL_ORIENTATION
-    smpDir = mat3(qt_lightProbeOrientation) * smpDir;
+    smpDir = qt_lightProbeOrientation * smpDir;
 #endif
 
     // Compute the Geometric occlusion/self-shadowing term
@@ -124,7 +124,7 @@ vec4 qt_sampleGlossyPrincipled(vec3 normal, vec3 viewDir, vec3 F, float roughnes
     float lod = clamp((roughness * 5), 0.0, levels);
     vec3 smpDir = normalize(reflect(-viewDir, normal));
 #if QSSG_ENABLE_IBL_ORIENTATION
-    smpDir = mat3(qt_lightProbeOrientation) * smpDir;
+    smpDir = qt_lightProbeOrientation * smpDir;
 #endif
 
     vec3 specularSample = qt_textureProbe(qt_lightProbe, smpDir, lod);

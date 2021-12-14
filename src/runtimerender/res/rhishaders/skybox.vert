@@ -3,9 +3,9 @@
 layout(location = 0) in vec3 attr_pos;
 
 layout(std140, binding = 0) uniform buf {
-    mat4 viewMatrix;
+    mat3 viewMatrix;
     mat4 inverseProjection;
-    mat4 orientation;
+    mat3 orientation;
     float adjustY;
     float exposure;
 } ubuf;
@@ -18,7 +18,7 @@ void main()
 {
     gl_Position = vec4(attr_pos, 1.0);
     vec3 unprojected = (ubuf.inverseProjection * gl_Position).xyz;
-    eye_direction = normalize(mat3(ubuf.viewMatrix) * unprojected);
-    eye_direction = normalize(mat3(ubuf.orientation) * eye_direction);
+    eye_direction = normalize(ubuf.viewMatrix * unprojected);
+    eye_direction = normalize(ubuf.orientation * eye_direction);
     gl_Position.y *= ubuf.adjustY;
 }

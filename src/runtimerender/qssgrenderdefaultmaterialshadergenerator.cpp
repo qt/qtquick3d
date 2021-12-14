@@ -1859,8 +1859,12 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         QSSGRenderTextureCoordOp theVertLightProbeTilingMode = theLightProbe->m_verticalTilingMode;
         const int maxMipLevel = lightProbeTexture.m_mipmapCount - 1;
 
-        if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity())
-            shaders->setUniform(ubufData, "qt_lightProbeOrientation", inRenderProperties.probeOrientation.constData(), 16 * sizeof(float), &cui.lightProbeOrientationIdx);
+        if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity()) {
+            shaders->setUniform(ubufData, "qt_lightProbeOrientation",
+                                inRenderProperties.probeOrientation.constData(),
+                                12 * sizeof(float), &cui.lightProbeOrientationIdx,
+                                QSSGRhiShaderPipeline::UniformFlag::Mat3);
+        }
 
         const float props[4] = { 0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure };
         shaders->setUniform(ubufData, "qt_lightProbeProperties", props, 4 * sizeof(float), &cui.lightProbePropertiesIdx);

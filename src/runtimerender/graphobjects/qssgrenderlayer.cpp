@@ -93,7 +93,7 @@ void QSSGRenderLayer::setProbeOrientation(const QVector3D &angles)
 {
     if (angles != probeOrientationAngles) {
         probeOrientationAngles = angles;
-        probeOrientation = QMatrix4x4(QQuaternion::fromEulerAngles(probeOrientationAngles).toRotationMatrix());
+        probeOrientation = QQuaternion::fromEulerAngles(probeOrientationAngles).toRotationMatrix();
     }
 }
 

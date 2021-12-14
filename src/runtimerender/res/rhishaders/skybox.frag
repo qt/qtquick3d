@@ -25,9 +25,9 @@
 layout(location = 0) out vec4 fragOutput;
 
 layout(std140, binding = 0) uniform buf {
-    mat4 viewMatrix;
+    mat3 viewMatrix;
     mat4 inverseProjection;
-    mat4 orientation;
+    mat3 orientation;
     float adjustY;
     float exposure;
 } ubuf;
