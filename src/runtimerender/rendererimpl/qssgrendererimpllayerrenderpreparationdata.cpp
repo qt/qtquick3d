@@ -1384,7 +1384,7 @@ void QSSGLayerRenderPreparationData::prepareForRender(const QSize &outputSize)
                 shaderLight.enabled = theLight->flags.testFlag(QSSGRenderLight::Flag::GloballyActive);
                 shaderLight.enabled &= theLight->m_brightness > 0.0f;
                 shaderLight.shadows = theLight->m_castShadow;
-                if (shaderLight.shadows) {
+                if (shaderLight.shadows && shaderLight.enabled) {
                     if (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
                         ++shadowMapCount;
                     } else {
