@@ -549,7 +549,12 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable 
                                              inRenderable.shaderDescription);
     auto it = m_shaderMap.find(skey);
     if (it == m_shaderMap.end()) {
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DGenerateShader,
+                                 QQuick3DProfiler::Quick3DStageBegin);
         shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader,
+                              QQuick3DProfiler::Quick3DStageEnd);
         // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
         skey.detach();
         // insert it no matter what, no point in trying over and over again
