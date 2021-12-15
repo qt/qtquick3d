@@ -124,35 +124,29 @@ Q_SIGNALS:
     void lineWidthChanged();
 
 protected:
+    enum Dirty : quint32 {
+        TextureDirty = 0x1,
+        PropertyDirty = 0x2,
+        ShaderSettingsDirty = 0x4,
+        DynamicPropertiesDirty = 0x8, // Special case for custom materials created manually
+        AllDirty = std::numeric_limits<quint32>::max() ^ DynamicPropertiesDirty // (DynamicPropertiesDirty is intentionally excluded from AllDirty)
+    };
+
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(ItemChange, const ItemChangeData &) override;
     void markAllDirty() override;
+    static void markDirty(QQuick3DCustomMaterial &that, QQuick3DCustomMaterial::Dirty type);
 
 private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty();
 
 private:
-    friend class MaterialAdapter;
     friend class QQuick3DShaderUtilsTextureInput;
-    enum Dirty {
-        TextureDirty = 0x1,
-        PropertyDirty = 0x2,
-        ShaderSettingsDirty = 0x4,
-        DynamicPropertiesDirty = 0x8
-    };
-
-    void markDirty(QQuick3DCustomMaterial::Dirty type)
-    {
-        if (!(m_dirtyAttributes & quint32(type))) {
-            m_dirtyAttributes |= quint32(type);
-            update();
-        }
-    }
     void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
 
     QVector<QQuick3DTexture *> m_dynamicTextureMaps;
-    quint32 m_dirtyAttributes = 0xffffffff;
+    quint32 m_dirtyAttributes = Dirty::AllDirty;
     BlendMode m_srcBlend = BlendMode::NoBlend;
     BlendMode m_dstBlend = BlendMode::NoBlend;
     ShadingMode m_shadingMode = ShadingMode::Shaded;

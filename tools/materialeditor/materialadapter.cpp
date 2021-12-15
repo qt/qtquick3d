@@ -50,6 +50,16 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace  {
+class CustomMaterialExposed : public QQuick3DCustomMaterial
+{
+public:
+    using Dirty = QQuick3DCustomMaterial::Dirty;
+    using QQuick3DCustomMaterial::markDirty;
+    CustomMaterialExposed() = delete;
+};
+}
+
 enum class ShaderType
 {
     Vertex,
@@ -194,8 +204,8 @@ void MaterialAdapter::updateShader(QQuick3DMaterial &target)
         QQuick3DCustomMaterial &material = static_cast<QQuick3DCustomMaterial &>(target);
         // We mark the material as dirty, this will trigger the material to reload the
         // shader source file, which then again will trigger our resolveShader() function.
-        material.markDirty(QQuick3DCustomMaterial::ShaderSettingsDirty);
-        material.markDirty(QQuick3DCustomMaterial::DynamicPropertiesDirty);
+        CustomMaterialExposed::markDirty(material, CustomMaterialExposed::Dirty::ShaderSettingsDirty);
+        CustomMaterialExposed::markDirty(material, CustomMaterialExposed::Dirty::DynamicPropertiesDirty);
     }
 }
 
