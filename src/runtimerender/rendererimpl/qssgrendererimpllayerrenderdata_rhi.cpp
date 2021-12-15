@@ -1698,7 +1698,7 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             rhiPrepareResourcesForReflectionMap(rhiCtx, inData, pEntry, &ps,
                                                 reflectionPassObjects, theCameras[face], renderer, face);
         }
-
+        QRhiRenderPassDescriptor *renderPassDesc = nullptr;
         for (int face = 0; face < 6; ++face) {
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 face = pEntry->m_timeSliceFace;
@@ -1724,8 +1724,10 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                 Q_ASSERT(shaderPipeline);
                 ps.shaderPipeline = shaderPipeline.data();
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[face];
-                QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-                renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, rpDesc, {});
+                if (!renderPassDesc)
+                    renderPassDesc = rt->newCompatibleRenderPassDescriptor();
+                rt->setRenderPassDescriptor(renderPassDesc);
+                renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, renderPassDesc, {});
             }
 
             bool needsSetViewport = true;
@@ -1738,6 +1740,7 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;
         }
+        renderPassDesc->deleteLater();
 
         pEntry->renderMips(rhiCtx);
 
