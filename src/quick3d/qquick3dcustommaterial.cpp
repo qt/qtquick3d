@@ -1369,7 +1369,7 @@ void QQuick3DCustomMaterial::setLineWidth(float width)
 
 void QQuick3DCustomMaterial::markAllDirty()
 {
-    m_dirtyAttributes = Dirty::AllDirty;
+    m_dirtyAttributes |= Dirty::AllDirty;
     QQuick3DMaterial::markAllDirty();
 }
 

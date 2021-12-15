@@ -219,6 +219,8 @@ void MaterialAdapter::updateMaterialDescription()
                                           !m_materialDescr.shaders.frag.isEmpty() ? m_materialDescr.shaders.frag : defaultShaderUrl(ShaderType::Fragment) };
         if (auto v = m_materialDescr.create(*m_resourceRoot, uniformTable, m_properties, shaders)) {
             m_material = v;
+            CustomMaterialExposed::markDirty(*m_material, CustomMaterialExposed::Dirty::ShaderSettingsDirty);
+            CustomMaterialExposed::markDirty(*m_material, CustomMaterialExposed::Dirty::DynamicPropertiesDirty);
             Q_EMIT materialChanged();
         }
     }
