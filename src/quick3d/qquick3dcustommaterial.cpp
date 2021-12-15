@@ -1314,7 +1314,7 @@ void QQuick3DCustomMaterial::setShadingMode(ShadingMode mode)
         return;
 
     m_shadingMode = mode;
-    markDirty(Dirty::ShaderSettingsDirty);
+    markDirty(*this, Dirty::ShaderSettingsDirty);
     emit shadingModeChanged();
 }
 
@@ -1329,7 +1329,7 @@ void QQuick3DCustomMaterial::setVertexShader(const QUrl &url)
         return;
 
     m_vertexShader = url;
-    markDirty(Dirty::ShaderSettingsDirty);
+    markDirty(*this, Dirty::ShaderSettingsDirty);
     emit vertexShaderChanged();
 }
 
@@ -1344,7 +1344,7 @@ void QQuick3DCustomMaterial::setFragmentShader(const QUrl &url)
         return;
 
     m_fragmentShader = url;
-    markDirty(Dirty::ShaderSettingsDirty);
+    markDirty(*this, Dirty::ShaderSettingsDirty);
     emit fragmentShaderChanged();
 }
 
@@ -1369,8 +1369,16 @@ void QQuick3DCustomMaterial::setLineWidth(float width)
 
 void QQuick3DCustomMaterial::markAllDirty()
 {
-    m_dirtyAttributes = 0xffffffff;
+    m_dirtyAttributes = Dirty::AllDirty;
     QQuick3DMaterial::markAllDirty();
+}
+
+void QQuick3DCustomMaterial::markDirty(QQuick3DCustomMaterial &that, Dirty type)
+{
+    if (!(that.m_dirtyAttributes & quint32(type))) {
+        that.m_dirtyAttributes |= quint32(type);
+        that.update();
+    }
 }
 
 bool QQuick3DCustomMaterial::alwaysDirty() const
@@ -1679,13 +1687,13 @@ void QQuick3DCustomMaterial::itemChange(QQuick3DObject::ItemChange change, const
 
 void QQuick3DCustomMaterial::onPropertyDirty()
 {
-    markDirty(Dirty::PropertyDirty);
+    markDirty(*this, Dirty::PropertyDirty);
     update();
 }
 
 void QQuick3DCustomMaterial::onTextureDirty()
 {
-    markDirty(Dirty::TextureDirty);
+    markDirty(*this, Dirty::TextureDirty);
     update();
 }
 
