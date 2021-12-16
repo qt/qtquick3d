@@ -82,6 +82,9 @@ Pane {
 
                 TextField {
                     id: uniformNameTextInput
+                    validator: RegularExpressionValidator {
+                        regularExpression: /[a-zA-Z_][a-zA-Z0-9_]+/
+                    }
                     Layout.fillWidth: true
                     placeholderText: "Uniform Name"
                     onAccepted: tableControls.insertUniform()
@@ -272,11 +275,15 @@ Pane {
 
                         Component {
                             id: intEditor
-                            SpinBox {
-                                value: model.value
-                                stepSize: 1
-                                editable: true
-                                onValueChanged: model.value = value
+                            TextField {
+                                text: model.value
+                                validator: IntValidator {
+                                    locale: "C"
+                                }
+                                onEditingFinished:{
+                                    if (acceptableInput)
+                                        model.value = parseInt(text)
+                                }
                             }
                         }
 
@@ -286,7 +293,7 @@ Pane {
                             TextField {
                                 text: model.value
                                 validator: DoubleValidator {
-
+                                    locale: "C"
                                 }
                                 onEditingFinished:{
                                     if (acceptableInput)
@@ -306,6 +313,7 @@ Pane {
                                         id: xField
                                         text: model.value.x
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished: {
                                             if (acceptableInput)
@@ -321,6 +329,7 @@ Pane {
                                         id: yField
                                         text: model.value.y
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished: {
                                             if (acceptableInput)
@@ -342,6 +351,7 @@ Pane {
                                         id: xField
                                         text: model.value.x
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -357,6 +367,7 @@ Pane {
                                         id: yField
                                         text: model.value.y
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -372,6 +383,7 @@ Pane {
                                         id: zField
                                         text: model.value.z
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -393,6 +405,7 @@ Pane {
                                         id: xField
                                         text: model.value.x
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -408,6 +421,7 @@ Pane {
                                         id: yField
                                         text: model.value.y
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -423,6 +437,7 @@ Pane {
                                         id: zField
                                         text: model.value.z
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -438,6 +453,7 @@ Pane {
                                         id: wField
                                         text: model.value.w
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -455,6 +471,7 @@ Pane {
                                     TextField {
                                         text: model.value.m11
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -467,6 +484,7 @@ Pane {
                                     TextField {
                                         text: model.value.m12
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -479,6 +497,7 @@ Pane {
                                     TextField {
                                         text: model.value.m13
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -491,6 +510,7 @@ Pane {
                                     TextField {
                                         text: model.value.m14
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -505,6 +525,7 @@ Pane {
                                     TextField {
                                         text: model.value.m21
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -517,6 +538,7 @@ Pane {
                                     TextField {
                                         text: model.value.m22
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -529,6 +551,7 @@ Pane {
                                     TextField {
                                         text: model.value.m23
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -541,6 +564,7 @@ Pane {
                                     TextField {
                                         text: model.value.m24
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -555,6 +579,7 @@ Pane {
                                     TextField {
                                         text: model.value.m31
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -567,6 +592,7 @@ Pane {
                                     TextField {
                                         text: model.value.m32
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -579,6 +605,7 @@ Pane {
                                     TextField {
                                         text: model.value.m33
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -591,6 +618,7 @@ Pane {
                                     TextField {
                                         text: model.value.m34
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -605,6 +633,7 @@ Pane {
                                     TextField {
                                         text: model.value.m41
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -617,6 +646,7 @@ Pane {
                                     TextField {
                                         text: model.value.m42
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -629,6 +659,7 @@ Pane {
                                     TextField {
                                         text: model.value.m43
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
@@ -641,6 +672,7 @@ Pane {
                                     TextField {
                                         text: model.value.m44
                                         validator: DoubleValidator {
+                                            locale: "C"
                                         }
                                         onEditingFinished:{
                                             if (acceptableInput)
