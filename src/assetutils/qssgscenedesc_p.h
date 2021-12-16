@@ -223,8 +223,8 @@ struct TextureData : Node
     };
 
     using Format = QQuick3DTextureData::Format;
-    explicit TextureData(QByteArrayView dataref, QSize size, Format format, quint8 flags = 0)
-        : Node(Node::Type::Texture, RuntimeType::TextureData)
+    explicit TextureData(QByteArrayView dataref, QSize size, Format format, quint8 flags = 0, QByteArrayView name = QByteArrayView())
+        : Node(name, Node::Type::Texture, RuntimeType::TextureData)
         , data(dataref)
         , sz(size)
         , fmt(format)

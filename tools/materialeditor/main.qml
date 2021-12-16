@@ -305,7 +305,7 @@ ApplicationWindow {
         id: materialAdapter
         vertexShader: editorView.vertexEditor.text
         fragmentShader: editorView.fragmentEditor.text
-        resourceRoot: preview.resourceRoot
+        rootNode: preview.rootNode
         uniformModel: editorView.uniformModel
         onVertexStatusChanged: {
             if (vertexStatus.status !== ShaderConstants.Success) {

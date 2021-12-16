@@ -109,7 +109,7 @@ QString Q_QUICK3DASSETUTILS_EXPORT stripParentDirectory(const QString &filePath)
 void Q_QUICK3DASSETUTILS_EXPORT writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value);
 
 void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir);
-void Q_QUICK3DASSETUTILS_EXPORT writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream);
+void Q_QUICK3DASSETUTILS_EXPORT writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream, const QDir &outDir);
 
 Q_REQUIRED_RESULT QString Q_QUICK3DASSETUTILS_EXPORT getMeshSourceName(const QByteArrayView &name);
 

@@ -210,8 +210,10 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObje
     case Node::Type::Texture:
         if (node.runtimeType == Node::RuntimeType::TextureData)
             obj = createRuntimeObject<QQuick3DTextureData>(static_cast<TextureData &>(node), parent);
-        else
+        else if (node.runtimeType == Node::RuntimeType::Image)
             obj = createRuntimeObject<QQuick3DTexture>(static_cast<Texture &>(node), parent);
+        else
+            Q_UNREACHABLE();
         break;
     case Node::Type::Material:
     {

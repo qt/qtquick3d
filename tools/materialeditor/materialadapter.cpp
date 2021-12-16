@@ -209,21 +209,24 @@ void MaterialAdapter::updateShader(QQuick3DMaterial &target)
     }
 }
 
-void MaterialAdapter::updateMaterialDescription()
+void MaterialAdapter::updateMaterialDescription(CustomMaterial::Shaders shaders)
 {
     // TODO: We might need to make some more clean-up of textures and front-end nodes
     // that are now replaced, but leaving as-is for now.
     auto oldMaterial = m_material;
-    if (m_resourceRoot != nullptr) {
-        CustomMaterial::Shaders shaders { !m_materialDescr.shaders.vert.isEmpty() ? m_materialDescr.shaders.vert : defaultShaderUrl(ShaderType::Vertex),
-                                          !m_materialDescr.shaders.frag.isEmpty() ? m_materialDescr.shaders.frag : defaultShaderUrl(ShaderType::Fragment) };
-        if (auto v = m_materialDescr.create(*m_resourceRoot, uniformTable, m_properties, shaders)) {
+    if (m_rootNode != nullptr) {
+        if (auto v = m_materialDescr.create(*m_rootNode, uniformTable, m_properties, shaders)) {
             m_material = v;
             CustomMaterialExposed::markDirty(*m_material, CustomMaterialExposed::Dirty::ShaderSettingsDirty);
             CustomMaterialExposed::markDirty(*m_material, CustomMaterialExposed::Dirty::DynamicPropertiesDirty);
             Q_EMIT materialChanged();
         }
     }
+}
+
+void MaterialAdapter::updateMaterialDescription()
+{
+    updateMaterialDescription({ defaultShaderUrl(ShaderType::Vertex), defaultShaderUrl(ShaderType::Fragment) });
 }
 
 MaterialAdapter::MaterialAdapter(QObject *parent)
@@ -437,35 +440,60 @@ bool MaterialAdapter::exportQmlComponent(const QUrl &componentFile, const QStrin
         filename[0] = firstLetter.toUpper();
     }
 
-    static const auto saveShader = [](const QUrl &filePath, const QString &text) {
-        auto saveFile = QFile(filePath.path());
+    static const auto saveShader = [](const QDir &dir, const QString &filename, const QString &text) {
+        const auto savePath = dir.path() + QDir::separator() + filename;
+        auto saveFile = QFile(savePath);
         bool ret = false;
         if (saveFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
             QTextStream out(&saveFile);
             out << text;
             ret = true;
+        } else {
+            qWarning("Unable to open '\%s\' for writing", qPrintable(savePath));
         }
 
         return ret;
     };
 
+    static const auto relShaderUrl = [](const QString &name, ShaderType type) {
+        QString relPath;
+        if (name.size() > 0) {
+            auto suffix = fileSuffix(type);
+            if (!name.endsWith(suffix))
+                relPath = name + suffix.toString();
+            else
+                relPath = name;
+        }
+
+        return QUrl(relPath);
+    };
+
     bool ret = false;
-    auto dirPath = fi.dir().path();
+    const auto &dir = fi.dir();
+    auto dirPath = dir.path();
     if (!dirPath.isEmpty()) {
         if (m_materialDescr.isValid()) {
-            m_materialDescr.shaders = { QUrl::fromLocalFile(dirPath + QDir::separator() + vertName + ".vert"), QUrl::fromLocalFile(dirPath + QDir::separator() + fragName + ".frag") };
-            const auto &shaders = m_materialDescr.shaders;
-            if (saveShader(shaders.vert, m_vertexShader) && saveShader(shaders.frag, m_fragmentShader)) {
-                updateMaterialDescription();
+            // NOTE: Relative paths. The shaders are exported with the component and we assume they live in the same location.
+            CustomMaterial::Shaders shaders = { relShaderUrl(vertName, ShaderType::Vertex), relShaderUrl(fragName, ShaderType::Fragment) };
+            const bool vertShaderOk = (m_vertexShader.size() > 0) ? saveShader(dir, shaders.vert.fileName(), m_vertexShader) : true;
+            const bool fragShaderOk = (m_fragmentShader.size() > 0) ? saveShader(dir, shaders.frag.fileName(), m_fragmentShader) : true;
+            if (vertShaderOk && fragShaderOk) {
+                updateMaterialDescription(shaders);
                 auto saveFile = QFile(dirPath + QDir::separator() + filename);
                 if (saveFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+                    const auto orgPath = QDir::current().path();
+                    QDir::setCurrent(dirPath);
                     QTextStream out(&saveFile);
                     out << m_materialDescr;
+                    QDir::setCurrent(orgPath);
                 }
             } else {
                 emit errorOccurred();
                 ret = false;
             }
+
+            // Re-set the shader urls
+            updateMaterialDescription();
         }
     }
 
@@ -524,17 +552,17 @@ void MaterialAdapter::setMaterialSaveFile(const QUrl &newMaterialSaveFile)
     emit materialSaveFileChanged();
 }
 
-QQuick3DObject *MaterialAdapter::resourceRoot() const
+QQuick3DNode *MaterialAdapter::rootNode() const
 {
-    return m_resourceRoot;
+    return m_rootNode;
 }
 
-void MaterialAdapter::setResourceRoot(QQuick3DObject *newResourceNode)
+void MaterialAdapter::setRootNode(QQuick3DNode *newResourceNode)
 {
-    if (m_resourceRoot == newResourceNode)
+    if (m_rootNode == newResourceNode)
         return;
-    m_resourceRoot = newResourceNode;
-    emit resourceRootChanged();
+    m_rootNode = newResourceNode;
+    emit rootNodeChanged();
 
     updateMaterialDescription();
 }
