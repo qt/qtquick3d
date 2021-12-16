@@ -64,7 +64,7 @@ class MaterialAdapter : public QObject
     using BlendMode = QQuick3DCustomMaterial::BlendMode;
 
     Q_PROPERTY(QQuick3DCustomMaterial * material READ material NOTIFY materialChanged)
-    Q_PROPERTY(QQuick3DObject * resourceRoot READ resourceRoot WRITE setResourceRoot NOTIFY resourceRootChanged)
+    Q_PROPERTY(QQuick3DNode * rootNode READ rootNode WRITE setRootNode NOTIFY rootNodeChanged)
     Q_PROPERTY(QString fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QString vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(ShaderBuildMessage vertexStatus READ vertexStatus NOTIFY vertexStatusChanged)
@@ -101,8 +101,8 @@ public:
     const QUrl &materialSaveFile() const;
     void setMaterialSaveFile(const QUrl &newMaterialSaveFile);
 
-    QQuick3DObject *resourceRoot() const;
-    void setResourceRoot(QQuick3DObject *newResourceNode);
+    QQuick3DNode *rootNode() const;
+    void setRootNode(QQuick3DNode *newResourceNode);
 
     CullMode cullMode() const;
     void setCullMode(CullMode newCullMode);
@@ -144,7 +144,7 @@ Q_SIGNALS:
 
     void errorOccurred();
     void postMaterialSaved();
-    void resourceRootChanged();
+    void rootNodeChanged();
     void cullModeChanged();
     void depthDrawModeChanged();
     void shadingModeChanged();
@@ -154,6 +154,7 @@ Q_SIGNALS:
 private:
     static void updateShader(QQuick3DMaterial &target);
     static void bakerStatusCallback(const QByteArray &descKey, QtQuick3DEditorHelpers::ShaderBaker::Status status, const QString &err, QShader::Stage stage);
+    void updateMaterialDescription(CustomMaterial::Shaders shaders);
     void updateMaterialDescription();
 
     QString importShader(const QUrl &shaderFile);
@@ -169,7 +170,7 @@ private:
     bool m_ready = false;
     bool m_unsavedChanges = true;
     QUrl m_materialSaveFile;
-    QPointer<QQuick3DObject> m_resourceRoot;
+    QPointer<QQuick3DNode> m_rootNode;
     CustomMaterial m_materialDescr;
     CustomMaterial::UniformTable uniformTable;
     CustomMaterial::Properties m_properties;

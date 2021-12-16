@@ -47,7 +47,7 @@ ColumnLayout {
     }
 
     property alias modelInstance: model
-    property alias resourceRoot: resourceRoot
+    property alias rootNode: resourceRoot
 
     Settings {
         property alias cameraOriginRotation: originNode.rotation

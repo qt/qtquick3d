@@ -999,6 +999,16 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 return { property.name, toQuotedString(QString::fromUtf8(path)) };
             }
         }
+
+        // Workaround the TextureInput item that wraps textures for the Custom material.
+        if (target.runtimeType == QSSGSceneDesc::Material::RuntimeType::CustomMaterial) {
+            if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Texture *>()) {
+                if (const auto texture = reinterpret_cast<QSSGSceneDesc::Texture *>(value.dptr)) {
+                    Q_ASSERT(texture->runtimeType == RuntimeType::Image);
+                    return { property.name, "TextureInput { texture: " + getIdForNode(*texture) + " }" };
+                }
+            }
+        }
     }
 
     if (ok)
@@ -1467,39 +1477,16 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
 #endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
 }
 
-void writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream)
+void writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream, const QDir &outDir)
 {
-    static const auto writeResourceProperties = [](const QSSGSceneDesc::Node &node, const char *uniformName, OutputContext &output) {
-        if (node.name.size() > 0) {
-            const auto typeName = node.name.toByteArray();
-            indent(output) << "property " << typeName << " " << uniformName << ": " << typeName << " {\n";
-            writeNodeProperties(node, output);
-            indent(output) << "}\n";
-        }
-    };
-
     using namespace QSSGSceneDesc;
     if (node.runtimeType == Material::RuntimeType::CustomMaterial) {
-        OutputContext output { stream, QDir(), 0, OutputContext::Resource };
+        OutputContext output { stream, outDir, 0, OutputContext::Resource };
         writeImportHeader(output);
         writeQml(static_cast<const Material &>(node), output);
         // Resources, if any, are written out as properties on the component
-        if (node.scene && node.scene->resources.size()) {
-            const auto &resources = node.scene->resources;
-            QSSGQmlScopedIndent scopedIndent(output);
-            for (auto res : resources) {
-                auto it = node.properties.begin();
-                const auto end = node.properties.end();
-                for (; it != end; ++it) {
-                    if (it->value.dptr == res)
-                        break;
-                }
-
-                if (it != end && it.m_obj->name)
-                    writeResourceProperties(*res, it.m_obj->name, output);
-            }
-        }
-
+        const auto &resources = node.scene->resources;
+        writeQmlForResources(resources, output);
         indent(output) << blockEnd(output);
     } else {
         Q_UNREACHABLE(); // Only implemented for Custom material at this point.

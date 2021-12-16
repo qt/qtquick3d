@@ -29,28 +29,14 @@
 
 #include "custommaterial.h"
 
+#include <QtCore/qdir.h>
+
 #include <QtQuick3DAssetUtils/private/qssgrtutilities_p.h>
 #include <QtQuick3DAssetUtils/private/qssgqmlutilities_p.h>
 
 #include <QtQuick3D/private/qquick3dshaderutils_p.h>
 
 QT_BEGIN_NAMESPACE
-
-namespace QSSGSceneDesc {
-
-struct TextureInput : QSSGSceneDesc::Node
-{
-    explicit TextureInput(QByteArrayView uName, QImage *image)
-        : Node("TextureInput", Node::Type::Texture, Node::RuntimeType::Unknown)
-        , uniformName(uName)
-        , texture(image) {}
-    using type = QQuick3DShaderUtilsTextureInput;
-    QByteArrayView uniformName;
-    QImage *texture = nullptr;
-};
-QSSG_DECLARE_NODE(TextureInput)
-
-}
 
 using TextureStore = QHash<QString, QImage *>;
 Q_GLOBAL_STATIC(TextureStore, s_textureStore);
@@ -73,20 +59,11 @@ template<typename T>
 static void setProperty(QQuick3DObject &obj, const char *name, T v)
 {
     if (QQuick3DObjectPrivate::get(&obj)->type == QQuick3DObjectPrivate::Type::CustomMaterial) {
-        if constexpr (std::is_same_v<T, QSSGSceneDesc::TextureInput *>) {
-            auto ti = static_cast<QSSGSceneDesc::TextureInput *>(v);
-            if (!ti->texture->isNull()) {
-                // Sigh...
-                auto texData = new QQuick3DTextureData(&obj);
-                const auto d = (const char *)ti->texture->constBits();
-                const auto s = ti->texture->sizeInBytes();
-                texData->setTextureData({d, s});
-                texData->setSize(ti->texture->size());
-                auto tex = new QQuick3DTexture(&obj);
-                tex->setTextureData(texData);
-                auto texUniform = new QQuick3DShaderUtilsTextureInput(&obj);
-                texUniform->setTexture(tex);
-                obj.setProperty(name, QVariant::fromValue(texUniform));
+        if constexpr (std::is_same_v<T, QSSGSceneDesc::Texture *>) {
+            if (QQuick3DTexture *texture = qobject_cast<QQuick3DTexture *>(v ? v->obj : nullptr)) {
+                auto textureInput = new QQuick3DShaderUtilsTextureInput(&obj);
+                textureInput->setTexture(texture);
+                obj.setProperty(name, QVariant::fromValue(textureInput));
             }
         } else {
             obj.setProperty(name, QVariant::fromValue(v));
@@ -127,7 +104,8 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
         break;
     case Uniform::Type::Sampler:
     {
-        const auto &path = uniform.imagePath;
+        QFileInfo fi(uniform.imagePath);
+        const auto &path = fi.canonicalFilePath();
         if (!path.isEmpty()) {
             auto it = s_textureStore->constFind(path);
             const auto end = s_textureStore->constEnd();
@@ -140,9 +118,18 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
             }
 
             if (it != end) {
-                auto texInputNode = material.scene->create<QSSGSceneDesc::TextureInput>(uniform.name.constData(), *it);
-                material.scene->resources.push_back(texInputNode);
-                QSSGSceneDesc::setProperty(material, uniform.name.constData(), &setProperty<QSSGSceneDesc::TextureInput *>, texInputNode, Dynamic);
+                const auto &image = *(*it);
+                const QSize resSize = image.size();
+                QByteArrayView dataref(image.constBits(), image.sizeInBytes());
+                auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
+                const auto &baseName = fi.baseName() + QString::number(material.id);
+                auto name = (baseName.size() > 0) ? fromQString(material.scene->allocator, baseName) : QByteArrayView();
+                auto textureData = material.scene->create<QSSGSceneDesc::TextureData>(dataref, resSize, format, 0, name);
+                QSSGSceneDesc::addNode(material, *textureData);
+                auto texture = material.scene->create<QSSGSceneDesc::Texture>();
+                QSSGSceneDesc::addNode(material, *texture);
+                QSSGSceneDesc::setProperty(*texture, "textureData", &QQuick3DTexture::setTextureData, textureData);
+                QSSGSceneDesc::setProperty(material, uniform.name.constData(), &setProperty<QSSGSceneDesc::Texture *>, texture, Dynamic);
             }
         }
         break;
@@ -153,7 +140,7 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
     }
 }
 
-QPointer<QQuick3DCustomMaterial> CustomMaterial::create(QQuick3DObject &parent, const UniformTable &uniforms, const Properties &properties, const Shaders &shaders)
+QPointer<QQuick3DCustomMaterial> CustomMaterial::create(QQuick3DNode &parent, const UniformTable &uniforms, const Properties &properties, const Shaders &shaders)
 {
     using namespace QSSGSceneDesc;
     QQuick3DCustomMaterial *ret = nullptr;
@@ -186,7 +173,7 @@ QPointer<QQuick3DCustomMaterial> CustomMaterial::create(QQuick3DObject &parent, 
         setProperty(*material, "fragmentShader", &QQuick3DCustomMaterial::setFragmentShader, QSSGSceneDesc::UrlView{ {fromQString(scene.allocator, shaders.frag.toString())} });
 
     auto resourceParent = std::make_unique<QQuick3DNode>();
-    QSSGRuntimeUtils::createGraphObject(*material, parent);
+    QSSGRuntimeUtils::createScene(parent, scene);
     if (auto customMaterial = qobject_cast<QQuick3DCustomMaterial *>(material->obj)) {
         resourceParent.release()->setParent(&parent);
         ret = customMaterial;
@@ -279,7 +266,7 @@ QDataStream &CustomMaterial::writeToDataStream(QDataStream &stream, const Unifor
 
 void CustomMaterial::writeQmlComponent(const QSSGSceneDesc::Material &material, QTextStream &stream)
 {
-    QSSGQmlUtilities::writeQmlComponent(material, stream);
+    QSSGQmlUtilities::writeQmlComponent(material, stream, QDir());
 }
 
 QT_END_NAMESPACE

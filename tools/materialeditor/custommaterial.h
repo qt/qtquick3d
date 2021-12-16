@@ -81,18 +81,18 @@ public:
     {
         QUrl vert;
         QUrl frag;
-    } shaders;
+    };
 
     static void setUniform(QSSGSceneDesc::Material &material, const Uniform &uniform);
-    QPointer<QQuick3DCustomMaterial> create(QQuick3DObject &parent, const UniformTable &uniforms, const Properties &properties, const Shaders &shaders);
+    QPointer<QQuick3DCustomMaterial> create(QQuick3DNode &parent, const UniformTable &uniforms, const Properties &properties, const Shaders &shaders);
     bool isValid() const;
     friend QTextStream &operator<<(QTextStream &stream, const CustomMaterial &material)
     {
         using namespace QSSGSceneDesc;
         const auto &scene = material.scene;
-        if (auto material = scene.root) {
-            Q_ASSERT(material->runtimeType == Material::RuntimeType::CustomMaterial);
-            writeQmlComponent(static_cast<const QSSGSceneDesc::Material &>(*material), stream);
+        if (auto node = scene.root) {
+            Q_ASSERT(node->runtimeType == Material::RuntimeType::CustomMaterial);
+            writeQmlComponent(static_cast<const QSSGSceneDesc::Material &>(*node), stream);
         }
         return stream;
     }
