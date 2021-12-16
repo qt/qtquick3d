@@ -973,6 +973,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         else
             fragmentShader << "    float qt_roughnessAmount = qt_material_properties.y;\n";
 
+        // Occlusion Map
+        if (occlusionImage) {
+            addLocalVariable(fragmentShader, "qt_ao", "float");
+            const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
+            const bool hasIdentityMap = identityImages.contains(occlusionImage);
+            if (hasIdentityMap)
+                generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
+            else
+                generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
+            const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
+            fragmentShader << "    qt_ao = texture2D(" << names.imageSampler << ", "
+                           << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
+            // apply occlusion map to ambient light
+            fragmentShader << "    global_diffuse_light.rgb = mix(global_diffuse_light.rgb, global_diffuse_light.rgb * qt_ao, qt_material_properties3.x);\n";
+        }
+
         if (specularLightingEnabled && roughnessImage) {
             const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::RoughnessChannel];
             const bool hasIdentityMap = identityImages.contains(roughnessImage);
@@ -1326,21 +1342,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // multiplied by the alpha from the material color and/or the vertex colors.
         fragmentShader << "    global_diffuse_light = vec4(global_diffuse_light.rgb * qt_aoFactor, qt_objectOpacity * qt_diffuseColor.a);\n";
 
-        // Occlusion Map
-        if (occlusionImage) {
-            if (hasIblProbe || hasReflectionProbe) {
-                const auto &channelProps = keyProps.m_textureChannels[QSSGShaderDefaultMaterialKeyProperties::OcclusionChannel];
-                const bool hasIdentityMap = identityImages.contains(occlusionImage);
-                if (hasIdentityMap)
-                    generateImageUVSampler(vertexShader, fragmentShader, inKey, *occlusionImage, imageFragCoords, occlusionImage->m_imageNode.m_indexUV);
-                else
-                    generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *occlusionImage, enableParallaxMapping, occlusionImage->m_imageNode.m_indexUV);
-                const auto &names = imageStringTable[int(QSSGRenderableImage::Type::Occlusion)];
-                fragmentShader << "    float qt_ao = texture2D(" << names.imageSampler << ", "
-                               << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << channelStr(channelProps, inKey) << ";\n";
-            }
-        }
-
         if (hasReflectionProbe) {
             vertexShader.generateWorldNormal(inKey);
             fragmentShader.addInclude("sampleReflectionProbe.glsllib");
@@ -1523,8 +1524,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         // Emission
         //fragmentShader.append("    debugOutput += qt_global_emission;\n");
         // Occlusion
-        //if (occlusionImage) {
-        //    fragmentShader.append("    debugOtuput += vec3(qt_ao);\n");
+        //if (occlusionImage)
+        //    fragmentShader.append("    debugOutput += vec3(qt_ao);\n");
         // Normal
         //fragmentShader.append("    debugOutput += qt_world_normal * 0.5 + 0.5;\n");
         // Tangent
