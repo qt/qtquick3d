@@ -536,6 +536,25 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironme
     return m_tonemapMode;
 }
 
+/*!
+    \qmlproperty float QQuick3D::SceneEnvironment::skyboxBlurAmount
+    \since 6.4
+
+    This property determines how much much the skybox should be blurred when
+    using \c SceneEnvironment.SkyBox for the
+    \l{QtQuick3D::View3D::backgroundMode}{backgroundMode} property. The default
+    value is \c 0.0 which means there is no bluring.
+
+    Acceptable values range between 0.0 and 1.0, all other values will be clamped
+    to this range.
+
+*/
+
+float QQuick3DSceneEnvironment::skyboxBlurAmount() const
+{
+    return m_skyboxBlurAmount;
+}
+
 void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)
 {
     if (m_antialiasingMode == antialiasingMode)
@@ -784,6 +803,18 @@ void QQuick3DSceneEnvironment::qmlClearEffects(QQmlListProperty<QQuick3DEffect> 
     QQuick3DSceneEnvironment *self = static_cast<QQuick3DSceneEnvironment *>(list->object);
     self->m_effects.clear();
     self->update();
+}
+
+void QQuick3DSceneEnvironment::setSkyboxBlurAmount(float newSkyboxBlurAmount)
+{
+    newSkyboxBlurAmount = qBound(0.0f, newSkyboxBlurAmount, 1.0f);
+
+    if (qFuzzyCompare(m_skyboxBlurAmount, newSkyboxBlurAmount))
+        return;
+
+    m_skyboxBlurAmount = newSkyboxBlurAmount;
+    emit skyboxBlurAmountChanged();
+    update();
 }
 
 QT_END_NAMESPACE

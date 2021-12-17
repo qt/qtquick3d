@@ -185,6 +185,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QVarLengthArray<QRhiShaderResourceBindings *, 4> item2DSrbs;
     bool skyBoxIsRgbe8 = false;
 
+    // Skybox
+    float skyboxBlurAmount = 0.0f;
+
     QVector<QSSGRenderGraphObject *> resourceLoaders;
 
     QSSGRenderLayer();

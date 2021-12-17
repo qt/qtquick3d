@@ -28,9 +28,14 @@ layout(std140, binding = 0) uniform buf {
     mat3 viewMatrix;
     mat4 inverseProjection;
     mat3 orientation;
-    float adjustY;
-    float exposure;
+    vec4 skyboxProperties;
 } ubuf;
+
+// skyboxProperties
+// x: adjustY
+// y: exposure
+// z: blurAmount
+// w: maxMipLevel
 
 layout(location = 0) in vec3 eye_direction;
 layout(binding = 1) uniform samplerCube skybox_image;
@@ -111,13 +116,15 @@ vec3 qt_tonemap(vec3 color)
 void main()
 {
     vec3 eye = normalize(eye_direction);
-    vec4 color = textureLod(skybox_image, eye, 0.0);
+    float mipLevel = mix(0.0, ubuf.skyboxProperties.w, ubuf.skyboxProperties.z);
+    vec4 color = textureLod(skybox_image, eye, mipLevel);
 #if QSSG_ENABLE_RGBE_LIGHT_PROBE
     color = vec4(color.rgb * pow(2.0, color.a * 255.0 - 128.0), 1.0);
 #endif
 
     // exposure
-    vec3 exposureCorrectedColor = vec3(1.0) - exp(-color.rgb * ubuf.exposure);
+    float exposure = ubuf.skyboxProperties.y;
+    vec3 exposureCorrectedColor = vec3(1.0) - exp(-color.rgb * exposure);
 
     // tonemapping
     color = vec4(qt_tonemap(exposureCorrectedColor), 1.0);

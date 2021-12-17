@@ -6,9 +6,14 @@ layout(std140, binding = 0) uniform buf {
     mat3 viewMatrix;
     mat4 inverseProjection;
     mat3 orientation;
-    float adjustY;
-    float exposure;
+    vec4 skyboxProperties;
 } ubuf;
+
+// skyboxProperties
+// x: adjustY
+// y: exposure
+// z: blurAmount
+// w: maxMipLevel
 
 layout(location = 0) out vec3 eye_direction;
 
@@ -20,5 +25,5 @@ void main()
     vec3 unprojected = (ubuf.inverseProjection * gl_Position).xyz;
     eye_direction = normalize(ubuf.viewMatrix * unprojected);
     eye_direction = normalize(ubuf.orientation * eye_direction);
-    gl_Position.y *= ubuf.adjustY;
+    gl_Position.y *= ubuf.skyboxProperties.x;
 }

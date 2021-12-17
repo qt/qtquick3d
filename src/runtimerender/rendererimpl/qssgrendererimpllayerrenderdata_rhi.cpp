@@ -1228,6 +1228,15 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
         const float exposure = layer.probeExposure;
         // orientation
         const QMatrix3x3 &rotationMatrix(layer.probeOrientation);
+        const float blurAmount = layer.skyboxBlurAmount;
+        const float maxMipLevel = float(lightProbeTexture.m_mipmapCount - 2);
+
+        const QVector4D skyboxProperties = {
+            adjustY,
+            exposure,
+            blurAmount,
+            maxMipLevel
+        };
 
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         memcpy(ubufData, viewMatrix.constData(), 44);
@@ -1235,8 +1244,7 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
         memcpy(ubufData + 112, rotationMatrix.constData(), 12);
         memcpy(ubufData + 128, (char *)rotationMatrix.constData() + 12, 12);
         memcpy(ubufData + 144, (char *)rotationMatrix.constData() + 24, 12);
-        memcpy(ubufData + 160, &adjustY, 4);
-        memcpy(ubufData + 164, &exposure, 4);
+        memcpy(ubufData + 160, &skyboxProperties, 16);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);

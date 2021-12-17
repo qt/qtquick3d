@@ -931,6 +931,7 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
         layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
 
     layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(view3D.environment()->tonemapMode());
+    layerNode.skyboxBlurAmount = view3D.environment()->skyboxBlurAmount();
 
     layerNode.markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 }

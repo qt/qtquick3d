@@ -84,6 +84,8 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 
     Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects)
 
+    Q_PROPERTY(float skyboxBlurAmount READ skyboxBlurAmount WRITE setSkyboxBlurAmount NOTIFY skyboxBlurAmountChanged REVISION(6, 4))
+
     QML_NAMED_ELEMENT(SceneEnvironment)
 
 public:
@@ -150,6 +152,7 @@ public:
 
     QQmlListProperty<QQuick3DEffect> effects();
 
+    Q_REVISION(6, 4) float skyboxBlurAmount() const;
 
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode);
@@ -177,6 +180,8 @@ public Q_SLOTS:
 
     void setTonemapMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes tonemapMode);
 
+    Q_REVISION(6, 4) void setSkyboxBlurAmount(float newSkyboxBlurAmount);
+
 Q_SIGNALS:
     void antialiasingModeChanged();
     void antialiasingQualityChanged();
@@ -202,6 +207,8 @@ Q_SIGNALS:
     void depthPrePassEnabledChanged();
 
     void tonemapModeChanged();
+
+    Q_REVISION(6, 4) void skyboxBlurAmountChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -242,6 +249,7 @@ private:
     bool m_depthTestEnabled = true;
     bool m_depthPrePassEnabled = false;
     QQuick3DEnvironmentTonemapModes m_tonemapMode = QQuick3DEnvironmentTonemapModes::TonemapModeLinear;
+    float m_skyboxBlurAmount = 0.0f;
 };
 
 QT_END_NAMESPACE

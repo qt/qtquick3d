@@ -68,6 +68,24 @@ Column {
             }
 
             PropertyLabel {
+                text: qsTr("Skybox Blur")
+                tooltip: qsTr("This property defines how much to blur the skybox when using SceneEnvironment.SkyBox for the backgroundMode property.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1
+                    decimals: 2
+                    backendValue: backendValues.skyboxBlurAmount
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
                 text: qsTr("Enable Depth Test")
                 tooltip: qsTr("Enables depth testing. Disable to optimize render speed for layers with mostly transparent objects.")
             }
