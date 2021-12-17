@@ -687,17 +687,23 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     // Reuse Vertex Buffer from phase 1
     // Reuse UniformBuffer from phase 1 (for vertex shader)
 
-    // UniformBuffer (roughness + resolution)
-    int ubufRoughnessElementSize = rhi->ubufAligned(8);
-    QRhiBuffer *uBufRoughness = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufRoughnessElementSize * mipmapCount);
-    uBufRoughness->create();
-    uBufRoughness->deleteLater();
+    // UniformBuffer
+    // float roughness;
+    // float resolution;
+    // float lodBias;
+    // int sampleCount;
+    // int distribution;
+
+    int ubufPrefilterElementSize = rhi->ubufAligned(20);
+    QRhiBuffer *uBufPrefilter = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufPrefilterElementSize * mipmapCount);
+    uBufPrefilter->create();
+    uBufPrefilter->deleteLater();
 
     // Shader Resource Bindings
     QRhiShaderResourceBindings *preFilterSrb = rhi->newShaderResourceBindings();
     preFilterSrb->setBindings({
                           QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
-                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, uBufRoughness, 8),
+                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, uBufPrefilter, 20),
                           QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, envCubeMap, envMapCubeSampler)
                       });
     preFilterSrb->create();
@@ -722,50 +728,23 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     }
     prefilterPipeline->deleteLater();
 
-
-    // Load the prefilter shader stages
-    QSSGRef<QSSGRhiShaderPipeline> irradianceShaderStages;
-    if (isRGBE)
-        irradianceShaderStages = shaderCache->loadBuiltinForRhi("environmentmapirradiance_rgbe");
-    else
-        irradianceShaderStages = shaderCache->loadBuiltinForRhi("environmentmapirradiance");
-
-    // Setup Irradiance pipline as well
-
-    QRhiGraphicsPipeline *irradiancePipeline = rhi->newGraphicsPipeline();
-    irradiancePipeline->setCullMode(QRhiGraphicsPipeline::Front);
-    irradiancePipeline->setFrontFace(QRhiGraphicsPipeline::CCW);
-    irradiancePipeline->setDepthOp(QRhiGraphicsPipeline::LessOrEqual);
-    irradiancePipeline->setShaderStages({
-                             *irradianceShaderStages->vertexStage(),
-                             *irradianceShaderStages->fragmentStage()
-                         });
-    QRhiShaderResourceBindings *irradianceSrb = rhi->newShaderResourceBindings();
-    irradianceSrb->setBindings({
-                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
-                          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, envCubeMap, sampler)
-                      });
-    irradianceSrb->create();
-    irradianceSrb->deleteLater();
-    irradiancePipeline->setShaderResourceBindings(irradianceSrb);
-    irradiancePipeline->setVertexInputLayout(inputLayout);
-    irradiancePipeline->setRenderPassDescriptor(renderPassDescriptorPhase2);
-    if (!irradiancePipeline->create()) {
-        qWarning("failed to create irradiance env map pipeline state");
-        return false;
-    }
-    irradiancePipeline->deleteLater();
-
     // Uniform Data
     // set the roughness uniform buffer data
     rub = rhi->nextResourceUpdateBatch();
-    for (int mipLevel = 0; mipLevel < mipmapCount - 1; ++mipLevel) {
+    const float resolution = environmentMapSize.width();
+    const float lodBias = 0.0f;
+    const int sampleCount = 1024;
+    for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
         Q_ASSERT(mipmapCount - 2);
         const float roughness = float(mipLevel) / float(mipmapCount - 2);
-        const float resolution = environmentMapSize.width();
-        rub->updateDynamicBuffer(uBufRoughness, mipLevel * ubufRoughnessElementSize, 4, &roughness);
-        rub->updateDynamicBuffer(uBufRoughness, mipLevel * ubufRoughnessElementSize + 4, 4, &resolution);
+        const int distribution = mipLevel == (mipmapCount - 1) ? 0 : 1; // last mip level is for irradiance
+        rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize, 4, &roughness);
+        rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize + 4, 4, &resolution);
+        rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize + 4 + 4, 4, &lodBias);
+        rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize + 4 + 4 + 4, 4, &sampleCount);
+        rub->updateDynamicBuffer(uBufPrefilter, mipLevel * ubufPrefilterElementSize + 4 + 4 + 4 + 4, 4, &distribution);
     }
+
     cb->resourceUpdate(rub);
 
     // Render
@@ -773,26 +752,14 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         for (int face = 0; face < 6; ++face) {
             cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             QSSGRHICTX_STAT(context, beginRenderPass(renderTargetsMap[mipLevel][face]));
-            if (mipLevel < mipmapCount - 1) {
-                // Specular pre-filtered Environment Map levels
-                cb->setGraphicsPipeline(prefilterPipeline);
-                cb->setVertexInput(0, 1, &vbufBinding);
-                cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
-                QVector<QPair<int, quint32>> dynamicOffsets = {
-                    { 0, quint32(ubufElementSize * face) },
-                    { 2, quint32(ubufRoughnessElementSize * mipLevel) }
-                };
-                cb->setShaderResources(preFilterSrb, 2, dynamicOffsets.constData());
-            } else {
-                // Diffuse Irradiance
-                cb->setGraphicsPipeline(irradiancePipeline);
-                cb->setVertexInput(0, 1, &vbufBinding);
-                cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
-                QVector<QPair<int, quint32>> dynamicOffsets = {
-                    { 0, quint32(ubufElementSize * face) },
-                };
-                cb->setShaderResources(irradianceSrb, 1, dynamicOffsets.constData());
-            }
+            cb->setGraphicsPipeline(prefilterPipeline);
+            cb->setVertexInput(0, 1, &vbufBinding);
+            cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
+            QVector<QPair<int, quint32>> dynamicOffsets = {
+                { 0, quint32(ubufElementSize * face) },
+                { 2, quint32(ubufPrefilterElementSize * mipLevel) }
+            };
+            cb->setShaderResources(preFilterSrb, 2, dynamicOffsets.constData());
             cb->draw(36);
             QSSGRHICTX_STAT(context, draw(36, 1));
             cb->endPass();

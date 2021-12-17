@@ -229,7 +229,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
             if (!pEntry->m_prefilterPipeline->create())
                 qWarning("failed to create pre-filter reflection map pipeline state");
 
-            QSSGRef<QSSGRhiShaderPipeline> irradianceShaderStages = m_context.shaderCache()->loadBuiltinForRhi("environmentmapirradiance");
+            QSSGRef<QSSGRhiShaderPipeline> irradianceShaderStages = m_context.shaderCache()->loadBuiltinForRhi("environmentmapprefilter");
 
             pEntry->m_irradiancePipeline = rhi->newGraphicsPipeline();
             pEntry->m_irradiancePipeline->setCullMode(QRhiGraphicsPipeline::Front);
@@ -240,9 +240,14 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                                      *irradianceShaderStages->fragmentStage()
                                  });
 
+            int ubufIrradianceSize = rhi->ubufAligned(20);
+            pEntry->m_irradianceFragBuffer = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufIrradianceSize);
+            pEntry->m_irradianceFragBuffer->create();
+
             pEntry->m_irradianceSrb = rhi->newShaderResourceBindings();
             pEntry->m_irradianceSrb->setBindings({
                                   QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, pEntry->m_prefilterVertBuffer, 128),
+                                  QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, pEntry->m_irradianceFragBuffer, 20),
                                   QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, pEntry->m_rhiCube, sampler)
                               });
             pEntry->m_irradianceSrb->create();
@@ -448,6 +453,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
 
     const int uBufSamplesSize = 16 * prefilterSampleCount + 8;
     int uBufSamplesElementSize = rhi->ubufAligned(uBufSamplesSize);
+    int uBufIrradianceElementSize = rhi->ubufAligned(20);
 
     // Uniform Data
     QMatrix4x4 mvp = rhi->clipSpaceCorrMatrix();
@@ -499,6 +505,18 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
         rub->updateDynamicBuffer(m_prefilterFragBuffer, mipLevel * uBufSamplesElementSize + 16 * prefilterSampleCount, 4, &invTotalWeight);
         rub->updateDynamicBuffer(m_prefilterFragBuffer, mipLevel * uBufSamplesElementSize + 16 * prefilterSampleCount + 4, 4, &sampleCount);
     }
+    {
+        const float roughness = 0.0f; // doesn't matter for irradiance
+        const float lodBias = 0.0f;
+        const int distribution = 0;
+        const int sampleCount = prefilterSampleCount;
+
+        rub->updateDynamicBuffer(m_irradianceFragBuffer, 0, 4, &roughness);
+        rub->updateDynamicBuffer(m_irradianceFragBuffer, 4, 4, &resolution);
+        rub->updateDynamicBuffer(m_irradianceFragBuffer, 4 + 4, 4, &lodBias);
+        rub->updateDynamicBuffer(m_irradianceFragBuffer, 4 + 4 + 4, 4, &sampleCount);
+        rub->updateDynamicBuffer(m_irradianceFragBuffer, 4 + 4 + 4 + 4, 4, &distribution);
+    }
 
     cb->resourceUpdate(rub);
 
@@ -530,6 +548,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
                 cb->setViewport(QRhiViewport(0, 0, m_prefilterMipLevelSizes[mipLevel].width(), m_prefilterMipLevelSizes[mipLevel].height()));
                 QVector<QPair<int, quint32>> dynamicOffsets = {
                     { 0, quint32(ubufElementSize * face) },
+                    { 2, quint32(uBufIrradianceElementSize) }
                 };
                 cb->setShaderResources(m_irradianceSrb, 1, dynamicOffsets.constData());
             }
@@ -592,6 +611,8 @@ void QSSGReflectionMapEntry::destroyRhiResources()
     m_prefilterVertBuffer = nullptr;
     delete m_prefilterFragBuffer;
     m_prefilterFragBuffer = nullptr;
+    delete m_irradianceFragBuffer;
+    m_irradianceFragBuffer = nullptr;
     delete m_rhiPrefilterRenderPassDesc;
     m_rhiPrefilterRenderPassDesc = nullptr;
     QMapIterator<int, QVarLengthArray<QRhiTextureRenderTarget *, 6>> i(m_rhiPrefilterRenderTargetsMap);
