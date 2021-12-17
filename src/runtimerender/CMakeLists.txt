@@ -193,8 +193,6 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
         res/rhishaders/skybox.frag
         res/rhishaders/environmentmapprefilter.vert
         res/rhishaders/environmentmapprefilter.frag
-        res/rhishaders/environmentmapirradiance.vert
-        res/rhishaders/environmentmapirradiance.frag
         res/rhishaders/reflectionprobeprefilter.vert
         res/rhishaders/reflectionprobeprefilter.frag
 )
@@ -208,13 +206,9 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_lightprobe_rgbe"
     FILES
         res/rhishaders/environmentmapprefilter.vert
         res/rhishaders/environmentmapprefilter.frag
-        res/rhishaders/environmentmapirradiance.vert
-        res/rhishaders/environmentmapirradiance.frag
     OUTPUTS
         res/rhishaders/environmentmapprefilter_rgbe.vert.qsb
         res/rhishaders/environmentmapprefilter_rgbe.frag.qsb
-        res/rhishaders/environmentmapirradiance_rgbe.vert.qsb
-        res/rhishaders/environmentmapirradiance_rgbe.frag.qsb
     DEFINES
         QSSG_ENABLE_RGBE_LIGHT_PROBE=1
 )

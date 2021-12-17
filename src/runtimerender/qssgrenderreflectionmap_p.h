@@ -83,6 +83,7 @@ struct QSSGReflectionMapEntry
     QRhiShaderResourceBindings *m_irradianceSrb = nullptr;
     QRhiBuffer *m_prefilterVertBuffer = nullptr;
     QRhiBuffer *m_prefilterFragBuffer = nullptr;
+    QRhiBuffer *m_irradianceFragBuffer = nullptr;
     QMap<int, QVarLengthArray<QRhiTextureRenderTarget *, 6>> m_rhiPrefilterRenderTargetsMap;
     QRhiRenderPassDescriptor *m_rhiPrefilterRenderPassDesc = nullptr;
     QMap<int, QSize> m_prefilterMipLevelSizes;

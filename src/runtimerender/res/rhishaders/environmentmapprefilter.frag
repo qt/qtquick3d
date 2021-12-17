@@ -11,7 +11,13 @@ layout(binding = 1) uniform samplerCube environmentMap;
 layout(std140, binding = 2) uniform buf {
     float roughness;
     float resolution;
+    float lodBias;
+    int sampleCount;
+    int distribution;
 } ubuf2;
+
+const int DistributionLambertian = 0;
+const int DistributionGGX = 1;
 
 const float M_PI = 3.14159265359;
 
@@ -45,84 +51,177 @@ vec2 hammersley(uint i, uint N)
     return vec2(float(i) / float(N), radicalInverse_VdC(i));
 }
 
-vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+mat3 generateTBN(vec3 normal)
 {
-    float a = roughness*roughness;
+    vec3 bitangent = vec3(0.0, 1.0, 0.0);
 
-    float phi = 2.0 * M_PI * Xi.x;
-    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    float NdotUp = dot(normal, vec3(0.0, 1.0, 0.0));
+    float epsilon = 0.0000001;
+    if (1.0 - abs(NdotUp) <= epsilon) {
+        // Sampling +Y or -Y, so we need a more robust bitangent.
+        if (NdotUp > 0.0)
+            bitangent = vec3(0.0, 0.0, 1.0);
+        else
+            bitangent = vec3(0.0, 0.0, -1.0);
+    }
 
-    // from spherical coordinates to cartesian coordinates
-    vec3 H;
-    H.x = cos(phi) * sinTheta;
-    H.y = sin(phi) * sinTheta;
-    H.z = cosTheta;
+    vec3 tangent = normalize(cross(bitangent, normal));
+    bitangent = cross(normal, tangent);
 
-    // from tangent-space vector to world-space sample vector
-    vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangent   = normalize(cross(up, N));
-    vec3 bitangent = cross(N, tangent);
-
-    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
-    return normalize(sampleVec);
+    return mat3(tangent, bitangent, normal);
 }
-#if QSSG_ENABLE_RGBE_LIGHT_PROBE == 0
-float distributionGGX(float NdotH, float roughness) {
-  float a = roughness * roughness;
-  float a2 = a * a;
-  float NdotH2 = NdotH * NdotH;
 
-  float nom = a2;
-  float denom = NdotH2 * (a2 - 1.0) + 1.0;
-  denom = M_PI * denom * denom;
-
-  return nom / denom;
-}
-#endif
-
-// This implements the pre-filtering technique described here:
-// https://learnopengl.com/PBR/IBL/Specular-IBL
-void main()
+struct DistributionSample
 {
-    vec3 N = normalize(localPos);
-    vec3 R = N;
-    vec3 V = R;
+    float pdf;
+    float cosTheta;
+    float sinTheta;
+    float phi;
+};
 
-    const uint SAMPLE_COUNT = 1024u;
-    float totalWeight = 0.0;
-    vec3 prefilteredColor = vec3(0.0);
-    for(uint i = 0u; i < SAMPLE_COUNT; ++i)
-    {
-        vec2 Xi = hammersley(i, SAMPLE_COUNT);
-        vec3 H  = importanceSampleGGX(Xi, N, ubuf2.roughness);
-        vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+float D_GGX(float NdotH, float roughness) {
+    float a = NdotH * roughness;
+    float k = roughness / (1.0 - NdotH * NdotH + a * a);
+    return k * k * (1.0 / M_PI);
+}
 
-        float NdotL = max(dot(N, L), 0.0);
-        if(NdotL > 0.0)
-        {
-#if QSSG_ENABLE_RGBE_LIGHT_PROBE == 0
-            float NdotH = max(dot(N, H), 0.0);
-            float D = distributionGGX(NdotH, ubuf2.roughness);
-            float HdotV = max(dot(H, V), 0.0);
-            float pdf = D * NdotH / (4.0 * HdotV) + 0.0001;
+float saturate(float v)
+{
+    return clamp(v, 0.0f, 1.0f);
+}
 
-            float saTexel = 4.0 * M_PI / (6.0 * ubuf2.resolution * ubuf2.resolution);
-            float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
-            float mipLevel = ubuf2.roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel);
-#endif
+DistributionSample GGX(vec2 xi, float roughness)
+{
+    DistributionSample ggx;
+
+    // evaluate sampling equations
+    float alpha = roughness * roughness;
+    ggx.cosTheta = saturate(sqrt((1.0 - xi.y) / (1.0 + (alpha * alpha - 1.0) * xi.y)));
+    ggx.sinTheta = sqrt(1.0 - ggx.cosTheta * ggx.cosTheta);
+    ggx.phi = 2.0 * M_PI * xi.x;
+
+    // evaluate GGX pdf (for half vector)
+    ggx.pdf = D_GGX(ggx.cosTheta, alpha);
+
+    ggx.pdf /= 4.0;
+
+    return ggx;
+}
+
+DistributionSample Lambertian(vec2 xi)
+{
+    DistributionSample lambertian;
+
+    // Cosine weighted hemisphere sampling
+    // http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling
+    lambertian.cosTheta = sqrt(1.0 - xi.y);
+    lambertian.sinTheta = sqrt(xi.y);
+    lambertian.phi = 2.0 * M_PI * xi.x;
+
+    lambertian.pdf = lambertian.cosTheta / M_PI;
+
+    return lambertian;
+}
+
+vec4 getImportanceSample(int sampleIndex, vec3 N, float roughness)
+{
+    // generate a quasi monte carlo point in the unit square [0.1)^2
+    vec2 xi = hammersley(sampleIndex, ubuf2.sampleCount);
+
+    DistributionSample importanceSample;
+
+    // generate the points on the hemisphere with a fitting mapping for
+    // the distribution (e.g. lambertian uses a cosine importance)
+    if (ubuf2.distribution == DistributionLambertian) {
+        importanceSample = Lambertian(xi);
+    } else if (ubuf2.distribution == DistributionGGX) {
+        // Trowbridge-Reitz / GGX microfacet model (Walter et al)
+        // https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.html
+        importanceSample = GGX(xi, roughness);
+    }
+
+    // transform the hemisphere sample to the normal coordinate frame
+    // i.e. rotate the hemisphere to the normal direction
+    vec3 localSpaceDirection = normalize(vec3(
+        importanceSample.sinTheta * cos(importanceSample.phi),
+        importanceSample.sinTheta * sin(importanceSample.phi),
+        importanceSample.cosTheta
+    ));
+    mat3 TBN = generateTBN(N);
+    vec3 direction = TBN * localSpaceDirection;
+
+    return vec4(direction, importanceSample.pdf);
+}
+
+float computeLod(float pdf)
+{
+    float lod = 0.5 * log2( 6.0 * ubuf2.resolution * ubuf2.resolution / (float(ubuf2.sampleCount) * pdf));
+    return lod;
+}
+
+vec3 filterColor(vec3 N)
+{
+    vec3 color = vec3(0.f);
+    float weight = 0.0f;
+
+    for (int i = 0; i < ubuf2.sampleCount; ++i) {
+        vec4 importanceSample = getImportanceSample(i, N, ubuf2.roughness);
+
+        vec3 H = vec3(importanceSample.xyz);
+        float pdf = importanceSample.w;
+
+        // mipmap filtered samples (GPU Gems 3, 20.4)
+        float lod = computeLod(pdf);
+
+        // apply the bias to the lod
+        lod += ubuf2.lodBias;
+
+        if (ubuf2.distribution == DistributionLambertian) {
+            // sample lambertian at a lower resolution to avoid fireflies
+
 #if QSSG_ENABLE_RGBE_LIGHT_PROBE
-            prefilteredColor += decodeRGBE(texture(environmentMap, L)).rgb * NdotL;
+            vec3 lambertian = decodeRGBE(texture(environmentMap, H)).rgb;
 #else
-            prefilteredColor += textureLod(environmentMap, L, mipLevel).rgb * NdotL;
+            vec3 lambertian = textureLod(environmentMap, H, lod).rgb;
 #endif
-            totalWeight      += NdotL;
+            color += lambertian;
+        } else if (ubuf2.distribution == DistributionGGX) {
+            // Note: reflect takes incident vector.
+            vec3 V = N;
+            vec3 L = normalize(reflect(-V, H));
+            float NdotL = dot(N, L);
+
+            if (NdotL > 0.0) {
+                if (ubuf2.roughness == 0.0)
+                    lod = ubuf2.lodBias;
+
+#if QSSG_ENABLE_RGBE_LIGHT_PROBE
+                vec3 sampleColor = decodeRGBE(texture(environmentMap, L)).rgb;
+#else
+                vec3 sampleColor = textureLod(environmentMap, L, lod).rgb;
+#endif
+                color += sampleColor * NdotL;
+                weight += NdotL;
+            }
         }
     }
-    prefilteredColor = prefilteredColor / totalWeight;
+
+    if (weight != 0.0f)
+        color /= weight;
+    else
+        color /= float(ubuf2.sampleCount);
+
+    return color.rgb ;
+}
+
+void main()
+{
+    vec3 direction = normalize(localPos);
+    vec3 color = filterColor(direction);
+
 #if QSSG_ENABLE_RGBE_LIGHT_PROBE
-    FragColor = encodeRGBE(vec4(prefilteredColor, 1.0));
+    FragColor = encodeRGBE(vec4(color, 1.0));
 #else
-    FragColor = vec4(prefilteredColor, 1.0);
+    FragColor = vec4(color, 1.0);
 #endif
 }
