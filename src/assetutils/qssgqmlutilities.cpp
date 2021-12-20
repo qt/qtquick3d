@@ -1012,13 +1012,13 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto end = properties.end();
     bool ok = false;
     for (; it != end; ++it) {
-        const auto ret = valueToQml(node, (*it), output, &ok);
+        const auto &[name, value] = valueToQml(node, (*it), output, &ok);
         if (it->type != Property::Type::Dynamic) {
             if (!ok)
                 indent(output) << comment();
-            indent(output) << ret.first << ": " << ret.second << "\n";
+            indent(output) << name << ": " << value << "\n";
         } else if (ok && it->type == Property::Type::Dynamic) {
-            indent(output) << "property " << typeName(it->value.mt).toByteArray() << ' ' << ret.first << ": " << ret.second << "\n";
+            indent(output) << "property " << typeName(it->value.mt).toByteArray() << ' ' << name << ": " << value << "\n";
         }
     }
 }
