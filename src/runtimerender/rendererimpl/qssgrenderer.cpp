@@ -243,10 +243,12 @@ void QSSGRenderer::endFrame()
 {
     // We need to do this endFrame(), as the material nodes might not exist after this!
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
-        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
+        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
-        else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial)
+        } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial
+                   || matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
+        }
     }
     m_materialClearDirty.clear();
 
