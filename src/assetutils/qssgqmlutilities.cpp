@@ -647,9 +647,14 @@ static QByteArrayView typeName(QMetaType mt)
 
 static QString getIdForNode(const QSSGSceneDesc::Node &node)
 {
-    const QString name = (!node.name.isNull()) ? QSSGQmlUtilities::sanitizeQmlId(QString::fromUtf8(node.name))
-                                               : QString::fromLatin1(getQmlElementName(node));
-    return QStringLiteral("_q%1_%2").arg(name).arg(node.id);
+    const bool nodeHasName = (node.name.size() > 0);
+    QString name = nodeHasName ? QString::fromUtf8(node.name) : QString::fromLatin1(getQmlElementName(node));
+    QString sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
+
+    if (nodeHasName)
+        return sanitizedName;
+
+    return QStringLiteral("%1%2").arg(sanitizedName).arg(node.id);
 }
 
 void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value)
