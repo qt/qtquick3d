@@ -8,10 +8,10 @@ float qt_schlick(float value)
     return n2 * n2 * n;
 }
 
-vec3 qt_F0_ior(float ior, float metalness, vec3 baseColor) {
+vec3 qt_F0_ior(float ior, float metalness, vec3 baseColor)
+{
     float f0 = ((ior - 1.0) * (ior - 1.0)) / ((ior + 1.0) * (ior + 1.0));
-    vec3 f0v = vec3(f0);
-    return mix(f0v, baseColor, metalness);
+    return (vec3(f0) * (1.0 - metalness)) + (baseColor * metalness);
 }
 
 vec3 qt_principledMaterialFresnel(in vec3 N, in vec3 viewDir, in vec3 f0, in float roughness, in float fresnelPower)
