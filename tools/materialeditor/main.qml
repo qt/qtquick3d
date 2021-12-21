@@ -159,6 +159,7 @@ ApplicationWindow {
                 }
                 TextField {
                     id: vertexFilename
+                    enabled: (editorView.vertexEditor.text !== "")
                     validator: nameValidator
                 }
             }
@@ -169,6 +170,7 @@ ApplicationWindow {
                 }
                 TextField {
                     id: fragmentFilename
+                    enabled: (editorView.fragmentEditor.text !== "")
                     validator: nameValidator
                 }
             }
@@ -176,7 +178,7 @@ ApplicationWindow {
             DialogButtonBox {
                 Button {
                     text: qsTr("Export")
-                    enabled: (componentFilePath.text !== "" && vertexFilename.text !== "" && fragmentFilename.text !== "")
+                    enabled: (componentFilePath.text !== "" && (!vertexFilename.enabled || (vertexFilename.enabled && vertexFilename.text !== "")) && (!fragmentFilename.enabled || (fragmentFilename.enabled && fragmentFilename.text !== "")))
                     DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                     onClicked: exportMaterialDialog.accept()
                 }
