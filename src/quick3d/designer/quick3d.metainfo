@@ -12,7 +12,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Perspective"
-            category: "Qt Quick 3D"
+            category: "Camera"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -32,7 +32,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Orthographic"
-            category: "Qt Quick 3D"
+            category: "Camera"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -52,7 +52,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Frustum"
-            category: "Qt Quick 3D"
+            category: "Camera"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -72,7 +72,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Custom"
-            category: "Qt Quick 3D"
+            category: "Camera"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -91,7 +91,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Custom Material"
-            category: "Qt Quick 3D"
+            category: "Materials"
             libraryIcon: "images/custommaterial.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -111,7 +111,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Default Material"
-            category: "Qt Quick 3D"
+            category: "Materials"
             libraryIcon: "images/material.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -130,7 +130,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Principled Material"
-            category: "Qt Quick 3D"
+            category: "Materials"
             libraryIcon: "images/material.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -150,7 +150,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Texture"
-            category: "Qt Quick 3D"
+            category: "Materials"
             libraryIcon: "images/texture.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -169,7 +169,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Light Directional"
-            category: "Qt Quick 3D"
+            category: "Lights"
             libraryIcon: "images/lightdirectional.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -188,7 +188,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Light Point"
-            category: "Qt Quick 3D"
+            category: "Lights"
             libraryIcon: "images/lightpoint.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -207,7 +207,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Light Spot"
-            category: "Qt Quick 3D"
+            category: "Lights"
             libraryIcon: "images/lightspot.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -226,8 +226,28 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
+            name: "Empty"
+            category: "Models"
+            libraryIcon: "images/group.png"
+            version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.Model"
+        icon: "images/model16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+            visibleNonDefaultProperties: "materials"
+        }
+
+        ItemLibraryEntry {
             name: "Cube"
-            category: "Qt Quick 3D"
+            category: "Models"
             libraryIcon: "images/cube.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -248,7 +268,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Sphere"
-            category: "Qt Quick 3D"
+            category: "Models"
             libraryIcon: "images/sphere.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -269,7 +289,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Cylinder"
-            category: "Qt Quick 3D"
+            category: "Models"
             libraryIcon: "images/cylinder.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -290,7 +310,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Plane"
-            category: "Qt Quick 3D"
+            category: "Models"
             libraryIcon: "images/plane.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -311,7 +331,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Cone"
-            category: "Qt Quick 3D"
+            category: "Models"
             libraryIcon: "images/cone.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -331,7 +351,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Group"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/group.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -349,7 +369,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Scene Environment"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/scene.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -361,7 +381,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "View3D"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/view3D.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -498,7 +518,7 @@ MetaInfo {
     }
     Type {
         name: "QtQuick3D.Repeater3D"
-        icon: "images/repeater3d16.png"
+        icon: "images/dummy16.png"
 
         Hints {
             visibleInNavigator: true
@@ -509,15 +529,15 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Repeater3D"
-            category: "Qt Quick 3D"
-            libraryIcon: "images/repeater3d.png"
+            category: "Components"
+            libraryIcon: "images/dummy.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.Loader3D"
-        icon: "images/loader3d16.png"
+        icon: "images/dummy16.png"
 
         Hints {
             visibleInNavigator: true
@@ -528,15 +548,15 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Loader3D"
-            category: "Qt Quick 3D"
-            libraryIcon: "images/loader3d.png"
+            category: "Components"
+            libraryIcon: "images/dummy.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.Skeleton"
-        icon: "images/skeleton16.png"
+        icon: "images/group16.png"
 
         Hints {
             visibleInNavigator: true
@@ -547,14 +567,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Skeleton"
             category: "Qt Quick 3D"
-            libraryIcon: "images/skeleton.png"
+            libraryIcon: "images/group.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.MorphTarget"
-        icon: "images/morphtarget16.png"
+        icon: "images/group16.png"
 
         Hints {
             visibleInNavigator: true
@@ -565,14 +585,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Morph Target"
             category: "Qt Quick 3D"
-            libraryIcon: "images/morphtarget.png"
+            libraryIcon: "images/group.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.InstanceListEntry"
-        icon: "images/instancelistentry16.png"
+        icon: "images/group16.png"
 
         Hints {
             visibleInNavigator: true
@@ -583,14 +603,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Instance List Entry"
             category: "Qt Quick 3D"
-            libraryIcon: "images/instancelistentry.png"
+            libraryIcon: "images/group.png"
             version: "6.2"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.InstanceList"
-        icon: "images/instancelist16.png"
+        icon: "images/group16.png"
 
         Hints {
             visibleInNavigator: true
@@ -601,14 +621,14 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Instance List"
             category: "Qt Quick 3D"
-            libraryIcon: "images/instancelist.png"
+            libraryIcon: "images/group.png"
             version: "6.2"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.FileInstancing"
-        icon: "images/fileinstancing16.png"
+        icon: "images/group16.png"
 
         Hints {
             visibleInNavigator: true
@@ -617,16 +637,16 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
-            name: "File Instancing"
+            name: "Instancing"
             category: "Qt Quick 3D"
-            libraryIcon: "images/fileinstancing.png"
+            libraryIcon: "images/group.png"
             version: "6.2"
             requiredImport: "QtQuick3D"
         }
     }
     Type {
         name: "QtQuick3D.Joint"
-        icon: "images/joint16.png"
+        icon: "images/group16.png"
 
         Hints {
             visibleInNavigator: true
@@ -637,7 +657,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Joint"
             category: "Qt Quick 3D"
-            libraryIcon: "images/joint.png"
+            libraryIcon: "images/group.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
         }
