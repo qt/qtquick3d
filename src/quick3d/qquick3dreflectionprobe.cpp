@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     provides properties to the runtime which are then used to render the scene to a cube map. The cube map
     is then used as the reflection information for the reflecting objects.
 
-    \sa {Qt Quick 3D - ReflectionProbe Example}
+    \sa {Qt Quick 3D - Reflection Probes Example}
 */
 
 QQuick3DReflectionProbe::QQuick3DReflectionProbe(QQuick3DNode *parent)

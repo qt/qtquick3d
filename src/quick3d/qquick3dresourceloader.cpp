@@ -39,7 +39,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \inherits Object3D
 
-    \brief Allows pre-loading of 3D resources
+    \brief Allows pre-loading of 3D resources.
 
     ResourceLoader is used to pre-load resources for Qt Quick 3D. Normally
     resources are only loaded when they are needed to render a frame, and are
