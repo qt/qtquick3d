@@ -190,10 +190,10 @@ QQuick3DTexture *QQuick3DParticleSpriteParticle::colorTable() const
 }
 
 /*!
-    \qmlproperty List<QtQuick3D::QQuick3DAbstractLight> SpriteParticle3D::lights
+    \qmlproperty list<Light> SpriteParticle3D::lights
     \since 6.3
 
-    This property contains a list of \l [QtQuick3D QML] {QQuick3DAbstractLight}{lights} used
+    This property contains a list of \l [QtQuick3D QML] {Light}{lights} used
     for rendering the particles.
     \note For optimal performance, define lights only if they are needed and keep
     the amount of lights at minimum.
