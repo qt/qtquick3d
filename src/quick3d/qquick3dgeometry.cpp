@@ -528,15 +528,24 @@ void QQuick3DGeometry::setPrimitiveType(PrimitiveType type)
 
     The component type can be one of the following:
 
-    \value U16Type The attribute is an unsigned 16-bit integer.
-    \value U32Type The attribute is an unsigned 32-bit integer.
-    \value I32Type The attribute is a signed 32-bit integer.
+    \value U16Type The index component type is unsigned 16-bit integer. Only
+    supported for \c IndexSemantic.
+
+    \value U32Type The attribute (or index component) is an unsigned 32-bit
+    integer.
+
+    \value I32Type The attribute is a signed 32-bit integer. Be aware that old
+    OpenGL versions (such as, 2.1 or OpenGL ES 2.0) may not support this data
+    type.
+
     \value F32Type The attribute is a single-precision float.
 
     \note The joint index data is typically \c I32Type. \c F32Type is also supported
     in order to enable functioning with APIs, such as OpenGL ES 2.0, that do not
     support integer vertex input attributes.
 
+    \note For index data (\c IndexSemantic) only U16Type and U32Type are
+    sensible and supported.
 */
 void QQuick3DGeometry::addAttribute(Attribute::Semantic semantic, int offset,
                   Attribute::ComponentType componentType)
@@ -686,8 +695,16 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
             geometry->addAttribute(mapSemantic(d->m_attributes[i].semantic),
                                    d->m_attributes[i].offset,
                                    componentType);
-            if (d->m_attributes[i].semantic == Attribute::IndexSemantic)
+            if (d->m_attributes[i].semantic == Attribute::IndexSemantic) {
+                if (componentType != QSSGMesh::Mesh::ComponentType::UnsignedInt16
+                        && componentType != QSSGMesh::Mesh::ComponentType::UnsignedInt32)
+                {
+                    qWarning("Index data can only be uint16 or uint32");
+                }
                 indexBufferComponentSize = QSSGMesh::MeshInternal::byteSizeForComponentType(componentType);
+            } else if (componentType == QSSGMesh::Mesh::ComponentType::UnsignedInt16) {
+                qWarning("Attributes cannot be uint16, only index data");
+            }
         }
         if (!d->m_indexBuffer.isEmpty() && !indexBufferComponentSize) {
             qWarning("IndexData has been set, but no index attribute found.");
