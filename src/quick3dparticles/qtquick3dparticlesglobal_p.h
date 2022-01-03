@@ -44,4 +44,10 @@
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 #include <QtQuick3DParticles/private/qtquick3dparticlesexports_p.h>
 
+QT_BEGIN_NAMESPACE
+
+void Q_QUICK3DPARTICLES_PRIVATE_EXPORT qml_register_types_QtQuick3D_Particles3D();
+
+QT_END_NAMESPACE
+
 #endif // QTQUICK3DPARTICLESGLOBAL_P_H

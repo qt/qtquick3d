@@ -63,7 +63,6 @@
 
 #include <private/qqmlglobal_p.h>
 
-Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick3D);
 
 static void initResources()
 {
@@ -74,6 +73,8 @@ static void initResources()
 }
 
 QT_BEGIN_NAMESPACE
+
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick3D);
 
 static QQmlPrivate::AutoParentResult qquick3dobject_autoParent(QObject *obj, QObject *parent)
 {

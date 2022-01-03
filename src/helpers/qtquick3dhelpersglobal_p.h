@@ -44,6 +44,10 @@
 #include <QtGui/qtguiglobal.h>
 #include <QtQuick3DHelpers/private/qtquick3dhelpersexports_p.h>
 
+QT_BEGIN_NAMESPACE
+
 void Q_QUICK3DHELPERS_PRIVATE_EXPORT qml_register_types_QtQuick3D_Helpers();
+
+QT_END_NAMESPACE
 
 #endif // QTQUICK3DHELPERSGLOBAL_P_H

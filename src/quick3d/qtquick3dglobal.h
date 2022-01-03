@@ -33,6 +33,4 @@
 #include <QtCore/qglobal.h>
 #include <QtQuick3D/qtquick3dexports.h>
 
-void Q_QUICK3D_EXPORT qml_register_types_QtQuick3D();
-
 #endif // QTQUICK3DGLOBAL_H

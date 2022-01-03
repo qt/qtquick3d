@@ -33,6 +33,4 @@
 #include <QtCore/qglobal.h>
 #include <QtQuick3DParticles/qtquick3dparticlesexports.h>
 
-void Q_QUICK3DPARTICLES_EXPORT qml_register_types_QtQuick3D_Particles3D();
-
 #endif // QTQUICK3DPARTICLESGLOBAL_H

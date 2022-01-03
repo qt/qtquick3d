@@ -44,4 +44,10 @@
 #include <QtQuick3D/qtquick3dglobal.h>
 #include <QtQuick3D/private/qtquick3dexports_p.h>
 
+QT_BEGIN_NAMESPACE
+
+void Q_QUICK3D_PRIVATE_EXPORT qml_register_types_QtQuick3D();
+
+QT_END_NAMESPACE
+
 #endif // QTQUICK3DGLOBAL_P_H

@@ -44,6 +44,10 @@
 #include <QtCore/qglobal.h>
 #include <QtQuick3DAssetUtils/private/qtquick3dassetutilsexports_p.h>
 
+QT_BEGIN_NAMESPACE
+
 void Q_QUICK3DASSETUTILS_PRIVATE_EXPORT qml_register_types_QtQuick3D_AssetUtils();
+
+QT_END_NAMESPACE
 
 #endif // QTQUICK3DASSETUTILSGLOBAL_P_H
