@@ -1365,6 +1365,22 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                                               theObject->renderableFlags.isCustomMaterialMeshSubset());
             }
 
+            // There is no screen texture at this stage. But the shader from a
+            // custom material may rely on it, and an object with that material
+            // can end up in the shadow map's object list. So bind a dummy
+            // texture then due to the lack of other options.
+            int binding = shaderPipeline->bindingForTexture("qt_screenTexture", int(QSSGRhiSamplerBindingHints::ScreenTexture));
+            if (binding >= 0) {
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                         QRhiSampler::Repeat, QRhiSampler::Repeat });
+                QRhiResourceUpdateBatch *resourceUpdates = rhiCtx->rhi()->nextResourceUpdateBatch();
+                QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resourceUpdates);
+                rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    dummyTexture, sampler);
+            }
+
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
             subsetRenderable.rhiRenderData.shadowPass.pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, pEntry->m_rhiRenderPassDesc, srb),
                                                                                   pEntry->m_rhiRenderPassDesc,
