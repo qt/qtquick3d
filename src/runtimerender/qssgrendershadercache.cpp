@@ -271,7 +271,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
    static auto dumpShader = [](QShader::Stage stage, const QByteArray &code) {
        switch (stage) {
        case QShader::Stage::VertexStage:
-           qDebug("FRAGMENT SHADER:\n*****\n");
+           qDebug("VERTEX SHADER:\n*****\n");
            break;
        case QShader::Stage::FragmentStage:
            qDebug("FRAGMENT SHADER:\n*****\n");
