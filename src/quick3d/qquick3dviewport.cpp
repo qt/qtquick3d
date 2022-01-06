@@ -1151,9 +1151,9 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
             // and Qt Quick expects it to arrive that way: then QQuickDeliveryAgentPrivate::translateTouchEvent()
             // copies it into the scene position before localizing.
             // That might be silly, we might change it eventually, but gotta stay consistent for now.
-            QMutableEventPoint &mut = QMutableEventPoint::from(event->point(pointIndex));
-            mut.setPosition(pt);
-            mut.setScenePosition(pt);
+            QEventPoint &ep = event->point(pointIndex);
+            QMutableEventPoint::setPosition(ep, pt);
+            QMutableEventPoint::setScenePosition(ep, pt);
         }
 
         if (event->isBeginEvent())
@@ -1185,7 +1185,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
         event->setAccepted(false);
     } else {
         for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex)
-            QMutableEventPoint::from(event->point(pointIndex)).setScenePosition(originalScenePositions.at(pointIndex));
+            QMutableEventPoint::setScenePosition(event->point(pointIndex), originalScenePositions.at(pointIndex));
     }
     return ret;
 }
