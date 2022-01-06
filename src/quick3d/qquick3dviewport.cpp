@@ -997,7 +997,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
 
     for (int pointIndex = 0; pointIndex < event->pointCount(); ++pointIndex) {
         QQuick3DSceneRenderer::PickResultList pickResults;
-        auto eventPoint = QMutableEventPoint::from(event->point(pointIndex));
+        auto &eventPoint = event->point(pointIndex);
         if (useRayPicking) {
             const QSSGRenderRay ray(origin, direction);
             pickResults = renderer->syncPickAll(ray);
