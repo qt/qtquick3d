@@ -112,6 +112,8 @@ QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRender
         return QRhiGraphicsPipeline::Lines;
     case QSSGRenderDrawMode::TriangleStrip:
         return QRhiGraphicsPipeline::TriangleStrip;
+    case QSSGRenderDrawMode::TriangleFan:
+        return QRhiGraphicsPipeline::TriangleFan;
     case QSSGRenderDrawMode::Triangles:
         return QRhiGraphicsPipeline::Triangles;
     default:
