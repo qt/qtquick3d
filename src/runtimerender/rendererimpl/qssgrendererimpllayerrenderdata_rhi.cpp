@@ -1187,7 +1187,6 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
 
 static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                              QSSGRenderLayer &layer,
-                             QSSGRhiGraphicsPipelineState *ps,
                              QSSGRenderCamera &inCamera,
                              const QSSGRef<QSSGRenderer> &renderer,
                              QSSGReflectionMapEntry *entry = nullptr,
@@ -1260,7 +1259,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
                                                 int cubeFace)
 {
     if (inData.layer.background == QSSGRenderLayer::Background::SkyBox && inData.layer.lightProbe)
-        rhiPrepareSkyBox(rhiCtx, inData.layer, ps, inCamera, renderer, pEntry, cubeFace);
+        rhiPrepareSkyBox(rhiCtx, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject &inObject = *handle.obj;
@@ -1673,7 +1672,6 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                                QSSGLayerRenderData &inData,
                                QSSGRenderReflectionMap *reflectionMapManager,
-                               const QSSGRenderCamera &camera,
                                const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
                                const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
                                const QSSGRef<QSSGRenderer> &renderer)
@@ -2138,7 +2136,6 @@ void QSSGLayerRenderData::rhiPrepare()
                 rhiRenderReflectionMap(rhiCtx,
                                    *this,
                                    reflectionMapManager,
-                                   *camera,
                                    reflectionProbes,
                                    reflectionPassObjects,
                                    renderer);
@@ -2178,7 +2175,7 @@ void QSSGLayerRenderData::rhiPrepare()
         ps->blendEnable = false;
 
         if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
-            rhiPrepareSkyBox(rhiCtx, layer, ps, *camera, renderer);
+            rhiPrepareSkyBox(rhiCtx, layer, *camera, renderer);
 
         const bool layerEnableDepthTest = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest);
         bool depthTestEnableDefault = false;
