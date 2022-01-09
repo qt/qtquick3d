@@ -81,12 +81,9 @@ ParticleSystem3D {
             extents.x: 250
         }
 
-        EmitBurst3D {
+        DynamicBurst3D {
             id: cloudBaseBurst
             amount: 10
-            randMax: 200
-            randMin: 100
-            random: false
         }
     }
 
@@ -125,12 +122,9 @@ ParticleSystem3D {
             type: ParticleShape3D.Sphere
         }
 
-        EmitBurst3D {
+        DynamicBurst3D {
             id: cloudSmallBurst
             amount: 15
-            random: false
-            randMax: 200
-            randMin: 100
         }
     }
     VectorDirection3D {
