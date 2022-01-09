@@ -119,18 +119,11 @@ ParticleSystem3D {
             }
         }
 
-        EmitBurst3D {
+        DynamicBurst3D {
             id: heavyRainDropletBurst
-            triggerOnly: true
-            endTrigger: true
-            time: heavyRainEmitter.lifeSpan
-            repeatDelay: 1000 / heavyRainEmitter.emitRate
-            duration: 0
+            triggerMode: DynamicBurst3D.TriggerEnd
             amount: 1
-            randMax: 2
-            random: true
-            randMin: 0
-            repeat: false
+            amountVariation: 1
         }
 
         VectorDirection3D {
@@ -176,18 +169,10 @@ ParticleSystem3D {
             }
         }
 
-        EmitBurst3D {
+        DynamicBurst3D {
             id: heavyRainPoolBurst
-            endTrigger: true
-            triggerOnly: true
-            repeatDelay: 1000 / heavyRainEmitter.emitRate
-            randMax: 2
+            triggerMode: DynamicBurst3D.TriggerEnd
             amount: 1
-            random: false
-            randMin: 0
-            duration: 0
-            time: heavyRainEmitter.lifeSpan
-            repeat: false
         }
     }
 
@@ -228,15 +213,10 @@ ParticleSystem3D {
             maxAmount: 1500
         }
 
-        EmitBurst3D {
+        DynamicBurst3D {
             id: heavyRainSplashBurst
-            randMax: 2
-            time: heavyRainEmitter.lifeSpan
-            repeatDelay: 1000 / heavyRainEmitter.emitRate
+            triggerMode: DynamicBurst3D.TriggerEnd
             amount: 1
-            duration: 0
-            triggerOnly: true
-            endTrigger: true
         }
     }
 }

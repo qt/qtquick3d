@@ -125,12 +125,10 @@ ParticleSystem3D {
             }
         }
 
-        EmitBurst3D {
+        DynamicBurst3D {
             id: lightRainSplashBurst
-            time: lightRainEmitter.lifeSpan
             amount: 1
-            triggerOnly: true
-            endTrigger: true
+            triggerMode: DynamicBurst3D.TriggerEnd
         }
     }
 }
