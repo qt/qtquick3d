@@ -19,6 +19,25 @@ MetaInfo {
         }
     }
     Type {
+        name: "QtQuick3D.Particles3D.DynamicBurst3D"
+        icon: "images/emit-burst-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Dynamic Burst"
+            category: "Qt Quick 3D Particles 3D"
+            libraryIcon: "images/emit-burst-24px.png"
+            version: "6.3"
+            requiredImport: "QtQuick3D.Particles3D"
+        }
+    }
+    Type {
         name: "QtQuick3D.Particles3D.EmitBurst3D"
         icon: "images/emit-burst-16px.png"
 

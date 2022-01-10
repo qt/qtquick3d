@@ -9,6 +9,8 @@ qt_copy_or_install(
         Attractor3DSpecifics.qml
         EmitBurst3DSection.qml
         EmitBurst3DSpecifics.qml
+        DynamicBurst3DSection.qml
+        DynamicBurst3DSpecifics.qml
         ParticleEmitter3DSection.qml
         ParticleEmitter3DSpecifics.qml
         Gravity3DSection.qml

@@ -47,6 +47,7 @@
 #include <QtQuick3DParticles/private/qquick3dparticlemodelparticle_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticleabstractshape_p.h>
 #include <QtQuick3DParticles/private/qquick3dparticleemitburst_p.h>
+#include <QtQuick3DParticles/private/qquick3dparticledynamicburst_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -155,7 +156,7 @@ protected:
     void emitActivationNodeParticles(QQuick3DParticleModelBlendParticle *particle);
     void emitParticlesBurst(const QQuick3DParticleEmitBurstData &burst);
     int getEmitAmount();
-    int getEmitAmountFromBursts(int triggerType);
+    int getEmitAmountFromDynamicBursts(int triggerType = 0);
 
     void reset();
 
@@ -176,11 +177,21 @@ protected:
     static void removeLastEmitBurst(QQmlListProperty<QQuick3DParticleEmitBurst> *);
 
 private:
+    struct BurstEmitData
+    {
+        int startTime;
+        int endTime;
+        int emitAmount;
+        int emitCounter = 0;
+        int prevBurstTime;
+    };
     QQuick3DParticleDirection *m_velocity = nullptr;
     QQuick3DParticleSystem *m_system = nullptr;
     float m_emitRate = 0.0f;
     // Time in ms when emitting last time happened
     int m_prevEmitTime = 0;
+    // Time in ms when dynamic burst last time happened
+    int m_prevBurstTime = 0;
     float m_particleScale = 1.0f;
     float m_particleEndScale = -1.0f;
     float m_particleScaleVariation = 0.0f;
@@ -199,7 +210,9 @@ private:
     const QQuick3DParticleData m_clearData = {};
     bool m_burstGenerated = false;
     QQuick3DNode *m_systemSharedParent = nullptr;
+    // This list contains all emit bursts (both QQuick3DParticleEmitBurst and QQuick3DParticleDynamicBurst)
     QList<QQuick3DParticleEmitBurst *> m_emitBursts;
+    QList<BurstEmitData> m_burstEmitData;
 };
 
 QT_END_NAMESPACE

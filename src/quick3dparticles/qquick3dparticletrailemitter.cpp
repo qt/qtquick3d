@@ -86,13 +86,21 @@ void QQuick3DParticleTrailEmitter::burst(int count)
     m_bursts << burst;
 }
 
+// Returns true if there are any dynamic bursts
 bool QQuick3DParticleTrailEmitter::hasBursts() const
 {
-    return !m_bursts.empty() | !m_emitBursts.empty();
+    bool dynamicBursts = false;
+    for (auto *burst : qAsConst(m_emitBursts)) {
+        if (qobject_cast<QQuick3DParticleDynamicBurst *>(burst)) {
+            dynamicBursts = true;
+            break;
+        }
+    }
+    return !m_bursts.empty() || dynamicBursts;
 }
 
 // Called to emit set of particles
-void QQuick3DParticleTrailEmitter::emitTrailParticles(QVector3D centerPos, int emitAmount, int triggerType)
+void QQuick3DParticleTrailEmitter::emitTrailParticles(const QVector3D &centerPos, int emitAmount, int triggerType)
 {
     if (!system())
         return;
@@ -103,7 +111,7 @@ void QQuick3DParticleTrailEmitter::emitTrailParticles(QVector3D centerPos, int e
     const int systemTime = system()->currentTime();
     for (auto particle : qAsConst(m_system->m_particles)) {
         if (particle == m_particle) {
-            emitAmount += getEmitAmountFromBursts(triggerType);
+            emitAmount += getEmitAmountFromDynamicBursts(triggerType);
             emitAmount = std::min(emitAmount, int(particle->maxAmount()));
             float addTime = ((systemTime - m_prevEmitTime) / 1000.0f) / emitAmount;
             for (int i = 0; i < emitAmount; i++) {

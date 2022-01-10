@@ -40,7 +40,12 @@ QT_BEGIN_NAMESPACE
     \brief Declarative emitter bursts.
     \since 6.2
 
-    This element defines particle bursts in the \l ParticleEmitter3D.
+    This element defines particle bursts in the \l ParticleEmitter3D. These bursts are
+    static, meaning that they are evaluated when the particlesystem starts. This allows
+    better performance than \l DynamicBurst3D and bursting outside of the particlesystem
+    time (so e.g. burst at 1000ms while system time starts from 2000ms).
+    \note EmitBurst3D uses emitter properties (position, rotation etc.) at the
+    particlesystem start. For dynamic emitters, use \l DynamicBurst3D instead.
 
     For example, to emit 100 particles at the beginning, and 50 particles at 2 seconds,
     so that both bursts take 200 milliseconds:
@@ -124,105 +129,6 @@ int QQuick3DParticleEmitBurst::duration() const
     return m_duration;
 }
 
-/*!
-    \qmlproperty bool EmitBurst3D::repeatDelay
-    \since 6.3
-
-    This property defines the delay between repeating bursts.
-
-    For example, to have the burst emit 5 particles every 1000 milliseconds
-    \qml
-    EmitBurst3D {
-        amount: 5
-        repeat: true
-        repeatDelay: 1000
-    }
-    \endqml
-
-    The default value is \c false.
-*/
-int QQuick3DParticleEmitBurst::repeatDelay() const
-{
-    return m_repeatDelay;
-}
-
-/*!
-    \qmlproperty bool EmitBurst3D::repeat
-    \since 6.3
-
-    This property defines if the burst will keep repeating after its initial burst.
-
-    The default value is \c false.
-*/
-bool QQuick3DParticleEmitBurst::repeat() const
-{
-    return m_repeat;
-}
-
-/*!
-    \qmlproperty int EmitBurst3D::amountVariation
-    \since 6.3
-
-    This property defines the random variation in particle emit amount.
-
-    For example, to have a random range between 0 and 10
-    \qml
-    EmitBurst3D {
-        time: 1000
-        amount: 5
-        amountVariation: 5
-    }
-    \endqml
-
-    The default value is \c 0.
-*/
-int QQuick3DParticleEmitBurst::amountVariation() const
-{
-    return m_amountVariation;
-}
-
-/*!
-    \qmlproperty bool EmitBurst3D::endTrigger
-    \since 6.3
-
-    This property defines if the burst should be emitted when the followed particle is destroyed.
-    \note This property is restricted to only work with trail emitters.
-
-    The default value is \c false.
-*/
-bool QQuick3DParticleEmitBurst::endTrigger() const
-{
-    return m_triggerType & TriggerEnd;
-}
-
-/*!
-    \qmlproperty bool EmitBurst3D::startTrigger
-    \since 6.3
-
-    This property defines if the burst should be emitted when the followed particle is created.
-    \note This property is restricted to only work with trail emitters.
-
-    The default value is \c false.
-*/
-bool QQuick3DParticleEmitBurst::startTrigger() const
-{
-    return m_triggerType & TriggerStart;
-}
-
-/*!
-    \qmlproperty bool EmitBurst3D::triggerOnly
-    \since 6.3
-
-    This property defines if the burst should only be triggered by creation or deletion.
-    \note This property is restricted to only work with trail emitters.
-
-    The default value is \c false.
-*/
-bool QQuick3DParticleEmitBurst::triggerOnly() const
-{
-    return !(m_triggerType & TriggerEmit);
-}
-
 void QQuick3DParticleEmitBurst::setTime(int time)
 {
     if (m_time == time)
@@ -254,68 +160,6 @@ void QQuick3DParticleEmitBurst::setDuration(int duration)
     }
     m_duration = duration;
     Q_EMIT durationChanged();
-}
-
-void QQuick3DParticleEmitBurst::setRepeatDelay(int delay)
-{
-    if (m_repeatDelay == delay)
-        return;
-
-    if (delay < 0) {
-        qWarning () << "EmitBurst3D: Repeat delay must be positive.";
-        return;
-    }
-    m_repeatDelay = delay;
-    Q_EMIT repeatDelayChanged();
-}
-
-void QQuick3DParticleEmitBurst::setRepeat(bool repeat)
-{
-    if (m_repeat == repeat)
-        return;
-
-    m_repeat = repeat;
-    Q_EMIT repeatChanged();
-}
-
-void QQuick3DParticleEmitBurst::setAmountVariation(int value)
-{
-    if (m_amountVariation == value)
-        return;
-
-    if (value < 0) {
-        qWarning () << "EmitBurst3D: Amount variation must be positive.";
-        return;
-    }
-    m_amountVariation = value;
-    Q_EMIT amountVariationChanged();
-}
-
-void QQuick3DParticleEmitBurst::setTriggerOnly(bool value)
-{
-    if (triggerOnly() == value)
-        return;
-
-    m_triggerType = (TriggerType)(m_triggerType ^ TriggerEmit);
-    Q_EMIT triggerOnlyChanged();
-}
-
-void QQuick3DParticleEmitBurst::setEndTrigger(bool value)
-{
-    if (endTrigger() == value)
-        return;
-
-    m_triggerType = (TriggerType)(m_triggerType ^ TriggerEnd);
-    Q_EMIT endTriggerChanged();
-}
-
-void QQuick3DParticleEmitBurst::setStartTrigger(bool value)
-{
-    if (startTrigger() == value)
-        return;
-
-    m_triggerType = (TriggerType)(m_triggerType ^ TriggerStart);
-    Q_EMIT startTriggerChanged();
 }
 
 void QQuick3DParticleEmitBurst::componentComplete()
