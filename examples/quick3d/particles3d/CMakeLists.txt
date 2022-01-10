@@ -46,6 +46,7 @@ qt_add_qml_module(particles3d
         qml/CustomLabel.qml
         qml/CustomSlider.qml
         qml/CustomSelectionBox.qml
+        qml/DynamicBursts.qml
         qml/EmitAndBurst.qml
         qml/EmitterCustomShapes.qml
         qml/EmitterShapes.qml

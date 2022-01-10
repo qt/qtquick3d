@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICK3DPARTICLEEMITBURST_H
-#define QQUICK3DPARTICLEEMITBURST_H
+#ifndef QQUICK3DPARTICLEDYNAMICBURST_H
+#define QQUICK3DPARTICLEDYNAMICBURST_H
 
 //
 //  W A R N I N G
@@ -41,58 +41,51 @@
 // We mean it.
 //
 
-#include <QObject>
-#include <QQmlEngine>
-#include <QtQml/qqmlparserstatus.h>
-#include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+#include <QtQuick3DParticles/private/qquick3dparticleemitburst_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuick3DParticleEmitter;
-
-class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleEmitBurst : public QObject, public QQmlParserStatus
+class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleDynamicBurst : public QQuick3DParticleEmitBurst
 {
     Q_OBJECT
-    Q_PROPERTY(int time READ time WRITE setTime NOTIFY timeChanged)
-    Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-
-    QML_NAMED_ELEMENT(EmitBurst3D)
-    Q_INTERFACES(QQmlParserStatus)
-    QML_ADDED_IN_VERSION(6, 2)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(int amountVariation READ amountVariation WRITE setAmountVariation NOTIFY amountVariationChanged)
+    Q_PROPERTY(TriggerMode triggerMode READ triggerMode WRITE setTriggerMode NOTIFY triggerModeChanged)
+    QML_NAMED_ELEMENT(DynamicBurst3D)
+    QML_ADDED_IN_VERSION(6, 3)
 
 public:
-    QQuick3DParticleEmitBurst(QObject *parent = nullptr);
-    ~QQuick3DParticleEmitBurst() override;
+    enum TriggerMode
+    {
+        TriggerTime = 0,
+        TriggerStart,
+        TriggerEnd
+    };
+    Q_ENUM(TriggerMode)
 
-    int time() const;
-    int amount() const;
-    int duration() const;
+    explicit QQuick3DParticleDynamicBurst(QObject *parent = nullptr);
+    bool enabled() const;
+    int amountVariation() const;
+    TriggerMode triggerMode() const;
 
 public Q_SLOTS:
-    void setTime(int time);
-    void setAmount(int amount);
-    void setDuration(int duration);
+    void setEnabled(bool enabled);
+    void setAmountVariation(int value);
+    void setTriggerMode(TriggerMode mode);
 
 Q_SIGNALS:
-    void timeChanged();
-    void amountChanged();
-    void durationChanged();
-
-protected:
-    // From QQmlParserStatus
-    void componentComplete() override;
-    void classBegin() override {}
+    void enabledChanged();
+    void amountVariationChanged();
+    void triggerModeChanged();
 
 private:
     friend class QQuick3DParticleEmitter;
 
-    QQuick3DParticleEmitter *m_parentEmitter = nullptr;
-    int m_time = 0;
-    int m_amount = 0;
-    int m_duration = 0;
+    bool m_enabled = true;
+    int m_amountVariation = 0;
+    TriggerMode m_triggerMode = TriggerMode::TriggerTime;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICK3DPARTICLEEMITBURST_H
+#endif // QQUICK3DPARTICLEDYNAMICBURST_H

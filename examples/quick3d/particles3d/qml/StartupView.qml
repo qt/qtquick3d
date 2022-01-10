@@ -102,6 +102,10 @@ Item {
             name: "Lights"
             file: "Lights.qml"
         }
+        ListElement {
+            name: "Dynamic Bursts"
+            file: "DynamicBursts.qml"
+        }
     }
 
     ListModel {

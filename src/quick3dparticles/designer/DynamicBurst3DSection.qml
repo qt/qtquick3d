@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -33,13 +33,30 @@ import HelperWidgets 2.0
 import StudioTheme 1.0 as StudioTheme
 
 Section {
-    caption: qsTr("Particle Emit Burst")
+    caption: qsTr("Particle Dynamic Burst")
     width: parent.width
 
     SectionLayout {
         PropertyLabel {
-            text: qsTr("Time")
-            tooltip: qsTr("This property defines the time in milliseconds when emitting the burst starts.")
+            text: qsTr("Trigger Mode")
+            tooltip: qsTr("This property defines the triggering mode used for emitting the particles.")
+        }
+
+        SecondColumnLayout {
+            ComboBox {
+                scope: "DynamicBurst3D"
+                model: ["TriggerTime", "TriggerStart", "TriggerEnd"]
+                backendValue: backendValues.triggerMode
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Amount Variation")
+            tooltip: qsTr("This property defines the random variation in particle emit amount.")
         }
 
         SecondColumnLayout {
@@ -47,7 +64,7 @@ Section {
                 minimumValue: 0
                 maximumValue: 999999
                 decimals: 0
-                backendValue: backendValues.time
+                backendValue: backendValues.amountVariation
                 implicitWidth: StudioTheme.Values.twoControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
             }
@@ -56,34 +73,15 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Amount")
-            tooltip: qsTr("This property defines the amount of particles emitted during the burst.")
+            text: qsTr("Enabled")
+            tooltip: qsTr("If enabled is set to false, this burst will not emit any particles. Usually this is used to conditionally turn a bust on or off.")
         }
 
         SecondColumnLayout {
-            SpinBox {
-                minimumValue: 0
-                maximumValue: 999999
-                decimals: 0
-                backendValue: backendValues.amount
-                implicitWidth: StudioTheme.Values.twoControlColumnWidth
-                               + StudioTheme.Values.actionIndicatorWidth
-            }
-
-            ExpandingSpacer {}
-        }
-
-        PropertyLabel {
-            text: qsTr("Duration")
-            tooltip: qsTr("This property defines the duration of the burst.")
-        }
-
-        SecondColumnLayout {
-            SpinBox {
-                minimumValue: 0
-                maximumValue: 999999
-                decimals: 0
-                backendValue: backendValues.duration
+            CheckBox {
+                id: enabledCheckBox
+                text: backendValues.enabled.valueToString
+                backendValue: backendValues.enabled
                 implicitWidth: StudioTheme.Values.twoControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
             }
