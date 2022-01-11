@@ -38,6 +38,10 @@ Column {
         width: parent.width
     }
 
+    CameraSection {
+        width: parent.width
+    }
+
     NodeSection {
         width: parent.width
     }

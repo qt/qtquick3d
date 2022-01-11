@@ -123,6 +123,42 @@ void QQuick3DCamera::setFrustumCullingEnabled(bool frustumCullingEnabled)
 }
 
 /*!
+    \qmlproperty Node Camera::lookAtNode
+
+    If this property is set to a \c non-null value, the rotation of this camera is automatically
+    updated so that this camera keeps looking at the specified node whenever the scene position of
+    this camera or the specified node changes.
+    By default this property is set to \c{null}.
+
+    \sa lookAt
+*/
+QQuick3DNode *QQuick3DCamera::lookAtNode() const
+{
+    return m_lookAtNode;
+}
+
+void QQuick3DCamera::setLookAtNode(QQuick3DNode *node)
+{
+    if (m_lookAtNode == node)
+        return;
+
+    if (m_lookAtNode) {
+        disconnect(m_lookAtNode, &QQuick3DNode::scenePositionChanged, this, &QQuick3DCamera::updateLookAt);
+        disconnect(this, &QQuick3DNode::scenePositionChanged, this, &QQuick3DCamera::updateLookAt);
+    }
+
+    m_lookAtNode = node;
+
+    if (m_lookAtNode) {
+        connect(m_lookAtNode, &QQuick3DNode::scenePositionChanged, this, &QQuick3DCamera::updateLookAt);
+        connect(this, &QQuick3DNode::scenePositionChanged, this, &QQuick3DCamera::updateLookAt);
+    }
+
+    emit lookAtNodeChanged();
+    updateLookAt();
+}
+
+/*!
     \qmlmethod vector3d Camera::mapToViewport(vector3d scenePos)
 
     Transforms \a scenePos from global scene space (3D) into viewport space (2D).
@@ -335,4 +371,11 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
 
     return node;
 }
+
+void QQuick3DCamera::updateLookAt()
+{
+    if (m_lookAtNode)
+        lookAt(m_lookAtNode);
+}
+
 QT_END_NAMESPACE

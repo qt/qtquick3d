@@ -43,8 +43,15 @@ class tst_QQuick3DPerspectiveCamera : public QObject
         using QQuick3DCamera::updateSpatialNode;
     };
 
+    class NodeItem : public QQuick3DNode
+    {
+    public:
+        using QQuick3DNode::updateSpatialNode;
+    };
+
 private slots:
     void testClipAndFov();
+    void testLookAt();
 };
 
 void tst_QQuick3DPerspectiveCamera::testClipAndFov()
@@ -85,6 +92,73 @@ void tst_QQuick3DPerspectiveCamera::testClipAndFov()
     camera.setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation::Vertical);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QVERIFY(node->fovHorizontal == false);
+}
+
+void tst_QQuick3DPerspectiveCamera::testLookAt()
+{
+    Camera cam1;
+    Camera cam2;
+    NodeItem nodeItem;
+
+    nodeItem.setPosition(QVector3D(200.f, 0.f, 0.f));
+    cam1.setPosition(QVector3D(100.f, 0.f, 100.f));
+    cam2.setPosition(QVector3D(100.f, 0.f, 100.f));
+
+    auto node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(nullptr));
+    auto camNode1 = static_cast<QSSGRenderNode *>(cam1.updateSpatialNode(nullptr));
+    auto camNode2 = static_cast<QSSGRenderNode *>(cam2.updateSpatialNode(nullptr));
+
+    QVERIFY(node);
+    QVERIFY(camNode1);
+    QVERIFY(camNode2);
+
+    // Verify that using lookAt method and lookAtNode property result in same rotation
+    cam1.setLookAtNode(&nodeItem);
+    cam2.lookAt(&nodeItem);
+
+    camNode1 = static_cast<QSSGRenderNode *>(cam1.updateSpatialNode(camNode1));
+    camNode2 = static_cast<QSSGRenderNode *>(cam2.updateSpatialNode(camNode2));
+
+    QVERIFY(qFuzzyIsNull(cam1.eulerRotation().x()));
+    QVERIFY(qFuzzyCompare(cam1.eulerRotation().y(), -45.f));
+    QVERIFY(qFuzzyIsNull(cam1.eulerRotation().z()));
+    QVERIFY(qFuzzyIsNull(cam2.eulerRotation().x()));
+    QVERIFY(qFuzzyCompare(cam2.eulerRotation().y(), -45.f));
+    QVERIFY(qFuzzyIsNull(cam2.eulerRotation().z()));
+    QCOMPARE(camNode1->rotation, cam1.rotation());
+    QCOMPARE(camNode2->rotation, cam2.rotation());
+
+    // Verify that rotation automatically changes when moving camera and using lookAtNode property
+    cam1.setPosition(QVector3D(300.f, 0.f, 100.f));
+    cam2.setPosition(QVector3D(300.f, 0.f, 100.f));
+
+    camNode1 = static_cast<QSSGRenderNode *>(cam1.updateSpatialNode(camNode1));
+    camNode2 = static_cast<QSSGRenderNode *>(cam2.updateSpatialNode(camNode2));
+
+    QVERIFY(qFuzzyIsNull(cam1.eulerRotation().x()));
+    QVERIFY(qFuzzyCompare(cam1.eulerRotation().y(), 45.f)); // rotation updates
+    QVERIFY(qFuzzyIsNull(cam1.eulerRotation().z()));
+    QVERIFY(qFuzzyIsNull(cam2.eulerRotation().x()));
+    QVERIFY(qFuzzyCompare(cam2.eulerRotation().y(), -45.f)); // rotation doesn't update
+    QVERIFY(qFuzzyIsNull(cam2.eulerRotation().z()));
+    QCOMPARE(camNode1->rotation, cam1.rotation());
+    QCOMPARE(camNode2->rotation, cam2.rotation());
+
+    // Verify that rotation automatically changs when moving the target node
+    nodeItem.setPosition(QVector3D(200.f, 0.f, 100.f));
+
+    node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
+    camNode1 = static_cast<QSSGRenderNode *>(cam1.updateSpatialNode(camNode1));
+    camNode2 = static_cast<QSSGRenderNode *>(cam2.updateSpatialNode(camNode2));
+
+    QVERIFY(qFuzzyIsNull(cam1.eulerRotation().x()));
+    QVERIFY(qFuzzyCompare(cam1.eulerRotation().y(), 90.f)); // rotation updates
+    QVERIFY(qFuzzyIsNull(cam1.eulerRotation().z()));
+    QVERIFY(qFuzzyIsNull(cam2.eulerRotation().x()));
+    QVERIFY(qFuzzyCompare(cam2.eulerRotation().y(), -45.f)); // rotation doesn't update
+    QVERIFY(qFuzzyIsNull(cam2.eulerRotation().z()));
+    QCOMPARE(camNode1->rotation, cam1.rotation());
+    QCOMPARE(camNode2->rotation, cam2.rotation());
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DPerspectiveCamera)

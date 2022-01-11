@@ -109,21 +109,5 @@ Section {
 
             ExpandingSpacer {}
         }
-
-        PropertyLabel {
-            text: qsTr("Frustum Culling Enabled")
-            tooltip: qsTr("When this property is true, objects outside the camera frustum will be culled, meaning they will not be passed to the renderer.")
-        }
-
-        SecondColumnLayout {
-            CheckBox {
-                text: backendValues.frustumCullingEnabled.valueToString
-                backendValue: backendValues.frustumCullingEnabled
-                implicitWidth: StudioTheme.Values.twoControlColumnWidth
-                               + StudioTheme.Values.actionIndicatorWidth
-            }
-
-            ExpandingSpacer {}
-        }
     }
 }

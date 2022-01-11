@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -30,23 +30,42 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
+import StudioTheme 1.0 as StudioTheme
 
-Column {
-    width: parent.width
+Section {
+    caption: qsTr("Camera")
 
-    FrustumCameraSection {
-        width: parent.width
-    }
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Frustum Culling")
+            tooltip: qsTr("When this property is true, objects outside the camera frustum will be culled, meaning they will not be passed to the renderer.")
+        }
 
-    PerspectiveCameraSection {
-        width: parent.width
-    }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.frustumCullingEnabled.valueToString
+                backendValue: backendValues.frustumCullingEnabled
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
 
-    CameraSection {
-        width: parent.width
-    }
+            ExpandingSpacer {}
+        }
 
-    NodeSection {
-        width: parent.width
+        PropertyLabel {
+            text: qsTr("Look-at Node")
+            tooltip: qsTr("Contains the look-at node for the camera.")
+        }
+
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Node"
+                backendValue: backendValues.lookAtNode
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
     }
 }

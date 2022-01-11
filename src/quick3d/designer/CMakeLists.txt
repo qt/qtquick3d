@@ -6,6 +6,8 @@ qt_copy_or_install(
         BufferInputSpecifics.qml
         BufferSection.qml
         BufferSpecifics.qml
+        CameraSection.qml
+        CustomCameraSpecifics.qml
         CustomMaterialSection.qml
         CustomMaterialSpecifics.qml
         DefaultMaterialSection.qml

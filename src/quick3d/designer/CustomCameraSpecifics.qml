@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -34,13 +34,8 @@ import HelperWidgets 2.0
 Column {
     width: parent.width
 
-    FrustumCameraSection {
-        width: parent.width
-    }
-
-    PerspectiveCameraSection {
-        width: parent.width
-    }
+    // Custom camera doesn't have any meaningful designable properties itself, so only add
+    // the generic camera section
 
     CameraSection {
         width: parent.width
