@@ -21,6 +21,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         graphobjects/qssgrendermodel.cpp graphobjects/qssgrendermodel_p.h
         graphobjects/qssgrendernode.cpp graphobjects/qssgrendernode_p.h
         graphobjects/qssgrenderskeleton.cpp graphobjects/qssgrenderskeleton_p.h
+        graphobjects/qssgrenderskin.cpp graphobjects/qssgrenderskin_p.h
         graphobjects/qssgrendertexturedata.cpp graphobjects/qssgrendertexturedata_p.h
         graphobjects/qssgrendermorphtarget.cpp graphobjects/qssgrendermorphtarget_p.h
         graphobjects/qssgrenderresourceloader.cpp graphobjects/qssgrenderresourceloader_p.h

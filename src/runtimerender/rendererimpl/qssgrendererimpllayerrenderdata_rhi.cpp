@@ -122,7 +122,8 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
 
     const QMatrix4x4 &localInstanceTransform(subsetRenderable.modelContext.model.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(subsetRenderable.modelContext.model.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix(!subsetRenderable.modelContext.model.skeleton ? subsetRenderable.globalTransform
+    const QMatrix4x4 &modelMatrix(subsetRenderable.modelContext.model.skin ? QMatrix4x4()
+                                : !subsetRenderable.modelContext.model.skeleton ? subsetRenderable.globalTransform
                                                 : subsetRenderable.modelContext.model.skeleton->globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -57,8 +57,18 @@ Node {
     PrincipledMaterial {
         id: material
         lighting: PrincipledMaterial.NoLighting
-        baseColor: "orange"
+        baseColor: "red"
     }
+
+    //! [skeleton]
+    Node {
+        id: joint0
+        Node {
+            id: joint1
+            eulerRotation.z: 45
+        }
+    }
+    //! [skeleton]
 
     Model {
         geometry: SkinGeometry {
@@ -122,38 +132,29 @@ Node {
         materials: [
             material
         ]
-        //! [skeleton in Model]
-        skeleton: qmlskeleton
-        //! [skeleton in Model]
-        //! [poses]
-        inverseBindPoses: [
-            Qt.matrix4x4(1, 0, 0, -0.5,
-                         0, 1, 0, -1,
-                         0, 0, 1, 0,
-                         0, 0, 0, 1),
-            Qt.matrix4x4(1, 0, 0, -0.5,
-                         0, 1, 0, -1,
-                         0, 0, 1, 0,
-                         0, 0, 0, 1)
-        ]
-        //! [poses]
-    }
-    //! [skeleton]
-    Skeleton {
-        id: qmlskeleton
-        Joint {
-            id: joint0
-            index: 0
-            skeletonRoot: qmlskeleton
-            Joint {
-                id: joint1
-                index: 1
-                skeletonRoot: qmlskeleton
-                eulerRotation.z: 45
-            }
+
+        //! [skin]
+        skin: Skin {
+            id: skin0
+            joints: [
+                joint0,
+                joint1
+            ]
+            //! [poses]
+            inverseBindPoses: [
+                Qt.matrix4x4(1, 0, 0, -0.5,
+                             0, 1, 0, -1,
+                             0, 0, 1, 0,
+                             0, 0, 0, 1),
+                Qt.matrix4x4(1, 0, 0, -0.5,
+                             0, 1, 0, -1,
+                             0, 0, 1, 0,
+                             0, 0, 0, 1)
+            ]
+            //! [poses]
         }
+        //! [skin]
     }
-    //! [skeleton]
 
     //! [animation]
     Timeline {

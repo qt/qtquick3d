@@ -335,6 +335,26 @@ QQuick3DSkeleton *QQuick3DModel::skeleton() const
 }
 
 /*!
+    \qmlproperty Skin Model::skin
+
+    Contains the skeleton for the model. The Skeleton is used for
+    \l {Vertex Skinning}{skinning}.
+
+    \note Meshes of the model must have both joints and weights attributes.
+    \note If this property is set, skinning animation is enabled. This means
+    the \l {Model} will be transformed based on \l {Skin::joints} and the
+    Model's global transformation will be ignored.
+    \note If a model has both a skeleton and a skin, then the skin will be used.
+
+    \sa {Model::skeleton} {Qt Quick 3D - Simple Skinning Example}
+*/
+QQuick3DSkin *QQuick3DModel::skin() const
+{
+    return m_skin;
+}
+
+
+/*!
     \qmlproperty List<matrix4x4> Model::inverseBindPoses
 
     This property contains a list of Inverse Bind Pose matrixes used for the
@@ -481,6 +501,21 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
     }
     emit skeletonChanged();
     markDirty(SkeletonDirty);
+}
+
+void QQuick3DModel::setSkin(QQuick3DSkin *skin)
+{
+    if (skin == m_skin)
+        return;
+
+    // Make sure to disconnect if the skin gets deleted out from under us
+    QQuick3DObjectPrivate::updatePropertyListener(skin, m_skin, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skin"), m_connections, [this](QQuick3DObject *n) {
+        setSkin(qobject_cast<QQuick3DSkin *>(n));
+    });
+
+    m_skin = skin;
+    emit skinChanged();
+    markDirty(SkinDirty);
 }
 
 void QQuick3DModel::setInverseBindPoses(const QList<QMatrix4x4> &poses)
@@ -663,6 +698,13 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             modelNode->skeleton = nullptr;
     }
 
+    if (m_dirtyAttributes & SkinDirty) {
+        if (m_skin)
+            modelNode->skin = static_cast<QSSGRenderSkin *>(QQuick3DObjectPrivate::get(m_skin)->spatialNode);
+        else
+            modelNode->skin = nullptr;
+    }
+
     if (m_dirtyAttributes & PoseDirty) {
         modelNode->inverseBindPoses = m_inverseBindPoses.toVector();
         modelNode->skinningDirty = true;
@@ -692,6 +734,7 @@ void QQuick3DModel::updateSceneManager(QQuick3DSceneManager *sceneManager)
     if (sceneManager) {
         sceneManager->dirtyBoundingBoxList.append(this);
         QQuick3DObjectPrivate::refSceneManager(m_skeleton, *sceneManager);
+        QQuick3DObjectPrivate::refSceneManager(m_skin, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_geometry, *sceneManager);
         QQuick3DObjectPrivate::refSceneManager(m_instancing, *sceneManager);
         for (Material &mat : m_materials) {
@@ -704,6 +747,7 @@ void QQuick3DModel::updateSceneManager(QQuick3DSceneManager *sceneManager)
         }
     } else {
         QQuick3DObjectPrivate::derefSceneManager(m_skeleton);
+        QQuick3DObjectPrivate::derefSceneManager(m_skin);
         QQuick3DObjectPrivate::derefSceneManager(m_geometry);
         QQuick3DObjectPrivate::derefSceneManager(m_instancing);
         for (Material &mat : m_materials) {

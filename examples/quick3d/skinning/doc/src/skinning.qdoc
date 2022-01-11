@@ -88,6 +88,7 @@
 
     For skinning, we add a \e skeleton property to the \l Model:
 
+    \snippet skinning/SimpleSkinning.qml skeleton in Model
     \snippet skinning/SimpleSkinning.qml skeleton
 
     The two \l {Joint}{Joint}s are connected in a \l Skeleton. We will rotate \c
@@ -133,4 +134,25 @@
     the \l {Joint}{Joint}s' properties, specifically \e eulerRotation.
 
     \snippet skinning/SimpleSkinning.qml animation
+
+    \section1 A more complete approach to skinning
+    Skeleton is a resource but it's hierarchy and position is
+    used for the Model's transformation.
+
+    Instead of a \l Skeleton node, we can use the resource type \l Skin.
+    Since the \l Skin type is not a spatial node in the scene, its position
+    will not affect the model. A minimal working Skin node will normally
+    consist of a node list, joints and an optional inverse bind matrices,
+    inverseBindPoses.
+
+    Using the \l Skin item the previous example can be written like this:
+
+    \snippet skinning/SimpleSkinningNew.qml skin
+
+    From the code snippet we can see that the \l Skin only has two lists,
+    a joints and an inverseBindPoses, which differs from the \l Skeleton
+    approach, as it does not have any hierarchy and just uses existing
+    node's hierarchy.
+
+    \snippet skinning/SimpleSkinningNew.qml skeleton
 */

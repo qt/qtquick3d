@@ -101,6 +101,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource
         CustomMaterial, // Resource
+        Skin, // Resource
     };
 
     Q_REQUIRED_RESULT static inline constexpr bool isNodeType(Type type) Q_DECL_NOTHROW

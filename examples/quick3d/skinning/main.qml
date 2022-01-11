@@ -55,7 +55,7 @@ import Example
 Window {
     id: window
     visible: true
-    width: 480
+    width: 800
     height: 480
     title: qsTr("Simple Skinning")
 
@@ -76,6 +76,10 @@ Window {
         }
 
         SimpleSkinning {
+            x: -1
+        }
+        SimpleSkinningNew {
+            x: 1
         }
     }
 }

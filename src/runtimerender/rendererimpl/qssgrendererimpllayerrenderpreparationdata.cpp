@@ -132,7 +132,10 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
             auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
             auto skeletonNode = modelNode->skeleton;
             bool hcj = false;
-            if (skeletonNode) {
+            if (modelNode->skin) {
+                modelNode->boneTransforms = modelNode->skin->boneMatrices;
+                modelNode->boneNormalTransforms = modelNode->skin->boneNormalMatrices;
+            } else if (skeletonNode) {
                 const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
                 const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
                                                 && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
@@ -941,7 +944,7 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
     QSSGDataView<QMatrix3x3> boneNormals;
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     // Skeletal Animation passes it's boneId as unsigned integers
-    if (inModel.skeleton) {
+    if (inModel.skin || inModel.skeleton) {
         boneGlobals = toDataView(inModel.boneTransforms);
         boneNormals = toDataView(inModel.boneNormalTransforms);
     }

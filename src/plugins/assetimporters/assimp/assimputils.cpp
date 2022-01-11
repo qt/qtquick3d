@@ -339,10 +339,15 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
             for (uint i = 0; i < mesh->mNumBones; ++i) {
                 QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
 
-                const auto boneIdxItr = boneIdxMap.constFind(boneName);
-                if (boneIdxItr == boneIdxMap.cend()) {
-                    qWarning() << "Joint " << boneName << " is not included in pre-defined skeleton.";
-                    continue;
+                uint vId = i;
+                if (!boneIdxMap.isEmpty()) {
+                    const auto boneIdxItr = boneIdxMap.constFind(boneName);
+                    if (boneIdxItr == boneIdxMap.cend()) {
+                        qWarning() << "Joint " << boneName << " is not included in pre-defined skeleton.";
+                        continue;
+                    } else {
+                        vId = *boneIdxItr;
+                    }
                 }
 
                 for (uint j = 0; j < mesh->mBones[i]->mNumWeights; ++j) {
@@ -357,13 +362,13 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                     for (uint ii = 0; ii < 4; ++ii) {
                         if (weights[vertexId * 4 + ii] == 0.0f) {
                             if (useFloatJointIndices)
-                                fBoneIndexes[vertexId * 4 + ii] = (float)*boneIdxItr;
+                                fBoneIndexes[vertexId * 4 + ii] = float(vId);
                             else
-                                boneIndexes[vertexId * 4 + ii] = *boneIdxItr;
+                                boneIndexes[vertexId * 4 + ii] = vId;
                             weights[vertexId * 4 + ii] = weight;
                             break;
                         } else if (ii == 3) {
-                            qWarning("vertexId %d has already 4 weights and index %d's weight %f will be ignored.", vertexId, *boneIdxItr, weight);
+                            qWarning("vertexId %d has already 4 weights and index %d's weight %f will be ignored.", vertexId, vId, weight);
                         }
                     }
                 }

@@ -46,6 +46,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendergeometry_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderskeleton_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderskin_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderinstancetable_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
@@ -64,6 +65,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QSSGRenderGeometry *geometry = nullptr;
     QSSGRenderPath meshPath;
     QSSGRenderSkeleton *skeleton = nullptr;
+    QSSGRenderSkin *skin = nullptr;
     QVector<QMatrix4x4> inverseBindPoses;
     float m_depthBias = 0.0f;
     bool castsShadows = true;

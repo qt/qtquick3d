@@ -282,10 +282,14 @@ struct QSSGModelContext
     {
         // For skinning, node's global transformation will be ignored and
         // an identity matrix will be used for the normalMatrix
-        if (!model.skeleton)
+        if (model.skin) {
+            modelViewProjection = inViewProjection;
+            normalMatrix = QMatrix3x3();
+        } else if (!model.skeleton) {
             model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
-        else
+        } else {
             model.skeleton->calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
+        }
     }
 };
 

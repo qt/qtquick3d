@@ -392,6 +392,9 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
         vertexGenerator.append("    if (qt_vertWeights != vec4(0.0))");
         vertexGenerator.append("        qt_vertNormal = qt_getSkinNormalMatrix(qt_vertJoints, qt_vertWeights) * qt_vertNormal;");
     }
+    // If new model->skin is used,
+    // both qt_normalMatrix and qt_modelMatrix are identity.
+    // It might be improved in the shader code.
     if (!usesInstancing)
         vertexGenerator.append("    vec3 qt_world_normal = normalize(qt_normalMatrix * qt_vertNormal);");
     else

@@ -46,6 +46,7 @@
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 #include <QtQuick3D/private/qquick3dinstancing_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
+#include <QtQuick3D/private/qquick3dskin_p.h>
 #include <QtQuick3D/private/qquick3dmorphtarget_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
@@ -93,6 +94,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DInstancing *instancing READ instancing WRITE setInstancing NOTIFY instancingChanged)
     Q_PROPERTY(QQuick3DNode *instanceRoot READ instanceRoot WRITE setInstanceRoot NOTIFY instanceRootChanged)
     Q_PROPERTY(QQuick3DSkeleton *skeleton READ skeleton WRITE setSkeleton NOTIFY skeletonChanged)
+    Q_PROPERTY(QQuick3DSkin *skin READ skin WRITE setSkin NOTIFY skinChanged REVISION(6, 4))
     Q_PROPERTY(QList<QMatrix4x4> inverseBindPoses READ inverseBindPoses WRITE setInverseBindPoses NOTIFY inverseBindPosesChanged)
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
     Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
@@ -121,6 +123,7 @@ public:
     QQuick3DNode *instanceRoot() const;
 
     Q_REVISION(6, 3)  bool receivesReflections() const;
+    Q_REVISION(6, 4)  QQuick3DSkin *skin() const;
 
     static QString translateMeshSource(const QUrl &source, QObject *contextObject);
 
@@ -137,6 +140,7 @@ public Q_SLOTS:
     void setInstanceRoot(QQuick3DNode *instanceRoot);
     void setDepthBias(float bias);
     Q_REVISION(6, 3)  void setReceivesReflections(bool receivesReflections);
+    Q_REVISION(6, 4)  void setSkin(QQuick3DSkin *skin);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -152,6 +156,7 @@ Q_SIGNALS:
     void morphTargetsChanged();
     void depthBiasChanged();
     Q_REVISION(6, 3)  void receivesReflectionsChanged();
+    Q_REVISION(6, 4)  void skinChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -174,7 +179,8 @@ private:
         InstancesDirty =         0x00000080,
         MorphTargetsDirty =      0x00000100,
         PropertyDirty =          0x00000200,
-        ReflectionDirty =        0x00000400
+        ReflectionDirty =        0x00000400,
+        SkinDirty =              0x00000800
     };
 
     QUrl m_source;
@@ -214,6 +220,7 @@ private:
     bool m_receivesShadows = true;
     bool m_pickable = false;
     bool m_receivesReflections = false;
+    QQuick3DSkin *m_skin = nullptr;
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;
 };
