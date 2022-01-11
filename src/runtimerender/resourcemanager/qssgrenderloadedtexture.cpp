@@ -33,6 +33,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 #include <QtGui/QImageReader>
+#include <QtGui/QColorSpace>
 #include <QtMath>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -313,6 +314,8 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
     retval->data = (void *)retval->image.bits();
     retval->dataSizeInBytes = image.sizeInBytes();
     retval->setFormatFromComponents();
+    // #TODO: This is a very crude way detect color space
+    retval->isSRGB = image.colorSpace().transferFunction() != QColorSpace::TransferFunction::Linear;
 
     return retval;
 }
@@ -534,6 +537,7 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadHdrImage(const QSharedPointer<QIODevic
     imageData->height = height;
     imageData->format = format;
     imageData->components = format.getNumberOfComponent();
+    imageData->isSRGB = false;
 
     // Allocate a scanline worth of RGBE data
     RGBE *scanline = new RGBE[width];
@@ -570,6 +574,18 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
     imageData->height = textureData->size().height();
     imageData->format = textureData->format();
     imageData->components = textureData->format().getNumberOfComponent();
+
+    // #TODO: add an API to make this explicit
+    // For now we assume HDR formats are linear and everything else
+    // is sRGB, which is not ideal but so far this is only used by
+    // the environment mapper code
+    if (imageData->format == QSSGRenderTextureFormat::RGBE8 ||
+        imageData->format == QSSGRenderTextureFormat::RGBA16F ||
+        imageData->format == QSSGRenderTextureFormat::RGBA32F ||
+        imageData->format == QSSGRenderTextureFormat::BC6H)
+        imageData->isSRGB = false;
+    else
+        imageData->isSRGB = true;
 
     return imageData;
 }

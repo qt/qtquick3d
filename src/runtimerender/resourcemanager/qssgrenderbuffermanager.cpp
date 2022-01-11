@@ -454,6 +454,8 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
             ? QRhiTexture::RGBA16F // let's just assume that if compressed textures are available, then it's at least a GLES 3.0 level API
             : sourceTextureFormat;
 
+    const int colorSpace = inImage->isSRGB ? 1 : 0; // 0 Linear | 1 sRGB
+
     // Phase 1: Convert the Equirectangular texture to a Cubemap
     QRhiTexture *envCubeMap = rhi->newTexture(cubeTextureFormat, environmentMapSize, 1,
                                               QRhiTexture::RenderTarget | QRhiTexture::CubeMap | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
@@ -536,10 +538,16 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     uBuf->create();
     uBuf->deleteLater();
 
+    int ubufEnvMapElementSize = rhi->ubufAligned(4);
+    QRhiBuffer *uBufEnvMap = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufEnvMapElementSize * 6);
+    uBufEnvMap->create();
+    uBufEnvMap->deleteLater();
+
     // Shader Resource Bindings
     QRhiShaderResourceBindings *envMapSrb = rhi->newShaderResourceBindings();
     envMapSrb->setBindings({
                          QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+                         QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, uBufEnvMap, ubufEnvMapElementSize),
                          QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, sourceTexture, sampler)
                      });
     envMapSrb->create();
@@ -600,6 +608,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     for (int face = 0; face < 6; ++face) {
         rub->updateDynamicBuffer(uBuf, face * ubufElementSize, 64, mvp.constData());
         rub->updateDynamicBuffer(uBuf, face * ubufElementSize + 64, 64, views[face].constData());
+        rub->updateDynamicBuffer(uBufEnvMap, face * ubufEnvMapElementSize, 4, &colorSpace);
     }
     cb->resourceUpdate(rub);
 
@@ -611,8 +620,11 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         cb->setGraphicsPipeline(envMapPipeline);
         cb->setVertexInput(0, 1, &vbufBinding);
         cb->setViewport(QRhiViewport(0, 0, environmentMapSize.width(), environmentMapSize.height()));
-        QPair<int, quint32> dynamicOffset = { 0, quint32(ubufElementSize * face) };
-        cb->setShaderResources(envMapSrb, 1, &dynamicOffset);
+        QVector<QPair<int, quint32>> dynamicOffset = {
+            { 0, quint32(ubufElementSize * face) },
+            { 2, quint32(ubufEnvMapElementSize * face )}
+        };
+        cb->setShaderResources(envMapSrb, 2, dynamicOffset.constData());
 
         cb->draw(36);
         QSSGRHICTX_STAT(context, draw(36, 1));
