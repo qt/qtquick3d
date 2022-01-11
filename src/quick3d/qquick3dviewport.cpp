@@ -52,6 +52,8 @@
 
 #include <QtQml>
 
+#include <QtGui/private/qeventpoint_p.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
