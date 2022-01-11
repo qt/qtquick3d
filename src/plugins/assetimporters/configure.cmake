@@ -10,13 +10,13 @@ set_property(CACHE INPUT_quick3d_assimp PROPERTY STRINGS undefined no qt system)
 
 #### Libraries
 
-qt_find_package(WrapQuick3DAssimp 5.1 PROVIDED_TARGETS WrapQuick3DAssimp::WrapQuick3DAssimp MODULE_NAME assetimporters QMAKE_LIB quick3d_assimp)
+qt_find_package(WrapQuick3DAssimp 5.1.6 PROVIDED_TARGETS WrapQuick3DAssimp::WrapQuick3DAssimp MODULE_NAME assetimporters QMAKE_LIB quick3d_assimp)
 
 qt_config_compile_test("quick3d_assimp"
                    LABEL "Assimp"
                    PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../config.tests/quick3d_assimp"
                    LIBRARIES WrapQuick3DAssimp::WrapQuick3DAssimp
-                   PACKAGES PACKAGE WrapQuick3DAssimp 5.1)
+                   PACKAGES PACKAGE WrapQuick3DAssimp 5.1.6)
 
 
 #### Tests
