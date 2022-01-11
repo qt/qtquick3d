@@ -191,6 +191,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     const int suggestedSize = qMax(512.f, inImage->height * 0.5f);
     const QSize environmentMapSize(suggestedSize, suggestedSize);
     const bool isRGBE = inImage->format.format == QSSGRenderTextureFormat::Format::RGBE8;
+    const int colorSpace = inImage->isSRGB ? 1 : 0; // 0 Linear | 1 sRGB
 
     // Phase 1: Convert the Equirectangular texture to a Cubemap
     QRhiTexture *envCubeMap = rhi->newTexture(QRhiTexture::RGBA16F,
@@ -272,10 +273,16 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     uBuf->create();
     uBuf->deleteLater();
 
+    int ubufEnvMapElementSize = rhi->ubufAligned(4);
+    QRhiBuffer *uBufEnvMap = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufEnvMapElementSize * 6);
+    uBufEnvMap->create();
+    uBufEnvMap->deleteLater();
+
     // Shader Resource Bindings
     QRhiShaderResourceBindings *envMapSrb = rhi->newShaderResourceBindings();
     envMapSrb->setBindings(
             { QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(0, QRhiShaderResourceBinding::VertexStage, uBuf, 128),
+              QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(2, QRhiShaderResourceBinding::FragmentStage, uBufEnvMap, ubufEnvMapElementSize),
               QRhiShaderResourceBinding::sampledTexture(1, QRhiShaderResourceBinding::FragmentStage, sourceTexture, sampler) });
     envMapSrb->create();
     envMapSrb->deleteLater();
@@ -326,6 +333,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     for (int face = 0; face < 6; ++face) {
         rub->updateDynamicBuffer(uBuf, face * ubufElementSize, 64, mvp.constData());
         rub->updateDynamicBuffer(uBuf, face * ubufElementSize + 64, 64, views[face].constData());
+        rub->updateDynamicBuffer(uBufEnvMap, face * ubufEnvMapElementSize, 4, &colorSpace);
     }
     cb->resourceUpdate(rub);
 
@@ -336,8 +344,11 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
         cb->setGraphicsPipeline(envMapPipeline);
         cb->setVertexInput(0, 1, &vbufBinding);
         cb->setViewport(QRhiViewport(0, 0, environmentMapSize.width(), environmentMapSize.height()));
-        QPair<int, quint32> dynamicOffset = { 0, quint32(ubufElementSize * face) };
-        cb->setShaderResources(envMapSrb, 1, &dynamicOffset);
+        QVector<QPair<int, quint32>> dynamicOffset = {
+            { 0, quint32(ubufElementSize * face) },
+            { 2, quint32(ubufEnvMapElementSize * face )}
+        };
+        cb->setShaderResources(envMapSrb, 2, dynamicOffset.constData());
 
         cb->draw(36);
         cb->endPass();

@@ -86,6 +86,8 @@ public:
     QImage image;
     quint32 dataSizeInBytes = 0;
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA8;
+    // #TODO: There should be more ways to influence this (hints on the texture)
+    bool isSRGB = false;
 
     ~QSSGLoadedTexture();
     void setFormatFromComponents()
