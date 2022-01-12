@@ -128,8 +128,6 @@ ApplicationWindow {
         id: exportMaterialDialog
         title: "Export material"
         anchors.centerIn: parent
-        width: parent.width * 0.5
-        height: parent.height * 0.3
 
         ColumnLayout {
             id: exportFiles
