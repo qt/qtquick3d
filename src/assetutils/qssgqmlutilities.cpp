@@ -689,10 +689,10 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
         case QMetaType::QMatrix4x4: {
             const auto &mat44 = *reinterpret_cast<QMatrix4x4 *>(value.dptr);
             return { property.name, QLatin1String("Qt.matrix4x4(")
-                        + QString::number(mat44(0, 0)) + ", " + QString::number(mat44(0, 1)) + ", " + QString::number(mat44(0, 2)) + ", " + QString::number(mat44(0, 3)) + ", "
-                        + QString::number(mat44(1, 0)) + ", " + QString::number(mat44(1, 1)) + ", " + QString::number(mat44(1, 2)) + ", " + QString::number(mat44(1, 3)) + ", "
-                        + QString::number(mat44(2, 0)) + ", " + QString::number(mat44(2, 1)) + ", " + QString::number(mat44(2, 2)) + ", " + QString::number(mat44(2, 3)) + ", "
-                        + QString::number(mat44(3, 0)) + ", " + QString::number(mat44(3, 1)) + ", " + QString::number(mat44(3, 2)) + ", " + QString::number(mat44(3, 3)) + ')' };
+                        + QString::number(mat44(0, 0)) + u", " + QString::number(mat44(0, 1)) + u", " + QString::number(mat44(0, 2)) + u", " + QString::number(mat44(0, 3)) + u", "
+                        + QString::number(mat44(1, 0)) + u", " + QString::number(mat44(1, 1)) + u", " + QString::number(mat44(1, 2)) + u", " + QString::number(mat44(1, 3)) + u", "
+                        + QString::number(mat44(2, 0)) + u", " + QString::number(mat44(2, 1)) + u", " + QString::number(mat44(2, 2)) + u", " + QString::number(mat44(2, 3)) + u", "
+                        + QString::number(mat44(3, 0)) + u", " + QString::number(mat44(3, 1)) + u", " + QString::number(mat44(3, 2)) + u", " + QString::number(mat44(3, 3)) + u')' };
         }
         case QMetaType::QUrl:
             return { property.name, QString(QLatin1String("\"%1\"")).arg(asString(value)) };
