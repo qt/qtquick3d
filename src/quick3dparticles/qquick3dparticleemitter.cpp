@@ -797,7 +797,6 @@ int QQuick3DParticleEmitter::getEmitAmountFromDynamicBursts(int triggerType)
             continue;
         if (!burstPtr->m_enabled)
             continue;
-        const int endTime = burstPtr->m_time + burstPtr->m_duration;
         // Trigering on trail emitter start / end
         const bool trailTriggering = triggerType && (burstPtr->m_triggerMode) == triggerType;
         // Triggering on time for the first time
