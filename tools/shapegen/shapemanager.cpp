@@ -162,7 +162,7 @@ bool ShapeManager::saveShapeData(const QString &filename)
         int index = 0;
         while (m_outputData.size() < m_amount) {
             m_outputData << m_data[index];
-            index = index < (m_data.size() - 1) ? ++index : 0;
+            index = index < (m_data.size() - 1) ? index + 1 : 0;
         }
     }
 
