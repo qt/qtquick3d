@@ -309,15 +309,11 @@ static QSSGMesh::Mesh loadMesh(const QString &source)
     src = QDir::cleanPath(src);
     if (src.startsWith(QLatin1String("qrc:/")))
         src = src.mid(3);
-    QSSGMesh::Mesh mesh;
-    QFileInfo fileInfo = QFileInfo(src);
-    if (fileInfo.exists()) {
-        QFile file(fileInfo.absoluteFilePath());
-        if (!file.open(QFile::ReadOnly))
-            return {};
-        mesh = QSSGMesh::Mesh::loadMesh(&file);
-    }
-    return mesh;
+
+    QFile file(src);
+    if (!file.open(QFile::ReadOnly))
+        return {};
+    return QSSGMesh::Mesh::loadMesh(&file);
 }
 
 static QVector3D getPosition(const quint8 *srcVertices, quint32 idx, quint32 vertexStride, quint32 posOffset)
