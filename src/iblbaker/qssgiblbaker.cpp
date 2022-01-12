@@ -64,7 +64,7 @@ static constexpr QSSGRenderTextureFormat FORMAT(QSSGRenderTextureFormat::RGBA16F
 
 const QStringList QSSGIblBaker::inputExtensions() const
 {
-    return { QStringLiteral("hdr") };
+    return { QStringLiteral("hdr"), QStringLiteral("exr")};
 }
 
 const QString QSSGIblBaker::outputExtension() const

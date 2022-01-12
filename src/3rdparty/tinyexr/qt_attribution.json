@@ -1,0 +1,14 @@
+{
+    "Id": "tinyexr",
+    "Name": "Tiny OpenEXR",
+    "QDocModule": "qtquick3d",
+    "Description": "tinyexr is a small, single header-only library to load and save OpenEXR (.exr) images.",
+    "QtUsage": "Used to open OpenEXR image files in Qt Quick 3D",
+
+    "Homepage": "https://github.com/syoyo/tinyexr",
+    "Version": "v1.0.1",
+    "License": "BSD 3-clause \"New\" or \"Revised\" License",
+    "LicenseId": "BSD-3-Clause",
+    "LicenseFile": "LICENSE",
+    "Copyright": "Copyright (c) 2014 - 2021, Syoyo Fujita and many contributors."
+}

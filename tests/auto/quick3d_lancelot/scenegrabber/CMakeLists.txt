@@ -39,6 +39,7 @@ qt6_add_lightprobe_images(qquick3d_qmlscenegrabber "ibl_assets"
         "../data/shared/maps"
     FILES
         "../data/shared/maps/OpenfootageNET_lowerAustria01-1024.hdr"
+        "../data/shared/maps/TestEnvironment-512.exr"
 )
 
 # Turn it into a QML module which has no plugin (i.e. just a backing target)

@@ -4,6 +4,13 @@
 ## Quick3DRuntimeRender Module:
 #####################################################################
 
+# Handle the conditional finding of either system zlib or qt zlib.
+if(NOT QT_FEATURE_system_zlib)
+    find_package(Qt6 COMPONENTS ZlibPrivate)
+elseif(NOT TARGET WrapZLIB::WrapZLIB)
+    qt_find_package(WrapZLIB PROVIDED_TARGETS WrapZLIB::WrapZLIB)
+endif()
+
 qt_internal_add_module(Quick3DRuntimeRender
     SOURCES
         graphobjects/qssgrendercamera.cpp graphobjects/qssgrendercamera_p.h
@@ -136,6 +143,21 @@ qt_internal_add_resource(Quick3DRuntimeRender "res"
 )
 
 # special case begin
+
+qt_internal_extend_target(Quick3DRuntimeRender
+    INCLUDE_DIRECTORIES
+        ../3rdparty/tinyexr
+)
+
+qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_FEATURE_system_zlib
+    LIBRARIES
+        WrapZLIB::WrapZLIB
+)
+
+qt_internal_extend_target(Quick3DRuntimeRender CONDITION NOT QT_FEATURE_system_zlib
+    LIBRARIES
+        Qt6::ZlibPrivate
+)
 
 # default settings are GLSL "100es,120,150" HLSL "50" MSL "12"
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
