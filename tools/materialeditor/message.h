@@ -47,6 +47,7 @@ struct Message
 
     using MessagePtr = std::shared_ptr<Message>;
 
+    virtual ~Message();
     // NOTE! These functions assume the device is open and read/writeable when called!
     virtual bool read(QDataStream &device) = 0;
     virtual bool write(QDataStream &device) const = 0;
@@ -69,6 +70,7 @@ struct UniformsMessage : Message
 
     UniformsMessage() = default;
     UniformsMessage(UniformList list) : uniforms(list) {}
+    ~UniformsMessage() override;
 
     bool read(QDataStream &stream) final;
     bool write(QDataStream &stream) const final;
@@ -79,6 +81,7 @@ struct FilenamesMessage : Message
 {
     static constexpr MessageId id { "FM" };
 
+    ~FilenamesMessage() override;
     bool read(QDataStream &stream) final;
     bool write(QDataStream &stream) const final;
     Type type() const final { return Type::Filenames; }
