@@ -1754,7 +1754,8 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;
         }
-        renderPassDesc->deleteLater();
+        if (renderPassDesc)
+            renderPassDesc->deleteLater();
 
         pEntry->renderMips(rhiCtx);
 
