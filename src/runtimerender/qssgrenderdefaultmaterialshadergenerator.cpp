@@ -417,7 +417,8 @@ static constexpr QByteArrayView qssg_shader_arg_names[] {
     { "INSTANCE_MODEL_MATRIX" },
     { "INSTANCE_MODELVIEWPROJECTION_MATRIX" },
     { "UV0" },
-    { "UV1" }
+    { "UV1" },
+    { "VERTEX" }
 };
 
 const char *QSSGMaterialShaderGenerator::directionalLightProcessorArgumentList()
