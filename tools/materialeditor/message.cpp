@@ -35,6 +35,11 @@ QT_BEGIN_NAMESPACE
 
 Message::Type Message::type() const { return Message::Type::Invalid; }
 
+UniformsMessage::~UniformsMessage()
+{
+
+}
+
 bool UniformsMessage::read(QDataStream &stream)
 {
     stream >> uniforms;
@@ -49,6 +54,11 @@ bool UniformsMessage::write(QDataStream &stream) const
     return (stream.status() == QDataStream::Ok);
 }
 
+FilenamesMessage::~FilenamesMessage()
+{
+
+}
+
 bool FilenamesMessage::read(QDataStream &stream)
 {
     stream >> vertFilename >> fragFilename;
@@ -59,6 +69,11 @@ bool FilenamesMessage::write(QDataStream &stream) const
 {
     stream << vertFilename << fragFilename;
     return (stream.status() == QDataStream::Ok);
+}
+
+Message::~Message()
+{
+
 }
 
 Message::MessagePtr Message::getMessage(QIODevice &device)

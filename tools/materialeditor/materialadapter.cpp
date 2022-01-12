@@ -68,7 +68,6 @@ enum class ShaderType
 
 static QString getScheme() { return u"q3dres"_qs; }
 static QString getUserType() { return u"material"_qs; }
-static QUrl materialShaderUrl(const QUrl &url) { return QUrl(getScheme() + "://" + getUserType() + '@' + url.fileName()); }
 static constexpr QStringView fileSuffix(ShaderType type) { return (type == ShaderType::Vertex) ? u".vert" : u".frag"; }
 
 static QUrl defaultShaderUrl(ShaderType type)

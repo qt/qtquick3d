@@ -122,7 +122,7 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
                 const QSize resSize = image.size();
                 QByteArrayView dataref(image.constBits(), image.sizeInBytes());
                 auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
-                const auto &baseName = fi.baseName() + QString::number(material.id);
+                const auto &baseName = QString(fi.baseName() + QString::number(material.id));
                 auto name = (baseName.size() > 0) ? fromQString(material.scene->allocator, baseName) : QByteArrayView();
                 auto textureData = material.scene->create<QSSGSceneDesc::TextureData>(dataref, resSize, format, 0, name);
                 QSSGSceneDesc::addNode(material, *textureData);
