@@ -161,6 +161,7 @@ struct Node
         Material,
         Light,
         Mesh,
+        Skin,
         Skeleton,
         Joint
     };
@@ -275,6 +276,13 @@ struct Light : Node
     explicit Light(RuntimeType rt) : Node(Node::Type::Light, rt) {}
 };
 QSSG_DECLARE_NODE(Light)
+
+struct Skin : Node
+{
+    using type = QQuick3DSkin;
+    Skin() : Node(Node::Type::Skin, Node::RuntimeType::Skin) {}
+};
+QSSG_DECLARE_NODE(Skin)
 
 struct Skeleton : Node
 {
@@ -701,6 +709,7 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::Mesh)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Model)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Camera)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Light)
+Q_DECLARE_METATYPE(QSSGSceneDesc::Skin)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Skeleton)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Joint)
 Q_DECLARE_METATYPE(QSSGSceneDesc::NodeList)

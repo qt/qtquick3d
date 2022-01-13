@@ -155,7 +155,9 @@ QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::Tex
     return obj;
 }
 
-void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverse)
+void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
+                                         QList<QSSGSceneDesc::Node *> &deferredNodes,
+                                         QQuick3DObject &parent, bool traverse)
 {
     using namespace QSSGSceneDesc;
 
@@ -174,6 +176,12 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObje
         break;
     case Node::Type::Joint:
         obj = createRuntimeObject<QQuick3DJoint>(static_cast<Joint &>(node), parent);
+        break;
+    case Node::Type::Skin:
+        obj = createRuntimeObject<QQuick3DSkin>(static_cast<Skin &>(node), parent);
+        // We will update it's properties later because a property, joints,
+        // is required for other nodes to be completed before
+        deferredNodes.push_back(&node);
         break;
     case Node::Type::Light:
     {
@@ -234,10 +242,11 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObje
     }
 
     if (obj && traverse) {
-        setProperties(*obj, node);
+        if (node.nodeType != Node::Type::Skin)
+            setProperties(*obj, node);
 
         for (auto &chld : node.children)
-            createGraphObject(chld, *obj);
+            createGraphObject(chld, deferredNodes, *obj);
     }
 }
 
@@ -248,11 +257,17 @@ QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGScen
 
     QSSGBufferManager::registerMeshData(scene.id, scene.meshStorage);
 
+    QList<QSSGSceneDesc::Node *> deferredNodes;
     auto root = scene.root;
     for (const auto &resource : scene.resources)
-        createGraphObject(*resource, parent, false);
+        createGraphObject(*resource, deferredNodes, parent, false);
 
-    createGraphObject(*root, parent);
+    createGraphObject(*root, deferredNodes, parent);
+
+    // Some resources such as Skin have properties related with the node
+    // heirarchy. They will be deferred to be set
+    for (const auto &deferred: deferredNodes)
+        setProperties(static_cast<QQuick3DObject &>(*deferred->obj), *deferred);
 
     // Usually it makes sense to only enable 1 timeline at a time
     // so for now we just enable the first one.

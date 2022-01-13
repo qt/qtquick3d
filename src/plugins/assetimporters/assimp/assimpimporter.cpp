@@ -304,58 +304,6 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         }
     }
 
-    // Check for Bones
-    if (m_scene->HasMeshes()) {
-        for (uint i = 0; i < m_scene->mNumMeshes; ++i) {
-            aiMesh *mesh = m_scene->mMeshes[i];
-            if (mesh->HasBones()) {
-                for (uint j = 0; j < mesh->mNumBones; ++j) {
-                    aiBone *bone = mesh->mBones[j];
-                    Q_ASSERT(bone);
-                    aiNode *node = m_scene->mRootNode->FindNode(bone->mName);
-                    if (node) {
-                        QString boneName = QString::fromUtf8(bone->mName.C_Str());
-                        m_bones.insert(boneName, node);
-                    }
-                }
-            }
-        }
-        // make m_skeletonIdxMap
-        for (uint i = 0; i < m_scene->mNumMeshes; ++i) {
-            aiMesh *mesh = m_scene->mMeshes[i];
-            if (mesh->HasBones()) {
-                aiBone *bone = mesh->mBones[0];
-                Q_ASSERT(bone);
-                aiNode *node = m_scene->mRootNode->FindNode(bone->mName);
-                if (m_skeletonIdxMap.contains(node))
-                    continue;
-
-                aiNode *boneRootNode = node->mParent;
-                while (isBone(boneRootNode))
-                    boneRootNode = boneRootNode->mParent;
-
-                QString id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(QStringLiteral("qmlskeleton")));
-                quint32 skeletonIdx = m_skeletonIds.size();
-                m_skeletonIds.append(id);
-                quint32 numBones = 0;
-
-                for (uint j = 0; j < boneRootNode->mNumChildren; ++j) {
-                    aiNode *cNode = boneRootNode->mChildren[j];
-                    // assumes that all the Joints have children which are Joints
-                    if (!isBone(cNode))
-                        continue;
-
-                    QString boneName = QString::fromUtf8(cNode->mName.C_Str());
-                    m_nodeTypeMap.insert(cNode, QSSGQmlUtilities::PropertyMap::Joint);
-                    m_skeletonIdxMap.insert(cNode, qMakePair(skeletonIdx, true));
-                    m_boneIdxMap.insert(boneName, numBones++);
-                    generateSkeletonIdxMap(cNode, skeletonIdx, numBones);
-                }
-                m_numBonesInSkeleton.append(numBones);
-            }
-        }
-     }
-
     // Materials
 
     // Traverse Node Tree
@@ -485,26 +433,6 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     return errorString;
 }
 
-void AssimpImporter::generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx)
-{
-    Q_ASSERT(node != nullptr);
-    for (uint i = 0; i < node->mNumChildren; ++i) {
-        aiNode *cNode = node->mChildren[i];
-
-        if (!isModel(cNode) && !isCamera(cNode) && !isLight(cNode)) {
-            // assumes that all the Joints have children which are Joints
-            QString boneName = QString::fromUtf8(cNode->mName.C_Str());
-            if (!isBone(cNode)) {
-                m_bones.insert(boneName, cNode);
-            }
-            m_nodeTypeMap.insert(cNode, QSSGQmlUtilities::PropertyMap::Joint);
-            m_skeletonIdxMap.insert(cNode, qMakePair(skeletonIdx, false));
-            m_boneIdxMap.insert(boneName, boneIdx++);
-        }
-        generateSkeletonIdxMap(cNode, skeletonIdx, boneIdx);
-    }
-}
-
 void AssimpImporter::writeHeader(QTextStream &output)
 {
     output << "import QtQuick\n";
@@ -521,25 +449,8 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
         // Figure out what kind of node this is
         if (isModel(currentNode)) {
             // Model
-            int numMeshes = currentNode->mNumMeshes;
-
-            // The following code is to merge submeshes
-            // but assimp makes submeshes with primitives in GLTF2
-            // It means that they could be merged always.
-            // After checking it for other formats, then remove
-            // this checking processes
-            // Now, we will merge submeshes without checking for morphing
-            QVector<bool> visited(numMeshes, false);
-            const QVector<bool> visitedAll(numMeshes, true);
-
-            while (true) {
-                output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Model {\n");
-                generateModelProperties(currentNode, visited, output, tabLevel + 1);
-                if (visited == visitedAll)
-                    break;
-                else
-                    output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
-            }
+            output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Model {\n");
+            generateModelProperties(currentNode, output, tabLevel + 1);
             m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Model);
         } else if (isLight(currentNode)) {
             // Light
@@ -551,42 +462,8 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
             // Camera
             auto type = generateCameraProperties(currentNode, output, tabLevel);
             m_nodeTypeMap.insert(node, type);
-        } else if (isBone(currentNode)) {
-            SkeletonInfo skeletonInfo = m_skeletonIdxMap[currentNode];
-            QString nodeName = QString::fromUtf8(currentNode->mName.C_Str());
-            qint32 boneIdx = m_boneIdxMap[nodeName];
-            quint32 skeletonIdx = skeletonInfo.first;
-            QString skeletonId = m_skeletonIds[skeletonIdx];
-            if (boneIdx == 0) {
-                output << QSSGQmlUtilities::insertTabs(tabLevel)
-                       << QStringLiteral("Skeleton {\n");
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-                       << QStringLiteral("id: ") << skeletonId << QStringLiteral("\n");
-                processSkeleton(currentNode->mParent, skeletonIdx, output, tabLevel + 1);
-                output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
-                return;
-            } else if (!skeletonInfo.second) {
-                output << QSSGQmlUtilities::insertTabs(tabLevel)
-                       << QStringLiteral("Joint {\n");
-                generateNodeProperties(currentNode, output, tabLevel + 1);
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-                       << QStringLiteral("index: ") << QString::number(boneIdx)
-                       << QStringLiteral("\n");
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-                       << QStringLiteral("skeletonRoot: ") << skeletonId << QStringLiteral("\n");
-            } else {
-                // isRootBone but it should be processed when making Skeleton with processSkeleton.
-                return;
-            }
         } else {
             // Transform Node
-
-            // ### Make empty transform node removal optional
-            // Check if the node actually does something before generating it
-            // and return early without processing the rest of the branch
-            if (!containsNodesOfConsequence(node))
-                return;
-
             output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("Node {\n");
             generateNodeProperties(currentNode, output, tabLevel + 1);
             m_nodeTypeMap.insert(node, QSSGQmlUtilities::PropertyMap::Node);
@@ -604,7 +481,7 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
     }
 }
 
-void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &visited, QTextStream &output, int tabLevel)
+void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &output, int tabLevel)
 {
     generateNodeProperties(modelNode, output, tabLevel);
 
@@ -616,110 +493,17 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
     // These submeshes will animate with the same morphing weight!
     AssimpUtils::MeshList meshes;
     QVector<aiMaterial *> materials;
-    QVector<aiMatrix4x4 *> inverseBindPoses;
 
-    // First, check skinning
-    aiBone *bone = nullptr;
+    aiMesh *boneMesh = nullptr;
     for (uint i = 0; i < modelNode->mNumMeshes; ++i) {
-        if (visited[i])
-            continue;
-
+        // Now all the meshes will be merged.
         aiMesh *mesh = m_scene->mMeshes[modelNode->mMeshes[i]];
-        if (mesh->HasBones()) {
-            bone = mesh->mBones[0];
-            visited[i] = true;
-            meshes.append(mesh);
-            aiMaterial *material = m_scene->mMaterials[mesh->mMaterialIndex];
-            materials.append(material);
-            break;
-        }
-    }
-
-    // skeletonRoot
-    quint32 skeletonIdx = 0xffffffff;
-    if (bone != nullptr) {
-        QString id;
-        QString boneName = QString::fromUtf8(bone->mName.C_Str());
-        aiNode *boneNode = m_bones[boneName];
-        Q_ASSERT(m_skeletonIdxMap.contains(boneNode));
-        skeletonIdx = m_skeletonIdxMap[boneNode].first;
-        id = m_skeletonIds[skeletonIdx];
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("skeleton: ")
-               << id << QStringLiteral("\n");
-
-        inverseBindPoses.resize(m_numBonesInSkeleton[skeletonIdx]);
-        const aiMesh *mesh = meshes[0];
-        for (uint i = 0; i < mesh->mNumBones; ++i) {
-            QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
-            Q_ASSERT(m_boneIdxMap.contains(boneName));
-            qint32 boneIndex = m_boneIdxMap[boneName];
-            inverseBindPoses[boneIndex] = &(mesh->mBones[i]->mOffsetMatrix);
-        }
-    }
-
-    for (uint i = 0; i < modelNode->mNumMeshes; ++i) {
-        if (visited[i])
-            continue;
-        aiMesh *mesh = m_scene->mMeshes[modelNode->mMeshes[i]];
-        if (mesh->HasBones()) {
-            bone = mesh->mBones[0];
-            QString boneName = QString::fromUtf8(bone->mName.C_Str());
-            aiNode *boneNode = m_bones[boneName];
-            Q_ASSERT(m_skeletonIdxMap.contains(boneNode));
-            // check this skinned mesh can be merged with previous one
-            if (skeletonIdx != m_skeletonIdxMap[boneNode].first) {
-                // This node will be processed at the next time.
-                continue;
-            }
-            bool canBeMerged = true;
-            for (uint i = 0; i < mesh->mNumBones; ++i) {
-                QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
-                Q_ASSERT(m_boneIdxMap.contains(boneName));
-                qint32 boneIndex = m_boneIdxMap[boneName];
-                if (inverseBindPoses[boneIndex] != nullptr
-                        && *(inverseBindPoses[boneIndex]) != mesh->mBones[i]->mOffsetMatrix) {
-                    canBeMerged = false;
-                    break;
-                }
-            }
-            if (!canBeMerged)
-                continue;
-
-            // Add additional inverseBindPoses
-            for (uint i = 0; i < mesh->mNumBones; ++i) {
-                QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
-                qint32 boneIndex = m_boneIdxMap[boneName];
-                inverseBindPoses[boneIndex] = &(mesh->mBones[i]->mOffsetMatrix);
-            }
-        }
+        // all the boneMeshes should be the same
+        if (mesh->HasBones())
+            boneMesh = mesh;
         meshes.append(mesh);
         aiMaterial *material = m_scene->mMaterials[mesh->mMaterialIndex];
         materials.append(material);
-
-        visited[i] = true;
-    }
-
-    if (inverseBindPoses.size() > 0) {
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("inverseBindPoses: [\n");
-        for (uint i = 0; i < inverseBindPoses.size(); ++i) {
-            aiMatrix4x4 *osMat = inverseBindPoses[i];
-            if (osMat) {
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-                       << QStringLiteral("Qt.matrix4x4(")
-                       << QString("%1, %2, %3, %4, ").arg((*osMat)[0][0]).arg((*osMat)[0][1]).arg((*osMat)[0][2]).arg((*osMat)[0][3])
-                       << QString("%1, %2, %3, %4, ").arg((*osMat)[1][0]).arg((*osMat)[1][1]).arg((*osMat)[1][2]).arg((*osMat)[1][3])
-                       << QString("%1, %2, %3, %4, ").arg((*osMat)[2][0]).arg((*osMat)[2][1]).arg((*osMat)[2][2]).arg((*osMat)[2][3])
-                       << QString("%1, %2, %3, %4)").arg((*osMat)[3][0]).arg((*osMat)[3][1]).arg((*osMat)[3][2]).arg((*osMat)[3][3]);
-            } else {
-                output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-                       << QStringLiteral("Qt.matrix4x4()");
-            }
-
-            if (i != inverseBindPoses.size() - 1)
-                output << ",\n";
-            else
-                output << "\n" << QSSGQmlUtilities::insertTabs(tabLevel) << "]\n";
-        }
     }
 
     // Model name can contain invalid characters for filename, so just to be safe, convert the name
@@ -746,6 +530,55 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QVector<bool> &v
 
     output << QSSGQmlUtilities::insertTabs(tabLevel) << "source: \"" << outputMeshFile
            << QStringLiteral("\"") << QStringLiteral("\n");
+
+    // Skin
+    if (boneMesh != nullptr) {
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("skin: Skin {\n");
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("joints: [\n");
+        QVector<aiMatrix4x4 *> inverseBindPoses;
+        const uint &numBones = boneMesh->mNumBones;
+        bool hasNonIdentityPoses = false;
+        for (uint i = 0; i < numBones; ++i) {
+            aiBone *bone = boneMesh->mBones[i];
+            QString boneName = QString::fromUtf8(bone->mName.C_Str());
+
+            // Now we'll assume all the sanitizedQmlId(nodeName)s are unique
+            // If not, initialization of the nodeNames can solve the conflict
+            QString id = QSSGQmlUtilities::sanitizeQmlId(boneName);
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 2) << id;
+            if (i != numBones - 1)
+                output << QStringLiteral(",\n");
+            else
+                output << QStringLiteral("\n");
+            inverseBindPoses.push_back(&(bone->mOffsetMatrix));
+            if (!bone->mOffsetMatrix.IsIdentity())
+                hasNonIdentityPoses = true;
+        }
+        output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("]\n");
+        if (hasNonIdentityPoses) {
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("inverseBindPoses: [\n");
+            for (uint i = 0; i < numBones; ++i) {
+                const aiMatrix4x4 *osMat = inverseBindPoses.at(i);
+                if (!osMat->IsIdentity()) {
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 2)
+                           << QStringLiteral("Qt.matrix4x4(")
+                           << QString("%1, %2, %3, %4, ").arg((*osMat)[0][0]).arg((*osMat)[0][1]).arg((*osMat)[0][2]).arg((*osMat)[0][3])
+                           << QString("%1, %2, %3, %4, ").arg((*osMat)[1][0]).arg((*osMat)[1][1]).arg((*osMat)[1][2]).arg((*osMat)[1][3])
+                           << QString("%1, %2, %3, %4, ").arg((*osMat)[2][0]).arg((*osMat)[2][1]).arg((*osMat)[2][2]).arg((*osMat)[2][3])
+                           << QString("%1, %2, %3, %4)").arg((*osMat)[3][0]).arg((*osMat)[3][1]).arg((*osMat)[3][2]).arg((*osMat)[3][3]);
+                } else {
+                    output << QSSGQmlUtilities::insertTabs(tabLevel + 2)
+                           << QStringLiteral("Qt.matrix4x4()");
+                }
+                if (i != numBones - 1)
+                    output << QStringLiteral(",\n");
+                else
+                    output << QStringLiteral("\n");
+            }
+            output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("]\n");
+        }
+        output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
+    }
 
     // Morphing
     const QVector<QString> targets = generateMorphing(modelNode, meshes, output, tabLevel);
@@ -1021,7 +854,7 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const AssimpUtil
         return QStringLiteral("Could not open device to write mesh file");
 
     QString errorString;
-    const auto mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_boneIdxMap, m_generateLightmapUV, m_useFloatJointIndices, errorString);
+    const auto mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_generateLightmapUV, m_useFloatJointIndices, errorString);
 
     if (mesh.isValid()) {
         if (!mesh.save(&file))
@@ -1852,36 +1685,6 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
     return outputString;
 }
 
-void AssimpImporter::processSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel)
-{
-    if (!node)
-        return;
-
-    for (uint i = 0; i < node->mNumChildren; ++i) {
-        aiNode *cNode = node->mChildren[i];
-        if (!isBone(cNode))
-            continue;
-
-        QString id = m_skeletonIds[idx];
-        QString nodeName = QString::fromUtf8(cNode->mName.C_Str());
-        qint32 boneIdx = m_boneIdxMap[nodeName];
-        output << QSSGQmlUtilities::insertTabs(tabLevel)
-               << QStringLiteral("Joint {\n");
-        generateNodeProperties(cNode, output, tabLevel + 1);
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-               << QStringLiteral("index: ") << QString::number(boneIdx)
-               << QStringLiteral("\n");
-        output << QSSGQmlUtilities::insertTabs(tabLevel + 1)
-               << QStringLiteral("skeletonRoot: ") << id << QStringLiteral("\n");
-
-        for (uint j = 0; j < cNode->mNumChildren; ++j)
-            processNode(cNode->mChildren[j], output, tabLevel + 1);
-
-        output << QSSGQmlUtilities::insertTabs(tabLevel)
-               << QStringLiteral("}\n");
-    }
-}
-
 void AssimpImporter::processAnimations(QTextStream &output)
 {
     bool isFirstAnimation = true;
@@ -2226,14 +2029,6 @@ bool AssimpImporter::isCamera(aiNode *node)
     return node && m_cameras.contains(node);
 }
 
-bool AssimpImporter::isBone(aiNode *node)
-{
-    if (!node)
-        return false;
-    QString boneName = QString::fromUtf8(node->mName.C_Str());
-    return m_bones.contains(boneName);
-}
-
 QString AssimpImporter::generateUniqueId(const QString &id)
 {
     int index = 0;
@@ -2242,29 +2037,6 @@ QString AssimpImporter::generateUniqueId(const QString &id)
         uniqueID = id + QStringLiteral("_") + QString::number(++index);
     m_uniqueIds.insert(uniqueID);
     return uniqueID;
-}
-
-// This method is used to walk a subtree to see if any of the nodes actually
-// add any state to the scene.  A branch of empty transform nodes would only be
-// useful if they were being used somewhere else (like where to aim a camera),
-// but the general case is that they can be safely culled
-bool AssimpImporter::containsNodesOfConsequence(aiNode *node)
-{
-    bool isUseful = false;
-
-    isUseful |= isLight(node);
-    isUseful |= isModel(node);
-    isUseful |= isCamera(node);
-    isUseful |= isBone(node);
-
-    // Return early if we know already
-    if (isUseful)
-        return true;
-
-    for (uint i = 0; i < node->mNumChildren; ++i)
-        isUseful |= containsNodesOfConsequence(node->mChildren[i]);
-
-    return isUseful;
 }
 
 void AssimpImporter::processOptions(const QVariantMap &options)

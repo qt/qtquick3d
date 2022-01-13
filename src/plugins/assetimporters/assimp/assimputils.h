@@ -48,7 +48,6 @@ using MeshList = QVector<const aiMesh *>;
 
 QSSGMesh::Mesh generateMeshData(const aiScene &scene,
                                 const MeshList &meshes,
-                                const BoneIndexMap &boneIdxMap,
                                 bool generateLightmapUV,
                                 bool useFloatJointIndices,
                                 QString &errorString);

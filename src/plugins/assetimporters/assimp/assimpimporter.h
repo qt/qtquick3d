@@ -93,7 +93,7 @@ public:
 private:
     void writeHeader(QTextStream &output);
     void processNode(aiNode *node, QTextStream &output, int tabLevel = 0);
-    void generateModelProperties(aiNode *modelNode, QVector<bool> &visited, QTextStream &output, int tabLevel);
+    void generateModelProperties(aiNode *modelNode, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel);
     void generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection = nullptr, bool skipScaling = false);
@@ -101,8 +101,6 @@ private:
     void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
     QVector<QString> generateMorphing(aiNode *node, const AssimpUtils::MeshList &meshes, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
-    void generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx);
-    void processSkeleton(aiNode *node, quint32 idx, QTextStream &output, int tabLevel);
     void processAnimations(QTextStream &output);
     template <typename T>
     void generateKeyframes(const QString &id, const QString &propertyName,
@@ -120,7 +118,6 @@ private:
     bool isCamera(aiNode *node);
     bool isBone(aiNode *node);
     QString generateUniqueId(const QString &id);
-    bool containsNodesOfConsequence(aiNode *node);
     void processOptions(const QVariantMap &options);
     bool checkBooleanOption(const QString &optionName, const QJsonObject &options);
     qreal getRealOption(const QString &optionName, const QJsonObject &options);
@@ -141,13 +138,6 @@ private:
     QSet<QString> m_uniqueIds;
     QHash<aiNode *, QString> m_nodeIdMap;
     QHash<aiNode *, QSSGQmlUtilities::PropertyMap::Type> m_nodeTypeMap;
-
-    QHash<QString, aiNode *> m_bones;
-    using SkeletonInfo = QPair<quint32, bool>;
-    QHash<aiNode *, SkeletonInfo> m_skeletonIdxMap; // pair(id, isRootBone)
-    AssimpUtils::BoneIndexMap m_boneIdxMap;
-    QVector<QString> m_skeletonIds;
-    QVector<qint32> m_numBonesInSkeleton;
 
     QDir m_savePath;
     QFileInfo m_sourceFile;

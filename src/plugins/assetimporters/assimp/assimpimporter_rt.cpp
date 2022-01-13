@@ -95,7 +95,6 @@ struct NodeInfo
 Q_DECLARE_TYPEINFO(NodeInfo, Q_PRIMITIVE_TYPE);
 
 using NodeMap = QHash<const aiNode *, NodeInfo>;
-using SkeletonInfo = QPair<QSSGSceneDesc::Skeleton *, bool>;
 
 using AnimationNodeMap = QHash<QByteArrayView, QSSGSceneDesc::Node *>;
 
@@ -161,15 +160,22 @@ struct SceneInfo
     using MeshMap = QVarLengthArray<QPair<const aiMesh *, QSSGSceneDesc::Mesh *>>;
     using EmbeddedTextureMap = QVarLengthArray<QSSGSceneDesc::TextureData *>;
     using TextureMap = QSet<TextureEntry>;
-    using SkeletonMap = QHash<const aiNode *, SkeletonInfo>;
+
+    struct skinData {
+        aiBone **mBones;
+        unsigned int mNumBones;
+        QSSGSceneDesc::Skin *node;
+    };
+    using SkinMap = QVarLengthArray<skinData>;
+    using Mesh2SkinMap = QVarLengthArray<qint16>;
 
     const aiScene &scene;
     MaterialMap &materialMap;
     MeshMap &meshMap;
     EmbeddedTextureMap &embeddedTextureMap;
     TextureMap &textureMap;
-    SkeletonMap &skeletonMap;
-    AssimpUtils::BoneIndexMap &boneIdxMap;
+    SkinMap &skinMap;
+    Mesh2SkinMap &mesh2skin;
     QDir workingDir;
     GltfVersion ver;
     Options opt;
@@ -212,8 +218,6 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
     // pivot
 
     // opacity
-
-    // boneid
 
     // visible
 }
@@ -862,8 +866,8 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     auto &meshStorage = targetScene->meshStorage;
     auto &materialMap = sceneInfo.materialMap;
     auto &meshMap = sceneInfo.meshMap;
-    auto &skeletonMap = sceneInfo.skeletonMap;
-    auto &boneIdxMap = sceneInfo.boneIdxMap;
+    auto &skinMap = sceneInfo.skinMap;
+    auto &mesh2skin = sceneInfo.mesh2skin;
 
     QVarLengthArray<QSSGSceneDesc::Material *> materials;
     materials.reserve(source.mNumMeshes); // Assumig there's max one material per mesh.
@@ -872,8 +876,6 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
                                                                             : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
 
     QString errorString;
-
-    QSSGSceneDesc::Skeleton *skeleton = nullptr;
 
     const auto ensureMaterial = [&](qsizetype materialIndex) {
         // Get the material for the mesh
@@ -895,27 +897,30 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     };
 
     AssimpUtils::MeshList meshes;
+    qint16 skinIdx = -1;
     // Combine all the meshes referenced by this model into a single MultiMesh file
     // For the morphing, the target mesh must have the same AnimMeshes.
     // It means if only one mesh has a morphing animation, the other sub-meshes will
     // get null target attributes. However this case might not be common.
     // These submeshes will animate with the same morphing weight!
+
+    // If meshes have separate skins, they should not be combined. GLTF2 does not
+    // seem to have problems related with this case, but When we use runtime asset
+    // for other formats, this case must be checked again.
+    // Here, we will use only the first skin in the mesh list
     const auto combineMeshes = [&](const aiNode &source, aiMesh **sceneMeshes) {
         for (qsizetype i = 0, end = source.mNumMeshes; i != end; ++i) {
             const aiMesh &mesh = *sceneMeshes[source.mMeshes[i]];
             ensureMaterial(mesh.mMaterialIndex);
-            if (mesh.HasBones()) {
-                aiBone *bone = mesh.mBones[0];
-                aiNode *node = srcScene.mRootNode->FindNode(bone->mName);
-                skeleton = skeletonMap[node].first;
-            }
+            if (skinIdx == -1 && mesh.HasBones())
+                skinIdx = mesh2skin[source.mMeshes[i]];
             meshes.push_back(&mesh);
         }
     };
 
     const auto createMeshNode = [&](const aiString &name) {
         // TODO: There's a bug here when the lightmap generation is enabled...
-        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, boneIdxMap, false, false, errorString);
+        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, false, false, errorString);
         meshStorage.push_back(std::move(meshData));
 
         const auto idx = meshStorage.size() - 1;
@@ -937,12 +942,9 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
         auto &mesh = meshMap[*source.mMeshes];
         meshNode = mesh.second;
         if (meshNode == nullptr) {
-            if (mesh.first->HasBones()) {
-                aiBone *bone = mesh.first->mBones[0];
-                aiNode *node = srcScene.mRootNode->FindNode(bone->mName);
-                skeleton = skeletonMap[node].first;
-            }
             meshes = {mesh.first};
+            if (mesh.first->HasBones())
+                skinIdx = mesh2skin[*source.mMeshes];
             mesh.second = meshNode = createMeshNode(mesh.first->mName);
             QSSGSceneDesc::addNode(target, *meshNode); // We only add this the first time we create it.
         }
@@ -953,27 +955,12 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     if (meshNode)
         QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh>(), meshNode });
 
-    if (skeleton) {
-        QSSGSceneDesc::setProperty(target, "skeleton", &QQuick3DModel::setSkeleton, skeleton);
-        QList<QMatrix4x4> inverseBindPoses;
-        inverseBindPoses.resize(skeleton->maxIndex + 1);
-        for (const auto &mesh : qAsConst(meshes)) {
-            using It = decltype (mesh->mNumBones);
-            for (It i = 0, end = mesh->mNumBones; i != end; ++i) {
-                QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
-                const auto boneIt = boneIdxMap.constFind(boneName);
-                if (boneIt != boneIdxMap.cend()) { // All the bones should be inserted.
-                    const auto &osMat = mesh->mBones[i]->mOffsetMatrix;
-                    inverseBindPoses[*boneIt] = { osMat[0][0], osMat[0][1], osMat[0][2], osMat[0][3],
-                                                  osMat[1][0], osMat[1][1], osMat[1][2], osMat[1][3],
-                                                  osMat[2][0], osMat[2][1], osMat[2][2], osMat[2][3],
-                                                  osMat[3][0], osMat[3][1], osMat[3][2], osMat[3][3] };
-                } else {
-                    qWarning("Warning: Unidentified bone node! It is unexpected.");
-                }
-            }
-        }
-        QSSGSceneDesc::setProperty(target, "inverseBindPoses", &QQuick3DModel::setInverseBindPoses, inverseBindPoses);
+    if (skinIdx != -1) {
+        auto &skin = skinMap[skinIdx];
+        skin.node = targetScene->create<QSSGSceneDesc::Skin>();
+        QSSGSceneDesc::setProperty(target, "skin", &QQuick3DModel::setSkin, skin.node);
+        QSSGSceneDesc::addNode(target, *skin.node);
+        // Skins' properties wil be set after all the nodes are processed
     }
 
     // materials
@@ -981,19 +968,6 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     // Since we don't create any runtime objects at this point, the list also contains the node type that corresponds with the
     // type expected to be in the list (this is ensured at compile-time).
     QSSGSceneDesc::setProperty(target, "materials", &QQuick3DModel::materials, materials);
-}
-
-static bool containsNodesOfConsequence(const aiNode &node, const NodeMap &nodeMap)
-{
-    // Any node in the nodeMap is already of interest.
-    bool knownNode = nodeMap.contains(&node)
-                     || (node.mNumMeshes > 0) /* Models */;
-
-    // Return early if we know already
-    for (qsizetype i = 0, end = node.mNumChildren; i != end && !knownNode; ++i)
-        knownNode |= containsNodesOfConsequence(*node.mChildren[i], nodeMap);
-
-    return knownNode;
 }
 
 static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
@@ -1060,34 +1034,11 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
 static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSceneDesc::Node &parent, const NodeMap &nodeMap, AnimationNodeMap &animationNodes)
 {
     QSSGSceneDesc::Node *node = nullptr;
-    if (source.mNumMeshes != 0) {
+    if (source.mNumMeshes != 0)
         node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Model }, source, parent, sceneInfo);
-    } else {
-        auto it = nodeMap.constFind(&source);
-        const auto end = nodeMap.constEnd();
-        if (it != end) {
-            if (it->type == QSSGSceneDesc::Node::Type::Joint) {
-                auto newParent = &parent;
-                auto &skeletonMap = sceneInfo.skeletonMap;
-                Q_ASSERT(skeletonMap.contains(&source));
-                auto skeletonInfo = skeletonMap[&source];
-                auto skeleton = skeletonInfo.first;
-                if (it->index == 0) // first node
-                    QSSGSceneDesc::addNode(parent, *skeleton);
-
-                if (skeletonInfo.second)
-                    newParent = skeleton;
-
-                node = createSceneNode(*it, source, *newParent, sceneInfo);
-                QSSGSceneDesc::setProperty(*node, "skeletonRoot", &QQuick3DJoint::setSkeletonRoot, skeleton);
-            } else {
-                node = createSceneNode(*it, source, parent, sceneInfo);
-            }
-        }
-    }
 
     // For now, all the nodes are generated, even if they are empty.
-    if (!node && containsNodesOfConsequence(source, nodeMap))
+    if (!node)
         node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Transform }, source, parent, sceneInfo);
 
     if (!node)
@@ -1117,26 +1068,6 @@ static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiVectorKey &k
 static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiQuatKey &key, qreal freq) {
     const auto flag = quint16(QSSGSceneDesc::Animation::KeyPosition::KeyType::Time) | quint16(QSSGSceneDesc::Animation::KeyPosition::ValueType::Quaternion);
     return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w }, float(key.mTime * freq), flag };
-}
-
-// This function updates skeletonMap and index of nodeMap as joint index for a Joint hierarchy
-static void buildSkeletonMapAndBoneIndexMap(QSSGSceneDesc::Skeleton *skeleton, const aiNode &node, qint32 &index, NodeMap *nodeMap, SceneInfo::SkeletonMap *skeletonMap, AssimpUtils::BoneIndexMap *boneIdxMap)
-{
-    using It = decltype (node.mNumChildren);
-    for (It i = 0, end = node.mNumChildren; i != end; ++i) {
-        auto cNode = node.mChildren[i];
-        // Assumes that all the Joints have children which are Joints
-        // if the child is not in the nodeMap
-        auto it = nodeMap->find(cNode);
-        auto cEnd = nodeMap->end();
-        if (it == cEnd || it->type == NodeInfo::Type::Joint) {
-            nodeMap->insert(cNode, NodeInfo { size_t(index), QSSGSceneDesc::Node::Type::Joint });
-            skeletonMap->insert(cNode, qMakePair(skeleton, false));
-            auto boneName = QString::fromUtf8(cNode->mName.C_Str());
-            boneIdxMap->insert(boneName, index);
-            buildSkeletonMapAndBoneIndexMap(skeleton, *cNode, ++index, nodeMap, skeletonMap, boneIdxMap);
-        }
-    }
 }
 
 static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneDesc::Scene &targetScene)
@@ -1207,7 +1138,6 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     // Before we can start processing the scene we start my mapping out the nodes
     // we can tell the type of.
     const auto &srcRootNode = *sourceScene->mRootNode;
-    bool hasSkeleton = false;
     NodeMap nodeMap;
     // We need to know which nodes are animated so we can map _our_ animation data to
     // the target node (in Assimp this is string based mapping).
@@ -1243,22 +1173,6 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                 }
             }
         }
-
-        // Bones
-        const size_t maxId = std::numeric_limits<size_t>::max();
-        if (sourceScene->HasMeshes()) {
-            for (It i = 0, end = sourceScene->mNumMeshes; i != end; ++i) {
-                const auto &mesh = *sourceScene->mMeshes[i];
-                if (mesh.HasBones()) {
-                    hasSkeleton = true;
-                    for (It j = 0, jEnd = mesh.mNumBones; j != jEnd; ++j) {
-                        const auto &bone = *mesh.mBones[j];
-                        if (auto node = srcRootNode.FindNode(bone.mName))
-                            nodeMap[node] = { maxId, NodeInfo::Type::Joint };
-                    }
-                }
-            }
-        }
     }
 
     // We'll use these to ensure we don't re-create resources.
@@ -1269,70 +1183,85 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     const auto meshCount = sourceScene->mNumMeshes;
     SceneInfo::MeshMap meshes;
     meshes.reserve(meshCount);
+    SceneInfo::Mesh2SkinMap mesh2skin;
+    mesh2skin.reserve(meshCount);
 
     const auto embeddedTextureCount = sourceScene->mNumTextures;
     SceneInfo::EmbeddedTextureMap embeddedTextures;
 
+    SceneInfo::SkinMap skins;
+
     for (It i = 0; i != materialCount; ++i)
         materials.push_back({sourceScene->mMaterials[i], nullptr});
 
-    for (It i = 0; i != meshCount; ++i)
+    for (It i = 0; i != meshCount; ++i) {
         meshes.push_back({sourceScene->mMeshes[i], nullptr});
+        if (sourceScene->mMeshes[i]->HasBones()) {
+            mesh2skin.push_back(skins.size());
+            const auto boneCount = sourceScene->mMeshes[i]->mNumBones;
+            auto bones = sourceScene->mMeshes[i]->mBones;
+            skins.push_back(SceneInfo::skinData{ bones, boneCount, nullptr });
+
+            // For skinning, we need to get the joints list and their target nodes.
+            // It is also done by the string based mapping and many of them will
+            // be animated. So we will use existing AnimationNodeMap for the data.
+            for (It j = 0; j != boneCount; ++j) {
+                const auto &nodeName = bones[j]->mName;
+                if (nodeName.length > 0) {
+                    animatingNodes.insert(QByteArrayView{ nodeName.C_Str(),
+                                                          qsizetype(nodeName.length) },
+                                          nullptr);
+                }
+            }
+        } else {
+            mesh2skin.push_back(-1);
+        }
+    }
 
     for (It i = 0; i != embeddedTextureCount; ++i)
         embeddedTextures.push_back(nullptr);
 
     SceneInfo::TextureMap textureMap;
-    SceneInfo::SkeletonMap skeletonMap;
-    AssimpUtils::BoneIndexMap boneIdxMap;
 
     if (!targetScene.root) {
         auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(targetScene, *root);
     }
 
-    // It will store nodes which are not Joint but have Joints as children
-    if (hasSkeleton) {
-        Q_ASSERT(sourceScene->HasMeshes());
-        for (const auto &mesh : qAsConst(meshes)) {
-            if (mesh.first->HasBones()) {
-                const auto &bone = *mesh.first->mBones[0];
-                const size_t maxId = std::numeric_limits<size_t>::max();
-                auto node = srcRootNode.FindNode(bone.mName);
-                if (nodeMap[node].index != maxId) // already checked
-                    continue;
-
-                auto jointRootNode = node->mParent;
-                while (nodeMap.contains(jointRootNode))
-                    jointRootNode = jointRootNode->mParent;
-
-                // Create skeletonNode before processNode
-                // The node should exist before processNode for Model node
-                auto skeleton = targetScene.create<QSSGSceneDesc::Skeleton>();
-                qint32 bIndex = 0;
-                for (It j = 0, jEnd = jointRootNode->mNumChildren; j != jEnd; ++j) {
-                    auto cNode = jointRootNode->mChildren[j];
-                    auto it = nodeMap.find(cNode);
-                    auto cEnd = nodeMap.end();
-                    if (it == cEnd || it->type != NodeInfo::Type::Joint)
-                        continue;
-                    it->index = size_t(bIndex);
-                    auto boneName = QString::fromUtf8(cNode->mName.C_Str());
-                    boneIdxMap.insert(boneName, bIndex);
-                    skeletonMap.insert(cNode, qMakePair(skeleton, true));
-                    buildSkeletonMapAndBoneIndexMap(skeleton, *cNode, ++bIndex, &nodeMap, &skeletonMap, &boneIdxMap);
-                }
-                skeleton->maxIndex = bIndex;
-            }
-        }
-    }
-
     const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skeletonMap, boneIdxMap, sourceFile.dir(), gltfVersion, opt };
+    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skins, mesh2skin, sourceFile.dir(), gltfVersion, opt };
 
     // Now lets go through the scene
     if (sourceScene->mRootNode)
         processNode(sceneInfo, *sourceScene->mRootNode, *targetScene.root, nodeMap, animatingNodes);
+    // skins
+    for (It i = 0, endI = skins.size(); i != endI; ++i) {
+        const auto &skin = skins[i];
+
+        // It is possible that an asset has a unused mesh with a skin
+        if (!skin.node)
+            continue;
+
+        QList<QMatrix4x4> inverseBindPoses;
+        QVarLengthArray<QSSGSceneDesc::Node *> joints;
+        joints.reserve(skin.mNumBones);
+        for (It j = 0, endJ = skin.mNumBones; j != endJ; ++j) {
+            const auto &bone = *skin.mBones[j];
+            const auto &nodeName = bone.mName;
+            if (nodeName.length > 0) {
+                auto targetNode = animatingNodes.value(QByteArrayView{ nodeName.C_Str(), qsizetype(nodeName.length) });
+                joints.push_back(targetNode);
+                const auto &osMat = bone.mOffsetMatrix;
+                auto pose = QMatrix4x4(osMat[0][0], osMat[0][1], osMat[0][2], osMat[0][3],
+                                       osMat[1][0], osMat[1][1], osMat[1][2], osMat[1][3],
+                                       osMat[2][0], osMat[2][1], osMat[2][2], osMat[2][3],
+                                       osMat[3][0], osMat[3][1], osMat[3][2], osMat[3][3]);
+                inverseBindPoses.push_back(pose);
+            }
+        }
+        QSSGSceneDesc::setProperty(*skin.node, "joints", &QQuick3DSkin::joints, joints);
+        QSSGSceneDesc::setProperty(*skin.node, "inverseBindPoses", &QQuick3DSkin::setInverseBindPoses, inverseBindPoses);
+    }
 
     static const auto createAnimation = [](QSSGSceneDesc::Scene &targetScene, const aiAnimation &srcAnim, const AnimationNodeMap &animatingNodes) {
         using namespace QSSGSceneDesc;
@@ -1347,7 +1276,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
             const auto &nodeName = srcChannel.mNodeName;
             if (nodeName.length > 0) {
                 const auto aNodeEnd = animatingNodes.cend();
-                const auto aNodeIt = animatingNodes.constFind(QByteArrayView{nodeName.C_Str(), qsizetype(nodeName.length)});
+                const auto aNodeIt = animatingNodes.constFind(QByteArrayView{ nodeName.C_Str(), qsizetype(nodeName.length) });
                 if (aNodeIt != aNodeEnd && aNodeIt.value() != nullptr) {
                     auto targetNode = aNodeIt.value();
                     // Target property(s)
@@ -1427,6 +1356,9 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
             createAnimation(targetScene, srcAnim, animatingNodes);
         }
     }
+
+    QTextStream output(stdout);
+    QSSGQmlUtilities::writeQml(targetScene, output, QDir());
 
     return QString();
 }

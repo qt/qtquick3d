@@ -68,7 +68,6 @@ struct SubsetEntryData {
 
 QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                              const MeshList &meshes,
-                                             const BoneIndexMap &boneIdxMap,
                                              bool generateLightmapUV,
                                              bool useFloatJointIndices,
                                              QString &errorString)
@@ -339,17 +338,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
             for (uint i = 0; i < mesh->mNumBones; ++i) {
                 QString boneName = QString::fromUtf8(mesh->mBones[i]->mName.C_Str());
 
-                uint vId = i;
-                if (!boneIdxMap.isEmpty()) {
-                    const auto boneIdxItr = boneIdxMap.constFind(boneName);
-                    if (boneIdxItr == boneIdxMap.cend()) {
-                        qWarning() << "Joint " << boneName << " is not included in pre-defined skeleton.";
-                        continue;
-                    } else {
-                        vId = *boneIdxItr;
-                    }
-                }
-
+                const uint vId = i;
                 for (uint j = 0; j < mesh->mBones[i]->mNumWeights; ++j) {
                     quint32 vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
                     float weight = mesh->mBones[i]->mWeights[j].mWeight;

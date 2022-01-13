@@ -497,6 +497,7 @@ template<> const char *qmlElementName<QSSGSceneDesc::Camera::RuntimeType::PointL
 
 template<> const char *qmlElementName<QSSGSceneDesc::Joint::RuntimeType::Joint>() { return "Joint"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Skeleton::RuntimeType::Skeleton>() { return "Skeleton"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Skin>() { return "Skin"; }
 
 static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
 {
@@ -530,6 +531,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Skeleton>();
     case RuntimeType::Joint:
         return qmlElementName<RuntimeType::Joint>();
+    case RuntimeType::Skin:
+        return qmlElementName<RuntimeType::Skin>();
     default:
         return "UNKNOWN_TYPE";
     }
@@ -839,6 +842,9 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
         // Enumerations
         if (value.mt.flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
             switch (target.nodeType) {
+            case QSSGSceneDesc::Node::Type::Skin:
+                return { property.name, QLatin1String(qmlElementName<RuntimeType::Skin>()) + QLatin1Char('.') + asString(value) };
+                break;
             case QSSGSceneDesc::Node::Type::Skeleton:
                 return { property.name, QLatin1String(qmlElementName<RuntimeType::Skeleton>()) + QLatin1Char('.') + asString(value) };
                 break;
@@ -1096,6 +1102,14 @@ static void writeQml(const QSSGSceneDesc::Texture &texture, OutputContext &outpu
     writeNodeProperties(texture, output);
 }
 
+static void writeQml(const QSSGSceneDesc::Skin &skin, OutputContext &output)
+{
+    using namespace QSSGSceneDesc;
+    Q_ASSERT(skin.nodeType == Node::Type::Skin && skin.runtimeType == Node::RuntimeType::Skin);
+    indent(output) << qmlElementName<Node::RuntimeType::Skin>() << blockBegin(output);
+    writeNodeProperties(skin, output);
+}
+
 QString getTextureSourceName(const QString &name)
 {
     const auto textureFolder = getTextureFolder();
@@ -1200,7 +1214,10 @@ static void writeQmlForResourceNode(const QSSGSceneDesc::Node &node, OutputConte
     if (processNode) {
         QSSGQmlScopedIndent scopedIndent(output);
         switch (node.nodeType) {
-        case QSSGSceneDesc::Node::Type::Skeleton:
+        case Node::Type::Skin:
+            writeQml(static_cast<const Skin &>(node), output);
+            break;
+        case Node::Type::Skeleton:
             writeQml(static_cast<const Skeleton &>(node), output);
             break;
         case Node::Type::Texture:
