@@ -1368,7 +1368,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
         // if necessary. In practice this is relevant with OpenGL ES 3.0 or
         // 2.0, because there are still implementations in use that only
         // support the spec mandated minimum of 224 vec4s (so 3584 bytes).
-        if (rhiCtx->maxUniformBufferRange() <= REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
+        if (rhiCtx->maxUniformBufferRange() < REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
             features.set(QSSGShaderFeatures::Feature::ReduceMaxNumLights, true);
             static bool notified = false;
             if (!notified) {
