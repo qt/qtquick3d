@@ -43,7 +43,7 @@ Pane {
     SplitView {
         anchors.fill: parent
         ColumnLayout {
-            //anchors.fill: parent
+            clip: true
             RowLayout {
                 id: tableControls
 
@@ -53,13 +53,6 @@ Pane {
                         uniformNameTextInput.text = ""
                 }
 
-                Button {
-                    id: addButton
-                    text: "Add"
-                    enabled: uniformNameTextInput.text != ""
-                    onClicked: tableControls.insertUniform()
-
-                }
                 Label {
                     text: "Type:"
                 }
@@ -89,7 +82,12 @@ Pane {
                     placeholderText: "Uniform Name"
                     onAccepted: tableControls.insertUniform()
                 }
-
+                Button {
+                    id: addButton
+                    text: "Add"
+                    enabled: uniformNameTextInput.text != ""
+                    onClicked: tableControls.insertUniform()
+                }
             }
 
             //          Column Header
@@ -207,6 +205,7 @@ Pane {
         Item {
             id: uniformValueEditor
             width: parent.width * 0.5
+            clip: true
 
             Label {
                 id: emptyLabel
@@ -220,6 +219,7 @@ Pane {
                 model: uniformModel
                 Item {
                     anchors.fill: parent
+                    anchors.margins: 10
                     visible: index === uniformTable.currentIndex
 
                     Item {
@@ -231,8 +231,9 @@ Pane {
                             anchors.fill: parent
                             id: headerLayout
                             Label {
-                                text: "Uniform Editor: " + name
+                                text: "Uniform: " + name
                                 Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
                             Button {
                                 id: removeButton
@@ -289,15 +290,39 @@ Pane {
 
                         Component {
                             id: floatEditor
-
-                            TextField {
-                                text: model.value
-                                validator: DoubleValidator {
-                                    locale: "C"
+                            ColumnLayout {
+                                TextField {
+                                    Layout.fillWidth: true
+                                    text: model.value
+                                    validator: DoubleValidator {
+                                        locale: "C"
+                                    }
+                                    onEditingFinished:{
+                                        if (acceptableInput) {
+                                            var floatValue = parseFloat(text);
+                                            floatSlider.updateMinMax(floatValue);
+                                            model.value = floatValue;
+                                        }
+                                    }
                                 }
-                                onEditingFinished:{
-                                    if (acceptableInput)
-                                        model.value = parseFloat(text)
+                                Slider {
+                                    id: floatSlider
+                                    // Grow slider min & max based on given values
+                                    function updateMinMax(newValue) {
+                                        if (from > newValue)
+                                            from = newValue;
+                                        if (to < newValue)
+                                            to = newValue;
+                                        value = newValue;
+                                    }
+                                    from: 0.0
+                                    to: 1.0
+                                    onValueChanged: {
+                                        model.value = value;
+                                    }
+                                    Component.onCompleted: {
+                                        updateMinMax(model.value);
+                                    }
                                 }
                             }
                         }

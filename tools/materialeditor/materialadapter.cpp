@@ -410,6 +410,8 @@ bool MaterialAdapter::loadMaterial(const QUrl &materialFile)
             m_uniformModel->setModelData(&uniformTable);
             updateMaterialDescription();
         }
+        // Set filename to loaded one
+        setMaterialSaveFile(materialFile);
     } else {
         return false;
     }
@@ -449,7 +451,7 @@ bool MaterialAdapter::exportQmlComponent(const QUrl &componentFile, const QStrin
             out << text;
             ret = true;
         } else {
-            qWarning("Unable to open '\%s\' for writing", qPrintable(savePath));
+            qWarning("Unable to open \'%s\' for writing", qPrintable(savePath));
         }
 
         return ret;
