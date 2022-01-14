@@ -62,6 +62,8 @@ Item {
 
     RowLayout {
         id: layout
+        anchors.left: parent.left
+        anchors.leftMargin: 10
         Label {
             text: "Model"
         }

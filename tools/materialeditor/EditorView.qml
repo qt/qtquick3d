@@ -106,6 +106,7 @@ SplitView {
     }
 
     ColumnLayout {
+        spacing: 0
         TabBar {
             id: tabBarInfoView
             Layout.fillWidth: true
@@ -136,13 +137,29 @@ SplitView {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 color: palette.base
-                TextEdit {
-                    id: outputTextItem
+                ScrollView {
                     anchors.fill: parent
-                    padding: 2
-                    color: palette.text
-                    wrapMode: Text.WordWrap
-                    readOnly: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                    TextArea {
+                        id: outputTextItem
+                        width: outputView.width
+                        padding: 2
+                        color: palette.text
+                        wrapMode: Text.WordWrap
+                        readOnly: true
+                        text: " "
+                    }
+                }
+                Button {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 25
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 5
+                    text: qsTr("Clear")
+                    onClicked: {
+                        outputTextItem.text = "";
+                    }
                 }
             }
         }
