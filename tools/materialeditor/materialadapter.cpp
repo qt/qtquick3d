@@ -441,7 +441,7 @@ bool MaterialAdapter::exportQmlComponent(const QUrl &componentFile, const QStrin
     }
 
     static const auto saveShader = [](const QDir &dir, const QString &filename, const QString &text) {
-        const auto savePath = dir.path() + QDir::separator() + filename;
+        const QString savePath = dir.path() + QDir::separator() + filename;
         auto saveFile = QFile(savePath);
         bool ret = false;
         if (saveFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
