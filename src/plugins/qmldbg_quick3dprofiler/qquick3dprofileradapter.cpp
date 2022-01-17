@@ -102,13 +102,13 @@ static void QQuick3DProfilerDataToByteArrays(const QQuick3DProfilerData &data,
                 case QQuick3DProfiler::Quick3DRenderFrame:
                 case QQuick3DProfiler::Quick3DSynchronizeFrame:
                 case QQuick3DProfiler::Quick3DPrepareFrame:
-                case QQuick3DProfiler::Quick3DMeshLoad:
-                case QQuick3DProfiler::Quick3DCustomMeshLoad:
-                case QQuick3DProfiler::Quick3DTextureLoad:
                 case QQuick3DProfiler::Quick3DLoadShader:
                 case QQuick3DProfiler::Quick3DGenerateShader:
                     ds << data.subtime_1;
                     break;
+                case QQuick3DProfiler::Quick3DMeshLoad:
+                case QQuick3DProfiler::Quick3DCustomMeshLoad:
+                case QQuick3DProfiler::Quick3DTextureLoad:
                 case QQuick3DProfiler::Quick3DParticleUpdate:
                     ds << data.subtime_1 << data.subtime_2;
                     break;

@@ -181,8 +181,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         if (inMipMode == MipModeNone && image->m_generateMipmaps)
             inMipMode = MipModeGenerated;
 
-        return loadTextureData(image->m_rawTextureData, inMipMode);
-
+        result = loadTextureData(image->m_rawTextureData, inMipMode);
+        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
     } else if (!image->m_imagePath.isEmpty()) {
         const ImageCacheKey imageKey = { image->m_imagePath, inMipMode };
         auto foundIt = imageMap.find(imageKey);
@@ -204,6 +204,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 #endif
                 }
                 result = foundIt.value().renderImageTexture;
+                Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
                 // again
@@ -214,8 +215,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         }
         foundIt.value().usageCounts[currentLayer]++;
     }
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DTextureLoad,
-                             QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
+                          QQuick3DProfiler::Quick3DStageEnd, stats.imageDataSize);
     return result;
 }
 
@@ -245,6 +246,8 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
                 qDebug() << "+ uploadTexture: " << data << currentLayer;
 #endif
             theImageData.value().generationId = data->generationId();
+            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad,
+                                         increaseMemoryStat(theImageData.value().renderImageTexture.m_texture));
         } else {
             theImageData.value() = ImageData();
         }
@@ -1198,8 +1201,14 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
         qDebug() << "- releaseGeometry: " << geometry << currentLayer;
 #endif
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DCustomMeshLoad,
+                                 QQuick3DProfiler::Quick3DStageBegin);
+        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, decreaseMemoryStat(meshItr.value().mesh));
         delete meshItr.value().mesh;
         customMeshMap.erase(meshItr);
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DCustomMeshLoad,
+                              QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
     }
 }
 
@@ -1212,7 +1221,14 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
             qDebug() << "- releaseTextureData: " << textureData << currentLayer;
 #endif
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
+            Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DTextureLoad,
+                                     QQuick3DProfiler::Quick3DStageBegin);
+            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, decreaseMemoryStat(rhiTexture));
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
+                                  QQuick3DProfiler::Quick3DStageEnd, stats.imageDataSize);
+
         }
         customTextureMap.erase(textureDataItr);
     }
@@ -1226,8 +1242,14 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
         qDebug() << "- releaseMesh: " << inSourcePath.path() << currentLayer;
 #endif
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DMeshLoad,
+                                 QQuick3DProfiler::Quick3DStageBegin);
+        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DMeshLoad, decreaseMemoryStat(meshItr.value().mesh));
         delete meshItr.value().mesh;
         meshMap.erase(meshItr);
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
+                              QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
     }
 }
 
@@ -1240,7 +1262,13 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
             qDebug() << "- releaseTexture: " << key.path.path() << currentLayer;
 #endif
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
+            Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DTextureLoad,
+                                     QQuick3DProfiler::Quick3DStageBegin);
+            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, decreaseMemoryStat(rhiTexture));
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
+            Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
+                                  QQuick3DProfiler::Quick3DStageEnd, stats.imageDataSize);
         }
         imageMap.erase(imageItr);
     }
@@ -1416,8 +1444,8 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
     QSSGMesh::Mesh result = loadMeshData(inMeshPath);
     if (!result.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DMeshLoad,
-                                 QQuick3DProfiler::Quick3DStageEnd);
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
+                              QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
         return nullptr;
     }
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
@@ -1425,9 +1453,10 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
 #endif
     auto ret = createRenderMesh(result);
     meshMap.insert(inMeshPath, { ret, {{currentLayer, 1}} });
+    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DMeshLoad, increaseMemoryStat(ret));
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DMeshLoad,
-                             QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
+                          QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
     return ret;
 }
 
@@ -1460,12 +1489,13 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
         meshIterator->mesh = createRenderMesh(mesh);
         meshIterator->usageCounts[currentLayer] = 1;
         meshIterator->generationId = geometry->generationId();
+        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, increaseMemoryStat(meshIterator->mesh));
     } else {
         qWarning("Mesh building failed: %s", qPrintable(error));
     }
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DCustomMeshLoad,
-                          QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DCustomMeshLoad,
+                          QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
     return meshIterator->mesh;
 }
 
@@ -1653,5 +1683,102 @@ void QSSGBufferManager::processResourceLoader(const QSSGRenderResourceLoader *lo
     // Make sure the uploads occur
     commitBufferResourceUpdates();
 }
+
+#if QT_CONFIG(qml_debug)
+QSSGBufferManager::MemoryStats QSSGBufferManager::memoryStats() const
+{
+    return stats;
+}
+
+static uint64_t textureMemorySize(QRhiTexture *texture)
+{
+    uint64_t s = 0;
+    if (!texture)
+        return s;
+
+    auto format = texture->format();
+    if (format == QRhiTexture::UnknownFormat)
+        return 0;
+
+    s = texture->pixelSize().width() * texture->pixelSize().height();
+    /*
+        UnknownFormat,
+        RGBA8,
+        BGRA8,
+        R8,
+        RG8,
+        R16,
+        RG16,
+        RED_OR_ALPHA8,
+        RGBA16F,
+        RGBA32F,
+        R16F,
+        R32F,
+        D16,
+        D24,
+        D24S8,
+        D32F,*/
+    static const uint64_t pixelSizes[] = {0, 4, 4, 1, 2, 2, 4, 1, 2, 4, 2, 4, 2, 4, 4, 4};
+    /*
+        BC1,
+        BC2,
+        BC3,
+        BC4,
+        BC5,
+        BC6H,
+        BC7,
+        ETC2_RGB8,
+        ETC2_RGB8A1,
+        ETC2_RGBA8,*/
+    static const uint64_t blockSizes[] = {8, 16, 16, 8, 16, 16, 16, 8, 8, 16};
+    Q_STATIC_ASSERT_X(QRhiTexture::BC1 == 16 && QRhiTexture::ETC2_RGBA8 == 25,
+                      "QRhiTexture format constant value missmatch.");
+    if (format < QRhiTexture::BC1)
+        s *= pixelSizes[format];
+    else if (format >= QRhiTexture::BC1 && format <= QRhiTexture::ETC2_RGBA8)
+        s /= blockSizes[format - QRhiTexture::BC1];
+    else
+        s /= 16;
+
+    if (texture->flags() & QRhiTexture::MipMapped)
+        s += s / 4;
+    if (texture->flags() & QRhiTexture::CubeMap)
+        s *= 6;
+    return s;
+}
+
+static uint64_t bufferMemorySize(QRhiBuffer *buffer)
+{
+    uint64_t s = 0;
+    if (!buffer)
+        return s;
+    s = buffer->size();
+    return s;
+}
+
+void QSSGBufferManager::increaseMemoryStat(QRhiTexture *texture)
+{
+    stats.imageDataSize += textureMemorySize(texture);
+}
+
+void QSSGBufferManager::decreaseMemoryStat(QRhiTexture *texture)
+{
+    stats.imageDataSize = qMax(0u, stats.imageDataSize - textureMemorySize(texture));
+}
+
+void QSSGBufferManager::increaseMemoryStat(QSSGRenderMesh *mesh)
+{
+    stats.meshDataSize += bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer())
+            + bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer());
+}
+
+void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
+{
+    uint64_t s = bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer())
+            + bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer());
+    stats.meshDataSize = qMax(0u, stats.meshDataSize - s);
+}
+
+#endif
 
 QT_END_NAMESPACE

@@ -97,6 +97,11 @@ public:
         uint32_t generationId = 0;
     };
 
+    struct MemoryStats {
+        uint64_t meshDataSize = 0;
+        uint64_t imageDataSize = 0;
+    };
+
     enum MipMode {
         MipModeNone = 0,
         MipModeBsdf,
@@ -144,7 +149,13 @@ public:
     static QString primitivePath(const QString &primitive);
 
     QMutex *meshUpdateMutex();
-
+#if QT_CONFIG(qml_debug)
+    MemoryStats memoryStats() const;
+    void increaseMemoryStat(QRhiTexture *texture);
+    void decreaseMemoryStat(QRhiTexture *texture);
+    void increaseMemoryStat(QSSGRenderMesh *mesh);
+    void decreaseMemoryStat(QSSGRenderMesh *mesh);
+#endif
     // Views for testing
     const QHash<ImageCacheKey, ImageData> &getImageMap() const { return imageMap; }
     const QHash<QSGTexture *, ImageData> &getSGImageMap() const { return qsgImageMap; }
@@ -186,6 +197,9 @@ private:
     quint32 frameCleanupIndex = 0;
     quint32 frameResetIndex = 0;
     QSSGRenderLayer *currentLayer = nullptr;
+#if QT_CONFIG(qml_debug)
+    MemoryStats stats;
+#endif
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
