@@ -274,7 +274,6 @@ ApplicationWindow {
         orientation: Qt.Horizontal
         EditorView {
             id: editorView
-            uniformTable2: materialAdapter.uniformModel
             vertexTabText: "Vertex Shader"
             fragmentTabText: "Fragment Shader"
             SplitView.preferredWidth: window.width * 0.5

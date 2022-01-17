@@ -41,7 +41,6 @@ SplitView {
     orientation: Qt.Vertical
     property alias vertexEditor: vertEdit
     property alias fragmentEditor: fragEdit
-    property QtObject uniformTable2
     property alias outputTextItem: outputTextItem
     property alias outputView: outputView
     property alias vertexTabText: vertexTabText.text

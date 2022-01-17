@@ -174,7 +174,6 @@ private:
     CustomMaterial m_materialDescr;
     CustomMaterial::UniformTable uniformTable;
     CustomMaterial::Properties m_properties;
-    DepthDrawMode m_depthDrawMode;
 };
 
 QT_END_NAMESPACE

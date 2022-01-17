@@ -1,5 +1,3 @@
-#include "message.h"
-
 /****************************************************************************
 **
 ** Copyright (C) 2021 The Qt Company Ltd.
@@ -29,6 +27,7 @@
 **
 ****************************************************************************/
 
+#include "message.h"
 #include <QtNetwork/qlocalsocket.h>
 
 QT_BEGIN_NAMESPACE

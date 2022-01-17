@@ -217,6 +217,8 @@ void UniformModel::removeRow(int rowIndex, int rows)
         beginRemoveRows(QModelIndex(), rowIndex, rowIndex + rows - 1);
         m_uniformTable->remove(rowIndex, rows);
         endRemoveRows();
+        emit dataChanged(QAbstractItemModel::createIndex(0, 0),
+                         QAbstractItemModel::createIndex(rowIndex, 0));
     }
 }
 
