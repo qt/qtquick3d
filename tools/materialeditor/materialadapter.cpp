@@ -488,6 +488,7 @@ bool MaterialAdapter::exportQmlComponent(const QUrl &componentFile, const QStrin
                     QTextStream out(&saveFile);
                     out << m_materialDescr;
                     QDir::setCurrent(orgPath);
+                    ret = true;
                 }
             } else {
                 emit errorOccurred();
@@ -653,6 +654,7 @@ void MaterialAdapter::setUniformModel(UniformModel *newUniformModel)
             updateMaterialDescription();
         });
     }
+    emit uniformModelChanged();
 }
 
 QString MaterialAdapter::getSupportedImageFormatsFilter() const
