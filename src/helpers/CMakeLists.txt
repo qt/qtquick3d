@@ -32,3 +32,7 @@ qt_internal_add_qml_module(Quick3DHelpers
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
+
+if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
+    add_subdirectory(designer)
+endif()
