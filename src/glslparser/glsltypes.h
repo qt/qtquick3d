@@ -30,8 +30,8 @@
 #ifndef QSSG_GLSLTYPES_H
 #define QSSG_GLSLTYPES_H
 
-#include "glsltype.h"
-#include "glslsymbol.h"
+#include <QtQuick3DGlslParser/glsltype.h>
+#include <QtQuick3DGlslParser/glslsymbol.h>
 #include <QVector>
 #include <QHash>
 #include <QString>

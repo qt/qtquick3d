@@ -30,7 +30,7 @@
 #ifndef QSSG_GLSLLEXER_H
 #define QSSG_GLSLLEXER_H
 
-#include "glsl.h"
+#include <QtQuick3DGlslParser/glsl.h>
 #include <QtCore/qstring.h>
 #include <qstringlist.h>
 

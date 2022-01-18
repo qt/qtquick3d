@@ -33,12 +33,18 @@
 #ifndef QSSG_GLSLPARSER_H
 #define QSSG_GLSLPARSER_H
 
-#include "glslparsertable_p.h"
-#include "glsllexer.h"
-#include "glslast.h"
-#include "glslengine.h"
+#include <QtQuick3DGlslParser/glsllexer.h>
+#include <QtQuick3DGlslParser/glslast.h>
+#include <QtQuick3DGlslParser/glslengine.h>
 #include <vector>
 #include <stack>
+
+#if 0
+// Silence syncqt (this whole module is internal/private)
+#pragma qt_no_included_check
+#endif
+
+#include <QtQuick3DGlslParser/private/glslparsertable_p.h>
 
 QT_BEGIN_NAMESPACE
 

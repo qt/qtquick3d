@@ -30,8 +30,8 @@
 #ifndef QSSG_GLSLAST_H
 #define QSSG_GLSLAST_H
 
-#include "glsl.h"
-#include "glslmemorypool.h"
+#include <QtQuick3DGlslParser/glsl.h>
+#include <QtQuick3DGlslParser/glslmemorypool.h>
 #include <qstring.h>
 
 QT_BEGIN_NAMESPACE

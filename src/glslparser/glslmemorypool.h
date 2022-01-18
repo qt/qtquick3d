@@ -30,7 +30,7 @@
 #ifndef QSSG_GLSLMEMORYPOOL_H
 #define QSSG_GLSLMEMORYPOOL_H
 
-#include "glsl.h"
+#include <QtQuick3DGlslParser/glsl.h>
 #include <new>
 
 QT_BEGIN_NAMESPACE

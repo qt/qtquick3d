@@ -30,7 +30,7 @@
 #ifndef QSSG_GLSLSYMBOL_H
 #define QSSG_GLSLSYMBOL_H
 
-#include "glsl.h"
+#include <QtQuick3DGlslParser/glsl.h>
 #include <QString>
 
 QT_BEGIN_NAMESPACE

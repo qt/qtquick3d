@@ -30,7 +30,7 @@
 #ifndef QSSG_GLSLTYPE_H
 #define QSSG_GLSLTYPE_H
 
-#include "glsl.h"
+#include <QtQuick3DGlslParser/glsl.h>
 
 QT_BEGIN_NAMESPACE
 
