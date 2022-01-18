@@ -30,7 +30,7 @@
 #ifndef QSSG_GLSLASTVISITOR_H
 #define QSSG_GLSLASTVISITOR_H
 
-#include "glslast.h"
+#include <QtQuick3DGlslParser/glslast.h>
 
 QT_BEGIN_NAMESPACE
 

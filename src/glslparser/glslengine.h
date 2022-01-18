@@ -30,9 +30,9 @@
 #ifndef QSSG_GLSLENGINE_H
 #define QSSG_GLSLENGINE_H
 
-#include "glsl.h"
-#include "glslmemorypool.h"
-#include "glsltypes.h"
+#include <QtQuick3DGlslParser/glsl.h>
+#include <QtQuick3DGlslParser/glslmemorypool.h>
+#include <QtQuick3DGlslParser/glsltypes.h>
 #include <qstring.h>
 
 #include <functional>

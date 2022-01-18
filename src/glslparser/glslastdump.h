@@ -30,7 +30,7 @@
 #ifndef QSSG_GLSLASTDUMP_H
 #define QSSG_GLSLASTDUMP_H
 
-#include "glslastvisitor.h"
+#include <QtQuick3DGlslParser/glslastvisitor.h>
 
 QT_BEGIN_NAMESPACE
 

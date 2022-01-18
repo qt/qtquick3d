@@ -30,8 +30,8 @@
 #ifndef QSSG_GLSLSEMANTIC_H
 #define QSSG_GLSLSEMANTIC_H
 
-#include "glslastvisitor.h"
-#include "glsltype.h"
+#include <QtQuick3DGlslParser/glslastvisitor.h>
+#include <QtQuick3DGlslParser/glsltype.h>
 
 QT_BEGIN_NAMESPACE
 
