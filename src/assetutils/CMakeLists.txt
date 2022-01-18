@@ -40,3 +40,7 @@ qt_internal_extend_target(Quick3DAssetUtils CONDITION TARGET Qt::QuickTimeline
     DEFINES
         QT_QUICK3D_ENABLE_RT_ANIMATIONS
 )
+
+if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
+    add_subdirectory(designer)
+endif()
