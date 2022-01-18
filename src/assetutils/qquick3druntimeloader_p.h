@@ -53,6 +53,7 @@ class Q_QUICK3DASSETUTILS_EXPORT QQuick3DRuntimeLoader : public QQuick3DNode
     Q_OBJECT
 
     QML_NAMED_ELEMENT(RuntimeLoader)
+    QML_ADDED_IN_VERSION(6, 2)
 
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
