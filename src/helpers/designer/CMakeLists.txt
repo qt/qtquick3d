@@ -7,6 +7,8 @@ qt_copy_or_install(
         DebugViewSpecifics.qml
         GridGeometrySection.qml
         GridGeometrySpecifics.qml
+        LookAtNodeSection.qml
+        LookAtNodeSpecifics.qml
         NodeSection.qml
         WasdControllerSection.qml
         WasdControllerSpecifics.qml

@@ -1,5 +1,25 @@
 MetaInfo {
     Type {
+        name: "QtQuick3D.Helpers.LookAtNode"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+        }
+
+        ItemLibraryEntry {
+            name: "Look-at Node"
+            category: "Helpers"
+            libraryIcon: "images/dummy.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
+
+    Type {
         name: "QtQuick3D.Helpers.AxisHelper"
         icon: "images/dummy16.png"
 
