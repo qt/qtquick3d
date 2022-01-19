@@ -1192,7 +1192,6 @@ bool QSSGLayerRenderPreparationData::prepareRenderablesForRender(const QMatrix4x
                                                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                                                    QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
-    viewProjection = inViewProjection;
     bool wasDataDirty = false;
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
     for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
@@ -1574,6 +1573,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                 }
             }
 
+            QMatrix4x4 viewProjection(Qt::Uninitialized);
             if (camera) {
                 camera->calculateViewProjectionMatrix(viewProjection);
                 if (camera->enableFrustumClipping) {
@@ -1591,8 +1591,9 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                 } else if (clippingFrustum.hasValue()) {
                     clippingFrustum.setEmpty();
                 }
-            } else
-                viewProjection = QMatrix4x4();
+            } else {
+                viewProjection = QMatrix4x4(/*identity*/);
+            }
 
             modelContexts.clear();
 

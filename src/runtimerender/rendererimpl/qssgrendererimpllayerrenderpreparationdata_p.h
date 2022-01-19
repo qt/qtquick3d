@@ -214,7 +214,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     TRenderableObjectList renderedScreenTextureObjects;
     TRenderableObjectList renderedOpaqueDepthPrepassObjects;
     TRenderableObjectList renderedDepthWriteObjects;
-    QMatrix4x4 viewProjection;
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
     QSSGOption<QVector3D> cameraDirection;
