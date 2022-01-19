@@ -1024,7 +1024,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 {
     Q_UNUSED(options);
 
-    auto filePath = url.toLocalFile();
+    auto filePath = url.path();
+
+    const bool maybeLocalFile = (url.scheme().isEmpty() || url.isLocalFile());
+    if (maybeLocalFile && !QFileInfo::exists(filePath))
+        filePath = url.toLocalFile();
 
     auto sourceFile = QFileInfo(filePath);
     if (!sourceFile.exists())
