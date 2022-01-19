@@ -682,7 +682,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             }
 
             // we need to re-render time-based AA not only when AA state changes, but also when resized
-            m_layer->tempAAPassIndex = m_layer->progAAPassIndex = 0;
+            if (m_aaIsDirty || layerSizeIsDirty)
+                m_layer->tempAAPassIndex = m_layer->progAAPassIndex = 0;
 
             if (m_aaIsDirty) {
                 m_samples = 1;
