@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty List<url> Model::meshSources
+    \qmlproperty List<url> ResourceLoader::meshSources
 
     This property defines a list of locations of mesh files containing geometry.
     When a mesh file is added to this list, it will be loaded to the GPU and
@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty List<QtQuick3D::Texture> Model::textures
+    \qmlproperty List<QtQuick3D::Texture> ResourceLoader::textures
 
     This property defines a list of Texture resources that will be loaded to the
     GPU and cached.
@@ -81,14 +81,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty List<QtQuick3D::Geometry> Model::geometries
+    \qmlproperty List<QtQuick3D::Geometry> ResourceLoader::geometries
 
     This property defines a list of Geometry resources that will be loaded to the
     GPU and cached.
 
 */
-
-
 
 QQuick3DResourceLoader::QQuick3DResourceLoader(QQuick3DObject *parent)
     : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::ResourceLoader)), parent)
