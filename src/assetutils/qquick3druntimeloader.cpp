@@ -117,7 +117,14 @@ void QQuick3DRuntimeLoader::setSource(const QUrl &newSource)
 {
     if (m_source == newSource)
         return;
-    m_source = newSource;
+
+    const QQmlContext *context = qmlContext(this);
+    auto resolvedUrl = (context ? context->resolvedUrl(newSource) : newSource);
+
+    if (m_source == resolvedUrl)
+        return;
+
+    m_source = resolvedUrl;
     emit sourceChanged();
 
     if (isComponentComplete())
