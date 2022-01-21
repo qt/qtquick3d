@@ -75,6 +75,8 @@ struct QQuick3DProfiler {
 
 };
 
+#define Q_QUICK3D_PROFILING_ENABLED false
+
 #else
 
 #define Q_QUICK3D_PROFILE_IF_ENABLED(feature, Code)\
@@ -82,6 +84,8 @@ struct QQuick3DProfiler {
         Code;\
     } else\
         (void)0
+
+#define Q_QUICK3D_PROFILING_ENABLED (QQuick3DProfiler::featuresEnabled > 0)
 
 // This struct is somewhat dangerous to use:
 // You can save values either with 32 or 64 bit precision. toByteArrays will

@@ -45,6 +45,7 @@
 #include <QtCore/qstack.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 #include <QtGui/private/qrhi_p.h>
+#include "private/qquick3dprofiler_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -778,7 +779,7 @@ class QSSGRhiContextStats
 public:
     static bool isEnabled()
     {
-        static bool enabled = qgetenv("QSG_RENDERER_DEBUG").contains(QByteArrayLiteral("render"));
+        static bool enabled = Q_QUICK3D_PROFILING_ENABLED || qgetenv("QSG_RENDERER_DEBUG").contains(QByteArrayLiteral("render"));
         return enabled;
     }
 
@@ -845,7 +846,6 @@ public:
         }
     }
 
-private:
     struct IndexedDrawInfo {
         quint32 callCount = 0;
         quint32 instancedCallCount = 0;
