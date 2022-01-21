@@ -72,7 +72,8 @@ Item {
             newLights.push(lightPoint);
         if (checkBoxSpotLightUse.checked)
             newLights.push(lightSpot);
-        spriteParticle.lightsArray = newLights;
+        // Particles to use the enabled lights
+        spriteParticle.lights = newLights;
     }
 
     View3D {
@@ -172,7 +173,6 @@ Item {
 
             SpriteParticle3D {
                 id: spriteParticle
-                property var lightsArray: []
                 sprite: Texture {
                     source: "images/sphere.png"
                 }
@@ -182,8 +182,6 @@ Item {
                 fadeInDuration: 1000
                 fadeOutDuration: 1000
                 billboard: true
-                // Particles to use the enabled lights
-                lights: lightsArray
                 // Disable this to see the unlit particles
                 blendMode: SpriteParticle3D.Screen
             }
