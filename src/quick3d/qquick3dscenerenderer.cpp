@@ -252,9 +252,6 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
-                                 QQuick3DProfiler::Quick3DStageBegin);
-
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
 
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
@@ -297,13 +294,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         if (m_renderStats)
             m_renderStats->endRenderPrepare();
 
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
-                              QQuick3DProfiler::Quick3DStageEnd);
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame);
 
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
-
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DRenderFrame,
-                                 QQuick3DProfiler::Quick3DStageBegin);
 
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
@@ -449,7 +442,6 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         endFrame();
 
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                           QQuick3DProfiler::Quick3DStageEnd,
                                            STAT_PAYLOAD(m_sgContext->rhiContext()->stats()));
     }
 
@@ -519,8 +511,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_renderStats->startSync();
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DSynchronizeFrame);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DSynchronizeFrame,
-                             QQuick3DProfiler::Quick3DStageBegin);
 
     m_sgContext->setDpr(dpr);
     bool layerSizeIsDirty = m_surfaceSize != size;
@@ -828,8 +818,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     if (m_renderStats)
         m_renderStats->endSync(dumpRenderTimes);
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DSynchronizeFrame,
-                          QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DSynchronizeFrame);
 }
 
 void QQuick3DSceneRenderer::invalidateFramebufferObject()
@@ -1108,8 +1097,6 @@ void QQuick3DSGRenderNode::prepare()
         return;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
-                             QQuick3DProfiler::Quick3DStageBegin);
     // this is outside the main renderpass
     queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
     qreal dpr = window->devicePixelRatio();
@@ -1119,8 +1106,7 @@ void QQuick3DSGRenderNode::prepare()
     const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
     renderer->beginFrame();
     renderer->rhiPrepare(vp, dpr);
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
-                          QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame);
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
@@ -1130,13 +1116,10 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     if (renderer->m_sgContext->rhiContext()->isValid()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
 
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DRenderFrame,
-                                 QQuick3DProfiler::Quick3DStageBegin);
         queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
         renderer->rhiRender();
         renderer->endFrame();
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                           QQuick3DProfiler::Quick3DStageEnd,
                                            STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()));
     }
 }
@@ -1220,16 +1203,12 @@ void QQuick3DSGDirectRenderer::prepare()
             }
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
-
-            Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
-                                     QQuick3DProfiler::Quick3DStageBegin);
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
             const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
             m_renderer->beginFrame();
             m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
+            Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame);
 
-            Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
-                                  QQuick3DProfiler::Quick3DStageEnd);
             if (renderStats)
                 renderStats->endRenderPrepare();
         }
@@ -1281,18 +1260,18 @@ void QQuick3DSGDirectRenderer::render()
         }
         else
         {
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
 
             m_renderer->rhiRender();
             m_renderer->endFrame();
 
             Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                               QQuick3DProfiler::Quick3DStageEnd,
                                                STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()));
 
             if (m_renderer->renderStats())
                 m_renderer->renderStats()->endRender(dumpRenderTimes);
-
         }
     }
 }

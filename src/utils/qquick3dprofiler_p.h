@@ -100,13 +100,13 @@ struct Q_AUTOTEST_EXPORT QQuick3DProfilerData
     QQuick3DProfilerData() {}
 
     QQuick3DProfilerData(qint64 time, int messageType, int detailType, qint64 d1, qint64 d2) :
-        time(time), messageType(messageType), detailType(detailType), subtime_1(d1), subtime_2(d2) {}
+        time(time), messageType(messageType), detailType(detailType), subdata1(d1), subdata2(d2) {}
 
     qint64 time;
     int messageType;
     int detailType;
-    qint64 subtime_1;
-    qint64 subtime_2;
+    qint64 subdata1;
+    qint64 subdata2;
 };
 
 Q_DECLARE_TYPEINFO(QQuick3DProfilerData, Q_RELOCATABLE_TYPE);
@@ -143,35 +143,11 @@ public:
         Quick3DStageEnd
     };
 
-    template<Quick3DFrameType FrameType1, Quick3DFrameType FrameType2>
-    static void startQuick3DFrame()
-    {
-        startQuick3DFrame<FrameType1>();
-        s_instance->m_sceneGraphData.timings<FrameType2>()[0] =
-                s_instance->m_sceneGraphData.timings<FrameType1>()[0];
-    }
-
-    template<Quick3DFrameType FrameType>
-    static void startQuick3DFrame()
-    {
-        s_instance->m_sceneGraphData.timings<FrameType>()[0] = s_instance->timestamp();
-    }
-
     template<Quick3DFrameType FrameType>
     static void recordSceneGraphTimestamp(uint position)
     {
         s_instance->m_sceneGraphData.timings<FrameType>()[position] = s_instance->timestamp();
     }
-
-    template<Quick3DFrameType FrameType, uint Skip>
-    static void skipSceneGraphTimestamps(uint position)
-    {
-        qint64 *timings = s_instance->m_sceneGraphData.timings<FrameType>();
-        const qint64 last = timings[position];
-        for (uint i = 0; i < Skip; ++i)
-            timings[++position] = last;
-    }
-
     template<Quick3DFrameType FrameType, bool Record>
     static void reportQuick3DFrame(uint position, quint64 payload = ~0)
     {
@@ -228,54 +204,25 @@ protected:
 
 #endif // QT_CONFIG(qml_debug)
 
-#define Q_QUICK3D_PROFILE(feature, Method)\
+#define Q_QUICK3D_PROFILE(feature, Method) \
     Q_QUICK3D_PROFILE_IF_ENABLED(feature, QQuick3DProfiler::Method)
 
-// Record current timestamp for \a Type at position 0.
-#define Q_QUICK3D_PROFILE_START(Type)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::startQuick3DFrame<Type>()))
-
-// Record current timestamp for \a Type at \a position.
-#define Q_QUICK3D_PROFILE_RECORD(Type, position)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::recordSceneGraphTimestamp<Type>(position)))
-
-// Use the timestamp for \a Type at position \a position and repeat it \a Skip times in subsequent
-// positions.
-#define Q_QUICK3D_PROFILE_SKIP(Type, position, Skip)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::skipSceneGraphTimestamps<Type, Skip>(position)))
-
-// Record current timestamp for both \a Type1 and \a Type2 at position 0.
-#define Q_QUICK3D_PROFILE_START_SYNCHRONIZED(Type1, Type2)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::startQuick3DFrame<Type1, Type2>()))
-
-// report \a Type1, using the current timestamp at \a position, and switch to \a Typ2, using
-// the current timestamp at position 0.
-#define Q_QUICK3D_PROFILE_SWITCH(Type1, Type2, position)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::reportQuick3DFrame<Type1, true, Type2>(\
-                                    position)))
-
-// report \a Type, using data points 0 to \a position, including \a position.
-#define Q_QUICK3D_PROFILE_REPORT(Type, position)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::reportQuick3DFrame<Type, false>(position)))
+#define Q_QUICK3D_PROFILE_START(Type) \
+    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D, \
+                               (QQuick3DProfiler::recordSceneGraphTimestamp<Type>(QQuick3DProfiler::Quick3DStageBegin)))
 
 // report \a Type, using data points 0 to \a position, including \a position, and setting the
 // timestamp at \a position to the current one.
-#define Q_QUICK3D_PROFILE_END(Type, position)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::reportQuick3DFrame<Type, true>(position)))
+#define Q_QUICK3D_PROFILE_END(Type) \
+    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D, \
+                               (QQuick3DProfiler::reportQuick3DFrame<Type, true>(QQuick3DProfiler::Quick3DStageEnd)))
 
 // report \a Type, using data points 0 to \a position, including \a position, and setting the
 // timestamp at \a position to the current one. Remaining data points up to position 5 are filled
 // with \a Payload.
-#define Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(Type, position, Payload)\
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D,\
-                               (QQuick3DProfiler::reportQuick3DFrame<Type, true>(position,\
+#define Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(Type, Payload) \
+    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D, \
+                               (QQuick3DProfiler::reportQuick3DFrame<Type, true>(QQuick3DProfiler::Quick3DStageEnd, \
                                                                                   Payload)))
 
 QT_END_NAMESPACE

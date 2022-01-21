@@ -389,8 +389,6 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
         qDebug("Loading pregenerated rhi shader(s)");
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DLoadShader,
-                             QQuick3DProfiler::Quick3DStageBegin);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
     QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
@@ -414,8 +412,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
             qDebug("Loading of vertex and fragment stages succeeded");
     }
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DLoadShader,
-                          QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DLoadShader);
 
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = QSSGShaderFeatures();
@@ -437,8 +434,6 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
         qDebug("Loading builtin rhi shader: %s", inKey.constData());
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DLoadShader,
-                             QQuick3DProfiler::Quick3DStageBegin);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
     QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
@@ -478,8 +473,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
             qDebug("Loading of vertex and fragment stages succeeded");
     }
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DLoadShader,
-                          QQuick3DProfiler::Quick3DStageEnd);
+    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DLoadShader);
 
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = QSSGShaderFeatures();

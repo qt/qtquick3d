@@ -527,8 +527,6 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
         return;
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DParticleUpdate);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DParticleUpdate,
-                             QQuick3DProfiler::Quick3DStageBegin);
 
     m_currentTime = currentTime;
     const float timeS = float(m_currentTime / 1000.0f);
@@ -591,8 +589,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
     m_timeAnimation += m_perfTimer.nsecsElapsed();
     m_updateAnimation->setDirty(false);
-    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DParticleUpdate,
-                                       QQuick3DProfiler::Quick3DStageEnd, m_particlesUsed);
+    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DParticleUpdate, m_particlesUsed);
 }
 
 void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS)

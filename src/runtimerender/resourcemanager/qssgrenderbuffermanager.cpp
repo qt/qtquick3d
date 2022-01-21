@@ -133,8 +133,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
     auto context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DTextureLoad,
-                             QQuick3DProfiler::Quick3DStageBegin);
     if (image->m_qsgTexture) {
         QSGTexture *qsgTexture = image->m_qsgTexture;
         if (qsgTexture->thread() == QThread::currentThread()) {
@@ -217,8 +215,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         }
         foundIt.value().usageCounts[currentLayer]++;
     }
-    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
-                          QQuick3DProfiler::Quick3DStageEnd, stats.imageDataSize);
+    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
     return result;
 }
 
@@ -1220,13 +1217,11 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
         qDebug() << "- releaseGeometry: " << geometry << currentLayer;
 #endif
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DCustomMeshLoad,
-                                 QQuick3DProfiler::Quick3DStageBegin);
         Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, decreaseMemoryStat(meshItr.value().mesh));
         delete meshItr.value().mesh;
         customMeshMap.erase(meshItr);
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DCustomMeshLoad,
-                              QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
+                                           stats.meshDataSize);
     }
 }
 
@@ -1240,12 +1235,10 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
             qDebug() << "- releaseTextureData: " << textureData << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-            Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DTextureLoad,
-                                     QQuick3DProfiler::Quick3DStageBegin);
             Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, decreaseMemoryStat(rhiTexture));
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
-                                  QQuick3DProfiler::Quick3DStageEnd, stats.imageDataSize);
+                                               stats.imageDataSize);
 
         }
         customTextureMap.erase(textureDataItr);
@@ -1261,13 +1254,11 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
         qDebug() << "- releaseMesh: " << inSourcePath.path() << currentLayer;
 #endif
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DMeshLoad,
-                                 QQuick3DProfiler::Quick3DStageBegin);
         Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DMeshLoad, decreaseMemoryStat(meshItr.value().mesh));
         delete meshItr.value().mesh;
         meshMap.erase(meshItr);
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
-                              QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
+                                           stats.meshDataSize);
     }
 }
 
@@ -1281,12 +1272,10 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
             qDebug() << "- releaseTexture: " << key.path.path() << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-            Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DTextureLoad,
-                                     QQuick3DProfiler::Quick3DStageBegin);
             Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, decreaseMemoryStat(rhiTexture));
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
-                                  QQuick3DProfiler::Quick3DStageEnd, stats.imageDataSize);
+                                               stats.imageDataSize);
         }
         imageMap.erase(imageItr);
     }
@@ -1456,14 +1445,12 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
     }
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DMeshLoad,
-                             QQuick3DProfiler::Quick3DStageBegin);
 
     QSSGMesh::Mesh result = loadMeshData(inMeshPath);
     if (!result.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
-                              QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
+                                           stats.meshDataSize);
         return nullptr;
     }
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
@@ -1474,7 +1461,7 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderPath &inMeshPath)
     Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DMeshLoad, increaseMemoryStat(ret));
 
     Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
-                          QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
+                                       stats.meshDataSize);
     return ret;
 }
 
@@ -1494,8 +1481,6 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
     }
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DCustomMeshLoad,
-                             QQuick3DProfiler::Quick3DStageBegin);
 
     if (!geometry->meshData().m_vertexBuffer.isEmpty()) {
         // Mesh data needs to be loaded
@@ -1516,7 +1501,7 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
     // else an empty mesh is not an error, leave the QSSGRenderMesh null, it will not be rendered then
 
     Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DCustomMeshLoad,
-                          QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
+                                       stats.meshDataSize);
     return meshIterator->mesh;
 }
 

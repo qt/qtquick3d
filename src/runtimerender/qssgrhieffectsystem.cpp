@@ -463,15 +463,12 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
     if (!m_currentShaderPipeline) {
         // Final option, generate the shader pipeline
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DGenerateShader,
-                                 QQuick3DProfiler::Quick3DStageBegin);
         const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
         if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
             m_shaderPipelines.insert(rkey, stages);
             m_currentShaderPipeline = stages.data();
         }
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader,
-                              QQuick3DProfiler::Quick3DStageEnd);
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader);
     }
 
     if (m_currentShaderPipeline) {
