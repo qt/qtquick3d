@@ -60,6 +60,22 @@ QT_BEGIN_NAMESPACE
 
 static bool dumpRenderTimes = false;
 
+#if QT_CONFIG(qml_debug)
+
+static quint64 statsDrawCalls(const QSSGRhiContextStats& stats)
+{
+    quint64 count = 0;
+    for (auto pass : stats.renderPasses)
+        count += pass.draws.callCount + pass.indexedDraws.callCount;
+    count += stats.externalRenderPass.draws.callCount + stats.externalRenderPass.indexedDraws.callCount;
+    return count;
+}
+
+#define STAT_PAYLOAD(stats) \
+    (statsDrawCalls(stats) | (quint64(stats.renderPasses.size()) << 32))
+
+#endif
+
 SGFramebufferObjectNode::SGFramebufferObjectNode()
     : window(nullptr)
     , renderer(nullptr)
@@ -433,8 +449,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         }
         endFrame();
 
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DRenderFrame,
-                              QQuick3DProfiler::Quick3DStageEnd);
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
+                                           QQuick3DProfiler::Quick3DStageEnd,
+                                           STAT_PAYLOAD(m_sgContext->rhiContext()->stats()));
     }
 
     return currentTexture;
@@ -1077,8 +1094,9 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
         queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
         renderer->rhiRender();
         renderer->endFrame();
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DRenderFrame,
-                              QQuick3DProfiler::Quick3DStageEnd);
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
+                                           QQuick3DProfiler::Quick3DStageEnd,
+                                           STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()));
     }
 }
 
@@ -1188,8 +1206,9 @@ void QQuick3DSGDirectRenderer::render()
         m_renderer->rhiRender();
         m_renderer->endFrame();
 
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DRenderFrame,
-                              QQuick3DProfiler::Quick3DStageEnd);
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
+                                           QQuick3DProfiler::Quick3DStageEnd,
+                                           STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()));
 
         if (m_renderer->renderStats())
             m_renderer->renderStats()->endRender(dumpRenderTimes);
