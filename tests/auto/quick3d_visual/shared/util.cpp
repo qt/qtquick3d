@@ -313,13 +313,8 @@ bool QQuick3DTestOffscreenRenderer::resize(const QSize &newSize)
         qWarning("Failed to recreate depth-stencil buffer");
         return false;
     }
-    if (!texRt->create()) {
-        qWarning("Failed to recreate rendertarget");
-        return false;
-    }
 
-    // setRenderTarget is mandatory upon changing something, even if the texRt pointer itself is the same
-    quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+    // Intentionally no texRt->create() or quickWindow->setRenderTarget(). It must work without those.
 
     rootItem->setSize(newSize);
     quickWindow->contentItem()->setSize(newSize);
