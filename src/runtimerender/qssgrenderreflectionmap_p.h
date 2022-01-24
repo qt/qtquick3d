@@ -92,7 +92,8 @@ struct QSSGReflectionMapEntry
 
     QMatrix4x4 m_viewProjection;
 
-    bool m_needsRender = true;
+    bool m_needsRender = false;
+    bool m_rendered = false;
 
     QSSGRenderReflectionProbe::ReflectionTimeSlicing m_timeSlicing = QSSGRenderReflectionProbe::ReflectionTimeSlicing::None;
     int m_timeSliceFrame = 1;
