@@ -778,12 +778,6 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                           QQuick3DProfiler::Quick3DStageEnd);
 }
 
-void QQuick3DSceneRenderer::update()
-{
-    if (fboNode)
-        fboNode->scheduleRender();
-}
-
 void QQuick3DSceneRenderer::invalidateFramebufferObject()
 {
     if (fboNode)

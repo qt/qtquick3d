@@ -75,7 +75,6 @@ protected:
     void rhiPrepare(const QRect &viewport, qreal displayPixelRatio);
     void rhiRender();
     void synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO = true);
-    void update();
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
 
