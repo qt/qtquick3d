@@ -56,7 +56,7 @@ If the material could not be assembled a message describing the problem will be 
 
 The language used for writing the \l[QtQuick3D]{CustomMaterial}'s shader snippets is Vulkan-style GLSL
 with some additional keywords that are specific for QtQuick3D, these are easily identifiable by being
-written in all upper-case characters. The QtQuick3D specific keywords will also be highlighted in the editors.
+written in all upper-case characters. The QtQuick3D specific keywords will also be highlighted by the editor.
 
 For a more detailed overview of the language used in shaders snippets and how they interact with the rest of
 the rendering pipeline, see the \l {Programmable Materials, Effects, Geometry, and Texture data}{Programmable Materials}
@@ -67,7 +67,7 @@ documentation.
 \section2 Material properties
 
 The Material Properties section contains the common QML properties for the material.
-These properties and how they affect the material are described \l [QtQuick3d]{CustomMaterial}{here}.
+These properties and how they affect the material are described in more details in the \l [QtQuick3d]{CustomMaterial} documentation.
 
 \image MaterialEditor-properties.png
 
@@ -75,9 +75,9 @@ These properties and how they affect the material are described \l [QtQuick3d]{C
 
 In addition to showing how the current material is rendered, the preview panel contains a selection of controls
 that can be adjusted to see how the material looks under different conditions. These controls allows the
-user to: Selecting a different model, toggling the usage of \l{Using Image-Based Lighting}{Image Based Lighting},
-turning the scene light \b on or \b off, and adjust the rotation of the environment. It's also possible to orbit
-around the model to see it from different angles using the mouse.
+user to: Select a different model, toggle the usage of \l{Using Image-Based Lighting}{Image Based Lighting},
+turn the scene light \b on or \b off, and adjust the rotation of the environment. It's also possible to orbit
+around the model using the mouse.
 
 \image MaterialEditor-preview.jpg
 
@@ -101,20 +101,20 @@ The output panel shows diagnostic messages, for example, errors found in the sha
 Shaders snippets can be imported into the application, these have the file extension \c{.vert} and \c{.frag} and
 are expected to contain plain-text.
 Imported shader snippets will of course need to be adapted, manually, if the shader code is not in a language or in a form
-that's compatible with the \l[QtQuick3D]{CustomMaterial} already, no translation is attempted by the tool.
+that's compatible with the \l[QtQuick3D]{CustomMaterial} already (no translation is attempted by the tool.)
 
 \section2 Saving and loading projects.
 
 The Material Editor can save or load project files using it's own project format.
 The extension of the Material Editor project files are \c{.qmp}.
-\note The Material Editor's project file-format is not intended for runtime and is only intended to
+\note The Material Editor's project file-format is not intended for runtime usage, it is only intended to
 be used with the Material Editor.
 
 \section2 Exporting.
 
 For the material to be usable from an application it needs to be exported as a QML Component,
 this can be done by opening the export dialog from the application menu. The export dialog will
-as for an output folder, name of the material component and the name(s) of the shader snippets.
+ask for an output folder, the name of the material component, and the name(s) of the shader snippets.
 When the material has been successfully exported the output folder will contain a QML Component
 describing the material together with any shader snippet and texture needed by the material.
 
