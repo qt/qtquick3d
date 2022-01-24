@@ -96,6 +96,8 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
     }
 
     if (pEntry) {
+        pEntry->m_needsRender = true;
+
         if (mapRes != pEntry->m_rhiCube->pixelSize().width()) {
             pEntry->destroyRhiResources();
             pEntry->m_rhiDepthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);

@@ -1692,7 +1692,10 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
         if (!pEntry)
             continue;
 
-        if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame && !pEntry->m_needsRender)
+        if (!pEntry->m_needsRender)
+            continue;
+
+        if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame && pEntry->m_rendered)
             continue;
 
         Q_ASSERT(pEntry->m_rhiDepthStencil);
@@ -1769,7 +1772,9 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
         }
 
         if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame)
-            pEntry->m_needsRender = false;
+            pEntry->m_rendered = true;
+
+        pEntry->m_needsRender = false;
     }
 }
 

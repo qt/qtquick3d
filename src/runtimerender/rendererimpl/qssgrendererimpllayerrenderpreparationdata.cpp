@@ -1258,11 +1258,11 @@ void QSSGLayerRenderPreparationData::prepareReflectionProbesForRender()
             reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
 
         reflectionProbes[probeIdx]->calculateGlobalVariables();
-        reflectionMapManager->addReflectionMapEntry(probeIdx, *reflectionProbes[probeIdx]);
     }
 
     TRenderableObjectList combinedList = transparentObjects + opaqueObjects;
     for (int i = 0; i < probeCount; i++) {
+        int reflectionObjectCount = 0;
         QSSGRenderReflectionProbe* probe = reflectionProbes[i];
         QVector3D probeExtent = probe->boxSize / 2;
         QSSGBounds3 probeBound = QSSGBounds3::centerExtents(probe->getGlobalPos(), probeExtent);
@@ -1291,9 +1291,13 @@ void QSSGLayerRenderPreparationData::prepareReflectionProbesForRender()
                     renderableObj->reflectionProbe.probeBoxMax = probeExtent;
                     renderableObj->reflectionProbe.probeBoxMin = probeExtent * -1;
                     renderableObj->reflectionProbe.enabled = true;
+                    reflectionObjectCount++;
                 }
             }
         }
+
+        if (reflectionObjectCount > 0)
+            reflectionMapManager->addReflectionMapEntry(i, *reflectionProbes[i]);
     }
 }
 
@@ -1453,6 +1457,8 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                 cameras.resize(cameraNodeCount);
             if (lights.size() != lightNodeCount)
                 lights.resize(lightNodeCount);
+            if (reflectionProbes.size() != reflectionProbeCount)
+                reflectionProbes.resize(reflectionProbeCount);
 
             renderableItem2Ds.clear();
 
