@@ -52,7 +52,6 @@ QQuick3DProfilerAdapter::QQuick3DProfilerAdapter(QObject *parent) :
     QQmlAbstractProfilerAdapter(parent), next(0)
 {
     QQuick3DProfiler::initialize(this);
-    QQuick3DProfiler::s_instance;
     // We can always do DirectConnection here as all methods are protected by mutexes
     connect(this, &QQmlAbstractProfilerAdapter::profilingEnabled,
             QQuick3DProfiler::s_instance, &QQuick3DProfiler::startProfilingImpl, Qt::DirectConnection);
