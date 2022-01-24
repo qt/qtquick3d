@@ -92,13 +92,15 @@ public:
 
 private:
     void writeHeader(QTextStream &output);
-    void processNode(aiNode *node, QTextStream &output, int tabLevel = 0);
+    void processScene(QTextStream &output);
+    void processNode(aiNode *node, QTextStream &output, int tabLevel = 1);
     void generateModelProperties(aiNode *modelNode, QVector<bool> &visited, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateLightProperties(aiNode *lightNode, QTextStream &output, int tabLevel);
     QSSGQmlUtilities::PropertyMap::Type generateCameraProperties(aiNode *cameraNode, QTextStream &output, int tabLevel);
     void generateNodeProperties(aiNode *node, QTextStream &output, int tabLevel, aiMatrix4x4 *transformCorrection = nullptr, bool skipScaling = false);
     QString generateMeshFile(aiNode *node, QFile &file, const AssimpUtils::MeshList &meshes);
-    void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel);
+    void processMaterials(QTextStream &output);
+    void generateMaterial(aiMaterial *material, QTextStream &output, int tabLevel = 1);
     QVector<QString> generateMorphing(aiNode *node, const AssimpUtils::MeshList &meshes, QTextStream &output, int tabLevel);
     QString generateImage(aiMaterial *material, aiTextureType textureType, unsigned index, int tabLevel);
     void generateSkeletonIdxMap(aiNode *node, quint32 skeletonIdx, quint32 &boneIdx);
