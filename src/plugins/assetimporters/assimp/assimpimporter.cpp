@@ -421,7 +421,7 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         writeHeader(output);
 
         // Component Code
-        processNode(m_scene->mRootNode, output);
+        processScene(output);
 
         targetFile.close();
         if (generatedFiles) {
@@ -440,6 +440,31 @@ void AssimpImporter::writeHeader(QTextStream &output)
     if (m_scene->HasAnimations())
         output << "import QtQuick.Timeline\n";
 
+}
+
+void AssimpImporter::processScene(QTextStream &output)
+{
+    aiNode *node = m_scene->mRootNode;
+
+    output << QStringLiteral("\nNode {\n");
+
+    processMaterials(output);
+
+    processNode(node, output);
+
+    processAnimations(output);
+
+    // Write the QML Footer
+    output << QStringLiteral("}\n");
+}
+
+void AssimpImporter::processMaterials(QTextStream &output)
+{
+    output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("// Materials");
+    for (uint i = 0; i < m_scene->mNumMaterials; ++i)
+        generateMaterial(m_scene->mMaterials[i], output);
+    output << QStringLiteral("\n");
+    output << QSSGQmlUtilities::insertTabs(1) << QStringLiteral("// end of Materials\n\n");
 }
 
 void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel)
@@ -472,9 +497,6 @@ void AssimpImporter::processNode(aiNode *node, QTextStream &output, int tabLevel
         // Process All Children Nodes
         for (uint i = 0; i < currentNode->mNumChildren; ++i)
             processNode(currentNode->mChildren[i], output, tabLevel + 1);
-
-        if (tabLevel == 0)
-            processAnimations(output);
 
         // Write the QML Footer
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("}\n");
@@ -589,15 +611,6 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
             output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << targets[i] << QStringLiteral(",\n");
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << targets.back() << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("]\n");
-    }
-
-    // materials
-    // If there are any new materials, add them as children of the Model first
-    for (int i = 0; i < materials.count(); ++i) {
-        if (!m_materialIdMap.contains(materials[i])) {
-            generateMaterial(materials[i], output, tabLevel);
-            output << QStringLiteral("\n");
-        }
     }
 
     // For each sub-mesh, generate a material reference for this list
