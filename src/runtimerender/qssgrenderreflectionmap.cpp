@@ -615,11 +615,8 @@ void QSSGReflectionMapEntry::destroyRhiResources()
     m_irradianceFragBuffer = nullptr;
     delete m_rhiPrefilterRenderPassDesc;
     m_rhiPrefilterRenderPassDesc = nullptr;
-    QMapIterator<int, QVarLengthArray<QRhiTextureRenderTarget *, 6>> i(m_rhiPrefilterRenderTargetsMap);
-    while (i.hasNext()) {
-        i.next();
-        qDeleteAll(i.value());
-    }
+    for (const auto &e : std::as_const(m_rhiPrefilterRenderTargetsMap))
+        qDeleteAll(e);
     m_rhiPrefilterRenderTargetsMap.clear();
     m_prefilterMipLevelSizes.clear();
 }
