@@ -1246,8 +1246,12 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
     }
 }
 
-void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *layer)
+void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLayer *currentLayer)
 {
+#if !defined(QSSG_RENDERBUFFER_DEBUGGING) && !defined(QSSG_RENDERBUFFER_DEBUGGING_USAGES)
+    Q_UNUSED(currentLayer);
+#endif
+
     // Don't cleanup if
     if (frameId == frameCleanupIndex)
         return;
