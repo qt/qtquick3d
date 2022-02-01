@@ -3,21 +3,21 @@ qt_internal_add_module(Quick3DGlslParserPrivate
     DEFINES
         QT_BUILD_QUICK3DGLSLPARSER_PRIVATE_LIB
     SOURCES
-        glsl.h
-        glslast.cpp glslast.h
-        glslastdump.cpp glslastdump.h
-        glslastvisitor.cpp glslastvisitor.h
-        glslengine.cpp glslengine.h
+        glsl_p.h
+        glslast.cpp glslast_p.h
+        glslastdump.cpp glslastdump_p.h
+        glslastvisitor.cpp glslastvisitor_p.h
+        glslengine.cpp glslengine_p.h
         glslkeywords.cpp
-        glsllexer.cpp glsllexer.h
-        glslmemorypool.cpp glslmemorypool.h
-        glslparser.cpp glslparser.h
+        glsllexer.cpp glsllexer_p.h
+        glslmemorypool.cpp glslmemorypool_p.h
+        glslparser.cpp glslparser_p.h
         glslparsertable.cpp glslparsertable_p.h
-        glslsemantic.cpp glslsemantic.h
-        glslsymbol.cpp glslsymbol.h
-        glslsymbols.cpp glslsymbols.h
-        glsltype.cpp glsltype.h
-        glsltypes.cpp glsltypes.h
+        glslsemantic.cpp glslsemantic_p.h
+        glslsymbol.cpp glslsymbol_p.h
+        glslsymbols.cpp glslsymbols_p.h
+        glsltype.cpp glsltype_p.h
+        glsltypes.cpp glsltypes_p.h
     DEFINES
         QT_NO_CAST_FROM_ASCII
     PUBLIC_LIBRARIES

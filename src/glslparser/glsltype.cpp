@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "glsltype.h"
+#include "glsltype_p.h"
 
 QT_BEGIN_NAMESPACE
 

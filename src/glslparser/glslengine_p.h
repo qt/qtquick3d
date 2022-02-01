@@ -30,9 +30,20 @@
 #ifndef QSSG_GLSLENGINE_H
 #define QSSG_GLSLENGINE_H
 
-#include <QtQuick3DGlslParser/glsl.h>
-#include <QtQuick3DGlslParser/glslmemorypool.h>
-#include <QtQuick3DGlslParser/glsltypes.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick3DGlslParser/private/glsl_p.h>
+#include <QtQuick3DGlslParser/private/glslmemorypool_p.h>
+#include <QtQuick3DGlslParser/private/glsltypes_p.h>
 #include <qstring.h>
 
 #include <functional>

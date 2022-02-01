@@ -34,8 +34,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 
-#include <QtQuick3DGlslParser/glsllexer.h>
-#include <QtQuick3DGlslParser/glslparser.h>
+#include <QtQuick3DGlslParser/private/glsllexer_p.h>
+#include <QtQuick3DGlslParser/private/glslparser_p.h>
 
 QT_BEGIN_NAMESPACE
 

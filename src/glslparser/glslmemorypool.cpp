@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "glslmemorypool.h"
+#include "glslmemorypool_p.h"
 #include <cstring>
 #include <cassert>
 #include <cstdlib>

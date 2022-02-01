@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "glslastvisitor.h"
+#include "glslastvisitor_p.h"
 
 QT_BEGIN_NAMESPACE
 

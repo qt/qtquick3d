@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "glslsymbol.h"
+#include "glslsymbol_p.h"
 #include <QStringList>
 
 QT_BEGIN_NAMESPACE

@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "glslastdump.h"
+#include "glslastdump_p.h"
 #include <QTextStream>
 
 #include <typeinfo>

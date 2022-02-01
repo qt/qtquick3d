@@ -33,18 +33,23 @@
 #ifndef QSSG_GLSLPARSER_H
 #define QSSG_GLSLPARSER_H
 
-#include <QtQuick3DGlslParser/glsllexer.h>
-#include <QtQuick3DGlslParser/glslast.h>
-#include <QtQuick3DGlslParser/glslengine.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick3DGlslParser/private/glsllexer_p.h>
+#include <QtQuick3DGlslParser/private/glslast_p.h>
+#include <QtQuick3DGlslParser/private/glslengine_p.h>
+#include <QtQuick3DGlslParser/private/glslparsertable_p.h>
 #include <vector>
 #include <stack>
-
-#if 0
-// Silence syncqt (this whole module is internal/private)
-#pragma qt_no_included_check
-#endif
-
-#include <QtQuick3DGlslParser/private/glslparsertable_p.h>
 
 QT_BEGIN_NAMESPACE
 
