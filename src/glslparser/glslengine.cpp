@@ -27,10 +27,10 @@
 **
 ****************************************************************************/
 
-#include "glslengine.h"
-#include "glslsymbols.h"
-#include "glsltypes.h"
-#include "glslparser.h"
+#include "glslengine_p.h"
+#include "glslsymbols_p.h"
+#include "glsltypes_p.h"
+#include "glslparser_p.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#include "glslsymbols.h"
-#include "glsltypes.h"
+#include "glslsymbols_p.h"
+#include "glsltypes_p.h"
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE

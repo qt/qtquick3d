@@ -27,51 +27,46 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_GLSL_H
-#define QSSG_GLSL_H
+#ifndef QSSG_GLSLASTDUMP_H
+#define QSSG_GLSLASTDUMP_H
 
-#include <QtQuick3DGlslParser/qtquick3dglslparserexports.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick3DGlslParser/private/glslastvisitor_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QTextStream;
+
 namespace GLSL {
-class Engine;
-class Lexer;
-class Parser;
-class MemoryPool;
 
-// types
-class Type;
-class UndefinedType;
-class VoidType;
-class ScalarType;
-class BoolType;
-class IntType;
-class UIntType;
-class FloatType;
-class DoubleType;
-class IndexType;
-class VectorType;
-class MatrixType;
-class ArrayType;
-class SamplerType;
+class Q_QUICK3DGLSLPARSER_EXPORT ASTDump: protected Visitor
+{
+public:
+    ASTDump(QTextStream &out);
 
-// symbols
-class Symbol;
-class Scope;
-class Struct;
-class Function;
-class Argument;
-class Block;
-class Variable;
-class OverloadSet;
-class Namespace;
+    void operator()(AST *ast);
 
-class AST;
-class TranslationUnitAST;
-template <typename T> class List;
-}
+protected:
+    bool preVisit(AST *) override;
+    void postVisit(AST *) override;
+
+private:
+    QTextStream &out;
+    int _depth;
+};
+
+} // namespace GLSL
 
 QT_END_NAMESPACE
 
-#endif // QSSG_GLSL_H
+#endif // QSSG_GLSLASTDUMP_H

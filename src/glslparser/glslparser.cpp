@@ -30,8 +30,8 @@
 **
 ****************************************************************************/
 
-#include "glslparser.h"
-#include "glslengine.h"
+#include "glslparser_p.h"
+#include "glslengine_p.h"
 #include <iostream>
 #include <cstdio>
 #include <cassert>

@@ -30,8 +30,19 @@
 #ifndef QSSG_GLSLAST_H
 #define QSSG_GLSLAST_H
 
-#include <QtQuick3DGlslParser/glsl.h>
-#include <QtQuick3DGlslParser/glslmemorypool.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuick3DGlslParser/private/glsl_p.h>
+#include <QtQuick3DGlslParser/private/glslmemorypool_p.h>
 #include <qstring.h>
 
 QT_BEGIN_NAMESPACE

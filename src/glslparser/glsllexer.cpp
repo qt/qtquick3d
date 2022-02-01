@@ -28,9 +28,9 @@
 ****************************************************************************/
 
 #include "glslparsertable_p.h"
-#include "glsllexer.h"
-#include "glslparser.h"
-#include "glslengine.h"
+#include "glsllexer_p.h"
+#include "glslparser_p.h"
+#include "glslengine_p.h"
 #include <cctype>
 #include <iostream>
 #include <cstdio>

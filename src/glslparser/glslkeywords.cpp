@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#include "glsllexer.h"
-#include "glslparser.h"
+#include "glsllexer_p.h"
+#include "glslparser_p.h"
 
 QT_BEGIN_NAMESPACE
 
