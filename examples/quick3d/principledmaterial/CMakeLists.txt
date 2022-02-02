@@ -22,6 +22,7 @@ find_package(Qt6 COMPONENTS Quick3D)
 
 qt_add_executable(principledmaterial
     main.cpp
+    imagehelper.h imagehelper.cpp
 )
 set_target_properties(principledmaterial PROPERTIES
     WIN32_EXECUTABLE TRUE
@@ -38,14 +39,38 @@ qt_add_qml_module(principledmaterial
     URI Example
     VERSION 1.0
     QML_FILES
-        MaterialControl.qml
+        BackgroundCurtain.qml
+        OrbitCameraController.qml
+        TextureSourceControl.qml
+        BasicsPane.qml
+        AlphaPane.qml
+        DetailsPane.qml
+        MarkdownLabel.qml
+        ClearcoatPane.qml
+        RefractionPane.qml
+        SpecialPane.qml
+        VerticalSectionSeparator.qml
         main.qml
     RESOURCES
         maps/OpenfootageNET_garage-1024.hdr
+        maps/grid.png
+        maps/alpha_gradient.png
+        maps/normal_stamp.png
+        maps/monkey_ao.jpg
+        maps/monkey_thickness.jpg
+        maps/noise.png
+        maps/curtain_normal.jpg
+        maps/small_envmap.jpg
+        maps/tilepattern.png
         maps/metallic/basecolor.jpg
         maps/metallic/metallic.jpg
         maps/metallic/normal.jpg
         maps/metallic/roughness.jpg
+        meshes/suzanne.mesh
+        meshes/curtain.mesh
+        meshes/frame.mesh
+        meshes/logo_lines.mesh
+        meshes/logo_points.mesh
     NO_RESOURCE_TARGET_PATH
 )
 
