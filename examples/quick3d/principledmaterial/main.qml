@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -50,6 +50,9 @@
 
 import QtQuick
 import QtQuick3D
+import QtQuick3D.Effects
+import QtQuick.Controls
+import QtQuick.Layouts
 
 Window {
     id: window
@@ -57,96 +60,207 @@ Window {
     height: 720
     visible: true
     title: "Principled Materials Example"
+    //color: "black"
     color: "#848895"
 
-    MaterialControl {
-        id: materialCtrl
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
+    Image {
+        anchors.fill: parent
+        source: "maps/grid.png"
+        fillMode: Image.Tile
+        horizontalAlignment: Image.AlignLeft
+        verticalAlignment: Image.AlignTop
     }
 
-    View3D {
+    SplitView {
+        id: splitView
         anchors.fill: parent
-        camera: camera
-        renderMode: View3D.Underlay
+        Page {
+            id: toolPage
+            SplitView.fillHeight: true
+            SplitView.preferredWidth: 420
+            SplitView.minimumWidth: 300
+            header: TabBar {
+               id: tabBar
+               TabButton {
+                   text: "Basics"
+               }
+               TabButton {
+                   text: "Alpha"
+               }
+               TabButton {
+                   text: "Details"
+               }
+               TabButton {
+                   text: "Clearcoat"
+               }
+               TabButton {
+                   text: "Refraction"
+               }
+               TabButton {
+                   text: "Special"
+               }
+            }
 
-        //! [rotating light]
-        // Rotate the light direction
-        DirectionalLight {
-            eulerRotation.y: -100
-            brightness: 1
-            SequentialAnimation on eulerRotation.y {
-                loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: 5000
-                    to: 360
-                    from: 0
+            StackLayout {
+                id: toolPageSwipeView
+                anchors.fill: parent
+                anchors.margins: 10
+                currentIndex: tabBar.currentIndex
+
+                BasicsPane {
+                    targetMaterial: basicMaterial
+                }
+
+                AlphaPane {
+                    targetMaterial: basicMaterial
+                }
+
+                DetailsPane {
+                    targetMaterial: basicMaterial
+                    view3D: viewport
+                }
+
+                ClearcoatPane {
+                    targetMaterial: basicMaterial
+                }
+
+                RefractionPane {
+                    targetMaterial: basicMaterial
+                }
+
+                SpecialPane {
+                    targetMaterial: basicMaterial
+                    linesModel: linesLogo
+                    pointsModel: pointsLogo
                 }
             }
         }
-        //! [rotating light]
 
-        //! [environment]
-        environment: SceneEnvironment {
-            clearColor: window.color
-            backgroundMode: SceneEnvironment.SkyBox
-            lightProbe: Texture {
-                source: "maps/OpenfootageNET_garage-1024.hdr"
+        View3D {
+            id: viewport
+            SplitView.fillHeight: true
+            SplitView.fillWidth: true
+            SplitView.minimumWidth: splitView.width * 0.5
+            environment: SceneEnvironment {
+                property bool enableEffects: false
+                antialiasingMode: SceneEnvironment.MSAA
+                antialiasingQuality: SceneEnvironment.High
+                lightProbe: Texture {
+                    source: "maps/OpenfootageNET_garage-1024.hdr"
+                }
+                effects: enableEffects ? [bloom, scurveTonemap] : []
+                backgroundMode: SceneEnvironment.SkyBox
+
+                SCurveTonemap {
+                    id: scurveTonemap
+                }
+                HDRBloomTonemap {
+                    id: bloom
+                }
             }
-            probeOrientation: Qt.vector3d(0, -90, 0)
-        }
-        //! [environment]
-
-        PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 0, 600)
-        }
-
-        //! [basic principled]
-        Model {
-            position: Qt.vector3d(-250, -30, 0)
-            scale: Qt.vector3d(4, 4, 4)
-            source: "#Sphere"
-            materials: [ PrincipledMaterial {
-                    baseColor: "#41cd52"
-                    metalness: materialCtrl.metalness
-                    roughness: materialCtrl.roughness
-                    specularAmount: materialCtrl.specular
-                    specularTint: materialCtrl.specularTint
-                    opacity: materialCtrl.opacityValue
+            Node {
+                id: originNode
+                PerspectiveCamera {
+                    id: cameraNode
+                    z: 600
+                    clipNear: 1
+                    clipFar: 10000
                 }
-            ]
-        }
-        //! [basic principled]
+            }
 
-        //! [textured principled]
-        Model {
-            position: Qt.vector3d(250, -30, 0)
-            scale: Qt.vector3d(4, 4, 4)
-            source: "#Sphere"
-            materials: [ PrincipledMaterial {
-                    metalness: materialCtrl.metalness
-                    roughness: materialCtrl.roughness
-                    specularAmount: materialCtrl.specular
-                    opacity: materialCtrl.opacityValue
+            PrincipledMaterial {
+                id: basicMaterial
+                baseColor: "red"
+            }
 
-                    baseColorMap: Texture { source: "maps/metallic/basecolor.jpg" }
-                    metalnessMap: Texture { source: "maps/metallic/metallic.jpg" }
-                    roughnessMap: Texture { source: "maps/metallic/roughness.jpg" }
-                    normalMap: Texture { source: "maps/metallic/normal.jpg" }
+            Model {
+                id: cube
+                source: "#Cube"
+                materials: basicMaterial
+                pickable: true
+            }
 
-                    metalnessChannel: Material.R
-                    roughnessChannel: Material.R
+            Model {
+                id: sphereModel
+                x: -200
+                scale: Qt.vector3d(1.5, 1.5, 1.5)
+                source: "#Sphere"
+                materials: basicMaterial
+                pickable: true
+            }
+
+            Model {
+                id: monkeyMesh
+                x: 250
+                source: "meshes/suzanne.mesh"
+                materials: basicMaterial
+                pickable: true
+            }
+
+            Model {
+                id: linesLogo
+                y: 200
+                x: -100
+                source: "meshes/logo_lines.mesh"
+                materials: basicMaterial
+                pickable: true
+                visible: false
+            }
+
+            Model {
+                id: pointsLogo
+                y: 200
+                x: 100
+                source: "meshes/logo_points.mesh"
+                materials: basicMaterial
+                pickable: true
+                visible: false
+            }
+
+            ResourceLoader {
+                meshSources: [
+                    linesLogo.source,
+                    pointsLogo.source,
+                ]
+            }
+
+            BackgroundCurtain {
+                visible: curtainToggleButton.checked
+                y: -150
+            }
+
+            OrbitCameraController {
+                origin: originNode
+                camera: cameraNode
+            }
+
+            MouseArea {
+                id: pickController
+                anchors.fill: parent
+                onClicked: function(mouse) {
+                    let pickResult = viewport.pick(mouse.x, mouse.y);
+                    if (pickResult.objectHit) {
+                        let pickedObject = pickResult.objectHit;
+                        // Move the camera orbit origin to be the clicked object
+                        originNode.position = pickedObject.position
+                    }
                 }
-            ]
-            //! [textured principled]
+            }
 
-            SequentialAnimation on eulerRotation {
-                loops: Animation.Infinite
-                PropertyAnimation {
-                    duration: 5000
-                    from: Qt.vector3d(0, 0, 0)
-                    to: Qt.vector3d(360, 360, 360)
+            Button {
+                id: curtainToggleButton
+                text: checked ? "Hide Curtain" : "Show Curtain"
+                checkable: true
+                checked: true
+                anchors.top: parent.top
+                anchors.right: parent.right
+            }
+
+            RowLayout {
+                anchors.bottom: parent.bottom
+                Label {
+                    text: "Drag Background to Orbit Camera, Touch/Click a Model to Center Camera"
+                    color: "#dddddd"
                 }
             }
         }
