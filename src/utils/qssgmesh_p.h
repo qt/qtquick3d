@@ -156,8 +156,8 @@ public:
     quint32 save(QIODevice *device, quint32 id = 0) const;
 
 private:
-    DrawMode m_drawMode;
-    Winding m_winding;
+    DrawMode m_drawMode = DrawMode::Triangles;
+    Winding m_winding = Winding::CounterClockwise;
     VertexBuffer m_vertexBuffer;
     IndexBuffer m_indexBuffer;
     QVector<Subset> m_subsets;
