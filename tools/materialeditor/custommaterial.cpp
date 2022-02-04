@@ -186,7 +186,9 @@ bool CustomMaterial::isValid() const { return scene.root != nullptr && scene.roo
 
 QDataStream &CustomMaterial::readFromDataStream(QDataStream &stream, Uniform &uniform)
 {
-    stream >> uniform.type >> uniform.name;
+    int type;
+    stream >> type >> uniform.name;
+    uniform.type = Uniform::Type(type);
     switch (uniform.type) {
     case Uniform::Type::Bool:
         stream >> uniform.b;
@@ -225,7 +227,7 @@ QDataStream &CustomMaterial::readFromDataStream(QDataStream &stream, Uniform &un
 
 QDataStream &CustomMaterial::writeToDataStream(QDataStream &stream, const Uniform &uniform)
 {
-    stream << uniform.type << uniform.name;
+    stream << int(uniform.type) << uniform.name;
     switch (uniform.type) {
     case Uniform::Type::Bool:
         stream << uniform.b;

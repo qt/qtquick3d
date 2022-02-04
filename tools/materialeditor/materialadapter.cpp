@@ -346,11 +346,11 @@ bool MaterialAdapter::saveMaterial(const QUrl &materialFile)
         out << MATERIAL_MAGIC << MATERIAL_VERSION;
         out << m_vertexShader;
         out << m_fragmentShader;
-        out << m_material->srcBlend();
-        out << m_material->dstBlend();
-        out << m_material->cullMode();
-        out << m_material->depthDrawMode();
-        out << m_material->shadingMode();
+        out << int(m_material->srcBlend());
+        out << int(m_material->dstBlend());
+        out << int(m_material->cullMode());
+        out << int(m_material->depthDrawMode());
+        out << int(m_material->shadingMode());
         // Uniforms
         out << uniformTable.count();
         for (const auto &uniform : qAsConst(uniformTable))
@@ -384,17 +384,17 @@ bool MaterialAdapter::loadMaterial(const QUrl &materialFile)
         in >> vertexShader >> fragmentShader;
         setVertexShader(vertexShader);
         setFragmentShader(fragmentShader);
-        QQuick3DCustomMaterial::BlendMode sourceBlend;
-        QQuick3DCustomMaterial::BlendMode destBlend;
-        QQuick3DMaterial::CullMode cullMode;
-        QQuick3DMaterial::DepthDrawMode depthDrawMode;
-        QQuick3DCustomMaterial::ShadingMode shadingMode;
+        int sourceBlend;
+        int destBlend;
+        int cullMode;
+        int depthDrawMode;
+        int shadingMode;
         in >> sourceBlend >> destBlend >> cullMode >> depthDrawMode >> shadingMode;
-        m_material->setSrcBlend(sourceBlend);
-        m_material->setDstBlend(destBlend);
-        m_material->setCullMode(cullMode);
-        m_material->setDepthDrawMode(depthDrawMode);
-        m_material->setShadingMode(shadingMode);
+        m_material->setSrcBlend(QQuick3DCustomMaterial::BlendMode(sourceBlend));
+        m_material->setDstBlend(QQuick3DCustomMaterial::BlendMode(destBlend));
+        m_material->setCullMode(QQuick3DMaterial::CullMode(cullMode));
+        m_material->setDepthDrawMode(QQuick3DMaterial::DepthDrawMode(depthDrawMode));
+        m_material->setShadingMode(QQuick3DCustomMaterial::ShadingMode(shadingMode));
         // Uniforms
         qsizetype uniformsCount = 0;
         in >> uniformsCount;
