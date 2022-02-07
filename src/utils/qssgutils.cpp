@@ -74,50 +74,6 @@ QVector3D mat33::transform(const QMatrix3x3 &m, const QVector3D &v)
     return c0 * v.x() + c1 * v.y() + c2 * v.z();
 }
 
-static Q_DECL_CONSTEXPR inline float dotProduct(const float (&v1)[3], const float (&v2)[3])
-{
-    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-
-static Q_DECL_CONSTEXPR inline QVector3D crossProduct(const float (&v1)[3], const float (&v2)[3])
-{
-    return QVector3D{v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]};
-};
-
-QMatrix3x3 mat33::getInverse(const QMatrix3x3 &m)
-{
-    //return column0.dot(column1.cross(column2));
-    const QVector3D c0(m(0, 0), m(1, 0), m(2, 0));
-    const QVector3D c1(m(0, 1), m(1, 1), m(2, 1));
-    const QVector3D c2(m(0, 2), m(1, 2), m(2, 2));
-
-    const float (&c0d)[3] = reinterpret_cast<const float (&)[3]>(c0);
-    const float (&c1d)[3] = reinterpret_cast<const float (&)[3]>(c1);
-    const float (&c2d)[3] = reinterpret_cast<const float (&)[3]>(c2);
-
-    const auto &xp = crossProduct(c1d, c2d);
-    const float det = dotProduct(c0d, reinterpret_cast<const float (&)[3]>(xp));
-
-    QMatrix3x3 inverse;
-    if (!qFuzzyIsNull(det)) {
-        const float invDet = 1.0f / det;
-
-        inverse(0, 0) = invDet * (m(1, 1) * m(2, 2) - m(2, 1) * m(1, 2));
-        inverse(0, 1) = invDet * -(m(0, 1) * m(2, 2) - m(2, 1) * m(0, 2));
-        inverse(0, 2) = invDet * (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1));
-
-        inverse(1, 0) = invDet * -(m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0));
-        inverse(1, 1) = invDet * (m(0, 0) * m(2, 2) - m(0, 2) * m(2, 0));
-        inverse(1, 2) = invDet * -(m(0, 0) * m(1, 2) - m(0, 2) * m(1, 0));
-
-        inverse(2, 0) = invDet * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
-        inverse(2, 1) = invDet * -(m(0, 0) * m(2, 1) - m(0, 1) * m(2, 0));
-        inverse(2, 2) = invDet * (m(0, 0) * m(1, 1) - m(1, 0) * m(0, 1));
-    }
-
-    return inverse;
-}
-
 QMatrix3x3 mat44::getUpper3x3(const QMatrix4x4 &m)
 {
     const float values[9] = { m(0, 0), m(0, 1), m(0, 2), m(1, 0), m(1, 1), m(1, 2), m(2, 0), m(2, 1), m(2, 2) };

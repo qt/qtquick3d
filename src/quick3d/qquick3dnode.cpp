@@ -469,8 +469,7 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
         // Instead of calling forward(), up() and right(), calculate them here.
         // This way m_sceneTransform isn't updated due to m_sceneTransformDirty and
         // common theDirMatrix operations are not duplicated.
-        QMatrix3x3 theDirMatrix = mat44::getUpper3x3(m_sceneTransform);
-        theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+        QMatrix3x3 theDirMatrix = m_sceneTransform.normalMatrix();
         prevForward = mat33::transform(theDirMatrix, QVector3D(0, 0, -1)).normalized();
         prevUp = mat33::transform(theDirMatrix, QVector3D(0, 1, 0)).normalized();
         prevRight = mat33::transform(theDirMatrix, QVector3D(1, 0, 0)).normalized();
@@ -482,8 +481,7 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
     const QQuaternion newRotation = QQuaternion::fromRotationMatrix(mat44::getUpper3x3(m_sceneTransform)).normalized();
     const QVector3D newScale = mat44::getScale(m_sceneTransform);
     if (emitDirectionChanges) {
-        QMatrix3x3 theDirMatrix = mat44::getUpper3x3(m_sceneTransform);
-        theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+        QMatrix3x3 theDirMatrix = m_sceneTransform.normalMatrix();
         newForward = mat33::transform(theDirMatrix, QVector3D(0, 0, -1)).normalized();
         newUp = mat33::transform(theDirMatrix, QVector3D(0, 1, 0)).normalized();
         newRight = mat33::transform(theDirMatrix, QVector3D(1, 0, 0)).normalized();
@@ -938,8 +936,7 @@ QVector3D QQuick3DNode::mapPositionFromNode(const QQuick3DNode *node, const QVec
 */
 QVector3D QQuick3DNode::mapDirectionToScene(const QVector3D &localDirection) const
 {
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(sceneTransform());
-    theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+    QMatrix3x3 theDirMatrix = sceneTransform().normalMatrix();
     return mat33::transform(theDirMatrix, localDirection);
 }
 
