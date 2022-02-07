@@ -105,8 +105,7 @@ void QQuick3DSkin::onJointChanged(QQuick3DNode *node)
             if (m_inverseBindPoses.count() > i)
                 jointGlobal *= m_inverseBindPoses.at(i);
             m_boneMatrices[i] = jointGlobal;
-            QMatrix3x3 jointNormal = mat44::getUpper3x3(jointGlobal);
-            m_boneNormalMatrices[i] = mat33::getInverse(jointNormal).transposed();
+            m_boneNormalMatrices[i] = jointGlobal.normalMatrix();
             markDirty();
         }
     }
@@ -136,8 +135,7 @@ void QQuick3DSkin::qmlAppendJoint(QQmlListProperty<QQuick3DNode> *list, QQuick3D
     if (index < self->m_inverseBindPoses.count())
         M *= self->m_inverseBindPoses.at(index);
     self->m_boneMatrices.push_back(M);
-    QMatrix3x3 N = mat44::getUpper3x3(M);
-    self->m_boneNormalMatrices.push_back(mat33::getInverse(N).transposed());
+    self->m_boneNormalMatrices.push_back(M.normalMatrix());
     self->markDirty();
 
     connect(joint, &QQuick3DNode::sceneTransformChanged, self,
@@ -196,8 +194,7 @@ void QQuick3DSkin::setInverseBindPoses(const QList<QMatrix4x4> &poses)
         if (m_inverseBindPoses.count() > i)
             jointGlobal *= m_inverseBindPoses.at(i);
         m_boneMatrices[i] = jointGlobal;
-        QMatrix3x3 jointNormal = mat44::getUpper3x3(jointGlobal);
-        m_boneNormalMatrices[i] = mat33::getInverse(jointNormal).transposed();
+        m_boneNormalMatrices[i] = jointGlobal.normalMatrix();
     }
 
     markDirty();

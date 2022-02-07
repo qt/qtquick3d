@@ -64,8 +64,7 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
             M *= poses[jointNode->index];
         M = inverseRootM * M;
         modelNode->boneTransforms[jointNode->index] = M;
-        QMatrix3x3 N = mat44::getUpper3x3(M);
-        modelNode->boneNormalTransforms[jointNode->index] = mat33::getInverse(N).transposed();
+        modelNode->boneNormalTransforms[jointNode->index] = M.normalMatrix();
     } else {
         modelNode->skeletonContainsNonJointNodes = true;
     }

@@ -291,9 +291,7 @@ QVector3D QSSGRenderNode::getDirection() const
 
 QVector3D QSSGRenderNode::getScalingCorrectDirection() const
 {
-    // ### This code has been checked to be corect
-    QMatrix3x3 theDirMatrix = mat44::getUpper3x3(globalTransform);
-    theDirMatrix = mat33::getInverse(theDirMatrix).transposed();
+    QMatrix3x3 theDirMatrix = globalTransform.normalMatrix();
     QVector3D theOriginalDir(0, 0, -1);
     QVector3D retval = mat33::transform(theDirMatrix, theOriginalDir);
     // Should already be normalized, but whatever
@@ -323,8 +321,11 @@ void QSSGRenderNode::calculateMVPAndNormalMatrix(const QMatrix4x4 &inViewProject
 
 QMatrix3x3 QSSGRenderNode::calculateNormalMatrix() const
 {
-    QMatrix3x3 outNormalMatrix = mat44::getUpper3x3(globalTransform);
-    return mat33::getInverse(outNormalMatrix).transposed();
+    // NB! QMatrix4x4:normalMatrix() uses double precision for determinant
+    // calculations when inverting the matrix, which is good and is important
+    // in practice e.g. in scenes with with small scale factors.
+
+    return globalTransform.normalMatrix();
 }
 
 QT_END_NAMESPACE
