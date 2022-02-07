@@ -1537,6 +1537,11 @@ void QQuick3DPrincipledMaterial::setClearcoatMap(QQuick3DTexture *newClearcoatMa
 {
     if (m_clearcoatMap == newClearcoatMap)
         return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(newClearcoatMap, m_clearcoatMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("clearcoatMap"), m_connections, [this](QQuick3DObject *n) {
+        setClearcoatMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
     m_clearcoatMap = newClearcoatMap;
     emit clearcoatMapChanged(m_clearcoatMap);
     markDirty(ClearcoatDirty);
@@ -1593,6 +1598,11 @@ void QQuick3DPrincipledMaterial::setClearcoatRoughnessMap(QQuick3DTexture *newCl
 {
     if (m_clearcoatRoughnessMap == newClearcoatRoughnessMap)
         return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(newClearcoatRoughnessMap, m_clearcoatRoughnessMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("clearcoatRoughnessMap"), m_connections, [this](QQuick3DObject *n) {
+        setClearcoatRoughnessMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
     m_clearcoatRoughnessMap = newClearcoatRoughnessMap;
     emit clearcoatRoughnessMapChanged(m_clearcoatRoughnessMap);
     markDirty(ClearcoatDirty);
@@ -1607,6 +1617,11 @@ void QQuick3DPrincipledMaterial::setClearcoatNormalMap(QQuick3DTexture *newClear
 {
     if (m_clearcoatNormalMap == newClearcoatNormalMap)
         return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(newClearcoatNormalMap, m_clearcoatNormalMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("clearcoatNormalMap"), m_connections, [this](QQuick3DObject *n) {
+        setClearcoatNormalMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
     m_clearcoatNormalMap = newClearcoatNormalMap;
     emit clearcoatNormalMapChanged(m_clearcoatNormalMap);
     markDirty(ClearcoatDirty);
@@ -1635,6 +1650,11 @@ void QQuick3DPrincipledMaterial::setTransmissionMap(QQuick3DTexture *newTransmis
 {
     if (m_transmissionMap == newTransmissionMap)
         return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(newTransmissionMap, m_transmissionMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("transmissionMap"), m_connections, [this](QQuick3DObject *n) {
+        setTransmissionMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
     m_transmissionMap = newTransmissionMap;
     emit transmissionMapChanged(m_transmissionMap);
     markDirty(TransmissionDirty);
@@ -1682,6 +1702,11 @@ void QQuick3DPrincipledMaterial::setThicknessMap(QQuick3DTexture *newThicknessMa
 {
     if (m_thicknessMap == newThicknessMap)
         return;
+
+    QQuick3DObjectPrivate::updatePropertyListener(newThicknessMap, m_thicknessMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("thicknessMap"), m_connections, [this](QQuick3DObject *n) {
+        setThicknessMap(qobject_cast<QQuick3DTexture *>(n));
+    });
+
     m_thicknessMap = newThicknessMap;
     emit thicknessMapChanged(m_thicknessMap);
     markDirty(VolumeDirty);
