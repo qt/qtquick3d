@@ -48,6 +48,7 @@ Section {
                 id: sourceUrlChooser
                 backendValue: backendValues.source
                 filter: "*.mesh"
+                defaultItems: ["#Rectangle" ,"#Sphere" ,"#Cube" ,"#Cone" ,"#Cylinder"]
             }
 
             ExpandingSpacer {}
