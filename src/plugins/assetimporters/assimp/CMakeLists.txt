@@ -395,6 +395,7 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION MSVC AND NOT QT_FEATURE
     COMPILE_OPTIONS
         "-wd4100"
         "-wd4189"
+        "-wd4244"
         "-wd4267"
         "-wd4996"
         "-wd4828"
