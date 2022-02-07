@@ -1944,13 +1944,6 @@ static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, b
     return true;
 }
 
-static inline void offsetProjectionMatrix(QMatrix4x4 &inProjectionMatrix,
-                                          const QVector2D &inVertexOffsets)
-{
-    inProjectionMatrix(0, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.x();
-    inProjectionMatrix(1, 3) += inProjectionMatrix(3, 3) * inVertexOffsets.y();
-}
-
 // These are meant to be pixel offsets, so you need to divide them by the width/height
 // of the layer respectively.
 static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = {
@@ -2009,15 +2002,17 @@ void QSSGLayerRenderData::rhiPrepare()
         vertexOffsetsAA = { f / float(vp.width()/2.0), f / float(vp.height()/2.0) };
     }
 
-    if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
-        // TODO - optimize this exact matrix operation.
-        for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
-            QMatrix4x4 &originalProjection(modelContexts[idx]->modelViewProjection);
-            offsetProjectionMatrix(originalProjection, vertexOffsetsAA);  //????? do these get reset per frame, or does it accumulate???
-        }
-    }
-
     if (camera) {
+        if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
+            // TODO - optimize this exact matrix operation.
+            for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
+                QMatrix4x4 offsetProjection = camera->projection;
+                offsetProjection(0, 2) = vertexOffsetsAA.x();
+                offsetProjection(1, 2) = vertexOffsetsAA.y();
+                modelContexts[idx]->modelViewProjection = offsetProjection * camera->projection.inverted() * modelContexts[idx]->modelViewProjection;
+            }
+        }
+
         camera->dpr = renderer->contextInterface()->dpr();
         renderer->beginLayerRender(*this);
 
