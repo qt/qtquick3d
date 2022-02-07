@@ -461,6 +461,9 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
         case QRhiTexture::Format::RED_OR_ALPHA8:
             hasA = !renderer->contextInterface()->rhiContext()->rhi()->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
             break;
+        case QRhiTexture::Format::R8:
+            // Leave BGA as false
+            break;
         default:
             hasA = true;
             hasG = true;
@@ -483,9 +486,6 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
 
         if (inMaterial && inImageIndex >= QSSGShaderDefaultMaterialKeyProperties::SingleChannelImagesFirst) {
             QSSGRenderDefaultMaterial::TextureChannelMapping value = QSSGRenderDefaultMaterial::R;
-            QSSGRenderDefaultMaterial::TextureChannelMapping defaultValues[5] = {QSSGRenderDefaultMaterial::R, QSSGRenderDefaultMaterial::G, QSSGRenderDefaultMaterial::B, QSSGRenderDefaultMaterial::R, QSSGRenderDefaultMaterial::A};
-            if (inMaterial->type == QSSGRenderGraphObject::Type::DefaultMaterial)
-                defaultValues[1] = defaultValues[2] = QSSGRenderDefaultMaterial::R;
 
             const quint32 scIndex = inImageIndex - QSSGShaderDefaultMaterialKeyProperties::SingleChannelImagesFirst;
             QSSGShaderKeyTextureChannel &channelKey = renderer->defaultMaterialShaderKeyProperties().m_textureChannels[scIndex];
@@ -538,7 +538,7 @@ void QSSGLayerRenderPreparationData::prepareImageForRender(QSSGRenderImage &inIm
                 break;
             }
             if (useDefault)
-                value = defaultValues[scIndex];
+                value = QSSGRenderDefaultMaterial::R; // Always Fallback to Red
             channelKey.setTextureChannel(QSSGShaderKeyTextureChannel::TexturChannelBits(value), inShaderKey);
         }
     }
