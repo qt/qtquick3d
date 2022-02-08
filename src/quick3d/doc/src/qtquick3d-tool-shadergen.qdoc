@@ -159,15 +159,14 @@ or disables features in the material, or the scene, are declared as individual c
 help the tool to generated the correct material shaders.
 
 The following example shows a contrived example of a material where we want to add a base color
-map to a material at run-time. Note that we don't actually use the MaterialRedExtended
-component in this case, it's purely defined for the shadergen tool to generated the needed
-material shaders that will be need at run-time to set the map on the \c redMaterial material.
+map to a material at run-time. Note that the component \c MaterialRedExtended is never used in the example,
+it's purely defined to help the shadergen tool generate the shaders needed to dynamically set the \c baseColorMap at run-time.
 
 MaterialRed.qml
 
 \snippet offlineshaders/MaterialRed.qml baseMaterial
 
-MaterialRedWithNormal.qml
+MaterialRedExtended.qml
 
 \snippet offlineshaders/MaterialRedExtended.qml extendedMaterial
 
