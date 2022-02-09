@@ -2198,6 +2198,12 @@ void QSSGLayerRenderData::rhiPrepare()
                 Q_ASSERT(m_rhiScreenTexture.isValid());
                 // NB: not compatible with disabling LayerEnableDepthTest
                 // because there are effectively no "opaque" objects then.
+                // Disable Tonemapping for all materials in the screen pass texture
+                QSSGShaderFeatures featuresBackup = this->features;
+                this->features.set(QSSGShaderFeatures::Feature::LinearTonemapping, false);
+                this->features.set(QSSGShaderFeatures::Feature::AcesTonemapping, false);
+                this->features.set(QSSGShaderFeatures::Feature::FilmicTonemapping, false);
+                this->features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping, false);
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
                 QColor clearColor(Qt::transparent);
@@ -2227,6 +2233,8 @@ void QSSGLayerRenderData::rhiPrepare()
                 }
                 cb->endPass(rub);
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+                // Re-enable all tonemapping
+                this->features = featuresBackup;
             }
             cb->debugMarkEnd();
         } else {
