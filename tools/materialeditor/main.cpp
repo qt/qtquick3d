@@ -67,6 +67,9 @@ int main(int argc, char *argv[])
     QCommandLineOption changeDirOption({QChar(u'C'), QLatin1String("directory")}, QLatin1String("Change the working directory"), QLatin1String("dir"));
     cmdLineparser.addOption(changeDirOption);
 
+    QCommandLineOption projectDirOption({QChar(u'p'), QLatin1String("project-dir")}, QLatin1String("Project directory"), QLatin1String("dir"));
+    cmdLineparser.addOption(projectDirOption);
+
     QCommandLineOption verboseOutputOption({QChar(u'v'), QLatin1String("verbose")}, QLatin1String("Turn on verbose output."));
     cmdLineparser.addOption(verboseOutputOption);
 
@@ -76,12 +79,11 @@ int main(int argc, char *argv[])
     if (cmdLineparser.isSet(changeDirOption)) {
         const auto value = cmdLineparser.value(changeDirOption);
         QFileInfo fi(value);
-        if (!fi.isDir()) {
+        workingDirSet = fi.isDir();
+        if (workingDirSet)
+            QDir::setCurrent(value);
+        else
             qWarning("%s : %s - Not a directory", qPrintable(app.applicationName()), qPrintable(value));
-            return -1;
-        }
-        workingDirSet = true;
-        QDir::setCurrent(value);
     }
 
     QString resourceFile;
@@ -101,7 +103,19 @@ int main(int argc, char *argv[])
         }
     }
 
+    QString projectPath;
+    if (cmdLineparser.isSet(projectDirOption)) {
+        const auto value = cmdLineparser.value(projectDirOption);
+        QFileInfo fi(value);
+        if (fi.isDir())
+            projectPath = fi.canonicalPath();
+        else
+            qWarning("%s : %s - Not a directory", qPrintable(app.applicationName()), qPrintable(value));
+    }
+
     QQmlApplicationEngine engine;
+    if (auto ctx = engine.rootContext())
+        ctx->setContextProperty("_qtProjectDir", QUrl::fromLocalFile(projectPath));
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     engine.load(url);
     if (engine.rootObjects().isEmpty())
