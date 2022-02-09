@@ -44,6 +44,9 @@ ApplicationWindow {
     visible: true
     title: qsTr("Material Editor")
 
+    // Context property (see main.cpp)
+    property url projectFolder: _qtProjectDir
+
     Settings {
         id: settings
         property alias windowX: window.x
@@ -71,6 +74,7 @@ ApplicationWindow {
         id: openMaterialDialog
         title: "Open a Material Project File"
         nameFilters: [ "Material Editor Project (*.qmp)"]
+        currentFolder: projectFolder
         onAccepted: {
             if (openMaterialDialog.selectedFile != null)
                 materialAdapter.loadMaterial(openMaterialDialog.selectedFile);
@@ -80,6 +84,7 @@ ApplicationWindow {
     FileDialog {
         id: saveAsDialog
         fileMode: FileDialog.SaveFile
+        currentFolder: projectFolder
         nameFilters: [ "Material Editor Project (*.qmp)"]
         onAccepted: materialAdapter.saveMaterial(selectedFile)
 
@@ -90,6 +95,7 @@ ApplicationWindow {
         id: fragmentShaderImportDialog
         title: "Fragment Shader to import"
         nameFilters: [ "Fragment Shader (*.frag *.fs *.glsl)" ]
+        currentFolder: projectFolder
         onAccepted: {
             if (fragmentShaderImportDialog.selectedFile != null) {
                 materialAdapter.importFragmentShader(fragmentShaderImportDialog.selectedFile)
@@ -101,6 +107,7 @@ ApplicationWindow {
         id: vertexShaderImportDialog
         title: "Vertex Shader to import"
         nameFilters: [ "Vertex Shader (*.vert *.vs *.glsl)" ]
+        currentFolder: projectFolder
         onAccepted: {
             if (vertexShaderImportDialog.selectedFile != null) {
                 materialAdapter.importVertexShader(vertexShaderImportDialog.selectedFile)
@@ -113,6 +120,7 @@ ApplicationWindow {
         title: "Choose file"
         nameFilters: [ "QML Componen (*.qml)" ]
         fileMode: FileDialog.SaveFile
+        currentFolder: projectFolder
         onAccepted: {
             if (selectedFile != null)
                 componentFilePath.text = selectedFile
