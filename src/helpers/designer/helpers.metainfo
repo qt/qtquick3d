@@ -21,7 +21,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.AxisHelper"
-        icon: "images/dummy16.png"
+        icon: "images/axishelper16.png"
 
         Hints {
             visibleInNavigator: true
@@ -33,7 +33,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Axis Helper"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/axishelper.png"
             version: "6.0"
             requiredImport: "QtQuick3D.Helpers"
         }
@@ -41,7 +41,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.DebugView"
-        icon: "images/dummy16.png"
+        icon: "images/debugview16.png"
 
         Hints {
             visibleInNavigator: true
@@ -53,7 +53,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Debug View"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/debugview.png"
             version: "6.0"
             requiredImport: "QtQuick3D.Helpers"
         }
@@ -61,7 +61,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.GridGeometry"
-        icon: "images/dummy16.png"
+        icon: "images/gridgeometry16.png"
 
         Hints {
             visibleInNavigator: true
@@ -73,7 +73,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Grid Geometry"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/gridgeometry.png"
             version: "6.0"
             requiredImport: "QtQuick3D.Helpers"
         }
@@ -81,7 +81,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.WasdController"
-        icon: "images/dummy16.png"
+        icon: "images/wasdcontroller16.png"
 
         Hints {
             visibleInNavigator: true
@@ -93,7 +93,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Wasd Controller"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/wasdcontroller.png"
             version: "6.0"
             requiredImport: "QtQuick3D.Helpers"
         }
