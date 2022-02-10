@@ -380,6 +380,7 @@ float QQuick3DModel::depthBias() const
 }
 
 /*!
+    \preliminary
     \qmlproperty bool Model::receivesReflections
 
     When this property is set to \c true, the model's materials take reflections contribution from

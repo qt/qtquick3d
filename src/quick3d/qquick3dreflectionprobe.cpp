@@ -41,6 +41,8 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick3D
     \brief Defines a reflection probe in the scene.
 
+    \note This type is in tech preview in 6.3. The API is under development and subject to change.
+
     A reflection probe is used to provide reflections of the current scene to the objects. The probe
     provides properties to the runtime which are then used to render the scene to a cube map. The cube map
     is then used as the reflection information for the reflecting objects.
@@ -54,6 +56,7 @@ QQuick3DReflectionProbe::QQuick3DReflectionProbe(QQuick3DNode *parent)
 }
 
 /*!
+    \preliminary
     \qmlproperty ReflectionQuality ReflectionProbe::quality
 
     Quality determines the resolution of the cube map.
@@ -67,6 +70,7 @@ QQuick3DReflectionProbe::ReflectionQuality QQuick3DReflectionProbe::quality() co
 }
 
 /*!
+    \preliminary
     \qmlproperty Color ReflectionProbe::clearColor
 
     Clear color is the color used to clear the cube map prior rendering the scene.
@@ -77,6 +81,7 @@ QColor QQuick3DReflectionProbe::clearColor() const
 }
 
 /*!
+    \preliminary
     \qmlproperty ReflectionRefreshMode ReflectionProbe::refreshMode
 
     Refresh mode tells the runtime how many times the cube map is rendered.
@@ -92,6 +97,7 @@ QQuick3DReflectionProbe::ReflectionRefreshMode QQuick3DReflectionProbe::refreshM
 }
 
 /*!
+    \preliminary
     \qmlproperty ReflectionTimeSlicing ReflectionProbe::timeSlicing
 
     Time slicing determines how the cube map render is timed.
@@ -121,6 +127,7 @@ QQuick3DReflectionProbe::ReflectionTimeSlicing QQuick3DReflectionProbe::timeSlic
 }
 
 /*!
+    \preliminary
     \qmlproperty bool ReflectionProbe::parallaxCorrection
 
     By default the reflections provided by the reflection probe are assumed to be from an infinite distance similar
@@ -136,6 +143,7 @@ bool QQuick3DReflectionProbe::parallaxCorrection() const
 }
 
 /*!
+    \preliminary
     \qmlproperty vector3d ReflectionProbe::boxSize
 
     Box size is used to determine which objects get their reflections from this ReflectionProbe. Objects that are
