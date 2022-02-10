@@ -44,6 +44,7 @@
 #include <qmath.h>
 #include <qmatrix4x4.h>
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
+#include <private/qglobal_p.h>
 
 class QQuick3DNode;
 

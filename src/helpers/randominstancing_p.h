@@ -42,6 +42,7 @@
 #define RANDOMINSTANCING_P_H
 
 #include <QtQuick3D/QQuick3DInstancing>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

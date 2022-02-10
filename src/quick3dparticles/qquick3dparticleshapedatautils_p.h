@@ -46,6 +46,7 @@
 #include <QtCore/QCborStreamWriter>
 #include <QtCore/QVariant>
 #include <QtCore/QMetaType>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

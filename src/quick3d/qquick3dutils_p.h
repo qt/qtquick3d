@@ -44,6 +44,7 @@
 #include <type_traits>
 
 #include <QtCore/QtGlobal>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

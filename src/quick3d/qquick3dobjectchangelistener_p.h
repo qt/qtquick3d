@@ -42,6 +42,7 @@
 //
 
 #include <QtQuick3D/qquick3dobject.h>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

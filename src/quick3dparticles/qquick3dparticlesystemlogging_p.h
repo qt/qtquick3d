@@ -43,6 +43,7 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include <private/qglobal_p.h>
 
 #include <QtQuick3DParticles/qtquick3dparticlesglobal.h>
 
