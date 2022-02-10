@@ -1,7 +1,7 @@
 MetaInfo {
     Type {
         name: "QtQuick3D.Helpers.LookAtNode"
-        icon: "images/dummy16.png"
+        icon: "images/lookatnode16.png"
 
         Hints {
             visibleInNavigator: true
@@ -13,7 +13,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Look-at Node"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/lookatnode.png"
             version: "6.4"
             requiredImport: "QtQuick3D.Helpers"
         }

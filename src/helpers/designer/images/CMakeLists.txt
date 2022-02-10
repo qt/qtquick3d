@@ -4,5 +4,8 @@ qt_copy_or_install(
         dummy.png
         dummy16.png
         dummy@2x.png
+        lookatnode.png
+        lookatnode16.png
+        lookatnode@2x.png
     DESTINATION "${destination}"
 )
