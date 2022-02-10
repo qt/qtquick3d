@@ -4,5 +4,8 @@ qt_copy_or_install(
         dummy.png
         dummy16.png
         dummy@2x.png
+        runtimeloader.png
+        runtimeloader16.png
+        runtimeloader@2x.png
     DESTINATION "${destination}"
 )
