@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderparticles_p.h>
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,7 +55,7 @@ void QSSGParticleBuffer::resize(int particleCount, int particleSize)
     }
     int vec4PerParticle = ceilDivide(particleSize, 16);
     int vec4s = particleCount * vec4PerParticle;
-    int width = divisibleBy(sqrt(vec4s), vec4PerParticle);
+    int width = divisibleBy(std::sqrt(vec4s), vec4PerParticle);
     int height = ceilDivide(vec4s, width);
     m_particlesPerSlice = width / vec4PerParticle;
     m_particleCount = particleCount;
