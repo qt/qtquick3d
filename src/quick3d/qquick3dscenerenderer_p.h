@@ -74,7 +74,7 @@ protected:
     void endFrame();
     void rhiPrepare(const QRect &viewport, qreal displayPixelRatio);
     void rhiRender();
-    void synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO = true);
+    void synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr);
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
 
@@ -128,6 +128,9 @@ private:
 
     bool m_prepared = false;
 
+    int requestedFramesCount = 0;
+    bool m_postProcessingStack = false;
+
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;
     friend class QQuick3DSGDirectRenderer;
@@ -167,7 +170,6 @@ public:
     bool invalidatePending;
 
     qreal devicePixelRatio;
-    int requestedFramesCount;
 };
 
 class QQuick3DSGRenderNode final : public QSGRenderNode
@@ -211,6 +213,8 @@ private:
     QQuick3DSGDirectRendererMode m_mode;
     QRectF m_viewport;
     bool m_isVisible = true;
+    QRhiTexture *m_rhiTexture = nullptr;
+    bool renderPending = false;
 };
 
 QT_END_NAMESPACE

@@ -78,7 +78,7 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     silhouettes.
 
     \b Cons: Usually more expensive than MSAA. Increases video memory usage.
-    Only supported with View3D items with renderMode set to Offscreen as the
+    Supported with View3D items with all renderMode except Inline as the
     technique implies rendering to a texture first.
 
     \b Multisampling
@@ -93,14 +93,17 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
 
     \b Cons: Does not help with texture or reflection issues. Increases video
     memory usage. Can be expensive to use on less powerful graphics hardware.
-    When using View3D items with a renderMode other than Offscreen, MSAA can
-    only be controlled on a per-window basis, it cannot be enabled or disabled
-    separately for the individual View3D items.
+    Can be controlled on a per-window basis or for individual View3D items
+    depending on the renderMode. When using Underlay/Overlay with an effect
+    applied or Offscreen, MSAA can be controlled for each View3D item. On the
+    other hand, using Underlay/Overlay without any effect or Inline will make
+    MSAA contolled per-window.
 
     \note For View3D items with a \l{QtQuick3D::View3D::renderMode}{renderMode}
-    other than Offscreen, multisampling can only be enabled via the
-    \l{QSurfaceFormat::setSamples()}{QSurfaceFormat} of the QQuickWindow or
-    QQuickView. This will then affect all content, both 2D and 3D, in that window.
+    other than Underlay/Overlay with effects or Offscreen, multisampling can only
+    be enabled via the \l{QSurfaceFormat::setSamples()}{QSurfaceFormat} of the
+    QQuickWindow or QQuickView. This will then affect all content,
+    both 2D and 3D, in that window.
 
     \b {Progressive antialiasing}
 
@@ -171,10 +174,12 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
 
     \value SceneEnvironment.Transparent
         The scene is cleared to be transparent. This is useful to render 3D content on top of another item.
-        This mode has no effect when the View3D is using a renderMode of Underlay or Overlay.
+        This mode has no effect when the View3D is using a renderMode of Underlay or Overlay without any
+        post processing enabled.
     \value SceneEnvironment.Color
         The scene is cleared with the color specified by the clearColor property.
-        This mode has no effect when the View3D is using a renderMode of Underlay or Overlay.
+        This mode has no effect when the View3D is using a renderMode of Underlay or Overlay without any
+        post processing enabled.
     \value SceneEnvironment.SkyBox
         The scene will not be cleared, but instead a SkyBox or Skydome will be rendered. The SkyBox
         is defined using the HDRI map defined in the lightProbe property.

@@ -188,6 +188,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
         res/rhishaders/ssaaresolve.frag
         res/rhishaders/progressiveaa.vert
         res/rhishaders/progressiveaa.frag
+        res/rhishaders/simplequad.vert
+        res/rhishaders/simplequad.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3"
     SILENT

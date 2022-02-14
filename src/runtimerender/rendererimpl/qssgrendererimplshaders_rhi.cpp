@@ -156,4 +156,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiParticleShader(QSSGRenderPart
     return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSimpleQuadShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("simplequad"), m_simpleQuadRhiShader);
+}
+
 QT_END_NAMESPACE

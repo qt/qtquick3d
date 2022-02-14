@@ -82,7 +82,6 @@ SGFramebufferObjectNode::SGFramebufferObjectNode()
     , renderPending(true)
     , invalidatePending(false)
     , devicePixelRatio(1)
-    , requestedFramesCount(0)
 {
     qsgnode_set_description(this, QStringLiteral("fbonode"));
     setFlag(QSGNode::UsePreprocess, true);
@@ -154,11 +153,11 @@ void SGFramebufferObjectNode::render()
             renderer->renderStats()->endRender(dumpRenderTimes);
 
         if (renderer->m_sgContext->renderer()->rendererRequestsFrames()
-                || requestedFramesCount > 0) {
+                || renderer->requestedFramesCount > 0) {
             scheduleRender();
             requestFullUpdate(window);
-            if (requestedFramesCount > 0)
-                requestedFramesCount--;
+            if (renderer->requestedFramesCount > 0)
+                renderer->requestedFramesCount--;
         }
     }
 }
@@ -496,7 +495,7 @@ void QQuick3DSceneRenderer::rhiRender()
     m_sgContext->rhiRender(*m_layer);
 }
 
-void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr, bool useFBO)
+void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr)
 {
     Q_ASSERT(view3D != nullptr); // This is not an option!
     if (!m_renderStats)
@@ -620,14 +619,19 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_importRootNode = importRootNode;
     }
 
+    const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
+    const bool multiSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA;
+    const bool temporalAA = m_layer->temporalAAEnabled && !multiSamplingAA;
+    const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
+    const bool timeBasedAA = progressiveAA || temporalAA;
+    m_postProcessingStack = m_layer->firstEffect || timeBasedAA  || superSamplingAA;
+    bool useFBO = view3D->renderMode() == QQuick3DViewport::RenderMode::Offscreen ||
+                                          ((view3D->renderMode() == QQuick3DViewport::RenderMode::Underlay || view3D->renderMode() == QQuick3DViewport::RenderMode::Overlay)
+                                           && m_postProcessingStack);
     if (useFBO) {
         QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
         if (rhiCtx->isValid()) {
             QRhi *rhi = rhiCtx->rhi();
-            const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
-            const bool temporalAA = m_layer->temporalAAEnabled && m_layer->antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
-            const bool superSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA;
-            const bool timeBasedAA = progressiveAA || temporalAA;
             const QSize renderSize = superSamplingAA ? m_surfaceSize * m_ssaaMultiplier : m_surfaceSize;
 
             if (m_texture) {
@@ -975,9 +979,8 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
         // Also, we need to do an extra render when animation stops
         extraFramesToRender = (m_aaIsDirty || temporalIsDirty) ? QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS : 1;
     }
-    if (fboNode && extraFramesToRender)
-        fboNode->requestedFramesCount = extraFramesToRender;
 
+    requestedFramesCount = extraFramesToRender;
     // Effects need to be rendered in reverse order as described in the file.
     layerNode->firstEffect = nullptr; // We reset the linked list
     const auto &effects = view3D->environment()->m_effects;
@@ -1160,7 +1163,8 @@ void QQuick3DSGDirectRenderer::setVisibility(bool visible)
 
 void QQuick3DSGDirectRenderer::requestRender()
 {
-    m_window->update();
+    renderPending = true;
+    requestFullUpdate(m_window);
 }
 
 void QQuick3DSGDirectRenderer::prepare()
@@ -1169,29 +1173,44 @@ void QQuick3DSGDirectRenderer::prepare()
         return;
 
     if (m_renderer->m_sgContext->rhiContext()->isValid()) {
-        QQuick3DRenderStats *renderStats = m_renderer->renderStats();
-        if (renderStats) {
-            renderStats->startRender();
-            renderStats->startRenderPrepare();
-        }
-
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
-
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
-                                 QQuick3DProfiler::Quick3DStageBegin);
-
         // this is outside the main renderpass
+        if (m_renderer->m_postProcessingStack) {
+            if (renderPending) {
+                renderPending = false;
+                m_rhiTexture = m_renderer->renderToRhiTexture(m_window);
+                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+                auto quadRenderer = m_renderer->m_sgContext->renderer()->rhiQuadRenderer();
+                quadRenderer->prepareQuad(m_renderer->m_sgContext->rhiContext().data(), nullptr);
+                if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames()
+                        || m_renderer->requestedFramesCount > 0) {
+                    requestRender();
+                    if (m_renderer->requestedFramesCount > 0)
+                        m_renderer->requestedFramesCount--;
+                }
+            }
+        }
+        else
+        {
+            QQuick3DRenderStats *renderStats = m_renderer->renderStats();
+            if (renderStats) {
+                renderStats->startRender();
+                renderStats->startRenderPrepare();
+            }
 
-        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
-        const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
-        m_renderer->beginFrame();
-        m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
+            Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DPrepareFrame,
+                                     QQuick3DProfiler::Quick3DStageBegin);
+            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+            const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
+            m_renderer->beginFrame();
+            m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
 
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
-                              QQuick3DProfiler::Quick3DStageEnd);
-        if (renderStats)
-            renderStats->endRenderPrepare();
+            Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame,
+                                  QQuick3DProfiler::Quick3DStageEnd);
+            if (renderStats)
+                renderStats->endRenderPrepare();
+        }
     }
 }
 
@@ -1201,12 +1220,6 @@ void QQuick3DSGDirectRenderer::render()
         return;
 
     if (m_renderer->m_sgContext->rhiContext()->isValid()) {
-
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
-
-        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DRenderFrame,
-                                 QQuick3DProfiler::Quick3DStageBegin);
-
         // the command buffer is recording the main renderpass at this point
 
         // No m_window->beginExternalCommands() must be done here. When the
@@ -1217,17 +1230,48 @@ void QQuick3DSGDirectRenderer::render()
 
         // Requery the command buffer and co. since Offscreen mode View3Ds may
         // have altered these on the context.
-        queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+        if (m_renderer->m_postProcessingStack) {
+            if (m_rhiTexture) {
+                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+                auto rhiCtx = m_renderer->m_sgContext->rhiContext().data();
+                const auto &renderer = m_renderer->m_sgContext->renderer();
 
-        m_renderer->rhiRender();
-        m_renderer->endFrame();
+                // Instead of passing in a flip flag we choose to rely on qsb's
+                // per-target compilation mode in the fragment shader. (it does UV
+                // flipping based on QSHADER_ macros) This is just better for
+                // performance and the shaders are very simple so introducing a
+                // uniform block and branching dynamically would be an overkill.
+                QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
 
-        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                           QQuick3DProfiler::Quick3DStageEnd,
-                                           STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()));
+                QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiSimpleQuadShader();
 
-        if (m_renderer->renderStats())
-            m_renderer->renderStats()->endRender(dumpRenderTimes);
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                QSSGRhiShaderResourceBindingList bindings;
+                bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, m_rhiTexture, sampler);
+                QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+
+                QSSGRhiGraphicsPipelineState ps;
+                ps.viewport = QRhiViewport(float(vp.x()), float(vp.y()), float(vp.width()), float(vp.height()));
+                ps.shaderPipeline = shaderPipeline.data();
+                renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, rhiCtx->mainRenderPassDescriptor(), QSSGRhiQuadRenderer::UvCoords | QSSGRhiQuadRenderer::PremulBlend);
+            }
+        }
+        else
+        {
+            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+
+            m_renderer->rhiRender();
+            m_renderer->endFrame();
+
+            Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
+                                               QQuick3DProfiler::Quick3DStageEnd,
+                                               STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()));
+
+            if (m_renderer->renderStats())
+                m_renderer->renderStats()->endRender(dumpRenderTimes);
+
+        }
     }
 }
 

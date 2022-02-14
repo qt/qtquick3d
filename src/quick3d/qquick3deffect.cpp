@@ -95,9 +95,9 @@ QT_BEGIN_NAMESPACE
     more fine-grained control over filtering modes, and allows effects to work
     with texture formats other than RGBA8, for example, floating point formats.
 
-    \note Post-processing effects are currently available only when the View3D
-    has its \l{View3D::renderMode}{renderMode} set to \c Offscreen. Effects
-    will not be rendered with other renderMode values.
+    \note Post-processing effects are currently available when the View3D
+    has its \l{View3D::renderMode}{renderMode} set to \c Offscreen,
+    \c Underlay or \c Overlay. Effects will not be rendered for \c Inline mode.
 
     \note When using post-processing effects, the application-provided shaders
     usually expect linear color data without tonemapping applied. It is then
