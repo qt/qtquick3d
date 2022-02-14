@@ -1,5 +1,3 @@
-# Generated from quick3d.pro.
-
 qt_internal_add_example(antialiasing)
 qt_internal_add_example(customshaders)
 qt_internal_add_example(effects)

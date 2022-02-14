@@ -1,32 +1,25 @@
-# Generated from particles3d.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(particles3d LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/particles3d")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Quick3D)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
 qt_add_executable(particles3d
     main.cpp
 )
+
 set_target_properties(particles3d PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(particles3d PUBLIC
     Qt::Core
     Qt::Gui
