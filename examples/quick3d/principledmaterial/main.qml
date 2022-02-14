@@ -216,13 +216,14 @@ Window {
                 pickable: true
                 visible: false
             }
-
+            //! [resource loader]
             ResourceLoader {
                 meshSources: [
-                    linesLogo.source,
-                    pointsLogo.source,
+                    "meshes/logo_lines.mesh",
+                    "meshes/logo_points.mesh"
                 ]
             }
+            //! [resource loader]
 
             BackgroundCurtain {
                 visible: curtainToggleButton.checked

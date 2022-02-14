@@ -60,6 +60,8 @@ QT_BEGIN_NAMESPACE
     showing a scene, there is no risk of dropping any frames due to resources
     being loaded during an animation.
 
+    For usage examples, see \l {Qt Quick 3D - Principled Material Example}
+
 */
 
 /*!
