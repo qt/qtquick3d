@@ -1479,20 +1479,23 @@ QSSGRenderMesh *QSSGBufferManager::loadCustomMesh(QSSGRenderGeometry *geometry)
     Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DCustomMeshLoad,
                              QQuick3DProfiler::Quick3DStageBegin);
 
-    // Mesh data needs to be loaded
-    QString error;
-    QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(geometry->meshData(), &error);
-    if (mesh.isValid()) {
-#ifdef QSSG_RENDERBUFFER_DEBUGGING
-        qDebug() << "+ uploadGeometry: " << geometry << currentLayer;
-#endif
-        meshIterator->mesh = createRenderMesh(mesh);
-        meshIterator->usageCounts[currentLayer] = 1;
-        meshIterator->generationId = geometry->generationId();
-        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, increaseMemoryStat(meshIterator->mesh));
-    } else {
-        qWarning("Mesh building failed: %s", qPrintable(error));
+    if (!geometry->meshData().m_vertexBuffer.isEmpty()) {
+        // Mesh data needs to be loaded
+        QString error;
+        QSSGMesh::Mesh mesh = QSSGMesh::Mesh::fromRuntimeData(geometry->meshData(), &error);
+        if (mesh.isValid()) {
+    #ifdef QSSG_RENDERBUFFER_DEBUGGING
+            qDebug() << "+ uploadGeometry: " << geometry << currentLayer;
+    #endif
+            meshIterator->mesh = createRenderMesh(mesh);
+            meshIterator->usageCounts[currentLayer] = 1;
+            meshIterator->generationId = geometry->generationId();
+            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, increaseMemoryStat(meshIterator->mesh));
+        } else {
+            qWarning("Mesh building failed: %s", qPrintable(error));
+        }
     }
+    // else an empty mesh is not an error, leave the QSSGRenderMesh null, it will not be rendered then
 
     Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DCustomMeshLoad,
                           QQuick3DProfiler::Quick3DStageEnd, stats.meshDataSize);
