@@ -52,10 +52,11 @@ import QtQuick
 import QtQuick3D
 Node {
     scale: Qt.vector3d(200, 200, 200)
+    //! [resource loader]
     ResourceLoader {
         meshSources: [
             frame.source,
-            curtain.source,
+            curtain.source
         ]
         textures: [
             tilePatternTexture,
@@ -108,4 +109,5 @@ Node {
             curtain_material
         ]
     }
+    //! [resource loader]
 }
