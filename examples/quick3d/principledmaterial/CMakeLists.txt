@@ -1,33 +1,26 @@
-# Generated from principledmaterial.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(principledmaterial LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/principledmaterial")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Quick3D)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
 
 qt_add_executable(principledmaterial
     main.cpp
     imagehelper.h imagehelper.cpp
 )
+
 set_target_properties(principledmaterial PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(principledmaterial PUBLIC
     Qt::Core
     Qt::Gui
