@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import Qt.labs.platform
 import Qt.labs.settings
@@ -14,8 +15,8 @@ import QtQuick3D.AssetUtils
 
 Window {
     visible: true
-    width: 800
-    height: 600
+    width: 1280
+    height: 720
 
     property url importUrl;
 
@@ -28,13 +29,18 @@ Window {
             lightProbe: Texture {
                 textureData: ProceduralSkyTextureData{}
             }
+            debugSettings: DebugSettings {
+                id: debugSettingsInstance
+            }
         }
 
         camera: helper.orbitControllerEnabled ? orbitCamera : wasdCamera
 
         DirectionalLight {
-            eulerRotation: "-30, -20, -40"
-            ambientColor: "#333"
+            eulerRotation.x: -35
+            eulerRotation.y: -90
+
+            castsShadow: true
         }
 
         Node {
@@ -83,8 +89,6 @@ Window {
                 boundsCenter = Qt.vector3d((bounds.maximum.x + bounds.minimum.x) / 2,
                                            (bounds.maximum.y + bounds.minimum.y) / 2,
                                            (bounds.maximum.z + bounds.minimum.z) / 2 )
-                console.log("Bounds changed: ", bounds.minimum, bounds.maximum,
-                            " center:", boundsCenter, "diameter:", boundsDiameter)
 
                 wasdController.speed = boundsDiameter / 1000.0
                 wasdController.shiftSpeed = 3 * wasdController.speed
@@ -185,36 +189,71 @@ Window {
     }
     //! [camera control]
 
-    Row {
-        RoundButton {
-            id: importButton
-            text: "Import..."
-            onClicked: fileDialog.open()
-            focusPolicy: Qt.NoFocus
-        }
-        RoundButton {
-            id: resetButton
-            text: "Reset view"
-            onClicked: view3D.resetView()
-            focusPolicy: Qt.NoFocus
-        }
-        RoundButton {
-            id: visualizeButton
-            checkable: true
-            text: "Visualize bounds"
-            focusPolicy: Qt.NoFocus
-        }
-        RoundButton {
-            id: instancingButton
-            checkable: true
-            text: "Instancing"
-            focusPolicy: Qt.NoFocus
-        }
-        RoundButton {
-            id: controllerButton
-            text: helper.orbitControllerEnabled ? "Orbit controller" : "WASD controller"
-            onClicked: helper.switchController(!helper.orbitControllerEnabled)
-            focusPolicy: Qt.NoFocus
+    Pane {
+        width: parent.width
+        contentHeight: controlsLayout.implicitHeight
+        RowLayout {
+            id: controlsLayout
+            Button {
+                id: importButton
+                text: "Import..."
+                onClicked: fileDialog.open()
+                focusPolicy: Qt.NoFocus
+            }
+            Button {
+                id: resetButton
+                text: "Reset view"
+                onClicked: view3D.resetView()
+                focusPolicy: Qt.NoFocus
+            }
+            Button {
+                id: visualizeButton
+                checkable: true
+                text: "Visualize bounds"
+                focusPolicy: Qt.NoFocus
+            }
+            Button {
+                id: instancingButton
+                checkable: true
+                text: "Instancing"
+                focusPolicy: Qt.NoFocus
+            }
+            Button {
+                id: controllerButton
+                text: helper.orbitControllerEnabled ? "Orbit" : "WASD"
+                onClicked: helper.switchController(!helper.orbitControllerEnabled)
+                focusPolicy: Qt.NoFocus
+            }
+            RowLayout {
+                Label {
+                    text: "Material Override"
+                }
+                ComboBox {
+                    id: materialOverrideComboBox
+                    textRole: "text"
+                    valueRole: "value"
+                    implicitContentWidthPolicy: ComboBox.WidestText
+                    onActivated: debugSettingsInstance.materialOverride = currentValue
+
+                    Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(debugSettingsInstance.materialOverride)
+
+                    model: [
+                        { value: DebugSettings.None, text: "None"},
+                        { value: DebugSettings.BaseColor, text: "Base Color"},
+                        { value: DebugSettings.Roughness, text: "Roughness"},
+                        { value: DebugSettings.Metalness, text: "Metalness"},
+                        { value: DebugSettings.Diffuse, text: "Diffuse"},
+                        { value: DebugSettings.Specular, text: "Specular"},
+                        { value: DebugSettings.ShadowOcclusion, text: "Shadow Occlusion"},
+                        { value: DebugSettings.Emission, text: "Emission"},
+                        { value: DebugSettings.AmbientOcclusion, text: "Ambient Occlusion"},
+                        { value: DebugSettings.Normals, text: "Normals"},
+                        { value: DebugSettings.Tangents, text: "Tangents"},
+                        { value: DebugSettings.Binormals, text: "Binormals"},
+                        { value: DebugSettings.F0, text: "F0"}
+                    ]
+                }
+            }
         }
     }
     FileDialog {

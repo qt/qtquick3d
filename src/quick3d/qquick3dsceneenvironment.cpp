@@ -5,6 +5,7 @@
 #include "qquick3dobject_p.h"
 #include "qquick3dtexture_p.h"
 #include "qquick3dcubemaptexture_p.h"
+#include "qquick3ddebugsettings_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -554,6 +555,20 @@ float QQuick3DSceneEnvironment::skyboxBlurAmount() const
     return m_skyboxBlurAmount;
 }
 
+/*!
+    \qmlproperty QQuick3D::DebugSettings QQuick3D::SceneEnvironment::debugSettings
+    \since 6.5
+
+    This property specifies a \c DebugSettings object which is used to
+    configure the Debugging tools of the renderer.
+
+*/
+
+QQuick3DDebugSettings *QQuick3DSceneEnvironment::debugSettings() const
+{
+    return m_debugSettings;
+}
+
 void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)
 {
     if (m_antialiasingMode == antialiasingMode)
@@ -898,6 +913,28 @@ void QQuick3DSceneEnvironment::setSkyBoxCubeMap(QQuick3DCubeMapTexture *newSkyBo
 
     m_skyBoxCubeMap = newSkyBoxCubeMap;
     emit skyBoxCubeMapChanged();
+}
+
+void QQuick3DSceneEnvironment::setDebugSettings(QQuick3DDebugSettings *newDebugSettings)
+{
+    if (m_debugSettings == newDebugSettings)
+        return;
+
+    if (m_debugSettings)
+        m_debugSettings->disconnect(m_debugSettingsSignalConnection);
+
+    m_debugSettings = newDebugSettings;
+
+    m_debugSettingsSignalConnection = QObject::connect(m_debugSettings, &QQuick3DDebugSettings::changed, this,
+                                                       [this] { update(); });
+    QObject::connect(m_debugSettings, &QObject::destroyed, this,
+                     [this] {
+        m_debugSettings = nullptr;
+        update();
+    });
+
+    emit debugSettingsChanged();
+    update();
 }
 
 QT_END_NAMESPACE

@@ -26,6 +26,7 @@
 
 #include <QtQuick3D/private/qquick3deffect_p.h>
 #include <QtQuick3D/private/qquick3dlightmapper_p.h>
+#include <QtQuick3D/private/qquick3ddebugsettings_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,6 +67,8 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(bool specularAAEnabled READ specularAAEnabled WRITE setSpecularAAEnabled NOTIFY specularAAEnabledChanged REVISION(6, 4))
 
     Q_PROPERTY(QQuick3DLightmapper *lightmapper READ lightmapper WRITE setLightmapper NOTIFY lightmapperChanged REVISION(6, 4))
+
+    Q_PROPERTY(QQuick3DDebugSettings *debugSettings READ debugSettings WRITE setDebugSettings NOTIFY debugSettingsChanged REVISION(6, 5))
 
     QML_NAMED_ELEMENT(SceneEnvironment)
 
@@ -139,6 +142,8 @@ public:
     Q_REVISION(6, 4) QQuick3DLightmapper *lightmapper() const;
     Q_REVISION(6, 4) QQuick3DCubeMapTexture *skyBoxCubeMap() const;
 
+    Q_REVISION(6, 5) QQuick3DDebugSettings *debugSettings() const;
+
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode);
     void setAntialiasingQuality(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues antialiasingQuality);
@@ -171,6 +176,8 @@ public Q_SLOTS:
 
     Q_REVISION(6, 4) void setLightmapper(QQuick3DLightmapper *lightmapper);
 
+    Q_REVISION(6, 5) void setDebugSettings(QQuick3DDebugSettings *newDebugSettings);
+
 Q_SIGNALS:
     void antialiasingModeChanged();
     void antialiasingQualityChanged();
@@ -201,6 +208,8 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void specularAAEnabledChanged();
     Q_REVISION(6, 4) void lightmapperChanged();
     Q_REVISION(6, 4) void skyBoxCubeMapChanged();
+
+    Q_REVISION(6, 5) void debugSettingsChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -245,6 +254,8 @@ private:
     QQuick3DLightmapper *m_lightmapper = nullptr;
     QMetaObject::Connection m_lightmapperSignalConnection;
     QQuick3DCubeMapTexture *m_skyBoxCubeMap = nullptr;
+    QQuick3DDebugSettings *m_debugSettings = nullptr;
+    QMetaObject::Connection m_debugSettingsSignalConnection;
 };
 
 QT_END_NAMESPACE

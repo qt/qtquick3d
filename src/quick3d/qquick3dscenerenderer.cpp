@@ -12,6 +12,7 @@
 #include "qquick3dpickresult_p.h"
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
+#include "qquick3ddebugsettings_p.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
@@ -988,6 +989,10 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
 
     layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(environment->tonemapMode());
     layerNode.skyboxBlurAmount = environment->skyboxBlurAmount();
+    if (auto debugSettings = view3D.environment()->debugSettings())
+        layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode(debugSettings->materialOverride());
+    else
+        layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode::None;
 
     if (environment->lightmapper()) {
         QQuick3DLightmapper *lightmapper = environment->lightmapper();

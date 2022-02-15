@@ -589,6 +589,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     specularLightingEnabled |= hasReflectionProbe;
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
+    auto debugMode = QSSGRenderLayer::MaterialDebugMode(keyProps.m_debugMode.getValue(inKey));
 
     // Morphing
     if (numMorphTargets > 0 || hasCustomVert) {
@@ -677,7 +678,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldPosition(inKey);
 
         const bool usingDefaultMaterialSpecularGGX = !(materialAdapter->isPrincipled() || materialAdapter->isSpecularGlossy()) && materialAdapter->specularModel() == QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
-        const bool needsTangentAndBinormal = hasCustomFrag || enableParallaxMapping || clearcoatNormalImage || enableBumpNormal || usingDefaultMaterialSpecularGGX;
+        // Note: tangetOrBinormalDebugMode doesn't force generation, it just makes sure that qt_tangent and qt_binormal variables exist
+        const bool tangentOrBinormalDebugMode = (debugMode == QSSGRenderLayer::MaterialDebugMode::Tangent) || (debugMode == QSSGRenderLayer::MaterialDebugMode::Binormal);
+        const bool needsTangentAndBinormal = hasCustomFrag || enableParallaxMapping || clearcoatNormalImage || enableBumpNormal || usingDefaultMaterialSpecularGGX || tangentOrBinormalDebugMode;
 
 
         if (needsTangentAndBinormal) {
@@ -1564,45 +1567,53 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         fragmentShader.addInclude("tonemapping.glsllib");
         fragmentShader.append("    fragOutput = vec4(qt_tonemap(qt_color_sum));");
 
-
-#if 0
-        // ### Debug Code for viewing various parts of the shading process
-        fragmentShader.append("    vec3 debugOutput = vec3(0.0);\n");
-        // Base Color
-        //fragmentShader.append("    debugOutput += qt_diffuseColor.rgb;\n");
-        //fragmentShader.append("    debugOutput += qt_tonemap(qt_diffuseColor.rgb);\n");
-        // Roughness
-        //fragmentShader.append("    debugOutput += vec3(qt_roughnessAmount);\n");
-        // Metalness
-        //fragmentShader.append("    debugOutput += vec3(qt_metalnessAmount);\n");
-        // Specular
-        //fragmentShader.append("    debugOutput += global_specular_light;\n");
-        fragmentShader.append("    debugOutput += qt_tonemap(global_specular_light);\n");
-        // Fresnel
-        //fragmentShader.append("    debugOutput += vec3(qt_specularAmount);\n");
-        //fragmentShader.append("    vec2 brdf = qt_brdfApproximation(qt_world_normal, qt_view_vector, qt_roughnessAmount);\n");
-        //fragmentShader.append("    debugOutput += vec3(qt_specularAmount * brdf.x);\n");
-        //fragmentShader.append("    debugOutput += vec3(qt_specularAmount * brdf.x + brdf.y);\n");
-        // F0
-        //fragmentShader.append("    debugOutput += qt_F0(qt_metalnessAmount, qt_specularFactor, qt_diffuseColor.rgb);");
-        // Diffuse
-        //fragmentShader.append("    debugOutput += global_diffuse_light.rgb;\n");
-//        fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
-        // Emission
-        //fragmentShader.append("    debugOutput += qt_global_emission;\n");
-        // Occlusion
-        //if (occlusionImage)
-        //    fragmentShader.append("    debugOutput += vec3(qt_ao);\n");
-        // Normal
-        //fragmentShader.append("    debugOutput += qt_world_normal * 0.5 + 0.5;\n");
-        // Tangent
-        //fragmentShader.append("    debugOutput += qt_tangent * 0.5 + 0.5;\n");
-        // Binormal
-        //fragmentShader.append("    debugOutput += qt_binormal * 0.5 + 0.5;\n");
-
-        fragmentShader.append("    fragOutput = vec4(debugOutput, 1.0);\n");
-#endif
-
+        // Debug Overrides for viewing various parts of the shading process
+        if (Q_UNLIKELY(debugMode != QSSGRenderLayer::MaterialDebugMode::None)) {
+            fragmentShader.append("    vec3 debugOutput = vec3(0.0);\n");
+            switch (debugMode) {
+            case QSSGRenderLayer::MaterialDebugMode::BaseColor:
+                fragmentShader.append("    debugOutput += qt_tonemap(qt_diffuseColor.rgb);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Roughness:
+                fragmentShader.append("    debugOutput += vec3(qt_roughnessAmount);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Metalness:
+                fragmentShader.append("    debugOutput += vec3(qt_metalnessAmount);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Diffuse:
+                fragmentShader.append("    debugOutput += qt_tonemap(global_diffuse_light.rgb);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Specular:
+                fragmentShader.append("    debugOutput += qt_tonemap(global_specular_light);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::ShadowOcclusion:
+                fragmentShader.append("    debugOutput += vec3(qt_shadow_map_occl);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Emission:
+                fragmentShader.append("    debugOutput += qt_tonemap(qt_global_emission);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::AmbientOcclusion:
+                fragmentShader.append("    debugOutput += vec3(qt_aoFactor);\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Normal:
+                fragmentShader.append("    debugOutput += qt_world_normal * 0.5 + 0.5;\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Tangent:
+                fragmentShader.append("    debugOutput += qt_tangent * 0.5 + 0.5;\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::Binormal:
+                fragmentShader.append("    debugOutput += qt_binormal * 0.5 + 0.5;\n");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::F0:
+                if (materialAdapter->isPrincipled() || materialAdapter->isSpecularGlossy())
+                    fragmentShader.append("    debugOutput += qt_f0;");
+                break;
+            case QSSGRenderLayer::MaterialDebugMode::None:
+                Q_UNREACHABLE();
+                break;
+            }
+            fragmentShader.append("    fragOutput = vec4(debugOutput, 1.0);\n");
+        }
     } else {
         if ((isOrthoShadowPass || isCubeShadowPass || isDepthPass) && isOpaqueDepthPrePass) {
             fragmentShader << "    if ((qt_diffuseColor.a * qt_objectOpacity) < 1.0)\n";

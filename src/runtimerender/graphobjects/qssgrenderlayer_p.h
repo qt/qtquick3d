@@ -98,6 +98,23 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     };
     Q_DECLARE_FLAGS(LayerFlags, LayerFlag)
 
+    enum class MaterialDebugMode : quint8
+    {
+        None = 0, // Bypass
+        BaseColor = 1,
+        Roughness,
+        Metalness,
+        Diffuse,
+        Specular,
+        ShadowOcclusion,
+        Emission,
+        AmbientOcclusion,
+        Normal,
+        Tangent,
+        Binormal,
+        F0
+    };
+
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
     QSSGLayerRenderData *renderData = nullptr;
@@ -170,6 +187,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGLightmapperOptions lmOptions;
 
     QVector<QSSGRenderGraphObject *> resourceLoaders;
+
+    MaterialDebugMode debugMode = MaterialDebugMode::None;
 
     QSSGRenderLayer();
     ~QSSGRenderLayer();

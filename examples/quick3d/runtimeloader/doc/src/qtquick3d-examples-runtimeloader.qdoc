@@ -57,5 +57,15 @@
     imported asset as if it were a simple model. In this case we use the \l RandomInstancing
     component from the \l{Qt Quick 3D Helpers QML Types}{Helpers} module to randomly position items
     within a fixed area and with a random color.
+
+    \section2 Material Overrides
+
+    Sometimes when loading an asset, it is possible that it may not look as expected. The
+    \l {DebugSettings::materialOverride}{materialOverride} property will change how each material
+    in the scene is rendered to display a particular contribution to the overall rendering. This can
+    be useful for determining what exactly about the asset is not correct so that the original asset
+    can be adjusted if necessary.
+
+    \image runtimeloader-normals.jpg
 */
 
