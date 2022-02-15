@@ -1019,8 +1019,9 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
 
     inLightPos -= inLightDir * inCamera.clipNear;
     theCamera.fov = qDegreesToRadians(90.f);
+    theCamera.parent = nullptr;
+    theCamera.pivot = inLight->pivot;
 
-    QMatrix4x4 transformDirectionalLight;
     if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
         Q_ASSERT(theCamera.type == QSSGRenderCamera::Type::OrthographicCamera);
         const QVector3D forward = inLightDir.normalized();
@@ -1088,15 +1089,6 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
         // Expand dimensions a little bit to avoid precision problems
         finalDims *= 1.05f;
 
-        // HACK(QTBUG-97381): We calculate the transformation matrix by hand since calling lookAt does not work properly
-        QMatrix4x4 posMatrix;
-        posMatrix.setColumn(3, QVector4D(-center, 1.0f));
-        QMatrix4x4 rotMatrix;
-        rotMatrix.setRow(0, QVector4D(right, 0.0f));
-        rotMatrix.setRow(1, QVector4D(up, 0.0f));
-        rotMatrix.setRow(2, QVector4D(forward, 0.0f));
-        transformDirectionalLight = (rotMatrix * posMatrix).inverted();
-
         // Apply bounding box parameters to shadow map camera projection matrix
         // so that the whole scene is fit inside the shadow map
         theViewport.setHeight(finalDims.y());
@@ -1104,24 +1096,13 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
         theCamera.clipNear = -0.5f * finalDims.z();
         theCamera.clipFar = 0.5f * finalDims.z();
 
-        inLightPos = center;
-    }
-
-    theCamera.parent = nullptr;
-    theCamera.pivot = inLight->pivot;
-
-    if (inLight->type == QSSGRenderLight::Type::PointLight) {
+        theCamera.position = center;
+        theCamera.rotation = QQuaternion::fromDirection(forward, up);
+    } else if (inLight->type == QSSGRenderLight::Type::PointLight) {
         theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), QVector3D(0, 0, 0));
-    } else {
-        theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), inLightPos + inLightDir);
     }
 
     theCamera.calculateGlobalVariables(theViewport);
-
-    // HACK(QTBUG-97381): Special case for broken lookAt
-    if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
-        theCamera.globalTransform = transformDirectionalLight;
-    }
 }
 
 static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCamera inCameras[6])
