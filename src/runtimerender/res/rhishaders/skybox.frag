@@ -108,6 +108,14 @@ vec3 qt_tonemap(vec3 color)
     return color;
 }
 
+vec3 qt_exposure(vec3 color, float exposure)
+{
+#if QSSG_ENABLE_ACES_TONEMAPPING || QSSG_ENABLE_HEJLDAWSON_TONEMAPPING || QSSG_ENABLE_FILMIC_TONEMAPPING || QSSG_ENABLE_LINEAR_TONEMAPPING
+    return vec3(vec3(1.0) - exp(-color * exposure));
+#endif
+    return color;
+}
+
 void main()
 {
     vec3 eye = normalize(eye_direction);
@@ -116,11 +124,5 @@ void main()
     color = vec4(color.rgb * pow(2.0, color.a * 255.0 - 128.0), 1.0);
 #endif
 
-    // exposure
-    vec3 exposureCorrectedColor = vec3(1.0) - exp(-color.rgb * ubuf.exposure);
-
-    // tonemapping
-    color = vec4(qt_tonemap(exposureCorrectedColor), 1.0);
-
-    fragOutput = color;
+    fragOutput = vec4(qt_tonemap(qt_exposure(color.rgb, ubuf.exposure)), 1.0);
 }

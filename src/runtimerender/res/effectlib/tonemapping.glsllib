@@ -1,3 +1,6 @@
+#ifndef TONEMAPPPING_GLSLIB
+#define TONEMAPPPING_GLSLIB 1
+
 #ifndef QSSG_ENABLE_LINEAR_TONEMAPPING
 #define QSSG_ENABLE_LINEAR_TONEMAPPING 0
 #endif
@@ -132,3 +135,13 @@ vec4 qt_tonemap(vec4 color)
 {
     return vec4(qt_tonemap(color.rgb), color.a);
 }
+
+vec3 qt_exposure(vec3 color, float exposure)
+{
+#if QSSG_ENABLE_ACES_TONEMAPPING || QSSG_ENABLE_HEJLDAWSON_TONEMAPPING || QSSG_ENABLE_FILMIC_TONEMAPPING || QSSG_ENABLE_LINEAR_TONEMAPPING
+    return vec3(vec3(1.0) - exp(-color * exposure));
+#endif
+    return color;
+}
+
+#endif // TONEMAPPPING_GLSLIB
