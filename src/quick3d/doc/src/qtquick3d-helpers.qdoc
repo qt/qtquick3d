@@ -232,3 +232,71 @@
 /*! \qmlproperty var DebugView::source
     Specifies the source View3D to show the statistics from.
 */
+
+/*!
+    \qmltype OrbitCameraController
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits Item
+    \brief Camera Controller which rotates around an origin.
+
+    This helper provides a way to rotate a camera around an origin. To function
+    OrbitCameraController accepts a Node as the origin, and a Camera object
+    which should be a child of the originNode to control. By only adjusting the z
+    position of the child camera relative to the parent origin it has the effect
+    of moving the camera nearer or farther from the target origin. By applying
+    a rotation to the origin node, the child camera will be orbited around the
+    origin node.
+
+    The OrbitCameraController item itself is a 2D item that accepts input events
+    so whatever it's size and position will be where input events are accepted.
+    To zoom either use the scroll wheel of the mouse or perform a pinch gesture.
+    To rotate click or touch and drag the area. To pan, hold control and drag
+    the area. Panning will change the position of the origin node. It is also
+    possible to perform a panning gesture by performing a two finger drag.
+
+    \badcode
+        View3D {
+            camera: cameraNode
+            Node {
+                id: originNode
+                PerspectiveCamera {
+                    id: cameraNode
+                    z: 100
+                }
+            }
+            OrbitCameraController {
+                anchors.fill: parent
+                origin: originNode
+                camera: cameraNode
+            }
+            ...
+        }
+    \endcode
+*/
+
+/*! \qmlproperty QtQuick3D::Node OrbitCameraController::origin
+    Specifies the origin node to control. This is a required property and should
+    be the parent of the \l camera
+*/
+/*! \qmlproperty QtQuick3D::Camera OrbitCameraController::camera
+    Specifies the camera node to control. This is a required property and should
+    be a child of the \l origin node.
+*/
+/*! \qmlproperty QtQuick3D::Node OrbitCameraController::xSpeed
+    Specifies the speed of navigation when the mouse is moved along the X axis.
+*/
+/*! \qmlproperty QtQuick3D::Node OrbitCameraController::ySpeed
+    Specifies the speed of navigation when the mouse is moved along the Y axis.
+*/
+/*! \qmlproperty bool OrbitCameraController::xInvert
+    Inverts the x-axis controls. The default value is false.
+*/
+/*! \qmlproperty bool OrbitCameraController::yInvert
+    Inverts the y-axis controls. The default value is true.
+*/
+/*! \qmlproperty bool OrbitCameraController::mouseEnabled
+    Enables mouse controls. The default value is true.
+*/
+/*! \qmlproperty bool OrbitCameraController::panEnabled
+    Enables panning controls. The default value is true.
+*/

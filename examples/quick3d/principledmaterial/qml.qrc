@@ -8,7 +8,6 @@
         <file>DemoPane.qml</file>
         <file>DetailsPane.qml</file>
         <file>MarkdownLabel.qml</file>
-        <file>OrbitCameraController.qml</file>
         <file>RefractionPane.qml</file>
         <file>SpecialPane.qml</file>
         <file>TextureSourceControl.qml</file>

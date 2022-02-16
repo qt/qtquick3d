@@ -33,7 +33,6 @@ qt_internal_add_resource(${target_name} "qml"
         EditorView.qml
         Preview.qml
         PreviewControls.qml
-        OrbitCameraController.qml
         qtquickcontrols2.conf
         FrostedGlass.qml
         AboutDialog.qml

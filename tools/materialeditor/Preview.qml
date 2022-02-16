@@ -33,6 +33,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.settings
 import QtQuick3D
+import QtQuick3D.Helpers
 
 ColumnLayout {
     id: previewRoot
@@ -102,6 +103,7 @@ ColumnLayout {
         OrbitCameraController {
             origin: originNode
             camera: sceneCamera
+            panEnabled: false
         }
     }
 

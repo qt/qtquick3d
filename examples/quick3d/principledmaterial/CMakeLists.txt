@@ -33,7 +33,6 @@ qt_add_qml_module(principledmaterial
     VERSION 1.0
     QML_FILES
         BackgroundCurtain.qml
-        OrbitCameraController.qml
         TextureSourceControl.qml
         BasicsPane.qml
         AlphaPane.qml
