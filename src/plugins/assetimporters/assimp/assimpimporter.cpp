@@ -882,46 +882,19 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const AssimpUtil
 QVector<QString> AssimpImporter::generateMorphing(aiNode *, const AssimpUtils::MeshList &meshes, QTextStream &output, int tabLevel)
 {
     QVector<QString> targets;
-    quint32 numMorphTargets = 0;
-    QVector<bool> needsTargetPosition;
-    QVector<bool> needsTargetNormal;
-    QVector<bool> needsTargetTangent;
-    QVector<float> targetWeights;
-    QVector<QString> targetNames;
-    unsigned int morphingMethod = UINT_MAX;
+    const aiMesh *targetMesh = nullptr;
     for (const auto *mesh : meshes) {
         if (mesh->mNumAnimMeshes && mesh->mAnimMeshes) {
-            // According to the gltf2 spec, numMorphTargets should be the same
-            // for all the submeshes. Other formats?
-            const quint32 numAnimMeshes = qMin(8U, mesh->mNumAnimMeshes);
-            if (numMorphTargets < numAnimMeshes) {
-                numMorphTargets = numAnimMeshes;
-                needsTargetPosition.resize(numMorphTargets);
-                needsTargetNormal.resize(numMorphTargets);
-                needsTargetTangent.resize(numMorphTargets);
-                targetWeights.resize(numMorphTargets);
-                targetNames.resize(numMorphTargets);
-            }
-            if (morphingMethod == UINT_MAX) {
-                // These values for all the submeshes should be the same.
-                morphingMethod = mesh->mMethod;
-                for (quint32 i = 0; i < numAnimMeshes; ++i) {
-                    auto animMesh = mesh->mAnimMeshes[i];
-                    targetWeights[i] = animMesh->mWeight;
-                    targetNames[i] = QString::fromUtf8(animMesh->mName.C_Str());
-                }
-            }
-            for (quint32 i = 0; i < numAnimMeshes; ++i) {
-                auto animMesh = mesh->mAnimMeshes[i];
-                needsTargetPosition[i] |= animMesh->HasPositions();
-                needsTargetNormal[i] |= animMesh->HasNormals();
-                needsTargetTangent[i] |= animMesh->HasTangentsAndBitangents();
-            }
+            // According to the gltf2 spec, the number of morph targets
+            // should be the same for all the submeshes. Other formats?
+            // We will just pick up the first aiAnimMeshes here.
+            targetMesh = mesh;
+            break;
         }
     }
 
     // Meshes do not have any morphing targets
-    if (numMorphTargets == 0)
+    if (!targetMesh)
         return targets;
 
     // We will support gltf's morphing method now.
@@ -933,28 +906,34 @@ QVector<QString> AssimpImporter::generateMorphing(aiNode *, const AssimpUtils::M
     //                                         QStringLiteral("morphingMode"),
     //                                         morphingMethod);
 
-    QString id;
-    for (unsigned i = 0; i < numMorphTargets; ++i) {
-        id = generateUniqueId(QSSGQmlUtilities::sanitizeQmlId(targetNames[i]));
-        targets.push_back(id);
+    const quint32 numMorphTargets = qMin(8U, targetMesh->mNumAnimMeshes);
+    for (uint i = 0; i < numMorphTargets; ++i) {
+        const auto animMesh = targetMesh->mAnimMeshes[i];
         output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("MorphTarget {\n");
+        QString id = generateUniqueId(
+                        QSSGQmlUtilities::sanitizeQmlId(
+                            QString::fromUtf8(animMesh->mName.C_Str())
+                        )
+                    );
+        targets.push_back(id);
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("id: ")
                << id << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("weight: ")
-               << targetWeights[i] << QStringLiteral("\n");
+               << animMesh->mWeight << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << QStringLiteral("attributes: ");
         bool needsOring = false;
-        if (needsTargetPosition[i]) {
+        if (animMesh->HasPositions()) {
             output << QStringLiteral("MorphTarget.Position");
             needsOring = true;
         }
-        if (needsTargetNormal[i]) {
+        if (animMesh->HasNormals()) {
             if (needsOring)
                 output << QStringLiteral(" | ");
+            else
+                needsOring = true;
             output << QStringLiteral("MorphTarget.Normal");
-            needsOring = true;
         }
-        if (needsTargetTangent[i]) {
+        if (animMesh->HasTangentsAndBitangents()) {
             if (needsOring)
                 output << QStringLiteral(" | ");
             // assimp always has tangent and binormal together.
@@ -1967,7 +1946,7 @@ void AssimpImporter::generateMorphKeyframes(const QString &id,
 {
     Q_ASSERT(numKeys > 0);
 
-    const uint numMorphTargets = (keys[0].mNumValuesAndWeights > 8) ? 8: keys[0].mNumValuesAndWeights;
+    const uint numMorphTargets = qMin(keys[0].mNumValuesAndWeights, 8U);
 
     output << QStringLiteral("\n");
     for (uint i = 0; i < numMorphTargets; ++i) {
