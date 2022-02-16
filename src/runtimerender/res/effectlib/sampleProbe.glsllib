@@ -29,6 +29,7 @@
 ****************************************************************************/
 
 #include "bsdf.glsllib"
+#include "tonemapping.glsllib"
 
 #ifndef SAMPLE_PROBE_GLSLLIB
 #define SAMPLE_PROBE_GLSLLIB 1
@@ -77,7 +78,7 @@ vec4 qt_sampleDiffuse(vec3 normal)
         val *= wtScaled;
     }
 
-    return vec4(qt_lightProbeProperties.w * val, 1.0);
+    return vec4(qt_exposure(val, qt_lightProbeProperties.w), 1.0);
 }
 
 // This method is used by DefaultMaterial for the specular term
@@ -108,7 +109,9 @@ vec4 qt_sampleGlossy(vec3 normal, vec3 viewDir, float rough)
         outColor *= wtScaled;
     }
 
-    return vec4(qt_lightProbeProperties.w * Gl * outColor, 1.0);
+    outColor = qt_exposure(outColor, qt_lightProbeProperties.w);
+
+    return vec4(Gl * outColor, 1.0);
 }
 
 // This method is used by the PrincipledMaterial for the IBL specular term.
@@ -136,7 +139,9 @@ vec4 qt_sampleGlossyPrincipled(vec3 normal, vec3 viewDir, vec3 F, float roughnes
         specularSample *= wtScaled;
     }
 
-    return vec4(qt_lightProbeProperties.w * (specularSample * (F * brdf.x + brdf.y)), 1.0);
+    vec3 sampleColor = (specularSample * (F * brdf.x + brdf.y));
+
+    return vec4(qt_exposure(sampleColor, qt_lightProbeProperties.w), 1.0);
 }
 
 #endif

@@ -331,9 +331,14 @@ QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 /*!
     \qmlproperty float QtQuick3D::SceneEnvironment::probeExposure
 
-    This property modifies the amount of light emitted by the light probe.
+    This property modifies the amount of light emitted by the light probe. Part
+    of the tonemapping is exposure mapping, and this property adjusts how
+    the light values in the light probes get tonemaped.
 
     By default exposure is set to is 1.0
+
+    \note This property does not have an effect when \l tonemapMode is set to
+    \c SceneEnvironment.TonemapModeNone.
 */
 float QQuick3DSceneEnvironment::probeExposure() const
 {
