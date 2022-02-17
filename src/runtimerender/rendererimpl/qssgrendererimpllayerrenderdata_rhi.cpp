@@ -1890,12 +1890,12 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, {});
 }
 
-static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool mips, QSSGRhiRenderableTexture *renderableTex)
+static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex)
 {
     QRhi *rhi = rhiCtx->rhi();
     bool needsBuild = false;
     QRhiTexture::Flags flags = QRhiTexture::RenderTarget;
-    if (mips)
+    if (wantsMips)
         flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 
     if (!renderableTex->texture) {
