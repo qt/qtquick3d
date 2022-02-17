@@ -1357,9 +1357,6 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         }
     }
 
-    QTextStream output(stdout);
-    QSSGQmlUtilities::writeQml(targetScene, output, QDir());
-
     return QString();
 }
 
