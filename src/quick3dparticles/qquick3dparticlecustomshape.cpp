@@ -176,7 +176,7 @@ void QQuick3DParticleCustomShape::doRandomizeData()
         return;
 
     auto rand = m_system->rand();
-    int seed = rand->get(0, QPRand::Shape1) * INT_MAX;
+    int seed = rand->get(0, QPRand::Shape1) * float(INT_MAX);
     std::shuffle(m_positions.begin(), m_positions.end(), std::default_random_engine(seed));
 
     m_randomizeDirty = false;
