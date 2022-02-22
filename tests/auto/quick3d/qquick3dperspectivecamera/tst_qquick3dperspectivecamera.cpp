@@ -45,6 +45,7 @@ class tst_QQuick3DPerspectiveCamera : public QObject
 
 private slots:
     void testClipAndFov();
+    void mapToViewport();
 };
 
 void tst_QQuick3DPerspectiveCamera::testClipAndFov()
@@ -85,6 +86,18 @@ void tst_QQuick3DPerspectiveCamera::testClipAndFov()
     camera.setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation::Vertical);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QVERIFY(node->fovHorizontal == false);
+}
+
+void tst_QQuick3DPerspectiveCamera::mapToViewport()
+{
+    Camera camera;
+    auto node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(nullptr));
+    QVERIFY(node);
+
+    // QTBUG-100832
+    const QVector3D largeValue(-3.40282e+38, 3.40282e+38, 3.40282e+38);
+    QVector3D result = camera.mapToViewport(largeValue);
+    QVERIFY(result.isNull());
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DPerspectiveCamera)
