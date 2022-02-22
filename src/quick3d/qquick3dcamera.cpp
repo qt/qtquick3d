@@ -150,7 +150,7 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     const QMatrix4x4 projectionViewMatrix = cameraNode->projection * sceneToCamera;
     const QVector4D transformedScenePos = mat44::transform(projectionViewMatrix, scenePosRightHand);
 
-    if (qFuzzyIsNull(transformedScenePos.w()))
+    if (qFuzzyIsNull(transformedScenePos.w()) || qIsNaN(transformedScenePos.w()))
         return QVector3D(0, 0, 0);
 
     // Normalize scenePosView between [-1, 1]
@@ -161,10 +161,14 @@ QVector3D QQuick3DCamera::mapToViewport(const QVector3D &scenePos) const
     const QVector4D clipNearPos(scenePosView.x(), scenePosView.y(), -1, 1);
     auto invProj = projectionViewMatrix.inverted();
     const QVector4D clipNearPosTransformed = mat44::transform(invProj, clipNearPos);
+    if (qFuzzyIsNull(clipNearPosTransformed.w()) || qIsNaN(clipNearPosTransformed.w()))
+        return QVector3D(0, 0, 0);
     const QVector4D clipNearPosScene = clipNearPosTransformed / clipNearPosTransformed.w();
     QVector4D clipFarPos = clipNearPos;
     clipFarPos.setZ(0);
     const QVector4D clipFarPosTransformed = mat44::transform(invProj, clipFarPos);
+    if (qFuzzyIsNull(clipFarPosTransformed.w()) || qIsNaN(clipFarPosTransformed.w()))
+        return QVector3D(0, 0, 0);
     const QVector4D clipFarPosScene = clipFarPosTransformed / clipFarPosTransformed.w();
     const QVector3D direction = (clipFarPosScene - clipNearPosScene).toVector3D();
     const QVector3D scenePosVec = (scenePosRightHand - clipNearPosScene).toVector3D();
@@ -221,7 +225,8 @@ QVector3D QQuick3DCamera::mapFromViewport(const QVector3D &viewportPos) const
     const QVector4D transformedClipNearPos = mat44::transform(projectionViewMatrixInv, clipNearPos);
     const QVector4D transformedClipFarPos = mat44::transform(projectionViewMatrixInv, clipFarPos);
 
-    if (qFuzzyIsNull(transformedClipNearPos.w()))
+    if (qFuzzyIsNull(transformedClipNearPos.w()) || qIsNaN(transformedClipNearPos.w()) ||
+        qFuzzyIsNull(transformedClipFarPos.w()) || qIsNaN(transformedClipFarPos.w()))
         return QVector3D(0, 0, 0);
 
     // Reverse the projection
