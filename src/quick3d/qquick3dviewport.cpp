@@ -408,7 +408,7 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 renderer = new QQuick3DSceneRenderer(rci);
             }
 
-            QObject::connect(qw, &QQuickWindow::afterFrameEnd, this, &QQuick3DViewport::cleanupResources);
+            QObject::connect(qw, &QQuickWindow::afterFrameEnd, this, &QQuick3DViewport::cleanupResources, Qt::DirectConnection);
         }
     }
 
