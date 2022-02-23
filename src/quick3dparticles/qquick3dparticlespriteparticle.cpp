@@ -73,10 +73,11 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 
 void QQuick3DParticleSpriteParticle::deleteNodes()
 {
-    for (PerEmitterData &value : m_perEmitterData) {
+    for (const PerEmitterData &value : qAsConst(m_perEmitterData)) {
         value.particleUpdateNode->m_spriteParticle = nullptr;
         delete value.particleUpdateNode;
     }
+    m_perEmitterData.clear();
 }
 
 /*!
@@ -433,7 +434,6 @@ void QQuick3DParticleSpriteParticle::reset()
     QQuick3DParticle::reset();
     deleteNodes();
     m_nextEmitterIndex = 0;
-    m_perEmitterData.clear();
     m_spriteParticleData.fill({});
 }
 
