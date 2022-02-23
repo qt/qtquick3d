@@ -60,6 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
     Q_PROPERTY(QVector3D boxSize READ boxSize WRITE setBoxSize NOTIFY boxSizeChanged)
     Q_PROPERTY(bool debugView READ debugView WRITE setDebugView NOTIFY debugViewChanged)
     QML_NAMED_ELEMENT(ReflectionProbe)
+    QML_ADDED_IN_VERSION(6, 3)
 
 public:
     enum class ReflectionQuality {
