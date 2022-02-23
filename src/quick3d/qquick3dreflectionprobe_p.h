@@ -56,6 +56,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
     Q_PROPERTY(bool parallaxCorrection READ parallaxCorrection WRITE setParallaxCorrection NOTIFY parallaxCorrectionChanged)
     Q_PROPERTY(QVector3D boxSize READ boxSize WRITE setBoxSize NOTIFY boxSizeChanged)
     QML_NAMED_ELEMENT(ReflectionProbe)
+    QML_ADDED_IN_VERSION(6, 3)
 
 public:
     enum class ReflectionQuality {

@@ -56,6 +56,7 @@ class Q_QUICK3D_EXPORT QQuick3DResourceLoader : public QQuick3DObject
     Q_PROPERTY(QQmlListProperty<QQuick3DTexture> textures READ textures)
     Q_PROPERTY(QQmlListProperty<QQuick3DGeometry> geometries READ geometries)
     QML_NAMED_ELEMENT(ResourceLoader)
+    QML_ADDED_IN_VERSION(6, 3)
 public:
     QQuick3DResourceLoader(QQuick3DObject *parent = nullptr);
 
