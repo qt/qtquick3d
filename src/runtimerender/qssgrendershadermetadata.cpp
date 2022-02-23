@@ -123,11 +123,16 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
 
         static const auto toUniform = [](const QJsonObject &uObj) {
             Uniform uniform;
-            if (!uObj.isEmpty()) {
-                const auto type = uObj.find(QLatin1String("type"));
-                uniform.type = type.value().toString().toLatin1();
-                uniform.name = uObj.find(QLatin1String("name"))->toString().toLatin1();
-                const auto conditionString = uObj.find(QLatin1String("condition"))->toString();
+            auto it = uObj.constBegin();
+            const auto end = uObj.constEnd();
+            if (it != end) {
+                it = uObj.constFind(QLatin1String("type"));
+                uniform.type = (it != end) ? it->toString().toLatin1() : QByteArray();
+                it = uObj.constFind(QLatin1String("name"));
+                uniform.name = (it != end) ? it->toString().toLatin1() : QByteArray();
+
+                it = uObj.constFind(QLatin1String("condition"));
+                const QString conditionString = (it != end) ? it->toString() : QString();
                 uniform.condition = Uniform::conditionFromString(conditionString);
                 if (uniform.condition == Uniform::Negated)
                     uniform.conditionName = conditionString.mid(1).toLatin1();
@@ -139,86 +144,96 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
 
         static const auto toInputOutput = [](const QJsonObject &uObj) {
             InputOutput inOutVar;
-            if (!uObj.isEmpty()) {
-                const auto type = uObj.find(QLatin1String("type"));
-                inOutVar.type = type.value().toString().toLatin1();
-                inOutVar.name = uObj.find(QLatin1String("name"))->toString().toLatin1();
-                inOutVar.stage = InputOutput::stageFromString(uObj.find(QLatin1String("stage"))->toString());
+            auto it = uObj.constBegin();
+            const auto end = uObj.constEnd();
+            if (it != end) {
+                it = uObj.constFind(QLatin1String("type"));
+                inOutVar.type = (it != end) ? it->toString().toLatin1() : QByteArray();
+                it = uObj.constFind(QLatin1String("name"));
+                inOutVar.name = (it != end) ? it->toString().toLatin1() : QByteArray();
+                it = uObj.constFind(QLatin1String("stage"));
+                inOutVar.stage = InputOutput::stageFromString((it != end) ? it->toString() : QString());
             }
             return inOutVar;
         };
 
         const QJsonObject obj = doc.object();
+        auto it = obj.constBegin();
+        const auto end = obj.constEnd();
+        if (it != end) {
+            // Uniforms
+            it = obj.constFind(QLatin1String("uniforms"));
+            if (it != obj.constEnd()) {
+                // Check if it's an array or a single object
+                if (it->type() == QJsonValue::Array) {
+                    const auto uniformArray = it->toArray();
+                    for (const auto &valueRef : uniformArray) {
+                        if (!valueRef.isObject())
+                            continue;
 
-        const auto uniforms = obj.constFind(QLatin1String("uniforms"));
-        // Check if it's an array or a single object
-        if (uniforms->type() == QJsonValue::Array) {
-            const auto uniformArray = uniforms.value().toArray();
-            for (const auto it : uniformArray) {
-                if (!it.isObject())
-                    continue;
-
-                const QJsonObject obj = it.toObject();
-                const auto uniform = toUniform(obj);
-                if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
-                    result.uniforms.push_back(uniform);
-                } else {
-                    qWarning("Invalid uniform (%s %s), skipping",
-                             qPrintable(obj.find(QLatin1String("type")).value().toString()),
-                             qPrintable(obj.find(QLatin1String("name")).value().toString()));
+                        const QJsonObject obj = valueRef.toObject();
+                        const auto uniform = toUniform(obj);
+                        if (!uniform.type.isEmpty() && !uniform.name.isEmpty()) {
+                            result.uniforms.push_back(uniform);
+                        } else {
+                            qWarning("Invalid uniform, skipping");
+                        }
+                    }
+                } else if (it->type() == QJsonValue::Object) {
+                    const auto uniform = toUniform(it->toObject());
+                    if (!uniform.type.isEmpty() && !uniform.name.isEmpty())
+                        result.uniforms.push_back(uniform);
+                    else
+                        qWarning("Invalid uniform, skipping");
                 }
             }
-        } else if (uniforms->type() == QJsonValue::Object) {
-            const auto uniform = toUniform(uniforms.value().toObject());
-            if (!uniform.type.isEmpty() && !uniform.name.isEmpty())
-                result.uniforms.push_back(uniform);
-            else
-                qWarning("Invalid uniform, skipping");
-        }
 
-        const auto inputs = obj.constFind(QLatin1String("inputs"));
-        if (inputs->type() == QJsonValue::Array) {
-            for (const auto it : inputs.value().toArray()) {
-                if (!it.isObject())
-                    continue;
-                const auto inOutVar = toInputOutput(it.toObject());
-                if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty())
-                    result.inputs.push_back(inOutVar);
-                else
-                    qWarning("Invalid input variable, skipping");
+            // Inputs
+            it = obj.constFind(QLatin1String("inputs"));
+            if (it != end) {
+                if (it->type() == QJsonValue::Array) {
+                    for (const auto &valueRef : it->toArray()) {
+                        if (!valueRef.isObject())
+                            continue;
+                        const auto inOutVar = toInputOutput(valueRef.toObject());
+                        if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty())
+                            result.inputs.push_back(inOutVar);
+                        else
+                            qWarning("Invalid input variable, skipping");
+                    }
+                } else if (it->type() == QJsonValue::Object) {
+                    const QJsonObject obj = it->toObject();
+                    const auto inOutVar = toInputOutput(obj);
+                    if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty()) {
+                        result.inputs.push_back(inOutVar);
+                    } else {
+                        qWarning("Invalid input variable, skipping");
+                    }
+                }
             }
-        } else if (inputs->type() == QJsonValue::Object) {
-            const QJsonObject obj = inputs.value().toObject();
-            const auto inOutVar = toInputOutput(obj);
-            if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty()) {
-                result.inputs.push_back(inOutVar);
-            } else {
-                qWarning("Invalid input variable (%s %s), skipping",
-                         qPrintable(obj.find(QLatin1String("type")).value().toString()),
-                         qPrintable(obj.find(QLatin1String("name")).value().toString()));
-            }
-        }
 
-        const auto outputs = obj.constFind(QLatin1String("outputs"));
-        if (outputs->type() == QJsonValue::Array) {
-            for (const auto it : outputs.value().toArray()) {
-                if (!it.isObject())
-                    continue;
-                const auto inOutVar = toInputOutput(it.toObject());
-                if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty())
-                    result.outputs.push_back(inOutVar);
-                else
-                    qWarning("Invalid output variable, skipping");
-            }
-        } else if (outputs->type() == QJsonValue::Object) {
-            const QJsonObject obj = outputs.value().toObject();
-            const auto inOutVar = toInputOutput(obj);
-            if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty()) {
-                result.outputs.push_back(inOutVar);
-            } else {
-                qWarning("Invalid output variable (%s %s), skipping",
-                         qPrintable(obj.find(QLatin1String("type")).value().toString()),
-                         qPrintable(obj.find(QLatin1String("name")).value().toString()));
+            // Outputs
+            it = obj.constFind(QLatin1String("outputs"));
+            if (it != end) {
+                if (it->type() == QJsonValue::Array) {
+                    for (const auto &valueRef : it->toArray()) {
+                        if (!valueRef.isObject())
+                            continue;
+                        const auto inOutVar = toInputOutput(valueRef.toObject());
+                        if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty())
+                            result.outputs.push_back(inOutVar);
+                        else
+                            qWarning("Invalid output variable, skipping");
+                    }
+                } else if (it->type() == QJsonValue::Object) {
+                    const QJsonObject inputJObj = it->toObject();
+                    const auto inOutVar = toInputOutput(inputJObj);
+                    if (!inOutVar.type.isEmpty() && !inOutVar.name.isEmpty()) {
+                        result.outputs.push_back(inOutVar);
+                    } else {
+                        qWarning("Invalid output variable, skipping");
+                    }
+                }
             }
         }
     }
