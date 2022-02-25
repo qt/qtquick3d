@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019-2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -30,39 +30,47 @@
 \title Qt Quick 3D
 \brief Provides API that lets you define 3D items using QML.
 
-Qt Quick 3D provides a high-level API for creating 3D content and 3D user interfaces
-based on \l{Qt Quick}. Rather than using an external engine which creates syncing issues,
-and additional layers of abstraction, we provide extensions to the existing
-\l{Qt Quick Scene Graph} for spatial content, and a renderer for that extended
-scene graph. When using the spatial scene graph it is also possible to mix
-Qt Quick 2D content with 3D content.
+Qt Quick 3D provides a high-level API for creating 3D content and 3D user
+interfaces based on \l{Qt Quick}. Rather than using an external engine, which
+creates syncing issues and additional layers of abstraction, Qt Quick 3D
+provides extensions to the existing \l{Qt Quick Scene Graph} for spatial content
+and a renderer for that extended scene graph. When using the spatial scene
+graph, it's possible to mix Qt Quick 2D content with 3D content.
 
 \image dragon.jpg
 
-\section1 Prerequisites
+\section1 Using the Module
 
-The \l{Qt Quick 3D QML Types}{QML Types} can be imported into your
-application using the following import statement in your \c {.qml} file:
+\section2 QML API
 
-\code
-import QtQuick3D
-\endcode
+\include {module-use.qdocinc} {using the qml api} {QtQuick3D}
 
-In addition to the base Qt Quick 3D Model, additional functionality is
-provided by the following module imports:
+The following module imports provide additional functionality:
 
-\code
+\qml
 import QtQuick3D.Effects
 import QtQuick3D.AssetUtils
 import QtQuick3D.Helpers
 import QtQuick3D.Particles3D
-\endcode
+\endqml
+
+\section2 C++ API
+
+\include {module-use.qdocinc} {using the c++ api}
+
+\section3 Building with CMake
+
+\include {module-use.qdocinc} {building with cmake} {Quick3D}
+
+\section3 Building with qmake
+
+\include {module-use.qdocinc} {building_with_qmake} {quick3d}
 
 \section1 Building From Source
 
 When building from source, ensure that the modules and tools from the
 \e qtdeclarative and \e qtshadertools repositories are built first, as
-it is not possible to use Qt Quick 3D without these. Having \e
+it's not possible to use Qt Quick 3D without these. Having \e
 qtquicktimeline available is strongly recommended as well, since
 keyframe-based animations will not be available otherwise.
 
@@ -72,19 +80,7 @@ In addition, some of the examples rely on \l {Qt Quick Controls}.
 \l{Changes to Qt Quick 3D} lists important changes in the module API
 and functionality that were done for the Qt 6 series of Qt.
 
-\section1 License and Attributions
-
-Qt Quick 3D is available under the commercial license from \l {The Qt Company}.
-In addition, it is available under the
-\l{GNU General Public License, version 3}.
-See \l {Qt Licensing} for further details.
-
-Furthermore Qt Quick 3D potentially contains third party modules
-under the following permissive licenses:
-
-\generatelist{groupsbymodule attributions-qtquick3d}
-
-\section1 Topics
+\section1 Articles and Guides
 
 \list
     \li \l{Qt Quick 3D - Introduction}{Qt Quick 3D Introduction Example}
@@ -105,17 +101,6 @@ under the following permissive licenses:
     \li \l{Custom Material Editor}{Custom Material Editor}
 \endlist
 
-\section1 Reference
-\list
-    \li \l{Qt Quick 3D QML Types}
-    \li \l{Qt Quick 3D C++ Classes}
-    \li \l{Qt Quick 3D Helpers QML Types}
-    \li \l{QtQuick3D.AssetUtils QML Types}
-          {Qt Quick 3D Asset Utility QML Types}
-    \li \l{Qt Quick 3D Effects QML Types}
-    \li \l{Qt Quick 3D Particles3D QML Types}
-\endlist
-
 \section1 Examples
 
 \list
@@ -133,10 +118,32 @@ under the following permissive licenses:
     \li \l{Qt Quick 3D Examples and Tutorials}{All examples}
 \endlist
 
+\section1 Reference
+\list
+    \li \l{Qt Quick 3D QML Types}
+    \li \l{Qt Quick 3D C++ Classes}
+    \li \l{Qt Quick 3D Helpers QML Types}
+    \li \l{QtQuick3D.AssetUtils QML Types}
+          {Qt Quick 3D Asset Utility QML Types}
+    \li \l{Qt Quick 3D Effects QML Types}
+    \li \l{Qt Quick 3D Particles3D QML Types}
+\endlist
+
 \section1 Related Modules
 
 \list
     \li \l{Qt Quick}
 \endlist
 
+\section1 Licenses and Attributions
+
+Qt Quick 3D is available under the commercial license from \l {The Qt Company}.
+In addition, it is available under the
+\l{GNU General Public License, version 3}.
+See \l {Qt Licensing} for further details.
+
+Furthermore, Qt Quick 3D potentially contains third party modules
+under the following permissive licenses:
+
+\generatelist{groupsbymodule attributions-qtquick3d}
 */
