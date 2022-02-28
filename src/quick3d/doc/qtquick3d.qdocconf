@@ -52,10 +52,10 @@ imagedirs   += images
 # Exclude private header files from the documentation build
 excludefiles += "*_p.h"
 
-manifestmeta.highlighted.names = "QtQuick3D/Qt Quick 3D - Morphing Example" \
+manifestmeta.highlighted.names = "QtQuick3D/Qt Quick 3D - Principled Material Example" \
+                                 "QtQuick3D/Qt Quick 3D - Reflection Probes Example" \
                                  "QtQuick3D/Qt Quick 3D - Particles 3D Testbed Example" \
-                                 "QtQuick3D/Qt Quick 3D - Custom Instanced Rendering" \
-                                 "QtQuick3D/Qt Quick 3D - Principled Material Example"
+                                 "QtQuick3D/Qt Quick 3D - Morphing Example"
 
 
 Cpp.ignoretokens += Q_QUICK3D_EXPORT
