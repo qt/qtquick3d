@@ -1,8 +1,11 @@
-# Generated from multiwindow.pro.
-
 #####################################################################
 ## qquick3dmultiwindow Test:
 #####################################################################
+
+file(GLOB_RECURSE test_data_glob
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        data/*)
+list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquick3dmultiwindow
     SOURCES
@@ -14,6 +17,7 @@ qt_internal_add_test(tst_qquick3dmultiwindow
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
+    TESTDATA ${test_data}
 )
 
 #### Keys ignored in scope 1:.:.:multiwindow.pro:<TRUE>:
