@@ -10,12 +10,11 @@ qt_internal_add_test(tst_qquick3dinput
         tst_input.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
+    TESTDATA ${test_data}
 )
 
 ## Scopes:
