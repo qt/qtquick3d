@@ -2,6 +2,11 @@
 ## tst_qquick3dbuffermanager Test:
 #####################################################################
 
+file(GLOB_RECURSE test_data_glob
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        data/*)
+list(APPEND test_data ${test_data_glob})
+
 qt_internal_add_test(tst_qquick3dbuffermanager
     SOURCES
         ../shared/util.cpp ../shared/util.h
@@ -13,6 +18,7 @@ qt_internal_add_test(tst_qquick3dbuffermanager
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
+    TESTDATA ${test_data}
 )
 
 qt_internal_extend_target(tst_qquick3dbuffermanager CONDITION ANDROID OR IOS
