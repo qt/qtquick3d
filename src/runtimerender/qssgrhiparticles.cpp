@@ -83,9 +83,8 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
     shaders->setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
     shaders->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, 1 * sizeof(quint32));
 
-    // Opacity already has diffuse color alpha applied
-    const QVector4D color = QVector4D(renderable.particles.m_diffuseColor.toVector3D(), renderable.opacity);
-    shaders->setUniform(ubufData, "qt_material_base_color", &color, 4 * sizeof(float), &cui.material_baseColorIdx);
+    // Global opacity of the particles node
+    shaders->setUniform(ubufData, "qt_opacity", &renderable.opacity, 1 * sizeof(float));
 
     float blendImages = renderable.particles.m_blendImages ? 1.0f : 0.0f;
     float imageCount = float(renderable.particles.m_spriteImageCount);

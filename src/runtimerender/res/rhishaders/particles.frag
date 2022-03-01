@@ -25,6 +25,7 @@ layout(std140, binding = 0) uniform buf {
     vec2 qt_oneOverParticleImageSize;
     uint qt_countPerSlice;
     float qt_billboard;
+    float qt_opacity;
 #ifdef QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
     bool qt_pointLights;
     bool qt_spotLights;
