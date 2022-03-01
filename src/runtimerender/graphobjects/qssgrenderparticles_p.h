@@ -138,7 +138,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     QVarLengthArray<QSSGRenderLight *, 4> m_lights;
 
     QSSGRenderParticles::BlendMode m_blendMode = BlendMode::SourceOver;
-    QVector4D m_diffuseColor{1.0f, 1.0f, 1.0f, 1.0f};
     QSSGRenderImage *m_sprite = nullptr;
     int m_spriteImageCount = 1;
     float m_depthBias = 0.0f;

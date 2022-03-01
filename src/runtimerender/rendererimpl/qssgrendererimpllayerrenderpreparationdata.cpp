@@ -1126,7 +1126,7 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
     renderableFlags.setHasAttributeColor(true);
     renderableFlags.setHasTransparency(inParticles.m_hasTransparency);
 
-    float opacity = inParticles.globalOpacity * inParticles.m_diffuseColor.w();
+    float opacity = inParticles.globalOpacity;
     QVector3D center(inParticles.m_particleBuffer.bounds().center());
     center = mat44::transform(inParticles.globalTransform, center);
 
