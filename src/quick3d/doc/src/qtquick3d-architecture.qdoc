@@ -80,8 +80,6 @@ library and tool, \l{Balsam Asset Import Tool}{Balsam}.
 \list
     \li Assimp - This plugin uses the 3rd party library libAssimp to convert
     3D assets in 3D interchange formats to Qt Quick 3D QML components.
-    \li UIP - This plugin allows for projects created with Qt 3D Studio to be
-    converted to Qt Quick 3D QML components.
 \endlist
 
 \section1 How does Qt Quick 3D fit into the Qt Graphics Stack

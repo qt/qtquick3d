@@ -10,8 +10,6 @@ include("configure.cmake")
 qt_feature_module_end(NO_MODULE)
 # special case end
 
-add_subdirectory(uip)
-
 if(QT_FEATURE_quick3d_assimp)
     add_subdirectory(assimp)
 endif()

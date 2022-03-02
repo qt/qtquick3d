@@ -96,24 +96,6 @@ associated with \l SceneEnvironment::lightProbe. This avoids the costly runtime
 processing that is necessary for image-based lighting. See \l{Pre-generating IBL
 cubemap} for more details.
 
-\section1 Support for Qt 3D Studio Projects
-
-The Balsam tool also has support for converting projects created with Qt 3D Studio
-into Qt Quick 3D QML projects.
-
-\list
-  \li Qt 3D Studio Application (.uia)
-  \li Qt 3D Studio Presentation (.uip)
-\endlist
-
-The conversion of Qt 3D Studio projects does have some limitations due to
-differences in features available. Features such as Effects and CustomMaterials
-are not available and will not be generated. There is also some differences in
-how Animations are implemented, so there can be differences in behavior on
-conversion. The conversion process will not be 100% and it is expected that some
-adjustments will be necessary, but should ease the porting process for existing
-projects.
-
 \section1 Supported Options
 
 The following table lists the command-line options recognized by \c balsam when
@@ -182,19 +164,6 @@ FBX assets (can create deep node hierarchies)
 \row \li \c {--generateMipMaps} \li Force all imported texture components to
 generate mip maps for mip map texture filtering
 \row \li \c {--useBinaryKeyframes} \li Record keyframe data as binary files
-\endtable
-
-The following table lists the command-line options recognized by \c balsam when
-converting Qt 3D Studio projects:
-
-\table
-\header \li Option \li Description
-\row \li \c {--createProjectWrapper} \li Creates a wrapper Window component for
-the imported UIA project. Only valid for UIA imports.
-\row \li \c {--createIndividualLayers} \li Creates an individual component for
-each layer instead of including layer contents in presentation components.
-\row \li \c {--framesPerSecond <value>} \li Specifies how many animation
-frames are created per second in animations.
 \endtable
 
 */
