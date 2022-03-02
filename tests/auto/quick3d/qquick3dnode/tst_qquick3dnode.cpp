@@ -47,6 +47,7 @@ class tst_QQuick3DNode : public QObject
 
 private slots:
     void testProperties();
+    void testSceneRotation();
     void testEnums();
 };
 
@@ -127,6 +128,24 @@ void tst_QQuick3DNode::testProperties()
     QCOMPARE(spy.count(), 1);
 
     QCOMPARE(originalNode, node);
+}
+
+void tst_QQuick3DNode::testSceneRotation()
+{
+    QQuick3DNode parentNode;
+    QQuick3DNode selfNode(&parentNode);
+
+    const auto rotX45 = QQuaternion::fromAxisAndAngle(QVector3D(1.0f, 0.0f, 0.0f), 45.0f);
+    parentNode.setRotation(rotX45);
+    QVERIFY(qFuzzyCompare(selfNode.sceneRotation(), rotX45));
+
+    const auto rotZ30 = QQuaternion::fromAxisAndAngle(QVector3D(0.0f, 0.0f, 1.0f), 30.0f);
+    selfNode.setRotation(rotZ30);
+    QVERIFY(qFuzzyCompare(selfNode.sceneRotation(), rotX45 * rotZ30));
+
+    // !m_hasInheritedUniformScale path, but the XY plane is scaled uniformly.
+    parentNode.setScale(QVector3D(5.0f, 5.0f, 1.0f));
+    QVERIFY(qFuzzyCompare(selfNode.sceneRotation(), rotX45 * rotZ30));
 }
 
 void tst_QQuick3DNode::testEnums()
