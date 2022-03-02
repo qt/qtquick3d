@@ -87,6 +87,7 @@ private:
     QQuickItem *m_contentItem = nullptr;
     bool m_sceneManagerValid = false;
     bool m_pickingDirty = true;
+    bool m_updatingRendererNode = false;
     QPointer<QQuick3DSceneManager> m_sceneManagerForLayer;
 };
 
