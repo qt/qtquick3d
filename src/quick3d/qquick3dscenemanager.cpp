@@ -118,7 +118,12 @@ void QQuick3DSceneManager::updateDirtyNodes()
 {
     cleanupNodes();
 
-    auto updateNodes = [this](QQuick3DObject *updateList) {
+    auto updateNodes = [this](QQuick3DObject **listHead) {
+        // Detach the current list head first, and consume all reachable entries.
+        // New entries may be added to the new list while traversing, which will be
+        // visited on the next updateDirtyNodes() call.
+        QQuick3DObject *updateList = *listHead;
+        *listHead = nullptr;
         if (updateList)
             QQuick3DObjectPrivate::get(updateList)->prevDirtyItem = &updateList;
 
@@ -131,18 +136,13 @@ void QQuick3DSceneManager::updateDirtyNodes()
         }
     };
 
-    updateNodes(dirtyTextureDataList);
-    updateNodes(dirtyImageList);
-    updateNodes(dirtyResourceList);
-    updateNodes(dirtySpatialNodeList);
+    updateNodes(&dirtyTextureDataList);
+    updateNodes(&dirtyImageList);
+    updateNodes(&dirtyResourceList);
+    updateNodes(&dirtySpatialNodeList);
     // Lights have to be last because of scoped lights
     for (const auto light : dirtyLightList)
         updateDirtyNode(light);
-
-    dirtyTextureDataList = nullptr;
-    dirtyImageList = nullptr;
-    dirtyResourceList = nullptr;
-    dirtySpatialNodeList = nullptr;
     dirtyLightList.clear();
 }
 
