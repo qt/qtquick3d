@@ -153,12 +153,26 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     if (!m_renderer) {
         m_renderer = rc->createRenderer(QSGRendererInterface::RenderMode3D);
         connect(window, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidated()), Qt::DirectConnection);
-        // direct connection when rendering is on the main thread, queued with the threaded render loop
-        connect(m_renderer, &QSGAbstractRenderer::sceneGraphChanged, this, &QQuick3DObject::update);
+        connect(
+                m_renderer,
+                &QSGAbstractRenderer::sceneGraphChanged,
+                this,
+                [this]() {
+                    if (m_updatingRendererNode)
+                        return;
+                    // direct connection when rendering is on the main thread, queued with
+                    // the threaded render loop
+                    QMetaObject::invokeMethod(this, &QQuick3DObject::update);
+                },
+                Qt::DirectConnection);
     }
+    // Do not mark this object dirty on m_renderer->nodeChanged(). Otherwise we would end up
+    // with constantly updating even when the 2D contents do not change.
+    m_updatingRendererNode = true;
     m_renderer->setRootNode(m_rootNode);
     m_rootNode->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
     m_renderer->nodeChanged(m_rootNode, QSGNode::DirtyForceUpdate); // Force render list update.
+    m_updatingRendererNode = false;
 
     if (m_pickingDirty) {
         m_pickingDirty = false;
