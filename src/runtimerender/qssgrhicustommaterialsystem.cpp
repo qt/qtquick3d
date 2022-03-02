@@ -152,12 +152,11 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
         rhi->isClipDepthZeroToOne()
     };
 
-
-    const QMatrix4x4 &localInstanceTransform(renderable.modelContext.model.localInstanceTransform);
-    const QMatrix4x4 &globalInstanceTransform(renderable.modelContext.model.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix(renderable.modelContext.model.skin ? QMatrix4x4()
-                                : !renderable.modelContext.model.skeleton ? renderable.globalTransform
-                                            : renderable.modelContext.model.skeleton->globalTransform);
+    const auto &modelNode = renderable.modelContext.model;
+    const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
+    const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
+    const QMatrix4x4 &modelMatrix(modelNode.boneTransforms.isEmpty() ? renderable.globalTransform
+                                : modelNode.skin ? QMatrix4x4() : modelNode.skeleton->globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,
