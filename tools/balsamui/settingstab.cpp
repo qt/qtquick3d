@@ -41,41 +41,45 @@ SettingsTab::SettingsTab(QWidget *parent) : QScrollArea(parent)
     const auto allDescs = QSSGAssetImportManager().getImporterPluginInfos();
 
     for (const auto &plugin : allDescs) {
-        auto options = plugin.importOptions.value("options").toMap();
-
+        auto options = plugin.importOptions;
         // Skip plugins without options
-        if (options.empty())
+        if (options.isEmpty())
             continue;
+
+        if (auto optionsIt = options.constFind(QLatin1String("options")); optionsIt != options.constEnd())
+            options = optionsIt->toObject();
 
         QGroupBox *pluginGroup = new QGroupBox(plugin.typeDescription + " (" + plugin.name + ")");
         QFormLayout *extensionsLayout = new QFormLayout;
         extensionsLayout->addRow(new QLabel(tr("Supported extensions:")), new QLabel(plugin.inputExtensions.join(", ")));
 
-        for (auto kv_it = options.constKeyValueBegin(); kv_it != options.constKeyValueEnd(); ++kv_it) {
-            auto map = kv_it->second.toMap();
-            auto description = map.value("description");
-            auto name = map.value("name");
-            auto type = map.value("type");
-            auto value = map.value("value");
+        for (auto kv_it = options.constBegin(); kv_it != options.constEnd(); ++kv_it) {
+            if (kv_it->isObject()) {
+                auto map = kv_it->toObject();
+                auto description = map.value("description");
+                auto name = map.value(QLatin1String("name"));
+                auto type = map.value("type");
+                auto value = map.value("value");
 
-            auto label = new QLabel(name.toString() + ":");
-            label->setToolTip(description.toString());
+                auto label = new QLabel(name.toString() + ":");
+                label->setToolTip(description.toString());
 
-            if (type == "Boolean") {
-                QCheckBox *checkBox = new QCheckBox();
-                checkBox->setChecked(value.toBool());
-                extensionsLayout->addRow(label, checkBox);
-                settings.push_back(Setting { checkBox, kv_it->first, value.toBool(), 0.0f });
-            } else if (type == "Real") {
-                QSpinBox *spinBox = new QSpinBox();
-                spinBox->setMinimum(-9999);
-                spinBox->setMaximum(9999);
-                spinBox->setSingleStep(1);
-                spinBox->setValue(value.toReal());
-                extensionsLayout->addRow(label, spinBox);
-                settings.push_back(Setting { spinBox, kv_it->first, false, value.toReal() });
-            } else {
-                qWarning() << "Unsupported setting " << name;
+                if (type == "Boolean") {
+                    QCheckBox *checkBox = new QCheckBox();
+                    checkBox->setChecked(value.toBool());
+                    extensionsLayout->addRow(label, checkBox);
+                    settings.push_back(Setting { checkBox, name.toString(), value.toBool(), 0.0f });
+                } else if (type == "Real") {
+                    QSpinBox *spinBox = new QSpinBox();
+                    spinBox->setMinimum(-9999);
+                    spinBox->setMaximum(9999);
+                    spinBox->setSingleStep(1);
+                    spinBox->setValue(value.toDouble());
+                    extensionsLayout->addRow(label, spinBox);
+                    settings.push_back(Setting { spinBox, name.toString(), false, value.toDouble() });
+                } else {
+                    qWarning() << "Unsupported setting " << name;
+                }
             }
         }
 
@@ -89,18 +93,18 @@ SettingsTab::SettingsTab(QWidget *parent) : QScrollArea(parent)
     setWidgetResizable(true);
 }
 
-QVariantMap SettingsTab::getOptions() const
+QJsonObject SettingsTab::getOptions() const
 {
-    QVariantMap options;
+    QJsonObject options;
 
     for (const Setting &setting : settings) {
         auto checkBox = dynamic_cast<QCheckBox *>(setting.uiELement);
         auto spinBox = dynamic_cast<QSpinBox *>(setting.uiELement);
 
         if (checkBox != nullptr && setting.defaultBool != checkBox->isChecked()) {
-            options[setting.name] = QVariant::fromValue(checkBox->isChecked());
+            options[setting.name] = QJsonValue(checkBox->isChecked());
         } else if (spinBox != nullptr && setting.defaultReal != spinBox->value()) {
-            options[setting.name] = QVariant::fromValue(double(spinBox->value()));
+            options[setting.name] = QJsonValue(double(spinBox->value()));
         }
     }
 

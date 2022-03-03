@@ -53,7 +53,7 @@ class SettingsTab : public QScrollArea
 public:
     explicit SettingsTab(QWidget *parent = nullptr);
 
-    QVariantMap getOptions() const;
+    QJsonObject getOptions() const;
 
 private:
     QList<Setting> settings;

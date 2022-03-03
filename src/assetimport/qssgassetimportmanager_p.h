@@ -47,9 +47,9 @@
 #include <QtCore/QVector>
 #include <QtCore/QMap>
 #include <QtCore/QDir>
-#include <QtCore/QVariant>
 #include <QtCore/QString>
 #include <QtCore/QList>
+#include <QtCore/qjsonobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,7 +63,7 @@ struct QSSGAssetImporterPluginInfo
     QStringList inputExtensions;
     QString outputExtension;
     QString type;
-    QVariantMap importOptions;
+    QJsonObject importOptions;
     QString typeDescription;
 };
 
@@ -81,19 +81,21 @@ public:
         Unsupported
     };
 
+    using PluginOptionMaps = QHash<QString, QJsonObject>;
+
     // ### Temp API
     ImportState importFile(const QString &filename,
                            const QDir &outputPath,
                            QString *error = nullptr);
     ImportState importFile(const QString &filename,
                            const QDir &outputPath,
-                           const QVariantMap &options = QVariantMap(),
+                           const QJsonObject &options = QJsonObject(),
                            QString *error = nullptr);
     ImportState importFile(const QUrl &url,
                            QSSGSceneDesc::Scene &scene,
                            QString *error = nullptr);
-    QVariantMap getOptionsForFile(const QString &filename);
-    QHash<QString, QVariantMap> getAllOptions() const;
+    QJsonObject getOptionsForFile(const QString &filename);
+    PluginOptionMaps getAllOptions() const;
     QHash<QString, QStringList> getSupportedExtensions() const;
     QList<QSSGAssetImporterPluginInfo> getImporterPluginInfos() const;
 

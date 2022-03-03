@@ -47,6 +47,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QDir>
 #include <QtCore/QFile>
+#include <QtCore/qjsonobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,14 +65,14 @@ public:
     virtual QStringList inputExtensions() const = 0;
     virtual QString outputExtension() const = 0;
     virtual QString type() const = 0;
-    virtual QVariantMap importOptions() const = 0;
+    virtual QJsonObject importOptions() const = 0;
     virtual QString typeDescription() const = 0;
     virtual QString import(const QString &sourceFile,
                            const QDir &savePath,
-                           const QVariantMap &options,
+                           const QJsonObject &options,
                            QStringList *generatedFiles = nullptr) = 0;
     virtual QString import(const QUrl &url,
-                           const QVariantMap &options,
+                           const QJsonObject &options,
                            QSSGSceneDesc::Scene &scene) = 0;
 };
 

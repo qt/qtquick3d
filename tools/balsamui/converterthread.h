@@ -35,8 +35,7 @@
 #include <QWaitCondition>
 #include <QDir>
 #include <QStringList>
-#include <QVariant>
-#include <QMap>
+#include <QtCore/qjsonobject.h>
 
 class ConverterThread : public QThread
 {
@@ -46,7 +45,7 @@ public:
     ConverterThread(QObject *parent = nullptr);
     ~ConverterThread();
 
-    void convert(QStringList filenames, QDir outputPath, QVariantMap options);
+    void convert(QStringList filenames, QDir outputPath, QJsonObject options);
 
 protected:
     void run() override;
@@ -64,7 +63,7 @@ private:
 
     QStringList m_filenames;
     QDir m_outputPath;
-    QVariantMap m_options;
+    QJsonObject m_options;
 };
 
 #endif

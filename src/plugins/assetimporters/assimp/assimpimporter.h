@@ -42,6 +42,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QVariant>
 #include <QtCore/QCborStreamWriter>
+#include <QtCore/qjsonobject.h>
 
 #include "assimputils.h"
 
@@ -85,10 +86,10 @@ public:
     QString outputExtension() const override;
     QString type() const override;
     QString typeDescription() const override;
-    QVariantMap importOptions() const override;
-    QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options,
-                         QStringList *generatedFiles) override;
-    QString import(const QUrl &sourceFile, const QVariantMap &options, QSSGSceneDesc::Scene &scene) override;
+    QJsonObject importOptions() const override;
+    QString import(const QString &sourceFile, const QDir &savePath, const QJsonObject &options,
+                   QStringList *generatedFiles) override;
+    QString import(const QUrl &sourceFile, const QJsonObject &options, QSSGSceneDesc::Scene &scene) override;
 
 private:
     void writeHeader(QTextStream &output);
@@ -120,7 +121,7 @@ private:
     bool isCamera(aiNode *node);
     bool isBone(aiNode *node);
     QString generateUniqueId(const QString &id);
-    void processOptions(const QVariantMap &options);
+    void processOptions(QJsonObject options);
     bool checkBooleanOption(const QString &optionName, const QJsonObject &options);
     qreal getRealOption(const QString &optionName, const QJsonObject &options);
 
@@ -153,7 +154,7 @@ private:
     bool m_generateLightmapUV = false;
     qreal m_globalScaleValue = 1.0;
 
-    QVariantMap m_options;
+    QJsonObject m_options;
     aiPostProcessSteps m_postProcessSteps;
 
 };

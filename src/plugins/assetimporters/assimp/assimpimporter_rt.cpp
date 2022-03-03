@@ -1487,7 +1487,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 
 ////////////////////////
 
-QString AssimpImporter::import(const QUrl &url, const QVariantMap &, QSSGSceneDesc::Scene &scene)
+QString AssimpImporter::import(const QUrl &url, const QJsonObject &, QSSGSceneDesc::Scene &scene)
 {
     // We'll simply use assimp to load the scene and then translate the Aassimp scene
     // into our own format.

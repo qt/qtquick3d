@@ -123,7 +123,7 @@ AssimpImporter::AssimpImporter()
     QByteArray options = optionFile.readAll();
     optionFile.close();
     auto optionsDocument = QJsonDocument::fromJson(options);
-    m_options = optionsDocument.object().toVariantMap();
+    m_options = optionsDocument.object();
     m_postProcessSteps = aiPostProcessSteps(demonPostProcessPresets);
 
     m_importer = new Assimp::Importer();
@@ -170,7 +170,7 @@ QString AssimpImporter::typeDescription() const
     return QObject::tr("3D Scene");
 }
 
-QVariantMap AssimpImporter::importOptions() const
+QJsonObject AssimpImporter::importOptions() const
 {
     return m_options;
 }
@@ -190,10 +190,8 @@ bool fuzzyCompare(const aiQuaternion &q1, const aiQuaternion &q2)
 }
 }
 
-QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
+QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QJsonObject &options, QStringList *generatedFiles)
 {
-    Q_UNUSED(options);
-
     QString errorString;
     m_savePath = savePath;
     m_sourceFile = QFileInfo(sourceFile);
@@ -2016,97 +2014,96 @@ QString AssimpImporter::generateUniqueId(const QString &id)
     return uniqueID;
 }
 
-void AssimpImporter::processOptions(const QVariantMap &options)
+void AssimpImporter::processOptions(QJsonObject options)
 {
     // Setup import settings based given options
     // You can either pass the whole options object, or just the "options" object
     // so get the right scope.
-    QJsonObject optionsObject = QJsonObject::fromVariantMap(options);
-    if (optionsObject.contains(QStringLiteral("options")))
-        optionsObject = optionsObject.value(QStringLiteral("options")).toObject();
+    if (auto it = options.constFind("options"), end = options.constEnd(); it != end)
+        options = it->toObject();
 
-    if (optionsObject.isEmpty())
+    if (options.isEmpty())
         return;
 
     // parse the options list for values
     // We always need to triangulate and remove non triangles
     m_postProcessSteps = aiPostProcessSteps(aiProcess_Triangulate | aiProcess_SortByPType);
 
-    if (checkBooleanOption(QStringLiteral("calculateTangentSpace"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("calculateTangentSpace"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_CalcTangentSpace);
 
-    if (checkBooleanOption(QStringLiteral("joinIdenticalVertices"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("joinIdenticalVertices"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_JoinIdenticalVertices);
 
-    if (checkBooleanOption(QStringLiteral("generateNormals"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("generateNormals"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GenNormals);
 
-    if (checkBooleanOption(QStringLiteral("generateSmoothNormals"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("generateSmoothNormals"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_GenSmoothNormals);
 
-    if (checkBooleanOption(QStringLiteral("splitLargeMeshes"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("splitLargeMeshes"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_SplitLargeMeshes);
 
-    if (checkBooleanOption(QStringLiteral("preTransformVertices"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("preTransformVertices"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_PreTransformVertices);
 
-    if (checkBooleanOption(QStringLiteral("improveCacheLocality"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("improveCacheLocality"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_ImproveCacheLocality);
 
-    if (checkBooleanOption(QStringLiteral("removeRedundantMaterials"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeRedundantMaterials"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_RemoveRedundantMaterials);
 
-    if (checkBooleanOption(QStringLiteral("fixInfacingNormals"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("fixInfacingNormals"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FixInfacingNormals);
 
-    if (checkBooleanOption(QStringLiteral("findDegenerates"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("findDegenerates"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindDegenerates);
 
-    if (checkBooleanOption(QStringLiteral("findInvalidData"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("findInvalidData"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindInvalidData);
 
-    if (checkBooleanOption(QStringLiteral("transformUVCoordinates"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("transformUVCoordinates"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_TransformUVCoords);
 
-    if (checkBooleanOption(QStringLiteral("findInstances"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("findInstances"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_FindInstances);
 
-    if (checkBooleanOption(QStringLiteral("optimizeMeshes"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("optimizeMeshes"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeMeshes);
 
-    if (checkBooleanOption(QStringLiteral("optimizeGraph"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("optimizeGraph"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_OptimizeGraph);
 
-    if (checkBooleanOption(QStringLiteral("globalScale"), optionsObject)) {
-        m_globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), optionsObject);
+    if (checkBooleanOption(QStringLiteral("globalScale"), options)) {
+        m_globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), options);
         if (m_globalScaleValue == 0.0)
             m_globalScaleValue = 1.0;
     }
 
-    if (checkBooleanOption(QStringLiteral("dropNormals"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("dropNormals"), options))
         m_postProcessSteps = aiPostProcessSteps(m_postProcessSteps | aiProcess_DropNormals);
 
     aiComponent removeComponents = aiComponent(0);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentNormals"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentNormals"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_NORMALS);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentTangentsAndBitangents"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentTangentsAndBitangents"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_TANGENTS_AND_BITANGENTS);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentColors"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentColors"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_COLORS);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentUVs"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentUVs"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_TEXCOORDS);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentBoneWeights"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentBoneWeights"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_BONEWEIGHTS);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentAnimations"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentAnimations"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_ANIMATIONS);
 
-    if (checkBooleanOption(QStringLiteral("removeComponentTextures"), optionsObject))
+    if (checkBooleanOption(QStringLiteral("removeComponentTextures"), options))
         removeComponents = aiComponent(removeComponents | aiComponent_TEXTURES);
 
     if (removeComponents != aiComponent(0)) {
@@ -2114,32 +2111,28 @@ void AssimpImporter::processOptions(const QVariantMap &options)
         m_importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeComponents);
     }
 
-    bool preservePivots = checkBooleanOption(QStringLiteral("fbxPreservePivots"), optionsObject);
+    bool preservePivots = checkBooleanOption(QStringLiteral("fbxPreservePivots"), options);
     m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, preservePivots);
 
-    m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), optionsObject);
-    m_forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), optionsObject);
-    m_binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), optionsObject);
+    m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), options);
+    m_forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), options);
+    m_binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), options);
 
-    m_generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), optionsObject);
+    m_generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), options);
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)
 {
-    if (!options.contains(optionName))
-        return false;
-
-    QJsonObject option = options.value(optionName).toObject();
-    return option.value(QStringLiteral("value")).toBool();
+    const auto it = options.constFind(optionName);
+    const auto end = options.constEnd();
+    return (it != end) ? it->toObject().value("value").toBool() : false;
 }
 
 qreal AssimpImporter::getRealOption(const QString &optionName, const QJsonObject &options)
 {
-    if (!options.contains(optionName))
-        return false;
-
-    QJsonObject option = options.value(optionName).toObject();
-    return option.value(QStringLiteral("value")).toDouble();
+    const auto it = options.constFind(optionName);
+    const auto end = options.constEnd();
+    return (it != end) ? it->toObject().value("value").toDouble() : 0.0;
 }
 
 QT_END_NAMESPACE

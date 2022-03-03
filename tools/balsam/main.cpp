@@ -50,9 +50,8 @@ public:
         qDeleteAll(m_optionsMap);
         m_optionsMap.clear();
     }
-    void generateCommandLineOptions(const QVariantMap &optionsMap)
+    void generateCommandLineOptions(const QJsonObject &options)
     {
-        QJsonObject options = QJsonObject::fromVariantMap(optionsMap);
         if (options.isEmpty() || !options.contains(QStringLiteral("options")))
             return;
 
@@ -77,11 +76,10 @@ public:
         }
     }
 
-    QVariantMap processCommandLineOptions(const QCommandLineParser &cmdLineParser, const QVariantMap &optionsMap) const
+    QJsonObject processCommandLineOptions(const QCommandLineParser &cmdLineParser, const QJsonObject &options) const
     {
-        QJsonObject options = QJsonObject::fromVariantMap(optionsMap);
         if (options.isEmpty() || !options.contains(QStringLiteral("options")))
-            return optionsMap;
+            return options;
 
         QJsonObject optionsObject = options.value(QStringLiteral("options")).toObject();
         for (const QString &optionsKey : optionsObject.keys()) {
@@ -103,7 +101,7 @@ public:
 
         removeFlagConflicts(cmdLineParser, optionsObject);
         options["options"] = optionsObject;
-        return optionsObject.toVariantMap();
+        return optionsObject;
     }
     void registerOptions(QCommandLineParser &parser) {
         for (const auto &cmdLineOption : qAsConst(m_optionsMap))
@@ -250,7 +248,7 @@ int main(int argc, char *argv[])
         QString errorString;
         QSSGAssetImportManager::ImportState result = QSSGAssetImportManager::ImportState::Unsupported;
         if (canUsePlugins) {
-            QVariantMap options = assetImporter->getOptionsForFile(assetFileName);
+            QJsonObject options = assetImporter->getOptionsForFile(assetFileName);
             options = optionsManager.processCommandLineOptions(cmdLineParser, options);
             // first try the plugin-based asset importer system
             result = assetImporter->importFile(assetFileName, outputDirectory, options, &errorString);

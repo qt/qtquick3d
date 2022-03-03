@@ -71,12 +71,12 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QSt
                                                                        const QDir &outputPath,
                                                                        QString *error)
 {
-    return importFile(filename, outputPath, QVariantMap(), error);
+    return importFile(filename, outputPath, QJsonObject(), error);
 }
 
 QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QString &filename,
                                                                        const QDir &outputPath,
-                                                                       const QVariantMap &options,
+                                                                       const QJsonObject &options,
                                                                        QString *error)
 {
     QFileInfo fileInfo(filename);
@@ -128,7 +128,7 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QUr
 
     if (it != end) {
         const auto &importer = *it;
-        const auto ret = importer->import(url, QVariantMap(), scene);
+        const auto ret = importer->import(url, QJsonObject(), scene);
         if (!ret.isEmpty()) {
             if (error)
                 *error = ret;
@@ -139,11 +139,11 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QUr
     return ImportState::Success;
 }
 
-QVariantMap QSSGAssetImportManager::getOptionsForFile(const QString &filename)
+QJsonObject QSSGAssetImportManager::getOptionsForFile(const QString &filename)
 {
     QFileInfo fileInfo(filename);
 
-    QVariantMap options;
+    QJsonObject options;
 
     // Is this a real file?
     if (fileInfo.exists()) {
@@ -157,9 +157,9 @@ QVariantMap QSSGAssetImportManager::getOptionsForFile(const QString &filename)
     return options;
 }
 
-QHash<QString, QVariantMap> QSSGAssetImportManager::getAllOptions() const
+QSSGAssetImportManager::PluginOptionMaps QSSGAssetImportManager::getAllOptions() const
 {
-    QHash<QString, QVariantMap> options;
+    PluginOptionMaps options;
     for (const auto importer : m_assetImporters)
         options.insert(importer->inputExtensions().join(QChar::fromLatin1(':')), importer->importOptions());
     return options;

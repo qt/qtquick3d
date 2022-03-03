@@ -45,7 +45,7 @@ ConverterThread::~ConverterThread()
     wait();
 }
 
-void ConverterThread::convert(QStringList filenames, QDir outputPath, QVariantMap options)
+void ConverterThread::convert(QStringList filenames, QDir outputPath, QJsonObject options)
 {
     QMutexLocker locker(&mutex);
 
