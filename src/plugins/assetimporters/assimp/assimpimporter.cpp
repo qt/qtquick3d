@@ -138,12 +138,12 @@ AssimpImporter::~AssimpImporter()
     delete m_importer;
 }
 
-const QString AssimpImporter::name() const
+QString AssimpImporter::name() const
 {
     return QStringLiteral("assimp");
 }
 
-const QStringList AssimpImporter::inputExtensions() const
+QStringList AssimpImporter::inputExtensions() const
 {
     QStringList extensions;
     extensions.append(QStringLiteral("fbx"));
@@ -155,22 +155,22 @@ const QStringList AssimpImporter::inputExtensions() const
     return extensions;
 }
 
-const QString AssimpImporter::outputExtension() const
+QString AssimpImporter::outputExtension() const
 {
     return QStringLiteral(".qml");
 }
 
-const QString AssimpImporter::type() const
+QString AssimpImporter::type() const
 {
     return QStringLiteral("Scene");
 }
 
-const QString AssimpImporter::typeDescription() const
+QString AssimpImporter::typeDescription() const
 {
     return QObject::tr("3D Scene");
 }
 
-const QVariantMap AssimpImporter::importOptions() const
+QVariantMap AssimpImporter::importOptions() const
 {
     return m_options;
 }
@@ -190,7 +190,7 @@ bool fuzzyCompare(const aiQuaternion &q1, const aiQuaternion &q2)
 }
 }
 
-const QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
+QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options, QStringList *generatedFiles)
 {
     Q_UNUSED(options);
 

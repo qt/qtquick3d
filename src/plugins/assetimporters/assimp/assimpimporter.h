@@ -80,13 +80,13 @@ public:
     AssimpImporter();
     ~AssimpImporter() override;
 
-    const QString name() const override;
-    const QStringList inputExtensions() const override;
-    const QString outputExtension() const override;
-    const QString type() const override;
-    const QString typeDescription() const override;
-    const QVariantMap importOptions() const override;
-    const QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options,
+    QString name() const override;
+    QStringList inputExtensions() const override;
+    QString outputExtension() const override;
+    QString type() const override;
+    QString typeDescription() const override;
+    QVariantMap importOptions() const override;
+    QString import(const QString &sourceFile, const QDir &savePath, const QVariantMap &options,
                          QStringList *generatedFiles) override;
     QString import(const QUrl &sourceFile, const QVariantMap &options, QSSGSceneDesc::Scene &scene) override;
 

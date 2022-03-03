@@ -60,16 +60,16 @@ class Q_QUICK3DASSETIMPORT_EXPORT QSSGAssetImporter : public QObject
 {
     Q_OBJECT
 public:
-    virtual const QString name() const = 0;
-    virtual const QStringList inputExtensions() const = 0;
-    virtual const QString outputExtension() const = 0;
-    virtual const QString type() const = 0;
-    virtual const QVariantMap importOptions() const = 0;
-    virtual const QString typeDescription() const = 0;
-    virtual const QString import(const QString &sourceFile,
-                                 const QDir &savePath,
-                                 const QVariantMap &options,
-                                 QStringList *generatedFiles = nullptr) = 0;
+    virtual QString name() const = 0;
+    virtual QStringList inputExtensions() const = 0;
+    virtual QString outputExtension() const = 0;
+    virtual QString type() const = 0;
+    virtual QVariantMap importOptions() const = 0;
+    virtual QString typeDescription() const = 0;
+    virtual QString import(const QString &sourceFile,
+                           const QDir &savePath,
+                           const QVariantMap &options,
+                           QStringList *generatedFiles = nullptr) = 0;
     virtual QString import(const QUrl &url,
                            const QVariantMap &options,
                            QSSGSceneDesc::Scene &scene) = 0;
