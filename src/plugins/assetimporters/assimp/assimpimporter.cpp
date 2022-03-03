@@ -212,24 +212,7 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
 
     // There is special handling needed for GLTF assets
     const auto extension = m_sourceFile.suffix().toLower();
-    if (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb")) {
-        // assimp bug #3009
-        // Currently meshOffsets are not cleared for GLTF files
-        // If a GLTF file is imported, we just reset the importer before reading a new gltf file
-        if (m_gltfUsed) { // it means that one of previous imported files is gltf format
-            delete m_importer;
-            m_scene = nullptr;
-            m_importer = new Assimp::Importer();
-            // Remove primatives that are not Triangles
-            m_importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-            m_gltfUsed = false;
-        } else {
-            m_gltfUsed = true;
-        }
-        m_gltfMode = true;
-    } else {
-        m_gltfMode = false;
-    }
+    m_gltfMode = (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb"));
 
     processOptions(options);
 
@@ -1554,7 +1537,7 @@ QString AssimpImporter::generateImage(aiMaterial *material, aiTextureType textur
         float rotationUV = qRadiansToDegrees(rotation);
         float posU = transforms.mTranslation.x;
         float posV = transforms.mTranslation.y;
-        if (m_gltfUsed) {
+        if (m_gltfMode) {
             float rcos = std::cos(rotation);
             float rsin = std::sin(rotation);
             posU -= 0.5 * transforms.mScaling.x * (-rcos + rsin + 1);

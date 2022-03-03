@@ -147,7 +147,6 @@ private:
     QMap<int, QString> m_embeddedTextureSources; // id -> destination path
 
     bool m_gltfMode = false;
-    bool m_gltfUsed = false;
     bool m_binaryKeyframes = false;
     bool m_forceMipMapGeneration = false;
     bool m_useFloatJointIndices = false;
