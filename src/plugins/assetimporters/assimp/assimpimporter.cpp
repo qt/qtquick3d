@@ -201,6 +201,15 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
     // Create savePath if it doesn't exist already
     m_savePath.mkdir(".");
 
+    // Release old data
+    qDeleteAll(m_animations);
+    m_animations.clear();
+    m_cameras.clear();
+    m_lights.clear();
+    m_uniqueIds.clear();
+    m_nodeIdMap.clear();
+    m_nodeTypeMap.clear();
+
     // There is special handling needed for GLTF assets
     const auto extension = m_sourceFile.suffix().toLower();
     if (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb")) {
@@ -208,14 +217,6 @@ const QString AssimpImporter::import(const QString &sourceFile, const QDir &save
         // Currently meshOffsets are not cleared for GLTF files
         // If a GLTF file is imported, we just reset the importer before reading a new gltf file
         if (m_gltfUsed) { // it means that one of previous imported files is gltf format
-            for (auto *animation : m_animations)
-                delete animation;
-            m_animations.clear();
-            m_cameras.clear();
-            m_lights.clear();
-            m_uniqueIds.clear();
-            m_nodeIdMap.clear();
-            m_nodeTypeMap.clear();
             delete m_importer;
             m_scene = nullptr;
             m_importer = new Assimp::Importer();
