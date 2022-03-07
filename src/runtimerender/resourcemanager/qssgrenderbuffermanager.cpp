@@ -88,7 +88,7 @@ static MeshIdxNamePair splitRuntimeMeshPath(const QSSGRenderPath &rpath)
 namespace {
 struct PrimitiveEntry
 {
-    // Name of the primitive as it will be in the UIP file
+    // Name of the primitive as it will be in e.g., the QML file
     const char *primitive;
     // Name of the primitive file on the filesystem
     const char *file;
