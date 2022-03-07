@@ -3,7 +3,7 @@
 ** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of Qt 3D Studio.
+** This file is part of Qt Quick 3D.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
