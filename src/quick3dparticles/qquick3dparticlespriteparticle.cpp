@@ -561,6 +561,13 @@ void QQuick3DParticleSpriteParticle::setParticleData(int particleIndex,
     dst = {position, rotation, color, size, age, animationFrame, dst.emitterIndex};
 }
 
+void QQuick3DParticleSpriteParticle::resetParticleData(int particleIndex)
+{
+    auto &dst = m_spriteParticleData[particleIndex];
+    if (dst.size > 0.0f)
+        dst = {{}, {}, {}, 0.0f, 0.0f, -1.0f, dst.emitterIndex};
+}
+
 void QQuick3DParticleSpriteParticle::updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *spatialNode)
 {
     const auto &particles = m_spriteParticleData;

@@ -773,9 +773,7 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
                     trailEmit.emitter->emitTrailParticles(particleData.position, 0, QQuick3DParticleDynamicBurst::TriggerEnd);
             }
             // Particle not alive currently
-            spriteParticle->setParticleData(i, {}, {},
-                                            {}, 0.0f, 0.0f,
-                                            0.0f);
+            spriteParticle->resetParticleData(i);
             continue;
         }
         const float particleTimeS = timeS - d->startTime;

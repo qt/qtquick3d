@@ -118,6 +118,7 @@ protected:
                          const QVector4D &color,
                          float size, float age,
                          float animationFrame);
+    void resetParticleData(int particleIndex);
     void commitParticles();
     void setDepthBias(float bias) override
     {
