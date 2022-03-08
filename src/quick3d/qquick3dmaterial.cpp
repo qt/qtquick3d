@@ -52,6 +52,10 @@ QT_BEGIN_NAMESPACE
     \note Setting a light probe on the material will override the
     \l {SceneEnvironment::lightProbe} {scene's light probe} for models using this material.
 
+    \note This property is ignored when Reflection Probe is used to show
+    reflections on the Model using this material because Reflection Probe uses
+    the \l {SceneEnvironment::lightProbe} {scene's light probe}.
+
     \sa SceneEnvironment::lightProbe
 */
 
