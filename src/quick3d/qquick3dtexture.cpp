@@ -57,6 +57,10 @@ QT_BEGIN_NAMESPACE
     additional detail which cannot be efficiently modelled in 3D. It can also be
     used to emulate other lighting effects, such as reflections.
 
+    While Texture itself always represents a 2D texture, other kinds of
+    textures are available as well via subclasses of Texture. For example, to
+    create a cube map texture with 6 faces, use the \l CubeMapTexture type.
+
     When the geometry is being rendered, each location on its surface will be
     transformed to a corresponding location in the texture by transforming and
     interpolating the UV coordinates (texture coordinate) that have been set for
@@ -1021,6 +1025,9 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
     if (!node) {
         markAllDirty();
         node = new QSSGRenderImage();
+        auto imageNode = static_cast<QSSGRenderImage *>(node);
+        if (isCubeMap())
+            imageNode->m_flags.setFlag(QSSGRenderImage::Flag::CubeMap);
     }
 
     auto imageNode = static_cast<QSSGRenderImage *>(node);
@@ -1386,6 +1393,11 @@ void QQuick3DTexture::markAllDirty()
 {
     m_dirtyFlags = DirtyFlags(0xFFFF);
     QQuick3DObject::markAllDirty();
+}
+
+bool QQuick3DTexture::isCubeMap() const
+{
+    return m_type == Type::CubeMap;
 }
 
 QT_END_NAMESPACE

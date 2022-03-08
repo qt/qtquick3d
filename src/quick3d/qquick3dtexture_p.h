@@ -132,6 +132,8 @@ public:
 
     QSSGRenderImage *getRenderImage();
 
+    bool isCubeMap() const;
+
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setSourceItem(QQuickItem *sourceItem);
@@ -184,6 +186,13 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &geometry) override;
+
+    enum class Type {
+        TwoDimensional,
+        CubeMap
+    };
+
+    Type m_type = Type::TwoDimensional;
 
 private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);

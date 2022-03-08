@@ -157,6 +157,15 @@ static QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray
     return transform;
 }
 
+static void sanityCheckImageForSampler(const QSSGRenderableImage &image, const char *samplerName)
+{
+    if (image.m_imageNode.m_flags.testFlag(QSSGRenderImage::Flag::CubeMap)) {
+        qWarning("Sampler %s expects a 2D texture but the associated texture is a cube map. "
+                 "This will lead to problems.",
+                 samplerName);
+    }
+}
+
 static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
                                        QSSGStageGeneratorBase &fragmentShader,
                                        const QSSGShaderDefaultMaterialKey &key,
@@ -166,6 +175,7 @@ static void generateImageUVCoordinates(QSSGMaterialVertexPipeline &vertexShader,
 {
     const auto &names = imageStringTable[int(image.m_mapType)];
     char textureCoordName[TEXCOORD_VAR_LEN];
+    sanityCheckImageForSampler(image, names.imageSampler);
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     if (!forceFragmentShader) {
         vertexShader.addUniform(names.imageOffsets, "vec3");
@@ -211,6 +221,7 @@ static void generateImageUVSampler(QSSGMaterialVertexPipeline &vertexGenerator,
                                    quint8 uvSet = 0)
 {
     const auto &names = imageStringTable[int(image.m_mapType)];
+    sanityCheckImageForSampler(image, names.imageSampler);
     fragmentShader.addUniform(names.imageSampler, "sampler2D");
     // NOTE: Actually update the uniform name here
     textureCoordVariableName(outString, uvSet);

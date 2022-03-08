@@ -62,7 +62,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     enum class Flag
     {
         Dirty = 1 << 0,
-        TransformDirty = 1 << 1
+        TransformDirty = 1 << 1,
+        CubeMap = 1 << 2
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

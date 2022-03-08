@@ -122,17 +122,17 @@ QT_BEGIN_NAMESPACE
     \li QMatrix4x4, \l{QtQml::Qt::matrix4x4()}{matrix4x4} -> mat4
     \li QQuaternion, \l{QtQml::Qt::quaternion()}{quaternion} -> vec4, scalar value is \c w
 
-    \li TextureInput -> sampler2D - Textures referencing
-    \l{Texture::source}{image files} and \l{Texture::sourceItem}{Qt Quick item
-    layers} are both supported. Setting the \l{TextureInput::enabled}{enabled}
-    property to false leads to exposing a dummy texture to the shader, meaning
-    the shaders are still functional but will sample a texture with opaque
-    black image content. Pay attention to the fact that properties for samplers
-    must always reference a \l TextureInput object, not a \l Texture directly.
-    When it comes to the \l Texture properties, the source, tiling, and
-    filtering related ones are the only ones that are taken into account
-    implicitly with effects, as the rest (such as, UV transformations)
-    is up to the custom shaders to implement as they see fit.
+    \li TextureInput -> sampler2D or samplerCube, depending on whether \l
+    Texture or \l CubeMapTexture is used in the texture property of the
+    TextureInput. Setting the \l{TextureInput::enabled}{enabled} property to
+    false leads to exposing a dummy texture to the shader, meaning the shaders
+    are still functional but will sample a texture with opaque black image
+    content. Pay attention to the fact that properties for samplers must always
+    reference a \l TextureInput object, not a \l Texture directly. When it
+    comes to the \l Texture properties, the source, tiling, and filtering
+    related ones are the only ones that are taken into account implicitly with
+    effects, as the rest (such as, UV transformations) is up to the custom
+    shaders to implement as they see fit.
 
     \endlist
 
@@ -674,7 +674,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                                                                                    : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
                                                                                                                                               : QSSGRenderTextureCoordOp::MirroredRepeat);
 
-            uniforms.append({ QByteArrayLiteral("sampler2D"), name });
+            if (tex->isCubeMap())
+                uniforms.append({ QByteArrayLiteral("samplerCube"), name });
+            else
+                uniforms.append({ QByteArrayLiteral("sampler2D"), name });
+
             effectNode->textureProperties.push_back(texProp);
         };
 

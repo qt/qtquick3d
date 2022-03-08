@@ -83,6 +83,7 @@ public:
     struct ImageCacheKey {
         QSSGRenderPath path;
         int mipMode;
+        bool cubemap;
     };
 
     struct ImageData {
@@ -168,10 +169,15 @@ private:
     QRhiResourceUpdateBatch *meshBufferUpdateBatch();
 
     static QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath);
+    enum CreateRhiTextureFlag {
+        ScanForTransparency = 0x01,
+        CubeMap = 0x02
+    };
+    Q_DECLARE_FLAGS(CreateRhiTextureFlags, CreateRhiTextureFlag)
     bool createRhiTexture(QSSGRenderImageTexture &texture,
                           const QSSGLoadedTexture *inTexture,
-                          bool inForceScanForTransparency = false,
-                          MipMode inMipMode = MipModeNone);
+                          MipMode inMipMode = MipModeNone,
+                          CreateRhiTextureFlags inFlags = {});
     QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
     QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry);
     static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
@@ -206,12 +212,12 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
 
 inline size_t qHash(const QSSGBufferManager::ImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
 {
-    return qHash(k.path, seed) ^ k.mipMode;
+    return qHash(k.path, seed) ^ k.mipMode ^ int(k.cubemap);
 }
 
 inline bool operator==(const QSSGBufferManager::ImageCacheKey &a, const QSSGBufferManager::ImageCacheKey &b) Q_DECL_NOTHROW
 {
-    return a.path == b.path && a.mipMode == b.mipMode;
+    return a.path == b.path && a.mipMode == b.mipMode && a.cubemap == b.cubemap;
 }
 
 QT_END_NAMESPACE
