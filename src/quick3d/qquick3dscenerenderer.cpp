@@ -376,7 +376,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                 renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
 
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
                 QSSGRhiShaderResourceBindingList bindings;
                 bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
                 bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler);
@@ -434,7 +434,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiSupersampleResolveShader();
 
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });
+                                                     QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
             QSSGRhiShaderResourceBindingList bindings;
             bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler);
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);

@@ -254,7 +254,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     rub->uploadTexture(sourceTexture, desc);
 
     const QSSGRhiSamplerDescription samplerDesc {
-        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
+        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat
     };
     QRhiSampler *sampler = rhiContext->sampler(samplerDesc);
 
@@ -412,7 +412,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
     // Create a new Sampler
     const QSSGRhiSamplerDescription samplerMipMapDesc {
-        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
+        QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat
     };
 
     QRhiSampler *envMapCubeSampler = nullptr;

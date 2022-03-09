@@ -530,10 +530,11 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
 
     const QSSGRhiSamplerDescription samplerDesc {
         QRhiSampler::Linear,
-                QRhiSampler::Linear,
-                QRhiSampler::None,
-                QRhiSampler::ClampToEdge,
-                QRhiSampler::ClampToEdge
+        QRhiSampler::Linear,
+        QRhiSampler::None,
+        QRhiSampler::ClampToEdge,
+        QRhiSampler::ClampToEdge,
+        QRhiSampler::Repeat
     };
     QRhiSampler *sampler = context->sampler(samplerDesc);
 
@@ -703,10 +704,11 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     // Create a new Sampler
     const QSSGRhiSamplerDescription samplerMipMapDesc {
         QRhiSampler::Linear,
-                QRhiSampler::Linear,
-                QRhiSampler::Linear,
-                QRhiSampler::ClampToEdge,
-                QRhiSampler::ClampToEdge
+        QRhiSampler::Linear,
+        QRhiSampler::Linear,
+        QRhiSampler::ClampToEdge,
+        QRhiSampler::ClampToEdge,
+        QRhiSampler::Repeat
     };
 
     QRhiSampler *envMapCubeSampler = nullptr;

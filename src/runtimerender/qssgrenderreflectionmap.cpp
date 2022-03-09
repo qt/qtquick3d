@@ -174,18 +174,20 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
 
             const QSSGRhiSamplerDescription samplerMipMapDesc {
                 QRhiSampler::Linear,
-                        QRhiSampler::Linear,
-                        QRhiSampler::Linear,
-                        QRhiSampler::ClampToEdge,
-                        QRhiSampler::ClampToEdge
+                QRhiSampler::Linear,
+                QRhiSampler::Linear,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::Repeat
             };
 
             const QSSGRhiSamplerDescription samplerDesc {
                 QRhiSampler::Linear,
-                        QRhiSampler::Linear,
-                        QRhiSampler::None,
-                        QRhiSampler::ClampToEdge,
-                        QRhiSampler::ClampToEdge
+                QRhiSampler::Linear,
+                QRhiSampler::None,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::ClampToEdge,
+                QRhiSampler::Repeat
             };
 
             QRhiSampler *sampler = m_context.rhiContext()->sampler(samplerDesc);

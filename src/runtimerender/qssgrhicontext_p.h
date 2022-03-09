@@ -163,11 +163,12 @@ struct QSSGRhiSamplerDescription
     QRhiSampler::Filter mipmap;
     QRhiSampler::AddressMode hTiling;
     QRhiSampler::AddressMode vTiling;
+    QRhiSampler::AddressMode zTiling;
 };
 
 inline bool operator==(const QSSGRhiSamplerDescription &a, const QSSGRhiSamplerDescription &b) Q_DECL_NOTHROW
 {
-   return a.hTiling == b.hTiling && a.vTiling == b.vTiling
+   return a.hTiling == b.hTiling && a.vTiling == b.vTiling && a.zTiling == b.zTiling
            && a.minFilter == b.minFilter && a.magFilter == b.magFilter
            && a.mipmap == b.mipmap;
 }

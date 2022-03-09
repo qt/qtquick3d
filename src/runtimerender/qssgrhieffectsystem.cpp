@@ -316,7 +316,7 @@ void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSS
     QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false);
     auto filter = toRhi(inCmd->m_filterOp);
     auto tiling = toRhi(inCmd->m_texCoordOp);
-    buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling };
+    buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling, QRhiSampler::Repeat };
     buf->flags = inCmd->m_bufferFlags;
 }
 
@@ -353,7 +353,8 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
                             toRhi(textureProperty.magFilterType),
                             textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
                             toRhi(textureProperty.horizontalClampType),
-                            toRhi(textureProperty.verticalClampType)
+                            toRhi(textureProperty.verticalClampType),
+                            QRhiSampler::Repeat
                         };
                         addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
                         texAdded = true;
@@ -586,7 +587,7 @@ void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const 
         static const QSSGRhiSamplerDescription depthSamplerDesc {
                     QRhiSampler::Nearest, QRhiSampler::Nearest,
                     QRhiSampler::None,
-                    QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge
+                    QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat
         };
         addTextureToShaderPipeline("qt_depthTexture", m_depthTexture, depthSamplerDesc);
     }
@@ -600,7 +601,7 @@ void QSSGRhiEffectSystem::addTextureToShaderPipeline(const QByteArray &name,
         return;
 
     static const QSSGRhiSamplerDescription defaultDescription { QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge };
+                                                                QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat };
     bool validDescription = samplerDescription.magFilter != QRhiSampler::None;
 
     // This is a map for a reason: there can be multiple calls to this function

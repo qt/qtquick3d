@@ -378,7 +378,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                      toRhi(renderableImage->m_imageNode.m_magFilterType),
                                                      mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
                                                      toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
-                                                     toRhi(renderableImage->m_imageNode.m_verticalTilingMode) });
+                                                     toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
+                                                     QRhiSampler::Repeat
+                                                   });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         } else {
             QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
@@ -388,7 +390,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                      QRhiSampler::Nearest,
                                                      QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge,
-                                                     QRhiSampler::ClampToEdge });
+                                                     QRhiSampler::ClampToEdge,
+                                                     QRhiSampler::Repeat
+                                                   });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         }
     }
@@ -401,7 +405,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                      QRhiSampler::Nearest,
                                                      QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge,
-                                                     QRhiSampler::ClampToEdge });
+                                                     QRhiSampler::ClampToEdge,
+                                                     QRhiSampler::Repeat
+                                                   });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::VertexStage, texture, sampler);
         }
     }
@@ -417,7 +423,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                          QRhiSampler::Nearest,
                                                          QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge,
-                                                         QRhiSampler::ClampToEdge });
+                                                         QRhiSampler::ClampToEdge,
+                                                         QRhiSampler::Repeat
+                                                       });
                 bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
             }
         }
@@ -430,7 +438,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                      QRhiSampler::Nearest,
                                                      QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge,
-                                                     QRhiSampler::ClampToEdge });
+                                                     QRhiSampler::ClampToEdge,
+                                                     QRhiSampler::Repeat
+                                                   });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::FragmentStage, texture, sampler);
         }
     }
@@ -517,7 +527,9 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
                                                      QRhiSampler::Nearest,
                                                      QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge,
-                                                     QRhiSampler::ClampToEdge });
+                                                     QRhiSampler::ClampToEdge,
+                                                     QRhiSampler::Repeat
+                                                   });
             bindings.addTexture(samplerBinding, QRhiShaderResourceBinding::VertexStage, texture, sampler);
         }
     }
