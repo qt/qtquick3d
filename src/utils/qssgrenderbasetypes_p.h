@@ -1219,7 +1219,7 @@ enum class QSSGRenderShaderDataType : quint32
     Rect, // QRect
     RectF, // QRectF
     Quaternion, // QQuaternion
-    Texture2D, // QSSGRenderTexture2D *
+    Texture,
 };
 
 inline const char *toString(QSSGRenderShaderDataType type)
@@ -1277,8 +1277,8 @@ inline const char *toString(QSSGRenderShaderDataType type)
         return "RectF";
     case QSSGRenderShaderDataType::Quaternion:
         return "Quaternion";
-    case QSSGRenderShaderDataType::Texture2D: // QSSGRenderTexture2D *:
-        return "Texture2D";
+    case QSSGRenderShaderDataType::Texture:
+        return "Texture";
 
     case QSSGRenderShaderDataType::Unknown:
     default:

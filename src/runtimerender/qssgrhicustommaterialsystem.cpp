@@ -503,7 +503,7 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
 {
     Q_UNUSED(inMaterial);
 
-    if (inPropertyType == QSSGRenderShaderDataType::Texture2D) {
+    if (inPropertyType == QSSGRenderShaderDataType::Texture) {
         QSSGRenderCustomMaterial::TextureProperty *textureProperty =
                 reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
         QSSGRenderImage *image = textureProperty->texImage;

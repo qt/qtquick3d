@@ -658,7 +658,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
             if (texture.enabled)
                 texProp.texImage = tex->getRenderImage();
 
-            texProp.shaderDataType = QSSGRenderShaderDataType::Texture2D;
+            texProp.shaderDataType = QSSGRenderShaderDataType::Texture;
 
             texProp.minFilterType = tex->minFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
                                                                                  : QSSGRenderTextureFilterOp::Linear;

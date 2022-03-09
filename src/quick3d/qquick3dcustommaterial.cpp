@@ -1577,7 +1577,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             QSSGRenderCustomMaterial::TextureProperty textureData;
             textureData.texInput = &texture;
             textureData.name = name;
-            textureData.shaderDataType = QSSGRenderShaderDataType::Texture2D;
+            textureData.shaderDataType = QSSGRenderShaderDataType::Texture;
 
             if (newBackendNode) {
                 connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
