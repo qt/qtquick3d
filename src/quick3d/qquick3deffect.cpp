@@ -651,30 +651,32 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         const auto processTextureProperty = [&](QQuick3DShaderUtilsTextureInput &texture, const QByteArray &name) {
             QSSGRenderEffect::TextureProperty texProp;
-            QQuick3DTexture *tex = texture.texture();
+            QQuick3DTexture *tex = texture.texture(); // may be null if the TextureInput has no 'texture' set
             connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DEffect::onTextureDirty);
             connect(&texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DEffect::onTextureDirty);
             texProp.name = name;
-            if (texture.enabled)
+            if (texture.enabled && tex)
                 texProp.texImage = tex->getRenderImage();
 
             texProp.shaderDataType = QSSGRenderShaderDataType::Texture;
 
-            texProp.minFilterType = tex->minFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
-                                                                                 : QSSGRenderTextureFilterOp::Linear;
-            texProp.magFilterType = tex->magFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
-                                                                                 : QSSGRenderTextureFilterOp::Linear;
-            texProp.mipFilterType = tex->generateMipmaps() ? (tex->mipFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
-                                                                                                           : QSSGRenderTextureFilterOp::Linear)
-                                                           : QSSGRenderTextureFilterOp::None;
-            texProp.horizontalClampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
-                                                                                   : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
-                                                                                                                                              : QSSGRenderTextureCoordOp::MirroredRepeat);
-            texProp.verticalClampType = tex->verticalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
-                                                                                   : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
-                                                                                                                                              : QSSGRenderTextureCoordOp::MirroredRepeat);
+            if (tex) {
+                texProp.minFilterType = tex->minFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
+                                                                                     : QSSGRenderTextureFilterOp::Linear;
+                texProp.magFilterType = tex->magFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
+                                                                                     : QSSGRenderTextureFilterOp::Linear;
+                texProp.mipFilterType = tex->generateMipmaps() ? (tex->mipFilter() == QQuick3DTexture::Nearest ? QSSGRenderTextureFilterOp::Nearest
+                                                                                                               : QSSGRenderTextureFilterOp::Linear)
+                                                               : QSSGRenderTextureFilterOp::None;
+                texProp.horizontalClampType = tex->horizontalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                                                                                                 : (tex->horizontalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
+                                                                                                                                                            : QSSGRenderTextureCoordOp::MirroredRepeat);
+                texProp.verticalClampType = tex->verticalTiling() == QQuick3DTexture::Repeat ? QSSGRenderTextureCoordOp::Repeat
+                                                                                             : (tex->verticalTiling() == QQuick3DTexture::ClampToEdge ? QSSGRenderTextureCoordOp::ClampToEdge
+                                                                                                                                                      : QSSGRenderTextureCoordOp::MirroredRepeat);
+            }
 
-            if (tex->isCubeMap())
+            if (tex && tex->isCubeMap())
                 uniforms.append({ QByteArrayLiteral("samplerCube"), name });
             else
                 uniforms.append({ QByteArrayLiteral("sampler2D"), name });
