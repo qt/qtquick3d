@@ -242,11 +242,11 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
     // Upload the equirectangular texture
     QRhiTextureUploadDescription desc;
-    if (inImage->compressedData.isValid()) {
+    if (inImage->textureFileData.isValid()) {
         desc = { { 0,
                    0,
-                   { inImage->compressedData.data().constData() + inImage->compressedData.dataOffset(0),
-                     int(inImage->compressedData.dataLength(0)) } } };
+                   { inImage->textureFileData.data().constData() + inImage->textureFileData.dataOffset(0),
+                     int(inImage->textureFileData.dataLength(0)) } } };
     } else {
         desc = { { 0, 0, { inImage->data, int(inImage->dataSizeInBytes) } } };
     }

@@ -82,7 +82,7 @@ public:
     qint32 components = 0;
     void *data = nullptr;
     bool ownsData = true;
-    QTextureFileData compressedData;
+    QTextureFileData textureFileData;
     QImage image;
     quint32 dataSizeInBytes = 0;
     QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA8;

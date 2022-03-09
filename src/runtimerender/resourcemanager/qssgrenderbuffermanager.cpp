@@ -520,9 +520,9 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     sourceTexture->deleteLater();
 
     // Upload the equirectangular texture
-    const auto desc = inImage->compressedData.isValid()
+    const auto desc = inImage->textureFileData.isValid()
             ? QRhiTextureUploadDescription(
-                    { 0, 0, QRhiTextureSubresourceUploadDescription(inImage->compressedData.getDataView().toByteArray()) })
+                    { 0, 0, QRhiTextureSubresourceUploadDescription(inImage->textureFileData.getDataView().toByteArray()) })
             : QRhiTextureUploadDescription({ 0, 0, { inImage->data, int(inImage->dataSizeInBytes) } });
 
     auto *rub = rhi->nextResourceUpdateBatch();
@@ -823,14 +823,14 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     QSize size;
     if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
         texture.m_flags.setRgbe8(true);
-    if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->compressedData.isValid())) {
+    if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->textureFileData.isValid())) {
         // Before creating an environment map, check if the provided texture is a
         // pre-baked environment map
-        if (inTexture->compressedData.isValid() && inTexture->compressedData.keyValueMetadata().contains("QT_IBL_BAKER_VERSION")) {
-            Q_ASSERT(inTexture->compressedData.numFaces() == 6);
-            Q_ASSERT(inTexture->compressedData.numLevels() >= 5);
+        if (inTexture->textureFileData.isValid() && inTexture->textureFileData.keyValueMetadata().contains("QT_IBL_BAKER_VERSION")) {
+            Q_ASSERT(inTexture->textureFileData.numFaces() == 6);
+            Q_ASSERT(inTexture->textureFileData.numLevels() >= 5);
 
-            const QTextureFileData &tex = inTexture->compressedData;
+            const QTextureFileData &tex = inTexture->textureFileData;
             rhiFormat = toRhiFormat(inTexture->format.format);
             size = tex.size();
             mipmapCount = tex.numLevels();
@@ -862,8 +862,8 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
             context->registerTexture(texture.m_texture);
             return true;
         }
-    } else if (inTexture->compressedData.isValid()) {
-        const QTextureFileData &tex = inTexture->compressedData;
+    } else if (inTexture->textureFileData.isValid()) {
+        const QTextureFileData &tex = inTexture->textureFileData;
         size = tex.size();
         mipmapCount = tex.numLevels();
         for (int i = 0; i < tex.numLevels(); i++) {
