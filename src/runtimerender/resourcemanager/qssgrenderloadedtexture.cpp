@@ -344,14 +344,14 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadCompressedImage(const QString &inPath)
         return retval;
     }
     retval = new QSSGLoadedTexture;
-    retval->compressedData = reader->read();
+    retval->textureFileData = reader->read();
 
     // Fill out what makes sense, leave the rest at the default 0 and null.
-    retval->width = retval->compressedData.size().width();
-    retval->height = retval->compressedData.size().height();
-    auto glFormat = retval->compressedData.glInternalFormat()
-            ? retval->compressedData.glInternalFormat()
-            : retval->compressedData.glFormat();
+    retval->width = retval->textureFileData.size().width();
+    retval->height = retval->textureFileData.size().height();
+    auto glFormat = retval->textureFileData.glInternalFormat()
+            ? retval->textureFileData.glInternalFormat()
+            : retval->textureFileData.glFormat();
     retval->format = fromGLtoTextureFormat(glFormat);
 
     delete reader;
