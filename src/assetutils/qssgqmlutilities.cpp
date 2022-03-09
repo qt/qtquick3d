@@ -981,11 +981,12 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
                     return QString(); // Error out
 
-                const auto newfilepath = QString(mapsFolder + fi.fileName());
+                const QString relpath = mapsFolder + fi.fileName();
+                const auto newfilepath = QString(outdir.canonicalPath() + QDir::separator() + relpath);
                 if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath))
                     return QString();
 
-                return newfilepath;
+                return relpath;
             };
 
             if (const auto urlView = reinterpret_cast<const UrlView *>(value.dptr)) {
