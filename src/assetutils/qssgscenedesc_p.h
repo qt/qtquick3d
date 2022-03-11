@@ -315,7 +315,7 @@ QSSG_DECLARE_NODE(MorphTarget)
 
 struct ListView
 {
-    void *head = nullptr;
+    Value head;
     qsizetype count = -1;
 };
 
@@ -519,8 +519,8 @@ struct PropertyListSetter : PropertyCall
     bool set(QQuick3DObject &that, const char *, const void *value) override
     {
         if (const auto listView = reinterpret_cast<const ListView *>(value)) {
-            const auto begin = reinterpret_cast<It *>(listView->head);
-            const auto end = reinterpret_cast<It *>(listView->head) + listView->count;
+            const auto begin = reinterpret_cast<It *>(listView->head.dptr);
+            const auto end = reinterpret_cast<It *>(listView->head.dptr) + listView->count;
             (qobject_cast<Class *>(&that)->*call)(ListT{begin, end});
             return true;
         }
@@ -623,7 +623,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         prop->name = name;
         prop->call = node.scene->create<decltype(PropertyListSetter(setter))>(setter);
         prop->value.mt = listViewMetaType();
-        prop->value.dptr = node.scene->create<ListView>(ListView{ data, count });
+        prop->value.dptr = node.scene->create<ListView>(ListView{ { QMetaType::fromType<T>(), data }, count });
         node.properties.push_back(*prop);
     }
 }

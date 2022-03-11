@@ -702,6 +702,14 @@ struct QSSGQmlScopedIndent
     OutputContext &output;
 };
 
+static QString indentString(OutputContext &output)
+{
+    QString str;
+    for (quint8 i = 0; i < output.indent; i += QSSGQmlScopedIndent::QSSG_INDENT)
+        str += QString::fromLatin1(indent());
+    return str;
+}
+
 static QTextStream &indent(OutputContext &output)
 {
     for (quint8 i = 0; i < output.indent; i += QSSGQmlScopedIndent::QSSG_INDENT)
@@ -763,6 +771,65 @@ QString asString(const QSSGSceneDesc::Value &value)
     return str;
 }
 
+QString builtinQmlType(const QSSGSceneDesc::Value &value)
+{
+    switch (value.mt.id()) {
+    case QMetaType::QVector2D: {
+        const auto &vec2 = *reinterpret_cast<QVector2D *>(value.dptr);
+        return QLatin1String("Qt.vector2d(") + QString::number(vec2.x()) + QLatin1String(", ") + QString::number(vec2.y()) + QLatin1Char(')');
+    }
+    case QMetaType::QVector3D: {
+        const auto &vec3 = *reinterpret_cast<QVector3D *>(value.dptr);
+        return QLatin1String("Qt.vector3d(") + QString::number(vec3.x()) + QLatin1String(", ")
+                + QString::number(vec3.y()) + QLatin1String(", ")
+                + QString::number(vec3.z()) + QLatin1Char(')');
+    }
+    case QMetaType::QVector4D: {
+        const auto &vec4 = *reinterpret_cast<QVector4D *>(value.dptr);
+        return QLatin1String("Qt.vector4d(") + QString::number(vec4.x()) + QLatin1String(", ")
+                + QString::number(vec4.y()) + QLatin1String(", ")
+                + QString::number(vec4.z()) + QLatin1String(", ")
+                + QString::number(vec4.w()) + QLatin1Char(')');
+    }
+    case QMetaType::QColor: {
+        const auto &color = *reinterpret_cast<QColor *>(value.dptr);
+        return colorToQml(color);
+    }
+    case QMetaType::QQuaternion: {
+        const auto &quat = *reinterpret_cast<QQuaternion *>(value.dptr);
+        return QLatin1String("Qt.quaternion(") + QString::number(quat.scalar()) + QLatin1String(", ")
+                + QString::number(quat.x()) + QLatin1String(", ")
+                + QString::number(quat.y()) + QLatin1String(", ")
+                + QString::number(quat.z()) + QLatin1Char(')');
+    }
+    case QMetaType::QMatrix4x4: {
+        const auto &mat44 = *reinterpret_cast<QMatrix4x4 *>(value.dptr);
+        return QLatin1String("Qt.matrix4x4(")
+                + QString::number(mat44(0, 0)) + u", " + QString::number(mat44(0, 1)) + u", " + QString::number(mat44(0, 2)) + u", " + QString::number(mat44(0, 3)) + u", "
+                + QString::number(mat44(1, 0)) + u", " + QString::number(mat44(1, 1)) + u", " + QString::number(mat44(1, 2)) + u", " + QString::number(mat44(1, 3)) + u", "
+                + QString::number(mat44(2, 0)) + u", " + QString::number(mat44(2, 1)) + u", " + QString::number(mat44(2, 2)) + u", " + QString::number(mat44(2, 3)) + u", "
+                + QString::number(mat44(3, 0)) + u", " + QString::number(mat44(3, 1)) + u", " + QString::number(mat44(3, 2)) + u", " + QString::number(mat44(3, 3)) + u')';
+    }
+    case QMetaType::QUrl:
+        return QString(QLatin1String("\"%1\"")).arg(asString(value));
+    case QMetaType::Float:
+    case QMetaType::Double:
+    case QMetaType::Int:
+    case QMetaType::Char:
+    case QMetaType::Long:
+    case QMetaType::LongLong:
+    case QMetaType::ULong:
+    case QMetaType::ULongLong:
+        Q_FALLTHROUGH();
+    case QMetaType::Bool:
+        return asString(value);
+    default:
+        break;
+    }
+
+    return QString();
+}
+
 QString asString(QSSGSceneDesc::Animation::Channel::TargetProperty prop)
 {
     if (prop == QSSGSceneDesc::Animation::Channel::TargetProperty::Position)
@@ -776,6 +843,8 @@ QString asString(QSSGSceneDesc::Animation::Channel::TargetProperty prop)
 
     return QStringLiteral("unknown");
 }
+
+
 
 using PropertyPair = std::pair<const char * /* name */, QString /* value */>;
 
@@ -792,59 +861,10 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
             *ok = true;
 
         // Built-in types
-        switch (value.mt.id()) {
-        case QMetaType::QVector2D: {
-            const auto &vec2 = *reinterpret_cast<QVector2D *>(value.dptr);
-            return { property.name, QLatin1String("Qt.vector2d(") + QString::number(vec2.x()) + QLatin1String(", ")
-                                                                  + QString::number(vec2.y()) + QLatin1Char(')') };
-        }
-        case QMetaType::QVector3D: {
-            const auto &vec3 = *reinterpret_cast<QVector3D *>(value.dptr);
-            return { property.name, QLatin1String("Qt.vector3d(") + QString::number(vec3.x()) + QLatin1String(", ")
-                                                                  + QString::number(vec3.y()) + QLatin1String(", ")
-                                                                  + QString::number(vec3.z()) + QLatin1Char(')') };
-        }
-        case QMetaType::QVector4D: {
-            const auto &vec4 = *reinterpret_cast<QVector4D *>(value.dptr);
-            return { property.name, QLatin1String("Qt.vector4d(") + QString::number(vec4.x()) + QLatin1String(", ")
-                                                                  + QString::number(vec4.y()) + QLatin1String(", ")
-                                                                  + QString::number(vec4.z()) + QLatin1String(", ")
-                                                                  + QString::number(vec4.w()) + QLatin1Char(')') };
-        }
-        case QMetaType::QColor: {
-            const auto &color = *reinterpret_cast<QColor *>(value.dptr);
-            return { property.name, colorToQml(color) };
-        }
-        case QMetaType::QQuaternion: {
-            const auto &quat = *reinterpret_cast<QQuaternion *>(value.dptr);
-            return { property.name, QLatin1String("Qt.quaternion(") + QString::number(quat.scalar()) + QLatin1String(", ")
-                                                                    + QString::number(quat.x()) + QLatin1String(", ")
-                                                                    + QString::number(quat.y()) + QLatin1String(", ")
-                                                                    + QString::number(quat.z()) + QLatin1Char(')') };
-        }
-        case QMetaType::QMatrix4x4: {
-            const auto &mat44 = *reinterpret_cast<QMatrix4x4 *>(value.dptr);
-            return { property.name, QLatin1String("Qt.matrix4x4(")
-                        + QString::number(mat44(0, 0)) + u", " + QString::number(mat44(0, 1)) + u", " + QString::number(mat44(0, 2)) + u", " + QString::number(mat44(0, 3)) + u", "
-                        + QString::number(mat44(1, 0)) + u", " + QString::number(mat44(1, 1)) + u", " + QString::number(mat44(1, 2)) + u", " + QString::number(mat44(1, 3)) + u", "
-                        + QString::number(mat44(2, 0)) + u", " + QString::number(mat44(2, 1)) + u", " + QString::number(mat44(2, 2)) + u", " + QString::number(mat44(2, 3)) + u", "
-                        + QString::number(mat44(3, 0)) + u", " + QString::number(mat44(3, 1)) + u", " + QString::number(mat44(3, 2)) + u", " + QString::number(mat44(3, 3)) + u')' };
-        }
-        case QMetaType::QUrl:
-            return { property.name, QString(QLatin1String("\"%1\"")).arg(asString(value)) };
-        case QMetaType::Float:
-        case QMetaType::Double:
-        case QMetaType::Int:
-        case QMetaType::Char:
-        case QMetaType::Long:
-        case QMetaType::LongLong:
-        case QMetaType::ULong:
-        case QMetaType::ULongLong:
-            Q_FALLTHROUGH();
-        case QMetaType::Bool:
-            return { property.name, asString(value) };
-        default:
-            break;
+        {
+            QString valueAsString = builtinQmlType(value);
+            if (valueAsString.size() > 0)
+                return { property.name, valueAsString };
         }
 
         // Enumerations
@@ -920,22 +940,67 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
             const auto &list = *reinterpret_cast<QSSGSceneDesc::NodeList *>(value.dptr);
-            QString str;
+            if (list.count > 0) {
+                const bool useBrackets = (list.count > 1);
 
-            int nodes = 0;
-            for (int i = 0, end = list.count; i != end; ++i) {
-                if (i != 0)
-                    str.append(u", ");
-                str.append(getIdForNode(*(list.head[i])));
-                ++nodes;
+                const QString indentStr = indentString(output);
+                QSSGQmlScopedIndent scopedIndent(output);
+                const QString listIndentStr = indentString(output);
+
+                QString str;
+                if (useBrackets)
+                    str.append(u"[\n");
+
+                for (int i = 0, end = list.count; i != end; ++i) {
+                    if (i != 0)
+                        str.append(u",\n");
+                    if (useBrackets)
+                        str.append(listIndentStr);
+                    str.append(getIdForNode(*(list.head[i])));
+                }
+
+                if (useBrackets)
+                    str.append(u'\n' + indentStr + u']');
+
+                return { property.name, str };
             }
+        }
 
-            if (nodes > 1) {
-                str.prepend(u'[');
-                str.append(u']');
+        if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::ListView>()) {
+            const auto &list = *reinterpret_cast<QSSGSceneDesc::ListView *>(value.dptr);
+            if (list.count > 0) {
+                const bool useBrackets = (list.count > 1);
+
+                const QString indentStr = indentString(output);
+                QSSGQmlScopedIndent scopedIndent(output);
+                const QString listIndentStr = indentString(output);
+
+                QString str;
+                if (useBrackets)
+                    str.append(u"[\n");
+
+                char *vptr = reinterpret_cast<char *>(list.head.dptr);
+                auto size = list.head.mt.sizeOf();
+
+                for (int i = 0, end = list.count; i != end; ++i) {
+                    if (i != 0)
+                        str.append(u",\n");
+
+                    QSSGSceneDesc::Value v{list.head.mt, reinterpret_cast<void *>(vptr + (size * i))};
+                    QString valueString = builtinQmlType(v);
+                    if (valueString.isEmpty())
+                        valueString = asString(v);
+
+                    if (useBrackets)
+                        str.append(listIndentStr);
+                    str.append(valueString);
+                }
+
+                if (useBrackets)
+                    str.append(u'\n' + indentStr + u']');
+
+                return { property.name, str };
             }
-
-            return { property.name, str };
         }
 
         if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
