@@ -33,8 +33,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGRenderImage::QSSGRenderImage()
-    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Image)
+QSSGRenderImage::QSSGRenderImage(QSSGRenderGraphObject::Type type)
+    : QSSGRenderGraphObject(type)
 {
     m_flags.setFlag(Flag::Dirty);
     m_flags.setFlag(Flag::TransformDirty);

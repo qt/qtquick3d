@@ -184,11 +184,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         result = loadTextureData(image->m_rawTextureData, inMipMode);
         Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
     } else if (!image->m_imagePath.isEmpty()) {
-        const bool imageDeclaredAsCubeMap = image->m_flags.testFlag(QSSGRenderImage::Flag::CubeMap);
-        // The same source file with a different mipmapping mode or
-        // load-as-cubemap flag must lead to generating a new texture, hence
-        // including these in the key.
-        const ImageCacheKey imageKey = { image->m_imagePath, inMipMode, imageDeclaredAsCubeMap };
+        const ImageCacheKey imageKey = { image->m_imagePath, inMipMode, int(image->type) };
         auto foundIt = imageMap.find(imageKey);
         if (foundIt != imageMap.cend()) {
             result = foundIt.value().renderImageTexture;
@@ -200,7 +196,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             if (theLoadedTexture) {
                 foundIt = imageMap.insert(imageKey, ImageData());
                 CreateRhiTextureFlags rhiTexFlags = ScanForTransparency;
-                if (imageDeclaredAsCubeMap)
+                if (image->type == QSSGRenderGraphObject::Type::ImageCube)
                     rhiTexFlags |= CubeMap;
                 if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags)) {
                     foundIt.value() = ImageData();

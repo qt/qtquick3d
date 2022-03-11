@@ -114,7 +114,12 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
-    : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image)), parent)
+    : QQuick3DTexture(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::Image2D)), parent)
+{
+}
+
+QQuick3DTexture::QQuick3DTexture(QQuick3DObjectPrivate &dd, QQuick3DObject *parent)
+    : QQuick3DObject(dd, parent)
 {
     const QMetaObject *mo = metaObject();
     const int updateSlotIdx = mo->indexOfSlot("update()");
@@ -1024,10 +1029,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 {
     if (!node) {
         markAllDirty();
-        node = new QSSGRenderImage();
-        auto imageNode = static_cast<QSSGRenderImage *>(node);
-        if (isCubeMap())
-            imageNode->m_flags.setFlag(QSSGRenderImage::Flag::CubeMap);
+        node = new QSSGRenderImage(QQuick3DObjectPrivate::get(this)->type);
     }
 
     auto imageNode = static_cast<QSSGRenderImage *>(node);
@@ -1393,11 +1395,6 @@ void QQuick3DTexture::markAllDirty()
 {
     m_dirtyFlags = DirtyFlags(0xFFFF);
     QQuick3DObject::markAllDirty();
-}
-
-bool QQuick3DTexture::isCubeMap() const
-{
-    return m_type == Type::CubeMap;
 }
 
 QT_END_NAMESPACE

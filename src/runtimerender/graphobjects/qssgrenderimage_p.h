@@ -63,7 +63,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     {
         Dirty = 1 << 0,
         TransformDirty = 1 << 1,
-        CubeMap = 1 << 2
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -108,7 +107,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderImage : public QSSGRenderGraphObj
     // the texture transform is covered by TransformDirty.
     QMatrix4x4 m_textureTransform;
 
-    QSSGRenderImage();
+    QSSGRenderImage(QSSGRenderGraphObject::Type type = QSSGRenderGraphObject::Type::Image2D);
     ~QSSGRenderImage();
 
     bool clearDirty();

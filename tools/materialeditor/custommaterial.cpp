@@ -126,7 +126,7 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
                 auto name = (baseName.size() > 0) ? fromQString(material.scene->allocator, baseName) : QByteArrayView();
                 auto textureData = material.scene->create<QSSGSceneDesc::TextureData>(dataref, resSize, format, 0, name);
                 QSSGSceneDesc::addNode(material, *textureData);
-                auto texture = material.scene->create<QSSGSceneDesc::Texture>();
+                auto texture = material.scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D);
                 QSSGSceneDesc::addNode(material, *texture);
                 QSSGSceneDesc::setProperty(*texture, "textureData", &QQuick3DTexture::setTextureData, textureData);
                 QSSGSceneDesc::setProperty(material, uniform.name.constData(), &setProperty<QSSGSceneDesc::Texture *>, texture, Dynamic);

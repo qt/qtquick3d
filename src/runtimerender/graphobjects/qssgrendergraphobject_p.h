@@ -62,7 +62,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Camera = 0x40,
         Renderable = 0x80,
         Resource = 0x100,
-        Material = 0x200
+        Material = 0x200,
+        Texture = 0x400
     };
 
     enum class Type : quint16 {
@@ -89,7 +90,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Particles, // Renderable Node
         // Resources
         SceneEnvironment = BaseType::Resource, // Resource
-        Image, // Resource
         Effect, // Resource
         Geometry, // Resource
         TextureData, // Resource
@@ -102,6 +102,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         PrincipledMaterial, // Resource
         CustomMaterial, // Resource
         Skin, // Resource
+        // Textures
+        Image2D = BaseType::Texture | BaseType::Resource, // Resource
+        ImageCube, // Resource
     };
 
     Q_REQUIRED_RESULT static inline constexpr bool isNodeType(Type type) Q_DECL_NOTHROW
@@ -124,6 +127,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         return (quint16(type) & BaseType::Material);
     }
 
+    Q_REQUIRED_RESULT static inline constexpr bool isTexture(Type type) Q_DECL_NOTHROW
+    {
+        return (quint16(type) & BaseType::Texture);
+    }
+
     Q_REQUIRED_RESULT static inline constexpr bool isRenderable(Type type) Q_DECL_NOTHROW
     {
         return (quint16(type) & BaseType::Renderable);
@@ -138,7 +146,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
     Q_REQUIRED_RESULT static inline constexpr bool hasGraphicsResources(Type type) Q_DECL_NOTHROW
     {
         return ((type == Type::Model)
-                || (type == Type::Image)
+                || (isTexture(type))
                 || (type == Type::Geometry)
                 || (type == Type::TextureData)
                 || (type == Type::ResourceLoader));

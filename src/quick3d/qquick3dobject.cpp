@@ -807,7 +807,7 @@ void QQuick3DObjectPrivate::addToDirtyList()
         // NOTE: Skeleton node will be treated as a resources when creating/updating the backend nodes
         // (as it's a resource to the model node).
         if (QSSGRenderGraphObject::isResource(type) || type == QSSGRenderGraphObject::Type::Skeleton) {
-            if (type == Type::Image) {
+            if (QSSGRenderGraphObject::isTexture(type)) {
                 // Will likely need to refactor this, but images need to come before other
                 // resources
                 nextDirtyItem = sceneManager->dirtyImageList;

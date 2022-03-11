@@ -363,7 +363,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                     tex = it->texture;
                 } else {
                     // Two types, externally referenced or embedded
-                    tex = scene->create<QSSGSceneDesc::Texture>();
+                    tex = scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D);
                     // NOTE: We need a persistent zero terminated string!
                     textureMap.insert(TextureEntry{fromAiString(scene->allocator, texturePath), texInfo, tex});
 

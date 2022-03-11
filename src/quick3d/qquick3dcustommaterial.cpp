@@ -1585,7 +1585,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             } // else already connected
 
             QQuick3DTexture *tex = texture.texture(); // may be null if the TextureInput has no 'texture' set
-            if (tex && tex->isCubeMap())
+            if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)
                 uniforms.append({ QByteArrayLiteral("samplerCube"), textureData.name });
             else
                 uniforms.append({ QByteArrayLiteral("sampler2D"), textureData.name });

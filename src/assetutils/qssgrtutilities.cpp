@@ -221,8 +221,10 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
     case Node::Type::Texture:
         if (node.runtimeType == Node::RuntimeType::TextureData)
             obj = createRuntimeObject<QQuick3DTextureData>(static_cast<TextureData &>(node), parent);
-        else if (node.runtimeType == Node::RuntimeType::Image)
+        else if (node.runtimeType == Node::RuntimeType::Image2D)
             obj = createRuntimeObject<QQuick3DTexture>(static_cast<Texture &>(node), parent);
+        else if (node.runtimeType == Node::RuntimeType::ImageCube)
+            obj = createRuntimeObject<QQuick3DCubeMapTexture>(static_cast<Texture &>(node), parent);
         else
             Q_UNREACHABLE();
         break;

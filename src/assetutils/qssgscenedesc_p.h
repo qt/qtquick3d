@@ -57,6 +57,7 @@
 #include <QtQuick3D/private/qquick3dspotlight_p.h>
 // Texture
 #include <QtQuick3D/private/qquick3dtexture_p.h>
+#include <QtQuick3D/private/qquick3dcubemaptexture_p.h>
 #include <QtQuick3D/private/qquick3dtexturedata_p.h>
 //
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
@@ -212,7 +213,7 @@ QSSG_DECLARE_NODE(Node)
 struct Texture : Node
 {
     using type = QQuick3DTexture;
-    Texture() : Node(Node::Type::Texture, RuntimeType::Image) {}
+    Texture(Node::RuntimeType rt) : Node(Node::Type::Texture, rt) {}
 };
 QSSG_DECLARE_NODE(Texture)
 

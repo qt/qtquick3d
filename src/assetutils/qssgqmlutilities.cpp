@@ -488,7 +488,8 @@ template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::Pers
 
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Model>() { return "Model"; }
 
-template<> const char *qmlElementName<QSSGSceneDesc::Texture::RuntimeType::Image>() { return "Texture"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Texture::RuntimeType::Image2D>() { return "Texture"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Texture::RuntimeType::ImageCube>() { return "CubeMapTexture"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Texture::RuntimeType::TextureData>() { return "TextureData"; }
 
 template<> const char *qmlElementName<QSSGSceneDesc::Camera::RuntimeType::DirectionalLight>() { return "DirectionalLight"; }
@@ -512,8 +513,10 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::DefaultMaterial>();
     case RuntimeType::CustomMaterial:
         return qmlElementName<RuntimeType::CustomMaterial>();
-    case RuntimeType::Image:
-        return qmlElementName<RuntimeType::Image>();
+    case RuntimeType::Image2D:
+        return qmlElementName<RuntimeType::Image2D>();
+    case RuntimeType::ImageCube:
+        return qmlElementName<RuntimeType::ImageCube>();
     case RuntimeType::TextureData:
         return qmlElementName<RuntimeType::TextureData>();
     case RuntimeType::Model:
@@ -873,8 +876,10 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 break;
             case QSSGSceneDesc::Node::Type::Texture:
                 switch (target.runtimeType) {
-                case RuntimeType::Image:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::Image>()) + QLatin1Char('.') + asString(value) };
+                case RuntimeType::Image2D:
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::Image2D>()) + QLatin1Char('.') + asString(value) };
+                case RuntimeType::ImageCube:
+                    return { property.name, QLatin1String(qmlElementName<RuntimeType::ImageCube>()) + QLatin1Char('.') + asString(value) };
                 case RuntimeType::TextureData:
                     return { property.name, QLatin1String(qmlElementName<RuntimeType::TextureData>()) + QLatin1Char('.') + asString(value) };
                 default:
@@ -1004,7 +1009,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
             if (const auto urlView = reinterpret_cast<const UrlView *>(value.dptr)) {
                 // We need to adjust source url(s) as those should contain the canonical path
                 const auto &path = urlView->view;
-                if (target.runtimeType == RuntimeType::Image) {
+                if (QSSGRenderGraphObject::isTexture(target.runtimeType)) {
                     const auto sourcePath = copyTextureAsset(path, output.outdir);
                     return { property.name, toQuotedString(sourcePath) };
                 }
@@ -1017,7 +1022,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
         if (target.runtimeType == QSSGSceneDesc::Material::RuntimeType::CustomMaterial) {
             if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Texture *>()) {
                 if (const auto texture = reinterpret_cast<QSSGSceneDesc::Texture *>(value.dptr)) {
-                    Q_ASSERT(texture->runtimeType == RuntimeType::Image);
+                    Q_ASSERT(QSSGRenderGraphObject::isTexture(texture->runtimeType));
                     return { property.name, QLatin1String("TextureInput { texture: ") +
                                 getIdForNode(*texture) + QLatin1String(" }") };
                 }
@@ -1104,8 +1109,11 @@ static void writeQml(const QSSGSceneDesc::Camera &camera, OutputContext &output)
 static void writeQml(const QSSGSceneDesc::Texture &texture, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
-    Q_ASSERT(texture.nodeType == Node::Type::Texture && texture.runtimeType == Node::RuntimeType::Image);
-    indent(output) << qmlElementName<Camera::RuntimeType::Image>() << blockBegin(output);
+    Q_ASSERT(texture.nodeType == Node::Type::Texture && QSSGRenderGraphObject::isTexture(texture.runtimeType));
+    if (texture.runtimeType == Texture::RuntimeType::Image2D)
+        indent(output) << qmlElementName<Texture::RuntimeType::Image2D>() << blockBegin(output);
+    else if (texture.runtimeType == Texture::RuntimeType::ImageCube)
+        indent(output) << qmlElementName<Texture::RuntimeType::ImageCube>() << blockBegin(output);
     writeNodeProperties(texture, output);
 }
 
@@ -1239,7 +1247,9 @@ static void writeQmlForResourceNode(const QSSGSceneDesc::Node &node, OutputConte
             writeQml(static_cast<const Skeleton &>(node), output);
             break;
         case Node::Type::Texture:
-            if (node.runtimeType == Node::RuntimeType::Image)
+            if (node.runtimeType == Node::RuntimeType::Image2D)
+                writeQml(static_cast<const Texture &>(node), output);
+            else if (node.runtimeType == Node::RuntimeType::ImageCube)
                 writeQml(static_cast<const Texture &>(node), output);
             else if (node.runtimeType == Node::RuntimeType::TextureData)
                 writeQml(static_cast<const TextureData &>(node), output);
@@ -1322,7 +1332,9 @@ void writeQmlForResources(const QSSGSceneDesc::Scene::ResourceNodes &resources, 
         using RType = QSSGSceneDesc::Node::RuntimeType;
         if (a->runtimeType == RType::TextureData && b->runtimeType != RType::TextureData)
             return true;
-        if (a->runtimeType == RType::Image && (b->runtimeType != RType::TextureData && b->runtimeType != RType::Image))
+        if (a->runtimeType == RType::ImageCube && (b->runtimeType != RType::TextureData && b->runtimeType != RType::ImageCube))
+            return true;
+        if (a->runtimeType == RType::Image2D && (b->runtimeType != RType::TextureData && b->runtimeType != RType::Image2D))
             return true;
 
         return false;

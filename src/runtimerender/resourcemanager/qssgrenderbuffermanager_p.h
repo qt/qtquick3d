@@ -83,7 +83,7 @@ public:
     struct ImageCacheKey {
         QSSGRenderPath path;
         int mipMode;
-        bool cubemap;
+        int type;
     };
 
     struct ImageData {
@@ -212,12 +212,12 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)
 
 inline size_t qHash(const QSSGBufferManager::ImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
 {
-    return qHash(k.path, seed) ^ k.mipMode ^ int(k.cubemap);
+    return qHash(k.path, seed) ^ k.mipMode ^ k.type;
 }
 
 inline bool operator==(const QSSGBufferManager::ImageCacheKey &a, const QSSGBufferManager::ImageCacheKey &b) Q_DECL_NOTHROW
 {
-    return a.path == b.path && a.mipMode == b.mipMode && a.cubemap == b.cubemap;
+    return a.path == b.path && a.mipMode == b.mipMode && a.type == b.type;
 }
 
 QT_END_NAMESPACE

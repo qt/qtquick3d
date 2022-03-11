@@ -28,6 +28,7 @@
 ****************************************************************************/
 
 #include "qquick3dcubemaptexture_p.h"
+#include "qquick3dobject_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -83,9 +84,8 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuick3DCubeMapTexture::QQuick3DCubeMapTexture(QQuick3DObject *parent)
-    : QQuick3DTexture(parent)
+    : QQuick3DTexture(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::ImageCube)), parent)
 {
-    m_type = Type::CubeMap;
 }
 
 QQuick3DCubeMapTexture::~QQuick3DCubeMapTexture()

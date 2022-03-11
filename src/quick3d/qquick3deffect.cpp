@@ -689,7 +689,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                                                                                                                                                       : QSSGRenderTextureCoordOp::MirroredRepeat);
             }
 
-            if (tex && tex->isCubeMap())
+            if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)
                 uniforms.append({ QByteArrayLiteral("samplerCube"), name });
             else
                 uniforms.append({ QByteArrayLiteral("sampler2D"), name });

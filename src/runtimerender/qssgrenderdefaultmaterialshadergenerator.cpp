@@ -159,7 +159,7 @@ static QByteArray uvTransform(const QByteArray& imageRotations, const QByteArray
 
 static void sanityCheckImageForSampler(const QSSGRenderableImage &image, const char *samplerName)
 {
-    if (image.m_imageNode.m_flags.testFlag(QSSGRenderImage::Flag::CubeMap)) {
+    if (image.m_imageNode.type == QSSGRenderGraphObject::Type::ImageCube) {
         qWarning("Sampler %s expects a 2D texture but the associated texture is a cube map. "
                  "This will lead to problems.",
                  samplerName);
