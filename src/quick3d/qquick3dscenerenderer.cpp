@@ -495,6 +495,20 @@ void QQuick3DSceneRenderer::rhiRender()
     m_sgContext->rhiRender(*m_layer);
 }
 
+static QRhiTexture::Format toRhiTextureFormat(QQuickShaderEffectSource::Format format)
+{
+    switch (format) {
+    case QQuickShaderEffectSource::RGBA8:
+        return QRhiTexture::RGBA8;
+    case QQuickShaderEffectSource::RGBA16F:
+        return QRhiTexture::RGBA16F;
+    case QQuickShaderEffectSource::RGBA32F:
+        return QRhiTexture::RGBA32F;
+    default:
+        return QRhiTexture::RGBA8;
+    }
+}
+
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr)
 {
     Q_ASSERT(view3D != nullptr); // This is not an option!
@@ -548,7 +562,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             lastEffect = lastEffect->m_nextEffect;
         effectOutputFormatOverride = QSSGRhiEffectSystem::overriddenOutputFormat(lastEffect);
     }
-    const auto layerTextureFormat = [effectOutputFormatOverride](QRhi *rhi, bool postProc) {
+    const auto layerTextureFormat = [effectOutputFormatOverride, view3D](QRhi *rhi, bool postProc) {
         if (effectOutputFormatOverride != QSSGRenderTextureFormat::Unknown)
             return QSSGBufferManager::toRhiFormat(effectOutputFormatOverride);
 
@@ -566,10 +580,14 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         // is compatible with potential future on-screen HDR output support.
 
         const QRhiTexture::Format preferredPostProcFormat = QRhiTexture::RGBA16F;
+        if (postProc && rhi->isTextureFormatSupported(preferredPostProcFormat))
+            return preferredPostProcFormat;
 
-        return postProc && rhi->isTextureFormatSupported(preferredPostProcFormat)
-                ? preferredPostProcFormat
-                : QRhiTexture::RGBA8;
+        const QRhiTexture::Format preferredView3DFormat = toRhiTextureFormat(view3D->renderFormat());
+        if (rhi->isTextureFormatSupported(preferredView3DFormat))
+            return preferredView3DFormat;
+
+        return QRhiTexture::RGBA8;
     };
     bool postProcessingStateDirty = postProcessingNeeded != postProcessingWasActive;
 

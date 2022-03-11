@@ -368,6 +368,32 @@ QQuick3DViewport::RenderMode QQuick3DViewport::renderMode() const
 }
 
 /*!
+    \qmlproperty enumeration QtQuick3D::View3D::renderFormat
+    \since 6.4
+
+    This property determines the backing texture's format. Applicable only when
+    the View3D is rendering to a texture, for example because the \l renderMode
+    is \c{View3D.Offscreen}.
+
+    The default is \c{ShaderEffectSource.RGBA8}.
+
+    If the format is not supported by the underlying graphics driver at run
+    time, RGBA8 is used.
+
+    \list
+    \li ShaderEffectSource.RGBA8
+    \li ShaderEffectSource.RGBA16F
+    \li ShaderEffectSource.RGBA32F
+    \endlist
+
+    \sa QtQuick::ShaderEffectSource::format, QtQuick::Item::layer.format
+ */
+QQuickShaderEffectSource::Format QQuick3DViewport::renderFormat() const
+{
+    return m_renderFormat;
+}
+
+/*!
     \qmlproperty QtQuick3D::RenderStats QtQuick3D::View3D::renderStats
     \readonly
 
@@ -697,6 +723,17 @@ void QQuick3DViewport::setRenderMode(QQuick3DViewport::RenderMode renderMode)
     m_renderMode = renderMode;
     m_renderModeDirty = true;
     emit renderModeChanged();
+    update();
+}
+
+void QQuick3DViewport::setRenderFormat(QQuickShaderEffectSource::Format format)
+{
+    if (m_renderFormat == format)
+        return;
+
+    m_renderFormat = format;
+    m_renderModeDirty = true;
+    emit renderFormatChanged();
     update();
 }
 
