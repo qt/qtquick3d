@@ -552,7 +552,22 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     const auto layerTextureFormat = [effectOutputFormatOverride](QRhi *rhi, bool postProc) {
         if (effectOutputFormatOverride != QSSGRenderTextureFormat::Unknown)
             return QSSGBufferManager::toRhiFormat(effectOutputFormatOverride);
+
+        // Our standard choice for the postprocessing input/output textures'
+        // format is a floating point one. (unlike intermediate Buffers, which
+        // default to RGBA8 unless the format is explicitly specified)
+        // This is intentional since a float format allows passing in
+        // non-tonemapped content without colors being clamped when written out
+        // to the render target.
+        //
+        // When it comes to the output, this applies to that too due to
+        // QSSGRhiEffectSystem picking it up unless overridden (with a Buffer
+        // an empty 'name'). Here too a float format gives more flexibility:
+        // the effect may or may not do its own tonemapping and this approach
+        // is compatible with potential future on-screen HDR output support.
+
         const QRhiTexture::Format preferredPostProcFormat = QRhiTexture::RGBA16F;
+
         return postProc && rhi->isTextureFormatSupported(preferredPostProcFormat)
                 ? preferredPostProcFormat
                 : QRhiTexture::RGBA8;

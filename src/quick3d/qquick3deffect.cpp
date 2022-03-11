@@ -99,6 +99,19 @@ QT_BEGIN_NAMESPACE
     has its \l{View3D::renderMode}{renderMode} set to \c Offscreen. Effects
     will not be rendered with other renderMode values.
 
+    \note When using post-processing effects, the application-provided shaders
+    usually expect linear color data without tonemapping applied. It is then
+    essential to bypass the built-in tonemapping by setting
+    \l{SceneEnvironment::tonemapMode}{tonemapMode} to \c
+    SceneEnvironment.TonemapModeNone.
+
+    \note By default the texture used as the effects' input is created with a
+    floating point texture format, such as 16-bit floating point RGBA. The
+    output texture's format is the same since by default it follows the input
+    format. This can be overridden using \l Buffer and an empty name. The
+    default RGBA16F is useful because it allows working with non-tonemapped
+    linear data without having the color values outside the 0-1 range clamped.
+
     \section1 Exposing data to the shaders
 
     Like with CustomMaterial or ShaderEffect, the dynamic properties of an
