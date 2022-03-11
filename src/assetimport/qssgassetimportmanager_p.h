@@ -48,6 +48,8 @@
 #include <QtCore/QMap>
 #include <QtCore/QDir>
 #include <QtCore/QVariant>
+#include <QtCore/QString>
+#include <QtCore/QList>
 
 QT_BEGIN_NAMESPACE
 

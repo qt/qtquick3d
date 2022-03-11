@@ -43,6 +43,8 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qlist.h>
 
 QT_BEGIN_NAMESPACE
 class QSSGRenderContextInterface;

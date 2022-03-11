@@ -45,6 +45,7 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qset.h>
+#include <QtCore/qmap.h>
 
 #include <QtGui/private/qshader_p.h>
 

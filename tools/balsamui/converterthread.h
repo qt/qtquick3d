@@ -35,6 +35,8 @@
 #include <QWaitCondition>
 #include <QDir>
 #include <QStringList>
+#include <QVariant>
+#include <QMap>
 
 class ConverterThread : public QThread
 {

@@ -47,9 +47,10 @@
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
-#include <QtCore/QString>
-#include <QtCore/QByteArray>
-#include <QtCore/QIODevice>
+#include <QtCore/qstring.h>
+#include <QtCore/qbytearray.h>
+#include <QtCore/qiodevice.h>
+#include <QtCore/qmap.h>
 
 QT_BEGIN_NAMESPACE
 

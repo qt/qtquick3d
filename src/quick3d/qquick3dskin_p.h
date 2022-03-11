@@ -43,6 +43,8 @@
 
 #include <QtQuick3D/qquick3dobject.h>
 #include <QtQuick3D/private/qquick3dnode_p.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qhash.h>
 
 QT_BEGIN_NAMESPACE
 

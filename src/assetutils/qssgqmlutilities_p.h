@@ -46,6 +46,7 @@
 #include <QString>
 #include <QColor>
 #include <QVariant>
+#include <QHash>
 #include <QTextStream>
 
 QT_BEGIN_NAMESPACE

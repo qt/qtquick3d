@@ -34,6 +34,10 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QDebug>
+#include <QtCore/QHash>
+#include <QtCore/QMap>
+#include <QtCore/QList>
+#include <QtCore/QString>
 
 QT_BEGIN_NAMESPACE
 
