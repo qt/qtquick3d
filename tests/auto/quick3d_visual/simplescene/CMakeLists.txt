@@ -4,6 +4,12 @@
 ## qquick3dsimplescene Test:
 #####################################################################
 
+# Collect test data
+file(GLOB_RECURSE test_data
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*
+)
+
 qt_internal_add_test(tst_qquick3dsimplescene
     SOURCES
         ../shared/util.cpp ../shared/util.h
@@ -14,6 +20,7 @@ qt_internal_add_test(tst_qquick3dsimplescene
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
+   TESTDATA ${test_data}
 )
 
 #### Keys ignored in scope 1:.:.:simplescene.pro:<TRUE>:
@@ -31,3 +38,7 @@ qt_internal_extend_target(tst_qquick3dsimplescene CONDITION NOT ANDROID AND NOT 
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qquick3dsimplescene)
+endif()
