@@ -333,10 +333,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         if (cubeFace >= 0) {
             // Disable tonemapping for the reflection pass
-            featureSet.set(QSSGShaderFeatures::Feature::LinearTonemapping, false);
-            featureSet.set(QSSGShaderFeatures::Feature::AcesTonemapping, false);
-            featureSet.set(QSSGShaderFeatures::Feature::FilmicTonemapping, false);
-            featureSet.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping, false);
+            featureSet.disableTonemapping();
         }
 
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
@@ -538,10 +535,7 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
         if (cubeFace >= 0) {
             // Disable tonemapping for the reflection pass
-            featureSet.set(QSSGShaderFeatures::Feature::LinearTonemapping, false);
-            featureSet.set(QSSGShaderFeatures::Feature::AcesTonemapping, false);
-            featureSet.set(QSSGShaderFeatures::Feature::FilmicTonemapping, false);
-            featureSet.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping, false);
+            featureSet.disableTonemapping();
         }
 
         customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, featureSet,
@@ -2196,10 +2190,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 // because there are effectively no "opaque" objects then.
                 // Disable Tonemapping for all materials in the screen pass texture
                 QSSGShaderFeatures featuresBackup = this->features;
-                this->features.set(QSSGShaderFeatures::Feature::LinearTonemapping, false);
-                this->features.set(QSSGShaderFeatures::Feature::AcesTonemapping, false);
-                this->features.set(QSSGShaderFeatures::Feature::FilmicTonemapping, false);
-                this->features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping, false);
+                this->features.disableTonemapping();
                 for (const auto &handle : sortedOpaqueObjects)
                     rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
                 QColor clearColor(Qt::transparent);
