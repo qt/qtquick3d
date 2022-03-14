@@ -122,6 +122,14 @@ FlagType flags = 0;
 
 inline friend bool operator==(QSSGShaderFeatures a, QSSGShaderFeatures b) { return a.flags == b.flags; }
 
+void disableTonemapping()
+{
+    set(Feature::LinearTonemapping, false);
+    set(Feature::AcesTonemapping, false);
+    set(Feature::FilmicTonemapping, false);
+    set(Feature::HejlDawsonTonemapping, false);
+}
+
 };
 
 Q_QUICK3DRUNTIMERENDER_EXPORT size_t qHash(QSSGShaderFeatures features) noexcept;
