@@ -167,12 +167,11 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
             const auto face = mesh->mFaces[faceIndex];
             // Faces should always have 3 indicides
             Q_ASSERT(face.mNumIndices == 3);
-            indexes.append(quint32(face.mIndices[0]) + baseIndex);
-            indexes.append(quint32(face.mIndices[1]) + baseIndex);
-            indexes.append(quint32(face.mIndices[2]) + baseIndex);
+            // not adjusted with baseIndex at this point! that happens later.
+            indexes.append(quint32(face.mIndices[0]));
+            indexes.append(quint32(face.mIndices[1]));
+            indexes.append(quint32(face.mIndices[2]));
         }
-        // Since we might be combining multiple meshes together, we also need to change the index offset
-        baseIndex = *std::max_element(indexes.constBegin(), indexes.constEnd()) + 1;
 
         QByteArray positions;
         if (mesh->HasPositions()) {
@@ -209,6 +208,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         quint32 lightmapHeight = 0;
         if (generateLightmapUV && mesh->HasPositions()) {
             QSSGLightmapUVGenerator uvGen;
+            // this works because 'indexes' is still local (per submesh), not adjusted for the merged index buffer
             const QByteArray indices = QByteArray::fromRawData(reinterpret_cast<const char *>(indexes.constData()),
                                                                indexes.count() * sizeof(quint32));
             QSSGLightmapUVGeneratorResult lightmapResult = uvGen.run(positions,
@@ -243,6 +243,16 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         // From this point on, if vertexMap is non-empty, then remapping is
         // needed for all attribute data. Also note the potential difference
         // between outputVertexCount and mesh->mNumVertices from this point on.
+
+        // Now 'indexes' becomes global, with entries referring to the merged
+        // (per-model, not per-submesh) data.
+        for (quint32 &i : indexes)
+            i += baseIndex;
+
+        // The index buffer we are building is common for all submeshes of the
+        // model so the indices gotten from the importer need to be offset for
+        // all subsequent submeshes.
+        baseIndex += outputVertexCount;
 
         if (mesh->HasPositions()) {
             if (vertexMap.isEmpty())
