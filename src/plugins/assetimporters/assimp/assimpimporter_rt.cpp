@@ -96,7 +96,7 @@ Q_DECLARE_TYPEINFO(NodeInfo, Q_PRIMITIVE_TYPE);
 
 using NodeMap = QHash<const aiNode *, NodeInfo>;
 
-using AnimationNodeMap = QHash<QByteArrayView, QSSGSceneDesc::Node *>;
+using AnimationNodeMap = QHash<QByteArray, QSSGSceneDesc::Node *>;
 
 struct TextureInfo
 {
@@ -1232,7 +1232,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                     const auto &nodeName = srcChannel->mNodeName;
                     if (nodeName.length > 0) {
                         // We'll update this once we've created the node!
-                        QByteArrayView name(nodeName.C_Str(), qsizetype(nodeName.length));
+                        QByteArray name(nodeName.C_Str(), qsizetype(nodeName.length));
                         if (!animatingNodes.contains(name))
                             animatingNodes.insert(name, nullptr);
                     }
@@ -1289,7 +1289,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
             for (It j = 0; j != boneCount; ++j) {
                 const auto &nodeName = bones[j]->mName;
                 if (nodeName.length > 0) {
-                    animatingNodes.insert(QByteArrayView{ nodeName.C_Str(),
+                    animatingNodes.insert(QByteArray{ nodeName.C_Str(),
                                                           qsizetype(nodeName.length) },
                                           nullptr);
                 }
@@ -1330,7 +1330,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
             const auto &bone = *skin.mBones[j];
             const auto &nodeName = bone.mName;
             if (nodeName.length > 0) {
-                auto targetNode = animatingNodes.value(QByteArrayView{ nodeName.C_Str(), qsizetype(nodeName.length) });
+                auto targetNode = animatingNodes.value(QByteArray{ nodeName.C_Str(), qsizetype(nodeName.length) });
                 joints.push_back(targetNode);
                 const auto &osMat = bone.mOffsetMatrix;
                 auto pose = QMatrix4x4(osMat[0][0], osMat[0][1], osMat[0][2], osMat[0][3],
@@ -1357,7 +1357,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
             const auto &nodeName = srcChannel.mNodeName;
             if (nodeName.length > 0) {
                 const auto aNodeEnd = animatingNodes.cend();
-                const auto aNodeIt = animatingNodes.constFind(QByteArrayView{ nodeName.C_Str(), qsizetype(nodeName.length) });
+                const auto aNodeIt = animatingNodes.constFind(QByteArray{ nodeName.C_Str(), qsizetype(nodeName.length) });
                 if (aNodeIt != aNodeEnd && aNodeIt.value() != nullptr) {
                     auto targetNode = aNodeIt.value();
                     // Target property(s)
