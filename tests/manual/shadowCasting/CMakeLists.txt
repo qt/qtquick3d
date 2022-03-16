@@ -1,10 +1,4 @@
-# Generated from shadowCasting.pro.
-
-#####################################################################
-## shadowCasting Binary:
-#####################################################################
-
-qt_internal_add_manual_test(shadowCasting
+qt_internal_add_manual_test(manual_test_shadowCasting
     GUI
     SOURCES
         main.cpp
@@ -19,13 +13,10 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_internal_add_resource(shadowCasting "qml"
+qt_internal_add_resource(manual_test_shadowCasting "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
 
-
-#### Keys ignored in scope 1:.:.:shadowCasting.pro:<TRUE>:
-# OTHER_FILES = "main.qml"

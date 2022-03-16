@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick3D 1.15
+import QtQuick
+import QtQuick3D
 
 View3D {
     anchors.fill: parent

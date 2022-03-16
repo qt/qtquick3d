@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick3D 1.15
-import QtQml 2.0
+import QtQuick
+import QtQuick3D
+import QtQml
 
 Window {
+    id: window
     visible: true
     x: 100
     y: 100
@@ -75,15 +75,17 @@ Window {
         interval: 2000
         repeat: true
         onTriggered: {
-            if (view) {
+            if (window.view) {
                 console.log("Deleting view");
-                view.destroy();
+                window.view.destroy();
             } else {
                 console.log("Creating view");
-                if (!comp)
-                    comp = Qt.createComponent("view3DComponent.qml");
-                if (comp.status === Component.Ready)
-                    view = comp.createObject(rootItem);
+                if (!window.comp)
+                    window.comp = Qt.createComponent("view3DComponent.qml");
+                if (window.comp.status === Component.Ready)
+                    window.view = comp.createObject(rootItem);
+                else
+                    console.log("failed to create view3DComponent")
             }
         }
     }

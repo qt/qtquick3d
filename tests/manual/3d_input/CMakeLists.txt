@@ -1,4 +1,4 @@
-qt_internal_add_manual_test(manual_test_loader
+qt_internal_add_manual_test(manual_test_3d_input
     GUI
     SOURCES
         main.cpp
@@ -10,11 +10,12 @@ qt_internal_add_manual_test(manual_test_loader
 
 # Resources:
 set(qml_resource_files
-    "TestModel.qml"
     "main.qml"
+    "InputDebugger.qml"
+    "custom.frag"
 )
 
-qt_internal_add_resource(manual_test_loader "qml"
+qt_internal_add_resource(manual_test_3d_input "qml"
     PREFIX
         "/"
     FILES

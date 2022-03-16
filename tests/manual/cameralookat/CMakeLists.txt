@@ -1,10 +1,4 @@
-# Generated from cameralookat.pro.
-
-#####################################################################
-## cameralookat Binary:
-#####################################################################
-
-qt_internal_add_manual_test(cameralookat
+qt_internal_add_manual_test(manual_test_cameralookat
     GUI
     SOURCES
         main.cpp
@@ -19,13 +13,9 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_internal_add_resource(cameralookat "qml"
+qt_internal_add_resource(manual_test_cameralookat "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:cameralookat.pro:<TRUE>:
-# OTHER_FILES = "main.qml"

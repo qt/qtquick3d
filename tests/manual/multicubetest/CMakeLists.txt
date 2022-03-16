@@ -1,10 +1,4 @@
-# Generated from multicubetest.pro.
-
-#####################################################################
-## multicubetest Binary:
-#####################################################################
-
-qt_internal_add_manual_test(multicubetest
+qt_internal_add_manual_test(manual_test_multicube
     GUI
     SOURCES
         main.cpp
@@ -19,13 +13,9 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_internal_add_resource(multicubetest "qml"
+qt_internal_add_resource(manual_test_multicube "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:multicubetest.pro:<TRUE>:
-# OTHER_FILES = "main.qml"

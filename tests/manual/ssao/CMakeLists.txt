@@ -1,10 +1,4 @@
-# Generated from ssao.pro.
-
-#####################################################################
-## ssao Binary:
-#####################################################################
-
-qt_internal_add_manual_test(ssao
+qt_internal_add_manual_test(manual_test_ssao
     GUI
     SOURCES
         ssao.cpp
@@ -24,13 +18,9 @@ set(ssao_resource_files
     "ssao.qml"
 )
 
-qt_internal_add_resource(ssao "ssao"
+qt_internal_add_resource(manual_test_ssao "ssao"
     PREFIX
         "/"
     FILES
         ${ssao_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:ssao.pro:<TRUE>:
-# OTHER_FILES = "ssao.qml"

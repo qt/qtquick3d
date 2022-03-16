@@ -1,4 +1,4 @@
-qt_internal_add_manual_test(lightmap_concept
+qt_internal_add_manual_test(manual_test_lightmap_concept
     GUI
     SOURCES
         main.cpp
@@ -6,7 +6,6 @@ qt_internal_add_manual_test(lightmap_concept
         Qt::Gui
         Qt::Quick
         Qt::Quick3D
-        Qt::QuickControls2
 )
 
 set(qml_resource_files
@@ -23,7 +22,7 @@ set(qml_resource_files
     "meshes/animal.mesh"
 )
 
-qt_internal_add_resource(lightmap_concept "qml"
+qt_internal_add_resource(manual_test_lightmap_concept "qml"
     PREFIX
         "/"
     FILES

@@ -1,10 +1,4 @@
-# Generated from offscreenrendermode.pro.
-
-#####################################################################
-## offscreenrendermode Binary:
-#####################################################################
-
-qt_internal_add_manual_test(offscreenrendermode
+qt_internal_add_manual_test(manual_test_offscreenrendermode
     GUI
     SOURCES
         offscreenrendermode.cpp
@@ -25,13 +19,9 @@ set(offscreenrendermode_resource_files
     "qt_logo.png"
 )
 
-qt_internal_add_resource(offscreenrendermode "offscreenrendermode"
+qt_internal_add_resource(manual_test_offscreenrendermode "offscreenrendermode"
     PREFIX
         "/"
     FILES
         ${offscreenrendermode_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:offscreenrendermode.pro:<TRUE>:
-# OTHER_FILES = "offscreenrendermode.qml" "SomePointLight.qml"

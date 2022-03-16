@@ -104,7 +104,7 @@ static void packVertices(const QByteArray &pos, const QByteArray &norm,
                          const QByteArray &tan, const QByteArray &bin,
                          const QByteArray &col, QByteArray &dest)
 {
-    int count = pos.size() / sizeof(QVector3D);
+    int count = int(pos.size() / sizeof(QVector3D));
     QByteArray vertices;
     vertices.resize(count * s_vertexSize);
     vertices.fill(0);
@@ -142,7 +142,7 @@ static QByteArray s_normals = QByteArray();
 QByteArray &generateNormals(const QByteArray &positions, const QByteArray &indices)
 {
     if (!s_normals.size()) {
-        int count = indices.size() / sizeof(Face);
+        int count = int(indices.size() / sizeof(Face));
         s_normals.resize(positions.size());
         s_normals.fill(0);
         const Face *faces = reinterpret_cast<const Face *>(indices.constData());
@@ -159,7 +159,7 @@ QByteArray &generateNormals(const QByteArray &positions, const QByteArray &indic
             n[f.v1] += normal;
             n[f.v2] += normal;
         }
-        count = positions.size() / sizeof(QVector3D);
+        count = int(positions.size() / sizeof(QVector3D));
         for (int i = 0; i < count; i++)
             n[i] = n[i].normalized();
     }
@@ -171,7 +171,7 @@ static QByteArray s_tangents = QByteArray();
 QByteArray &generateTangents(const QByteArray &positions, const QByteArray &normals, const QByteArray &indices)
 {
     if (!s_tangents.size()) {
-        int count = indices.size() / sizeof(Face);
+        int count = int(indices.size() / sizeof(Face));
         s_tangents.resize(positions.size());
         s_tangents.fill(0);
         const Face *faces = reinterpret_cast<const Face *>(indices.constData());
@@ -185,7 +185,7 @@ QByteArray &generateTangents(const QByteArray &positions, const QByteArray &norm
             t[f.v1] += QVector3D::crossProduct(n[f.v1], u).normalized();
             t[f.v2] += QVector3D::crossProduct(n[f.v2], u).normalized();
         }
-        count = positions.size() / sizeof(QVector3D);
+        count = int(positions.size() / sizeof(QVector3D));
         for (int i = 0; i < count; i++)
             t[i] = t[i].normalized();
     }
@@ -197,7 +197,7 @@ static QByteArray s_binormals = QByteArray();
 QByteArray &generateBinormals(const QByteArray &normals, const QByteArray &tangents)
 {
     if (!s_binormals.size()) {
-        int count = normals.size() / sizeof(QVector3D);
+        int count = int(normals.size() / sizeof(QVector3D));
         s_binormals.resize(normals.size());
         s_binormals.fill(0);
 
@@ -217,7 +217,7 @@ QByteArray &generateTexcoords0(const QByteArray &positions, const QByteArray &no
                      QVector3D &minPos, QVector3D &maxPos, float tstep)
 {
     if (!s_texcoords0.size()) {
-        int count = positions.size() / sizeof(QVector3D);
+        int count = int(positions.size() / sizeof(QVector3D));
         s_texcoords0.resize(count * sizeof(QVector2D));
         s_texcoords0.fill(0);
         QVector2D *t = reinterpret_cast<QVector2D *>(s_texcoords0.data());
@@ -246,7 +246,7 @@ static QByteArray s_texcoords1 = QByteArray();
 QByteArray &generateTexcoords1(const QByteArray &positions)
 {
     if (!s_texcoords1.size()) {
-        int count = positions.size() / sizeof(QVector3D);
+        int count = int(positions.size() / sizeof(QVector3D));
         s_texcoords1.resize(count * sizeof(QVector2D));
         s_texcoords1.fill(0);
         QVector2D *t = reinterpret_cast<QVector2D *>(s_texcoords1.data());
@@ -266,7 +266,7 @@ static QByteArray s_colors = QByteArray();
 QByteArray &generateColors(const QByteArray &positions)
 {
     if (!s_colors.size()) {
-        int count = positions.size() / sizeof(QVector3D);
+        int count = int(positions.size() / sizeof(QVector3D));
         s_colors.resize(count * sizeof(QVector4D));
         s_colors.fill(0);
         QVector4D colorF = QVector4D(1.f, 0.5f, 0.5f, 1.0f);
@@ -291,7 +291,7 @@ QByteArray &generateColors(const QByteArray &positions)
 template <typename T>
 quint32 insertData(const T &c, QByteArray &data)
 {
-    int count = data.size() / sizeof(T);
+    int count = int(data.size() / sizeof(T));
     QByteArray d;
     d.resize(sizeof(T));
     memcpy(d.data(), &c, sizeof(T));
@@ -302,7 +302,7 @@ quint32 insertData(const T &c, QByteArray &data)
 quint32 findOrInsertVertex(const QVector3D v, QByteArray &vertices, int &lsty, int step)
 {
     const QVector3D *ptr = reinterpret_cast<const QVector3D *>(vertices.constData());
-    int count = vertices.size() / sizeof(QVector3D);
+    int count = int(vertices.size() / sizeof(QVector3D));
     for (int i = 0; i < count; ++i) {
         if (qFuzzyCompare(v, ptr[(i + lsty) % count])) {
             lsty = (i + lsty) % count;

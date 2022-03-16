@@ -1,10 +1,4 @@
-# Generated from stereoscopic.pro.
-
-#####################################################################
-## stereoscopic Binary:
-#####################################################################
-
-qt_internal_add_manual_test(stereoscopic
+qt_internal_add_manual_test(manual_test_stereoscopic
     GUI
     SOURCES
         main.cpp
@@ -21,13 +15,9 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_internal_add_resource(stereoscopic "qml"
+qt_internal_add_resource(manual_test_stereoscopic "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:stereoscopic.pro:<TRUE>:
-# OTHER_FILES = "main.qml" "SceneNode.qml"

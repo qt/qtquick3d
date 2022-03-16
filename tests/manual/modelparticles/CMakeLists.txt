@@ -1,4 +1,4 @@
-qt_internal_add_manual_test(manual_test_loader
+qt_internal_add_manual_test(manual_test_modelparticles
     GUI
     SOURCES
         main.cpp
@@ -8,13 +8,11 @@ qt_internal_add_manual_test(manual_test_loader
         Qt::Quick3D
 )
 
-# Resources:
 set(qml_resource_files
-    "TestModel.qml"
     "main.qml"
 )
 
-qt_internal_add_resource(manual_test_loader "qml"
+qt_internal_add_resource(manual_test_modelparticles "qml"
     PREFIX
         "/"
     FILES

@@ -1,4 +1,4 @@
-qt_internal_add_manual_test(dynamicenvmap
+qt_internal_add_manual_test(manual_test_dynamicenvmap
     GUI
     SOURCES
         main.cpp
@@ -14,7 +14,7 @@ set(dynamicenvmap_resource_files
     "00455_OpenfootageNET_field_low_resized.jpg"
 )
 
-qt6_add_resources(dynamicenvmap "dynamicenvmap"
+qt6_add_resources(manual_test_dynamicenvmap "dynamicenvmap"
     PREFIX
         "/"
     FILES

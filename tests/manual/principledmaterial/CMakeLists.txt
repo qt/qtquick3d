@@ -1,10 +1,4 @@
-# Generated from principledmaterial.pro.
-
-#####################################################################
-## principledmaterial Binary:
-#####################################################################
-
-qt_internal_add_manual_test(principledmaterial
+qt_internal_add_manual_test(manual_test_principledmaterial
     GUI
     SOURCES
         main.cpp
@@ -20,7 +14,7 @@ set(qml_resource_files
     "main.qml"
 )
 
-qt_internal_add_resource(principledmaterial "qml"
+qt_internal_add_resource(manual_test_principledmaterial "qml"
     PREFIX
         "/"
     FILES
@@ -32,15 +26,9 @@ set(materials_resource_files
     "maps/metallic/normalrough.astc"
 )
 
-qt_internal_add_resource(principledmaterial "materials"
+qt_internal_add_resource(manual_test_principledmaterial "materials"
     PREFIX
         "/"
     FILES
         ${materials_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:principledmaterial.pro:<TRUE>:
-# INSTALLS = "target"
-# OTHER_FILES = "doc/src/*.*"
-# target.path = "$$[QT_INSTALL_EXAMPLES]/quick3d/principledmaterial"

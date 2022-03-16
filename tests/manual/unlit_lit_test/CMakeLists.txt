@@ -1,10 +1,4 @@
-# Generated from unlit_lit_test.pro.
-
-#####################################################################
-## unlit_lit_test Binary:
-#####################################################################
-
-qt_internal_add_manual_test(unlit_lit_test
+qt_internal_add_manual_test(manual_test_unlit_lit
     GUI
     SOURCES
         rhitest.cpp
@@ -25,13 +19,9 @@ set(rhitest_resource_files
     "rhitest.qml"
 )
 
-qt_internal_add_resource(unlit_lit_test "rhitest"
+qt_internal_add_resource(manual_test_unlit_lit "rhitest"
     PREFIX
         "/"
     FILES
         ${rhitest_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:unlit_lit_test.pro:<TRUE>:
-# OTHER_FILES = "rhitest.qml" "SomePointLight.qml"

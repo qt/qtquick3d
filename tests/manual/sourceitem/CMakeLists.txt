@@ -1,10 +1,4 @@
-# Generated from sourceitem.pro.
-
-#####################################################################
-## sourceitem Binary:
-#####################################################################
-
-qt_internal_add_manual_test(sourceitem
+qt_internal_add_manual_test(manual_test_sourceitem
     GUI
     SOURCES
         main.cpp
@@ -12,7 +6,6 @@ qt_internal_add_manual_test(sourceitem
         Qt::Gui
         Qt::Quick
         Qt::Quick3D
-        Qt::QuickControls2
 )
 
 # Resources:
@@ -22,13 +15,9 @@ set(qml_resource_files
     "qt_logo_rect.png"
 )
 
-qt_internal_add_resource(sourceitem "qml"
+qt_internal_add_resource(manual_test_sourceitem "qml"
     PREFIX
         "/"
     FILES
         ${qml_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:sourceitem.pro:<TRUE>:
-# OTHER_FILES = "main.qml"
