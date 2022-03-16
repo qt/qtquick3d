@@ -51,8 +51,8 @@
 #ifndef IMAGEHELPER_H
 #define IMAGEHELPER_H
 
-#include <QObject>
-#include <QtQml>
+#include <QtCore/QObject>
+#include <QtQml/QtQml>
 
 class ImageHelper : public QObject
 {
