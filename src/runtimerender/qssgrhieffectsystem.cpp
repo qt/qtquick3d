@@ -431,6 +431,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
 {
     m_currentTextures.clear();
     m_pendingClears.clear();
+    m_currentShaderPipeline = nullptr;
 
     QRhi *rhi = m_renderer->contextInterface()->rhiContext()->rhi();
     const auto &shaderLib = m_renderer->contextInterface()->shaderLibraryManager();
@@ -458,17 +459,19 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
         }
     }
 
-    // Final option, generate the shader pipeline
-    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-    Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DGenerateShader,
-                             QQuick3DProfiler::Quick3DStageBegin);
-    const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
-    if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
-        m_shaderPipelines.insert(rkey, stages);
-        m_currentShaderPipeline = stages.data();
+    if (!m_currentShaderPipeline) {
+        // Final option, generate the shader pipeline
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
+        Q_QUICK3D_PROFILE_RECORD(QQuick3DProfiler::Quick3DGenerateShader,
+                                 QQuick3DProfiler::Quick3DStageBegin);
+        const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
+        if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
+            m_shaderPipelines.insert(rkey, stages);
+            m_currentShaderPipeline = stages.data();
+        }
+        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader,
+                              QQuick3DProfiler::Quick3DStageEnd);
     }
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader,
-                          QQuick3DProfiler::Quick3DStageEnd);
 
     if (m_currentShaderPipeline) {
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
@@ -477,7 +480,6 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
         m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     } else {
-        m_currentShaderPipeline = nullptr;
         m_currentUBufData = nullptr;
     }
 }
