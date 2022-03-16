@@ -372,7 +372,80 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         subsetData.append(subsetEntry);
     }
 
-    // Vertex Buffer Entries
+    if (generateLightmapUV && !positionData.isEmpty()) {
+        QSSGLightmapUVGenerator uvGen;
+        QSSGLightmapUVGeneratorResult r = uvGen.run(positionData, normalData, uv0Data, indexBufferData, QSSGMesh::Mesh::ComponentType::UnsignedInt32);
+        if (r.isValid()) {
+            qDebug("Lightmap UV unwrap, original vertex count = %u, new vertex count = %d, "
+                   "texture size hint = %ux%u",
+                   int(positionData.size() / sizeof(float) / 3),
+                   int(r.vertexMap.count()),
+                   r.lightmapWidth,
+                   r.lightmapHeight);
+
+            // r.indexData contains the new index data that has the same number of elements as before
+            const quint32 *indexSrc = reinterpret_cast<const quint32 *>(r.indexData.constData());
+            if (indexType == QSSGMesh::Mesh::ComponentType::UnsignedInt32) {
+                if (r.indexData.size() != indexBufferData.size()) {
+                    errorString = QStringLiteral("Index buffer size mismatch after UV unwrapping");
+                    return QSSGMesh::Mesh();
+                }
+                quint32 *indexDst = reinterpret_cast<quint32 *>(indexBufferData.data());
+                memcpy(indexDst, indexSrc, indexBufferData.size());
+            } else {
+                if (r.indexData.size() != indexBufferData.size() * 2) {
+                    errorString = QStringLiteral("Index buffer size mismatch after UV unwrapping");
+                    return QSSGMesh::Mesh();
+                }
+                quint16 *indexDst = reinterpret_cast<quint16 *>(indexBufferData.data());
+                for (size_t i = 0, count = indexBufferData.size() / sizeof(quint16); i != count; ++i)
+                    *indexDst++ = *indexSrc++;
+            }
+
+            positionData = QSSGLightmapUVGenerator::remap<float>(positionData, r.vertexMap, 3);
+            normalData = QSSGLightmapUVGenerator::remap<float>(normalData, r.vertexMap, 3);
+            uv0Data = QSSGLightmapUVGenerator::remap<float>(uv0Data, r.vertexMap, uv0Components);
+
+            if (uv1Data.isEmpty())
+                 qWarning("Mesh has UV1 but lightmap UV generation was enabled, overwriting UV1");
+
+            uv1Data = r.lightmapUVChannel;
+            uv1Components = 2;
+
+            // sanity check
+            if (uv0Components && !uv0Data.isEmpty()) {
+                const int uv0Count = int(uv0Data.size() / sizeof(float) / uv0Components);
+                const int uv1Count = int(uv1Data.size() / sizeof(float) / uv1Components);
+                if (uv0Count != uv1Count) {
+                    errorString = QString::asprintf("Lightmap UV generation error: vertex (UV) count mismatch: %d vs. %d",
+                                                    uv0Count, uv1Count);
+                    return QSSGMesh::Mesh();
+                }
+            }
+
+            tangentData = QSSGLightmapUVGenerator::remap<float>(tangentData, r.vertexMap, 3);
+            binormalData = QSSGLightmapUVGenerator::remap<float>(binormalData, r.vertexMap, 3);
+            vertexColorData = QSSGLightmapUVGenerator::remap<float>(vertexColorData, r.vertexMap, 4);
+            boneIndexData = QSSGLightmapUVGenerator::remap<qint32>(boneIndexData, r.vertexMap, 4);
+            boneWeightData = QSSGLightmapUVGenerator::remap<float>(boneWeightData, r.vertexMap, 4);
+
+            for (uint i = 0; i < numMorphTargets; ++i) {
+                targetPositionData[i] = QSSGLightmapUVGenerator::remap<float>(targetPositionData[i], r.vertexMap, 3);
+                targetNormalData[i] = QSSGLightmapUVGenerator::remap<float>(targetNormalData[i], r.vertexMap, 3);
+                targetTangentData[i] = QSSGLightmapUVGenerator::remap<float>(targetTangentData[i], r.vertexMap, 3);
+                targetBinormalData[i] = QSSGLightmapUVGenerator::remap<float>(targetBinormalData[i], r.vertexMap, 3);
+            }
+
+            for (SubsetEntryData &entry : subsetData) {
+                entry.lightmapWidth = r.lightmapWidth;
+                entry.lightmapHeight = r.lightmapHeight;
+            }
+        } else {
+            errorString = QStringLiteral("Lightmap UV generation failed");
+            return QSSGMesh::Mesh();
+        }
+    }
+
     QVector<QSSGMesh::AssetVertexEntry> entries;
     if (positionData.length() > 0) {
         entries.append({

@@ -857,7 +857,8 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const AssimpUtil
         if (!mesh.save(&file))
             return QString::asprintf("Failed to serialize mesh to %s", qPrintable(file.fileName()));
     } else {
-        return QString::asprintf("Mesh building failed for %s", qPrintable(file.fileName()));
+        return QString::asprintf("Mesh building failed for %s: %s",
+                                 qPrintable(file.fileName()), qPrintable(errorString));
     }
 
     return errorString;

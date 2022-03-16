@@ -97,6 +97,8 @@ public:
     template<typename T>
     static QByteArray remap(const QByteArray &source, const QVector<quint32> &vertexMap, int componentCount)
     {
+        if (source.isEmpty())
+            return QByteArray();
         const T *src = reinterpret_cast<const T *>(source.constData());
         const int byteStride = sizeof(T) * componentCount;
         QByteArray result(vertexMap.size() * byteStride, Qt::Uninitialized);
