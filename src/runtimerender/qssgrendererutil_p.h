@@ -58,7 +58,7 @@ class QSSGRenderPath
 public:
     QSSGRenderPath() = default;
     explicit inline QSSGRenderPath(const QString &p) noexcept
-        : m_path(p), m_key(qHash(p, qGlobalQHashSeed())) {}
+        : m_path(p), m_key(qHash(p, QHashSeed::globalSeed())) {}
 
     inline bool isNull() const { return m_path.isNull(); }
     inline bool isEmpty() const { return m_path.isEmpty(); }
