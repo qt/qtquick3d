@@ -911,7 +911,7 @@ bool QQuick3DFileInstancing::loadFromXmlFile(const QString &filename)
                     QVector3D scale { 1, 1, 1 };
                     for (auto &attr : reader.attributes()) {
                         if (attr.name() == QLatin1String("color")) {
-                            color = QColor(attr.value());
+                            color = QColor::fromString(attr.value());
                         } else if (attr.name() == QLatin1String("position")) {
                             position = toVector3D(attr.value());
                         } else if (attr.name() == QLatin1String("eulerRotation")) {
