@@ -1344,16 +1344,18 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
     indent(output) << "Timeline {\n";
 
     QSSGQmlScopedIndent scopedIndent(output);
+    // The duration property of the TimelineAnimation is an int...
+    const int duration = qCeil(anim.length);
     indent(output) << "startFrame: 0\n";
-    indent(output) << "endFrame: " << anim.length << "\n";
+    indent(output) << "endFrame: " << duration << "\n";
     indent(output) << "currentFrame: 0\n";
     indent(output) << "enabled: true\n";
     indent(output) << "animations: TimelineAnimation {\n";
     {
         QSSGQmlScopedIndent scopedIndent(output);
-        indent(output) << "duration: " << anim.length << "\n";
+        indent(output) << "duration: " << duration << "\n";
         indent(output) << "from: 0\n";
-        indent(output) << "to: " << anim.length << "\n";
+        indent(output) << "to: " << duration << "\n";
         indent(output) << "running: true\n";
         indent(output) << "loops: Animation.Infinite\n";
     }
