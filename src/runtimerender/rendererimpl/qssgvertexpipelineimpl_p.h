@@ -81,8 +81,6 @@ struct QSSGMaterialVertexPipeline
 
     const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties;
     QSSGShaderMaterialAdapter *materialAdapter;
-    QSSGDataView<QMatrix4x4> boneGlobals;
-    QSSGDataView<QMatrix3x3> boneNormals;
     bool useFloatJointIndices;
     QSSGDataView<float> morphWeights;
     bool hasCustomShadedMain;
@@ -92,8 +90,6 @@ struct QSSGMaterialVertexPipeline
     QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
                                QSSGShaderMaterialAdapter *materialAdapter,
-                               QSSGDataView<QMatrix4x4> boneGlobals,
-                               QSSGDataView<QMatrix3x3> boneNormals,
                                QSSGDataView<float> morphWeights);
 
     ~QSSGMaterialVertexPipeline() = default;

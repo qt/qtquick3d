@@ -115,6 +115,9 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
             bufferManager->releaseGeometry(geometry);
         } else if (resource->type == QSSGRenderGraphObject::Type::Model) {
             auto model = static_cast<QSSGRenderModel*>(resource);
+            // release the texture for skinning before remove a model
+            if (model->boneTexture)
+                rhi->releaseTexture(model->boneTexture);
             rhi->cleanupDrawCallData(model);
         } else if (resource->type == QSSGRenderGraphObject::Type::TextureData) {
             auto textureData = static_cast<QSSGRenderTextureData *>(resource);
@@ -175,8 +178,6 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     QSSGMaterialVertexPipeline pipeline(shaderProgramGenerator,
                                         shaderKeyProperties,
                                         renderable.defaultMaterial().adapter,
-                                        renderable.boneGlobals,
-                                        renderable.boneNormals,
                                         renderable.morphWeights);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),

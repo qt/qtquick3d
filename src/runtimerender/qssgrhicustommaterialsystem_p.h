@@ -51,7 +51,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
 #include <QtCore/qhash.h>
 #include <QtGui/QMatrix4x4>
-#include <QtGui/QMatrix3x3>
 
 QT_BEGIN_NAMESPACE
 

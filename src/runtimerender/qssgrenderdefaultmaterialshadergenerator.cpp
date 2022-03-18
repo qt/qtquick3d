@@ -1639,8 +1639,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QMatrix4x4 &clipSpaceCorrMatrix,
                                                            const QMatrix4x4 &localInstanceTransform,
                                                            const QMatrix4x4 &globalInstanceTransform,
-                                                           const QSSGDataView<QMatrix4x4> &inBoneGlobals,
-                                                           const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                                            const QSSGDataView<float> &inMorphWeights,
                                                            QSSGRenderableImage *inFirstImage,
                                                            float inOpacity,
@@ -1727,17 +1725,6 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                             QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
     if (usesParentMatrix)
         shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
-
-    // Skinning
-    const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
-    const bool hasSkinningInputs = inProperties.m_vertexAttributes.getBitValue(QSSGShaderKeyVertexAttribute::JointAndWeight, inKey);
-    const bool hasSkinning = inBoneGlobals.size() > 0 && (hasSkinningInputs || hasCustomVert);
-    if (hasSkinning) {
-        shaders->setUniformArray(ubufData, "qt_boneTransforms", inBoneGlobals.mData, inBoneGlobals.mSize,
-                                 QSSGRenderShaderDataType::Matrix4x4, &cui.boneTransformsIdx);
-        shaders->setUniformArray(ubufData, "qt_boneNormalTransforms", inBoneNormals.mData, inBoneNormals.mSize,
-                                 QSSGRenderShaderDataType::Matrix3x3, &cui.boneNormalTransformsIdx);
-    }
 
     // Morphing
     if (inMorphWeights.mSize > 0)

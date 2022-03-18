@@ -61,18 +61,29 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
 
+#define POS4BONETRANS(x)    (sizeof(float) * 16 * (x) * 2)
+#define POS4BONENORM(x)     (sizeof(float) * 16 * ((x) * 2 + 1))
+#define BONEDATASIZE4ID(x)  POS4BONETRANS(x + 1)
+
 static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QMatrix4x4 &inverseRootM, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
         QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
         jointNode->calculateGlobalVariables();
         QMatrix4x4 M = jointNode->globalTransform;
-        // if user doesn't give the inverseBindPose, identity matrixes are used.
+        // if user doesn't give the inverseBindPose, identity matrices are used.
         if (poses.size() > jointNode->index)
             M *= poses[jointNode->index];
         M = inverseRootM * M;
-        modelNode->boneTransforms[jointNode->index] = M;
-        modelNode->boneNormalTransforms[jointNode->index] = M.normalMatrix();
+        modelNode->boneData.replace(POS4BONETRANS(jointNode->index),
+                                    sizeof(float) * 16,
+                                    reinterpret_cast<const char *>(M.constData()),
+                                    sizeof(float) * 16);
+        // only upper 3x3 is meaningful
+        modelNode->boneData.replace(POS4BONENORM(jointNode->index),
+                                    sizeof(float) * 11,
+                                    reinterpret_cast<const char *>(QMatrix4x4(M.normalMatrix()).constData()),
+                                    sizeof(float) * 11);
     } else {
         modelNode->skeletonContainsNonJointNodes = true;
     }
@@ -140,8 +151,8 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
             auto skeletonNode = modelNode->skeleton;
             bool hcj = false;
             if (modelNode->skin) {
-                modelNode->boneTransforms = modelNode->skin->boneMatrices;
-                modelNode->boneNormalTransforms = modelNode->skin->boneNormalMatrices;
+                modelNode->boneData = modelNode->skin->boneData;
+                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
             } else if (skeletonNode) {
                 const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
                 const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
@@ -152,19 +163,16 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                     if (hasDirtyNonJoints && !dirtySkeleton)
                         dirtySkeletons.append(skeletonNode);
                     modelNode->skinningDirty = false;
-                    // For now, boneTransforms is a QVector<QMatrix4x4>
-                    // but it will be efficient to use QVector<float>
-                    // to pass it to the shader uniform buffer
-                    if (modelNode->boneTransforms.size() < skeletonNode->maxIndex + 1) {
-                        modelNode->boneTransforms.resize(skeletonNode->maxIndex + 1);
-                        modelNode->boneNormalTransforms.resize(skeletonNode->maxIndex + 1);
-                    }
+                    const quint32 dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
+                    if (modelNode->boneData.size() < dataSize)
+                        modelNode->boneData.resize(dataSize);
                     skeletonNode->calculateGlobalVariables();
                     const QMatrix4x4 inverseRootM = skeletonNode->globalTransform.inverted();
                     modelNode->skeletonContainsNonJointNodes = false;
                     for (auto &child : skeletonNode->children)
                         collectBoneTransforms(&child, modelNode, inverseRootM, modelNode->inverseBindPoses);
                 }
+                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
             }
             const int numMorphTarget = modelNode->morphTargets.size();
             for (int i = 0; i < numMorphTarget; ++i) {
@@ -919,14 +927,8 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
         renderableFlagsForModel.setHasAttributeMorphTarget(hasMorphTarget);
     }
 
-    QSSGDataView<QMatrix4x4> boneGlobals;
-    QSSGDataView<QMatrix3x3> boneNormals;
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
-    // Skeletal Animation passes it's boneId as unsigned integers
-    if (inModel.skin || inModel.skeleton) {
-        boneGlobals = toDataView(inModel.boneTransforms);
-        boneNormals = toDataView(inModel.boneNormalTransforms);
-    }
+
     QSSGDataView<float> morphWeights = toDataView(inModel.morphWeights);
 
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
@@ -993,7 +995,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
             renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
 
             // Skin
-            renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
+            renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.boneCount);
             renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                     theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
             // Instancing
@@ -1013,8 +1015,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                                                                          theMaterial,
                                                                          firstImage,
                                                                          theGeneratedKey,
-                                                                         boneGlobals,
-                                                                         boneNormals,
                                                                          lights,
                                                                          morphWeights);
             subsetDirty = subsetDirty || renderableFlags.isDirty();
@@ -1038,7 +1038,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                 renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, false);
 
             // Skin
-            renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
+            renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, inModel.boneCount);
             renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                     theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
@@ -1065,8 +1065,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                                                                          theMaterial,
                                                                          firstImage,
                                                                          theGeneratedKey,
-                                                                         boneGlobals,
-                                                                         boneNormals,
                                                                          lights,
                                                                          morphWeights);
         }
@@ -1195,6 +1193,23 @@ bool QSSGLayerRenderData::prepareRenderablesForRender(const QMatrix4x4 &inViewPr
             if (theModel->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
                 bool wasModelDirty = prepareModelForRender(*theModel, inViewProjection, inClipFrustum, theNodeEntry.lights, ioFlags);
                 wasDataDirty = wasDataDirty || wasModelDirty;
+            }
+            // Prepare boneTexture for skinning
+            if (!theModel->boneData.isEmpty()) {
+                const int boneTexWidth = qCeil(qSqrt(theModel->boneCount * 4 * 2));
+                const QSize texSize(boneTexWidth, boneTexWidth);
+                if (!theModel->boneTexture) {
+                    theModel->boneTexture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA32F, texSize);
+                    theModel->boneTexture->create();
+                    rhiCtx->registerTexture(theModel->boneTexture);
+                } else if (theModel->boneTexture->pixelSize() != texSize) {
+                    theModel->boneTexture->setPixelSize(texSize);
+                    theModel->boneTexture->create();
+                }
+            } else if (theModel->boneTexture) {
+                // This model had a skin but it was removed
+                rhiCtx->releaseTexture(theModel->boneTexture);
+                theModel->boneTexture = nullptr;
             }
         } break;
         case QSSGRenderGraphObject::Type::Particles: {
@@ -1733,7 +1748,7 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
     const auto &modelNode = subsetRenderable.modelContext.model;
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix(modelNode.boneTransforms.isEmpty() ? subsetRenderable.globalTransform
+    const QMatrix4x4 &modelMatrix((modelNode.boneCount == 0) ? subsetRenderable.globalTransform
                                     : modelNode.skin ? QMatrix4x4() : modelNode.skeleton->globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
@@ -1750,8 +1765,6 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           clipSpaceCorrMatrix,
                                                           localInstanceTransform,
                                                           globalInstanceTransform,
-                                                          subsetRenderable.boneGlobals,
-                                                          subsetRenderable.boneNormals,
                                                           subsetRenderable.morphWeights,
                                                           subsetRenderable.firstImage,
                                                           subsetRenderable.opacity,
@@ -1961,13 +1974,13 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // the previous frame.
             QSSGRhiShaderResourceBindingList bindings;
             const void *layerNode = &inData.layer;
-            const void *modelNode = &subsetRenderable.modelContext.model;
+            const auto &modelNode = subsetRenderable.modelContext.model;
             const bool blendParticles = subsetRenderable.generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(subsetRenderable.shaderDescription);
 
-            QSSGRhiDrawCallData &dcd(cubeFace >= 0 ? rhiCtx->drawCallData({ layerNode, modelNode,
+            QSSGRhiDrawCallData &dcd(cubeFace >= 0 ? rhiCtx->drawCallData({ layerNode, &modelNode,
                                                                             entry, cubeFace + int(subsetRenderable.subset.offset << 3),
                                                                             QSSGRhiDrawCallDataKey::Reflection })
-                                                   : rhiCtx->drawCallData({ layerNode, modelNode,
+                                                   : rhiCtx->drawCallData({ layerNode, &modelNode,
                                                                             &subsetRenderable.material, 0, QSSGRhiDrawCallDataKey::Main }));
 
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
@@ -1979,6 +1992,26 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             if (blendParticles)
                 QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
+
+            // Skinning
+            if (modelNode.boneCount != 0) {
+                QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+                QRhiTextureSubresourceUploadDescription boneDesc(modelNode.boneData);
+                QRhiTextureUploadDescription boneUploadDesc(QRhiTextureUploadEntry(0, 0, boneDesc));
+                rub->uploadTexture(modelNode.boneTexture, boneUploadDesc);
+                rhiCtx->commandBuffer()->resourceUpdate(rub);
+                int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
+                if (binding >= 0) {
+                    QRhiSampler *boneSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                                 QRhiSampler::Nearest,
+                                                                 QRhiSampler::None,
+                                                                 QRhiSampler::ClampToEdge,
+                                                                 QRhiSampler::ClampToEdge,
+                                                                 QRhiSampler::Repeat
+                                                               });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, modelNode.boneTexture, boneSampler);
+                }
+            }
 
             ps->samples = samples;
 

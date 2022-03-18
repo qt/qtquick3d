@@ -54,9 +54,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkin : public QSSGRenderGraphObje
     ~QSSGRenderSkin() override;
     Q_DISABLE_COPY(QSSGRenderSkin)
 
-    QVector<QMatrix4x4> boneMatrices;
-    QVector<QMatrix3x3> boneNormalMatrices;
-    QVector<QMatrix4x4> inverseBindPoses;
+    QByteArray boneData;
 };
 QT_END_NAMESPACE
 

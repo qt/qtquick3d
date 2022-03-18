@@ -510,8 +510,8 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "MODEL_MATRIX", "qt_modelMatrix" },
     { "VIEW_MATRIX", "qt_viewMatrix" },
     { "NORMAL_MATRIX", "qt_normalMatrix"},
-    { "BONE_TRANSFORMS", "qt_boneTransforms" },
-    { "BONE_NORMAL_TRANSFORMS", "qt_boneNormalTransforms" },
+    { "BONE_TRANSFORMS", "qt_getTexMatrix" },
+    { "BONE_NORMAL_TRANSFORMS", "qt_getTexMatrix" },
     { "PROJECTION_MATRIX", "qt_projectionMatrix" },
     { "INVERSE_PROJECTION_MATRIX", "qt_inverseProjectionMatrix" },
     { "CAMERA_POSITION", "qt_cameraPosition" },
@@ -619,6 +619,8 @@ struct Tokenizer {
         Token_SemiColon,
         Token_Identifier,
         Token_Macro,
+        Token_OpenBraket,
+        Token_CloseBraket,
         Token_Unspecified,
 
         Token_EOF
@@ -683,6 +685,8 @@ Tokenizer::Token Tokenizer::next()
         case '}': return Token_CloseBrace;
         case '(': return Token_OpenParen;
         case ')': return Token_CloseParen;
+        case '[': return Token_OpenBraket;
+        case ']': return Token_CloseBraket;
 
         case ' ':
         case '\n':
@@ -737,6 +741,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     const char *lastPos = shaderCode.constData();
 
     int funcFinderState = 0;
+    int useJointTexState = -1;
+    int useJointNormalTexState = -1;
     QByteArray currentShadedFunc;
     Tokenizer::Token t = tok.next();
     while (t != Tokenizer::Token_EOF) {
@@ -808,6 +814,10 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
                         id.replace(subst.builtin, subst.actualName); // replace, not assignment, to keep whitespace etc.
+                        if (trimmedId == QByteArrayLiteral("BONE_TRANSFORMS"))
+                            useJointTexState = 0;
+                        else if (trimmedId == QByteArrayLiteral("BONE_NORMAL_TRANSFORMS"))
+                            useJointNormalTexState = 0;
                         break;
                     }
                 }
@@ -831,6 +841,45 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 currentShadedFunc.clear();
             }
             funcFinderState = 0;
+            break;
+        case Tokenizer::Token_OpenBraket:
+            if (useJointTexState == 0) {
+                result += QByteArrayLiteral("(2 * (");
+                ++useJointTexState;
+                break;
+            } else if (useJointNormalTexState == 0) {
+                result += QByteArrayLiteral("(1 + 2 * (");
+                ++useJointNormalTexState;
+                break;
+            }
+
+            if (useJointTexState >= 0)
+                ++useJointTexState;
+            else if (useJointNormalTexState >= 0)
+                ++useJointNormalTexState;
+            result += QByteArrayLiteral("[");
+            break;
+        case Tokenizer::Token_CloseBraket:
+            // This implementation will not allow mixed usages of BONE_TRANSFORMS and
+            // BONE_NORMAL_TRANSFORMS.
+            // For example, BONE_TRANSFORM[int(BONE_NORMAL_TRANFORMS[i][0].x)]
+            // cannot be compiled successfully.
+            if (useJointTexState <= 0 && useJointNormalTexState <= 0) {
+                result += QByteArrayLiteral("]");
+                break;
+            }
+            if (useJointTexState > 1) {
+                result += QByteArrayLiteral("]");
+                --useJointTexState;
+                break;
+            } else if (useJointNormalTexState > 1) {
+                result += QByteArrayLiteral("]");
+                --useJointNormalTexState;
+                break;
+            }
+            result += QByteArrayLiteral("))");
+            useJointTexState = -1;
+            useJointNormalTexState = -1;
             break;
         default:
             result += QByteArray::fromRawData(lastPos, tok.pos - lastPos);

@@ -85,8 +85,6 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
         QSSGMaterialVertexPipeline pipeline(context->shaderProgramGenerator(),
                                             context->renderer()->defaultMaterialShaderKeyProperties(),
                                             material.adapter,
-                                            renderable.boneGlobals,
-                                            renderable.boneNormals,
                                             renderable.morphWeights);
 
         shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
@@ -155,7 +153,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
     const auto &modelNode = renderable.modelContext.model;
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix(modelNode.boneTransforms.isEmpty() ? renderable.globalTransform
+    const QMatrix4x4 &modelMatrix((modelNode.boneCount == 0) ? renderable.globalTransform
                                 : modelNode.skin ? QMatrix4x4() : modelNode.skeleton->globalTransform);
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
@@ -172,8 +170,6 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           clipSpaceCorrMatrix,
                                                           localInstanceTransform,
                                                           globalInstanceTransform,
-                                                          renderable.boneGlobals,
-                                                          renderable.boneNormals,
                                                           renderable.morphWeights,
                                                           renderable.firstImage,
                                                           renderable.opacity,
@@ -219,14 +215,15 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
     if (shaderPipeline) {
         QSSGRhiShaderResourceBindingList bindings;
+        const auto &modelNode = renderable.modelContext.model;
 
         QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ &layerData.layer,
-                                                        &renderable.modelContext.model,
+                                                        &modelNode,
                                                         &material,
                                                         0,
                                                         QSSGRhiDrawCallDataKey::Main })
                                               : rhiCtx->drawCallData({ &layerData.layer,
-                                                                       &renderable.modelContext.model,
+                                                                       &modelNode,
                                                                        entry, cubeFace + int(renderable.subset.offset << 3),
                                                                        QSSGRhiDrawCallDataKey::Reflection }));
 
@@ -306,6 +303,27 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
         if (blendParticles)
             samplerBindingsSpecified.setBit(shaderPipeline->bindingForTexture("qt_particleTexture"));
+
+        // Skinning
+        if (modelNode.boneCount != 0) {
+            QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+            QRhiTextureSubresourceUploadDescription boneDesc(modelNode.boneData);
+            QRhiTextureUploadDescription boneUploadDesc(QRhiTextureUploadEntry(0, 0, boneDesc));
+            rub->uploadTexture(modelNode.boneTexture, boneUploadDesc);
+            rhiCtx->commandBuffer()->resourceUpdate(rub);
+            int binding = shaderPipeline->bindingForTexture("qt_boneTexture");
+            if (binding >= 0) {
+                QRhiSampler *boneSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                             QRhiSampler::Nearest,
+                                                             QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::ClampToEdge,
+                                                             QRhiSampler::Repeat
+                                                           });
+                bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, modelNode.boneTexture, boneSampler);
+                samplerBindingsSpecified.setBit(binding);
+            }
+        }
 
         // Prioritize reflection texture over Light Probe texture because
         // reflection texture also contains the irradiance and pre filtered

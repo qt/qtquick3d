@@ -48,8 +48,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            const QSSGRenderGraphObject &mat,
                                            QSSGRenderableImage *inFirstImage,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
-                                           const QSSGDataView<QMatrix4x4> &inBoneGlobals,
-                                           const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                            const QSSGShaderLightList &inLights,
                                            const QSSGDataView<float> &inMorphWeights)
     : QSSGRenderableObject(inFlags,
@@ -66,8 +64,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , material(mat)
     , firstImage(inFirstImage)
     , shaderDescription(inShaderKey)
-    , boneGlobals(inBoneGlobals)
-    , boneNormals(inBoneNormals)
     , lights(inLights)
     , morphWeights(inMorphWeights)
 {

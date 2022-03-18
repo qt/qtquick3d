@@ -97,6 +97,9 @@ QQmlListProperty<QQuick3DNode> QQuick3DSkin::joints()
                                             QQuick3DSkin::qmlClearJoints);
 }
 
+#define POS4BONETRANS(x)    (sizeof(float) * 16 * (x) * 2)
+#define POS4BONENORM(x)     (sizeof(float) * 16 * ((x) * 2 + 1))
+
 void QQuick3DSkin::onJointChanged(QQuick3DNode *node)
 {
     for (int i = 0; i < m_joints.count(); ++i) {
@@ -104,8 +107,15 @@ void QQuick3DSkin::onJointChanged(QQuick3DNode *node)
             QMatrix4x4 jointGlobal = m_joints.at(i)->sceneTransform();
             if (m_inverseBindPoses.count() > i)
                 jointGlobal *= m_inverseBindPoses.at(i);
-            m_boneMatrices[i] = jointGlobal;
-            m_boneNormalMatrices[i] = jointGlobal.normalMatrix();
+            m_boneData.replace(POS4BONETRANS(i),
+                               sizeof(float) * 16,
+                               reinterpret_cast<const char *>(jointGlobal.constData()),
+                               sizeof(float) * 16);
+            // only upper 3x3 is meaningful
+            m_boneData.replace(POS4BONENORM(i),
+                               sizeof(float) * 11,
+                               reinterpret_cast<const char *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
+                               sizeof(float) * 11);
             markDirty();
         }
     }
@@ -116,8 +126,9 @@ void QQuick3DSkin::onJointDestroyed(QObject *object)
     for (int i = 0; i < m_joints.count(); ++i) {
         if (m_joints.at(i) == object) {
             m_joints.removeAt(i);
-            m_boneMatrices.removeAt(i);
-            m_boneNormalMatrices.removeAt(i);
+            // remove both transform and normal together
+            m_boneData.remove(POS4BONETRANS(i),
+                              sizeof(float) * 16 * 2);
             markDirty();
             break;
         }
@@ -131,11 +142,13 @@ void QQuick3DSkin::qmlAppendJoint(QQmlListProperty<QQuick3DNode> *list, QQuick3D
     QQuick3DSkin *self = static_cast<QQuick3DSkin *>(list->object);
     int index = self->m_joints.count();
     self->m_joints.push_back(joint);
-    QMatrix4x4 M = joint->sceneTransform();
+    QMatrix4x4 jointGlobal = joint->sceneTransform();
     if (index < self->m_inverseBindPoses.count())
-        M *= self->m_inverseBindPoses.at(index);
-    self->m_boneMatrices.push_back(M);
-    self->m_boneNormalMatrices.push_back(M.normalMatrix());
+        jointGlobal *= self->m_inverseBindPoses.at(index);
+    self->m_boneData.append(reinterpret_cast<const char *>(jointGlobal.constData()),
+                            sizeof(float) * 16);
+    self->m_boneData.append(reinterpret_cast<const char *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
+                            sizeof(float) * 16);
     self->markDirty();
 
     connect(joint, &QQuick3DNode::sceneTransformChanged, self,
@@ -193,8 +206,15 @@ void QQuick3DSkin::setInverseBindPoses(const QList<QMatrix4x4> &poses)
         QMatrix4x4 jointGlobal = m_joints.at(i)->sceneTransform();
         if (m_inverseBindPoses.count() > i)
             jointGlobal *= m_inverseBindPoses.at(i);
-        m_boneMatrices[i] = jointGlobal;
-        m_boneNormalMatrices[i] = jointGlobal.normalMatrix();
+        m_boneData.replace(POS4BONETRANS(i),
+                           sizeof(float) * 16,
+                           reinterpret_cast<const char *>(jointGlobal.constData()),
+                           sizeof(float) * 16);
+        // only upper 3x3 is meaningful
+        m_boneData.replace(POS4BONENORM(i),
+                           sizeof(float) * 11,
+                           reinterpret_cast<const char *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
+                           sizeof(float) * 11);
     }
 
     markDirty();
@@ -227,8 +247,7 @@ QSSGRenderGraphObject *QQuick3DSkin::updateSpatialNode(QSSGRenderGraphObject *no
 
     if (m_dirty) {
         m_dirty = false;
-        skinNode->boneMatrices = m_boneMatrices;
-        skinNode->boneNormalMatrices = m_boneNormalMatrices;
+        skinNode->boneData = m_boneData;
     }
 
     return node;

@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderDefaultMaterial;
 struct QSSGParticleBuffer;
 class QSSGBufferManager;
+class QRhiTexture;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
 {
@@ -72,8 +73,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     bool receivesShadows = true;
     bool skinningDirty = false;
     bool skeletonContainsNonJointNodes = false;
-    QVector<QMatrix4x4> boneTransforms;
-    QVector<QMatrix3x3> boneNormalTransforms;
+    QByteArray boneData;
+    QRhiTexture *boneTexture = nullptr;
+    quint32 boneCount = 0;
+
     QSSGRenderInstanceTable *instanceTable = nullptr;
     int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }
     bool instancing() const { return instanceTable;}

@@ -85,8 +85,7 @@ private:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
 
     QVector<QQuick3DNode *> m_joints;
-    QVector<QMatrix4x4> m_boneMatrices;
-    QVector<QMatrix3x3> m_boneNormalMatrices;
+    QByteArray m_boneData;
     QList<QMatrix4x4> m_inverseBindPoses;
     bool m_dirty = false;
 

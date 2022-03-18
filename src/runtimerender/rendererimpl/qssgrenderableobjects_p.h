@@ -282,7 +282,7 @@ struct QSSGModelContext
     {
         // For skinning, node's global transformation will be ignored and
         // an identity matrix will be used for the normalMatrix
-        if (model.boneTransforms.isEmpty()) {
+        if (model.boneCount == 0) {
             model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
         } else if (model.skin) {
             modelViewProjection = inViewProjection;
@@ -313,8 +313,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     const QSSGRenderGraphObject &material;
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
-    QSSGDataView<QMatrix4x4> boneGlobals;
-    QSSGDataView<QMatrix3x3> boneNormals;
     const QSSGShaderLightList &lights;
     QSSGDataView<float> morphWeights;
 
@@ -349,8 +347,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
                          const QSSGRenderGraphObject &mat,
                          QSSGRenderableImage *inFirstImage,
                          QSSGShaderDefaultMaterialKey inShaderKey,
-                         const QSSGDataView<QMatrix4x4> &inBoneGlobals,
-                         const QSSGDataView<QMatrix3x3> &inBoneNormals,
                          const QSSGShaderLightList &inLights,
                          const QSSGDataView<float> &inMorphWeights);
 

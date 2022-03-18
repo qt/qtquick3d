@@ -44,19 +44,14 @@ QT_BEGIN_NAMESPACE
 QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &programGen,
                                                        const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
                                                        QSSGShaderMaterialAdapter *materialAdapter,
-                                                       QSSGDataView<QMatrix4x4> boneGlobals,
-                                                       QSSGDataView<QMatrix3x3> boneNormals,
                                                        QSSGDataView<float> morphWeights)
     : m_programGenerator(programGen)
     , defaultMaterialShaderKeyProperties(materialProperties)
     , materialAdapter(materialAdapter)
-    , boneGlobals(boneGlobals)
-    , boneNormals(boneNormals)
     , morphWeights(morphWeights)
     , hasCustomShadedMain(false)
     , skipCustomFragmentSnippet(false)
 {
-    m_hasSkinning = boneGlobals.size() > 0;
     m_hasMorphing = morphWeights.size() > 0;
 }
 
@@ -162,6 +157,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool usesFloatJointIndices = defaultMaterialShaderKeyProperties.m_usesFloatJointIndices.getValue(inKey);
     const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
     usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
+    m_hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(inKey) > 0;
 
     vertexShader.addIncoming("attr_pos", "vec3");
     if (usesInstancing) {
@@ -188,8 +184,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             vertexShader.addIncoming("attr_joints", "ivec4");
         vertexShader.addIncoming("attr_weights", "vec4");
 
-        vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
-        vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
+        vertexShader.addUniform("qt_boneTexture", "sampler2D");
     }
     if (m_hasMorphing)
         vertexShader.addUniformArray("qt_morphWeights", "float", morphWeights.mSize);
@@ -210,8 +205,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
 
             if (m_hasSkinning) {
                 vertexShader.addInclude("skinanim.glsllib");
-                vertexShader.addUniformArray("qt_boneTransforms", "mat4", boneGlobals.mSize);
-                vertexShader.addUniformArray("qt_boneNormalTransforms", "mat3", boneNormals.mSize);
+                vertexShader.addUniform("qt_boneTexture", "sampler2D");
             }
 
             if (!materialAdapter->isUnshaded()) {

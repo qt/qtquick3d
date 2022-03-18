@@ -114,8 +114,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          const QMatrix4x4 &clipSpaceCorrMatrix,
                                          const QMatrix4x4 &localInstanceTransform,
                                          const QMatrix4x4 &globalInstanceTransform,
-                                         const QSSGDataView<QMatrix4x4> &inBoneGlobals,
-                                         const QSSGDataView<QMatrix3x3> &inBoneNormals,
                                          const QSSGDataView<float> &inMorphWeights,
                                          QSSGRenderableImage *inFirstImage,
                                          float inOpacity,
