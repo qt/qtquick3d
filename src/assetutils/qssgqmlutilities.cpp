@@ -838,66 +838,13 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         // Enumerations
         if (value.mt.flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
-            switch (target.nodeType) {
-            case QSSGSceneDesc::Node::Type::Skeleton:
-                return { property.name, QLatin1String(qmlElementName<RuntimeType::Skeleton>()) + QLatin1Char('.') + asString(value) };
-                break;
-            case QSSGSceneDesc::Node::Type::Joint:
-                return { property.name, QLatin1String(qmlElementName<RuntimeType::Joint>()) + QLatin1Char('.') + asString(value) };
-                break;
-            case QSSGSceneDesc::Node::Type::Transform:
-                return { property.name, QLatin1String(qmlElementName<RuntimeType::Node>()) + QLatin1Char('.') + asString(value) };
-                break;
-            case QSSGSceneDesc::Node::Type::Camera:
-                switch (target.runtimeType) {
-                case RuntimeType::PerspectiveCamera:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::PerspectiveCamera>()) + QLatin1Char('.') + asString(value) };
-                case RuntimeType::OrthographicCamera:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::OrthographicCamera>()) + QLatin1Char('.') + asString(value) };
-                default:
-                    Q_UNREACHABLE();
-                }
-                break;
-            case QSSGSceneDesc::Node::Type::Model:
-                break;
-            case QSSGSceneDesc::Node::Type::Texture:
-                switch (target.runtimeType) {
-                case RuntimeType::Image:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::Image>()) + QLatin1Char('.') + asString(value) };
-                case RuntimeType::TextureData:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::TextureData>()) + QLatin1Char('.') + asString(value) };
-                default:
-                    Q_UNREACHABLE();
-                }
-                break;
-            case QSSGSceneDesc::Node::Type::Material:
-                switch (target.runtimeType) {
-                case RuntimeType::PrincipledMaterial:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::PrincipledMaterial>()) + QLatin1Char('.') + asString(value) };
-                case RuntimeType::DefaultMaterial:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::DefaultMaterial>()) + QLatin1Char('.') + asString(value) };
-                case RuntimeType::CustomMaterial:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::CustomMaterial>()) + QLatin1Char('.') + asString(value) };
-                default:
-                    Q_UNREACHABLE();
-                }
-                break;
-            case QSSGSceneDesc::Node::Type::Light:
-                switch (target.runtimeType) {
-                case RuntimeType::DirectionalLight:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::DirectionalLight>()) + QLatin1Char('.') + asString(value) };
-                case RuntimeType::SpotLight:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::SpotLight>()) + QLatin1Char('.') + asString(value) };
-                case RuntimeType::PointLight:
-                    return { property.name, QLatin1String(qmlElementName<RuntimeType::PointLight>()) + QLatin1Char('.') + asString(value) };
-                default:
-                    Q_UNREACHABLE();
-                }
-                break;
-            case QSSGSceneDesc::Node::Type::Mesh:
-                break;
-
-            }
+            static const auto qmlEnumString = [](const QLatin1String &element, const QString &enumString) {
+                return QStringLiteral("%1.%2").arg(element).arg(enumString);
+            };
+            QLatin1String qmlElementName(getQmlElementName(target));
+            QString enumValue = asString(value);
+            if (enumValue.size() > 0)
+                return { property.name, qmlEnumString(qmlElementName, enumValue) };
         }
 
         if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
