@@ -134,7 +134,7 @@ protected:
     QByteArray getInstanceBuffer(int *instanceCount) override
     {
         if (instanceCount)
-            *instanceCount = int(m_instances.count() / sizeof(InstanceTableEntry));
+            *instanceCount = int(m_instances.size() / sizeof(InstanceTableEntry));
 
         if (!m_ageSorting)
             return m_instances;

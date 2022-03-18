@@ -112,7 +112,7 @@ ShaderMetaData getShaderMetaData(const QByteArray &data)
             qWarning("Missing }*/ suffix");
             break;
         }
-        jsonData = jsonData.mid(2, jsonData.count() - 4);
+        jsonData = jsonData.mid(2, jsonData.size() - 4);
 
         QJsonParseError error;
         const auto doc = QJsonDocument::fromJson(jsonData, &error);

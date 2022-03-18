@@ -183,7 +183,7 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         inputStream >> nameLength;
         offsetTracker.advance(sizeof(quint32));
         const QByteArray nameWithZeroTerminator = device->read(nameLength);
-        entry.name = QByteArray(nameWithZeroTerminator.constData(), qMax(0, nameWithZeroTerminator.count() - 1));
+        entry.name = QByteArray(nameWithZeroTerminator.constData(), qMax(0, nameWithZeroTerminator.size() - 1));
         alignAmount = offsetTracker.alignedAdvance(nameLength);
         if (alignAmount)
             device->read(alignPadding, alignAmount);
@@ -329,7 +329,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
 
     for (quint32 i = 0; i < vertexBufferEntriesCount; ++i) {
         const Mesh::VertexBufferEntry &entry(mesh.m_vertexBuffer.entries[i]);
-        const quint32 nameLength = entry.name.count() + 1;
+        const quint32 nameLength = entry.name.size() + 1;
         outputStream << nameLength;
         device->write(entry.name.constData(), nameLength); // with zero terminator included
         alignAmount = offsetTracker.alignedAdvance(sizeof(quint32) + nameLength);
@@ -358,7 +358,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
         const float maxX = subset.bounds.max.x();
         const float maxY = subset.bounds.max.y();
         const float maxZ = subset.bounds.max.z();
-        const quint32 nameLength = subset.name.count() + 1;
+        const quint32 nameLength = subset.name.size() + 1;
         const quint32 lightmapSizeHintWidth = qMax(0, subset.lightmapSizeHint.width());
         const quint32 lightmapSizeHintHeight = qMax(0, subset.lightmapSizeHint.height());
         outputStream << subsetCount
@@ -382,7 +382,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     for (quint32 i = 0; i < subsetsCount; ++i) {
         const Mesh::Subset &subset(mesh.m_subsets[i]);
         const char *utf16Name = reinterpret_cast<const char *>(subset.name.utf16());
-        const quint32 nameByteSize = (subset.name.count() + 1) * 2;
+        const quint32 nameByteSize = (subset.name.size() + 1) * 2;
         device->write(utf16Name, nameByteSize);
         alignAmount = offsetTracker.alignedAdvance(nameByteSize);
         if (alignAmount)

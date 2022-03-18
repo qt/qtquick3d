@@ -190,7 +190,7 @@ bool QQuick3DInstancing::depthSortingEnabled() const
 const QQuick3DInstancing::InstanceTableEntry *QQuick3DInstancing::getInstanceEntry(int index)
 {
     const QByteArray data = getInstanceBuffer(nullptr);
-    if (index >= int(data.count() / sizeof(InstanceTableEntry)))
+    if (index >= int(data.size() / sizeof(InstanceTableEntry)))
         return nullptr;
     return reinterpret_cast<const QQuick3DInstancing::InstanceTableEntry*>(data.constData()) + index;
 }

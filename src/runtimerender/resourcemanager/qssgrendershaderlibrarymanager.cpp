@@ -109,7 +109,7 @@ void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, co
         if (contents.startsWith(copyrightHeaderStart())) {
             int clipPos = contents.indexOf(copyrightHeaderEnd()) ;
             if (clipPos >= 0)
-                contents.remove(0, clipPos + copyrightHeaderEnd().count());
+                contents.remove(0, clipPos + copyrightHeaderEnd().size());
         }
         // Write insert comment for begin source
         contents.prepend(QByteArrayLiteral("\n// begin \"") + theInclude + QByteArrayLiteral("\"\n"));
