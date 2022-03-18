@@ -654,16 +654,34 @@ static QByteArrayView typeName(QMetaType mt)
     }
 }
 
+using NodeNameMap = QHash<const QSSGSceneDesc::Node *, QString>;
+Q_GLOBAL_STATIC(NodeNameMap, g_nodeNameMap)
+using UniqueIdMap = QHash<QString, const QSSGSceneDesc::Node *>;
+Q_GLOBAL_STATIC(UniqueIdMap, g_idMap)
+
 static QString getIdForNode(const QSSGSceneDesc::Node &node)
 {
     const bool nodeHasName = (node.name.size() > 0);
     QString name = nodeHasName ? QString::fromUtf8(node.name) : QString::fromLatin1(getQmlElementName(node));
     QString sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
 
-    if (nodeHasName)
-        return sanitizedName;
+    // Make sure we return a unique id.
+    if (const auto it = g_nodeNameMap->constFind(&node); it != g_nodeNameMap->constEnd())
+        return *it;
 
-    return QStringLiteral("%1%2").arg(sanitizedName).arg(node.id);
+    quint64 id = node.id;
+    int attempts = 1000;
+    do {
+        if (const auto it = g_idMap->constFind(sanitizedName); it == g_idMap->constEnd()) {
+            g_idMap->insert(sanitizedName, &node);
+            g_nodeNameMap->insert(&node, sanitizedName);
+            return sanitizedName;
+        }
+
+        sanitizedName = QStringLiteral("%1%2").arg(sanitizedName).arg(id++);
+    } while (--attempts);
+
+    return sanitizedName;
 }
 
 void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value)
