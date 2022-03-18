@@ -38,6 +38,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/qflags.h>
 #include <QtQml/qqmllist.h>
 
 // QtQuick3D
@@ -125,6 +126,12 @@ struct Value
 {
     QMetaType mt;
     void *dptr;
+};
+
+struct Flag
+{
+    QMetaEnum me;
+    quintptr value;
 };
 
 struct BufferView {
@@ -320,6 +327,7 @@ struct ListView
 };
 
 Q_QUICK3DASSETUTILS_EXPORT QMetaType listViewMetaType();
+Q_QUICK3DASSETUTILS_EXPORT QMetaType flagMetaType();
 
 struct Animation
 {
@@ -607,6 +615,18 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     node.properties.push_back(*prop);
 }
 
+template<typename Setter, typename T, if_compatible_t<Setter, QFlags<T>> = false>
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QFlags<T> value)
+{
+    Q_ASSERT(node.scene);
+    auto prop = node.scene->create<Property>();
+    prop->name = name;
+    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
+    prop->value.mt = flagMetaType();
+    prop->value.dptr = node.scene->create<Flag>(Flag{ QMetaEnum::fromType<T>(), quintptr(value) });
+    node.properties.push_back(*prop);
+}
+
 template<typename Setter, typename T, if_compatible_t<Setter, QList<T>> = false>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QList<T> value)
 {
@@ -730,5 +750,7 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::BufferView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::UrlView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::StringView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::ListView)
+
+Q_DECLARE_METATYPE(QSSGSceneDesc::Flag)
 
 #endif // QSSGSCENEDESCRIPTION_P_H

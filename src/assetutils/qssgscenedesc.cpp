@@ -78,4 +78,9 @@ QMetaType QSSGSceneDesc::listViewMetaType()
     return QMetaType::fromType<QSSGSceneDesc::ListView>();
 }
 
+QMetaType QSSGSceneDesc::flagMetaType()
+{
+    return QMetaType::fromType<QSSGSceneDesc::Flag>();
+}
+
 QT_END_NAMESPACE

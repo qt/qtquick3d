@@ -878,6 +878,20 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 return { property.name, qmlEnumString(qmlElementName, enumValue) };
         }
 
+        if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
+            QByteArray element(getQmlElementName(target));
+            if (element.size() > 0) {
+                const auto &flag = *reinterpret_cast<QSSGSceneDesc::Flag *>(value.dptr);
+                QByteArray keysString = flag.me.valueToKeys(int(flag.value));
+                if (keysString.size() > 0) {
+                    keysString.prepend(element + '.');
+                    QByteArray replacement(" | " + element + '.');
+                    keysString.replace('|', replacement);
+                    return { property.name, QString::fromLatin1(keysString) };
+                }
+            }
+        }
+
         if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
             const auto &list = *reinterpret_cast<QSSGSceneDesc::NodeList *>(value.dptr);
             if (list.count > 0) {
