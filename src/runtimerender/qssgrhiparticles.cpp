@@ -198,7 +198,7 @@ static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
                           const QVector3D &cameraDirection, bool animatedParticles)
 {
     const QMatrix4x4 &invModelMatrix = particles.globalTransform.inverted();
-    QVector3D dir = invModelMatrix * cameraDirection;
+    QVector3D dir = invModelMatrix.mapVector(cameraDirection);
     QVector3D n = dir.normalized();
     const auto particleCount = buffer.particleCount();
     sortData.resize(particleCount);

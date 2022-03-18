@@ -86,7 +86,7 @@ void QSSGBounds3::transform(const QMatrix4x4 &inMatrix)
         expand(thePoints);
         setEmpty();
         for (quint32 idx = 0; idx < 8; ++idx)
-            include(inMatrix * thePoints[idx]);
+            include(inMatrix.mapVector(thePoints[idx]));
     }
 }
 
