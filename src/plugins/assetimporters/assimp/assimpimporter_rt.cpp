@@ -103,8 +103,8 @@ struct TextureInfo
 {
     aiTextureMapping mapping = aiTextureMapping::aiTextureMapping_UV;
     aiTextureMapMode modes[3] {};
-    unsigned int minFilter { AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR };
-    unsigned int magFilter { AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR };
+    unsigned int minFilter { AI_GLTF_FILTER_LINEAR };
+    unsigned int magFilter { AI_GLTF_FILTER_LINEAR };
     uint uvIndex { 0 };
     aiUVTransform *transform = nullptr;
 };
