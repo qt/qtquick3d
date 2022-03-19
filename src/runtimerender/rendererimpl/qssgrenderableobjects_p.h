@@ -331,7 +331,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
     const QSSGShaderLightList &lights;
-    QSSGDataView<float> morphWeights;
 
     struct {
         // Transient (due to the subsetRenderable being allocated using a
@@ -364,8 +363,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
                          const QSSGRenderGraphObject &mat,
                          QSSGRenderableImage *inFirstImage,
                          QSSGShaderDefaultMaterialKey inShaderKey,
-                         const QSSGShaderLightList &inLights,
-                         const QSSGDataView<float> &inMorphWeights);
+                         const QSSGShaderLightList &inLights);
 
     const QSSGRenderDefaultMaterial &defaultMaterial() const
     {

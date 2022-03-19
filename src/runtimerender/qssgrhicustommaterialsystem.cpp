@@ -84,8 +84,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         QSSGMaterialVertexPipeline pipeline(context->shaderProgramGenerator(),
                                             context->renderer()->defaultMaterialShaderKeyProperties(),
-                                            material.adapter,
-                                            renderable.morphWeights);
+                                            material.adapter);
 
         shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
                                                                                 pipeline,
@@ -170,7 +169,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           clipSpaceCorrMatrix,
                                                           localInstanceTransform,
                                                           globalInstanceTransform,
-                                                          renderable.morphWeights,
+                                                          toDataView(modelNode.morphWeights),
                                                           renderable.firstImage,
                                                           renderable.opacity,
                                                           globalProperties,

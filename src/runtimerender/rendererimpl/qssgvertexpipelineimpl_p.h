@@ -82,15 +82,13 @@ struct QSSGMaterialVertexPipeline
     const QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties;
     QSSGShaderMaterialAdapter *materialAdapter;
     bool useFloatJointIndices;
-    QSSGDataView<float> morphWeights;
     bool hasCustomShadedMain;
     bool usesInstancing;
     bool skipCustomFragmentSnippet;
 
     QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
-                               QSSGShaderMaterialAdapter *materialAdapter,
-                               QSSGDataView<float> morphWeights);
+                               QSSGShaderMaterialAdapter *materialAdapter);
 
     ~QSSGMaterialVertexPipeline() = default;
 

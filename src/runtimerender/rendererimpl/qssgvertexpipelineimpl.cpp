@@ -43,16 +43,13 @@ QT_BEGIN_NAMESPACE
 
 QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &programGen,
                                                        const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
-                                                       QSSGShaderMaterialAdapter *materialAdapter,
-                                                       QSSGDataView<float> morphWeights)
+                                                       QSSGShaderMaterialAdapter *materialAdapter)
     : m_programGenerator(programGen)
     , defaultMaterialShaderKeyProperties(materialProperties)
     , materialAdapter(materialAdapter)
-    , morphWeights(morphWeights)
     , hasCustomShadedMain(false)
     , skipCustomFragmentSnippet(false)
 {
-    m_hasMorphing = morphWeights.size() > 0;
 }
 
 static inline void insertProcessorArgs(QByteArray &snippet, const char *argKey, const char* (*argListFunc)(), bool usesShared = false, bool isSharedInout = false)
@@ -160,6 +157,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
     usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
     m_hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(inKey) > 0;
+    const auto morphSize = defaultMaterialShaderKeyProperties.m_morphTargetCount.getValue(inKey);
+    m_hasMorphing = morphSize > 0;
 
     vertexShader.addIncoming("attr_pos", "vec3");
     if (usesInstancing) {
@@ -189,7 +188,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addUniform("qt_boneTexture", "sampler2D");
     }
     if (m_hasMorphing)
-        vertexShader.addUniformArray("qt_morphWeights", "float", morphWeights.mSize);
+        vertexShader.addUniformArray("qt_morphWeights", "float", morphSize);
 
     const bool hasCustomVertexShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
     const bool hasCustomFragmentShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);

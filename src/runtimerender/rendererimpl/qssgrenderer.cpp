@@ -177,8 +177,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
 
     QSSGMaterialVertexPipeline pipeline(shaderProgramGenerator,
                                         shaderKeyProperties,
-                                        renderable.defaultMaterial().adapter,
-                                        renderable.morphWeights);
+                                        renderable.defaultMaterial().adapter);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
                                                                   pipeline,

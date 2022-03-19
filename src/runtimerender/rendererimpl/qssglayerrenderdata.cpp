@@ -984,8 +984,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
 
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
 
-    QSSGDataView<float> morphWeights = toDataView(inModel.morphWeights);
-
     TRenderableObjectList bakedLightingObjects;
 
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
@@ -1060,7 +1058,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
             // Instancing
             renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
             // Morphing
-            renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
+            renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, inModel.morphWeights.size());
             for (int i = 0; i < inModel.morphAttributes.size(); ++i)
                 renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, inModel.morphAttributes[i] & morphTargetAttribs[i]);
 
@@ -1074,8 +1072,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                                                                          theMaterial,
                                                                          firstImage,
                                                                          theGeneratedKey,
-                                                                         lights,
-                                                                         morphWeights);
+                                                                         lights);
             subsetDirty = subsetDirty || renderableFlags.isDirty();
         } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
@@ -1106,7 +1103,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                     && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
             renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
             // Morphing
-            renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, morphWeights.mSize);
+            renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, inModel.morphWeights.size());
             // For custommaterials, it is allowed to use morph inputs without morphTargets
             for (int i = 0; i < MAX_MORPH_TARGET; ++i)
                 renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, morphTargetAttribs[i]);
@@ -1124,8 +1121,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                                                                          theMaterial,
                                                                          firstImage,
                                                                          theGeneratedKey,
-                                                                         lights,
-                                                                         morphWeights);
+                                                                         lights);
         }
         if (theRenderableObject) {
             if (theRenderableObject->renderableFlags.requiresScreenTexture())
@@ -1835,7 +1831,7 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           clipSpaceCorrMatrix,
                                                           localInstanceTransform,
                                                           globalInstanceTransform,
-                                                          subsetRenderable.morphWeights,
+                                                          toDataView(modelNode.morphWeights),
                                                           subsetRenderable.firstImage,
                                                           subsetRenderable.opacity,
                                                           generator->getLayerGlobalRenderProperties(),

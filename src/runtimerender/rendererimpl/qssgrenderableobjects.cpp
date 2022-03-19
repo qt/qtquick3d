@@ -48,8 +48,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            const QSSGRenderGraphObject &mat,
                                            QSSGRenderableImage *inFirstImage,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
-                                           const QSSGShaderLightList &inLights,
-                                           const QSSGDataView<float> &inMorphWeights)
+                                           const QSSGShaderLightList &inLights)
     : QSSGRenderableObject(inFlags,
                            inWorldCenterPt,
                            inModelContext.model.globalTransform,
@@ -65,7 +64,6 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , firstImage(inFirstImage)
     , shaderDescription(inShaderKey)
     , lights(inLights)
-    , morphWeights(inMorphWeights)
 {
     if (mat.type == QSSGRenderGraphObject::Type::CustomMaterial) {
         renderableFlags.setCustomMaterialMeshSubset(true);
