@@ -98,14 +98,19 @@ using NodeMap = QHash<const aiNode *, NodeInfo>;
 
 using AnimationNodeMap = QHash<QByteArray, QSSGSceneDesc::Node *>;
 
+[[nodiscard]] static inline bool isEqual(const aiUVTransform &a, const aiUVTransform &b)
+{
+    return (a.mTranslation == b.mTranslation && a.mScaling == b.mScaling && a.mRotation == b.mRotation);
+};
+
 struct TextureInfo
 {
-    aiTextureMapping mapping = aiTextureMapping::aiTextureMapping_UV;
     aiTextureMapMode modes[3] {};
+    aiTextureMapping mapping = aiTextureMapping::aiTextureMapping_UV;
     unsigned int minFilter { AI_GLTF_FILTER_LINEAR };
     unsigned int magFilter { AI_GLTF_FILTER_LINEAR };
     uint uvIndex { 0 };
-    aiUVTransform *transform = nullptr;
+    aiUVTransform transform;
 };
 
 bool operator==(const TextureInfo &a, const TextureInfo &b)
@@ -115,7 +120,7 @@ bool operator==(const TextureInfo &a, const TextureInfo &b)
             && (a.minFilter == b.minFilter)
             && (a.magFilter == b.magFilter)
             && (a.uvIndex == b.uvIndex)
-            && ((a.transform == b.transform) || ((a.transform && b.transform) && (std::memcmp(a.transform, b.transform, sizeof(aiUVTransform)) == 0)));
+            && isEqual(a.transform, b.transform);
 }
 
 struct TextureEntry
@@ -127,13 +132,14 @@ struct TextureEntry
 
 size_t qHash(const TextureEntry &key, size_t seed)
 {
+    static_assert(std::is_same_v<decltype(key.info.transform), aiUVTransform>, "Unexpected type");
     const auto infoKey = quintptr(key.info.mapping)
                          ^ (quintptr(key.info.modes[0]) ^ quintptr(key.info.modes[1]) ^ quintptr(key.info.modes[2]))
                          ^ quintptr(key.info.minFilter ^ key.info.magFilter)
                          ^ quintptr(key.info.uvIndex)
-                         ^ quintptr(key.info.transform);
+                         ^ qHashBits(&key.info.transform, sizeof(aiUVTransform), seed);
 
-    return qHash(key.name, seed) ^ qHash(infoKey, seed);
+    return qHash(key.name, seed) ^ infoKey;
 }
 
 bool operator==(const TextureEntry &a, const TextureEntry &b)
@@ -265,14 +271,15 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
     // mapping mode V
     QSSGSceneDesc::setProperty(target, "tilingModeVertical", &QQuick3DTexture::setHorizontalTiling, asQtTilingMode(texInfo.modes[1]));
 
-    if (texInfo.transform) {
+    const bool applyUvTransform = !isEqual(texInfo.transform, aiUVTransform());
+    if (applyUvTransform) {
         // UV origins -
         //      glTF: 0, 1 (top left of texture)
         //      Assimp, Collada?, FBX?: 0.5, 0.5
         //      Quick3D: 0, 0 (bottom left of texture)
         // Assimp already tries to fix it but it's not correct.
         // So, we restore original values and then use pivot
-        const auto &transform = *texInfo.transform;
+        const auto &transform = texInfo.transform;
         float rotation = -transform.mRotation;
         float rotationUV = qRadiansToDegrees(rotation);
         float posU = transform.mTranslation.x;
@@ -346,7 +353,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             if (texturePath.length > 0) {
                 aiUVTransform transform;
                 if (material.Get(AI_MATKEY_UVTRANSFORM(textureType, index), transform) == aiReturn_SUCCESS)
-                    texInfo.transform = &transform;
+                    texInfo.transform = transform;
 
                 if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
                     material.Get(AI_MATKEY_UVWSRC(textureType, index), texInfo.uvIndex);
