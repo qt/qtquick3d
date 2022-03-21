@@ -106,56 +106,12 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
-
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
-
-    QSSGRenderContextInterface *m_contextInterface = nullptr; //  We're own by the context interface
-
-    // The shader refs are non-null if we have attempted to generate the
-    // shader. This does not mean we were successul, however.
-
-    // RHI
-    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurXRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurXRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_ssaoRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_skyBoxRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_supersampleResolveRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_simpleQuadRhiShader;
-
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingMappedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingAnimatedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
-
-    bool m_globalPickingEnabled = false;
-
-    // Temporary information stored only when rendering a particular layer.
-    QSSGLayerRenderData *m_currentLayer = nullptr;
-    QMatrix4x4 m_viewProjection;
-    QByteArray m_generatedShaderString;
-
-    bool m_progressiveAARenderRequest = false;
-    QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
-
-    QSet<QSSGRenderGraphObject *> m_materialClearDirty;
-
-    QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
-
-    TShaderMap m_shaderMap;
 
 public:
     QAtomicInt ref;
     QSSGRenderer();
     ~QSSGRenderer();
-
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> ShaderMap;
 
     QSSGShaderDefaultMaterialKeyProperties &defaultMaterialShaderKeyProperties()
     {
@@ -207,12 +163,9 @@ public:
                                                                         const QSSGShaderFeatures &featureSet,
                                                                         QByteArray &shaderString);
 
-    QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
-                                                             const QSSGShaderFeatures &inFeatureSet);
     QSSGRef<QSSGRhiShaderPipeline> getRhiShaders(QSSGSubsetRenderable &inRenderable,
                                                const QSSGShaderFeatures &inFeatureSet);
 
-public:
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
 
     QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
@@ -220,22 +173,8 @@ public:
     // Returns true if the renderer expects new frame to be rendered
     // Happens when progressive AA is enabled
     bool rendererRequestsFrames() const;
-protected:
-    static void getLayerHitObjectList(const QSSGRenderLayer &layer,
-                                      const QSSGRef<QSSGBufferManager> &bufferManager,
-                                      const QSSGRenderRay &ray,
-                                      bool inPickEverything,
-                                      PickResultList &outIntersectionResult);
-    static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
-                                                 const QSSGRenderRay &inRay,
-                                                 const QSSGRenderNode &node,
-                                                 PickResultList &outIntersectionResultList);
-    static void intersectRayWithItem2D(const QSSGRenderRay &inRay,
-                                       const QSSGRenderItem2D &item2D,
-                                       PickResultList &outIntersectionResultList);
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
-public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurXShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurYShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurXShader();
@@ -248,12 +187,65 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel);
     QSSGRef<QSSGRhiShaderPipeline> getRhiSimpleQuadShader();
 
+protected:
+    static void getLayerHitObjectList(const QSSGRenderLayer &layer,
+                                      const QSSGRef<QSSGBufferManager> &bufferManager,
+                                      const QSSGRenderRay &ray,
+                                      bool inPickEverything,
+                                      PickResultList &outIntersectionResult);
+    static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                 const QSSGRenderRay &inRay,
+                                                 const QSSGRenderNode &node,
+                                                 PickResultList &outIntersectionResultList);
+    static void intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, PickResultList &outIntersectionResultList);
+
 private:
     friend class QSSGRenderContextInterface;
     void releaseResources();
-
     QSSGRef<QSSGRhiShaderPipeline> getBuiltinRhiShader(const QByteArray &name,
                                                        QSSGRef<QSSGRhiShaderPipeline> &storage);
+    QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable, const QSSGShaderFeatures &inFeatureSet);
+
+    QSSGRenderContextInterface *m_contextInterface = nullptr; //  We're own by the context interface
+
+    // The shader refs are non-null if we have attempted to generate the
+    // shader. This does not mean we were successul, however.
+
+    // RHI
+    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurXRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurXRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_ssaoRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_skyBoxRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_supersampleResolveRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_simpleQuadRhiShader;
+
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingMappedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingAnimatedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
+
+    bool m_globalPickingEnabled = false;
+
+    // Temporary information stored only when rendering a particular layer.
+    QSSGLayerRenderData *m_currentLayer = nullptr;
+    QMatrix4x4 m_viewProjection;
+    QByteArray m_generatedShaderString;
+
+    bool m_progressiveAARenderRequest = false;
+    QSSGShaderDefaultMaterialKeyProperties m_defaultMaterialShaderKeyProperties;
+
+    QSet<QSSGRenderGraphObject *> m_materialClearDirty;
+
+    QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
+
+    QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> m_shaderMap;
+
     // Skybox shader state
     QSSGRenderLayer::TonemapMode m_skyboxTonemapMode = QSSGRenderLayer::TonemapMode::None;
     bool m_isSkyboxRGBE = false;
