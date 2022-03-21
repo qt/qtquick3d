@@ -210,9 +210,6 @@ QSSGLayerRenderPreparationData::~QSSGLayerRenderPreparationData()
 {
     delete shadowMapManager;
     delete reflectionMapManager;
-
-    if (renderer)
-        renderer->removeLastFrameLayer(this);
 }
 
 QVector3D QSSGLayerRenderPreparationData::getCameraDirection()

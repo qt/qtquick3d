@@ -95,6 +95,7 @@ bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
     Q_ASSERT(theRenderData);
+    theRenderData->resetForFrame();
     theRenderData->prepareForRender();
     return theRenderData->layerPrepResult->flags.wasDirty();
 }
@@ -166,11 +167,6 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
     m_materialClearDirty.insert(material);
 }
 
-void QSSGRenderer::removeLastFrameLayer(QSSGLayerRenderPreparationData *layerData)
-{
-    m_lastFrameLayers.removeAll(layerData);
-}
-
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 
@@ -232,10 +228,6 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubse
 
 void QSSGRenderer::beginFrame()
 {
-    for (int idx = 0, end = m_lastFrameLayers.size(); idx < end; ++idx)
-        m_lastFrameLayers[idx]->resetForFrame();
-    m_lastFrameLayers.clear();
-
     QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), start(this));
 }
 
@@ -348,11 +340,6 @@ QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
         m_rhiQuadRenderer = new QSSGRhiQuadRenderer;
 
     return m_rhiQuadRenderer;
-}
-
-void QSSGRenderer::layerNeedsFrameClear(QSSGLayerRenderData &inLayer)
-{
-    m_lastFrameLayers.push_back(&inLayer);
 }
 
 void QSSGRenderer::beginLayerDepthPassRender(QSSGLayerRenderData &inLayer)

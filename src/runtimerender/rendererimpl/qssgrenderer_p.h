@@ -106,7 +106,6 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
-    typedef QVector<QSSGLayerRenderData *> TLayerRenderList;
     typedef QVector<QSSGRenderPickResult> TPickResultArray;
     typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
 
@@ -135,8 +134,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
-
-    TLayerRenderList m_lastFrameLayers;
 
     // Set from the first layer.
     TPickResultArray m_lastPickResults;
@@ -220,14 +217,11 @@ public:
     QSSGRhiQuadRenderer *rhiQuadRenderer();
 
     // Callback during the layer render process.
-    void layerNeedsFrameClear(QSSGLayerRenderData &inLayer);
     void beginLayerDepthPassRender(QSSGLayerRenderData &inLayer);
     void endLayerDepthPassRender();
     void beginLayerRender(QSSGLayerRenderData &inLayer);
     void endLayerRender();
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
-
-    void removeLastFrameLayer(QSSGLayerRenderPreparationData *layerData);
 
     static QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                                         const QSSGRef<QSSGShaderCache> &shaderCache,

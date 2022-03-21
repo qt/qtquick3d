@@ -74,8 +74,6 @@ void QSSGLayerRenderData::prepareForRender()
     if (thePrepResult.flags.wasLayerDataDirty()) {
         m_progressiveAAPassIndex = 0;
     }
-
-    renderer->layerNeedsFrameClear(*this);
 }
 
 void QSSGLayerRenderData::resetForFrame()
