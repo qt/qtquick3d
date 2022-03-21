@@ -189,6 +189,11 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
 
 QQuick3DViewport::~QQuick3DViewport()
 {
+    // If the quick window still exists, make sure to disconnect any of the direct
+    // connections to this View3D
+    if (auto qw = window())
+        disconnect(qw, nullptr, this, nullptr);
+
     for (const auto &connection : qAsConst(m_connections))
         disconnect(connection);
     auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
