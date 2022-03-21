@@ -94,9 +94,6 @@ public:
 
     QSSGCameraGlobalCalculationResult setupCameraForRender(QSSGRenderCamera &inCamera);
 
-    static QSSGOption<QVector2D> layerMouseCoords(const QRectF &viewport, const QVector2D &inMouseCoords, const QVector2D &inWindowDimensions, bool inForceIntersect);
-    static QSSGOption<QSSGRenderRay> pickRay(const QSSGRenderCamera &camera, const QRectF &viewport, const QVector2D &inMouseCoords, const QVector2D &inWindowDimensions, bool inForceIntersect);
-
     // Checks the various viewports and determines if the layer is visible or not.
     bool isLayerVisible() const;
 

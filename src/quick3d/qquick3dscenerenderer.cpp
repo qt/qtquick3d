@@ -823,17 +823,21 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
 QSSGOption<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
 {
     if (!m_layer || !m_layer->renderedCamera)
-        return QSSGOption<QSSGRenderRay>();
+        return QSSGEmpty();
 
     const QVector2D viewportSize(m_surfaceSize.width(), m_surfaceSize.height());
     const QVector2D position(float(pos.x()), float(pos.y()));
     const QRectF viewportRect(QPointF{}, QSizeF(m_surfaceSize));
 
-    return QSSGLayerRenderHelper::pickRay(*m_layer->renderedCamera,
-                                          viewportRect,
-                                          position,
-                                          viewportSize,
-                                          false);
+    // First invert the y so we are dealing with numbers in a normal coordinate space.
+    // Second, move into our layer's coordinate space
+    QVector2D correctCoords(position.x(), viewportSize.y() - position.y());
+    QVector2D theLocalMouse = toRectRelative(viewportRect, correctCoords);
+    if ((theLocalMouse.x() < 0.0f || theLocalMouse.x() >= viewportSize.x() || theLocalMouse.y() < 0.0f
+         || theLocalMouse.y() >= viewportSize.y()))
+        return QSSGEmpty();
+
+    return m_layer->renderedCamera->unproject(theLocalMouse, viewportRect);
 }
 
 QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)

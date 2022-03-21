@@ -78,43 +78,6 @@ QSSGCameraGlobalCalculationResult QSSGLayerRenderHelper::setupCameraForRender(QS
     return result;
 }
 
-QSSGOption<QVector2D> QSSGLayerRenderHelper::layerMouseCoords(const QRectF &viewport,
-                                                              const QVector2D &inMouseCoords,
-                                                              const QVector2D &inWindowDimensions,
-                                                              bool inForceIntersect)
-{
-    // First invert the y so we are dealing with numbers in a normal coordinate space.
-    // Second, move into our layer's coordinate space
-    QVector2D correctCoords(inMouseCoords.x(), inWindowDimensions.y() - inMouseCoords.y());
-    QVector2D theLocalMouse = toRectRelative(viewport, correctCoords);
-
-    const float theRenderRectWidth = float(viewport.width());
-    const float theRenderRectHeight = float(viewport.height());
-    // Crop the mouse to the rect.  Apply no further translations.
-    if (!inForceIntersect
-        && (theLocalMouse.x() < 0.0f || theLocalMouse.x() >= theRenderRectWidth || theLocalMouse.y() < 0.0f
-            || theLocalMouse.y() >= theRenderRectHeight)) {
-        return QSSGEmpty();
-    }
-    return theLocalMouse;
-}
-
-QSSGOption<QSSGRenderRay> QSSGLayerRenderHelper::pickRay(const QSSGRenderCamera &camera,
-                                                         const QRectF &viewport,
-                                                         const QVector2D &inMouseCoords,
-                                                         const QVector2D &inWindowDimensions,
-                                                         bool inForceIntersect)
-{
-    QSSGOption<QVector2D> theCoords(layerMouseCoords(viewport, inMouseCoords, inWindowDimensions, inForceIntersect));
-    if (theCoords.hasValue()) {
-        // The cameras projection is different if we are onscreen vs. offscreen.
-        // When offscreen, we need to move the mouse coordinates into a local space
-        // to the layer.
-        return camera.unproject(*theCoords, viewport);
-    }
-    return QSSGEmpty();
-}
-
 bool QSSGLayerRenderHelper::isLayerVisible() const
 {
     return m_scissor.height() >= 2.0f && m_scissor.width() >= 2.0f;
