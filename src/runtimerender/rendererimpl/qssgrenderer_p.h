@@ -106,7 +106,6 @@ struct QSSGPickResultProcessResult : public QSSGRenderPickResult
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
-    typedef QVector<QSSGRenderPickResult> TPickResultArray;
     typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
 
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
@@ -134,9 +133,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
-
-    // Set from the first layer.
-    TPickResultArray m_lastPickResults;
 
     bool m_globalPickingEnabled = false;
 
@@ -176,7 +172,6 @@ public:
 
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
 
-    QSSGRenderLayer *layerForNode(const QSSGRenderNode &inNode) const;
     QSSGLayerRenderData *getOrCreateLayerRenderData(QSSGRenderLayer &layer);
 
     // The QSSGRenderContextInterface calls these, clients should not.
@@ -195,24 +190,6 @@ public:
     // Setting this true enables picking for all the models, regardless of
     // the models pickable property.
     void setGlobalPickingEnabled(bool isEnabled);
-
-    // Return the relative hit position, in UV space, of a mouse pick against this object.
-    // We need the node in order to figure out which layer rendered this object.
-    // We need mapper objects if this is a in a subpresentation because we have to know how
-    // to map the mouse coordinates into the subpresentation.  So for instance if inNode is in
-    // a subpres then we need to know which image is displaying the subpres in order to map
-    // the mouse coordinates into the subpres's render space.
-    QSSGOption<QVector2D> facePosition(QSSGRenderNode &inNode,
-                                       QSSGBounds3 inBounds,
-                                       const QMatrix4x4 &inGlobalTransform,
-                                       const QVector2D &inViewportDimensions,
-                                       const QVector2D &inMouseCoords,
-                                       QSSGDataView<QSSGRenderGraphObject *> inMapperObjects,
-                                       QSSGRenderBasisPlanes inPlane);
-
-    QVector3D unprojectToPosition(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector2D &inMouseVec) const;
-    QVector3D unprojectWithDepth(QSSGRenderNode &inNode, QVector3D &inPosition, const QVector3D &inMouseVec) const;
-    QVector3D projectPosition(QSSGRenderNode &inNode, const QVector3D &inPosition) const;
 
     QSSGRhiQuadRenderer *rhiQuadRenderer();
 
@@ -236,20 +213,14 @@ public:
                                                const QSSGShaderFeatures &inFeatureSet);
 
 public:
-    QSSGLayerRenderData *getLayerRenderData() { return m_currentLayer; }
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
 
     QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
 
-    const QSSGRef<QSSGProgramGenerator> &getProgramGenerator();
-
     // Returns true if the renderer expects new frame to be rendered
     // Happens when progressive AA is enabled
     bool rendererRequestsFrames() const;
-
-    static const QSSGRenderGraphObject *getPickObject(QSSGRenderableObject &inRenderableObject);
 protected:
-    QSSGPickResultProcessResult processPickResultList(bool inPickEverything);
     static void getLayerHitObjectList(const QSSGRenderLayer &layer,
                                       const QSSGRef<QSSGBufferManager> &bufferManager,
                                       const QSSGRenderRay &ray,

@@ -52,21 +52,6 @@
 #include <algorithm>
 #include <limits>
 
-#ifdef Q_CC_MSVC
-#pragma warning(disable : 4355)
-#endif
-
-// Quick tests you can run to find performance problems
-
-//#define QSSG_RENDER_DISABLE_HARDWARE_BLENDING 1
-//#define QSSG_RENDER_DISABLE_LIGHTING 1
-//#define QSSG_RENDER_DISABLE_TEXTURING 1
-//#define QSSG_RENDER_DISABLE_TRANSPARENCY 1
-//#define QSSG_RENDER_DISABLE_FRUSTUM_CULLING 1
-
-// If you are fillrate bound then sorting opaque objects can help in some circumstances
-//#define QSSG_RENDER_DISABLE_OPAQUE_SORT 1
-
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableImage;
@@ -74,7 +59,7 @@ struct QSSGSubsetRenderable;
 
 void QSSGRenderer::releaseResources()
 {
-    delete m_rhiQuadRenderer; // TODO: pointer to incomplete type!
+    delete m_rhiQuadRenderer;
     m_rhiQuadRenderer = nullptr;
 }
 
@@ -141,17 +126,6 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
         delete resource;
     }
     resources.clear();
-}
-
-QSSGRenderLayer *QSSGRenderer::layerForNode(const QSSGRenderNode &inNode) const
-{
-    if (inNode.type == QSSGRenderGraphObject::Type::Layer)
-        return &const_cast<QSSGRenderLayer &>(static_cast<const QSSGRenderLayer &>(inNode));
-
-    if (inNode.parent)
-        return layerForNode(*inNode.parent);
-
-    return nullptr;
 }
 
 QSSGLayerRenderData *QSSGRenderer::getOrCreateLayerRenderData(QSSGRenderLayer &layer)
@@ -294,41 +268,9 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
     return QSSGPickResultProcessResult();
 }
 
-inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs)
-{
-    return lhs.m_distanceSq < rhs.m_distanceSq;
-}
-
 void QSSGRenderer::setGlobalPickingEnabled(bool isEnabled)
 {
     m_globalPickingEnabled = isEnabled;
-}
-
-QSSGPickResultProcessResult QSSGRenderer::processPickResultList(bool inPickEverything)
-{
-    Q_UNUSED(inPickEverything);
-    if (m_lastPickResults.empty())
-        return QSSGPickResultProcessResult();
-    // Things are rendered in a particular order and we need to respect that ordering.
-    std::stable_sort(m_lastPickResults.begin(), m_lastPickResults.end(), pickResultLessThan);
-
-    // We need to pick against sub objects basically somewhat recursively
-    // but if we don't hit any sub objects and the parent isn't pickable then
-    // we need to move onto the next item in the list.
-    // We need to keep in mind that theQuery->Pick will enter this method in a later
-    // stack frame so *if* we get to sub objects we need to pick against them but if the pick
-    // completely misses *and* the parent object locally pickable is false then we need to move
-    // onto the next object.
-
-    const int numToCopy = m_lastPickResults.size();
-    Q_ASSERT(numToCopy >= 0);
-    size_t numCopyBytes = size_t(numToCopy) * sizeof(QSSGRenderPickResult);
-    QSSGRenderPickResult *thePickResults = reinterpret_cast<QSSGRenderPickResult *>(
-            m_contextInterface->perFrameAllocator().allocate(numCopyBytes));
-    ::memcpy(thePickResults, m_lastPickResults.data(), numCopyBytes);
-    m_lastPickResults.clear();
-    QSSGPickResultProcessResult thePickResult(thePickResults[0]);
-    return thePickResult;
 }
 
 QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
@@ -591,11 +533,6 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               isYUpInFramebuffer,
                                               isYUpInNDC,
                                               isClipDepthZeroToOne};
-}
-
-const QSSGRef<QSSGProgramGenerator> &QSSGRenderer::getProgramGenerator()
-{
-    return m_contextInterface->shaderProgramGenerator();
 }
 
 QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
