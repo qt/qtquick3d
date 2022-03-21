@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace  {
 class CustomMaterialExposed : public QQuick3DCustomMaterial
 {
@@ -66,8 +68,8 @@ enum class ShaderType
     Fragment
 };
 
-static QString getScheme() { return u"q3dres"_qs; }
-static QString getUserType() { return u"material"_qs; }
+static QString getScheme() { return u"q3dres"_s; }
+static QString getUserType() { return u"material"_s; }
 static constexpr QStringView fileSuffix(ShaderType type) { return (type == ShaderType::Vertex) ? u".vert" : u".frag"; }
 
 static QUrl defaultShaderUrl(ShaderType type)
