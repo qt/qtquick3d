@@ -1108,9 +1108,12 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
         }
     }
 
-    // For now, all the nodes are generated, even if they are empty.
-    if (!node)
-        node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Transform }, source, parent, sceneInfo);
+    if (!node) {
+        NodeInfo nodeInfo{ 0, QSSGSceneDesc::Node::Type::Transform };
+        if (auto it = nodeMap.constFind(&source); it != nodeMap.constEnd())
+            nodeInfo = (*it);
+        node = createSceneNode(nodeInfo, source, parent, sceneInfo);
+    }
 
     if (!node)
         node = &parent;
