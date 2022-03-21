@@ -32,6 +32,8 @@
 #include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 
+#include <limits>
+
 class tst_QQuick3DPerspectiveCamera : public QObject
 {
     Q_OBJECT
@@ -169,7 +171,8 @@ void tst_QQuick3DPerspectiveCamera::mapToViewport()
     QVERIFY(node);
 
     // QTBUG-100832
-    const QVector3D largeValue(-3.40282e+38, 3.40282e+38, 3.40282e+38);
+    const float floatMax = std::numeric_limits<float>::max();
+    const QVector3D largeValue(-floatMax, floatMax, floatMax);
     QVector3D result = camera.mapToViewport(largeValue);
     QVERIFY(result.isNull());
 }

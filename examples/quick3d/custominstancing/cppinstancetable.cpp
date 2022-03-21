@@ -224,7 +224,7 @@ public:
         } else if (k > treeLine) {
             return Qt::darkGray;
         } else {
-            return QColor::fromHsvF(k * 0.7 / maxHeight, 0.7, 0.5, 1.0);
+            return QColor::fromHsvF(k * 0.7f / maxHeight, 0.7f, 0.5f, 1.0f);
         }
     }
     bool isWaterSurface(int i, int j, int k) const { return k == seaLevel && k > terrainHeight(i, j); }
