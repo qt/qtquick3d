@@ -57,52 +57,16 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterialshadergenerator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderpickresult_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgoption_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 
-#include <limits>
-
 QT_BEGIN_NAMESPACE
 
 class QSSGRhiQuadRenderer;
-
-struct QSSGRenderPickResult
-{
-    const QSSGRenderGraphObject *m_hitObject = nullptr;
-    float m_distanceSq = std::numeric_limits<float>::max();
-    // The local coordinates in X,Y UV space where the hit occurred
-    QVector2D m_localUVCoords;
-    // The position in world coordinates
-    QVector3D m_scenePosition;
-    // The position in local coordinates
-    QVector3D m_localPosition;
-    // The normal of the hit face
-    QVector3D m_faceNormal;
-    // The subset index
-    int m_subset = 0;
-
-    QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
-                         float inCameraDistance,
-                         const QVector2D &inLocalUVCoords,
-                         const QVector3D &inScenePosition,
-                         const QVector3D &inLocalPosition,
-                         const QVector3D &faceNormal,
-                         int subset = 0);
-    QSSGRenderPickResult() = default;
-};
-
-Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderPickResult>::value);
-
-struct QSSGPickResultProcessResult : public QSSGRenderPickResult
-{
-    QSSGPickResultProcessResult(const QSSGRenderPickResult &inSrc) : QSSGRenderPickResult(inSrc) {}
-    QSSGPickResultProcessResult(const QSSGRenderPickResult &inSrc, bool consumed) : QSSGRenderPickResult(inSrc), m_wasPickConsumed(consumed) {}
-    QSSGPickResultProcessResult() = default;
-    bool m_wasPickConsumed = false;
-};
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {

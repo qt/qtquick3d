@@ -51,6 +51,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         qssgrendershadermetadata.cpp qssgrendershadermetadata_p.h
         qssgrendershadowmap.cpp qssgrendershadowmap_p.h
         qssgrenderreflectionmap.cpp qssgrenderreflectionmap_p.h
+        qssgrenderpickresult_p.h
         qssgrhiparticles.cpp qssgrhiparticles_p.h
         qssgrhicontext.cpp qssgrhicontext_p.h
         qssgrhicustommaterialsystem.cpp qssgrhicustommaterialsystem_p.h

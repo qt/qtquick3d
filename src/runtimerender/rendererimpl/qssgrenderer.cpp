@@ -416,14 +416,13 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     if (!intersectionResult.intersects)
         return;
 
-    outIntersectionResultList.push_back(
-                QSSGRenderPickResult(model,
-                                     intersectionResult.rayLengthSquared,
-                                     intersectionResult.relXY,
-                                     intersectionResult.scenePosition,
-                                     intersectionResult.localPosition,
-                                     intersectionResult.faceNormal,
-                                     resultSubset));
+    outIntersectionResultList.push_back(QSSGRenderPickResult { &model,
+                                                               intersectionResult.rayLengthSquared,
+                                                               intersectionResult.relXY,
+                                                               intersectionResult.scenePosition,
+                                                               intersectionResult.localPosition,
+                                                               intersectionResult.faceNormal,
+                                                               resultSubset });
 }
 
 void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, QSSGRenderer::PickResultList &outIntersectionResultList)
@@ -443,12 +442,12 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
             const QMatrix4x4 inverseGlobalTransform = item2D.globalTransform.inverted();
             const QVector3D localIntersectionPoint = mat44::transform(inverseGlobalTransform, intersectionPoint);
             const QVector2D qmlCoordinate(localIntersectionPoint.x(), -localIntersectionPoint.y());
-            outIntersectionResultList.push_back(QSSGRenderPickResult(item2D,
-                                                                     intersectionTime * intersectionTime,
-                                                                     qmlCoordinate,
-                                                                     intersectionPoint,
-                                                                     localIntersectionPoint,
-                                                                     normal));
+            outIntersectionResultList.push_back(QSSGRenderPickResult { &item2D,
+                                                                       intersectionTime * intersectionTime,
+                                                                       qmlCoordinate,
+                                                                       intersectionPoint,
+                                                                       localIntersectionPoint,
+                                                                       normal });
         }
     }
 }
@@ -533,23 +532,6 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               isYUpInFramebuffer,
                                               isYUpInNDC,
                                               isClipDepthZeroToOne};
-}
-
-QSSGRenderPickResult::QSSGRenderPickResult(const QSSGRenderGraphObject &inHitObject,
-                                           float inCameraDistance,
-                                           const QVector2D &inLocalUVCoords,
-                                           const QVector3D &scenePosition,
-                                           const QVector3D &inLocalPosition,
-                                           const QVector3D &faceNormal,
-                                           int subset)
-    : m_hitObject(&inHitObject)
-    , m_distanceSq(inCameraDistance)
-    , m_localUVCoords(inLocalUVCoords)
-    , m_scenePosition(scenePosition)
-    , m_localPosition(inLocalPosition)
-    , m_faceNormal(faceNormal.normalized())
-    , m_subset(subset)
-{
 }
 
 QT_END_NAMESPACE
