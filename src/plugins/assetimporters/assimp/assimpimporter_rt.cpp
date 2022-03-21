@@ -341,6 +341,11 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
 
 static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMaterial &source, const SceneInfo &sceneInfo)
 {
+    if (target.name.isNull()) {
+        aiString materialName = source.GetName();
+        target.name = fromAiString(target.scene->allocator, materialName);
+    }
+
     const auto createTextureNode = [&sceneInfo, &target](const aiMaterial &material, aiTextureType textureType, unsigned int index) {
         const auto &srcScene = sceneInfo.scene;
         QSSGSceneDesc::Texture *tex = nullptr;
