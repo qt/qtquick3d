@@ -186,8 +186,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
     typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;
 
-    // typedef Pool<SNodeLightEntry, ForwardingAllocator> TNodeLightEntryPoolType;
-
     enum Enum {
         MAX_AA_LEVELS = 8,
         MAX_TEMPORAL_AA_LEVELS = 2,
@@ -197,8 +195,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
     QSSGRef<QSSGRenderer> renderer;
     // List of nodes we can render, not all may be active.  Found by doing a depth-first
     // search through m_FirstChild if length is zero.
-
-    // TNodeLightEntryPoolType m_RenderableNodeLightEntryPool;
 
     // renderableNodes have all lights, but properties configured for specific node
     QVector<QSSGRenderableNodeEntry> renderableNodes;

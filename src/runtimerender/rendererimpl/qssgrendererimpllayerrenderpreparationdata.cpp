@@ -1339,8 +1339,6 @@ void QSSGLayerRenderPreparationData::prepareForRender()
     quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
     QSSGRenderEffect *theLastEffect = nullptr;
-    // Uncomment the line below to disable all progressive AA.
-    // maxNumAAPasses = 0;
 
     QSSGLayerRenderPreparationResult thePrepResult;
 
@@ -1349,7 +1347,6 @@ void QSSGLayerRenderPreparationData::prepareForRender()
     features.set(QSSGShaderFeatures::Feature::Ssm, false); // by default no shadow map generation
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
-        // Get the layer's width and height.
         for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
             if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Dirty)) {
                 wasDirty = true;
@@ -1361,6 +1358,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                     requiresDepthTexture = true;
             }
         }
+        // Get the layer's width and height.
         if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
             wasDirty = true;
             layer.calculateGlobalVariables();
@@ -1416,9 +1414,6 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                 if (lightProbeTexture.m_flags.isRgbe8())
                     features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
             }
-
-            // ### TODO: Really this should only be done if renderableNodes is empty or dirty
-            // but we don't have a way to say it's dirty yet (new renderables added to the tree)
 
             // Do not just clear() renderableNodes and friends. Rather, reuse
             // the space (even if clear does not actually deallocate, it still
