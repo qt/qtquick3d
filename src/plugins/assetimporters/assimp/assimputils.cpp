@@ -72,8 +72,6 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
     // Check if we need placeholders in certain channels
     bool needsPositionData = false;
     bool needsNormalData = false;
-    bool needsUV0Data = false;
-    bool needsUV1Data = false;
     bool needsTangentData = false;
     bool needsVertexColorData = false;
     unsigned uv0Components = 0;
@@ -107,8 +105,6 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         uv1Components = qMax(mesh->mNumUVComponents[1], uv1Components);
         needsPositionData |= mesh->HasPositions();
         needsNormalData |= mesh->HasNormals();
-        needsUV0Data |= mesh->HasTextureCoords(0);
-        needsUV1Data |= mesh->HasTextureCoords(1);
         needsTangentData |= mesh->HasTangentsAndBitangents();
         needsVertexColorData |=mesh->HasVertexColors(0);
         needsBones |= mesh->HasBones();
