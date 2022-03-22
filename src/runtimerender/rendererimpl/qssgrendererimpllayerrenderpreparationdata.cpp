@@ -1383,11 +1383,7 @@ void QSSGLayerRenderPreparationData::prepareForRender()
             }
         }
 
-        thePrepResult = QSSGLayerRenderPreparationResult(
-                QSSGLayerRenderHelper(theViewport,
-                                        theScissor,
-                                        layer));
-
+        thePrepResult = QSSGLayerRenderPreparationResult(theViewport, theScissor, layer);
         thePrepResult.lastEffect = theLastEffect;
         thePrepResult.maxAAPassIndex = maxNumAAPasses;
 
@@ -1656,6 +1652,45 @@ void QSSGLayerRenderPreparationData::resetForFrame()
     renderedItem2Ds.clear();
     renderedOpaqueDepthPrepassObjects.clear();
     renderedDepthWriteObjects.clear();
+}
+
+QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer)
+    : lastEffect(nullptr), maxAAPassIndex(0), layer(&inLayer)
+{
+    viewport = inViewport;
+
+    scissor = viewport;
+    scissor &= inScissor; // ensureInBounds/intersected
+    Q_ASSERT(scissor.width() >= 0.0f);
+    Q_ASSERT(scissor.height() >= 0.0f);
+}
+
+bool QSSGLayerRenderPreparationResult::isLayerVisible() const
+{
+    return scissor.height() >= 2.0f && scissor.width() >= 2.0f;
+}
+
+QSize QSSGLayerRenderPreparationResult::textureDimensions() const
+{
+    const auto size = viewport.size().toSize();
+    return QSize(QSSGRendererUtil::nextMultipleOf4(size.width()), QSSGRendererUtil::nextMultipleOf4(size.height()));
+}
+
+QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraForRender(QSSGRenderCamera &inCamera)
+{
+    // When using ssaa we need to zoom with the ssaa multiplier since otherwise the
+    // orthographic camera will be zoomed out due to the bigger viewport. We therefore
+    // scale the magnification before calulating the camera variables and then revert.
+    // Since the same camera can be used in several View3Ds with or without ssaa we
+    // cannot store the magnification permanently.
+    const float horizontalMagnification = inCamera.horizontalMagnification;
+    const float verticalMagnification = inCamera.verticalMagnification;
+    inCamera.horizontalMagnification *= layer->ssaaEnabled ? layer->ssaaMultiplier : 1.0f;
+    inCamera.verticalMagnification *= layer->ssaaEnabled ? layer->ssaaMultiplier : 1.0f;
+    const auto result = inCamera.calculateGlobalVariables(viewport);
+    inCamera.horizontalMagnification = horizontalMagnification;
+    inCamera.verticalMagnification = verticalMagnification;
+    return result;
 }
 
 QT_END_NAMESPACE

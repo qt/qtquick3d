@@ -268,8 +268,12 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
         if (table->isDepthSortingEnabled()) {
             QMatrix4x4 invGlobalTransform = modelContext.model.globalTransform.inverted();
             instanceData.sortedData.resize(table->dataSize());
-            sortInstances(instanceData.sortedData, instanceData.sortData, table->constData(), table->stride(), table->count(),
-                          (invGlobalTransform.mapVector(cameraDirection)).normalized());
+            sortInstances(instanceData.sortedData,
+                          instanceData.sortData,
+                          table->constData(),
+                          table->stride(),
+                          table->count(),
+                          (invGlobalTransform * cameraDirection).normalized());
             data = instanceData.sortedData.constData();
             instanceData.sortedCameraDirection = cameraDirection;
         } else {
@@ -1950,10 +1954,10 @@ void QSSGLayerRenderData::rhiPrepare()
 
     QSSGRhiGraphicsPipelineState *ps = rhiCtx->resetGraphicsPipelineState(this);
 
-    const QRectF vp = layerPrepResult->viewport();
+    const QRectF vp = layerPrepResult->viewport;
     ps->viewport = { float(vp.x()), float(vp.y()), float(vp.width()), float(vp.height()), 0.0f, 1.0f };
     ps->scissorEnable = true;
-    const QRect sc = layerPrepResult->scissor().toRect();
+    const QRect sc = layerPrepResult->scissor.toRect();
     ps->scissor = { sc.x(), sc.y(), sc.width(), sc.height() };
 
 
@@ -2283,7 +2287,7 @@ void QSSGLayerRenderData::rhiPrepare()
             const auto &renderTarget = rhiCtx->renderTarget();
             item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
             const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
-            item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport(), deviceRect));
+            item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
             item2D->m_renderer->setDeviceRect(deviceRect);
             item2D->m_renderer->setRenderTarget(renderTarget);
             item2D->m_renderer->setCommandBuffer(rhiCtx->commandBuffer());

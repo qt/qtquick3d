@@ -30,7 +30,6 @@
 #include <QtTest>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderhelper_p.h>
 
 class intersection : public QObject
 {

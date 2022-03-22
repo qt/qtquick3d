@@ -65,7 +65,6 @@ qt_internal_add_module(Quick3DRuntimeRender
         rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
         rendererimpl/qssgrendererimpllayerrenderdata_p.h
         rendererimpl/qssgrendererimpllayerrenderdata_rhi.cpp
-        rendererimpl/qssgrendererimpllayerrenderhelper.cpp rendererimpl/qssgrendererimpllayerrenderhelper_p.h
         rendererimpl/qssgrendererimpllayerrenderpreparationdata.cpp rendererimpl/qssgrendererimpllayerrenderpreparationdata_p.h
         rendererimpl/qssgrendererimplshaders_rhi.cpp
         rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h

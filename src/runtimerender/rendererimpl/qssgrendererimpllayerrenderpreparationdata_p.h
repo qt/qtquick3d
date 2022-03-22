@@ -42,7 +42,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderhelper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
@@ -51,6 +50,9 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderitem2d_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionmap_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+
+#include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
 
@@ -141,16 +143,21 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     }
 };
 
-struct QSSGLayerRenderPreparationResult : public QSSGLayerRenderHelper
+struct QSSGLayerRenderPreparationResult
 {
     QSSGRenderEffect *lastEffect = nullptr;
     QSSGLayerRenderPreparationResultFlags flags;
     quint32 maxAAPassIndex = 0;
+    QRectF viewport;
+    QRectF scissor;
+    QSSGRenderLayer *layer = nullptr;
+
     QSSGLayerRenderPreparationResult() = default;
-    QSSGLayerRenderPreparationResult(const QSSGLayerRenderHelper &inHelper)
-        : QSSGLayerRenderHelper(inHelper), lastEffect(nullptr), maxAAPassIndex(0)
-    {
-    }
+    QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer);
+
+    bool isLayerVisible() const;
+    QSize textureDimensions() const;
+    QSSGCameraGlobalCalculationResult setupCameraForRender(QSSGRenderCamera &inCamera);
 };
 
 struct QSSGRenderableNodeEntry
