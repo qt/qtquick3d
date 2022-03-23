@@ -50,7 +50,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
-#include <QtQuick3DRuntimeRender/private/qssglayerrenderpreparationdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 
@@ -226,7 +226,7 @@ void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 }
 
 // Blend factors are in the form of (frame blend factor, accumulator blend factor)
-static const QVector2D s_ProgressiveAABlendFactors[QSSGLayerRenderPreparationData::MAX_AA_LEVELS] = {
+static const QVector2D s_ProgressiveAABlendFactors[QSSGLayerRenderData::MAX_AA_LEVELS] = {
     QVector2D(0.500000f, 0.500000f), // 1x
     QVector2D(0.333333f, 0.666667f), // 2x
     QVector2D(0.250000f, 0.750000f), // 3x
@@ -988,7 +988,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
         // layer needs to be re-rendered (at least) MAX_TEMPORAL_AA_LEVELS times
         // to generate temporal antialiasing.
         // Also, we need to do an extra render when animation stops
-        extraFramesToRender = (m_aaIsDirty || temporalIsDirty) ? QSSGLayerRenderPreparationData::MAX_TEMPORAL_AA_LEVELS : 1;
+        extraFramesToRender = (m_aaIsDirty || temporalIsDirty) ? QSSGLayerRenderData::MAX_TEMPORAL_AA_LEVELS : 1;
     }
 
     requestedFramesCount = extraFramesToRender;
