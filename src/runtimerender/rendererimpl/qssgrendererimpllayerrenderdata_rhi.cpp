@@ -273,7 +273,7 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
                           table->constData(),
                           table->stride(),
                           table->count(),
-                          (invGlobalTransform * cameraDirection).normalized());
+                          invGlobalTransform.map(cameraDirection).normalized());
             data = instanceData.sortedData.constData();
             instanceData.sortedCameraDirection = cameraDirection;
         } else {

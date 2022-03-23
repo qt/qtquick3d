@@ -709,7 +709,7 @@ void QQuick3DParticleEmitter::emitParticle(QQuick3DParticle *particle, float sta
         QVector3D pos = centerPos;
         if (m_shape)
             pos += m_shape->getPosition(particleIdIndex);
-        d->startPosition = transform.mapVector(pos);
+        d->startPosition = transform.map(pos);
     }
 
     // Velocity

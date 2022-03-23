@@ -572,7 +572,7 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
     m_particleData.fill({});
     for (int i = 0; i < m_particleCount; i++) {
         m_triangleParticleData[i].center = m_centerData[i];
-        m_centerData[i] = transform.mapVector(m_centerData[i]);
+        m_centerData[i] = transform.map(m_centerData[i]);
         if (m_modelBlendMode == Construct) {
             m_triangleParticleData[i].size = 0.0f;
         } else {
@@ -791,7 +791,7 @@ void QQuick3DParticleModelBlendParticle::handleEndNodeChanged()
 
 QVector3D QQuick3DParticleModelBlendParticle::particleEndPosition(int idx) const
 {
-    return m_endRotationMatrix.mapVector(QVector3D(m_endNodeScale * m_centerData[idx])) + m_endNodePosition;
+    return m_endRotationMatrix.map(QVector3D(m_endNodeScale * m_centerData[idx])) + m_endNodePosition;
 }
 
 QVector3D QQuick3DParticleModelBlendParticle::particleEndRotation(int) const
