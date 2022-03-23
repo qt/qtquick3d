@@ -51,7 +51,7 @@ class QSSGRenderContextInterface;
 struct QSSGRenderPresentation;
 struct QSSGRenderEffect;
 struct QSSGRenderImage;
-struct QSSGLayerRenderData;
+class QSSGLayerRenderData;
 struct QSSGRenderResourceLoader;
 
 class QRhiShaderResourceBindings;

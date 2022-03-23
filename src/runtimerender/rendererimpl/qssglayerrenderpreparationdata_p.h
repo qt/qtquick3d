@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDERER_IMPL_LAYER_RENDER_PREPARATION_DATA_H
-#define QSSG_RENDERER_IMPL_LAYER_RENDER_PREPARATION_DATA_H
+#ifndef QSSG_LAYER_RENDER_PREPARATION_DATA_H
+#define QSSG_LAYER_RENDER_PREPARATION_DATA_H
 
 //
 //  W A R N I N G
@@ -58,7 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRendererImpl;
 struct QSSGRenderableObject;
 
 enum class QSSGLayerRenderPreparationResultFlag
@@ -180,56 +179,17 @@ struct QSSGDefaultMaterialPreparationResult
 };
 
 // Data used strictly in the render preparation step.
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
 {
-    typedef QHash<QSSGRenderLight *, QSSGRenderNode *> TLightToNodeMap;
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
     typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;
+public:
 
     enum Enum {
         MAX_AA_LEVELS = 8,
         MAX_TEMPORAL_AA_LEVELS = 2,
     };
 
-    QSSGRenderLayer &layer;
-    QSSGRef<QSSGRenderer> renderer;
-    // List of nodes we can render, not all may be active.  Found by doing a depth-first
-    // search through m_FirstChild if length is zero.
-
-    // renderableNodes have all lights, but properties configured for specific node
-    QVector<QSSGRenderableNodeEntry> renderableNodes;
-    QVector<QSSGRenderCamera *> cameras;
-    QVector<QSSGRenderLight *> lights;
-    QVector<QSSGRenderReflectionProbe *> reflectionProbes;
-    QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
-    QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
-
-    // Results of prepare for render.
-    QSSGRenderCamera *camera;
-    QSSGShaderLightList globalLights; // Contains all lights
-    TRenderableObjectList opaqueObjects;
-    TRenderableObjectList transparentObjects;
-    TRenderableObjectList screenTextureObjects;
-    // Sorted lists of the rendered objects.  There may be other transforms applied so
-    // it is simplest to duplicate the lists.
-    TRenderableObjectList renderedOpaqueObjects;
-    TRenderableObjectList renderedTransparentObjects;
-    TRenderableObjectList renderedScreenTextureObjects;
-    TRenderableObjectList renderedOpaqueDepthPrepassObjects;
-    TRenderableObjectList renderedDepthWriteObjects;
-    QSSGOption<QSSGClippingFrustum> clippingFrustum;
-    QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
-    QSSGOption<QVector3D> cameraDirection;
-
-    TModelContextPtrList modelContexts;
-
-    QSSGShaderFeatures features;
-    bool tooManyLightsWarningShown = false;
-    bool tooManyShadowLightsWarningShown = false;
-    bool particlesNotSupportedWarningShown = false;
-
-    QSSGRenderShadowMap *shadowMapManager = nullptr;
-    QSSGRenderReflectionMap *reflectionMapManager = nullptr;
 
     QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
     virtual ~QSSGLayerRenderPreparationData();
@@ -284,13 +244,54 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderPreparationData
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.
-    const QVector<QSSGRenderableObjectHandle> &getOpaqueRenderableObjects(bool performSort = true);
+    const TRenderableObjectList &getOpaqueRenderableObjects(bool performSort = true);
     // If layer depth test is false, this may also contain opaque objects.
-    const QVector<QSSGRenderableObjectHandle> &getTransparentRenderableObjects();
-    const QVector<QSSGRenderableObjectHandle> &getScreenTextureRenderableObjects();
+    const TRenderableObjectList &getTransparentRenderableObjects();
+    const TRenderableObjectList &getScreenTextureRenderableObjects();
     const QVector<QSSGRenderableNodeEntry> &getRenderableItem2Ds();
 
     virtual void resetForFrame();
+
+    QSSGRenderLayer &layer;
+    QSSGRef<QSSGRenderer> renderer;
+    // List of nodes we can render, not all may be active.  Found by doing a depth-first
+    // search through m_FirstChild if length is zero.
+
+    // renderableNodes have all lights, but properties configured for specific node
+    QVector<QSSGRenderableNodeEntry> renderableNodes;
+    QVector<QSSGRenderCamera *> cameras;
+    QVector<QSSGRenderLight *> lights;
+    QVector<QSSGRenderReflectionProbe *> reflectionProbes;
+    QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
+    QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
+
+    // Results of prepare for render.
+    QSSGRenderCamera *camera;
+    QSSGShaderLightList globalLights; // Contains all lights
+    TRenderableObjectList opaqueObjects;
+    TRenderableObjectList transparentObjects;
+    TRenderableObjectList screenTextureObjects;
+    // Sorted lists of the rendered objects.  There may be other transforms applied so
+    // it is simplest to duplicate the lists.
+    TRenderableObjectList renderedOpaqueObjects;
+    TRenderableObjectList renderedTransparentObjects;
+    TRenderableObjectList renderedScreenTextureObjects;
+    TRenderableObjectList renderedOpaqueDepthPrepassObjects;
+    TRenderableObjectList renderedDepthWriteObjects;
+    QSSGOption<QSSGClippingFrustum> clippingFrustum;
+    QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
+    QSSGOption<QVector3D> cameraDirection;
+
+    TModelContextPtrList modelContexts;
+
+    QSSGShaderFeatures features;
+    bool tooManyLightsWarningShown = false;
+    bool tooManyShadowLightsWarningShown = false;
+    bool particlesNotSupportedWarningShown = false;
+
+    QSSGRenderShadowMap *shadowMapManager = nullptr;
+    QSSGRenderReflectionMap *reflectionMapManager = nullptr;
 };
 QT_END_NAMESPACE
-#endif
+
+#endif // QSSG_LAYER_RENDER_PREPARATION_DATA_H

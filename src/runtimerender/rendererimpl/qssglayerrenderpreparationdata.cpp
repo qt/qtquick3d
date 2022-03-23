@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -198,8 +198,7 @@ QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGS
 
 #define MAX_AA_LEVELS 8
 
-QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer,
-                                                                   const QSSGRef<QSSGRenderer> &inRenderer)
+QSSGLayerRenderPreparationData::QSSGLayerRenderPreparationData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
     : layer(inLayer)
     , renderer(inRenderer)
     , camera(nullptr)
@@ -1256,7 +1255,7 @@ void QSSGLayerRenderPreparationData::prepareReflectionProbesForRender()
         reflectionProbes[probeIdx]->calculateGlobalVariables();
     }
 
-    TRenderableObjectList combinedList = transparentObjects + opaqueObjects;
+    auto combinedList = transparentObjects + opaqueObjects;
     for (int i = 0; i < probeCount; i++) {
         int reflectionObjectCount = 0;
         QSSGRenderReflectionProbe* probe = reflectionProbes[i];

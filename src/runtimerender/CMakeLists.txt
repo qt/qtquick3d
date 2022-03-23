@@ -64,9 +64,9 @@ qt_internal_add_module(Quick3DRuntimeRender
         qtquick3druntimerenderglobal_p.h
         rendererimpl/qssgrenderableobjects.cpp rendererimpl/qssgrenderableobjects_p.h
         rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
-        rendererimpl/qssgrendererimpllayerrenderdata_p.h
-        rendererimpl/qssgrendererimpllayerrenderdata_rhi.cpp
-        rendererimpl/qssgrendererimpllayerrenderpreparationdata.cpp rendererimpl/qssgrendererimpllayerrenderpreparationdata_p.h
+        rendererimpl/qssglayerrenderdata_p.h
+        rendererimpl/qssglayerrenderdata.cpp
+        rendererimpl/qssglayerrenderpreparationdata.cpp rendererimpl/qssglayerrenderpreparationdata_p.h
         rendererimpl/qssgrendererimplshaders_rhi.cpp
         rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h

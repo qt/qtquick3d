@@ -29,7 +29,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionprobe_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
 QT_BEGIN_NAMESPACE

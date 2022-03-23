@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderCustomMaterial;
 struct QSSGRenderSubset;
 struct QSSGRenderModel;
-struct QSSGLayerRenderData;
+class QSSGLayerRenderData;
 struct QSSGRenderableImage;
 struct QSSGRenderLayer;
 struct QSSGRenderLight;

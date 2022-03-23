@@ -50,7 +50,7 @@
 #include <QtQuick3DUtils/private/qqsbcollection_p.h>
 
 #include <private/qssgrenderer_p.h>
-#include <private/qssgrendererimpllayerrenderdata_p.h>
+#include <private/qssglayerrenderdata_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 

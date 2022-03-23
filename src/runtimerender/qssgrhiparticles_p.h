@@ -49,7 +49,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QSSGLayerRenderData;
+class QSSGLayerRenderData;
 struct QSSGRenderableImage;
 struct QSSGRenderLayer;
 struct QSSGRenderLight;

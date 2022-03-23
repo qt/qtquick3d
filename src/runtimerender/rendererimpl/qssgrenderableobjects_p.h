@@ -297,7 +297,7 @@ struct QSSGModelContext
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGModelContext>::value);
 
 class QSSGRenderer;
-struct QSSGLayerRenderData;
+class QSSGLayerRenderData;
 struct QSSGShadowMapEntry;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderableObject

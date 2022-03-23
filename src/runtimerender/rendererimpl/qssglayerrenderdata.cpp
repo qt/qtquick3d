@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,7 +28,7 @@
 **
 ****************************************************************************/
 
-#include "qssgrendererimpllayerrenderdata_p.h"
+#include "qssglayerrenderdata_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderlight_p.h>
@@ -53,27 +53,20 @@ static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
     : QSSGLayerRenderPreparationData(inLayer, inRenderer)
     , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
-    , m_progressiveAAPassIndex(0)
-    , m_temporalAAPassIndex(0)
     , m_globalZPrePassActive(false)
 {
 }
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
-    m_rhiDepthTexture.reset();
-    m_rhiAoTexture.reset();
-    m_rhiScreenTexture.reset();
+    rhiDepthTexture.reset();
+    rhiAoTexture.reset();
+    rhiScreenTexture.reset();
 }
 
 void QSSGLayerRenderData::prepareForRender()
 {
     QSSGLayerRenderPreparationData::prepareForRender();
-    QSSGLayerRenderPreparationResult &thePrepResult(*layerPrepResult);
-
-    if (thePrepResult.flags.wasLayerDataDirty()) {
-        m_progressiveAAPassIndex = 0;
-    }
 }
 
 void QSSGLayerRenderData::resetForFrame()
@@ -1809,8 +1802,8 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     if (!rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)) {
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         // just clear and stop there
-        cb->beginPass(inData.m_rhiAoTexture.rt, Qt::white, { 1.0f, 0 });
-        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(inData.m_rhiAoTexture.rt));
+        cb->beginPass(inData.rhiAoTexture.rt, Qt::white, { 1.0f, 0 });
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(inData.rhiAoTexture.rt));
         cb->endPass();
         QSSGRHICTX_STAT(rhiCtx, endRenderPass());
         return;
@@ -1824,7 +1817,7 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     ps.shaderPipeline = shaderPipeline.data();
 
     const float R2 = inData.layer.aoDistance * inData.layer.aoDistance * 0.16f;
-    const QSize textureSize = inData.m_rhiAoTexture.texture->pixelSize();
+    const QSize textureSize = inData.rhiAoTexture.texture->pixelSize();
     const float rw = float(textureSize.width());
     const float rh = float(textureSize.height());
     const float fov = camera.verticalFov(rw / rh);
@@ -1863,11 +1856,11 @@ static void rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
     QSSGRhiShaderResourceBindingList bindings;
     bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
-    bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, inData.m_rhiDepthTexture.texture, sampler);
+    bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, inData.rhiDepthTexture.texture, sampler);
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
     inData.renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-    inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.m_rhiAoTexture.rt, {});
+    inData.renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, inData.rhiAoTexture.rt, {});
 }
 
 static bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex)
@@ -2037,19 +2030,19 @@ void QSSGLayerRenderData::rhiPrepare()
         // If needed, generate a depth texture with the opaque objects. This
         // and the SSAO texture must come first since other passes may want to
         // expose these textures to their shaders.
-        if (layerPrepResult->flags.requiresDepthTexture() && m_progressiveAAPassIndex == 0) {
+        if (layerPrepResult->flags.requiresDepthTexture()) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D depth texture"));
 
-            if (rhiPrepareDepthTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiDepthTexture)) {
-                Q_ASSERT(m_rhiDepthTexture.isValid());
-                if (rhiPrepareDepthPass(rhiCtx, *ps, m_rhiDepthTexture.rpDesc, *this,
+            if (rhiPrepareDepthTexture(rhiCtx, layerPrepResult->textureDimensions(), &rhiDepthTexture)) {
+                Q_ASSERT(rhiDepthTexture.isValid());
+                if (rhiPrepareDepthPass(rhiCtx, *ps, rhiDepthTexture.rpDesc, *this,
                                         sortedOpaqueObjects, sortedTransparentObjects,
                                         QSSGRhiDrawCallDataKey::DepthTexture,
                                         1))
                 {
                     bool needsSetVieport = true;
-                    cb->beginPass(m_rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-                    QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_rhiDepthTexture.rt));
+                    cb->beginPass(rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+                    QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiDepthTexture.rt));
                     // NB! We do not pass sortedTransparentObjects in the 4th
                     // argument to stay compatible with the 5.15 code base,
                     // which also does not include semi-transparent objects in
@@ -2061,7 +2054,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     cb->endPass();
                     QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 } else {
-                    m_rhiDepthTexture.reset();
+                    rhiDepthTexture.reset();
                 }
             }
 
@@ -2071,29 +2064,29 @@ void QSSGLayerRenderData::rhiPrepare()
             // takes care of keeping the native texture resource around as long
             // as it is in use by an in-flight frame we do not have to worry
             // about that here.
-            m_rhiDepthTexture.reset();
+            rhiDepthTexture.reset();
         }
 
         // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
-        if (layerPrepResult->flags.requiresSsaoPass() && m_progressiveAAPassIndex == 0 && camera) {
+        if (layerPrepResult->flags.requiresSsaoPass() && camera) {
            cb->debugMarkBegin(QByteArrayLiteral("Quick3D SSAO map"));
 
-           if (rhiPrepareAoTexture(rhiCtx, layerPrepResult->textureDimensions(), &m_rhiAoTexture)) {
-               Q_ASSERT(m_rhiAoTexture.isValid());
+           if (rhiPrepareAoTexture(rhiCtx, layerPrepResult->textureDimensions(), &rhiAoTexture)) {
+               Q_ASSERT(rhiAoTexture.isValid());
                rhiRenderAoTexture(rhiCtx, *ps, *this, *camera);
            }
 
            cb->debugMarkEnd();
         } else {
-            m_rhiAoTexture.reset();
+            rhiAoTexture.reset();
         }
 
         // Shadows. Generates a 2D or cube shadow map. (opaque + pre-pass transparent objects)
-        if (layerPrepResult->flags.requiresShadowMapPass() && m_progressiveAAPassIndex == 0) {
+        if (layerPrepResult->flags.requiresShadowMapPass()) {
             if (!shadowMapManager)
                 shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
 
-            const TRenderableObjectList shadowPassObjects = renderedDepthWriteObjects + renderedOpaqueDepthPrepassObjects;
+            const auto shadowPassObjects = renderedDepthWriteObjects + renderedOpaqueDepthPrepassObjects;
 
             if (!shadowPassObjects.isEmpty() || !globalLights.isEmpty()) {
                 cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
@@ -2120,7 +2113,7 @@ void QSSGLayerRenderData::rhiPrepare()
             if (!reflectionMapManager)
                 reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
 
-            const TRenderableObjectList reflectionPassObjects = sortedOpaqueObjects + sortedTransparentObjects;
+            const auto reflectionPassObjects = sortedOpaqueObjects + sortedTransparentObjects;
 
             if (!reflectionPassObjects.isEmpty() || !reflectionProbes.isEmpty()) {
                 cb->debugMarkBegin(QByteArrayLiteral("Quick3D reflection map"));
@@ -2182,23 +2175,23 @@ void QSSGLayerRenderData::rhiPrepare()
         ps->depthWriteEnable = depthWriteEnableDefault;
 
         // Screen texture with opaque objects.
-        if (layerPrepResult->flags.requiresScreenTexture() && m_progressiveAAPassIndex == 0) {
+        if (layerPrepResult->flags.requiresScreenTexture()) {
             const bool wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
-            if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), wantsMips, &m_rhiScreenTexture)) {
-                Q_ASSERT(m_rhiScreenTexture.isValid());
+            if (rhiPrepareScreenTexture(rhiCtx, layerPrepResult->textureDimensions(), wantsMips, &rhiScreenTexture)) {
+                Q_ASSERT(rhiScreenTexture.isValid());
                 // NB: not compatible with disabling LayerEnableDepthTest
                 // because there are effectively no "opaque" objects then.
                 // Disable Tonemapping for all materials in the screen pass texture
                 QSSGShaderFeatures featuresBackup = this->features;
                 this->features.disableTonemapping();
                 for (const auto &handle : sortedOpaqueObjects)
-                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, m_rhiScreenTexture.rpDesc, 1);
+                    rhiPrepareRenderable(rhiCtx, *this, *handle.obj, rhiScreenTexture.rpDesc, 1);
                 QColor clearColor(Qt::transparent);
                 if (layer.background == QSSGRenderLayer::Background::Color)
                     clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
-                cb->beginPass(m_rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-                QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_rhiScreenTexture.rt));
+                cb->beginPass(rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+                QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture.rt));
                 if (layer.background == QSSGRenderLayer::Background::SkyBox
                         && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
                     // This is offscreen, so rendered untonemapped
@@ -2217,7 +2210,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 QRhiResourceUpdateBatch *rub = nullptr;
                 if (wantsMips) {
                     rub = rhiCtx->rhi()->nextResourceUpdateBatch();
-                    rub->generateMips(m_rhiScreenTexture.texture);
+                    rub->generateMips(rhiScreenTexture.texture);
                 }
                 cb->endPass(rub);
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
@@ -2226,7 +2219,7 @@ void QSSGLayerRenderData::rhiPrepare()
             }
             cb->debugMarkEnd();
         } else {
-            m_rhiScreenTexture.reset();
+            rhiScreenTexture.reset();
         }
 
         // make the buffer copies and other stuff we put on the command buffer in

@@ -40,7 +40,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgvertexpipelineimpl_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
@@ -140,9 +140,9 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
         camera,
         layerData.cameraDirection,
         layerData.shadowMapManager,
-        layerData.m_rhiDepthTexture.texture,
-        layerData.m_rhiAoTexture.texture,
-        layerData.m_rhiScreenTexture.texture,
+        layerData.rhiDepthTexture.texture,
+        layerData.rhiAoTexture.texture,
+        layerData.rhiScreenTexture.texture,
         layerData.layer.lightProbe,
         layerData.layer.probeHorizon,
         layerData.layer.probeExposure,

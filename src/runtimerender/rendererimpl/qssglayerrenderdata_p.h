@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2008-2012 NVIDIA Corporation.
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -28,8 +28,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSSG_RENDERER_IMPL_LAYER_RENDER_DATA_H
-#define QSSG_RENDERER_IMPL_LAYER_RENDER_DATA_H
+#ifndef QSSG_LAYER_RENDER_DATA_H
+#define QSSG_LAYER_RENDER_DATA_H
 
 //
 //  W A R N I N G
@@ -42,7 +42,7 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderpreparationdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderpreparationdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -68,38 +68,35 @@ struct QSSGRhiRenderableTexture
     }
 };
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRenderPreparationData
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData : public QSSGLayerRenderPreparationData
 {
+public:
     QAtomicInt ref;
 
-    QSSGRenderTextureFormat m_depthBufferFormat;
+    QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
+    virtual ~QSSGLayerRenderData() override;
+
+    void prepareForRender() override;
+    void resetForFrame() final;
+
+    void rhiPrepare();
+    void rhiRender();
 
     // RHI resources
-    QSSGRhiRenderableTexture m_rhiDepthTexture;
-    QSSGRhiRenderableTexture m_rhiAoTexture;
-    QSSGRhiRenderableTexture m_rhiScreenTexture;
+    QSSGRhiRenderableTexture rhiDepthTexture;
+    QSSGRhiRenderableTexture rhiAoTexture;
+    QSSGRhiRenderableTexture rhiScreenTexture;
 
-    // ProgressiveAA algorithm details.
-    quint32 m_progressiveAAPassIndex;
-    // Increments every frame regardless to provide appropriate jittering
-    quint32 m_temporalAAPassIndex;
+private:
+
+    QSSGRenderTextureFormat m_depthBufferFormat;
 
     QSize m_previousOutputSize;
 
     bool m_globalZPrePassActive;
 
-    QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
-
-    virtual ~QSSGLayerRenderData() override;
-
-    // Internal Call
-    void prepareForRender() override;
-    void resetForFrame() final;
-
-    // RHI-only
-    void rhiPrepare();
-    void rhiRender();
-
 };
+
 QT_END_NAMESPACE
-#endif
+
+#endif // QSSG_LAYER_RENDER_DATA_H
