@@ -184,14 +184,15 @@ void QQuick3DParticleCustomShape::doRandomizeData()
 
 QVector3D QQuick3DParticleCustomShape::getPosition(int particleIndex)
 {
-    if (!m_parentNode || m_positions.isEmpty())
+    auto *parent = parentNode();
+    if (!parent || m_positions.isEmpty())
         return QVector3D();
 
     if (m_randomizeDirty)
         doRandomizeData();
 
     int index = particleIndex % m_positions.size();
-    return m_positions.at(index) * m_parentNode->scale();
+    return m_positions.at(index) * parent->scale();
 }
 
 QT_END_NAMESPACE

@@ -221,9 +221,12 @@ QVector3D QQuick3DParticleModelShape::randomPositionModel(int particleIndex)
                 pos += (m_modelTriangleCenter - pos) * alpha;
             }
 
-            QMatrix4x4 mat;
-            mat.rotate(m_parentNode->rotation() * m_model->rotation());
-            return mat.mapVector(pos * m_parentNode->sceneScale() * m_model->scale());
+            auto *parent = parentNode();
+            if (parent) {
+                QMatrix4x4 mat;
+                mat.rotate(parent->rotation() * m_model->rotation());
+                return mat.mapVector(pos * parent->sceneScale() * m_model->scale());
+            }
         }
     }
     return QVector3D(0, 0, 0);

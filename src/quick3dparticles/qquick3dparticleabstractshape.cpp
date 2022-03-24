@@ -50,9 +50,16 @@ QQuick3DParticleAbstractShape::QQuick3DParticleAbstractShape(QObject *parent)
 
 void QQuick3DParticleAbstractShape::componentComplete()
 {
-    m_parentNode = qobject_cast<QQuick3DNode *>(parent());
-    if (!m_parentNode)
+    if (!parentNode())
         qWarning() << "Shape requires parent Node to function correctly!";
+}
+
+QQuick3DNode *QQuick3DParticleAbstractShape::parentNode()
+{
+    QQuick3DNode *node = qobject_cast<QQuick3DNode *>(parent());
+    if (!m_parentNode || m_parentNode != node)
+        m_parentNode = node;
+    return m_parentNode;
 }
 
 QT_END_NAMESPACE

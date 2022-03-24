@@ -72,6 +72,7 @@ protected:
     // From QQmlParserStatus
     void componentComplete() override;
     void classBegin() override {}
+    QQuick3DNode *parentNode();
 
     QQuick3DNode *m_parentNode = nullptr;
     QQuick3DParticleSystem *m_system = nullptr;
