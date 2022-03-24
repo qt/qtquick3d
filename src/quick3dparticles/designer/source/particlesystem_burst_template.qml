@@ -32,6 +32,7 @@ import QtQuick3D
 import QtQuick3D.Particles3D
 
 ParticleSystem3D {
+    id: burstSystem
     ParticleEmitter3D {
         id: burstEmitter
         emitBursts: emitBurst
