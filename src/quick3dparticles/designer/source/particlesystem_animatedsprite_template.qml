@@ -32,6 +32,7 @@ import QtQuick3D
 import QtQuick3D.Particles3D
 
 ParticleSystem3D {
+    id: animatedSpriteSystem
     ParticleEmitter3D {
         id: animatedSpriteEmitter
         velocity: animatedSpriteDirection
