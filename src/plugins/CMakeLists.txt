@@ -1,8 +1,6 @@
-# Generated from plugins.pro.
-
 if((android_app OR NOT ANDROID) AND (android_app OR NOT INTEGRITY) AND (NOT ANDROID OR NOT CMAKE_CROSSCOMPILING) AND (NOT ANDROID OR NOT WASM) AND (NOT CMAKE_CROSSCOMPILING OR NOT INTEGRITY) AND (NOT INTEGRITY OR NOT WASM))
     add_subdirectory(assetimporters)
-    if (QT_FEATURE_qml_debug AND TARGET Qt::PacketProtocolPrivate)
-        add_subdirectory(qmldbg_quick3dprofiler)
-    endif()
+endif()
+if (QT_FEATURE_qml_debug AND TARGET Qt::PacketProtocolPrivate)
+    add_subdirectory(qmldbg_quick3dprofiler)
 endif()
