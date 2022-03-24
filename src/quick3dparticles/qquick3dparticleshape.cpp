@@ -138,7 +138,7 @@ void QQuick3DParticleShape::setExtents(QVector3D extents)
 
 QVector3D QQuick3DParticleShape::getPosition(int particleIndex)
 {
-    if (!m_parentNode || !m_system)
+    if (!parentNode() || !m_system)
         return QVector3D();
 
     switch (m_type) {
