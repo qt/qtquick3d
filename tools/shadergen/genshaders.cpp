@@ -61,16 +61,16 @@ static inline void qDryRunPrintQsbcAdd(const QByteArray &id)
     printf("Shader pipeline generated for (dry run):\n %s\n\n", qPrintable(id));
 }
 
-static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
+static void initBaker(QShaderBaker *baker, QRhi *rhi)
 {
-    Q_UNUSED(target);
+    Q_UNUSED(rhi); // that's a Null-backed rhi here anyways
     QVector<QShaderBaker::GeneratedShader> outputs;
     // TODO: For simplicity we're just going to add all off these for now.
     outputs.append({ QShader::SpirvShader, QShaderVersion(100) }); // Vulkan 1.0
     outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
     outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
     outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
-    outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+
+    outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
 
     baker->setGeneratedShaders(outputs);
     baker->setGeneratedShaderVariants({ QShader::StandardShader });

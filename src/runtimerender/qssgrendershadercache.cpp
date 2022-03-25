@@ -42,6 +42,7 @@
 #include <QtGui/qsurfaceformat.h>
 #if QT_CONFIG(opengl)
 # include <QtGui/qopenglcontext.h>
+# include <QtGui/private/qrhigles2_p.h>
 #endif
 
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
@@ -114,10 +115,10 @@ size_t qHash(const QSSGShaderCacheKey &key)
 }
 
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
-static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
+static void initBaker(QShaderBaker *baker, QRhi *rhi)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
-    switch (target) {
+    switch (rhi->backend()) {
     case QRhi::D3D11:
         outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
         break;
@@ -126,7 +127,10 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
         break;
     case QRhi::OpenGLES2:
     {
-        const QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+        QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+        auto h = static_cast<const QRhiGles2NativeHandles *>(rhi->nativeHandles());
+        if (h && h->context)
+            format = h->context->format();
         if (format.profile() == QSurfaceFormat::CoreProfile && format.version() >= qMakePair(3, 3)) {
             outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
         } else {
@@ -140,12 +144,24 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
                 else
                     outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
             } else {
-                // Default to GLSL 130 (OpenGL 3.0), not 120. The difference is
-                // actually relevant when it comes to certain GLSL features
-                // (textureSize, unsigned integers, and with SPIRV-Cross even
-                // bool), and we do not have to care about pure OpenGL (non-ES)
-                // 2.x implementations in practice.
-                outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0
+                // Need to default to at least GLSL 130 (OpenGL 3.0), not 120.
+                // The difference is actually relevant when it comes to certain
+                // GLSL features (textureSize, unsigned integers, and with
+                // SPIRV-Cross even bool), and we do not have to care about
+                // pure OpenGL (non-ES) 2.x implementations in practice.
+
+                // For full feature set we need GLSL 140 (OpenGL 3.1), e.g.
+                // because of inverse() used for instancing.
+
+                // GLSL 130 should still be attempted, to support old Mesa
+                // llvmpipe that only gives us OpenGL 3.0. At the time of
+                // writing the opengl32sw.dll shipped with pre-built Qt is one
+                // of these still.
+
+                if (format.version() >= qMakePair(3, 1))
+                    outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
+                else
+                    outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+
             }
         }
     }
@@ -159,7 +175,7 @@ static void initBaker(QShaderBaker *baker, QRhi::Implementation target)
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
 #else
-static void initBaker(QShaderBaker *, QRhi::Implementation)
+static void initBaker(QShaderBaker *, QRhi *)
 {
 }
 #endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
@@ -263,7 +279,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QString vertErr, fragErr;
 
     QShaderBaker baker;
-    m_initBaker(&baker, m_rhiContext->rhi()->backend());
+    m_initBaker(&baker, m_rhiContext->rhi());
 
     const bool editorMode = QSSGRhiContext::editorMode();
     // Shader debug is disabled in editor mode

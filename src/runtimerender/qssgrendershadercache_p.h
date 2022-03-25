@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRhiShaderPipeline;
 class QShaderBaker;
-
+class QRhi;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderFeatures
 {
@@ -177,7 +177,7 @@ public:
 
     QAtomicInt ref;
 
-    using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi::Implementation target);
+    using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi *rhi);
 private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderPipeline>> TRhiShaderMap;
     QSSGRef<QSSGRhiContext> m_rhiContext;
