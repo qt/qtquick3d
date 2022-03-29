@@ -467,7 +467,7 @@ void QQuick3DNodePrivate::emitChangesToSceneTransform()
 
     const bool positionChanged = prevPosition != newPosition;
     const bool rotationChanged = prevRotation != newRotation;
-    const bool scaleChanged = prevScale != newScale;
+    const bool scaleChanged = !qFuzzyCompare(prevScale, newScale);
 
     if (!positionChanged && !rotationChanged && !scaleChanged)
         return;
