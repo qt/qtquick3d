@@ -70,8 +70,13 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty Node Light::scope
-    The property allows the selection of a Node in the scene. Only that node and it's children
-    are affected by this light. By default no scope is selected.
+
+    The property allows the selection of a Node in the scene. Only that node
+    and its children are affected by this light. By default the value is null,
+    which indicates no scope selected.
+
+    \note Scoped lights cannot cast shadows, meaning a Light with a scope set
+    should not set \l castsShadow to true.
 */
 
 /*!
