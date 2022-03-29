@@ -1559,7 +1559,12 @@ void QSSGLayerRenderPreparationData::prepareForRender()
                     features.set(QSSGShaderFeatures::Feature::Ssm, true);
                 }
             }
-            globalLights = renderableLights;
+
+            for (const QSSGShaderLight &shaderLight : qAsConst(renderableLights)) {
+                if (!shaderLight.light->m_scope)
+                    globalLights.append(shaderLight);
+            }
+
             for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
                 QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
                 theNodeEntry.lights = renderableLights;
