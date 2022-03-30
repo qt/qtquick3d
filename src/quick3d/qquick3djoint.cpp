@@ -158,26 +158,9 @@ QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *n
         node = new QSSGRenderJoint();
     }
 
-    auto jointNode = static_cast<QSSGRenderJoint *>(node);
-    auto d = QQuick3DNodePrivate::get(this);
-    bool transformIsDirty = false;
+    QQuick3DNode::updateSpatialNode(node);
 
-    if (jointNode->position != d->m_position) {
-        transformIsDirty = true;
-        jointNode->position = d->m_position;
-    }
-    if (jointNode->rotation != d->m_rotation) {
-        transformIsDirty = true;
-        jointNode->rotation = d->m_rotation;
-    }
-    if (jointNode->scale != d->m_scale) {
-        transformIsDirty = true;
-        jointNode->scale = d->m_scale;
-    }
-    if (jointNode->pivot != d->m_pivot) {
-        transformIsDirty = true;
-        jointNode->pivot = d->m_pivot;
-    }
+    auto jointNode = static_cast<QSSGRenderJoint *>(node);
 
     QQuick3DObjectPrivate *skeletonPriv = QQuick3DObjectPrivate::get(m_skeletonRoot);
 
@@ -186,9 +169,7 @@ QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *n
             jointNode->skeletonRoot = static_cast<QSSGRenderSkeleton *>(skeletonPriv->spatialNode);
         m_skeletonRootDirty = false;
     }
-    if (transformIsDirty) {
-        jointNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
-        jointNode->flags.setFlag(QSSGRenderNode::Flag::Dirty, true);
+    if (jointNode->flags.testFlag(QSSGRenderNode::Flag::TransformDirty)) {
         if (jointNode->skeletonRoot)
             markSkeletonDirty(jointNode->skeletonRoot);
     } else {
