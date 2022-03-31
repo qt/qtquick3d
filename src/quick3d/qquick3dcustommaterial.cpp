@@ -318,25 +318,17 @@ QT_BEGIN_NAMESPACE
     the associated model does not provide joint weights data, the value is
     vec4(0.0).
 
-    \li MORPH_POSITION\e{n} -> vec3, the \e{n}th morph target position in the vertex
-    shader. \e{n}'s range is from 0 to 7. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_MORPH_IN_POSITION\e{n})}
-    before use it.
+    \li MORPH_POSITION(\e{n}) -> vec3, the \e{n+1}th morph target position in the vertex
+    shader. The associated model should provide proper data.
 
-    \li MORPH_NORMAL\e{n} -> vec3, the \e{n}th morph target normal in the vertex
-    shader. \e{n}'s range is from 0 to 4. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_MORPH_IN_NORMAL\e{n})}
-    before use it.
+    \li MORPH_NORMAL(\e{n}) -> vec3, the \e{n+1}th morph target normal in the vertex
+    shader. The associated model should provide proper data.
 
-    \li MORPH_TANGENT\e{n} -> vec3, the \e{n}th morph target tangent in the vertex
-    shader. \e{n}'s range is from 0 to 1. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_MORPH_IN_TANGENT\e{n})}
-    before use it.
+    \li MORPH_TANGENT(\e{n}) -> vec3, the \e{n+1}th morph target tangent in the vertex
+    shader. The associated model should provide proper data.
 
-    \li MORPH_BINORMAL\e{n} -> vec3, the \e{n}th morph target binormal in the vertex
-    shader. \e{n}'s range is from 0 to 1. The associated model should provide proper
-    data. For safety, the user can check \b {defined(QT_MORPH_IN_BINORMAL\e{n})}
-    before use it.
+    \li MORPH_BINORMAL(\e{n}) -> vec3, the \e{n+1}th morph target binormal in the vertex
+    shader. The associated model should provide proper data.
 
     \li MODELVIEWPROJECTION_MATRIX -> mat4, the model-view-projection matrix.
     Projection matrices always follow OpenGL conventions, with a baked-in
@@ -1454,6 +1446,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Lightmap, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesSkinning))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Skinning, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesMorphing))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Morphing, true);
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)

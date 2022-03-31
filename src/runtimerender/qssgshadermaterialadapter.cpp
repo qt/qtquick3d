@@ -115,6 +115,11 @@ bool QSSGShaderDefaultMaterialAdapter::usesCustomSkinning()
     return false;
 }
 
+bool QSSGShaderDefaultMaterialAdapter::usesCustomMorphing()
+{
+    return false;
+}
+
 QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderDefaultMaterialAdapter::specularModel()
 {
     return m_material.specularModel;
@@ -306,6 +311,11 @@ bool QSSGShaderCustomMaterialAdapter::hasLighting()
 bool QSSGShaderCustomMaterialAdapter::usesCustomSkinning()
 {
     return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Skinning);
+}
+
+bool QSSGShaderCustomMaterialAdapter::usesCustomMorphing()
+{
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Morphing);
 }
 
 QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderCustomMaterialAdapter::specularModel()
@@ -570,22 +580,10 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "INSTANCE_INDEX", "gl_InstanceIndex"},
 
     // morphing
-    { "MORPH_POSITION0", "attr_tpos0"},
-    { "MORPH_POSITION1", "attr_tpos1"},
-    { "MORPH_POSITION2", "attr_tpos2"},
-    { "MORPH_POSITION3", "attr_tpos3"},
-    { "MORPH_POSITION4", "attr_tpos4"},
-    { "MORPH_POSITION5", "attr_tpos5"},
-    { "MORPH_POSITION6", "attr_tpos6"},
-    { "MORPH_POSITION7", "attr_tpos7"},
-    { "MORPH_NORMAL0", "attr_tnorm0"},
-    { "MORPH_NORMAL1", "attr_tnorm1"},
-    { "MORPH_NORMAL2", "attr_tnorm2"},
-    { "MORPH_NORMAL3", "attr_tnorm3"},
-    { "MORPH_TANGENT0", "attr_ttan0"},
-    { "MORPH_TANGENT1", "attr_ttan1"},
-    { "MORPH_BINORMAL0", "attr_tbinorm0"},
-    { "MORPH_BINORMAL1", "attr_tbinorm1"},
+    { "MORPH_POSITION", "qt_getTargetPositionFromTargetId"},
+    { "MORPH_NORMAL", "qt_getTargetNormalFromTargetId"},
+    { "MORPH_TANGENT", "qt_getTargetTangentFromTargetId"},
+    { "MORPH_BINORMAL", "qt_getTargetBinormalFromTargetId"},
     { "MORPH_WEIGHTS", "qt_morphWeights"},
 
     // custom variables
@@ -819,7 +817,11 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                             useJointNormalTexState = 0;
                             md.flags |= QSSGCustomShaderMetaData::UsesSkinning;
                         }
-
+                        if (trimmedId == QByteArrayLiteral("MORPH_POSITION") ||
+                                trimmedId == QByteArrayLiteral("MORPH_NORMAL") ||
+                                trimmedId == QByteArrayLiteral("MORPH_TANGENT") ||
+                                trimmedId == QByteArrayLiteral("MORPH_BINORMAL"))
+                            md.flags |= QSSGCustomShaderMetaData::UsesMorphing;
                         break;
                     }
                 }

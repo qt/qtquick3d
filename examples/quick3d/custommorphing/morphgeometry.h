@@ -40,6 +40,7 @@ private:
 
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
+    QByteArray m_targetBuffer;
 
     int m_gridSize = 50;
     QVector3D boundsMin;

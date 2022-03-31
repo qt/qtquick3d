@@ -855,7 +855,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
     bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe; // always true for Custom, depends for others
     bool specularAAEnabled = keyProps.m_specularAAEnabled.getValue(inKey);
-    quint32 numMorphTargets = keyProps.m_morphTargetCount.getValue(inKey);
+    quint32 numMorphTargets = keyProps.m_targetCount.getValue(inKey);
     // Pull the bump out as
     QSSGRenderableImage *bumpImage = nullptr;
     quint32 imageIdx = 0;
@@ -966,30 +966,37 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     // Morphing
     if (numMorphTargets > 0 || hasCustomVert) {
         vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_MAX_COUNT"),
-                QByteArray::number(keyProps.m_morphTargetCount.getValue(inKey)));
-        const quint32 endIter = hasCustomVert ? MAX_MORPH_TARGET : numMorphTargets;
-        for (quint32 i = 0; i < endIter; ++i) {
-            quint32 attribs = keyProps.m_morphTargetAttributes[i].getValue(inKey);
-            if (attribs & QSSGShaderKeyVertexAttribute::Position) {
-                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_POSITION") + QByteArray::number(i));
-                vertexShader.addIncoming(QByteArrayLiteral("attr_tpos") + QByteArray::number(i), "vec3");
-            }
-            if (attribs & QSSGShaderKeyVertexAttribute::Normal) {
-                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_NORMAL") + QByteArray::number(i));
-                vertexShader.addIncoming(QByteArrayLiteral("attr_tnorm") + QByteArray::number(i), "vec3");
-            }
-            if (attribs & QSSGShaderKeyVertexAttribute::Tangent) {
-                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_TANGENT") + QByteArray::number(i));
-                vertexShader.addIncoming(QByteArrayLiteral("attr_ttan") + QByteArray::number(i), "vec3");
-            }
-            if (attribs & QSSGShaderKeyVertexAttribute::Binormal) {
-                vertexShader.addDefinition(QByteArrayLiteral("QT_MORPH_IN_BINORMAL") + QByteArray::number(i));
-                vertexShader.addIncoming(QByteArrayLiteral("attr_tbinorm") + QByteArray::number(i), "vec3");
-            }
+                    QByteArray::number(numMorphTargets));
+        quint8 offset;
+        if ((offset = keyProps.m_targetPositionOffset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_POSITION_OFFSET"),
+                                       QByteArray::number(offset));
+        }
+        if ((offset = keyProps.m_targetNormalOffset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_NORMAL_OFFSET"),
+                                       QByteArray::number(offset));
+        }
+        if ((offset = keyProps.m_targetTangentOffset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_TANGENT_OFFSET"),
+                                       QByteArray::number(offset));
+        }
+        if ((offset = keyProps.m_targetBinormalOffset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_BINORMAL_OFFSET"),
+                                       QByteArray::number(offset));
+        }
+        if ((offset = keyProps.m_targetTexCoord0Offset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_TEX0_OFFSET"),
+                                       QByteArray::number(offset));
+        }
+        if ((offset = keyProps.m_targetTexCoord1Offset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_TEX1_OFFSET"),
+                                       QByteArray::number(offset));
+        }
+        if ((offset = keyProps.m_targetColorOffset.getValue(inKey)) < UINT8_MAX) {
+            vertexShader.addDefinition(QByteArrayLiteral("QT_TARGET_COLOR_OFFSET"),
+                                       QByteArray::number(offset));
         }
     }
-    if (numMorphTargets > 0)
-        vertexShader.addInclude("morphanim.glsllib");
 
     bool includeCustomFragmentMain = true;
     if (isDepthPass || isOrthoShadowPass || isCubeShadowPass) {
@@ -1932,9 +1939,19 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
 
     // Morphing
-    if (inMorphWeights.mSize > 0)
-        shaders->setUniformArray(ubufData, "qt_morphWeights",inMorphWeights.mData, inMorphWeights.mSize,
-                                 QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
+    const auto morphSize = inProperties.m_targetCount.getValue(inKey);
+    if (morphSize > 0) {
+        if (inMorphWeights.mSize >= morphSize) {
+            shaders->setUniformArray(ubufData, "qt_morphWeights", inMorphWeights.mData, morphSize,
+                                     QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
+        } else {
+            const QList<float> zeroWeights(morphSize - inMorphWeights.mSize, 0.0f);
+            QList<float> newWeights(inMorphWeights.mData, inMorphWeights.mData + inMorphWeights.mSize);
+            newWeights.append(zeroWeights);
+            shaders->setUniformArray(ubufData, "qt_morphWeights", newWeights.constData(), morphSize,
+                                     QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
+        }
+    }
 
     QVector3D theLightAmbientTotal;
     shaders->resetShadowMaps();

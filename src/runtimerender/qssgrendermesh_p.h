@@ -33,6 +33,7 @@ struct QSSGRenderSubset
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
+        QRhiTexture *targetsTexture = nullptr;
     } rhi;
 
     struct Lod {

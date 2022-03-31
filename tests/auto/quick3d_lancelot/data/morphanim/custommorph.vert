@@ -6,7 +6,7 @@ void MAIN()
                      INSTANCE_MODELVIEWPROJECTION_MATRIX[3][3]);
 
     float weight = dot(tmp, offset);
-    vec3 pos = sin(weight) * MORPH_POSITION0 + cos(weight) * MORPH_POSITION1 +
+    vec3 pos = sin(weight) * MORPH_POSITION(0) + cos(weight) * MORPH_POSITION(1) +
                 (1 - sin(weight) - cos(weight)) * VERTEX;
 
     POSITION = INSTANCE_MODELVIEWPROJECTION_MATRIX * vec4(pos, 1.0);

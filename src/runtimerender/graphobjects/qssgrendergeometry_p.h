@@ -33,6 +33,11 @@ public:
         int offset = -1;
         QSSGMesh::Mesh::ComponentType componentType = QSSGMesh::Mesh::ComponentType::Float32;
     };
+    struct TargetAttribute {
+        quint32 targetId = 0;
+        Attribute attr;
+        int stride = 0;
+    };
 
     explicit QSSGRenderGeometry();
     virtual ~QSSGRenderGeometry();
@@ -47,6 +52,7 @@ public:
     QVector3D boundsMin() const;
     QVector3D boundsMax() const;
     int stride() const;
+    int targetStride() const;
 
     void setVertexData(const QByteArray &data);
     void setIndexData(const QByteArray &data);
@@ -67,6 +73,15 @@ public:
     const QSSGMesh::RuntimeMeshData &meshData() const;
 
     QString debugObjectName;
+
+    void clearVertexAndIndex();
+    void clearTarget();
+    void setTargetData(const QByteArray &data);
+    void addTargetAttribute(quint32 targetId,
+                            QSSGMesh::RuntimeMeshData::Attribute::Semantic semantic,
+                            int offset,
+                            int stride = 0);
+    void addTargetAttribute(const TargetAttribute &att);
 
 protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)

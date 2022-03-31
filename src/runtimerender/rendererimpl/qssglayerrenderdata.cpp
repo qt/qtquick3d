@@ -1015,7 +1015,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 
         // many renderableFlags are the same for all the subsets
         QSSGRenderableObjectFlags renderableFlagsForModel;
-        quint32 morphTargetAttribs[MAX_MORPH_TARGET] = {0, 0, 0, 0, 0, 0, 0, 0};
 
         if (theMesh->subsets.size() > 0) {
             QSSGRenderSubset &theSubset = theMesh->subsets[0];
@@ -1041,7 +1040,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
             // APIs may treat unbound vertex inputs as a fatal error)
             bool hasJoint = false;
             bool hasWeight = false;
-            bool hasMorphTarget = false;
+            bool hasMorphTarget = theSubset.rhi.targetsTexture != nullptr;
             for (const QSSGRhiInputAssemblerState::InputSemantic &sem : std::as_const(theSubset.rhi.ia.inputs)) {
                 if (sem == QSSGRhiInputAssemblerState::PositionSemantic) {
                     renderableFlagsForModel.setHasAttributePosition(true);
@@ -1065,18 +1064,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                     hasJoint = true;
                 } else if (sem == QSSGRhiInputAssemblerState::WeightSemantic) {
                     hasWeight = true;
-                } else if (sem <= QSSGRhiInputAssemblerState::TargetPosition7Semantic) {
-                    hasMorphTarget = true;
-                    morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetPosition0Semantic)] |= QSSGShaderKeyVertexAttribute::Position;
-                } else if (sem <= QSSGRhiInputAssemblerState::TargetNormal3Semantic) {
-                    hasMorphTarget = true;
-                    morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetNormal0Semantic)] |= QSSGShaderKeyVertexAttribute::Normal;
-                } else if (sem <= QSSGRhiInputAssemblerState::TargetTangent1Semantic) {
-                    hasMorphTarget = true;
-                    morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetTangent0Semantic)] |= QSSGShaderKeyVertexAttribute::Tangent;
-                } else if (sem <= QSSGRhiInputAssemblerState::TargetBinormal1Semantic) {
-                    hasMorphTarget = true;
-                    morphTargetAttribs[(quint32)(sem - QSSGRhiInputAssemblerState::TargetBinormal0Semantic)] |= QSSGShaderKeyVertexAttribute::Binormal;
                 }
             }
             renderableFlagsForModel.setHasAttributeJointAndWeight(hasJoint && hasWeight);
@@ -1309,9 +1296,22 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 // Instancing
                 renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
-                renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, model.morphWeights.size());
-                for (int i = 0; i < model.morphAttributes.size(); ++i)
-                    renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, model.morphAttributes[i] & morphTargetAttribs[i]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetCount.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetCount);
+                renderer->defaultMaterialShaderKeyProperties().m_targetPositionOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::PositionSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetNormalOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::NormalSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetTangentOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TangentSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetBinormalOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::BinormalSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord0Offset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord0Semantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord1Offset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord1Semantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetColorOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::ColorSemantic]);
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
                                                                              QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset,
@@ -1356,10 +1356,22 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                         && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
                 renderer->defaultMaterialShaderKeyProperties().m_usesInstancing.setValue(theGeneratedKey, usesInstancing);
                 // Morphing
-                renderer->defaultMaterialShaderKeyProperties().m_morphTargetCount.setValue(theGeneratedKey, model.morphWeights.size());
-                // For custommaterials, it is allowed to use morph inputs without morphTargets
-                for (int i = 0; i < MAX_MORPH_TARGET; ++i)
-                    renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, morphTargetAttribs[i]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetCount.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetCount);
+                renderer->defaultMaterialShaderKeyProperties().m_targetPositionOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::PositionSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetNormalOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::NormalSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetTangentOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TangentSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetBinormalOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::BinormalSemantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord0Offset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord0Semantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetTexCoord1Offset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord1Semantic]);
+                renderer->defaultMaterialShaderKeyProperties().m_targetColorOffset.setValue(theGeneratedKey,
+                                        theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::ColorSemantic]);
 
                 if (theMaterial.m_iblProbe)
                     theMaterial.m_iblProbe->clearDirty();

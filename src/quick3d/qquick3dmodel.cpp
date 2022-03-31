@@ -159,15 +159,7 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
 
     This property contains a list of \l [QtQuick3D QML] {MorphTarget}{MorphTarget}s used to
     render the provided geometry. Meshes should have at least one attribute
-    among positions, normals, tangent, bitangent for the morph targets.
-    Quick3D supports maximum 8 morph targets and remains will be ignored.
-
-    \note First 2 morph targets can have maximum 4 attributes among position,
-    normal, tangent, and binormal.
-    \note 3rd and 4th  morph targets can have maximum 2 attributes among
-    position, and normal.
-    \note Remaining morph targets can have only the position attribute.
-    \note This property is not used when the model is shaded by \l {CustomMaterial}.
+    among positions, normals, tangents, and binormals for the morph targets.
 
     \sa {MorphTarget}
 */

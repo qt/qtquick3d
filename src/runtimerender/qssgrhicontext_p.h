@@ -39,33 +39,22 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
         NormalSemantic,             // attr_norm
         TexCoord0Semantic,          // attr_uv0
         TexCoord1Semantic,          // attr_uv1
-        TexCoordLightmapSemantic,   // attr_lightmapuv
         TangentSemantic,            // attr_textan
         BinormalSemantic,           // attr_binormal
+        ColorSemantic,              // attr_color
+        MaxTargetSemantic = ColorSemantic,
         JointSemantic,              // attr_joints
         WeightSemantic,             // attr_weights
-        ColorSemantic,              // attr_color
-        TargetPosition0Semantic,    // attr_tpos0
-        TargetPosition1Semantic,    // attr_tpos1
-        TargetPosition2Semantic,    // attr_tpos2
-        TargetPosition3Semantic,    // attr_tpos3
-        TargetPosition4Semantic,    // attr_tpos4
-        TargetPosition5Semantic,    // attr_tpos5
-        TargetPosition6Semantic,    // attr_tpos6
-        TargetPosition7Semantic,    // attr_tpos7
-        TargetNormal0Semantic,      // attr_tnorm0
-        TargetNormal1Semantic,      // attr_tnorm1
-        TargetNormal2Semantic,      // attr_tnorm2
-        TargetNormal3Semantic,      // attr_tnorm3
-        TargetTangent0Semantic,     // attr_ttan0
-        TargetTangent1Semantic,     // attr_ttan1
-        TargetBinormal0Semantic,    // attr_tbinorm0
-        TargetBinormal1Semantic     // attr_tbinorm1
+        TexCoordLightmapSemantic    // attr_lightmapuv
     };
 
     QRhiVertexInputLayout inputLayout;
     QVarLengthArray<InputSemantic, 8> inputs;
     QRhiGraphicsPipeline::Topology topology;
+
+    std::array<quint8, MaxTargetSemantic + 1> targetOffsets = { UINT8_MAX, UINT8_MAX, UINT8_MAX, UINT8_MAX,
+                                                                     UINT8_MAX, UINT8_MAX, UINT8_MAX };
+    quint8 targetCount = 0;
 
     static QRhiVertexInputAttribute::Format toVertexInputFormat(QSSGRenderComponentType compType, quint32 numComps);
     static QRhiGraphicsPipeline::Topology toTopology(QSSGRenderDrawMode drawMode);

@@ -1328,6 +1328,21 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, modelNode.boneTexture, boneSampler);
                 }
             }
+            // Morphing
+            auto *targetsTexture = subsetRenderable.subset.rhi.targetsTexture;
+            if (targetsTexture) {
+                int binding = shaderPipeline->bindingForTexture("qt_morphTargetTexture");
+                if (binding >= 0) {
+                    QRhiSampler *targetsSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                                    QRhiSampler::Nearest,
+                                                                    QRhiSampler::None,
+                                                                    QRhiSampler::ClampToEdge,
+                                                                    QRhiSampler::ClampToEdge,
+                                                                    QRhiSampler::ClampToEdge
+                                                               });
+                    bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, subsetRenderable.subset.rhi.targetsTexture, targetsSampler);
+                }
+            }
 
             ps->samples = samples;
 

@@ -46,7 +46,8 @@ struct QSSGCustomShaderMetaData
         UsesSharedVars = 1 << 8,
         UsesIblOrientation = 1 << 9,
         UsesLightmap = 1 << 10,
-        UsesSkinning = 1 << 11
+        UsesSkinning = 1 << 11,
+        UsesMorphing = 1 << 12
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

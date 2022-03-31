@@ -226,56 +226,6 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
                     instanceLocations.color = var.location;
                 } else if (var.name == "qt_instanceData") {
                     instanceLocations.data = var.location;
-                } else if (var.name.startsWith("attr_t")) {
-                    // it's for morphing animation and it is not common to use these
-                    // attributes. So we will check the prefix first and then remainings
-                    if (var.name.mid(6, 3) == "pos") {
-                        if (var.name.at(9) == '0')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition0Semantic] = var;
-                        else if (var.name.at(9) == '1')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition1Semantic] = var;
-                        else if (var.name.at(9) == '2')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition2Semantic] = var;
-                        else if (var.name.at(9) == '3')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition3Semantic] = var;
-                        else if (var.name.at(9) == '4')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition4Semantic] = var;
-                        else if (var.name.at(9) == '5')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition5Semantic] = var;
-                        else if (var.name.at(9) == '6')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition6Semantic] = var;
-                        else if (var.name.at(9) == '7')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetPosition7Semantic] = var;
-                        else
-                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
-                    } else if (var.name.mid(6, 4) == "norm") {
-                        if (var.name.at(10) == '0')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal0Semantic] = var;
-                        else if (var.name.at(10) == '1')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal1Semantic] = var;
-                        else if (var.name.at(10) == '2')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal2Semantic] = var;
-                        else if (var.name.at(10) == '3')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetNormal3Semantic] = var;
-                        else
-                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
-                    } else if (var.name.mid(6, 3) == "tan") {
-                        if (var.name.at(9) == '0')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetTangent0Semantic] = var;
-                        else if (var.name.at(9) == '1')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetTangent1Semantic] = var;
-                        else
-                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
-                    } else if (var.name.mid(6, 6) == "binorm") {
-                        if (var.name.at(12) == '0')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetBinormal0Semantic] = var;
-                        else if (var.name.at(12) == '1')
-                            m_vertexInputs[QSSGRhiInputAssemblerState::TargetBinormal1Semantic] = var;
-                        else
-                            qWarning("Ignoring vertex input %s in shader", var.name.constData());
-                    } else {
-                        qWarning("Ignoring vertex input %s in shader", var.name.constData());
-                    }
                 } else {
                     qWarning("Ignoring vertex input %s in shader", var.name.constData());
                 }

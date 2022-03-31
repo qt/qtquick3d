@@ -131,7 +131,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     const bool blendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
     usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
     m_hasSkinning = defaultMaterialShaderKeyProperties.m_boneCount.getValue(inKey) > 0;
-    const auto morphSize = defaultMaterialShaderKeyProperties.m_morphTargetCount.getValue(inKey);
+    const auto morphSize = defaultMaterialShaderKeyProperties.m_targetCount.getValue(inKey);
     m_hasMorphing = morphSize > 0;
 
     vertexShader.addIncoming("attr_pos", "vec3");
@@ -161,8 +161,11 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
 
         vertexShader.addUniform("qt_boneTexture", "sampler2D");
     }
-    if (m_hasMorphing)
+    if (m_hasMorphing) {
+        vertexShader.addInclude("morphanim.glsllib");
         vertexShader.addUniformArray("qt_morphWeights", "float", morphSize);
+        vertexShader.addUniform("qt_morphTargetTexture", "sampler2DArray");
+    }
 
     const bool hasCustomVertexShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
     const bool hasCustomFragmentShader = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Fragment);
@@ -182,6 +185,14 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
                 vertexShader.addInclude("skinanim.glsllib");
                 vertexShader.addUniform("qt_boneTexture", "sampler2D");
                 m_hasSkinning = false;
+            }
+
+            if (materialAdapter->usesCustomMorphing()) {
+                vertexShader.addInclude("morphanim_custom.glsllib");
+                if (morphSize > 0)
+                    vertexShader.addUniformArray("qt_morphWeights", "float", morphSize);
+                vertexShader.addUniform("qt_morphTargetTexture", "sampler2DArray");
+                m_hasMorphing = false;
             }
 
             if (!materialAdapter->isUnshaded()) {
@@ -308,7 +319,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             vertexShader.append(customMainCallWithArguments(usesInstancing));
 
         if (m_hasMorphing && !hasCustomVertexShader)
-            vertexShader.append("    qt_vertPosition.xyz = qt_getMorphPosition(qt_vertPosition.xyz);");
+            vertexShader.append("    qt_vertPosition.xyz = qt_getTargetPosition(qt_vertPosition.xyz);");
 
         if (m_hasSkinning) {
             vertexShader.append("    mat4 skinMat = mat4(1);");
@@ -378,7 +389,7 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
     if (!usesInstancing)
         vertexGenerator.addUniform("qt_normalMatrix", "mat3");
     if (m_hasMorphing)
-        vertexGenerator.append("    qt_vertNormal = qt_getMorphNormal(qt_vertNormal);");
+        vertexGenerator.append("    qt_vertNormal = qt_getTargetNormal(qt_vertNormal);");
     if (m_hasSkinning) {
         vertexGenerator.append("    if (qt_vertWeights != vec4(0.0))");
         vertexGenerator.append("        qt_vertNormal = qt_getSkinNormalMatrix(qt_vertJoints, qt_vertWeights) * qt_vertNormal;");
@@ -399,7 +410,7 @@ void QSSGMaterialVertexPipeline::doGenerateWorldNormal(const QSSGShaderDefaultMa
 void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMaterialKey &inKey)
 {
     if (m_hasMorphing)
-        vertex() << "    qt_vertTangent = qt_getMorphTangent(qt_vertTangent);\n";
+        vertex() << "    qt_vertTangent = qt_getTargetTangent(qt_vertTangent);\n";
     if (m_hasSkinning) {
         vertex() << "    if (qt_vertWeights != vec4(0.0))\n"
                  << "       qt_vertTangent = (skinMat * vec4(qt_vertTangent, 0.0)).xyz;\n";
@@ -419,7 +430,7 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMat
 void QSSGMaterialVertexPipeline::doGenerateVarBinormal(const QSSGShaderDefaultMaterialKey &inKey)
 {
     if (m_hasMorphing)
-        vertex() << "    qt_vertBinormal = qt_getMorphBinormal(qt_vertBinormal);\n";
+        vertex() << "    qt_vertBinormal = qt_getTargetBinormal(qt_vertBinormal);\n";
     if (m_hasSkinning) {
         vertex() << "    if (qt_vertWeights != vec4(0.0))\n"
                  << "       qt_vertBinormal = (skinMat * vec4(qt_vertBinormal, 0.0)).xyz;\n";

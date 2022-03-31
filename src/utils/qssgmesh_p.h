@@ -67,6 +67,12 @@ public:
         QByteArray data;
     };
 
+    struct TargetBuffer {
+        quint32 numTargets = 0;
+        QVector<VertexBufferEntry> entries;
+        QByteArray data;
+    };
+
     struct SubsetBounds {
         QVector3D min;
         QVector3D max;
@@ -90,6 +96,7 @@ public:
     // can just return by value (big data is all implicitly shared)
     VertexBuffer vertexBuffer() const { return m_vertexBuffer; }
     IndexBuffer indexBuffer() const { return m_indexBuffer; }
+    TargetBuffer targetBuffer() const { return m_targetBuffer; }
     QVector<Subset> subsets() const { return m_subsets; }
 
     // id 0 == first, otherwise has to match
@@ -100,7 +107,8 @@ public:
     static Mesh fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
                               const QByteArray &indexBufferData,
                               ComponentType indexComponentType,
-                              const QVector<AssetMeshSubset> &subsets);
+                              const QVector<AssetMeshSubset> &subsets,
+                              quint32 numTargets = 0, quint32 numTargetComps = 0);
 
     static Mesh fromRuntimeData(const RuntimeMeshData &data,
                                 QString *error);
@@ -121,6 +129,7 @@ private:
     Winding m_winding = Winding::CounterClockwise;
     VertexBuffer m_vertexBuffer;
     IndexBuffer m_indexBuffer;
+    TargetBuffer m_targetBuffer;
     QVector<Subset> m_subsets;
     friend struct MeshInternal;
 };
@@ -131,6 +140,7 @@ struct Q_QUICK3DUTILS_EXPORT AssetVertexEntry // for asset importer plugins (Ass
     QByteArray data;
     Mesh::ComponentType componentType = Mesh::ComponentType::Float32;
     quint32 componentCount = 0;
+    qint32 morphTargetId = -1; // -1 menas that this entry belongs to the original mesh.
 };
 
 struct Q_QUICK3DUTILS_EXPORT AssetMeshSubset // for asset importer plugins (Assimp, FBX)
@@ -157,10 +167,6 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
             JointSemantic,                          // attr_joints
             WeightSemantic,                         // attr_weights
             ColorSemantic,                          // attr_color
-            TargetPositionSemantic,                 // attr_tpos0
-            TargetNormalSemantic,                   // attr_tnorm0
-            TargetTangentSemantic,                  // attr_ttan0
-            TargetBinormalSemantic,                 // attr_tbinorm0
             TexCoord1Semantic,                      // attr_uv1
             TexCoord0Semantic = TexCoordSemantic    // attr_uv0
         };
@@ -181,18 +187,26 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
             case JointSemantic:             return 4;
             case WeightSemantic:            return 4;
             case ColorSemantic:             return 4;
-            case TargetPositionSemantic:    return 3;
-            case TargetNormalSemantic:      return 3;
-            case TargetTangentSemantic:     return 3;
-            case TargetBinormalSemantic:    return 3;
             }
             Q_UNREACHABLE_RETURN(0);
         }
     };
 
+    struct TargetAttribute {
+        Attribute attr;
+        int targetId;
+        int stride;
+    };
+
     static const int MAX_ATTRIBUTES = 16;
+    static const int MAX_TARGET_ATTRIBUTES = 32;
 
     void clear()
+    {
+        clearVertexAndIndex();
+        clearTarget();
+    }
+    void clearVertexAndIndex()
     {
         m_vertexBuffer.clear();
         m_indexBuffer.clear();
@@ -200,13 +214,21 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
         m_attributeCount = 0;
         m_primitiveType = Mesh::DrawMode::Triangles;
     }
+    void clearTarget()
+    {
+        m_targetBuffer.clear();
+        m_targetAttributeCount = 0;
+    }
 
     QByteArray m_vertexBuffer;
     QByteArray m_indexBuffer;
+    QByteArray m_targetBuffer;
     QVector<Mesh::Subset> m_subsets;
 
     Attribute m_attributes[MAX_ATTRIBUTES];
     int m_attributeCount = 0;
+    TargetAttribute m_targetAttributes[MAX_TARGET_ATTRIBUTES];
+    int m_targetAttributeCount = 0;
     Mesh::DrawMode m_primitiveType = Mesh::DrawMode::Triangles;
     int m_stride = 0;
 };
@@ -244,7 +266,8 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
         // This needs branching in the deserializer.
         // Version 6 differs from 5 with additional lodCount per subset as well
         // as a list of Level of Detail data after the subset names.
-        static const quint32 FILE_VERSION = 6;
+        // Version 7 will split the morph target data
+        static const quint32 FILE_VERSION = 7;
 
         static MeshDataHeader withDefaults() {
             return { FILE_ID, FILE_VERSION, 0, 0 };
@@ -262,6 +285,10 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
 
         bool hasLodDataHint() const {
             return fileVersion >= 6;
+        }
+
+        bool hasSeparateTargetBuffer() const {
+            return fileVersion >= 7;
         }
     };
 
@@ -329,63 +356,6 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
     static const char *getColorAttrName() { return "attr_color"; }
     static const char *getJointAttrName() { return "attr_joints"; }
     static const char *getWeightAttrName() { return "attr_weights"; }
-    static const char *getMorphTargetAttrNamePrefix() { return "attr_t"; }
-    static const char *getTargetPositionAttrName(int idx)
-    {
-        switch (idx) {
-            case 0:
-                return "attr_tpos0";
-            case 1:
-                return "attr_tpos1";
-            case 2:
-                return "attr_tpos2";
-            case 3:
-                return "attr_tpos3";
-            case 4:
-                return "attr_tpos4";
-            case 5:
-                return "attr_tpos5";
-            case 6:
-                return "attr_tpos6";
-            case 7:
-                return "attr_tpos7";
-        }
-        return "attr_unsupported";
-    }
-    static const char *getTargetNormalAttrName(int idx)
-    {
-        switch (idx) {
-            case 0:
-                return "attr_tnorm0";
-            case 1:
-                return "attr_tnorm1";
-            case 2:
-                return "attr_tnorm2";
-            case 3:
-                return "attr_tnorm3";
-        }
-        return "attr_unsupported";
-    }
-    static const char *getTargetTangentAttrName(int idx)
-    {
-        switch (idx) {
-            case 0:
-                return "attr_ttan0";
-            case 1:
-                return "attr_ttan1";
-        }
-        return "attr_unsupported";
-    }
-    static const char *getTargetBinormalAttrName(int idx)
-    {
-        switch (idx) {
-            case 0:
-                return "attr_tbinorm0";
-            case 1:
-                return "attr_tbinorm1";
-        }
-        return "attr_unsupported";
-    }
 
     static QSSGBounds3 calculateSubsetBounds(const Mesh::VertexBufferEntry &entry,
                                              const QByteArray &vertexBufferData,

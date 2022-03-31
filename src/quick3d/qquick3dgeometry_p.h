@@ -37,17 +37,23 @@ public:
     };
 
     static const int MAX_ATTRIBUTE_COUNT = 16;
+    static const int MAX_TARGET_ATTRIBUTE_COUNT = 32;
     QByteArray m_vertexBuffer;
+    QByteArray m_targetBuffer;
     QByteArray m_indexBuffer;
     QQuick3DGeometry::Attribute m_attributes[MAX_ATTRIBUTE_COUNT];
     QVector<Subset> m_subsets;
     int m_attributeCount = 0;
+    QQuick3DGeometry::TargetAttribute m_targetAttributes[MAX_TARGET_ATTRIBUTE_COUNT];
+    int m_targetAttributeCount = 0;
     QQuick3DGeometry::PrimitiveType m_primitiveType = QQuick3DGeometry::PrimitiveType::Triangles;
     QVector3D m_min;
     QVector3D m_max;
     int m_stride = 0;
     bool m_geometryChanged = true;
     bool m_geometryBoundsChanged = true;
+    bool m_targetChanged = true;
+    bool m_usesOldTargetSemantics = false;
 
     static QQuick3DGeometry::Attribute::Semantic semanticFromName(const QByteArray &name);
     static QQuick3DGeometry::Attribute::ComponentType toComponentType(QSSGMesh::Mesh::ComponentType componentType);

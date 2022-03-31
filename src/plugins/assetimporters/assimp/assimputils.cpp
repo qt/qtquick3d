@@ -56,12 +56,13 @@ struct VertexAttributeData {
     QVector3D tangent;
     QVector3D binormal;
     QVector4D color;
+};
+
+struct VertexAttributeDataExt {
+    VertexAttributeData aData;
     IntVector4D boneIndexes;
     QVector4D boneWeights;
-    QVector3D morphTargetPostions[8];
-    QVector3D morphTargetNormals[8];
-    QVector3D morphTargetTangents[8];
-    QVector3D morphTargetBinormals[8];
+    QVector<VertexAttributeData> targetAData;
 };
 
 struct VertexDataRequirments {
@@ -76,27 +77,16 @@ struct VertexDataRequirments {
     bool needsBones = false;
     bool useFloatJointIndices = false;
 
-    // GLTF should support at least 8 attributes for morphing.
-    // The supported combinations are the followings.
-    // 1. 8 targets having only positions.
-    // 2. 4 targets having both positions and normals.
-    // 3. 2 targets having positions, normals, and tangents(with binormals)
-    //
-    // 4. 2 targets having only positions and 3 targets having both positions
-    //   and normals,
-    // 5. ....
-    //
-    // Handling the same types is simple but let's think about 4.
-    // In this case, animMeshes should be sorted by descending order of the
-    // number of input attributes. It means that we need to process 3 targets
-    // having more attributes first and then 2 remaining targets.
-    // However, we will assume the asset is made by this correct order.
-
     quint32 numMorphTargets = 0;
-    QVector<bool> needsTargetPosition;
-    QVector<bool> needsTargetNormal;
-    QVector<bool> needsTargetTangent;
-    QVector<float> targetWeight;
+    // All the target mesh will have the same components
+    // Target texture coords will be recored as 3 components.
+    // even if we are using just 2 components now.
+    bool needsTargetPositionData = false;
+    bool needsTargetNormalData = false;
+    bool needsTargetTangentData = false;
+    bool needsTargetVertexColorData = false;
+    bool needsTargetUV0Data = false;
+    bool needsTargetUV1Data = false;
 
     void collectRequirmentsForMesh(const aiMesh *mesh) {
         uv0Components = qMax(mesh->mNumUVComponents[0], uv0Components);
@@ -108,31 +98,24 @@ struct VertexDataRequirments {
         needsTangentData |= mesh->HasTangentsAndBitangents();
         needsVertexColorData |=mesh->HasVertexColors(0);
         needsBones |= mesh->HasBones();
-        if (mesh->mNumAnimMeshes && mesh->mAnimMeshes) {
-            if (mesh->mNumAnimMeshes > 8)
-                qWarning() << "QtQuick3D supports maximum 8 morph targets, remains will be ignored\n";
-            const quint32 numAnimMeshes = qMin(8U, mesh->mNumAnimMeshes);
-            if (numMorphTargets < numAnimMeshes) {
-                numMorphTargets = numAnimMeshes;
-                needsTargetPosition.resize(numMorphTargets);
-                needsTargetNormal.resize(numMorphTargets);
-                needsTargetTangent.resize(numMorphTargets);
-                targetWeight.resize(numMorphTargets);
-            }
-            for (uint i = 0; i < numAnimMeshes; ++i) {
+        numMorphTargets = mesh->mNumAnimMeshes;
+        if (numMorphTargets && mesh->mAnimMeshes) {
+            for (uint i = 0; i < numMorphTargets; ++i) {
                 auto animMesh = mesh->mAnimMeshes[i];
-                needsTargetPosition[i] |= animMesh->HasPositions();
-                needsTargetNormal[i] |= animMesh->HasNormals();
-                needsTargetTangent[i] |= animMesh->HasTangentsAndBitangents();
-                targetWeight[i] = animMesh->mWeight;
+                needsTargetPositionData |= animMesh->HasPositions();
+                needsTargetNormalData |= animMesh->HasNormals();
+                needsTargetTangentData |= animMesh->HasTangentsAndBitangents();
+                needsTargetVertexColorData |= animMesh->HasVertexColors(0);
+                needsTargetUV0Data |= animMesh->HasTextureCoords(0);
+                needsTargetUV1Data |= animMesh->HasTextureCoords(1);
             }
         }
     }
 };
 
-QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const VertexDataRequirments &requirments)
+QVector<VertexAttributeDataExt> getVertexAttributeData(const aiMesh *mesh, const VertexDataRequirments &requirments)
 {
-    QVector<VertexAttributeData> vertexAttributes;
+    QVector<VertexAttributeDataExt> vertexAttributes;
 
     vertexAttributes.resize(mesh->mNumVertices);
 
@@ -140,7 +123,7 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
     if (mesh->HasPositions()) {
         for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
             const auto vertex = mesh->mVertices[index];
-            vertexAttributes[index].position = QVector3D(vertex.x, vertex.y, vertex.z);
+            vertexAttributes[index].aData.position = QVector3D(vertex.x, vertex.y, vertex.z);
         }
     }
 
@@ -148,7 +131,7 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
     if (mesh->HasNormals()) {
         for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
             const auto normal = mesh->mNormals[index];
-            vertexAttributes[index].normal = QVector3D(normal.x, normal.y, normal.z);
+            vertexAttributes[index].aData.normal = QVector3D(normal.x, normal.y, normal.z);
         }
     }
 
@@ -158,12 +141,12 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
         if (requirments.uv0Components == 2) {
             for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
                 const auto uv = texCoords[index];
-                vertexAttributes[index].uv0 = QVector3D(uv.x, uv.y, 0.0f);
+                vertexAttributes[index].aData.uv0 = QVector3D(uv.x, uv.y, 0.0f);
             }
         } else if (requirments.uv0Components == 3) {
             for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
                 const auto uv = texCoords[index];
-                vertexAttributes[index].uv0 = QVector3D(uv.x, uv.y, uv.z);
+                vertexAttributes[index].aData.uv0 = QVector3D(uv.x, uv.y, uv.z);
             }
         }
     }
@@ -174,12 +157,12 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
         if (requirments.uv1Components == 2) {
             for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
                 const auto uv = texCoords[index];
-                vertexAttributes[index].uv1 = QVector3D(uv.x, uv.y, 0.0f);
+                vertexAttributes[index].aData.uv1 = QVector3D(uv.x, uv.y, 0.0f);
             }
         } else if (requirments.uv1Components == 3) {
             for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
                 const auto uv = texCoords[index];
-                vertexAttributes[index].uv1 = QVector3D(uv.x, uv.y, uv.z);
+                vertexAttributes[index].aData.uv1 = QVector3D(uv.x, uv.y, uv.z);
             }
         }
     }
@@ -189,8 +172,8 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
         for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
             const auto tangent = mesh->mTangents[index];
             const auto binormal = mesh->mBitangents[index];
-            vertexAttributes[index].tangent = QVector3D(tangent.x, tangent.y, tangent.z);
-            vertexAttributes[index].binormal = QVector3D(binormal.x, binormal.y, binormal.z);
+            vertexAttributes[index].aData.tangent = QVector3D(tangent.x, tangent.y, tangent.z);
+            vertexAttributes[index].aData.binormal = QVector3D(binormal.x, binormal.y, binormal.z);
         }
     }
 
@@ -198,7 +181,7 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
     if (mesh->HasVertexColors(0)) {
         for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
             const auto color = mesh->mColors[0][index];
-            vertexAttributes[index].color = QVector4D(color.r, color.g, color.b, color.a);
+            vertexAttributes[index].aData.color = QVector4D(color.r, color.g, color.b, color.a);
         }
     }
 
@@ -235,35 +218,42 @@ QVector<VertexAttributeData> getVertexAttributeData(const aiMesh *mesh, const Ve
     }
 
     // Morph Targets
-    for (uint i = 0; i < requirments.numMorphTargets; ++i) {
-        aiAnimMesh *animMesh = nullptr;
-        if (i < mesh->mNumAnimMeshes) {
-            animMesh = mesh->mAnimMeshes[i];
-            Q_ASSERT(animMesh->mNumVertices == mesh->mNumVertices);
-        }
-        if (requirments.needsTargetPosition[i]) {
-            if (animMesh && animMesh->HasPositions()) {
-                for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
+    if (requirments.numMorphTargets > 0) {
+        for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
+            vertexAttributes[index].targetAData.resize(requirments.numMorphTargets);
+
+            for (uint i = 0; i < requirments.numMorphTargets; ++i) {
+                if (i >= mesh->mNumAnimMeshes)
+                    continue;
+
+                auto animMesh = mesh->mAnimMeshes[i];
+                if (animMesh->HasPositions()) {
                     const auto vertex = animMesh->mVertices[index];
-                    vertexAttributes[index].morphTargetPostions[i] = QVector3D(vertex.x, vertex.y, vertex.z);
+                    vertexAttributes[index].targetAData[i].position = QVector3D(vertex.x, vertex.y, vertex.z);
                 }
-            }
-        }
-        if (requirments.needsTargetNormal[i]) {
-            if (animMesh && animMesh->HasNormals()) {
-                for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
+                if (animMesh->HasNormals()) {
                     const auto normal = animMesh->mNormals[index];
-                    vertexAttributes[index].morphTargetNormals[i] = QVector3D(normal.x, normal.y, normal.z);
+                    vertexAttributes[index].targetAData[i].normal = QVector3D(normal.x, normal.y, normal.z);
                 }
-            }
-        }
-        if (requirments.needsTargetTangent[i]) {
-            if (animMesh && animMesh->HasTangentsAndBitangents()) {
-                for (unsigned int index = 0; index < mesh->mNumVertices; ++index) {
+                if (animMesh->HasTangentsAndBitangents()) {
                     const auto tangent = animMesh->mTangents[index];
                     const auto binormal = animMesh->mBitangents[index];
-                    vertexAttributes[index].morphTargetTangents[i] = QVector3D(tangent.x, tangent.y, tangent.z);
-                    vertexAttributes[index].morphTargetBinormals[i] = QVector3D(binormal.x, binormal.y, binormal.z);
+                    vertexAttributes[index].targetAData[i].tangent = QVector3D(tangent.x, tangent.y, tangent.z);
+                    vertexAttributes[index].targetAData[i].binormal = QVector3D(binormal.x, binormal.y, binormal.z);
+                }
+                if (animMesh->HasTextureCoords(0)) {
+                    const auto texCoords = animMesh->mTextureCoords[0];
+                    const auto uv = texCoords[index];
+                    vertexAttributes[index].targetAData[i].uv0 = QVector3D(uv.x, uv.y, uv.z);
+                }
+                if (animMesh->HasTextureCoords(1)) {
+                    const auto texCoords = animMesh->mTextureCoords[1];
+                    const auto uv = texCoords[index];
+                    vertexAttributes[index].targetAData[i].uv1 = QVector3D(uv.x, uv.y, uv.z);
+                }
+                if (animMesh->HasVertexColors(0)) {
+                    const auto color = animMesh->mColors[0][index];
+                    vertexAttributes[index].targetAData[i].color = QVector4D(color.r, color.g, color.b, color.a);
                 }
             }
         }
@@ -280,52 +270,53 @@ struct VertexBufferData {
     QByteArray tangentData;
     QByteArray binormalData;
     QByteArray vertexColorData;
+};
+
+struct VertexBufferDataExt {
+    VertexBufferData vData;
     QByteArray boneIndexData;
     QByteArray boneWeightData;
-    QByteArray targetPositionData[8];
-    QByteArray targetNormalData[8];
-    QByteArray targetTangentData[8];
-    QByteArray targetBinormalData[8];
+    QVector<VertexBufferData> targetVData;
 
-    void addVertexAttributeData(const VertexAttributeData &vertex, const VertexDataRequirments &requirments)
+    void addVertexAttributeData(const VertexAttributeDataExt &vertex, const VertexDataRequirments &requirments)
     {
         // Position
         if (requirments.needsPositionData)
-            positionData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.position), sizeof(QVector3D));
+            vData.positionData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.position), sizeof(QVector3D));
         // Normal
         if (requirments.needsNormalData)
-            normalData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.normal), sizeof(QVector3D));
+            vData.normalData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.normal), sizeof(QVector3D));
         // UV0
 
         if (requirments.needsUV0Data) {
             if (requirments.uv0Components == 2) {
-                const QVector2D uv(vertex.uv0.x(), vertex.uv0.y());
-                uv0Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&uv), sizeof(QVector2D));
+                const QVector2D uv(vertex.aData.uv0.x(), vertex.aData.uv0.y());
+                vData.uv0Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&uv), sizeof(QVector2D));
             } else {
-                uv0Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.uv0), sizeof(QVector3D));
+                vData.uv0Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.uv0), sizeof(QVector3D));
             }
         }
 
         // UV1
         if (requirments.needsUV1Data) {
             if (requirments.uv1Components == 2) {
-                const QVector2D uv(vertex.uv1.x(), vertex.uv1.y());
-                uv1Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&uv), sizeof(QVector2D));
+                const QVector2D uv(vertex.aData.uv1.x(), vertex.aData.uv1.y());
+                vData.uv1Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&uv), sizeof(QVector2D));
             } else {
-                uv1Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.uv1), sizeof(QVector3D));
+                vData.uv1Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.uv1), sizeof(QVector3D));
             }
         }
 
         // Tangent
         // Binormal
         if (requirments.needsTangentData) {
-            tangentData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.tangent), sizeof(QVector3D));
-            binormalData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.binormal), sizeof(QVector3D));
+            vData.tangentData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.tangent), sizeof(QVector3D));
+            vData.binormalData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.binormal), sizeof(QVector3D));
         }
 
         // Color
         if (requirments.needsVertexColorData)
-            vertexColorData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.color), sizeof(QVector4D));
+            vData.vertexColorData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.aData.color), sizeof(QVector4D));
 
         // Bone Indexes
         // Bone Weights
@@ -341,76 +332,91 @@ struct VertexBufferData {
 
         // Morph Targets
         for (uint i = 0; i < requirments.numMorphTargets; ++i) {
-            if (requirments.needsTargetPosition[i]) {
-                targetPositionData[i] += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.morphTargetPostions[i]), sizeof(QVector3D));
+            if (requirments.needsTargetPositionData) {
+                targetVData[i].positionData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].position), sizeof(QVector3D));
+                targetVData[i].positionData.append(sizeof(float), '\0');
             }
-            if (requirments.needsTargetNormal[i]) {
-                targetNormalData[i] += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.morphTargetNormals[i]), sizeof(QVector3D));
+            if (requirments.needsTargetNormalData) {
+                targetVData[i].normalData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].normal), sizeof(QVector3D));
+                targetVData[i].normalData.append(sizeof(float), '\0');
             }
-            if (requirments.needsTargetTangent[i]) {
-                targetTangentData[i] += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.morphTargetTangents[i]), sizeof(QVector3D));
-                targetBinormalData[i] += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.morphTargetBinormals[i]), sizeof(QVector3D));
+            if (requirments.needsTargetTangentData) {
+                targetVData[i].tangentData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].tangent), sizeof(QVector3D));
+                targetVData[i].tangentData.append(sizeof(float), '\0');
+                targetVData[i].binormalData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].binormal), sizeof(QVector3D));
+                targetVData[i].binormalData.append(sizeof(float), '\0');
+            }
+            if (requirments.needsTargetUV0Data) {
+                targetVData[i].uv0Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].uv0), sizeof(QVector3D));
+                targetVData[i].uv0Data.append(sizeof(float), '\0');
+            }
+            if (requirments.needsTargetUV1Data) {
+                targetVData[i].uv1Data += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].uv1), sizeof(QVector3D));
+                targetVData[i].uv1Data.append(sizeof(float), '\0');
+            }
+            if (requirments.needsTargetVertexColorData) {
+                targetVData[i].vertexColorData += QByteArray::fromRawData(reinterpret_cast<const char *>(&vertex.targetAData[i].color), sizeof(QVector4D));
             }
         }
     }
 
     QVector<QSSGMesh::AssetVertexEntry> createEntries(const VertexDataRequirments &requirments) {
         QVector<QSSGMesh::AssetVertexEntry> entries;
-        if (positionData.size() > 0) {
+        if (vData.positionData.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getPositionAttrName(),
-                               positionData,
+                               vData.positionData,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                3
                            });
         }
-        if (normalData.size() > 0) {
+        if (vData.normalData.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getNormalAttrName(),
-                               normalData,
+                               vData.normalData,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                3
                            });
         }
-        if (uv0Data.size() > 0) {
+        if (vData.uv0Data.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getUV0AttrName(),
-                               uv0Data,
+                               vData.uv0Data,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                requirments.uv0Components
                            });
         }
-        if (uv1Data.size() > 0) {
+        if (vData.uv1Data.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getUV1AttrName(),
-                               uv1Data,
+                               vData.uv1Data,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                requirments.uv1Components
                            });
         }
 
-        if (tangentData.size() > 0) {
+        if (vData.tangentData.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getTexTanAttrName(),
-                               tangentData,
+                               vData.tangentData,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                3
                            });
         }
 
-        if (binormalData.size() > 0) {
+        if (vData.binormalData.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getTexBinormalAttrName(),
-                               binormalData,
+                               vData.binormalData,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                3
                            });
         }
 
-        if (vertexColorData.size() > 0) {
+        if (vData.vertexColorData.size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getColorAttrName(),
-                               vertexColorData,
+                               vData.vertexColorData,
                                QSSGMesh::Mesh::ComponentType::Float32,
                                4
                            });
@@ -430,46 +436,76 @@ struct VertexBufferData {
                                4
                            });
         }
-        for (uint i = 0; i < requirments.numMorphTargets; ++i) {
-            if (targetPositionData[i].size() > 0) {
+        for (int i = 0; i < int(requirments.numMorphTargets); ++i) {
+            if (targetVData[i].positionData.size() > 0) {
                 entries.append({
-                                   QSSGMesh::MeshInternal::getTargetPositionAttrName(i),
-                                   targetPositionData[i],
+                                   QSSGMesh::MeshInternal::getPositionAttrName(),
+                                   targetVData[i].positionData,
                                    QSSGMesh::Mesh::ComponentType::Float32,
-                                   3
+                                   3,
+                                   i
                                });
             }
-            if (targetNormalData[i].size() > 0) {
+            if (targetVData[i].normalData.size() > 0) {
                 entries.append({
-                                   QSSGMesh::MeshInternal::getTargetNormalAttrName(i),
-                                   targetNormalData[i],
+                                   QSSGMesh::MeshInternal::getNormalAttrName(),
+                                   targetVData[i].normalData,
                                    QSSGMesh::Mesh::ComponentType::Float32,
-                                   3
+                                   3,
+                                   i
                                });
             }
-            if (targetTangentData[i].size() > 0) {
+            if (targetVData[i].tangentData.size() > 0) {
                 entries.append({
-                                   QSSGMesh::MeshInternal::getTargetTangentAttrName(i),
-                                   targetTangentData[i],
+                                   QSSGMesh::MeshInternal::getTexTanAttrName(),
+                                   targetVData[i].tangentData,
                                    QSSGMesh::Mesh::ComponentType::Float32,
-                                   3
+                                   3,
+                                   i
                                });
             }
-            if (targetBinormalData[i].size() > 0) {
+            if (targetVData[i].binormalData.size() > 0) {
                 entries.append({
-                                   QSSGMesh::MeshInternal::getTargetBinormalAttrName(i),
-                                   targetBinormalData[i],
+                                   QSSGMesh::MeshInternal::getTexBinormalAttrName(),
+                                   targetVData[i].binormalData,
                                    QSSGMesh::Mesh::ComponentType::Float32,
-                                   3
+                                   3,
+                                   i
                                });
             }
-
+            if (targetVData[i].uv0Data.size() > 0) {
+                entries.append({
+                                   QSSGMesh::MeshInternal::getUV0AttrName(),
+                                   targetVData[i].uv0Data,
+                                   QSSGMesh::Mesh::ComponentType::Float32,
+                                   3,
+                                   i
+                               });
+            }
+            if (targetVData[i].uv1Data.size() > 0) {
+                entries.append({
+                                   QSSGMesh::MeshInternal::getUV1AttrName(),
+                                   targetVData[i].uv1Data,
+                                   QSSGMesh::Mesh::ComponentType::Float32,
+                                   3,
+                                   i
+                               });
+            }
+            if (targetVData[i].vertexColorData.size() > 0) {
+                entries.append({
+                                   QSSGMesh::MeshInternal::getColorAttrName(),
+                                   targetVData[i].vertexColorData,
+                                   QSSGMesh::Mesh::ComponentType::Float32,
+                                   4,
+                                   i
+                               });
+            }
         }
         return entries;
     }
 };
 
-QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<VertexAttributeData> &vertexAttributes, QVector<quint32> &indexes, float normalMergeAngle = 60.0f, float normalSplitAngle = 25.0f)
+QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<VertexAttributeDataExt> &vertexAttributes, QVector<quint32> &indexes, float normalMergeAngle = 60.0f, float normalSplitAngle = 25.0f)
 {
     // If both normalMergeAngle and normalSplitAngle are 0.0, then don't recalculate normals
     const bool recalculateNormals = !(qFuzzyIsNull(normalMergeAngle) && qFuzzyIsNull(normalSplitAngle));
@@ -481,8 +517,8 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
     QVector<QVector3D> normals;
     normals.reserve(vertexAttributes.size());
     for (const auto &vertex : vertexAttributes) {
-        positions.append(vertex.position);
-        normals.append(vertex.normal);
+        positions.append(vertex.aData.position);
+        normals.append(vertex.aData.normal);
     }
 
     QVector<QVector3D> splitVertexNormals;
@@ -550,7 +586,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
             QHash<QVector3D, QVector<quint32>> positionHash;
             for (quint32 i = 0; i < newIndexes.size(); ++i) {
                 const quint32 index = newIndexes[i];
-                const QVector3D position = vertexAttributes[index].position;
+                const QVector3D position = vertexAttributes[index].aData.position;
                 positionHash[position].append(i);
             }
 
@@ -561,7 +597,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
             QVector<QPair<quint32, quint32>> remapIndexes;
             for (quint32 positionIndex = 0; positionIndex < newIndexes.size(); ++positionIndex) {
                 const quint32 index = newIndexes[positionIndex];
-                const QVector3D &position = vertexAttributes[index].position;
+                const QVector3D &position = vertexAttributes[index].aData.position;
                 const QVector3D &faceNormal = faceNormals[positionIndex];
                 QVector3D newNormal;
                 // Find all vertices that share the same position
@@ -572,7 +608,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
                         newNormal += faceNormal;
                     } else {
                         const quint32 index2 = newIndexes[positionIndex2];
-                        const QVector3D &position2 = vertexAttributes[index2].position;
+                        const QVector3D &position2 = vertexAttributes[index2].aData.position;
                         const QVector3D &faceNormal2 = faceNormals[positionIndex2];
                         if (QVector3D::dotProduct(faceNormal2, faceNormal) >= normalMergeThreshold)
                             newNormal += faceNormal2;
@@ -591,7 +627,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
                 // normal will already be ideal until we start getting to the very low lod levels
                 // which changes the topology in such a way that the original normal doesn't
                 // make sense anymore, thus the need to provide a more reasonable value.
-                const QVector3D &originalNormal = vertexAttributes[index].normal;
+                const QVector3D &originalNormal = vertexAttributes[index].aData.normal;
                 const float theta = QVector3D::dotProduct(originalNormal, newNormal);
                 if (theta < normalSplitThreshold) {
                     splitVertexIndices.append(index);
@@ -618,7 +654,7 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
         quint32 index = splitVertexIndices[i];
         QVector3D newNormal = splitVertexNormals[i];
         auto newVertex = vertexAttributes[index];
-        newVertex.normal = newNormal;
+        newVertex.aData.normal = newNormal;
         vertexAttributes.append(newVertex);
     }
 
@@ -647,7 +683,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
     // This is the actual data we will pass to the QSSGMesh that will get filled by
     // each of the subset meshes
     QByteArray indexBufferData;
-    VertexBufferData vertexBufferData;
+    VertexBufferDataExt vertexBufferData;
     QVector<SubsetEntryData> subsetData;
 
     // Since the vertex data of subsets are stored one after the other, the values in
@@ -735,6 +771,8 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
 
         // Fill the rest of the vertex data
         baseIndex += vertexAttributes.size(); // Final count of vertices added
+        // Increase target buffers before adding data
+        vertexBufferData.targetVData.resize(requirments.numMorphTargets);
         for (const auto &vertex : vertexAttributes)
             vertexBufferData.addVertexAttributeData(vertex, requirments);
 
@@ -756,7 +794,26 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
 
-    return QSSGMesh::Mesh::fromAssetData(entries, indexBufferData, indexType, subsets);
+    auto numTargetComponents = [](VertexDataRequirments req) {
+        int num = 0;
+        if (req.needsTargetPositionData)
+            ++num;
+        if (req.needsTargetNormalData)
+            ++num;
+        if (req.needsTargetTangentData)
+            num += 2; // tangent and binormal
+        if (req.needsTargetVertexColorData)
+            ++num;
+        if (req.needsTargetUV0Data)
+            ++num;
+        if (req.needsTargetUV1Data)
+            ++num;
+        return num;
+    };
+
+    return QSSGMesh::Mesh::fromAssetData(entries, indexBufferData, indexType,
+                                         subsets, requirments.numMorphTargets,
+                                         numTargetComponents(requirments));
 }
 
 QT_END_NAMESPACE

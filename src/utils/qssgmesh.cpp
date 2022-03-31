@@ -9,6 +9,8 @@
 
 #include "meshoptimizer.h"
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 namespace QSSGMesh {
@@ -108,15 +110,20 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
     MeshInternal::MeshOffsetTracker offsetTracker(offset + MESH_HEADER_STRUCT_SIZE);
     Q_ASSERT(offsetTracker.offset() == device->pos());
 
-    quint32 vertexBufferEntriesOffset; // unused
+    quint32 targetBufferEntriesCount;
     quint32 vertexBufferEntriesCount;
-    quint32 vertexBufferDataOffset; // unused
+    quint32 targetBufferDataSize;
     quint32 vertexBufferDataSize;
-    inputStream >> vertexBufferEntriesOffset
+    inputStream >> targetBufferEntriesCount
                 >> vertexBufferEntriesCount
                 >> mesh->m_vertexBuffer.stride
-                >> vertexBufferDataOffset
+                >> targetBufferDataSize
                 >> vertexBufferDataSize;
+
+    if (!header->hasSeparateTargetBuffer()) {
+        targetBufferEntriesCount = 0;
+        targetBufferDataSize = 0;
+    }
 
     quint32 indexBufferComponentType;
     quint32 indexBufferDataOffset;
@@ -126,14 +133,14 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
                 >> indexBufferDataSize;
     mesh->m_indexBuffer.componentType = Mesh::ComponentType(indexBufferComponentType);
 
-    quint32 subsetsOffsets; // unused
+    quint32 targetCount;
     quint32 subsetsCount;
-    inputStream >> subsetsOffsets >> subsetsCount;
+    inputStream >> targetCount >> subsetsCount;
+    mesh->m_targetBuffer.numTargets = targetCount;
 
     quint32 jointsOffsets; // unused
     quint32 jointsCount; // unused
     inputStream >> jointsOffsets >> jointsCount;
-
     quint32 drawMode;
     quint32 winding;
     inputStream >> drawMode >> winding;
@@ -160,6 +167,7 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         device->read(alignPadding, alignAmount);
 
     // vertex buffer entry names
+    quint32 numTargets = 0;
     for (auto &entry : mesh->m_vertexBuffer.entries) {
         quint32 nameLength;
         inputStream >> nameLength;
@@ -169,6 +177,37 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         alignAmount = offsetTracker.alignedAdvance(nameLength);
         if (alignAmount)
             device->read(alignPadding, alignAmount);
+        if (!header->hasSeparateTargetBuffer() && entry.name.startsWith("attr_t")) {
+            if (entry.name.mid(6, 3) == QByteArrayLiteral("pos")) {
+                const quint32 targetId_plus1 = entry.name.mid(9).toUInt() + 1;
+                if (targetId_plus1 > numTargets)
+                    numTargets = targetId_plus1;
+                entry.name = MeshInternal::getPositionAttrName();
+                mesh->m_targetBuffer.entries.append(entry);
+                targetBufferEntriesCount++;
+            } else if (entry.name.mid(6, 4) == QByteArrayLiteral("norm")) {
+                const quint32 targetId_plus1 = entry.name.mid(10).toUInt() + 1;
+                if (targetId_plus1 > numTargets)
+                    numTargets = targetId_plus1;
+                entry.name = MeshInternal::getNormalAttrName();
+                mesh->m_targetBuffer.entries.append(entry);
+                targetBufferEntriesCount++;
+            } else if (entry.name.mid(6, 3) == QByteArrayLiteral("tan")) {
+                const quint32 targetId_plus1 = entry.name.mid(9).toUInt() + 1;
+                if (targetId_plus1 > numTargets)
+                    numTargets = targetId_plus1;
+                entry.name = MeshInternal::getTexTanAttrName();
+                mesh->m_targetBuffer.entries.append(entry);
+                targetBufferEntriesCount++;
+            } else if (entry.name.mid(6, 6) == QByteArrayLiteral("binorm")) {
+                const quint32 targetId_plus1 = entry.name.mid(12).toUInt() + 1;
+                if (targetId_plus1 > numTargets)
+                    numTargets = targetId_plus1;
+                entry.name = MeshInternal::getTexBinormalAttrName();
+                mesh->m_targetBuffer.entries.append(entry);
+                targetBufferEntriesCount++;
+            }
+        }
     }
 
     mesh->m_vertexBuffer.data = device->read(vertexBufferDataSize);
@@ -257,6 +296,67 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         device->read(alignPadding, alignAmount);
 
 
+    // Data for morphTargets
+    if (targetBufferEntriesCount > 0) {
+        if (header->hasSeparateTargetBuffer()) {
+            entriesByteSize = 0;
+            for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
+                Mesh::VertexBufferEntry targetBufferEntry;
+                quint32 componentType;
+                quint32 nameOffset; // unused
+                inputStream >> nameOffset
+                            >> componentType
+                            >> targetBufferEntry.componentCount
+                            >> targetBufferEntry.offset;
+                targetBufferEntry.componentType = Mesh::ComponentType(componentType);
+                mesh->m_targetBuffer.entries.append(targetBufferEntry);
+                entriesByteSize += VERTEX_BUFFER_ENTRY_STRUCT_SIZE;
+            }
+            alignAmount = offsetTracker.alignedAdvance(entriesByteSize);
+            if (alignAmount)
+                device->read(alignPadding, alignAmount);
+
+            for (auto &entry : mesh->m_targetBuffer.entries) {
+                quint32 nameLength;
+                inputStream >> nameLength;
+                offsetTracker.advance(sizeof(quint32));
+                const QByteArray nameWithZeroTerminator = device->read(nameLength);
+                entry.name = QByteArray(nameWithZeroTerminator.constData(), qMax(0, nameWithZeroTerminator.size() - 1));
+                alignAmount = offsetTracker.alignedAdvance(nameLength);
+                if (alignAmount)
+                    device->read(alignPadding, alignAmount);
+            }
+
+            mesh->m_targetBuffer.data = device->read(targetBufferDataSize);
+        } else {
+            // remove target entries from vertexbuffer entries
+            mesh->m_vertexBuffer.entries.remove(vertexBufferEntriesCount - targetBufferEntriesCount,
+                                                targetBufferEntriesCount);
+            const quint32 vertexCount = vertexBufferDataSize / mesh->m_vertexBuffer.stride;
+            const quint32 targetEntryTexWidth = qCeil(qSqrt(vertexCount));
+            const quint32 targetCompStride = targetEntryTexWidth * targetEntryTexWidth * 4 * sizeof(float);
+            mesh->m_targetBuffer.data.resize(targetCompStride * targetBufferEntriesCount);
+            const quint32 numComps = targetBufferEntriesCount / numTargets;
+            for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
+                auto &entry = mesh->m_targetBuffer.entries[i];
+                char *dstBuf = mesh->m_targetBuffer.data.data()
+                                + (i / numComps) * targetCompStride
+                                + (i % numComps) * (targetCompStride * numTargets);
+                const char *srcBuf = mesh->m_vertexBuffer.data.constData() + entry.offset;
+                for (quint32 j = 0; j < vertexCount; ++j) {
+                    // The number of old target components is fixed as 3
+                    memcpy(dstBuf + j * 4 * sizeof(float),
+                           srcBuf + j * mesh->m_vertexBuffer.stride,
+                           3 * sizeof(float));
+                }
+                entry.offset = i * targetCompStride;
+            }
+            // now we don't need to have redundant targetbuffer entries
+            mesh->m_targetBuffer.entries.remove(numComps, targetBufferEntriesCount - numComps);
+            mesh->m_targetBuffer.numTargets = numTargets;
+        }
+    }
+
     return header->sizeInBytes;
 }
 
@@ -293,10 +393,12 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     const quint32 vertexBufferEntriesCount = mesh.m_vertexBuffer.entries.size();
     const quint32 vertexBufferDataSize = mesh.m_vertexBuffer.data.size();
     const quint32 vertexBufferStride = mesh.m_vertexBuffer.stride;
-    outputStream << quint32(0) // legacy offset
+    const quint32 targetBufferEntriesCount = mesh.m_targetBuffer.entries.count();
+    const quint32 targetBufferDataSize = mesh.m_targetBuffer.data.size();
+    outputStream << targetBufferEntriesCount
                  << vertexBufferEntriesCount
                  << vertexBufferStride;
-    outputStream << quint32(0) // legacy offset
+    outputStream << targetBufferDataSize
                  << vertexBufferDataSize;
 
     const quint32 indexBufferDataSize = mesh.m_indexBuffer.data.size();
@@ -305,8 +407,9 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     outputStream << quint32(0) // legacy offset
                  << indexBufferDataSize;
 
+    const quint32 targetCount = mesh.m_targetBuffer.numTargets;
     const quint32 subsetsCount = mesh.m_subsets.size();
-    outputStream << quint32(0) // legacy offset
+    outputStream << targetCount
                  << subsetsCount;
 
     outputStream << quint32(0) // legacy offset
@@ -415,6 +518,34 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     if (alignAmount)
         device->write(alignPadding, alignAmount);
 
+    // Data for morphTargets
+    for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
+        const Mesh::VertexBufferEntry &entry(mesh.m_targetBuffer.entries[i]);
+        const quint32 componentType = quint32(entry.componentType);
+        const quint32 componentCount = entry.componentCount;
+        const quint32 offset = entry.offset;
+        outputStream << quint32(0) // legacy offset
+                     << componentType
+                     << componentCount
+                     << offset;
+        entriesByteSize += VERTEX_BUFFER_ENTRY_STRUCT_SIZE;
+    }
+    alignAmount = offsetTracker.alignedAdvance(entriesByteSize);
+    if (alignAmount)
+        device->write(alignPadding, alignAmount);
+
+    for (quint32 i = 0; i < targetBufferEntriesCount; ++i) {
+        const Mesh::VertexBufferEntry &entry(mesh.m_targetBuffer.entries[i]);
+        const quint32 nameLength = entry.name.size() + 1;
+        outputStream << nameLength;
+        device->write(entry.name.constData(), nameLength); // with zero terminator included
+        alignAmount = offsetTracker.alignedAdvance(sizeof(quint32) + nameLength);
+        if (alignAmount)
+            device->write(alignPadding, alignAmount);
+    }
+
+    device->write(mesh.m_targetBuffer.data.constData(), targetBufferDataSize);
+
     const quint32 endPos = device->pos();
     const quint32 sizeInBytes = endPos - startPos;
     device->seek(endPos);
@@ -468,7 +599,9 @@ static inline quint32 getAlignedOffset(quint32 offset, quint32 align)
 Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
                          const QByteArray &indexBufferData,
                          ComponentType indexComponentType,
-                         const QVector<AssetMeshSubset> &subsets)
+                         const QVector<AssetMeshSubset> &subsets,
+                         quint32 numTargets,
+                         quint32 numTargetComps)
 {
     Mesh mesh;
     quint32 currentOffset = 0;
@@ -476,40 +609,68 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
     quint32 numItems = 0;
     bool ok = true;
 
+    mesh.m_targetBuffer.numTargets = numTargets;
+    quint32 targetCurrentComp = 0;
+    quint32 targetCompStride = 0;
+
+    QVector<AssetVertexEntry> vEntries;
     for (const AssetVertexEntry &entry : vbufEntries) {
         // Ignore entries with no data.
         if (entry.data.isEmpty())
             continue;
 
-        const quint32 alignment = MeshInternal::byteSizeForComponentType(entry.componentType);
-        bufferAlignment = qMax(bufferAlignment, alignment);
-        const quint32 byteSize = alignment * entry.componentCount;
-
-        if (entry.data.size() % alignment != 0) {
-            Q_ASSERT(false);
-            ok = false;
-        }
-
-        quint32 localNumItems = entry.data.size() / byteSize;
-        if (numItems == 0) {
-            numItems = localNumItems;
-        } else if (numItems != localNumItems) {
-            Q_ASSERT(false);
-            ok = false;
-            numItems = qMin(numItems, localNumItems);
-        }
-
-        currentOffset = getAlignedOffset(currentOffset, alignment);
-
         VertexBufferEntry meshEntry;
         meshEntry.componentType = entry.componentType;
         meshEntry.componentCount = entry.componentCount;
-        meshEntry.offset = currentOffset;
         meshEntry.name = entry.name;
 
-        mesh.m_vertexBuffer.entries.append(meshEntry);
+        if (entry.morphTargetId < 0) {
+            const quint32 alignment = MeshInternal::byteSizeForComponentType(entry.componentType);
+            const quint32 byteSize = alignment * entry.componentCount;
 
-        currentOffset += byteSize;
+            if (entry.data.size() % alignment != 0) {
+                Q_ASSERT(false);
+                ok = false;
+            }
+
+            quint32 localNumItems = entry.data.size() / byteSize;
+            if (numItems == 0) {
+                numItems = localNumItems;
+            } else if (numItems != localNumItems) {
+                Q_ASSERT(false);
+                ok = false;
+                numItems = qMin(numItems, localNumItems);
+            }
+
+            currentOffset = getAlignedOffset(currentOffset, alignment);
+            meshEntry.offset = currentOffset;
+
+            mesh.m_vertexBuffer.entries.append(meshEntry);
+            currentOffset += byteSize;
+            bufferAlignment = qMax(bufferAlignment, alignment);
+            vEntries.append(entry);
+        } else {
+            if (!targetCompStride) {
+                const quint32 targetEntrySize = entry.data.size();
+                quint32 targetEntryTexWidth = qCeil(qSqrt(((targetEntrySize + 15) >> 4)));
+                targetCompStride = targetEntryTexWidth * targetEntryTexWidth * 4 * sizeof(float);
+                mesh.m_targetBuffer.data.resize(targetCompStride * numTargets * numTargetComps);
+            }
+
+            // At assets, these entries are appended sequentially from target 0 to target N - 1
+            // It is safe to calculate the offset by the data size
+            meshEntry.offset = (targetCurrentComp * numTargets + entry.morphTargetId)
+                                    * targetCompStride;
+            memcpy(mesh.m_targetBuffer.data.data() + meshEntry.offset,
+                   entry.data.constData(), entry.data.size());
+
+            // Note: the targetBuffer will not be interleaved,
+            // data will be just appended in order and used for a texture array.
+            if (entry.morphTargetId == 0)
+                mesh.m_targetBuffer.entries.append(meshEntry);
+
+            targetCurrentComp = (targetCurrentComp + 1 < numTargetComps) ? targetCurrentComp + 1 : 0;
+        }
     }
 
     if (!ok)
@@ -520,7 +681,7 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
     // Packed interleave the data.
     for (quint32 idx = 0; idx < numItems; ++idx) {
         quint32 dataOffset = 0;
-        for (const AssetVertexEntry &entry : vbufEntries) {
+        for (const AssetVertexEntry &entry : vEntries) {
             if (entry.data.isEmpty())
                 continue;
 
@@ -528,7 +689,6 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
             const quint32 byteSize = alignment * entry.componentCount;
             const quint32 offset = byteSize * idx;
             const quint32 newOffset = getAlignedOffset(dataOffset, alignment);
-
             if (newOffset != dataOffset) {
                 QByteArray filler(newOffset - dataOffset, '\0');
                 mesh.m_vertexBuffer.data.append(filler);
@@ -549,6 +709,7 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
         meshSubset.count = subset.count;
         meshSubset.offset = subset.offset;
 
+        // TODO: QTBUG-102026
         if (subset.boundsPositionEntryIndex != std::numeric_limits<quint32>::max()) {
             const QSSGBounds3 bounds = MeshInternal::calculateSubsetBounds(
                     mesh.m_vertexBuffer.entries[subset.boundsPositionEntryIndex],
@@ -623,18 +784,6 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
             case RuntimeMeshData::Attribute::ColorSemantic:
                 name = MeshInternal::getColorAttrName();
                 break;
-            case RuntimeMeshData::Attribute::TargetPositionSemantic:
-                name = MeshInternal::getTargetPositionAttrName(0);
-                break;
-            case RuntimeMeshData::Attribute::TargetNormalSemantic:
-                name = MeshInternal::getTargetNormalAttrName(0);
-                break;
-            case RuntimeMeshData::Attribute::TargetTangentSemantic:
-                name = MeshInternal::getTargetTangentAttrName(0);
-                break;
-            case RuntimeMeshData::Attribute::TargetBinormalSemantic:
-                name = MeshInternal::getTargetBinormalAttrName(0);
-                break;
             default:
                 *error = QObject::tr("Warning: Invalid attribute semantic: %1")
                         .arg(att.semantic);
@@ -657,6 +806,77 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
     mesh.m_subsets = data.m_subsets;
     mesh.m_indexBuffer.data = data.m_indexBuffer;
 
+    if (!data.m_targetBuffer.isEmpty()) {
+        const quint32 vertexCount = data.m_vertexBuffer.size() / data.m_stride;
+        const quint32 targetEntryTexWidth = qCeil(qSqrt(vertexCount));
+        const quint32 targetCompStride = targetEntryTexWidth * targetEntryTexWidth * 4 * sizeof(float);
+        mesh.m_targetBuffer.data.resize(targetCompStride * data.m_targetAttributeCount);
+
+        QVarLengthArray<RuntimeMeshData::TargetAttribute> sortedAttribs(
+                                            data.m_targetAttributes,
+                                            data.m_targetAttributes + data.m_targetAttributeCount);
+        std::sort(sortedAttribs.begin(), sortedAttribs.end(),
+                  [] (RuntimeMeshData::TargetAttribute a, RuntimeMeshData::TargetAttribute b) {
+                  return (a.targetId == b.targetId) ? a.attr.semantic < b.attr.semantic :
+                                                      a.targetId < b.targetId; });
+        for (int i = 0; i < data.m_targetAttributeCount; ++i) {
+            const RuntimeMeshData::Attribute &att = sortedAttribs[i].attr;
+            const int stride = (sortedAttribs[i].stride < 1) ? att.componentCount() * sizeof(float)
+                                                             : sortedAttribs[i].stride;
+            const char *name = nullptr;
+            switch (att.semantic) {
+            case RuntimeMeshData::Attribute::PositionSemantic:
+                name = MeshInternal::getPositionAttrName();
+                break;
+            case RuntimeMeshData::Attribute::NormalSemantic:
+                name = MeshInternal::getNormalAttrName();
+                break;
+            case RuntimeMeshData::Attribute::TexCoord0Semantic:
+                name = MeshInternal::getUV0AttrName();
+                break;
+            case RuntimeMeshData::Attribute::TexCoord1Semantic:
+                name = MeshInternal::getUV1AttrName();
+                break;
+            case RuntimeMeshData::Attribute::TangentSemantic:
+                name = MeshInternal::getTexTanAttrName();
+                break;
+            case RuntimeMeshData::Attribute::BinormalSemantic:
+                name = MeshInternal::getTexBinormalAttrName();
+                break;
+            case RuntimeMeshData::Attribute::IndexSemantic:
+            case RuntimeMeshData::Attribute::JointSemantic:
+            case RuntimeMeshData::Attribute::WeightSemantic:
+                *error = QObject::tr("Warning: Invalid target attribute semantic: %1")
+                        .arg(att.semantic);
+                continue;
+            case RuntimeMeshData::Attribute::ColorSemantic:
+                name = MeshInternal::getColorAttrName();
+                break;
+            default:
+                *error = QObject::tr("Warning: Invalid target attribute semantic: %1")
+                        .arg(att.semantic);
+                return Mesh();
+            }
+            char *dstBuf = mesh.m_targetBuffer.data.data() + i * targetCompStride;
+            const char *srcBuf = data.m_targetBuffer.constData() + att.offset;
+            for (quint32 j = 0; j < vertexCount; ++j) {
+                Q_ASSERT(att.componentType == Mesh::ComponentType::Float32);
+                memcpy(dstBuf + j * 4 * sizeof(float),
+                       srcBuf + j * stride,
+                       att.componentCount() * sizeof(float));
+            }
+
+            if (sortedAttribs[i].targetId == 0) {
+                VertexBufferEntry entry;
+                entry.componentType = att.componentType;
+                entry.componentCount = att.componentCount();
+                entry.offset = i * targetCompStride;
+                entry.name = name;
+                mesh.m_targetBuffer.entries.append(entry);
+            }
+        }
+        mesh.m_targetBuffer.numTargets = data.m_targetAttributeCount / mesh.m_targetBuffer.entries.size();
+    }
     return mesh;
 }
 

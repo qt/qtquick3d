@@ -8,12 +8,8 @@
 struct Vertex {
     QVector3D position;
     QVector3D normal;
-
-    QVector3D targetPosition;
-    QVector3D targetNormal;
 };
 //! [vertex struct]
-Q_STATIC_ASSERT((sizeof(Vertex)/16)*16 == sizeof(Vertex)); // must be  4-float aligned
 
 //! [constructor]
 MorphGeometry::MorphGeometry(QQuick3DObject *parent)
@@ -47,10 +43,8 @@ void MorphGeometry::updateData()
     addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, 3 * sizeof(float),
                  QQuick3DGeometry::Attribute::ComponentType::F32Type);
 
-    addAttribute(QQuick3DGeometry::Attribute::TargetPositionSemantic, 6 * sizeof(float),
-                 QQuick3DGeometry::Attribute::ComponentType::F32Type);
-    addAttribute(QQuick3DGeometry::Attribute::TargetNormalSemantic, 9 * sizeof(float),
-                 QQuick3DGeometry::Attribute::ComponentType::F32Type);
+    addTargetAttribute(0, QQuick3DGeometry::Attribute::PositionSemantic, 0);
+    addTargetAttribute(0, QQuick3DGeometry::Attribute::NormalSemantic, m_targetPositions.size() * sizeof(QVector3D));
 
     addAttribute(QQuick3DGeometry::Attribute::IndexSemantic, 0,
                  QQuick3DGeometry::Attribute::ComponentType::U32Type);
@@ -63,12 +57,13 @@ void MorphGeometry::updateData()
         Vertex &v = vert[i];
         v.position = m_positions[i];
         v.normal = m_normals[i];
-        v.targetPosition = m_targetPositions[i];
-        v.targetNormal = m_targetNormals[i];
     }
+    m_targetBuffer.append(QByteArray(reinterpret_cast<char *>(m_targetPositions.data()), m_targetPositions.size() * sizeof(QVector3D)));
+    m_targetBuffer.append(QByteArray(reinterpret_cast<char *>(m_targetNormals.data()), m_targetNormals.size() * sizeof(QVector3D)));
 
     setStride(sizeof(Vertex));
     setVertexData(m_vertexBuffer);
+    setTargetData(m_targetBuffer);
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
     setBounds(boundsMin, boundsMax);
 

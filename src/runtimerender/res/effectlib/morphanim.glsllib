@@ -3,75 +3,89 @@
 
 // Assimp's animMesh stores complete target attributes,
 // so it's littlebit different from the glTF's morphing operation
-vec3 qt_getMorphPosition(vec3 pos)
+
+vec4 getTargetTexValue(ivec3 texCoord)
 {
-    vec3 morphPosition = pos;
-#if defined(QT_MORPH_IN_POSITION0) && (QT_MORPH_MAX_COUNT > 0)
-    morphPosition += qt_morphWeights[0] * (attr_tpos0 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION1) && (QT_MORPH_MAX_COUNT > 1)
-    morphPosition += qt_morphWeights[1] * (attr_tpos1 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION2) && (QT_MORPH_MAX_COUNT > 2)
-    morphPosition += qt_morphWeights[2] * (attr_tpos2 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION3) && (QT_MORPH_MAX_COUNT > 3)
-    morphPosition += qt_morphWeights[3] * (attr_tpos3 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION4) && (QT_MORPH_MAX_COUNT > 4)
-    morphPosition += qt_morphWeights[4] * (attr_tpos4 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION5) && (QT_MORPH_MAX_COUNT > 5)
-    morphPosition += qt_morphWeights[5] * (attr_tpos5 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION6) && (QT_MORPH_MAX_COUNT > 6)
-    morphPosition += qt_morphWeights[6] * (attr_tpos6 - pos);
-#endif
-#if defined(QT_MORPH_IN_POSITION7) && (QT_MORPH_MAX_COUNT > 7)
-    morphPosition += qt_morphWeights[7] * (attr_tpos7 - pos);
-#endif
-    return morphPosition;
+    return texelFetch(qt_morphTargetTexture, texCoord, 0);
 }
 
-vec3 qt_getMorphNormal(vec3 norm)
+vec4 qt_getTargetValue(vec4 orgValue, int offset)
 {
-    vec3 morphNormal = norm;
-#if defined(QT_MORPH_IN_NORMAL0) && (QT_MORPH_MAX_COUNT > 0)
-    morphNormal += qt_morphWeights[0] * (attr_tnorm0 - norm);
-#endif
-#if defined(QT_MORPH_IN_NORMAL1) && (QT_MORPH_MAX_COUNT > 1)
-    morphNormal += qt_morphWeights[1] * (attr_tnorm1 - norm);
-#endif
-#if defined(QT_MORPH_IN_NORMAL2) && (QT_MORPH_MAX_COUNT > 2)
-    morphNormal += qt_morphWeights[2] * (attr_tnorm2 - norm);
-#endif
-#if defined(QT_MORPH_IN_NORMAL3) && (QT_MORPH_MAX_COUNT > 3)
-    morphNormal += qt_morphWeights[3] * (attr_tnorm3 - norm);
-#endif
-    return morphNormal;
+    vec4 result = orgValue;
+    ivec3 texCoord;
+    int texWidth = textureSize(qt_morphTargetTexture, 0).x;
+    texCoord.x = gl_VertexIndex % texWidth;
+    texCoord.y = (gl_VertexIndex - texCoord.x) / texWidth;
+
+    for (int i = 0; i < QT_MORPH_MAX_COUNT; ++i) {
+        texCoord.z = offset + i;
+        vec4 targetValue = getTargetTexValue(texCoord);
+        result += qt_morphWeights[i] * (targetValue - orgValue);
+    }
+
+    return result;
 }
 
-vec3 qt_getMorphTangent(vec3 tan)
+vec3 qt_getTargetPosition(vec3 pos)
 {
-    vec3 morphTangent = tan;
-#if defined(QT_MORPH_IN_TANGENT0) && (QT_MORPH_MAX_COUNT > 0)
-    morphTangent += qt_morphWeights[0] * (attr_ttan0 - tan);
+#ifdef QT_TARGET_POSITION_OFFSET
+    return qt_getTargetValue(vec4(pos, 1.0), QT_TARGET_POSITION_OFFSET).xyz;
+#else
+    return pos;
 #endif
-#if defined(QT_MORPH_IN_TANGENT1) && (QT_MORPH_MAX_COUNT > 1)
-    morphTangent += qt_morphWeights[1] * (attr_ttan1 - tan);
-#endif
-    return morphTangent;
 }
 
-vec3 qt_getMorphBinormal(vec3 binorm)
+vec3 qt_getTargetNormal(vec3 norm)
 {
-    vec3 morphBinormal = binorm;
-#if defined(QT_MORPH_IN_BINORMAL0) && (QT_MORPH_MAX_COUNT > 0)
-    morphBinormal += qt_morphWeights[0] * (attr_tbinorm0 - binorm);
+#ifdef QT_TARGET_NORMAL_OFFSET
+    return qt_getTargetValue(vec4(norm, 1.0), QT_TARGET_NORMAL_OFFSET).xyz;
+#else
+    return norm;
 #endif
-#if defined(QT_MORPH_IN_BINORMAL1) && (QT_MORPH_MAX_COUNT > 1)
-    morphBinormal += qt_morphWeights[1] * (attr_tbinorm1 - binorm);
+}
+
+vec3 qt_getTargetTangent(vec3 tan)
+{
+#ifdef QT_TARGET_TANGENT_OFFSET
+    return qt_getTargetValue(vec4(tan, 1.0), QT_TARGET_TANGENT_OFFSET).xyz;
+#else
+    return tan;
 #endif
-    return morphBinormal;
+}
+
+vec3 qt_getTargetBinormal(vec3 binorm)
+{
+#ifdef QT_TARGET_BINORMAL_OFFSET
+    return qt_getTargetValue(vec4(binorm, 1.0), QT_TARGET_BINORMAL_OFFSET).xyz;
+#else
+    return binorm;
+#endif
+}
+
+vec2 qt_getTargetTex0(vec2 tex)
+{
+#ifdef QT_TARGET_TEX0_OFFSET
+    return qt_getTargetValue(vec4(tex, 1.0, 1.0), QT_TARGET_TEX0_OFFSET).xy;
+#else
+    return tex;
+#endif
+}
+
+vec2 qt_getTargetTex1(vec2 tex)
+{
+#ifdef QT_TARGET_TEX1_OFFSET
+    return qt_getTargetValue(vec4(tex, 1.0, 1.0), QT_TARGET_TEX1_OFFSET).xy;
+#else
+    return tex;
+#endif
+}
+
+vec4 qt_getTargetColor(vec4 color)
+{
+#ifdef QT_TARGET_COLOR_OFFSET
+    return qt_getTargetValue(color, QT_TARGET_COLOR_OFFSET);
+#else
+    return color;
+#endif
 }
 

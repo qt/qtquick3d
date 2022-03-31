@@ -304,6 +304,23 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             }
         }
 
+        // Morphing
+        auto *targetsTexture = renderable.subset.rhi.targetsTexture;
+        if (targetsTexture) {
+            int binding = shaderPipeline->bindingForTexture("qt_morphTargetTexture");
+            if (binding >= 0) {
+                QRhiSampler *targetsSampler = rhiCtx->sampler({ QRhiSampler::Nearest,
+                                                                QRhiSampler::Nearest,
+                                                                QRhiSampler::None,
+                                                                QRhiSampler::ClampToEdge,
+                                                                QRhiSampler::ClampToEdge,
+                                                                QRhiSampler::ClampToEdge
+                                                           });
+                bindings.addTexture(binding, QRhiShaderResourceBinding::VertexStage, renderable.subset.rhi.targetsTexture, targetsSampler);
+                samplerBindingsSpecified.setBit(binding);
+            }
+        }
+
         // Prioritize reflection texture over Light Probe texture because
         // reflection texture also contains the irradiance and pre filtered
         // values for the light probe.

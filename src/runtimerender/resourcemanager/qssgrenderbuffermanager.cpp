@@ -1097,6 +1097,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
                                                  QSSGRenderWinding(mesh.winding()));
     const QSSGMesh::Mesh::VertexBuffer vertexBuffer = mesh.vertexBuffer();
     const QSSGMesh::Mesh::IndexBuffer indexBuffer = mesh.indexBuffer();
+    const QSSGMesh::Mesh::TargetBuffer targetBuffer = mesh.targetBuffer();
 
     QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::UnsignedInt16;
     QRhiCommandBuffer::IndexFormat rhiIndexFormat = QRhiCommandBuffer::IndexUInt16;
@@ -1120,6 +1121,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         QSSGRef<QSSGRhiBuffer> vertexBuffer;
         QSSGRef<QSSGRhiBuffer> indexBuffer;
         QSSGRhiInputAssemblerState ia;
+        QRhiTexture *targetsTexture = nullptr;
     } rhi;
 
     QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
@@ -1141,6 +1143,57 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
                                             rhiIndexFormat);
         rub->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBuffer.data);
     }
+
+    if (!targetBuffer.data.isEmpty()) {
+        const int arraySize = targetBuffer.entries.size() * targetBuffer.numTargets;
+        const int numTexels = (targetBuffer.data.size() / arraySize) >> 4; // byte size to vec4
+        const int texWidth = qCeil(qSqrt(numTexels));
+        const QSize texSize(texWidth, texWidth);
+        if (!rhi.targetsTexture) {
+            rhi.targetsTexture = context->rhi()->newTextureArray(QRhiTexture::RGBA32F, arraySize, texSize);
+            rhi.targetsTexture->create();
+            context->registerTexture(rhi.targetsTexture);
+        } else if (rhi.targetsTexture->pixelSize() != texSize
+                || rhi.targetsTexture->arraySize() != arraySize) {
+            rhi.targetsTexture->setPixelSize(texSize);
+            rhi.targetsTexture->setArraySize(arraySize);
+            rhi.targetsTexture->create();
+        }
+
+        const quint32 layerSize = texWidth * texWidth * 4 * 4;
+        for (int arrayId = 0; arrayId < arraySize; ++arrayId) {
+            QRhiTextureSubresourceUploadDescription targetDesc(targetBuffer.data + arrayId * layerSize, layerSize);
+            QRhiTextureUploadDescription desc(QRhiTextureUploadEntry(arrayId, 0, targetDesc));
+            rub->uploadTexture(rhi.targetsTexture, desc);
+        }
+
+        for (quint32 entryIdx = 0, entryEnd = targetBuffer.entries.size(); entryIdx < entryEnd; ++entryIdx) {
+            const char *nameStr = targetBuffer.entries[entryIdx].name.constData();
+            if (!strcmp(nameStr, QSSGMesh::MeshInternal::getPositionAttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::PositionSemantic] = entryIdx * targetBuffer.numTargets;
+            } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getNormalAttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::NormalSemantic] = entryIdx * targetBuffer.numTargets;
+            } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getUV0AttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord0Semantic] = entryIdx * targetBuffer.numTargets;
+            } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getUV1AttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TexCoord1Semantic] = entryIdx * targetBuffer.numTargets;
+            } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getTexTanAttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::TangentSemantic] = entryIdx * targetBuffer.numTargets;
+            } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getTexBinormalAttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::BinormalSemantic] = entryIdx * targetBuffer.numTargets;
+            } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getColorAttrName())) {
+                rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::ColorSemantic] = entryIdx * targetBuffer.numTargets;
+            }
+        }
+        rhi.ia.targetCount = targetBuffer.numTargets;
+    } else if (rhi.targetsTexture) {
+        context->releaseTexture(rhi.targetsTexture);
+        rhi.targetsTexture = nullptr;
+        rhi.ia.targetOffsets = { UINT8_MAX, UINT8_MAX, UINT8_MAX, UINT8_MAX,
+                              UINT8_MAX, UINT8_MAX, UINT8_MAX };
+        rhi.ia.targetCount = 0;
+    }
+
     QVector<QSSGRenderVertexBufferEntry> entryBuffer;
     entryBuffer.resize(vertexBuffer.entries.size());
     for (quint32 entryIdx = 0, entryEnd = vertexBuffer.entries.size(); entryIdx < entryEnd; ++entryIdx)
@@ -1177,65 +1230,6 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
             rhi.ia.inputs << QSSGRhiInputAssemblerState::JointSemantic;
         } else if (!strcmp(nameStr, QSSGMesh::MeshInternal::getWeightAttrName())) {
             rhi.ia.inputs << QSSGRhiInputAssemblerState::WeightSemantic;
-        } else if (!strncmp(nameStr, QSSGMesh::MeshInternal::getMorphTargetAttrNamePrefix(), 6)) {
-            // it's for morphing animation and it is not common to use these
-            // attributes. So we will check the prefix first and then remainings
-            if (!strncmp(&(nameStr[6]), "pos", 3)) {
-                if (nameStr[9] == '0') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition0Semantic;
-                } else if (nameStr[9] == '1') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition1Semantic;
-                } else if (nameStr[9] == '2') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition2Semantic;
-                } else if (nameStr[9] == '3') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition3Semantic;
-                } else if (nameStr[9] == '4') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition4Semantic;
-                } else if (nameStr[9] == '5') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition5Semantic;
-                } else if (nameStr[9] == '6') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition6Semantic;
-                } else if (nameStr[9] == '7') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetPosition7Semantic;
-                } else {
-                    qWarning("Unknown vertex input %s in mesh", nameStr);
-                    ok = false;
-                }
-            } else if (!strncmp(&(nameStr[6]), "norm", 4)) {
-                if (nameStr[10] == '0') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal0Semantic;
-                } else if (nameStr[10] == '1') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal1Semantic;
-                } else if (nameStr[10] == '2') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal2Semantic;
-                } else if (nameStr[10] == '3') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetNormal3Semantic;
-                } else {
-                    qWarning("Unknown vertex input %s in mesh", nameStr);
-                    ok = false;
-                }
-            } else if (!strncmp(&(nameStr[6]), "tan", 3)) {
-                if (nameStr[9] == '0') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetTangent0Semantic;
-                } else if (nameStr[9] == '1') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetTangent1Semantic;
-                } else {
-                    qWarning("Unknown vertex input %s in mesh", nameStr);
-                    ok = false;
-                }
-            } else if (!strncmp(&(nameStr[6]), "binorm", 6)) {
-                if (nameStr[12] == '0') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetBinormal0Semantic;
-                } else if (nameStr[12] == '1') {
-                    rhi.ia.inputs << QSSGRhiInputAssemblerState::TargetBinormal1Semantic;
-                } else {
-                    qWarning("Unknown vertex input %s in mesh", nameStr);
-                    ok = false;
-                }
-            } else {
-                qWarning("Unknown vertex input %s in mesh", nameStr);
-                ok = false;
-            }
         } else {
             qWarning("Unknown vertex input %s in mesh", nameStr);
             ok = false;
@@ -1270,6 +1264,8 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         }
         if (rhi.indexBuffer)
             subset.rhi.indexBuffer = rhi.indexBuffer;
+        if (rhi.targetsTexture)
+            subset.rhi.targetsTexture = rhi.targetsTexture;
 
         newMesh->subsets.push_back(subset);
     }

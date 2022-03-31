@@ -98,7 +98,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         VarColor = 1 << 8,
         IblOrientation = 1 << 9,
         Lightmap = 1 << 10,
-        Skinning = 1 << 11
+        Skinning = 1 << 11,
+        Morphing = 1 << 12
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

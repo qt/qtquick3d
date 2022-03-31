@@ -142,6 +142,7 @@ set(res_resource_files
     "res/effectlib/transmission.glsllib"
     "res/effectlib/viewProperties.glsllib"
     "res/effectlib/morphanim.glsllib"
+    "res/effectlib/morphanim_custom.glsllib"
     "res/effectlib/parallaxMapping.glsllib"
     "res/effectlib/particles.glsllib"
     "res/effectlib/fog.glsllib"
