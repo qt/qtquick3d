@@ -86,6 +86,7 @@ QQuick3DJoint::~QQuick3DJoint()
     \l {QQuick3DGeometry::addAttribute}{custom geometry attribute}.
 
     \note Index values must be unique within the same \l {Skeleton}.
+    \note Negative values cannot be assigned.
 
     \sa {QQuick3DGeometry::addAttribute}, {Qt Quick 3D - Simple Skinning Example}
 */
@@ -114,6 +115,8 @@ QQuick3DSkeleton *QQuick3DJoint::skeletonRoot() const
 void QQuick3DJoint::setIndex(qint32 index)
 {
     if (m_index == index)
+        return;
+    if (index < 0)
         return;
 
     m_index = index;
