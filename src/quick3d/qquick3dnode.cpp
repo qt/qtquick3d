@@ -381,7 +381,7 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
 {
     Q_Q(QQuick3DNode);
     m_sceneTransformDirty = false;
-    QMatrix4x4 localTransform = calculateLocalTransform();
+    QMatrix4x4 localTransform = QSSGRenderNode::calculateTransformMatrix(m_position, m_scale, m_pivot, m_rotation);
     QQuick3DNode *parent = q->parentNode();
     if (!parent) {
         m_sceneTransform = localTransform;
@@ -401,28 +401,6 @@ void QQuick3DNodePrivate::calculateGlobalVariables()
         const QVector3D ps = privateParent->m_scale;
         m_hasInheritedUniformScale = qFuzzyCompare(ps.x(), ps.y()) && qFuzzyCompare(ps.x(), ps.z());
     }
-}
-
-QMatrix4x4 QQuick3DNodePrivate::calculateLocalTransform()
-{
-    const QVector3D pivot = -m_pivot * m_scale;
-    QMatrix4x4 localTransform;
-
-    localTransform(0, 0) = m_scale[0];
-    localTransform(1, 1) = m_scale[1];
-    localTransform(2, 2) = m_scale[2];
-
-    localTransform(0, 3) = pivot[0];
-    localTransform(1, 3) = pivot[1];
-    localTransform(2, 3) = pivot[2];
-
-    localTransform = localRotationMatrix() * localTransform;
-
-    localTransform(0, 3) += m_position[0];
-    localTransform(1, 3) += m_position[1];
-    localTransform(2, 3) += m_position[2];
-
-    return localTransform;
 }
 
 QMatrix4x4 QQuick3DNodePrivate::localRotationMatrix() const
@@ -820,25 +798,17 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
 
     auto spacialNode = static_cast<QSSGRenderNode *>(node);
     bool transformIsDirty = false;
-    if (spacialNode->position != d->m_position) {
-        transformIsDirty = true;
-        spacialNode->position = d->m_position;
-    }
 
-    if (spacialNode->rotation != d->m_rotation) {
-        transformIsDirty = true;
-        spacialNode->rotation = d->m_rotation;
-    }
-
-    if (spacialNode->scale != d->m_scale) {
-        transformIsDirty = true;
-        spacialNode->scale = d->m_scale;
-    }
     if (spacialNode->pivot != d->m_pivot) {
         transformIsDirty = true;
         spacialNode->pivot = d->m_pivot;
     }
 
+    auto localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);
+    if (!transformIsDirty)
+        transformIsDirty = (spacialNode->localTransform != localTransform);
+
+    spacialNode->localTransform = localTransform;
     spacialNode->staticFlags = d->m_staticFlags;
     spacialNode->localOpacity = d->m_opacity;
 

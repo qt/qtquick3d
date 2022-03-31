@@ -164,10 +164,10 @@ static QQuaternion rotationQuaternionForLookAt(const QVector3D &sourcePosition,
     return QQuaternion::fromAxisAndAngle(rotationAxis, rotationAngle);
 }
 
-void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos)
+void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos, const QVector3D &pivot)
 {
-    rotation = rotationQuaternionForLookAt(inCameraPos, getScalingCorrectDirection(), inTargetPos, inUpDir.normalized());
-    position = inCameraPos;
+    QQuaternion rotation = rotationQuaternionForLookAt(inCameraPos, getScalingCorrectDirection(), inTargetPos, inUpDir.normalized());
+    globalTransform = localTransform = QSSGRenderNode::calculateTransformMatrix(inCameraPos, QSSGRenderNode::initScale, pivot, rotation);
     markDirty(TransformDirtyFlag::TransformIsDirty);
 }
 

@@ -92,7 +92,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     // Need to test this when the camera's local transform is null.
     // Assumes parent's local transform is the identity, meaning our local transform is
     // our global transform.
-    void lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos);
+    void lookAt(const QVector3D &inCameraPos, const QVector3D &inUpDir, const QVector3D &inTargetPos, const QVector3D &pivot);
 
     QSSGCameraGlobalCalculationResult calculateGlobalVariables(const QRectF &inViewport);
     bool calculateProjection(const QRectF &inViewport);

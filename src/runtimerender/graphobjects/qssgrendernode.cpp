@@ -42,11 +42,13 @@ QT_BEGIN_NAMESPACE
 QSSGRenderNode::QSSGRenderNode()
     : QSSGRenderNode(Type::Node)
 {
-
 }
 
 QSSGRenderNode::QSSGRenderNode(Type type)
-    : QSSGRenderGraphObject(type) {}
+    : QSSGRenderGraphObject(type)
+{
+    globalTransform = localTransform = calculateTransformMatrix({}, initScale, {}, {});
+}
 
 QSSGRenderNode::~QSSGRenderNode()
     = default;
@@ -73,7 +75,6 @@ bool QSSGRenderNode::calculateGlobalVariables()
     bool retval = flags.testFlag(Flag::Dirty);
     if (retval) {
         flags.setFlag(Flag::Dirty, false);
-        calculateLocalTransform();
         globalOpacity = localOpacity;
         if (parent) {
             // Layer transforms do not flow down but affect the final layer's rendered
@@ -134,82 +135,32 @@ bool QSSGRenderNode::calculateGlobalVariables()
     return retval && flags.testFlag(Flag::Active);
 }
 
-void QSSGRenderNode::calculateRotationMatrix(QMatrix4x4 &outMatrix) const
+QMatrix4x4 QSSGRenderNode::calculateTransformMatrix(QVector3D position, QVector3D scale, QVector3D pivot, QQuaternion rotation)
 {
-    outMatrix = QMatrix4x4(rotation.toRotationMatrix());
-}
+    QMatrix4x4 transform;
 
-void QSSGRenderNode::calculateLocalTransform()
-{
-    if (flags.testFlag(Flag::TransformDirty)) {
-        flags.setFlag(Flag::TransformDirty, false);
-        localTransform = QMatrix4x4();
-        globalTransform = localTransform;
-        float *writePtr = localTransform.data();
-        QVector3D theScaledPivot(-pivot[0] * scale[0], -pivot[1] * scale[1], -pivot[2] * scale[2]);
-        localTransform(0, 0) = scale[0];
-        localTransform(1, 1) = scale[1];
-        localTransform(2, 2) = scale[2];
+    // Offset the origin (this is our pivot point)
+    auto offset = (-pivot * scale);
 
-        writePtr[12] = theScaledPivot[0];
-        writePtr[13] = theScaledPivot[1];
-        writePtr[14] = theScaledPivot[2];
+    // Scale
+    transform(0, 0) = scale[0];
+    transform(1, 1) = scale[1];
+    transform(2, 2) = scale[2];
 
-        QMatrix4x4 theRotationTransform;
-        calculateRotationMatrix(theRotationTransform);
-        // may need column conversion in here somewhere.
-        localTransform = theRotationTransform * localTransform;
+    // Offset (before rotation)
+    transform(0, 3) = offset[0];
+    transform(1, 3) = offset[1];
+    transform(2, 3) = offset[2];
 
-        writePtr[12] += position[0];
-        writePtr[13] += position[1];
-        writePtr[14] += position[2];
-    }
-}
+    // rotate
+    transform = QMatrix4x4{rotation.toRotationMatrix()} * transform;
 
-void QSSGRenderNode::setLocalTransformFromMatrix(QMatrix4x4 &inTransform)
-{
-    flags.setFlag(Flag::TransformDirty);
+    // translate
+    transform(0, 3) += position[0];
+    transform(1, 3) += position[1];
+    transform(2, 3) += position[2];
 
-    // clear pivot
-    pivot[0] = pivot[1] = pivot[2] = 0.0f;
-
-    // set translation
-    position[0] = inTransform(3, 0);
-    position[1] = inTransform(3, 1);
-    position[2] = inTransform(3, 2);
-    // set scale
-    const QVector3D column0(inTransform(0, 0), inTransform(0, 1), inTransform(0, 2));
-    const QVector3D column1(inTransform(1, 0), inTransform(1, 1), inTransform(1, 2));
-    const QVector3D column2(inTransform(2, 0), inTransform(2, 1), inTransform(2, 2));
-    scale[0] = vec3::magnitude(column0);
-    scale[1] = vec3::magnitude(column1);
-    scale[2] = vec3::magnitude(column2);
-    // make sure there is no zero value
-    scale[0] = (scale[0] == 0.0f) ? 1.0f : scale[0];
-    scale[1] = (scale[1] == 0.0f) ? 1.0f : scale[1];
-    scale[2] = (scale[2] == 0.0f) ? 1.0f : scale[2];
-
-    // extract rotation by first dividing through scale value
-    float invScaleX = 1.0f / scale[0];
-    float invScaleY = 1.0f / scale[1];
-    float invScaleZ = 1.0f / scale[2];
-
-    inTransform(0, 0) *= invScaleX;
-    inTransform(0, 1) *= invScaleX;
-    inTransform(0, 2) *= invScaleX;
-    inTransform(1, 0) *= invScaleY;
-    inTransform(1, 1) *= invScaleY;
-    inTransform(1, 2) *= invScaleY;
-    inTransform(2, 0) *= invScaleZ;
-    inTransform(2, 1) *= invScaleZ;
-    inTransform(2, 2) *= invScaleZ;
-
-    float rotationMatrixData[9] = { inTransform(0, 0), inTransform(0, 1), inTransform(0, 2),
-                                    inTransform(1, 0), inTransform(1, 1), inTransform(1, 2),
-                                    inTransform(2, 0), inTransform(2, 1), inTransform(2, 2) };
-
-    QMatrix3x3 theRotationMatrix(rotationMatrixData);
-    rotation = QQuaternion::fromRotationMatrix(theRotationMatrix).normalized();
+    return transform;
 }
 
 void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
@@ -267,8 +218,6 @@ QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inM
     QSSGBounds3 retval;
     QSSGBounds3 childBounds;
     for (auto &child : children) {
-        if (child.flags.testFlag(Flag::TransformDirty))
-            child.calculateLocalTransform();
         childBounds = child.getBounds(inManager);
         if (!childBounds.isEmpty()) {
             // Transform the bounds into our local space.
@@ -304,7 +253,7 @@ QVector3D QSSGRenderNode::getScalingCorrectDirection() const
 
 QVector3D QSSGRenderNode::getGlobalPivot() const
 {
-    QVector3D retval(position);
+    QVector3D retval(mat44::getPosition(localTransform));
     retval.setZ(retval.z() * -1);
 
     if (parent && parent->type != QSSGRenderGraphObject::Type::Layer) {

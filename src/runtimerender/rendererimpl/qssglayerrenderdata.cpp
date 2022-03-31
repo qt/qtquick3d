@@ -313,9 +313,9 @@ const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderData::getRenderableItem2D
                 (const QSSGRenderableNodeEntry &lhs, const QSSGRenderableNodeEntry &rhs) {
             if (!lhs.node->parent || !rhs.node->parent)
                 return false;
-            const QVector3D lhsDifference = lhs.node->parent->position - cameraPosition;
+            const QVector3D lhsDifference = lhs.node->parent->getGlobalPos() - cameraPosition;
             const float lhsCameraDistanceSq = QVector3D::dotProduct(lhsDifference, cameraDirection);
-            const QVector3D rhsDifference = rhs.node->parent->position - cameraPosition;
+            const QVector3D rhsDifference = rhs.node->parent->getGlobalPos() - cameraPosition;
             const float rhsCameraDistanceSq = QVector3D::dotProduct(rhsDifference, cameraDirection);
             return lhsCameraDistanceSq > rhsCameraDistanceSq;
         };
@@ -2633,16 +2633,15 @@ static void setupCubeReflectionCameras(const QSSGRenderReflectionProbe *inProbe,
     };
 
     const QVector3D inProbePos = inProbe->getGlobalPos();
+    const QVector3D inProbePivot = inProbe->pivot;
 
     for (int i = 0; i < 6; ++i) {
         inCameras[i].parent = nullptr;
-        inCameras[i].pivot = inProbe->pivot;
         inCameras[i].clipNear = 1.0f;
         inCameras[i].clipFar = qMax<float>(2.0f, 10000.0f);
         inCameras[i].fov = qDegreesToRadians(90.f);
 
-        inCameras[i].position = inProbePos;
-        inCameras[i].rotation = rotOfs[i];
+        inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inProbePos, QSSGRenderNode::initScale, inProbePivot, rotOfs[i]);
         inCameras[i].calculateGlobalVariables(theViewport);
     }
 }
@@ -2661,11 +2660,11 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
     // Setup camera projection
     QVector3D inLightPos = inLight->getGlobalPos();
     QVector3D inLightDir = inLight->getDirection();
+    QVector3D inLightPivot = inLight->pivot;
 
     inLightPos -= inLightDir * inCamera.clipNear;
     theCamera.fov = qDegreesToRadians(90.f);
     theCamera.parent = nullptr;
-    theCamera.pivot = inLight->pivot;
 
     if (inLight->type == QSSGRenderLight::Type::DirectionalLight) {
         Q_ASSERT(theCamera.type == QSSGRenderCamera::Type::OrthographicCamera);
@@ -2740,11 +2739,9 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
         theViewport.setWidth(finalDims.x());
         theCamera.clipNear = -0.5f * finalDims.z();
         theCamera.clipFar = 0.5f * finalDims.z();
-
-        theCamera.position = center;
-        theCamera.rotation = QQuaternion::fromDirection(forward, up);
+        theCamera.localTransform = QSSGRenderNode::calculateTransformMatrix(center, QSSGRenderNode::initScale, inLightPivot, QQuaternion::fromDirection(forward, up));
     } else if (inLight->type == QSSGRenderLight::Type::PointLight) {
-        theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), QVector3D(0, 0, 0));
+        theCamera.lookAt(inLightPos, QVector3D(0, 1.0, 0), QVector3D(0, 0, 0), inLightPivot);
     }
 
     theCamera.calculateGlobalVariables(theViewport);
@@ -2768,16 +2765,14 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     };
 
     const QVector3D inLightPos = inLight->getGlobalPos();
+    const QVector3D inLightPivot = inLight->pivot;
 
     for (int i = 0; i < 6; ++i) {
         inCameras[i].parent = nullptr;
-        inCameras[i].pivot = inLight->pivot;
         inCameras[i].clipNear = 1.0f;
         inCameras[i].clipFar = qMax<float>(2.0f, inLight->m_shadowMapFar);
         inCameras[i].fov = qDegreesToRadians(90.f);
-
-        inCameras[i].position = inLightPos;
-        inCameras[i].rotation = rotOfs[i];
+        inCameras[i].localTransform = QSSGRenderNode::calculateTransformMatrix(inLightPos, QSSGRenderNode::initScale, inLightPivot, rotOfs[i]);
         inCameras[i].calculateGlobalVariables(theViewport);
     }
 

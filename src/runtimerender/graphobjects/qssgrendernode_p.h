@@ -87,12 +87,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
         TransformIsDirty,
     };
 
+    static constexpr QVector3D initScale { 1.0f, 1.0f, 1.0f };
+
     // changing any one of these means you have to
     // set this object dirty
-    QQuaternion rotation;
-    QVector3D position { 0.0f, 0.0f, 600.0f };
-    QVector3D scale { 1.0f, 1.0f, 1.0f };
-    QVector3D pivot { 0.0f, 0.0f, 0.0f };
+    QVector3D pivot;
     int staticFlags = 0;
 
     // This only sets dirty, not transform dirty
@@ -147,25 +146,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // valid global transforms.
     bool calculateGlobalVariables();
 
-    // Given our rotation order and handedness, calculate the final rotation matrix
-    // Only the upper 3x3 of this matrix is filled in.
-    // If this object is left handed, then you need to call FlipCoordinateSystem
-    // to get a result identical to the result produced in CalculateLocalTransform
-    void calculateRotationMatrix(QMatrix4x4 &outMatrix) const;
-
-    // Force the calculation of the local transform
-    void calculateLocalTransform();
-
-    /**
-     * @brief setup local tranform from a matrix.
-     *		  This function decomposes a SRT matrix.
-     *		  This will fail if this matrix contains non-affine transformations
-     *
-     * @param inTransform[in]	input transformation
-     *
-     * @return true backend type
-     */
-    void setLocalTransformFromMatrix(QMatrix4x4 &inTransform);
+    // Calculates a tranform matrix based on the position, scale, pivot and rotation arguments.
+    // NOTE!!!: This function does not update or mark any nodes as dirty, if the returned matrix is set on a node then
+    // markDirty, calculateGlobalVariables etc. needs to be called as needed!
+    [[nodiscard]] static QMatrix4x4 calculateTransformMatrix(QVector3D position, QVector3D scale, QVector3D pivot, QQuaternion rotation);
 
     // Get the bounds of us and our children in our local space.
     QSSGBounds3 getBounds(const QSSGRef<QSSGBufferManager> &inManager,

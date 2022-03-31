@@ -31,6 +31,7 @@
 #include <QSignalSpy>
 #include <QtQuick3D/private/qquick3dperspectivecamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <limits>
 
@@ -128,8 +129,8 @@ void tst_QQuick3DPerspectiveCamera::testLookAt()
     QVERIFY(qFuzzyIsNull(cam2.eulerRotation().x()));
     QVERIFY(qFuzzyCompare(cam2.eulerRotation().y(), -45.f));
     QVERIFY(qFuzzyIsNull(cam2.eulerRotation().z()));
-    QCOMPARE(camNode1->rotation, cam1.rotation());
-    QCOMPARE(camNode2->rotation, cam2.rotation());
+    QVERIFY(qFuzzyCompare(QQuaternion::fromRotationMatrix(mat44::getUpper3x3(camNode1->localTransform)), cam1.rotation()));
+    QVERIFY(qFuzzyCompare(QQuaternion::fromRotationMatrix(mat44::getUpper3x3(camNode2->localTransform)), cam2.rotation()));
 
     // Verify that rotation automatically changes when moving camera and using lookAtNode property
     cam1.setPosition(QVector3D(300.f, 0.f, 100.f));
@@ -144,8 +145,8 @@ void tst_QQuick3DPerspectiveCamera::testLookAt()
     QVERIFY(qFuzzyIsNull(cam2.eulerRotation().x()));
     QVERIFY(qFuzzyCompare(cam2.eulerRotation().y(), -45.f)); // rotation doesn't update
     QVERIFY(qFuzzyIsNull(cam2.eulerRotation().z()));
-    QCOMPARE(camNode1->rotation, cam1.rotation());
-    QCOMPARE(camNode2->rotation, cam2.rotation());
+    QVERIFY(qFuzzyCompare(QQuaternion::fromRotationMatrix(mat44::getUpper3x3(camNode1->localTransform)), cam1.rotation()));
+    QVERIFY(qFuzzyCompare(QQuaternion::fromRotationMatrix(mat44::getUpper3x3(camNode2->localTransform)), cam2.rotation()));
 
     // Verify that rotation automatically changs when moving the target node
     nodeItem.setPosition(QVector3D(200.f, 0.f, 100.f));
@@ -160,8 +161,8 @@ void tst_QQuick3DPerspectiveCamera::testLookAt()
     QVERIFY(qFuzzyIsNull(cam2.eulerRotation().x()));
     QVERIFY(qFuzzyCompare(cam2.eulerRotation().y(), -45.f)); // rotation doesn't update
     QVERIFY(qFuzzyIsNull(cam2.eulerRotation().z()));
-    QCOMPARE(camNode1->rotation, cam1.rotation());
-    QCOMPARE(camNode2->rotation, cam2.rotation());
+    QVERIFY(qFuzzyCompare(QQuaternion::fromRotationMatrix(mat44::getUpper3x3(camNode1->localTransform)), cam1.rotation()));
+    QVERIFY(qFuzzyCompare(QQuaternion::fromRotationMatrix(mat44::getUpper3x3(camNode2->localTransform)), cam2.rotation()));
 }
 
 void tst_QQuick3DPerspectiveCamera::mapToViewport()
