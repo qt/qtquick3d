@@ -414,3 +414,10 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION MSVC AND (CMAKE_CROSSCO
     COMPILE_OPTIONS
         /bigobj
 )
+
+qt_internal_extend_target(AssimpImporterPlugin CONDITION GCC AND (NOT QT_FEATURE_system_assimp) AND (host_build OR NOT QT_FEATURE_system_assimp)
+    SOURCES
+        ../../../3rdparty/assimp/src/code/Common/ZipArchiveIOSystem.cpp
+    COMPILE_OPTIONS
+        "-Wno-cast-function-type"
+)
