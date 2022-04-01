@@ -128,9 +128,11 @@ static void initBaker(QShaderBaker *baker, QRhi *rhi)
     case QRhi::OpenGLES2:
     {
         QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+#if QT_CONFIG(opengl)
         auto h = static_cast<const QRhiGles2NativeHandles *>(rhi->nativeHandles());
         if (h && h->context)
             format = h->context->format();
+#endif
         if (format.profile() == QSurfaceFormat::CoreProfile && format.version() >= qMakePair(3, 3)) {
             outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
         } else {
