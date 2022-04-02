@@ -150,8 +150,6 @@ Rectangle {
         }
 
         Node {
-            x: 5
-            y: 5
             id: joint0
             Node {
                 id: joint1
