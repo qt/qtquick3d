@@ -83,6 +83,8 @@ Rectangle {
         }
 
         Model {
+            x : 5
+            y : 5
             geometry: SkinGeometry {
                 id: geometry
 
@@ -137,24 +139,25 @@ Rectangle {
                 material
             ]
 
-            skeleton: Skeleton {
-                id: qmlskeleton
-                Joint {
-                    id: joint0
-                    index: 0
-                    skeletonRoot: qmlskeleton
-                    Joint {
-                        id: joint1
-                        index: 1
-                        skeletonRoot: qmlskeleton
-                        eulerRotation.z: 45
-                    }
-                }
-            }
+            skeleton: qmlskeleton
             inverseBindPoses: [
                 Qt.matrix4x4(1, 0, 0, -0.5, 0, 1, 0, -1, 0, 0, 1, 0, 0, 0, 0, 1),
                 Qt.matrix4x4(1, 0, 0, -0.5, 0, 1, 0, -1, 0, 0, 1, 0, 0, 0, 0, 1)
             ]
+        }
+        Skeleton {
+            id: qmlskeleton
+            Joint {
+                id: joint0
+                index: 0
+                skeletonRoot: qmlskeleton
+                Joint {
+                    id: joint1
+                    index: 1
+                    skeletonRoot: qmlskeleton
+                    eulerRotation.z: 45
+                }
+            }
         }
     }
 }
