@@ -30,6 +30,8 @@
 #include "qssgrhiparticles_p.h"
 #include "qssgrhicontext_p.h"
 
+#include <qfloat16.h>
+
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
@@ -282,6 +284,17 @@ static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
     copyParticles(result, sortData, buffer);
 }
 
+static QByteArray convertParticleData(QByteArray &dest, const QByteArray &data, bool convert)
+{
+    if (!convert)
+        return data;
+    int count = data.size() / 4;
+    if (dest.size() != count * 2)
+        dest.resize(2 * count);
+    qFloatToFloat16(reinterpret_cast<qfloat16 *>(dest.data()), reinterpret_cast<const float *>(data.constData()), count);
+    return dest;
+}
+
 void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                                 QSSGRhiContext *rhiCtx,
                                                 QSSGRhiGraphicsPipelineState *ps,
@@ -295,6 +308,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
 {
     const void *layerNode = &inData.layer;
     const void *node = &renderable.particles;
+    const bool needsConversion = !rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
 
     QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ layerNode, node,
                                                     nullptr, 0, QSSGRhiDrawCallDataKey::Main })
@@ -315,7 +329,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
     if (particleData.texture == nullptr || particleData.particleCount != particleCount) {
         QSize size(particleBuffer.size());
         if (!particleData.texture) {
-            particleData.texture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA32F, size);
+            particleData.texture = rhiCtx->rhi()->newTexture(needsConversion ? QRhiTexture::RGBA16F : QRhiTexture::RGBA32F, size);
             particleData.texture->create();
         } else {
             particleData.texture->setPixelSize(size);
@@ -339,9 +353,9 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
             sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, *inData.cameraDirection, animatedParticles);
         else
             sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, camera->getScalingCorrectDirection(), animatedParticles);
-        uploadData = particleData.sortedData;
+        uploadData = convertParticleData(particleData.convertData, particleData.sortedData, needsConversion);
     } else {
-        uploadData = particleBuffer.data();
+        uploadData = convertParticleData(particleData.convertData, particleBuffer.data(), needsConversion);
     }
 
     QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
@@ -497,10 +511,11 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
     const QSSGParticleBuffer &particleBuffer = *model->particleBuffer;
     int particleCount = particleBuffer.particleCount();
     bool update = particleBuffer.serial() != particleData.serial;
+    const bool needsConversion = !rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
     if (particleData.texture == nullptr || particleData.particleCount != particleCount) {
         QSize size(particleBuffer.size());
         if (!particleData.texture) {
-            particleData.texture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA32F, size);
+            particleData.texture = rhiCtx->rhi()->newTexture(needsConversion ? QRhiTexture::RGBA16F : QRhiTexture::RGBA32F, size);
             particleData.texture->create();
         } else {
             particleData.texture->setPixelSize(size);
@@ -513,7 +528,7 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
     if (update) {
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         QRhiTextureSubresourceUploadDescription upload;
-        upload.setData(particleBuffer.data());
+        upload.setData(convertParticleData(particleData.convertData, particleBuffer.data(), needsConversion));
         QRhiTextureUploadDescription uploadDesc(QRhiTextureUploadEntry(0, 0, upload));
         rub->uploadTexture(particleData.texture, uploadDesc);
         rhiCtx->commandBuffer()->resourceUpdate(rub);

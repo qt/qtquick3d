@@ -743,6 +743,7 @@ struct QSSGRhiParticleData
 {
     QRhiTexture *texture = nullptr;
     QByteArray sortedData;
+    QByteArray convertData;
     QList<QSSGRhiSortData> sortData;
     int particleCount = 0;
     int serial = -1;
