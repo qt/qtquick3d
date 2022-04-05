@@ -34,6 +34,7 @@ qt_add_qml_module(skinning
     QML_FILES
         main.qml
         SimpleSkinning.qml
+        SimpleSkinningNew.qml
     NO_RESOURCE_TARGET_PATH
 )
 
