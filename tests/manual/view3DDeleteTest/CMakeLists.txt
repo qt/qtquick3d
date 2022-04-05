@@ -7,8 +7,6 @@ qt_internal_add_manual_test(manual_test_view3DDeleteTest
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
-    COMPILE_OPTIONS
-        /std:c++17
 )
 
 # Resources:
