@@ -294,7 +294,7 @@ public:
     // Results of prepare for render.
 
     QSSGRenderCamera *camera = nullptr;
-    QSSGShaderLightList globalLights; // Contains all lights
+    QSSGShaderLightList globalLights; // Contains all lights except ones with a scope set
     TRenderableObjectList opaqueObjects;
     TRenderableObjectList transparentObjects;
     TRenderableObjectList screenTextureObjects;
