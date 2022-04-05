@@ -548,6 +548,7 @@ static const QSSGCustomMaterialVariableSubstitution qssg_var_subst_tab[] = {
     { "DEPTH_TEXTURE", "qt_depthTexture" },
     { "AO_TEXTURE", "qt_aoTexture" },
     { "IBL_TEXTURE", "qt_lightProbe" },
+    { "LIGHTMAP", "qt_lightmap" },
 
     // For shaded only: vertex outputs, for convenience and perf. (only those
     // that are always present when lighting is enabled) The custom vertex main
@@ -810,6 +811,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                     md.flags |= QSSGCustomShaderMetaData::UsesSharedVars;
                 else if (trimmedId == QByteArrayLiteral("IBL_ORIENTATION"))
                     md.flags |= QSSGCustomShaderMetaData::UsesIblOrientation;
+                else if (trimmedId == QByteArrayLiteral("LIGHTMAP"))
+                    md.flags |= QSSGCustomShaderMetaData::UsesLightmap;
 
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
@@ -898,6 +901,8 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         allUniforms.append({ "sampler2D", "qt_depthTexture" });
     if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesAoTexture))
         allUniforms.append({ "sampler2D", "qt_aoTexture" });
+    if (md.flags.testFlag(QSSGCustomShaderMetaData::UsesLightmap))
+        allUniforms.append({ "sampler2D", "qt_lightmap" });
 
     static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
     static const char *metaEnd = "  ]\n}*/\n#endif\n";

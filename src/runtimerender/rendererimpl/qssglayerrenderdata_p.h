@@ -61,6 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableObject;
+class QSSGLightmapper;
 
 enum class QSSGLayerRenderPreparationResultFlag
 {
@@ -201,6 +202,17 @@ struct QSSGRhiRenderableTexture
     }
 };
 
+struct QSSGBakedLightingModel
+{
+    QSSGBakedLightingModel(const QSSGRenderModel *model, const QVector<QSSGRenderableObjectHandle> &renderables)
+        : model(model),
+          renderables(renderables)
+    { }
+
+    const QSSGRenderModel *model;
+    QVector<QSSGRenderableObjectHandle> renderables;
+};
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData
 {
 public:
@@ -274,9 +286,12 @@ public:
     // If layer depth test is false, this may also contain opaque objects.
     const TRenderableObjectList &getSortedTransparentRenderableObjects();
     const TRenderableObjectList &getSortedScreenTextureRenderableObjects();
+    const QVector<QSSGBakedLightingModel> &getSortedBakedLightingModels();
     const QVector<QSSGRenderableNodeEntry> &getRenderableItem2Ds();
 
     void resetForFrame();
+
+    void maybeBakeLightmap();
 
     QSSGRenderLayer &layer;
     QSSGRef<QSSGRenderer> renderer;
@@ -298,6 +313,7 @@ public:
     TRenderableObjectList opaqueObjects;
     TRenderableObjectList transparentObjects;
     TRenderableObjectList screenTextureObjects;
+    QVector<QSSGBakedLightingModel> bakedLightingModels;
     // Sorted lists of the rendered objects.  There may be other transforms applied so
     // it is simplest to duplicate the lists.
     TRenderableObjectList renderedOpaqueObjects;
@@ -305,6 +321,8 @@ public:
     TRenderableObjectList renderedScreenTextureObjects;
     TRenderableObjectList renderedOpaqueDepthPrepassObjects;
     TRenderableObjectList renderedDepthWriteObjects;
+    QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
+
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
     QSSGOption<QVector3D> cameraDirection;
@@ -326,6 +344,7 @@ public:
 
 private:
     bool m_globalZPrePassActive = false;
+    QSSGLightmapper *m_lightmapper = nullptr;
 };
 
 QT_END_NAMESPACE

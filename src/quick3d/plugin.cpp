@@ -60,6 +60,8 @@
 #include <QtQuick3D/private/qquick3dquaternionanimation_p.h>
 #include <QtQuick3D/private/qquick3dtexturedata_p.h>
 #include <QtQuick3D/private/qquick3dreflectionprobe_p.h>
+#include <QtQuick3D/private/qquick3dbakedlightmap_p.h>
+#include <QtQuick3D/private/qquick3dlightmapper_p.h>
 
 #include <private/qqmlglobal_p.h>
 

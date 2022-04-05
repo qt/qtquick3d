@@ -20,8 +20,12 @@ qt_internal_add_module(Quick3DUtils
         qtquick3dutilsglobal_p.h
         qquick3dprofiler.cpp
         qquick3dprofiler_p.h
+        ../3rdparty/xatlas/xatlas.cpp ../3rdparty/xatlas/xatlas.h
+        qssglightmapuvgenerator.cpp qssglightmapuvgenerator_p.h
     DEFINES
         QT_BUILD_QUICK3DUTILS_LIB
+    INCLUDE_DIRECTORIES
+        ../3rdparty/xatlas
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
@@ -36,6 +40,11 @@ qt_internal_add_module(Quick3DUtils
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
+
+# Silence warnings in 3rdparty code
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set_source_files_properties(../3rdparty/xatlas/xatlas.cpp PROPERTIES COMPILE_FLAGS "-Wno-type-limits")
+endif()
 
 #### Keys ignored in scope 1:.:.:utils.pro:<TRUE>:
 # MODULE = "quick3dutils"

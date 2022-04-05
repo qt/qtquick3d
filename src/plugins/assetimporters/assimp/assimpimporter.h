@@ -151,7 +151,6 @@ private:
     bool m_binaryKeyframes = false;
     bool m_forceMipMapGeneration = false;
     bool m_useFloatJointIndices = false;
-    bool m_generateLightmapUV = false;
     qreal m_globalScaleValue = 1.0;
 
     QJsonObject m_options;

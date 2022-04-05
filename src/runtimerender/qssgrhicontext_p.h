@@ -63,6 +63,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiInputAssemblerState
         NormalSemantic,             // attr_norm
         TexCoord0Semantic,          // attr_uv0
         TexCoord1Semantic,          // attr_uv1
+        TexCoordLightmapSemantic,   // attr_lightmapuv
         TangentSemantic,            // attr_textan
         BinormalSemantic,           // attr_binormal
         JointSemantic,              // attr_joints
@@ -191,6 +192,7 @@ enum class QSSGRhiSamplerBindingHints
     ScreenTexture,
     DepthTexture,
     AoTexture,
+    LightmapTexture,
 
     BindingMapSize
 };
@@ -378,6 +380,9 @@ public:
     void setSsaoTexture(QRhiTexture *texture) { m_ssaoTexture = texture; }
     QRhiTexture *ssaoTexture() const { return m_ssaoTexture; }
 
+    void setLightmapTexture(QRhiTexture *texture) { m_lightmapTexture = texture; }
+    QRhiTexture *lightmapTexture() const { return m_lightmapTexture; }
+
     void resetExtraTextures() { m_extraTextures.clear(); }
     void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
     int extraTextureCount() const { return m_extraTextures.count(); }
@@ -412,6 +417,7 @@ private:
     QRhiTexture *m_screenTexture = nullptr;
     QRhiTexture *m_depthTexture = nullptr;
     QRhiTexture *m_ssaoTexture = nullptr;
+    QRhiTexture *m_lightmapTexture = nullptr;
     QVarLengthArray<QSSGRhiTexture, 8> m_extraTextures;
 };
 
@@ -677,7 +683,8 @@ struct QSSGRhiDrawCallDataKey
         ProgressiveAA,
         Effects,
         Item2D,
-        Reflection
+        Reflection,
+        Lightmap
     };
     const void *layer;
     const void *model;

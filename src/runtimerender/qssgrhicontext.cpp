@@ -228,6 +228,8 @@ void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags fl
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord0Semantic] = var;
                 } else if (var.name == QSSGMesh::MeshInternal::getUV1AttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TexCoord1Semantic] = var;
+                } else if (var.name == QSSGMesh::MeshInternal::getLightmapUVAttrName()) {
+                    m_vertexInputs[QSSGRhiInputAssemblerState::TexCoordLightmapSemantic] = var;
                 } else if (var.name == QSSGMesh::MeshInternal::getTexTanAttrName()) {
                     m_vertexInputs[QSSGRhiInputAssemblerState::TangentSemantic] = var;
                 } else if (var.name == QSSGMesh::MeshInternal::getTexBinormalAttrName()) {

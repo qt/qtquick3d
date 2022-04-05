@@ -75,6 +75,26 @@ struct QSSGRenderLayer;
 // having a dedicated BufferManager for each render thread (window).
 
 class QSSGRenderContextInterface;
+
+struct QSSGMeshProcessingOptions
+{
+    bool wantsLightmapUVs = false;
+    uint lightmapBaseResolution = 0;
+
+    inline bool isCompatible(const QSSGMeshProcessingOptions &other) const
+    {
+        // a mesh postprocessing request with no-lightmap-UVs is compatible
+        // with a previously processed mesh regardless of having generated
+        // lightmap UVs or not
+        if (!wantsLightmapUVs)
+            return true;
+
+        // if lightmap UVs are wanted, the request can only use other's data
+        // if that generated lightmap UVs with the matching resolution
+        return other.wantsLightmapUVs && lightmapBaseResolution == other.lightmapBaseResolution;
+    }
+};
+
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 {
 public:
@@ -96,6 +116,7 @@ public:
         QSSGRenderMesh *mesh = nullptr;
         QHash<QSSGRenderLayer*, uint32_t> usageCounts;
         uint32_t generationId = 0;
+        QSSGMeshProcessingOptions options;
     };
 
     struct MemoryStats {
@@ -122,6 +143,7 @@ public:
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeNone,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
+    QSSGRenderImageTexture loadLightmap(const QSSGRenderModel &model);
 
     QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
     QSSGBounds3 getModelBounds(const QSSGRenderModel *model) const;
@@ -141,6 +163,9 @@ public:
 
     static QSSGMeshBVH *loadMeshBVH(const QSSGRenderPath &inSourcePath);
     static QSSGMeshBVH *loadMeshBVH(QSSGRenderGeometry *geometry);
+
+    static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
+    QSSGMesh::Mesh loadMeshData(const QSSGRenderGeometry *geometry);
 
     static QRhiTexture::Format toRhiFormat(const QSSGRenderTextureFormat format);
 
@@ -178,9 +203,10 @@ private:
                           const QSSGLoadedTexture *inTexture,
                           MipMode inMipMode = MipModeNone,
                           CreateRhiTextureFlags inFlags = {});
-    QSSGRenderMesh *loadMesh(const QSSGRenderPath &inSourcePath);
-    QSSGRenderMesh *loadCustomMesh(QSSGRenderGeometry *geometry);
-    static QSSGMesh::Mesh loadMeshData(const QSSGRenderPath &inSourcePath);
+
+    QSSGRenderMesh *loadRenderMesh(const QSSGRenderPath &inSourcePath, QSSGMeshProcessingOptions options);
+    QSSGRenderMesh *loadRenderMesh(QSSGRenderGeometry *geometry, QSSGMeshProcessingOptions options);
+
     QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh);
     QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
     bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture);

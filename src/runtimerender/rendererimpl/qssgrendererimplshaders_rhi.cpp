@@ -161,4 +161,24 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSimpleQuadShader()
     return getBuiltinRhiShader(QByteArrayLiteral("simplequad"), m_simpleQuadRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode)
+{
+    switch (mode) {
+    case LightmapUVRasterizationShaderMode::BaseColorMap:
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_basecolormap"), m_lightmapUVRasterShader_basecolormap);
+    case LightmapUVRasterizationShaderMode::EmissiveMap:
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_emissivemap"), m_lightmapUVRasterShader_emissivemap);
+    case LightmapUVRasterizationShaderMode::BaseColorAndEmissiveMaps:
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_both"), m_lightmapUVRasterShader_both);
+    default:
+        break;
+    }
+    return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster"), m_lightmapUVRasterShader);
+}
+
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiLightmapDilateShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("lightmapdilate"), m_lightmapDilateShader);
+}
+
 QT_END_NAMESPACE

@@ -440,7 +440,7 @@ struct QSSGShaderKeyAlphaMode : QSSGShaderKeyUnsigned<2>
     }
 };
 
-struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
+struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<9>
 {
     enum VertexAttributeBits {
         Position = 1 << 0,
@@ -450,10 +450,11 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
         Tangent = 1 << 4,
         Binormal = 1 << 5,
         Color = 1 << 6,
-        JointAndWeight = 1 << 7
+        JointAndWeight = 1 << 7,
+        TexCoordLightmap = 1 << 8
     };
 
-    explicit QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<8>(inName) {}
+    explicit QSSGShaderKeyVertexAttribute(const char *inName = "") : QSSGShaderKeyUnsigned<9>(inName) {}
 
     bool getBitValue(VertexAttributeBits bit, QSSGDataView<quint32> inKeySet) const
     {
@@ -483,6 +484,8 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
         internalToString(ioStr, QByteArrayView("binormal"), getBitValue(Binormal, inKeySet));
         ioStr.append(';');
         internalToString(ioStr, QByteArrayView("color"), getBitValue(Color, inKeySet));
+        ioStr.append(';');
+        internalToString(ioStr, QByteArrayView("texcoordlightmap"), getBitValue(TexCoordLightmap, inKeySet));
         ioStr.append('}');
         internalToString(ioStr, QByteArrayView("joint&weight"), getBitValue(JointAndWeight, inKeySet));
         ioStr.append('}');
@@ -503,7 +506,7 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
                 codeOffset++;
             const QByteArray val = ioStr.mid(codeOffsetBegin, codeOffset);
             const QVector<QByteArray> list = val.split(';');
-            if (list.size() != 7)
+            if (list.size() != 8)
                 return;
             setBitValue(Position, inKeySet, getBoolValue(list[0], QByteArrayView("position")));
             setBitValue(Normal, inKeySet, getBoolValue(list[1], QByteArrayView("normal")));
@@ -512,6 +515,7 @@ struct QSSGShaderKeyVertexAttribute : public QSSGShaderKeyUnsigned<8>
             setBitValue(Tangent, inKeySet, getBoolValue(list[4], QByteArrayView("tangent")));
             setBitValue(Binormal, inKeySet, getBoolValue(list[5], QByteArrayView("binormal")));
             setBitValue(Color, inKeySet, getBoolValue(list[6], QByteArrayView("color")));
+            setBitValue(TexCoordLightmap, inKeySet, getBoolValue(list[7], QByteArrayView("texcoordlightmap")));
         }
     }
 };
@@ -595,6 +599,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_clearcoatEnabled;
     QSSGShaderKeyBoolean m_transmissionEnabled;
     QSSGShaderKeyBoolean m_specularAAEnabled;
+    QSSGShaderKeyBoolean m_lightmapEnabled;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -620,6 +625,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_clearcoatEnabled("clearcoatEnabled")
         , m_transmissionEnabled("transmissionEnabled")
         , m_specularAAEnabled("specularAAEnabled")
+        , m_lightmapEnabled("lightmapEnabled")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -775,6 +781,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_clearcoatEnabled);
         inVisitor.visit(m_transmissionEnabled);
         inVisitor.visit(m_specularAAEnabled);
+        inVisitor.visit(m_lightmapEnabled);
     }
 
     struct OffsetVisitor
@@ -827,7 +834,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         visitProperties(visitor);
 
         // If this assert fires, then the default material key needs more bits.
-        Q_ASSERT(visitor.offsetVisitor.m_offset < 384);
+        Q_ASSERT(visitor.offsetVisitor.m_offset < 416);
         // This is so we can do some guestimate of how big the string buffer needs
         // to be to avoid doing a lot of allocations when concatenating the strings.
         m_stringBufferSizeHint = visitor.stringSizeVisitor.size;
@@ -837,9 +844,9 @@ struct QSSGShaderDefaultMaterialKeyProperties
 struct QSSGShaderDefaultMaterialKey
 {
     enum {
-        DataBufferSize = 12,
+        DataBufferSize = 13,
     };
-    quint32 m_dataBuffer[DataBufferSize];
+    quint32 m_dataBuffer[DataBufferSize]; // 13 * 4 * 8 = 416 bits
     size_t m_featureSetHash;
 
     explicit QSSGShaderDefaultMaterialKey(size_t inFeatureSetHash) : m_featureSetHash(inFeatureSetHash)

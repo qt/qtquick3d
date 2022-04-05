@@ -156,6 +156,8 @@ public:
     // id 0 == generate new id; otherwise uses it as-is, and must be an unused one
     quint32 save(QIODevice *device, quint32 id = 0) const;
 
+    bool createLightmapUVChannel(uint lightmapBaseResolution);
+
 private:
     DrawMode m_drawMode = DrawMode::Triangles;
     Winding m_winding = Winding::CounterClockwise;
@@ -373,6 +375,7 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
     static const char *getNormalAttrName() { return "attr_norm"; }
     static const char *getUV0AttrName() { return "attr_uv0"; }
     static const char *getUV1AttrName() { return "attr_uv1"; }
+    static const char *getLightmapUVAttrName() { return "attr_lightmapuv"; }
     static const char *getTexTanAttrName() { return "attr_textan"; }
     static const char *getTexBinormalAttrName() { return "attr_binormal"; }
     static const char *getColorAttrName() { return "attr_color"; }

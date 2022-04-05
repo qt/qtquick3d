@@ -271,7 +271,10 @@ void QQuick3DModel::markAllDirty()
     \qmlproperty bool Model::castsShadows
 
     When this property is \c true, the geometry of this model is used when
-    rendering to the shadow maps.
+    rendering to the shadow maps, and is also generating shadows in baked
+    lighting.
+
+    The default value is \c true.
 */
 
 bool QQuick3DModel::castsShadows() const
@@ -282,8 +285,14 @@ bool QQuick3DModel::castsShadows() const
 /*!
     \qmlproperty bool Model::receivesShadows
 
-    When this property is set to \c true, the model's materials take shadow contribution from
-    shadow casting lights into account.
+    When this property is set to \c true, the model's materials take shadow
+    contribution from shadow casting lights into account.
+
+    \note When lightmapping is enabled for this model, fully baked lights with
+    Light::bakeMode set to Light.BakeModeAll will always generate (baked)
+    shadows on the model, regardless of the value of this property.
+
+    The default value is \c true.
 */
 
 bool QQuick3DModel::receivesShadows() const
@@ -410,6 +419,103 @@ float QQuick3DModel::depthBias() const
 bool QQuick3DModel::receivesReflections() const
 {
     return m_receivesReflections;
+}
+
+/*!
+    \qmlproperty bool Model::usedInBakedLighting
+
+    When this property is set to \c true, the model contributes to baked
+    lighting, such as lightmaps, for example in form of casting shadows or
+    indirect light. This setting is independent of controlling lightmap
+    generation for the model, use \l bakedLightmap for that.
+
+    The default value is \c false.
+
+    \note The default value is false, because designers and developers must
+    always evaluate on a per-model basis if the object is suitable to take part
+    in baked lighting.
+
+    \warning Models with dynamically changing properties, for example, animated
+    position, rotation, or other properties, are not suitable for participating
+    in baked lighting.
+
+    For more information on how to bake lightmaps, see the \l Lightmapper
+    documentation.
+
+    This property is relevant only when baking lightmaps. It has no effect
+    afterwards, when using the generated lightmaps during rendering.
+
+    \sa Light::bakeMode, bakedLightmap, Lightmapper, {Lightmaps and Global Illumination}
+ */
+
+bool QQuick3DModel::isUsedInBakedLighting() const
+{
+    return m_usedInBakedLighting;
+}
+
+/*!
+    \qmlproperty int Model::lightmapBaseResolution
+
+    Defines the approximate size of the lightmap for this model. The default
+    value is 1024, indicating 1024x1024 as the base size. The actual size of
+    the lightmap texture is likely to be different, often bigger, depending on
+    the mesh.
+
+    For simpler, smaller meshes, or when it is known that using a bigger
+    lightmap is unnecessary, the value can be set to something smaller, for
+    example, 512 or 256.
+
+    The minimum value is 128.
+
+    This setting applies both to persistently stored and for intermediate,
+    partial lightmaps. When baking lightmaps, all models that have \l
+    usedInBakedLighting enabled are part of the path-traced scene. Thus all of
+    them need to have lightmap UV unwrapping performed and the rasterization
+    steps necessary to compute direct lighting which then can be taken into
+    account for indirect light bounces in the scene. However, for models that
+    just contribute to, but do not store a lightmap the default value is often
+    sufficient. Fine-tuning is more relevant for models that store and then use
+    the generated lightmaps.
+
+    This property is relevant only when baking lightmaps. It has no effect
+    afterwards, when using the generated lightmaps during rendering.
+ */
+int QQuick3DModel::lightmapBaseResolution() const
+{
+    return m_lightmapBaseResolution;
+}
+
+/*!
+    \qmlproperty BakedLightmap Model::bakedLightmap
+
+    When this property is set to a valid, enabled BakedLightmap object, the
+    model will get a lightmap generated when baking lighting, the lightmap is
+    then stored persistently. When rendering, the model will load and use the
+    associated lightmap. The default value is null.
+
+    \note When the intention is to generate a persistently stored lightmap for
+    a Model, both bakedLightmap and \l usedInBakedLighting must be set on it,
+    in order to indicate that the Model not only participates in the
+    lightmapped scene, but also wants a full lightmap to be baked and stored.
+
+    For more information on how to bake lightmaps, see the \l Lightmapper
+    documentation.
+
+    This property is relevant both when baking and when using lightmaps. A
+    consistent state between the baking run and the subsequent runs that use
+    the generated data is essential. For example, changing the lightmap key
+    will make it impossible to load the previously generated data. An exception
+    is \l enabled, which can be used to dynamically toggle the usage of
+    lightmaps (outside of the baking run), but be aware that the rendered
+    results will depend on the Lights' \l{Light::bakeMode}{bakeMode} settings
+    in the scene.
+
+    \sa usedInBakedLighting, Lightmapper
+ */
+
+QQuick3DBakedLightmap *QQuick3DModel::bakedLightmap() const
+{
+    return m_bakedLightmap;
 }
 
 void QQuick3DModel::setSource(const QUrl &source)
@@ -588,6 +694,51 @@ void QQuick3DModel::setReceivesReflections(bool receivesReflections)
     markDirty(ReflectionDirty);
 }
 
+void QQuick3DModel::setUsedInBakedLighting(bool enable)
+{
+    if (m_usedInBakedLighting == enable)
+        return;
+
+    m_usedInBakedLighting = enable;
+    emit usedInBakedLightingChanged();
+    markDirty(PropertyDirty);
+}
+
+void QQuick3DModel::setLightmapBaseResolution(int resolution)
+{
+    resolution = qMax(128, resolution);
+    if (m_lightmapBaseResolution == resolution)
+        return;
+
+    m_lightmapBaseResolution = resolution;
+    emit lightmapBaseResolutionChanged();
+    markDirty(PropertyDirty);
+}
+
+void QQuick3DModel::setBakedLightmap(QQuick3DBakedLightmap *bakedLightmap)
+{
+    if (m_bakedLightmap == bakedLightmap)
+        return;
+
+    if (m_bakedLightmap)
+        m_bakedLightmap->disconnect(m_bakedLightmapSignalConnection);
+
+    m_bakedLightmap = bakedLightmap;
+
+    m_bakedLightmapSignalConnection = QObject::connect(m_bakedLightmap, &QQuick3DBakedLightmap::changed, this,
+                                                       [this] { markDirty(PropertyDirty); });
+
+    QObject::connect(m_bakedLightmap, &QObject::destroyed, this,
+                     [this]
+    {
+        m_bakedLightmap = nullptr;
+        markDirty(PropertyDirty);
+    });
+
+    emit bakedLightmapChanged();
+    markDirty(PropertyDirty);
+}
+
 void QQuick3DModel::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == QQuick3DObject::ItemSceneChange)
@@ -710,8 +861,18 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         modelNode->skinningDirty = true;
     }
 
-    if (m_dirtyAttributes & PropertyDirty)
+    if (m_dirtyAttributes & PropertyDirty) {
         modelNode->m_depthBias = m_depthBias;
+        modelNode->usedInBakedLighting = m_usedInBakedLighting;
+        modelNode->lightmapBaseResolution = uint(m_lightmapBaseResolution);
+        if (m_bakedLightmap && m_bakedLightmap->isEnabled()) {
+            modelNode->lightmapKey = m_bakedLightmap->key();
+            modelNode->lightmapLoadPrefix = m_bakedLightmap->loadPrefix();
+        } else {
+            modelNode->lightmapKey.clear();
+            modelNode->lightmapLoadPrefix.clear();
+        }
+    }
 
     if (m_dirtyAttributes & ReflectionDirty)
         modelNode->receivesReflections = m_receivesReflections;

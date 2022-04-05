@@ -905,13 +905,15 @@ QQuick3DRenderStats *QQuick3DSceneRenderer::renderStats()
 
 void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &view3D, QSSGRenderLayer &layerNode, bool &aaIsDirty, bool &temporalIsDirty, float &ssaaMultiplier)
 {
-    QSSGRenderLayer::AAMode aaMode = QSSGRenderLayer::AAMode(view3D.environment()->antialiasingMode());
+    QQuick3DSceneEnvironment *environment = view3D.environment();
+
+    QSSGRenderLayer::AAMode aaMode = QSSGRenderLayer::AAMode(environment->antialiasingMode());
     if (aaMode != layerNode.antialiasingMode) {
         layerNode.antialiasingMode = aaMode;
         layerNode.progAAPassIndex = 0;
         aaIsDirty = true;
     }
-    QSSGRenderLayer::AAQuality aaQuality = QSSGRenderLayer::AAQuality(view3D.environment()->antialiasingQuality());
+    QSSGRenderLayer::AAQuality aaQuality = QSSGRenderLayer::AAQuality(environment->antialiasingQuality());
     if (aaQuality != layerNode.antialiasingQuality) {
         layerNode.antialiasingQuality = aaQuality;
         ssaaMultiplier = (aaQuality == QSSGRenderLayer::AAQuality::Normal) ? 1.2f :
@@ -921,57 +923,71 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
         aaIsDirty = true;
     }
 
-    bool temporalAAEnabled = view3D.environment()->temporalAAEnabled();
+    bool temporalAAEnabled = environment->temporalAAEnabled();
     if (temporalAAEnabled != layerNode.temporalAAEnabled) {
-        layerNode.temporalAAEnabled = view3D.environment()->temporalAAEnabled();
+        layerNode.temporalAAEnabled = environment->temporalAAEnabled();
         temporalIsDirty = true;
 
         layerNode.tempAAPassIndex = 0;
         aaIsDirty = true;
     }
-    layerNode.ssaaEnabled = view3D.environment()->antialiasingMode()
+    layerNode.ssaaEnabled = environment->antialiasingMode()
             == QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues::SSAA;
 
-    layerNode.temporalAAStrength = view3D.environment()->temporalAAStrength();
+    layerNode.temporalAAStrength = environment->temporalAAStrength();
 
-    layerNode.specularAAEnabled = view3D.environment()->specularAAEnabled();
+    layerNode.specularAAEnabled = environment->specularAAEnabled();
 
-    layerNode.background = QSSGRenderLayer::Background(view3D.environment()->backgroundMode());
-    layerNode.clearColor = QVector3D(float(view3D.environment()->clearColor().redF()),
-                                      float(view3D.environment()->clearColor().greenF()),
-                                      float(view3D.environment()->clearColor().blueF()));
+    layerNode.background = QSSGRenderLayer::Background(environment->backgroundMode());
+    layerNode.clearColor = QVector3D(float(environment->clearColor().redF()),
+                                      float(environment->clearColor().greenF()),
+                                      float(environment->clearColor().blueF()));
 
     layerNode.m_width = 100.f;
     layerNode.m_height = 100.f;
     layerNode.widthUnits = QSSGRenderLayer::UnitType::Percent;
     layerNode.heightUnits = QSSGRenderLayer::UnitType::Percent;
 
-    layerNode.aoStrength = view3D.environment()->aoStrength();
-    layerNode.aoDistance = view3D.environment()->aoDistance();
-    layerNode.aoSoftness = view3D.environment()->aoSoftness();
-    layerNode.aoBias = view3D.environment()->aoBias();
-    layerNode.aoSamplerate = view3D.environment()->aoSampleRate();
-    layerNode.aoDither = view3D.environment()->aoDither();
+    layerNode.aoStrength = environment->aoStrength();
+    layerNode.aoDistance = environment->aoDistance();
+    layerNode.aoSoftness = environment->aoSoftness();
+    layerNode.aoBias = environment->aoBias();
+    layerNode.aoSamplerate = environment->aoSampleRate();
+    layerNode.aoDither = environment->aoDither();
 
     // ### These images will not be registered anywhere
-    if (view3D.environment()->lightProbe())
-        layerNode.lightProbe = view3D.environment()->lightProbe()->getRenderImage();
+    if (environment->lightProbe())
+        layerNode.lightProbe = environment->lightProbe()->getRenderImage();
     else
         layerNode.lightProbe = nullptr;
 
-    layerNode.probeExposure = view3D.environment()->probeExposure();
+    layerNode.probeExposure = environment->probeExposure();
     // Remap the probeHorizon to the expected Range
-    layerNode.probeHorizon = qMin(view3D.environment()->probeHorizon() - 1.0f, -0.001f);
-    layerNode.setProbeOrientation(view3D.environment()->probeOrientation());
+    layerNode.probeHorizon = qMin(environment->probeHorizon() - 1.0f, -0.001f);
+    layerNode.setProbeOrientation(environment->probeOrientation());
 
     if (view3D.camera())
         layerNode.explicitCamera = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode);
 
-    layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest, view3D.environment()->depthTestEnabled());
-    layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass, view3D.environment()->depthPrePassEnabled());
+    layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest, environment->depthTestEnabled());
+    layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass, environment->depthPrePassEnabled());
 
-    layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(view3D.environment()->tonemapMode());
-    layerNode.skyboxBlurAmount = view3D.environment()->skyboxBlurAmount();
+    layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(environment->tonemapMode());
+    layerNode.skyboxBlurAmount = environment->skyboxBlurAmount();
+
+    if (environment->lightmapper()) {
+        QQuick3DLightmapper *lightmapper = environment->lightmapper();
+        layerNode.lmOptions.opacityThreshold = lightmapper->opacityThreshold();
+        layerNode.lmOptions.bias = lightmapper->bias();
+        layerNode.lmOptions.useAdaptiveBias = lightmapper->isAdaptiveBiasEnabled();
+        layerNode.lmOptions.indirectLightEnabled = lightmapper->isIndirectLightEnabled();
+        layerNode.lmOptions.indirectLightSamples = lightmapper->samples();
+        layerNode.lmOptions.indirectLightWorkgroupSize = lightmapper->indirectLightWorkgroupSize();
+        layerNode.lmOptions.indirectLightBounces = lightmapper->bounces();
+        layerNode.lmOptions.indirectLightFactor = lightmapper->indirectLightFactor();
+    } else {
+        layerNode.lmOptions = {};
+    }
 }
 
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders)

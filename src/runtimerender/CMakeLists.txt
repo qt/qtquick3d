@@ -65,6 +65,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         rendererimpl/qssgrenderer.cpp rendererimpl/qssgrenderer_p.h
         rendererimpl/qssglayerrenderdata_p.h
         rendererimpl/qssglayerrenderdata.cpp
+        rendererimpl/qssglightmapper.cpp rendererimpl/qssglightmapper_p.h
         rendererimpl/qssgrendererimplshaders_rhi.cpp
         rendererimpl/qssgvertexpipelineimpl.cpp rendererimpl/qssgvertexpipelineimpl_p.h
         resourcemanager/qssgrenderbuffermanager.cpp resourcemanager/qssgrenderbuffermanager_p.h
@@ -98,6 +99,15 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
         QT_QUICK3D_HAS_RUNTIME_SHADERS
 )
 
+qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_QUICK3D_HAS_EMBREE
+    PUBLIC_LIBRARIES
+        Qt::Concurrent
+    LIBRARIES
+        Qt::BundledEmbree
+    DEFINES
+        QT_QUICK3D_HAS_LIGHTMAPPER
+)
+
 # Resources:
 set(res_resource_files
     "res/effectlib/bsdf.glsllib"
@@ -109,6 +119,7 @@ set(res_resource_files
     "res/effectlib/funcdiffuseReflectionBSDF.glsllib"
     "res/effectlib/funcdiffuseReflectionWrapBSDF.glsllib"
     "res/effectlib/funcgetTransformedUVCoords.glsllib"
+    "res/effectlib/funclightmap.glsllib"
     "res/effectlib/funcsampleLightVars.glsllib"
     "res/effectlib/funcsampleNormalTexture.glsllib"
     "res/effectlib/funcspecularBSDF.glsllib"
@@ -145,6 +156,7 @@ qt_internal_add_resource(Quick3DRuntimeRender "res"
 qt_internal_extend_target(Quick3DRuntimeRender
     INCLUDE_DIRECTORIES
         ../3rdparty/tinyexr
+        ../3rdparty/embree/include
 )
 
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_FEATURE_system_zlib
@@ -173,6 +185,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
         res/rhishaders/texturedquad.frag
         res/rhishaders/environmentmap.vert
         res/rhishaders/environmentmap.frag
+        res/rhishaders/lightmapuvraster.vert
+        res/rhishaders/lightmapuvraster.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
     SILENT
@@ -201,6 +215,18 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3"
         res/rhishaders/cubeshadowblurx.frag
         res/rhishaders/cubeshadowblury.vert
         res/rhishaders/cubeshadowblury.frag
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_pertarget"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    PERTARGETCOMPILE
+    GLSL "300es,120,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lightmapdilate.vert
+        res/rhishaders/lightmapdilate.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
     SILENT
@@ -496,6 +522,65 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_particles_vlight_anima
         QSSG_PARTICLES_ENABLE_MAPPED
         QSSG_PARTICLES_ENABLE_ANIMATED
         QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_default"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lightmapuvraster.vert
+        res/rhishaders/lightmapuvraster.frag
+    OUTPUTS
+        res/rhishaders/lightmapuvraster.vert.qsb
+        res/rhishaders/lightmapuvraster.frag.qsb
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_basecolormap"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lightmapuvraster.vert
+        res/rhishaders/lightmapuvraster.frag
+    OUTPUTS
+        res/rhishaders/lightmapuvraster_basecolormap.vert.qsb
+        res/rhishaders/lightmapuvraster_basecolormap.frag.qsb
+    DEFINES
+        QSSG_LIGHTMAPUVRASTER_BASECOLORMAP
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_emissivemap"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lightmapuvraster.vert
+        res/rhishaders/lightmapuvraster.frag
+    OUTPUTS
+        res/rhishaders/lightmapuvraster_emissivemap.vert.qsb
+        res/rhishaders/lightmapuvraster_emissivemap.frag.qsb
+    DEFINES
+        QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_both"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lightmapuvraster.vert
+        res/rhishaders/lightmapuvraster.frag
+    OUTPUTS
+        res/rhishaders/lightmapuvraster_both.vert.qsb
+        res/rhishaders/lightmapuvraster_both.frag.qsb
+    DEFINES
+        QSSG_LIGHTMAPUVRASTER_BASECOLORMAP
+        QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP
 )
 
 # special case end

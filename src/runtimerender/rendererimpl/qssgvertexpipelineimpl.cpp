@@ -142,6 +142,8 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
                 QSSGShaderKeyVertexAttribute::TexCoord0, inKey);
     const bool meshHasTexCoord1 = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                 QSSGShaderKeyVertexAttribute::TexCoord1, inKey);
+    const bool meshHasTexCoordLightmap = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
+                QSSGShaderKeyVertexAttribute::TexCoordLightmap, inKey);
     const bool meshHasTangents = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
                 QSSGShaderKeyVertexAttribute::Tangent, inKey);
     const bool meshHasBinormals = defaultMaterialShaderKeyProperties.m_vertexAttributes.getBitValue(
@@ -228,6 +230,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     vertexShader.append("    vec3 qt_vertBinormal = vec3(0.0);");
     vertexShader.append("    vec2 qt_vertUV0 = vec2(0.0);");
     vertexShader.append("    vec2 qt_vertUV1 = vec2(0.0);");
+    vertexShader.append("    vec2 qt_vertLightmapUV = vec2(0.0);");
     vertexShader.append("    ivec4 qt_vertJoints = ivec4(0);");
     vertexShader.append("    vec4 qt_vertWeights = vec4(0.0);");
     vertexShader.append("    vec4 qt_vertColor = vec4(1.0);"); // must be 1,1,1,1 to not alter when multiplying with it
@@ -278,6 +281,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     if (meshHasTexCoord1) {
         vertexShader.append("    qt_vertUV1 = attr_uv1;");
         vertexShader.addIncoming("attr_uv1", "vec2");
+    }
+    if (meshHasTexCoordLightmap) {
+        vertexShader.append("    qt_vertLightmapUV = attr_lightmapuv;");
+        vertexShader.addIncoming("attr_lightmapuv", "vec2");
     }
     if (meshHasTangents) {
         vertexShader.append("    qt_vertTangent = attr_textan;");

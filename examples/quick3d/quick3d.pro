@@ -28,4 +28,5 @@ SUBDIRS += \
     custommorphing \
     particles3d \
     runtimeloader \
-    reflectionprobes
+    reflectionprobes \
+    bakedlightmap

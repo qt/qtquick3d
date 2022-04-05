@@ -848,4 +848,52 @@ void QQuick3DSceneEnvironment::setSkyboxBlurAmount(float newSkyboxBlurAmount)
     update();
 }
 
+/*!
+    \qmlproperty Lightmapper SceneEnvironment::lightmapper
+
+    When this property is set to a valid Lightmapper object, the settings
+    specified by the object will be taken into account when baking lightmaps.
+
+    The default value is null, which means using default values for all the
+    baking-related settings.
+
+    For more information on how to bake lightmaps, see the \l Lightmapper
+    documentation.
+
+    When lightmaps are not relevant to an application and baked lighting is
+    never generated, the property and the associated object serve no purpose in
+    practice.
+
+    \sa Model::usedInBakedLighting, Model::bakedLightmap, Light::bakeMode, Lightmapper
+ */
+
+QQuick3DLightmapper *QQuick3DSceneEnvironment::lightmapper() const
+{
+    return m_lightmapper;
+}
+
+void QQuick3DSceneEnvironment::setLightmapper(QQuick3DLightmapper *lightmapper)
+{
+    if (m_lightmapper == lightmapper)
+        return;
+
+    if (m_lightmapper)
+        m_lightmapper->disconnect(m_lightmapperSignalConnection);
+
+    m_lightmapper = lightmapper;
+
+    m_lightmapperSignalConnection = QObject::connect(m_lightmapper, &QQuick3DLightmapper::changed, this,
+                                                     [this] { update(); });
+
+    QObject::connect(m_lightmapper, &QObject::destroyed, this,
+                     [this]
+    {
+        m_lightmapper = nullptr;
+        update();
+    });
+
+    emit lightmapperChanged();
+    update();
+}
+
 QT_END_NAMESPACE

@@ -139,6 +139,13 @@ public:
     // Happens when progressive AA is enabled
     bool rendererRequestsFrames() const;
 
+    enum class LightmapUVRasterizationShaderMode {
+        Default,
+        BaseColorMap,
+        EmissiveMap,
+        BaseColorAndEmissiveMaps
+    };
+
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
     QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurXShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurYShader();
@@ -151,6 +158,8 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiTexturedQuadShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel);
     QSSGRef<QSSGRhiShaderPipeline> getRhiSimpleQuadShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
+    QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapDilateShader();
 
 protected:
     static void getLayerHitObjectList(const QSSGRenderLayer &layer,
@@ -187,6 +196,11 @@ private:
     QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_simpleQuadRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_basecolormap;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_emissivemap;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_both;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapDilateShader;
 
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingMappedRhiShader;

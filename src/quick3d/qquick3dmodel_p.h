@@ -47,6 +47,7 @@
 #include <QtQuick3D/private/qquick3dinstancing_p.h>
 #include <QtQuick3D/private/qquick3dskeleton_p.h>
 #include <QtQuick3D/private/qquick3dskin_p.h>
+#include <QtQuick3D/private/qquick3dbakedlightmap_p.h>
 #include <QtQuick3D/private/qquick3dmorphtarget_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 
@@ -99,6 +100,9 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DBounds3 bounds READ bounds NOTIFY boundsChanged)
     Q_PROPERTY(float depthBias READ depthBias WRITE setDepthBias NOTIFY depthBiasChanged)
     Q_PROPERTY(bool receivesReflections READ receivesReflections WRITE setReceivesReflections NOTIFY receivesReflectionsChanged REVISION(6, 3))
+    Q_PROPERTY(bool usedInBakedLighting READ isUsedInBakedLighting WRITE setUsedInBakedLighting NOTIFY usedInBakedLightingChanged REVISION(6, 4))
+    Q_PROPERTY(int lightmapBaseResolution READ lightmapBaseResolution WRITE setLightmapBaseResolution NOTIFY lightmapBaseResolutionChanged REVISION(6, 4))
+    Q_PROPERTY(QQuick3DBakedLightmap *bakedLightmap READ bakedLightmap WRITE setBakedLightmap NOTIFY bakedLightmapChanged REVISION(6, 4))
 
     QML_NAMED_ELEMENT(Model)
 
@@ -127,6 +131,10 @@ public:
 
     static QString translateMeshSource(const QUrl &source, QObject *contextObject);
 
+    Q_REVISION(6, 4) bool isUsedInBakedLighting() const;
+    Q_REVISION(6, 4) int lightmapBaseResolution() const;
+    Q_REVISION(6, 4) QQuick3DBakedLightmap *bakedLightmap() const;
+
 public Q_SLOTS:
     void setSource(const QUrl &source);
     void setCastsShadows(bool castsShadows);
@@ -141,6 +149,9 @@ public Q_SLOTS:
     void setDepthBias(float bias);
     Q_REVISION(6, 3)  void setReceivesReflections(bool receivesReflections);
     Q_REVISION(6, 4)  void setSkin(QQuick3DSkin *skin);
+    Q_REVISION(6, 4) void setUsedInBakedLighting(bool enable);
+    Q_REVISION(6, 4) void setLightmapBaseResolution(int resolution);
+    Q_REVISION(6, 4) void setBakedLightmap(QQuick3DBakedLightmap *bakedLightmap);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -157,6 +168,9 @@ Q_SIGNALS:
     void depthBiasChanged();
     Q_REVISION(6, 3)  void receivesReflectionsChanged();
     Q_REVISION(6, 4)  void skinChanged();
+    Q_REVISION(6, 4) void usedInBakedLightingChanged();
+    Q_REVISION(6, 4) void lightmapBaseResolutionChanged();
+    Q_REVISION(6, 4) void bakedLightmapChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -220,6 +234,10 @@ private:
     bool m_receivesShadows = true;
     bool m_pickable = false;
     bool m_receivesReflections = false;
+    bool m_usedInBakedLighting = false;
+    int m_lightmapBaseResolution = 1024;
+    QQuick3DBakedLightmap *m_bakedLightmap = nullptr;
+    QMetaObject::Connection m_bakedLightmapSignalConnection;
     QQuick3DSkin *m_skin = nullptr;
 
     QHash<QByteArray, QMetaObject::Connection> m_connections;

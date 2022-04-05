@@ -51,6 +51,7 @@
 #include <QtQml/QQmlListProperty>
 
 #include <QtQuick3D/private/qquick3deffect_p.h>
+#include <QtQuick3D/private/qquick3dlightmapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -86,6 +87,8 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 
     Q_PROPERTY(float skyboxBlurAmount READ skyboxBlurAmount WRITE setSkyboxBlurAmount NOTIFY skyboxBlurAmountChanged REVISION(6, 4))
     Q_PROPERTY(bool specularAAEnabled READ specularAAEnabled WRITE setSpecularAAEnabled NOTIFY specularAAEnabledChanged REVISION(6, 4))
+
+    Q_PROPERTY(QQuick3DLightmapper *lightmapper READ lightmapper WRITE setLightmapper NOTIFY lightmapperChanged REVISION(6, 4))
 
     QML_NAMED_ELEMENT(SceneEnvironment)
 
@@ -156,6 +159,8 @@ public:
     Q_REVISION(6, 4) float skyboxBlurAmount() const;
     Q_REVISION(6, 4) bool specularAAEnabled() const;
 
+    Q_REVISION(6, 4) QQuick3DLightmapper *lightmapper() const;
+
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode);
     void setAntialiasingQuality(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues antialiasingQuality);
@@ -185,6 +190,8 @@ public Q_SLOTS:
     Q_REVISION(6, 4) void setSkyboxBlurAmount(float newSkyboxBlurAmount);
     Q_REVISION(6, 4) void setSpecularAAEnabled(bool enabled);
 
+    Q_REVISION(6, 4) void setLightmapper(QQuick3DLightmapper *lightmapper);
+
 Q_SIGNALS:
     void antialiasingModeChanged();
     void antialiasingQualityChanged();
@@ -213,6 +220,8 @@ Q_SIGNALS:
 
     Q_REVISION(6, 4) void skyboxBlurAmountChanged();
     Q_REVISION(6, 4) void specularAAEnabledChanged();
+
+    Q_REVISION(6, 4) void lightmapperChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -255,6 +264,9 @@ private:
     bool m_depthPrePassEnabled = false;
     QQuick3DEnvironmentTonemapModes m_tonemapMode = QQuick3DEnvironmentTonemapModes::TonemapModeLinear;
     float m_skyboxBlurAmount = 0.0f;
+
+    QQuick3DLightmapper *m_lightmapper = nullptr;
+    QMetaObject::Connection m_lightmapperSignalConnection;
 };
 
 QT_END_NAMESPACE

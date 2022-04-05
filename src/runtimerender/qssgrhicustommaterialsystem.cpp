@@ -178,7 +178,8 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           renderable.reflectionProbe,
                                                           true,
                                                           renderable.renderableFlags.receivesReflections(),
-                                                          depthAdjust);
+                                                          depthAdjust,
+                                                          renderable.modelContext.lightmapTexture);
 }
 
 static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
@@ -391,6 +392,18 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 bindings.addTexture(binding,
                                     QRhiShaderResourceBinding::FragmentStage,
                                     shaderPipeline->ssaoTexture(), sampler);
+            } // else ignore, not an error
+        }
+
+        if (shaderPipeline->lightmapTexture()) {
+            int binding = shaderPipeline->bindingForTexture("qt_lightmap", int(QSSGRhiSamplerBindingHints::LightmapTexture));
+            if (binding >= 0) {
+                samplerBindingsSpecified.setBit(binding);
+                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                bindings.addTexture(binding,
+                                    QRhiShaderResourceBinding::FragmentStage,
+                                    shaderPipeline->lightmapTexture(), sampler);
             } // else ignore, not an error
         }
 

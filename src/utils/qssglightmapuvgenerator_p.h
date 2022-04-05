@@ -41,7 +41,6 @@
 // We mean it.
 //
 
-#include <QtQuick3DAssetImport/private/qtquick3dassetimportglobal_p.h>
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -59,7 +58,7 @@ struct QSSGLightmapUVGeneratorResult
     }
 };
 
-class Q_QUICK3DASSETIMPORT_EXPORT QSSGLightmapUVGenerator
+class Q_QUICK3DUTILS_EXPORT QSSGLightmapUVGenerator
 {
 public:
     // Takes in position, normals, UV0, indices and returns a new lightmap UV
@@ -84,11 +83,16 @@ public:
     // data (position, normals, UVs, etc.) so that the count of their elements
     // matches the lightmap UV channel.
     //
+    // baseResolution sepecifies the approx. size on which the lightmap size
+    // calculation is based; the returned width and height are in the same
+    // ballpark as much as possible (but may be bigger, depending on the mesh).
+    //
     QSSGLightmapUVGeneratorResult run(const QByteArray &positions,
                                       const QByteArray &normals,
                                       const QByteArray &uv0,
                                       const QByteArray &index,
-                                      QSSGMesh::Mesh::ComponentType indexComponentType);
+                                      QSSGMesh::Mesh::ComponentType indexComponentType,
+                                      uint baseResolution);
 
     // source is of N elements of componentCount * sizeof(T) bytes each. The
     // returned data is M elements of componentCount * sizeof(T) bytes each, where

@@ -91,6 +91,7 @@ struct QSSGRenderMesh
     QSSGRenderDrawMode drawMode;
     QSSGRenderWinding winding;
     QSSGMeshBVH *bvh = nullptr;
+    QSize lightmapSizeHint;
 
     QSSGRenderMesh(QSSGRenderDrawMode inDrawMode, QSSGRenderWinding inWinding)
         : drawMode(inDrawMode), winding(inWinding)

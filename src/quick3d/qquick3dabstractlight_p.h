@@ -60,6 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DAbstractLight : public QQuick3DNode
     Q_PROPERTY(QSSGShadowMapQuality shadowMapQuality READ shadowMapQuality WRITE setShadowMapQuality NOTIFY shadowMapQualityChanged)
     Q_PROPERTY(float shadowMapFar READ shadowMapFar WRITE setShadowMapFar NOTIFY shadowMapFarChanged)
     Q_PROPERTY(float shadowFilter READ shadowFilter WRITE setShadowFilter NOTIFY shadowFilterChanged)
+    Q_PROPERTY(QSSGBakeMode bakeMode READ bakeMode WRITE setBakeMode NOTIFY bakeModeChanged)
 
     QML_NAMED_ELEMENT(Light)
     QML_UNCREATABLE("Light is Abstract")
@@ -74,6 +75,13 @@ public:
     };
     Q_ENUM(QSSGShadowMapQuality)
 
+    enum class QSSGBakeMode {
+        BakeModeDisabled,
+        BakeModeIndirect,
+        BakeModeAll
+    };
+    Q_ENUM(QSSGBakeMode)
+
     QColor color() const;
     QColor ambientColor() const;
     float brightness() const;
@@ -84,6 +92,7 @@ public:
     QSSGShadowMapQuality shadowMapQuality() const;
     float shadowMapFar() const;
     float shadowFilter() const;
+    QSSGBakeMode bakeMode() const;
 
 public Q_SLOTS:
     void setColor(const QColor &color);
@@ -96,6 +105,7 @@ public Q_SLOTS:
     void setShadowMapQuality(QQuick3DAbstractLight::QSSGShadowMapQuality shadowMapQuality);
     void setShadowMapFar(float shadowMapFar);
     void setShadowFilter(float shadowFilter);
+    void setBakeMode(QQuick3DAbstractLight::QSSGBakeMode bakeMode);
 
 Q_SIGNALS:
     void colorChanged();
@@ -108,6 +118,7 @@ Q_SIGNALS:
     void shadowMapQualityChanged();
     void shadowMapFarChanged();
     void shadowFilterChanged();
+    void bakeModeChanged();
 
 protected:
     explicit QQuick3DAbstractLight(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
@@ -121,6 +132,7 @@ protected:
         BrightnessDirty = (1 << 2),
         FadeDirty = (1 << 3),
         AreaDirty = (1 << 4),
+        BakeModeDirty = (1 << 5)
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
@@ -142,6 +154,7 @@ private:
     QSSGShadowMapQuality m_shadowMapQuality = QSSGShadowMapQuality::ShadowMapQualityLow;
     float m_shadowMapFar = 5000.0f;
     float m_shadowFilter = 5.0f;
+    QSSGBakeMode m_bakeMode = QSSGBakeMode::BakeModeDisabled;
 };
 
 QT_END_NAMESPACE

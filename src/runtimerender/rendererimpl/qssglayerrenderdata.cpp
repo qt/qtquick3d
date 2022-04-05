@@ -47,14 +47,17 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QBitArray>
 #include <array>
+
 using BoxPoints = std::array<QVector3D, 8>;
 
 QT_BEGIN_NAMESPACE
@@ -298,6 +301,24 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenT
     return renderedScreenTextureObjects;
 }
 
+const QVector<QSSGBakedLightingModel> &QSSGLayerRenderData::getSortedBakedLightingModels()
+{
+    if (!renderedBakedLightingModels.empty() || camera == nullptr)
+        return renderedBakedLightingModels;
+    if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !bakedLightingModels.empty()) {
+        renderedBakedLightingModels = bakedLightingModels;
+        for (QSSGBakedLightingModel &lm : renderedBakedLightingModels) {
+            generateRenderableSortingKey(lm.renderables, camera->getGlobalPos(), getCameraDirection());
+            static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
+                return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
+            };
+            // sort nearest to furthest (front to back)
+            std::sort(lm.renderables.begin(), lm.renderables.end(), isRenderObjectPtrLessThan);
+        }
+    }
+    return renderedBakedLightingModels;
+}
+
 const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderData::getRenderableItem2Ds()
 {
     if (!renderedItem2Ds.isEmpty() || camera == nullptr)
@@ -370,7 +391,10 @@ QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
             QSSGRenderLight *theLight(lights[lightIdx].light);
             const bool isDirectional = theLight->type == QSSGRenderLight::Type::DirectionalLight;
             const bool isSpot = theLight->type == QSSGRenderLight::Type::SpotLight;
-            const bool castsShadows = theLight->m_castShadow && receivesShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
+            const bool castsShadows = theLight->m_castShadow
+                    && !theLight->m_fullyBaked
+                    && receivesShadows
+                    && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS;
             if (castsShadows)
                 ++shadowMapCount;
 
@@ -545,6 +569,8 @@ void QSSGLayerRenderData::setVertexInputPresence(const QSSGRenderableObjectFlags
         vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord0;
     if (renderableFlags.hasAttributeTexCoord1())
         vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoord1;
+    if (renderableFlags.hasAttributeTexCoordLightmap())
+        vertexAttribs |= QSSGShaderKeyVertexAttribute::TexCoordLightmap;
     if (renderableFlags.hasAttributeTangent())
         vertexAttribs |= QSSGShaderKeyVertexAttribute::Tangent;
     if (renderableFlags.hasAttributeBinormal())
@@ -601,7 +627,10 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
 
-//    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
+    // propagate the flag indicating the presence of a lightmap
+    renderer->defaultMaterialShaderKeyProperties().m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
+
+    //    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
 //        renderer->prepareImageForIbl(*theMaterial->iblProbe);
 //    }
 
@@ -789,6 +818,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
 
+    // propagate the flag indicating the presence of a lightmap
+    renderer->defaultMaterialShaderKeyProperties().m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
+
     // Knowing whether VAR_COLOR is used becomes relevant when there is no
     // custom vertex shader, but VAR_COLOR is present in the custom fragment
     // snippet, because that case needs special care.
@@ -887,6 +919,15 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
         renderableFlagsForModel.setReceivesShadows(inModel.receivesShadows);
         renderableFlagsForModel.setReceivesReflections(inModel.receivesReflections);
 
+        renderableFlagsForModel.setUsedInBakedLighting(inModel.usedInBakedLighting);
+        if (inModel.hasLightmap()) {
+            QSSGRenderImageTexture lmImageTexture = bufferManager->loadLightmap(inModel);
+            if (lmImageTexture.m_texture) {
+                renderableFlagsForModel.setRendersWithLightmap(true);
+                theModelContext.lightmapTexture = lmImageTexture.m_texture;
+            }
+        }
+
         // With the RHI we need to be able to tell the material shader
         // generator to not generate vertex input attributes that are not
         // provided by the mesh. (because unlike OpenGL, other graphics
@@ -903,6 +944,8 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                 renderableFlagsForModel.setHasAttributeTexCoord0(true);
             } else if (sem == QSSGRhiInputAssemblerState::TexCoord1Semantic) {
                 renderableFlagsForModel.setHasAttributeTexCoord1(true);
+            } else if (sem == QSSGRhiInputAssemblerState::TexCoordLightmapSemantic) {
+                renderableFlagsForModel.setHasAttributeTexCoordLightmap(true);
             } else if (sem == QSSGRhiInputAssemblerState::TangentSemantic) {
                 renderableFlagsForModel.setHasAttributeTangent(true);
             } else if (sem == QSSGRhiInputAssemblerState::BinormalSemantic) {
@@ -936,6 +979,8 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
 
     QSSGDataView<float> morphWeights = toDataView(inModel.morphWeights);
+
+    TRenderableObjectList bakedLightingObjects;
 
     for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
         // If the materials list < size of subsets, then use the last material for the rest
@@ -1081,8 +1126,14 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
                 transparentObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
             else
                 opaqueObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
+
+            if (theRenderableObject->renderableFlags.usedInBakedLighting())
+                bakedLightingObjects.push_back(QSSGRenderableObjectHandle::create(theRenderableObject));
         }
     }
+
+    if (!bakedLightingObjects.isEmpty())
+        bakedLightingModels.push_back(QSSGBakedLightingModel(&inModel, bakedLightingObjects));
 
     // Now is the time to kick off the vertex/index buffer updates for all the
     // new meshes (and their submeshes). This here is the last possible place
@@ -1524,7 +1575,7 @@ void QSSGLayerRenderData::prepareForRender()
                 shaderLight.light = theLight;
                 shaderLight.enabled = theLight->getGlobalState(QSSGRenderLight::GlobalState::Active);
                 shaderLight.enabled &= theLight->m_brightness > 0.0f;
-                shaderLight.shadows = theLight->m_castShadow;
+                shaderLight.shadows = theLight->m_castShadow && !theLight->m_fullyBaked;
                 if (shaderLight.shadows && shaderLight.enabled) {
                     if (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
                         ++shadowMapCount;
@@ -1643,6 +1694,7 @@ void QSSGLayerRenderData::resetForFrame()
     transparentObjects.clear();
     screenTextureObjects.clear();
     opaqueObjects.clear();
+    bakedLightingModels.clear();
     layerPrepResult.setEmpty();
     // The check for if the camera is or is not null is used
     // to figure out if this layer was rendered at all.
@@ -1654,6 +1706,7 @@ void QSSGLayerRenderData::resetForFrame()
     renderedItem2Ds.clear();
     renderedOpaqueDepthPrepassObjects.clear();
     renderedDepthWriteObjects.clear();
+    renderedBakedLightingModels.clear();
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer)
@@ -1709,6 +1762,7 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef
 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
+    delete m_lightmapper;
     delete shadowMapManager;
     delete reflectionMapManager;
     rhiDepthTexture.reset();
@@ -1780,7 +1834,8 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           subsetRenderable.reflectionProbe,
                                                           subsetRenderable.renderableFlags.receivesShadows(),
                                                           subsetRenderable.renderableFlags.receivesReflections(),
-                                                          depthAdjust);
+                                                          depthAdjust,
+                                                          subsetRenderable.modelContext.lightmapTexture);
 }
 
 static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend *targetBlend, QSSGRenderDefaultMaterial::MaterialBlendMode materialBlend)
@@ -1970,6 +2025,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             featureSet.disableTonemapping();
         }
 
+        if (subsetRenderable.renderableFlags.rendersWithLightmap())
+            featureSet.set(QSSGShaderFeatures::Feature::Lightmap, true);
+
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
         if (shaderPipeline) {
             // Unlike the subsetRenderable (which is allocated per frame so is
@@ -2123,6 +2181,17 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                                             shaderPipeline->screenTexture(), sampler);
                     } // else ignore, not an error
                 }
+
+                if (shaderPipeline->lightmapTexture()) {
+                    int binding = shaderPipeline->bindingForTexture("qt_lightmap", int(QSSGRhiSamplerBindingHints::LightmapTexture));
+                    if (binding >= 0) {
+                        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                                 QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                        bindings.addTexture(binding,
+                                            QRhiShaderResourceBinding::FragmentStage,
+                                            shaderPipeline->lightmapTexture(), sampler);
+                    } // else ignore, not an error
+                }
             }
 
             // Depth and SSAO textures
@@ -2191,6 +2260,9 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             // Disable tonemapping for the reflection pass
             featureSet.disableTonemapping();
         }
+
+        if (subsetRenderable.renderableFlags.rendersWithLightmap())
+            featureSet.set(QSSGShaderFeatures::Feature::Lightmap, true);
 
         customMaterialSystem.rhiPrepareRenderable(ps, subsetRenderable, featureSet,
                                                   material, inData, renderPassDescriptor, samples,
@@ -3212,7 +3284,7 @@ static void rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
 
     for (int i = 0, ie = globalLights.count(); i != ie; ++i) {
-        if (!globalLights[i].shadows)
+        if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
             continue;
 
         QSSGShadowMapEntry *pEntry = shadowMapManager->shadowMapEntry(i);
@@ -3594,6 +3666,8 @@ static inline QRect correctViewportCoordinates(const QRectF &layerViewport, cons
 // Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGLayerRenderData::rhiPrepare()
 {
+    maybeBakeLightmap();
+
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
     Q_ASSERT(rhiCtx->isValid());
 
@@ -4119,6 +4193,48 @@ void QSSGLayerRenderData::rhiRender()
 
         renderer->endLayerRender();
     }
+}
+
+void QSSGLayerRenderData::maybeBakeLightmap()
+{
+    static bool bakeRequested = false;
+    static bool bakeFlagChecked = false;
+    if (!bakeFlagChecked) {
+        bakeFlagChecked = true;
+        const bool cmdLineReq = QCoreApplication::arguments().contains(QStringLiteral("--bake-lightmaps"));
+        const bool envReq = qEnvironmentVariableIntValue("QT_QUICK3D_BAKE_LIGHTMAPS");
+        bakeRequested = cmdLineReq || envReq;
+    }
+    if (!bakeRequested)
+        return;
+
+    const auto &sortedBakedLightingModels = getSortedBakedLightingModels(); // front to back
+    if (sortedBakedLightingModels.isEmpty())
+        return;
+
+    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
+    if (!m_lightmapper)
+        m_lightmapper = new QSSGLightmapper(rhiCtx, renderer.data());
+
+    // sortedBakedLightingModels contains all models with
+    // usedInBakedLighting: true. These, together with lights that
+    // have a bakeMode set to either Indirect or All, form the
+    // lightmapped scene. A lightmap is stored persistently only
+    // for models that have their lightmapKey set.
+
+    m_lightmapper->reset();
+    m_lightmapper->setOptions(layer.lmOptions);
+
+    for (int i = 0, ie = sortedBakedLightingModels.count(); i != ie; ++i)
+        m_lightmapper->add(sortedBakedLightingModels[i]);
+
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin("Quick3D lightmap baking");
+    m_lightmapper->bake();
+    cb->debugMarkEnd();
+
+    qDebug("Lightmap baking done, exiting application");
+    QMetaObject::invokeMethod(qApp, "quit");
 }
 
 QT_END_NAMESPACE

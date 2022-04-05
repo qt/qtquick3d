@@ -39,7 +39,6 @@
 #include <assimp/importerdesc.h>
 
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
-#include <QtQuick3DAssetImport/private/qssglightmapuvgenerator_p.h>
 
 #include <QtGui/QImage>
 #include <QtGui/QImageReader>
@@ -849,7 +848,7 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const AssimpUtil
         return QStringLiteral("Could not open device to write mesh file");
 
     QString errorString;
-    const auto mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_generateLightmapUV, m_useFloatJointIndices, errorString);
+    const auto mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_useFloatJointIndices, errorString);
 
     if (mesh.isValid()) {
         if (!mesh.save(&file))
@@ -2117,8 +2116,6 @@ void AssimpImporter::processOptions(QJsonObject options)
     m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), options);
     m_forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), options);
     m_binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), options);
-
-    m_generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), options);
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)

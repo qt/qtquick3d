@@ -180,12 +180,6 @@
             "description": "Record keyframe data as binary files",
             "value": true,
             "type": "Boolean"
-        },
-        "generateLightmapUV": {
-            "name": "Generate lightmap UV channel",
-            "description": "Unwrap mesh to generate lightmap UV channel",
-            "value": false,
-            "type": "Boolean"
         }
     },
     "groups": {

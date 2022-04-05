@@ -604,6 +604,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     const bool hasIblOrientation = featureSet.isSet(QSSGShaderFeatures::Feature::IblOrientation);
     bool enableShadowMaps = featureSet.isSet(QSSGShaderFeatures::Feature::Ssm);
     bool enableSSAO = featureSet.isSet(QSSGShaderFeatures::Feature::Ssao);
+    bool enableLightmap = featureSet.isSet(QSSGShaderFeatures::Feature::Lightmap);
     bool hasReflectionProbe = featureSet.isSet(QSSGShaderFeatures::Feature::ReflectionProbe);
     bool enableBumpNormal = normalImage || bumpImage;
     bool enableParallaxMapping = heightImage != nullptr;
@@ -647,6 +648,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         hasLighting = false;
         enableSSAO = false;
         enableShadowMaps = false;
+        enableLightmap = false;
 
         metalnessEnabled = false;
         specularLightingEnabled = false;
@@ -783,6 +785,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     if (hasLighting) {
         if (includeSSAOVars)
             fragmentShader.addInclude("ssao.glsllib");
+
+        if (enableLightmap) {
+            vertexShader.generateLightmapUVCoords(inKey);
+            fragmentShader.addFunction("lightmap");
+        }
 
         fragmentShader.addFunction("sampleLightVars");
         if (materialAdapter->isPrincipled())
@@ -932,16 +939,21 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
         fragmentShader.addUniform("qt_light_ambient_total", "vec3");
 
-        if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_ambientLightProcessor"))) {
-            // DIFFUSE, TOTAL_AMBIENT_COLOR, NORMAL, VIEW_VECTOR(, SHARED)
-            fragmentShader.append("    vec4 global_diffuse_light = vec4(0.0);\n"
-                                  "    qt_ambientLightProcessor(global_diffuse_light.rgb, qt_light_ambient_total.rgb * (1.0 - qt_metalnessAmount) * qt_diffuseColor.rgb, qt_world_normal, qt_view_vector");
-            if (usesSharedVar)
-                fragmentShader << ", qt_customShared);\n";
-            else
-                fragmentShader << ");\n";
+        fragmentShader.append("    vec4 global_diffuse_light = vec4(0.0);");
+
+        if (enableLightmap) {
+            fragmentShader << "    global_diffuse_light.rgb = qt_lightmap_color(qt_texCoordLightmap) * (1.0 - qt_metalnessAmount) * qt_diffuseColor.rgb;\n";
         } else {
-            fragmentShader.append("    vec4 global_diffuse_light = vec4(qt_light_ambient_total.rgb * (1.0 - qt_metalnessAmount) * qt_diffuseColor.rgb, 0.0);");
+            if (hasCustomFrag && hasCustomFunction(QByteArrayLiteral("qt_ambientLightProcessor"))) {
+                // DIFFUSE, TOTAL_AMBIENT_COLOR, NORMAL, VIEW_VECTOR(, SHARED)
+                fragmentShader.append("    qt_ambientLightProcessor(global_diffuse_light.rgb, qt_light_ambient_total.rgb * (1.0 - qt_metalnessAmount) * qt_diffuseColor.rgb, qt_world_normal, qt_view_vector");
+                if (usesSharedVar)
+                    fragmentShader << ", qt_customShared);\n";
+                else
+                    fragmentShader << ");\n";
+            } else {
+                fragmentShader.append("    global_diffuse_light = vec4(qt_light_ambient_total.rgb * (1.0 - qt_metalnessAmount) * qt_diffuseColor.rgb, 0.0);");
+            }
         }
 
         fragmentShader.append("    vec3 global_specular_light = vec3(0.0);");
@@ -1139,6 +1151,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         for (qint32 lightIdx = 0; lightIdx < lights.size(); ++lightIdx) {
             auto &shaderLight = lights[lightIdx];
             QSSGRenderLight *lightNode = shaderLight.light;
+
+            if (enableLightmap && lightNode->m_fullyBaked)
+                continue;
+
             auto lightVarNames = setupLightVariableNames(lightIdx, *lightNode);
 
             const bool isDirectional = lightNode->type == QSSGRenderLight::Type::DirectionalLight;
@@ -1656,7 +1672,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QSSGShaderReflectionProbe &reflectionProbe,
                                                            bool receivesShadows,
                                                            bool receivesReflections,
-                                                           const QVector2D *shadowDepthAdjust)
+                                                           const QVector2D *shadowDepthAdjust,
+                                                           QRhiTexture *lightmapTexture)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders->commonUniformIndices;
@@ -1851,6 +1868,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
     shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
     shaders->setScreenTexture(inRenderProperties.rhiScreenTexture);
+    shaders->setLightmapTexture(lightmapTexture);
 
     QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
 

@@ -89,6 +89,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QVector<quint32> morphAttributes;
 
     bool receivesReflections = false;
+    bool usedInBakedLighting = false;
+    QString lightmapKey;
+    QString lightmapLoadPrefix;
+    uint lightmapBaseResolution = 0;
+    bool hasLightmap() const { return !lightmapKey.isEmpty(); }
 
     QSSGRenderModel();
 };

@@ -104,6 +104,7 @@ enum class Feature : FlagType
     OpaqueDepthPrePass = (1 << 20) + 12,
     ReflectionProbe = (1 << 21) + 13,
     ReduceMaxNumLights = (1 << 22) + 14,
+    Lightmap = (1 << 23) + 15,
 
     LastFeature
 };

@@ -153,6 +153,19 @@ struct QSSGMaterialVertexPipeline
             }
         }
     }
+
+    void generateLightmapUVCoords(const QSSGShaderDefaultMaterialKey &inKey)
+    {
+        if (hasAttributeInKey(QSSGShaderKeyVertexAttribute::TexCoordLightmap, inKey)) {
+            addInterpolationParameter("qt_varTexCoordLightmap", "vec2");
+            vertex() << "    qt_varTexCoordLightmap = qt_vertLightmapUV;\n";
+            fragment() <<"    vec2 qt_texCoordLightmap = qt_varTexCoordLightmap;\n";
+        } else {
+            vertex() << "    vec2 qt_varTexCoordLightmap = vec2(0.0);\n";
+            fragment() << "    vec2 qt_texCoordLightmap = vec2(0.0);\n";
+        }
+    }
+
     void generateEnvMapReflection(const QSSGShaderDefaultMaterialKey &inKey)
     {
         if (setCode(GenerationFlag::EnvMapReflection))

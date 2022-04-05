@@ -43,6 +43,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qlist.h>
 
@@ -202,6 +203,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     // Skybox
     float skyboxBlurAmount = 0.0f;
+
+    // Lightmapper config
+    QSSGLightmapperOptions lmOptions;
 
     QVector<QSSGRenderGraphObject *> resourceLoaders;
 
