@@ -1455,12 +1455,6 @@ void QSSGLayerRenderData::prepareForRender()
             renderableItem2Ds.clear();
 
             globalLights.clear();
-            for (const auto &oo : qAsConst(opaqueObjects))
-                delete oo.obj;
-            opaqueObjects.clear();
-            for (const auto &to : qAsConst(transparentObjects))
-                delete to.obj;
-            transparentObjects.clear();
 
             // Cameras
             // 1. If there's an explicit camera set and it's active (visible) we'll use that.
