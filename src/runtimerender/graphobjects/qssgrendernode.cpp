@@ -48,6 +48,9 @@ QSSGRenderNode::QSSGRenderNode()
 QSSGRenderNode::QSSGRenderNode(Type type)
     : QSSGRenderGraphObject(type) {}
 
+QSSGRenderNode::~QSSGRenderNode()
+    = default;
+
 // Sets this object dirty and walks down the graph setting all
 // children who are not dirty to be dirty.
 void QSSGRenderNode::markDirty(TransformDirtyFlag inTransformDirty)
