@@ -31,23 +31,22 @@
 
 /*!
     \qmltype HeightFieldGeometry
-    \inqmlmodule QtQuick3D
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits Geometry
     \since 6.4
     \brief A height field geometry.
 
-    This is a height-field geometry. The geometry is built from an image file where
-    every pixel is converted into a point on the height map where the height is
-    defined by the intensity of the pixel. The image's left-most, upper-most pixel
-    will be placed at position (0,0,0). The image's x-axis and y-axis will go along
-    the geometry's z-axis and x-axis respectively. The height of the field (y-axis)
-    goes between -0.5..0.5 depending on the intesity at the pixel. Each pixel is
-    distanced one (1) unit in the xz-plane from its adjacents.
+    This helper implements a height-field geometry. It defines a surface built from a grayscale image.
+    The y-coordinate of the surface at a given point in the horizontal plane is determined by the
+    pixel value at the corresponding point in the image. The image's x-axis and y-axis will go along
+    the geometry's x-axis and z-axis respectively.
 */
 
 /*!
-    \qmlproperty vector3d HeightFieldGeometry::heightFieldScale
-    This property defines the geometric scaling vector for the height-field.
-    The default value is (1, 1, 1).
+    \qmlproperty vector3d HeightFieldGeometry::extents
+    This property defines the extents of the height-field, that is
+    the dimensions of a box large enough to always contain the geometry.
+    The default value is (100, 100, 100) when the image is square.
 */
 
 /*!
@@ -55,26 +54,18 @@
     This property defines the URL of the heightMap.
 */
 
+/*!
+    \qmlproperty bool HeightFieldGeometry::smoothShading
+    This property defines whether the height map is shown with smooth shading
+    or with hard angles between the squares of the map.
+
+    The default value is \c true, meaning smooth scaling is turned on.
+*/
+
+
 HeightFieldGeometry::HeightFieldGeometry()
 {
     updateData();
-}
-
-const QVector3D &HeightFieldGeometry::heightFieldScale() const
-{
-    return m_heightFieldScale;
-}
-
-void HeightFieldGeometry::setHeightFieldScale(const QVector3D &newHeightFieldScale)
-{
-    if (m_heightFieldScale == newHeightFieldScale)
-        return;
-    m_heightFieldScale = newHeightFieldScale;
-
-    updateData();
-    update();
-
-    emit heightFieldScaleChanged();
 }
 
 const QUrl &HeightFieldGeometry::heightMap() const
@@ -92,6 +83,40 @@ void HeightFieldGeometry::setHeightMap(const QUrl &newHeightMap)
     update();
 
     emit heightMapChanged();
+}
+
+bool HeightFieldGeometry::smoothShading() const
+{
+    return m_smoothShading;
+}
+
+void HeightFieldGeometry::setSmoothShading(bool smooth)
+{
+    if (m_smoothShading == smooth)
+        return;
+    m_smoothShading = smooth;
+
+    updateData();
+    update();
+
+    emit smoothShadingChanged();
+}
+
+const QVector3D &HeightFieldGeometry::extents() const
+{
+    return m_extents;
+}
+
+void HeightFieldGeometry::setExtents(const QVector3D &newExtents)
+{
+    m_extentsSetExplicitly = true;
+    if (m_extents == newExtents)
+        return;
+    m_extents = newExtents;
+
+    updateData();
+    update();
+    emit extentsChanged();
 }
 
 struct Vertex
@@ -112,53 +137,77 @@ void HeightFieldGeometry::updateData()
     int numRows = heightMap.height();
     int numCols = heightMap.width();
 
-    const int numVertices = numRows * numCols;
-    if (numVertices == 0)
+    if (numRows < 2 || numCols < 2)
         return;
+
+    const int numVertices = numRows * numCols;
+
+    if (!m_extentsSetExplicitly) {
+        auto prevExt = m_extents;
+        if (numRows == numCols) {
+            m_extents = {100, 100, 100};
+        } else if (numRows < numCols) {
+            float f = float(numRows) / float(numCols);
+            m_extents = {100.f, 100.f, 100.f * f};
+        } else {
+            float f = float(numCols) / float(numRows);
+            m_extents = {100.f * f, 100.f, 100.f};
+        }
+        if (m_extents != prevExt) {
+            emit extentsChanged();
+        }
+    }
 
     QVector<Vertex> vertices;
     vertices.reserve(numVertices);
 
-    const auto scale = heightFieldScale();
-    for (int y = 0; y < numRows; y++) {
-        for (int x = 0; x < numCols; x++) {
+    const float rowF = m_extents.z() / (numRows - 1);
+    const float rowOffs = -m_extents.z() / 2;
+    const float colF = m_extents.x() / (numCols - 1);
+    const float colOffs = -m_extents.x() / 2;
+    for (int x = 0; x < numCols; x++) {
+        for (int y = 0; y < numRows; y++) {
             float f = heightMap.pixelColor(x, y).valueF() - 0.5;
             Vertex vertex;
-            vertex.position = QVector3D(y, f, x) * scale;
+            vertex.position = QVector3D(x * colF + colOffs, f * m_extents.y(), y * rowF + rowOffs);
             vertex.normal = QVector3D(0, 0, 0);
             vertices.push_back(vertex);
         }
     }
 
     QVector<quint32> indices;
-    for (int iy = 0; iy < numRows - 1; ++iy) {
-        for (int ix = 0; ix < numCols - 1; ++ix) {
-            const int idx = iy * numCols + ix;
+    for (int ix = 0; ix < numCols - 1; ++ix) {
+        for (int iy = 0; iy < numRows - 1; ++iy) {
+            const int idx = iy + ix * numRows;
 
-            const auto tri0 = std::array<int, 3> { idx + numCols + 1, idx + numCols, idx };
-            const auto tri1 = std::array<int, 3> { idx + 1, idx + numCols + 1, idx };
+            const auto tri0 = std::array<int, 3> { idx + numRows + 1, idx + numRows, idx };
+            const auto tri1 = std::array<int, 3> { idx + 1, idx + numRows + 1, idx };
 
             for (const auto [i0, i1, i2] : { tri0, tri1 }) {
                 indices.push_back(i0);
                 indices.push_back(i1);
                 indices.push_back(i2);
 
-                // Calculate face normal
-                const QVector3D e0 = vertices[i1].position - vertices[i0].position;
-                const QVector3D e1 = vertices[i2].position - vertices[i0].position;
-                QVector3D normal = QVector3D::crossProduct(e0, e1).normalized();
+                if (m_smoothShading) {
+                    // Calculate face normal
+                    const QVector3D e0 = vertices[i1].position - vertices[i0].position;
+                    const QVector3D e1 = vertices[i2].position - vertices[i0].position;
+                    QVector3D normal = QVector3D::crossProduct(e0, e1).normalized();
 
-                // Add normal to vertex, will normalize later
-                vertices[i0].normal += normal;
-                vertices[i1].normal += normal;
-                vertices[i2].normal += normal;
+                    // Add normal to vertex, will normalize later
+                    vertices[i0].normal += normal;
+                    vertices[i1].normal += normal;
+                    vertices[i2].normal += normal;
+                }
             }
         }
     }
 
-    // Normalize
-    for (auto &vertex : vertices)
-        vertex.normal.normalize();
+    if (m_smoothShading) {
+        // Normalize
+        for (auto &vertex : vertices)
+            vertex.normal.normalize();
+    }
 
     // Calculate bounds
     QVector3D boundsMin = vertices[0].position;
@@ -172,7 +221,10 @@ void HeightFieldGeometry::updateData()
 
     addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, 0, QQuick3DGeometry::Attribute::F32Type);
 
-    addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, sizeof(QVector3D), QQuick3DGeometry::Attribute::F32Type);
+    if (m_smoothShading)
+        addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, sizeof(QVector3D), QQuick3DGeometry::Attribute::F32Type);
+
+    setStride(sizeof(Vertex));
 
     addAttribute(QQuick3DGeometry::Attribute::IndexSemantic, 0, QQuick3DGeometry::Attribute::ComponentType::U32Type);
 

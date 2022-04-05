@@ -36,6 +36,7 @@ headerdirs  += .. \
 headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/randominstancing_p.h \
            ../../helpers/lookatnode_p.h \
+           ../../helpers/heightfieldgeometry_p.h \
            ../../assetutils/qquick3druntimeloader_p.h
 
 sourcedirs  += .. \
@@ -45,6 +46,7 @@ sourcedirs  += .. \
 sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/randominstancing.cpp \
            ../../helpers/lookatnode.cpp \
+           ../../helpers/heightfieldgeometry.cpp \
            ../../assetutils/qquick3druntimeloader.cpp
 
 exampledirs +=  ../../../examples/quick3d
