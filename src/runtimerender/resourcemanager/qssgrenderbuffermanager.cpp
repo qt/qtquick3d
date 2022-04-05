@@ -132,7 +132,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 {
     auto context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
-    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
     if (image->m_qsgTexture) {
         QSGTexture *qsgTexture = image->m_qsgTexture;
         if (qsgTexture->thread() == QThread::currentThread()) {
@@ -173,6 +172,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         }
 
     } else if (image->m_rawTextureData) {
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
 
         // Textures using QSSGRenderTextureData
         // QSSGRenderImage can override the mipmode for its texture data
@@ -181,7 +181,9 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 
         result = loadTextureData(image->m_rawTextureData, inMipMode);
         Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
     } else if (!image->m_imagePath.isEmpty()) {
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
         const ImageCacheKey imageKey = { image->m_imagePath, inMipMode };
         auto foundIt = imageMap.find(imageKey);
         if (foundIt != imageMap.cend()) {
@@ -203,6 +205,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 }
                 result = foundIt.value().renderImageTexture;
                 Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
+                Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
                 // again
@@ -213,7 +216,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         }
         foundIt.value().usageCounts[currentLayer]++;
     }
-    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
     return result;
 }
 
