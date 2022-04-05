@@ -976,13 +976,22 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
         if (theMaterialObject == nullptr)
             continue;
 
-        bool usesBlendParticles = theModelContext.model.particleBuffer != nullptr;
+        bool usesBlendParticles = theModelContext.model.particleBuffer != nullptr && inModel.particleBuffer->particleCount();
         bool usesInstancing = theModelContext.model.instancing()
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
         if (usesInstancing && theModelContext.model.instanceTable->hasTransparency())
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
         if (theModelContext.model.hasTransparency)
             renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
+        const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
+        const bool supportRgba16f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F);
+        if (!supportRgba32f && !supportRgba16f) {
+            if (!particlesNotSupportedWarningShown)
+                qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
+            particlesNotSupportedWarningShown = true;
+            usesBlendParticles = false;
+        }
 
         if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
@@ -997,10 +1006,8 @@ bool QSSGLayerRenderPreparationData::prepareModelForRender(const QSSGRenderModel
             subsetDirty |= theMaterialPrepResult.dirty;
             renderableFlags = theMaterialPrepResult.renderableFlags;
 
-            if (inModel.particleBuffer && inModel.particleBuffer->particleCount())
-                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, true);
-            else
-                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, false);
+            // Blend particles
+            renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
 
             // Skin
             renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneGlobals.mSize);
@@ -1106,9 +1113,10 @@ bool QSSGLayerRenderPreparationData::prepareParticlesForRender(const QSSGRenderP
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
 
     const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
-    if (!supportRgba32f) {
+    const bool supportRgba16f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F);
+    if (!supportRgba32f && !supportRgba16f) {
         if (!particlesNotSupportedWarningShown)
-            qWarning () << "Particles not supported due to missing RGBA32F texture format support";
+            qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
         particlesNotSupportedWarningShown = true;
         return false;
     }
