@@ -203,8 +203,6 @@ struct QSSGRhiRenderableTexture
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData
 {
-    typedef QVector<QSSGModelContext *> TModelContextPtrList;
-    typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;
 public:
     QAtomicInt ref;
 
@@ -216,6 +214,8 @@ public:
     QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
     ~QSSGLayerRenderData();
 
+    typedef QVector<QSSGModelContext *> TModelContextPtrList;
+    typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;
 
     void rhiPrepare();
     void rhiRender();
@@ -325,11 +325,7 @@ public:
     QSSGRhiRenderableTexture rhiScreenTexture;
 
 private:
-    QSSGRenderTextureFormat m_depthBufferFormat;
-
-    QSize m_previousOutputSize;
-
-    bool m_globalZPrePassActive;
+    bool m_globalZPrePassActive = false;
 };
 
 QT_END_NAMESPACE

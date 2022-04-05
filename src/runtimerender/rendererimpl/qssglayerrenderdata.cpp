@@ -1698,8 +1698,6 @@ static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
     : layer(inLayer)
     , renderer(inRenderer)
-    , m_depthBufferFormat(QSSGRenderTextureFormat::Unknown)
-    , m_globalZPrePassActive(false)
 {
 }
 
