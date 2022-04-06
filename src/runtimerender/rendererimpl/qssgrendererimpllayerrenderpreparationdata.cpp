@@ -1258,17 +1258,17 @@ void QSSGLayerRenderPreparationData::prepareResourceLoaders()
 void QSSGLayerRenderPreparationData::prepareReflectionProbesForRender()
 {
     const auto probeCount = reflectionProbes.size();
-    for (int probeIdx = 0; probeIdx < probeCount; probeIdx++) {
-        if (!reflectionMapManager)
-            reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
-
-        reflectionProbes[probeIdx]->calculateGlobalVariables();
-    }
+    if (!reflectionMapManager)
+        reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
 
     TRenderableObjectList combinedList = transparentObjects + opaqueObjects;
     for (int i = 0; i < probeCount; i++) {
-        int reflectionObjectCount = 0;
         QSSGRenderReflectionProbe* probe = reflectionProbes[i];
+        probe->calculateGlobalVariables();
+        if (!probe->flags.testFlag(QSSGRenderNode::Flag::GloballyActive))
+            continue;
+
+        int reflectionObjectCount = 0;
         QVector3D probeExtent = probe->boxSize / 2;
         QSSGBounds3 probeBound = QSSGBounds3::centerExtents(probe->getGlobalPos(), probeExtent);
         for (QSSGRenderableObjectHandle handle : combinedList) {
