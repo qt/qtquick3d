@@ -270,10 +270,10 @@ public:
 
     QVector3D getCameraDirection();
     // Per-frame cache of renderable objects post-sort.
-    const TRenderableObjectList &getOpaqueRenderableObjects(bool performSort = true);
+    const TRenderableObjectList &getSortedOpaqueRenderableObjects();
     // If layer depth test is false, this may also contain opaque objects.
-    const TRenderableObjectList &getTransparentRenderableObjects();
-    const TRenderableObjectList &getScreenTextureRenderableObjects();
+    const TRenderableObjectList &getSortedTransparentRenderableObjects();
+    const TRenderableObjectList &getSortedScreenTextureRenderableObjects();
     const QVector<QSSGRenderableNodeEntry> &getRenderableItem2Ds();
 
     void resetForFrame();

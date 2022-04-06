@@ -222,34 +222,36 @@ static inline float signedSquare(float val)
     return sign * val * val;
 }
 
+static inline void generateRenderableSortingKey(QSSGLayerRenderData::TRenderableObjectList &renderables,
+                                                const QVector3D &cameraPosition,
+                                                const QVector3D &cameraDirection)
+{
+    for (int idx = 0, end = renderables.size(); idx < end; ++idx) {
+        QSSGRenderableObjectHandle &info = renderables[idx];
+        const QVector3D difference = info.obj->worldCenterPoint - cameraPosition;
+        info.cameraDistanceSq = QVector3D::dotProduct(difference, cameraDirection) + signedSquare(info.obj->depthBias);
+    }
+}
+
 // Per-frame cache of renderable objects post-sort.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getOpaqueRenderableObjects(bool performSort)
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueRenderableObjects()
 {
     if (!renderedOpaqueObjects.empty() || camera == nullptr)
         return renderedOpaqueObjects;
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !opaqueObjects.empty()) {
-        QVector3D theCameraDirection(getCameraDirection());
-        QVector3D theCameraPosition = camera->getGlobalPos();
         renderedOpaqueObjects = opaqueObjects;
-        // Setup the object's sorting information
-        for (int idx = 0, end = renderedOpaqueObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObjectHandle &theInfo = renderedOpaqueObjects[idx];
-            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
-            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection) + signedSquare(theInfo.obj->depthBias);
-        }
-
+        generateRenderableSortingKey(renderedOpaqueObjects, camera->getGlobalPos(), getCameraDirection());
         static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
             return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
         };
         // Render nearest to furthest objects
-        if (performSort)
-            std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
+        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
     }
     return renderedOpaqueObjects;
 }
 
 // If layer depth test is false, this may also contain opaque objects.
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getTransparentRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTransparentRenderableObjects()
 {
     if (!renderedTransparentObjects.empty() || camera == nullptr)
         return renderedTransparentObjects;
@@ -260,16 +262,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getTransparentRe
         renderedTransparentObjects.append(opaqueObjects);
 
     if (!renderedTransparentObjects.empty()) {
-        QVector3D theCameraDirection(getCameraDirection());
-        QVector3D theCameraPosition = camera->getGlobalPos();
-
-        // Setup the object's sorting information
-        for (quint32 idx = 0, end = renderedTransparentObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObjectHandle &theInfo = renderedTransparentObjects[idx];
-            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
-            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection) + signedSquare(theInfo.obj->depthBias);
-        }
-
+        generateRenderableSortingKey(renderedTransparentObjects, camera->getGlobalPos(), getCameraDirection());
         static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
             return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
         };
@@ -280,20 +273,13 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getTransparentRe
     return renderedTransparentObjects;
 }
 
-const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getScreenTextureRenderableObjects()
+const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenTextureRenderableObjects()
 {
     if (!renderedScreenTextureObjects.empty() || camera == nullptr)
         return renderedScreenTextureObjects;
     renderedScreenTextureObjects = screenTextureObjects;
     if (!renderedScreenTextureObjects.empty()) {
-        QVector3D theCameraDirection(getCameraDirection());
-        QVector3D theCameraPosition = camera->getGlobalPos();
-        // Setup the object's sorting information
-        for (quint32 idx = 0, end = renderedScreenTextureObjects.size(); idx < end; ++idx) {
-            QSSGRenderableObjectHandle &theInfo = renderedScreenTextureObjects[idx];
-            const QVector3D difference = theInfo.obj->worldCenterPoint - theCameraPosition;
-            theInfo.cameraDistanceSq = QVector3D::dotProduct(difference, theCameraDirection) + signedSquare(theInfo.obj->depthBias);
-        }
+        generateRenderableSortingKey(renderedScreenTextureObjects, camera->getGlobalPos(), getCameraDirection());
         static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs,
                                                           const QSSGRenderableObjectHandle &rhs) {
             return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
@@ -1624,9 +1610,8 @@ void QSSGLayerRenderData::prepareForRender()
     layerPrepResult = thePrepResult;
 
     // Per-frame cache of renderable objects post-sort.
-    getOpaqueRenderableObjects();
-    // If layer depth test is false, this may also contain opaque objects.
-    getTransparentRenderableObjects();
+    getSortedOpaqueRenderableObjects();
+    getSortedTransparentRenderableObjects();
 
     getCameraDirection();
 }
@@ -3628,9 +3613,9 @@ void QSSGLayerRenderData::rhiPrepare()
         Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-        const auto &sortedOpaqueObjects = getOpaqueRenderableObjects(true); // front to back
-        const auto &sortedTransparentObjects = getTransparentRenderableObjects(); // back to front
-        const auto &sortedScreenTextureObjects = getScreenTextureRenderableObjects(); // back to front
+        const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(); // front to back
+        const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(); // back to front
+        const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(); // back to front
         const auto &item2Ds = getRenderableItem2Ds();
 
         // Verify that the depth write list(s) were cleared between frames
@@ -4032,7 +4017,7 @@ void QSSGLayerRenderData::rhiRender()
         renderer->beginLayerRender(*this);
 
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-        const auto &theOpaqueObjects = getOpaqueRenderableObjects(true);
+        const auto &theOpaqueObjects = getSortedOpaqueRenderableObjects();
         const auto &item2Ds = getRenderableItem2Ds();
         bool needsSetViewport = true;
 
@@ -4071,7 +4056,7 @@ void QSSGLayerRenderData::rhiRender()
         cb->debugMarkEnd();
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render screen texture dependent"));
-        const auto &theScreenTextureObjects = getScreenTextureRenderableObjects();
+        const auto &theScreenTextureObjects = getSortedScreenTextureRenderableObjects();
         for (const auto &handle : theScreenTextureObjects) {
             QSSGRenderableObject *theObject = handle.obj;
             rhiRenderRenderable(rhiCtx, *this, *theObject, &needsSetViewport);
@@ -4089,7 +4074,7 @@ void QSSGLayerRenderData::rhiRender()
         }
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
-        const auto &theTransparentObjects = getTransparentRenderableObjects();
+        const auto &theTransparentObjects = getSortedTransparentRenderableObjects();
         for (const auto &handle : theTransparentObjects) {
             QSSGRenderableObject *theObject = handle.obj;
             if (!theObject->renderableFlags.isCompletelyTransparent())
