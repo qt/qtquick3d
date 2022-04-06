@@ -361,6 +361,7 @@ const QVector<QSSGRenderableNodeEntry> &QSSGLayerRenderPreparationData::getRende
 template <typename T, typename... Args>
 Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Args&&... args)
 {
+    static_assert(std::is_trivially_destructible_v<T>, "Objects allocated using the per-frame allocator needs to be trivially destructible!");
     return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(std::forward<Args>(args)...);
 }
 
