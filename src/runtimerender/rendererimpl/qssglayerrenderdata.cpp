@@ -571,9 +571,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     retval.opacity = inOpacity;
     float &subsetOpacity(retval.opacity);
 
-    if (theMaterial->dirty.isDirty()) {
+    if (theMaterial->isDirty())
         renderableFlags |= QSSGRenderableObjectFlag::Dirty;
-    }
+
     subsetOpacity *= theMaterial->opacity;
 
     QSSGRenderableImage *firstImage = nullptr;

@@ -214,7 +214,7 @@ void QSSGRenderer::endFrame()
             static_cast<QSSGRenderCustomMaterial *>(matObj)->clearDirty();
         } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial
                    || matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
-            static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
+            static_cast<QSSGRenderDefaultMaterial *>(matObj)->clearDirty();
         }
     }
     m_materialClearDirty.clear();

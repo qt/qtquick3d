@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendermaterialdirty_p.h>
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
@@ -138,7 +137,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     float attenuationDistance = std::numeric_limits<float>::infinity();
     QVector3D attenuationColor { 1.0f, 1.0f, 1.0f };
 
-    QSSGMaterialDirty dirty;
     MaterialLighting lighting = MaterialLighting::FragmentLighting;
     QSSGRenderDefaultMaterial::MaterialBlendMode blendMode = QSSGRenderDefaultMaterial::MaterialBlendMode::SourceOver;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel = QSSGRenderDefaultMaterial::MaterialSpecularModel::Default;
@@ -146,6 +144,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     QSSGCullFaceMode cullMode = QSSGCullFaceMode::Back;
     QSSGDepthDrawMode depthDrawMode = QSSGDepthDrawMode::OpaqueOnly;
     bool vertexColorsEnabled = false;
+    bool dirty = true;
     TextureChannelMapping roughnessChannel = TextureChannelMapping::R;
     TextureChannelMapping opacityChannel = TextureChannelMapping::A;
     TextureChannelMapping translucencyChannel = TextureChannelMapping::A;
@@ -169,6 +168,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     bool hasLighting() const { return lighting != MaterialLighting::NoLighting; }
     bool isClearcoatEnabled() const { return clearcoatAmount > 0.01f; }
     bool isTransmissionEnabled() const { return transmissionFactor > 0.01f; }
+
+    [[nodiscard]] inline bool isDirty() const { return dirty; }
+    void clearDirty();
 
     QSSGShaderMaterialAdapter *adapter = nullptr;
 };

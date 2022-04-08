@@ -51,6 +51,11 @@ QSSGRenderDefaultMaterial::~QSSGRenderDefaultMaterial()
     delete adapter;
 }
 
+void QSSGRenderDefaultMaterial::clearDirty()
+{
+    dirty = false;
+}
+
 QSSGRenderCustomMaterial::QSSGRenderCustomMaterial()
     : QSSGRenderGraphObject(Type::CustomMaterial)
 {
