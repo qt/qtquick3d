@@ -80,6 +80,11 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node)
                 const QString qstring(QString::fromUtf8(string->view));
                 v.call->set(obj, v.name, &qstring);
             }
+        } else if (v.value.mt.id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
+            if (const auto flag = reinterpret_cast<const QSSGSceneDesc::Flag *>(v.value.dptr)) {
+                const int qflag(flag->value);
+                v.call->set(obj, v.name, &qflag);
+            }
         } else {
             v.call->set(obj, v.name, v.value.dptr);
         }
