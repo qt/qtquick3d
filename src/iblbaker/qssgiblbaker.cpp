@@ -38,6 +38,7 @@
 
 #if QT_CONFIG(opengl)
 #include <QtGui/private/qrhigles2_p.h>
+#include <QOffscreenSurface>
 #include <QOpenGLContext>
 #endif
 #if QT_CONFIG(vulkan)
