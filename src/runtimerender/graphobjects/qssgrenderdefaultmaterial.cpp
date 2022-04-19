@@ -62,4 +62,22 @@ QSSGRenderCustomMaterial::~QSSGRenderCustomMaterial()
     delete adapter;
 }
 
+void QSSGRenderCustomMaterial::markDirty()
+{
+    m_flags |= FlagT(Flags::Dirty);
+}
+
+void QSSGRenderCustomMaterial::clearDirty()
+{
+    m_flags &= ~FlagT(Flags::Dirty);
+}
+
+void QSSGRenderCustomMaterial::setAlwaysDirty(bool alwaysDirty)
+{
+    if (alwaysDirty)
+        m_flags |= FlagT(Flags::AlwaysDirty);
+    else
+        m_flags &= ~FlagT(Flags::AlwaysDirty);
+}
+
 QT_END_NAMESPACE

@@ -1352,11 +1352,11 @@ void QSSGLayerRenderData::prepareForRender()
 
     if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
         for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
-            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Dirty)) {
+            if (theEffect->isDirty()) {
                 wasDirty = true;
-                theEffect->flags.setFlag(QSSGRenderEffect::Flag::Dirty, false);
+                theEffect->clearDirty();
             }
-            if (theEffect->flags.testFlag(QSSGRenderEffect::Flag::Active)) {
+            if (theEffect->isActive()) {
                 theLastEffect = theEffect;
                 if (theEffect->requiresDepthTexture)
                     requiresDepthTexture = true;

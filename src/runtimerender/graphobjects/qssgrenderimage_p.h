@@ -43,7 +43,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderimagetexture_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>

@@ -1693,7 +1693,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
         }
     }
 
-    customMaterial->m_alwaysDirty = m_alwaysDirty;
+    customMaterial->setAlwaysDirty(m_alwaysDirty);
     if (m_srcBlend != BlendMode::NoBlend && m_dstBlend != BlendMode::NoBlend) { // both must be set to something other than NoBlend
         customMaterial->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Blending, true);
         customMaterial->m_srcBlend = toRhiBlendFactor(m_srcBlend);

@@ -86,6 +86,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
     using PropertyList = QList<Property>;
 
+    enum class Flags : quint8
+    {
+        Dirty = 0x1,
+        AlwaysDirty = 0x2
+    };
+    using FlagT = std::underlying_type_t<Flags>;
+
     enum class ShadingMode // must match QQuick3DCustomMaterial::ShadingMode
     {
         Unshaded,
@@ -112,9 +119,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 
-    using Flag = QSSGRenderNode::Flag;
-    Q_DECLARE_FLAGS(Flags, Flag)
-
     QByteArray m_shaderPathKey;
     CustomShaderPresence m_customShaderPresence;
 
@@ -134,22 +138,19 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
 
     ShadingMode m_shadingMode = ShadingMode::Shaded;
 
-    Flags m_flags;
-    bool m_alwaysDirty = false;
-    bool m_dirtyFlagWithInFrame = false;
+    FlagT m_flags { FlagT(Flags::Dirty) };
     bool incompleteBuildTimeObject = false; // Used by the shadergen tool
     bool m_usesSharedVariables = false;
 
-    bool isDirty() const { return m_flags.testFlag(Flag::Dirty) || m_dirtyFlagWithInFrame || m_alwaysDirty; }
-
-    void updateDirtyForFrame()
-    {
-        m_dirtyFlagWithInFrame = m_flags.testFlag(Flag::Dirty);
-        m_flags.setFlag(Flag::Dirty, false);
-    }
+    void markDirty();
+    void clearDirty();
+    void setAlwaysDirty(bool v);
+    [[nodiscard]] inline bool isDirty() const { return ((m_flags & (FlagT(Flags::Dirty) | FlagT(Flags::AlwaysDirty))) != 0); }
 
     QSSGShaderMaterialAdapter *adapter = nullptr;
 };
+
+
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderCustomMaterial::CustomShaderPresence)
 

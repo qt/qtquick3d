@@ -49,15 +49,24 @@ void QSSGRenderEffect::initialize()
 
 void QSSGRenderEffect::setActive(bool inActive)
 {
-    if (flags.testFlag(Flag::Active) != inActive) {
-        flags.setFlag(Flag::Active, inActive);
-        flags.setFlag(Flag::Dirty);
-    }
+   const bool wasActive = ((flags & FlagT(Flags::Active)) != 0);
+   if (inActive)
+       flags |= FlagT(Flags::Active);
+   else
+       flags &= ~FlagT(Flags::Active);
+
+   if (wasActive != inActive)
+       markDirty();
 }
 
-void QSSGRenderEffect::reset()
+void QSSGRenderEffect::markDirty()
 {
-    flags.setFlag(Flag::Dirty);
+    flags |= FlagT(Flags::Dirty);
+}
+
+void QSSGRenderEffect::clearDirty()
+{
+    flags &= ~FlagT(Flags::Dirty);
 }
 
 QT_END_NAMESPACE
