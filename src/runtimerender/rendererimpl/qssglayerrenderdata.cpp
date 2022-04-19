@@ -246,7 +246,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueR
 {
     if (!renderedOpaqueObjects.empty() || camera == nullptr)
         return renderedOpaqueObjects;
-    if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest) && !opaqueObjects.empty()) {
+    if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !opaqueObjects.empty()) {
         renderedOpaqueObjects = opaqueObjects;
         generateRenderableSortingKey(renderedOpaqueObjects, camera->getGlobalPos(), getCameraDirection());
         static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
@@ -266,7 +266,7 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTranspa
 
     renderedTransparentObjects = transparentObjects;
 
-    if (!layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest))
+    if (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest))
         renderedTransparentObjects.append(opaqueObjects);
 
     if (!renderedTransparentObjects.empty()) {
@@ -3652,7 +3652,7 @@ void QSSGLayerRenderData::rhiPrepare()
         Q_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty());
 
         // Depth Write List
-        if (layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
+        if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
             for (const auto &opaqueObject : sortedOpaqueObjects) {
                 const auto depthMode = opaqueObject.obj->depthWriteMode;
                 if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
@@ -3780,8 +3780,8 @@ void QSSGLayerRenderData::rhiPrepare()
 
         // Z (depth) pre-pass, if enabled, is part of the main render pass. (opaque + pre-pass transparent objects)
         // Prepare the data for it.
-        bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
-                && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
+        bool zPrePass = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass)
+                && layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)
                 && (!renderedDepthWriteObjects.isEmpty() || !item2Ds.isEmpty());
         if (zPrePass || !renderedOpaqueDepthPrepassObjects.isEmpty()) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
@@ -3811,13 +3811,13 @@ void QSSGLayerRenderData::rhiPrepare()
         if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
             rhiPrepareSkyBox(rhiCtx, layer, *camera, renderer);
 
-        const bool layerEnableDepthTest = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest);
+        const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
         bool depthTestEnableDefault = false;
         bool depthWriteEnableDefault = false;
         if (layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty())) {
             depthTestEnableDefault = true;
             // enable depth write for opaque objects when there was no Z prepass
-            depthWriteEnableDefault = !layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass) || !m_globalZPrePassActive;
+            depthWriteEnableDefault = !layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || !m_globalZPrePassActive;
         }
 
         ps->depthTestEnable = depthTestEnableDefault;
@@ -4050,15 +4050,15 @@ void QSSGLayerRenderData::rhiRender()
         const auto &item2Ds = getRenderableItem2Ds();
         bool needsSetViewport = true;
 
-        bool zPrePass = layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthPrePass)
-                && layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)
+        bool zPrePass = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass)
+                && layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)
                 && (!renderedDepthWriteObjects.isEmpty() || !item2Ds.isEmpty());
         if (zPrePass && m_globalZPrePassActive) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
             rhiRenderDepthPass(rhiCtx, *this, renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
             cb->debugMarkEnd();
         } else if (!renderedOpaqueDepthPrepassObjects.isEmpty() &&
-                   layer.flags.testFlag(QSSGRenderLayer::Flag::LayerEnableDepthTest)) {
+                   layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
             cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z forced prepass"));
             rhiRenderDepthPass(rhiCtx, *this, {}, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
             cb->debugMarkEnd();

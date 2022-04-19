@@ -70,14 +70,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
         TextDirty = 1 << 4,
         LocallyPickable = 1 << 5,
         GloballyPickable = 1 << 6,
-        LayerEnableDepthTest = 1 << 7,
-        LayerRenderToTarget = 1 << 8, ///< Does this layer render to the normal render target,
         /// or is it offscreen-only
-        ForceLayerOffscreen = 1 << 9, ///< Forces a layer to always use the offscreen rendering
+        ForceLayerOffscreen = 1 << 7, ///< Forces a layer to always use the offscreen rendering
         /// mechanism.  This can be usefulf or caching purposes.
-        IgnoreParentTransform = 1 << 10,
-        LayerEnableDepthPrePass = 1 << 11, ///< True when we render a depth pass before
-        CameraDirty = 1 << 12, ///< True when the camera inheriting from this is dirty
+        IgnoreParentTransform = 1 << 8,
+        CameraDirty = 1 << 9, ///< True when the camera inheriting from this is dirty
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

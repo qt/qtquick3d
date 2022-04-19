@@ -114,6 +114,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         Filmic
     };
 
+    enum class LayerFlag
+    {
+        EnableDepthTest = 0x1,
+        EnableDepthPrePass = 0x2, ///< True when we render a depth pass before
+        RenderToTarget = 0x3 ///< Does this layer render to the normal render target,
+    };
+    Q_DECLARE_FLAGS(LayerFlags, LayerFlag)
+
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
     QSSGLayerRenderData *renderData = nullptr;
@@ -181,6 +189,10 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     // Tonemapping
     TonemapMode tonemapMode;
+
+    LayerFlags layerFlags { LayerFlag::RenderToTarget,
+                            LayerFlag::EnableDepthTest,
+                            LayerFlag::EnableDepthPrePass };
 
     // references to objects owned by the QSSGRhiContext
     QRhiShaderResourceBindings *skyBoxSrb = nullptr;

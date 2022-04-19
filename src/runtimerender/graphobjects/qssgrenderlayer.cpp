@@ -72,9 +72,6 @@ QSSGRenderLayer::QSSGRenderLayer()
     , renderedCamera(nullptr)
     , tonemapMode(TonemapMode::Linear)
 {
-    flags.setFlag(Flag::LayerRenderToTarget);
-    flags.setFlag(Flag::LayerEnableDepthTest);
-    flags.setFlag(Flag::LayerEnableDepthPrePass);
 }
 
 QSSGRenderLayer::~QSSGRenderLayer()

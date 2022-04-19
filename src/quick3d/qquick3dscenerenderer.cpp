@@ -950,15 +950,8 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     if (view3D.camera())
         layerNode.explicitCamera = static_cast<QSSGRenderCamera *>(QQuick3DObjectPrivate::get(view3D.camera())->spatialNode);
 
-    if (view3D.environment()->depthTestEnabled())
-        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, true);
-    else
-        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthTest, false);
-
-    if (view3D.environment()->depthPrePassEnabled())
-        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, true);
-    else
-        layerNode.flags.setFlag(QSSGRenderNode::Flag::LayerEnableDepthPrePass, false);
+    layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest, view3D.environment()->depthTestEnabled());
+    layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass, view3D.environment()->depthPrePassEnabled());
 
     layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(view3D.environment()->tonemapMode());
     layerNode.skyboxBlurAmount = view3D.environment()->skyboxBlurAmount();
