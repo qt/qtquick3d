@@ -59,21 +59,21 @@ void tst_QQuick3DFrustumCamera::testClipAndFov()
     camera.setClipNear(clipNear);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
     QCOMPARE(clipNear, node->clipNear);
 
     const float clipFar = 0.4f;
     camera.setClipFar(clipFar);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
     QCOMPARE(clipFar, node->clipFar);
 
     const float fov = 6.2f;
     camera.setFieldOfView(fov);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
     QCOMPARE(fov, qRadiansToDegrees(node->fov)); // It gets converted inside, so we convert back
 
     const QQuick3DPerspectiveCamera::FieldOfViewOrientation fovOrientation
@@ -81,7 +81,7 @@ void tst_QQuick3DFrustumCamera::testClipAndFov()
     camera.setFieldOfViewOrientation(fovOrientation);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
     QVERIFY(node->fovHorizontal == true);
     camera.setFieldOfViewOrientation(QQuick3DPerspectiveCamera::FieldOfViewOrientation::Vertical);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
@@ -105,7 +105,7 @@ void tst_QQuick3DFrustumCamera::testFrustum()
     camera.setRight(frustumRight);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
     QCOMPARE(frustumBottom, node->bottom);
     QCOMPARE(frustumTop, node->top);
     QCOMPARE(frustumLeft, node->left);

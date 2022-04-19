@@ -52,6 +52,19 @@ QSSGRenderLight::QSSGRenderLight(QSSGRenderGraphObject::Type type)
     , m_shadowFilter(35.0f)
 {
     Q_ASSERT(QSSGRenderGraphObject::isLight(type));
+    markDirty(DirtyFlag::LightDirty);
+}
+
+void QSSGRenderLight::markDirty(DirtyFlag dirtyFlag)
+{
+    m_lightDirtyFlags |= FlagT(dirtyFlag);
+    QSSGRenderNode::markDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
+}
+
+void QSSGRenderLight::clearDirty(DirtyFlag dirtyFlag)
+{
+    m_lightDirtyFlags &= ~FlagT(dirtyFlag);
+    QSSGRenderNode::clearDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
 }
 
 QT_END_NAMESPACE

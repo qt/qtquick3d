@@ -59,6 +59,14 @@ struct QSSGCameraGlobalCalculationResult
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
 {
+    enum class DirtyFlag : quint8
+    {
+        CameraDirty = 0x1
+    };
+    using FlagT = std::underlying_type_t<DirtyFlag>;
+
+    static constexpr DirtyFlag DirtyMask { std::numeric_limits<FlagT>::max() };
+
     // Setting these variables should set dirty on the camera.
     float clipNear;
     float clipFar;
@@ -81,6 +89,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     // to use during mouse picking.
     QVector2D frustumScale;
     bool enableFrustumClipping;
+    FlagT cameraDirtyFlags = 0;
 
     QRectF previousInViewport;
 
@@ -118,6 +127,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
 
     float verticalFov(float aspectRatio) const;
     float verticalFov(const QRectF &inViewport) const;
+
+    [[nodiscard]] inline bool isDirty(DirtyFlag dirtyFlag = DirtyMask) const
+    {
+        return ((cameraDirtyFlags & FlagT(dirtyFlag)) != 0)
+               || ((dirtyFlag == DirtyMask) && QSSGRenderNode::isDirty());
+    }
+    void markDirty(DirtyFlag dirtyFlag);
+    void clearDirty(DirtyFlag dirtyFlag);
 };
 
 QT_END_NAMESPACE

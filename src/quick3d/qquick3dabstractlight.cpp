@@ -352,6 +352,9 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
         light->m_shadowFilter = m_shadowFilter;
     }
 
+    if (m_dirtyFlags.toInt() != 0) // Some flag was set, so mark the light dirty!
+        light->markDirty(QSSGRenderLight::DirtyFlag::LightDirty);
+
     if (m_scope) {
         light->m_scope
                 = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(m_scope)->spatialNode);

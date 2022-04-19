@@ -198,7 +198,7 @@ QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderG
                                | qUpdateIfNeeded(camera->horizontalMagnification, m_horizontalMagnification)
                                | qUpdateIfNeeded(camera->verticalMagnification, m_verticalMagnification)) != 0);
         if (changed)
-            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+            camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }
 
     return camera;

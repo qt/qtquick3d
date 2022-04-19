@@ -61,28 +61,30 @@ class QSSGBufferManager;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObject
 {
-    enum class Flag
+    enum class LocalState : quint8
     {
-        Dirty = 1,
-        TransformDirty = 1 << 1,
-        Active = 1 << 2, ///< Is this exact object active
-        GloballyActive = 1 << 3, ///< set based in Active and if a parent is active.
-        TextDirty = 1 << 4,
-        LocallyPickable = 1 << 5,
-        GloballyPickable = 1 << 6,
-        /// or is it offscreen-only
-        ForceLayerOffscreen = 1 << 7, ///< Forces a layer to always use the offscreen rendering
-        /// mechanism.  This can be usefulf or caching purposes.
-        IgnoreParentTransform = 1 << 8,
-        CameraDirty = 1 << 9, ///< True when the camera inheriting from this is dirty
+        Active = 1 << 0,
+        Pickable = 1 << 1
     };
-    Q_DECLARE_FLAGS(Flags, Flag)
 
-    enum class TransformDirtyFlag : quint8
+    enum class GlobalState : quint8
     {
-        TransformNotDirty,
-        TransformIsDirty,
+        Active = 1 << 2,
+        Pickable = 1 << 3
     };
+
+    enum class DirtyFlag : quint32
+    {
+        TransformDirty = 1 << 4,
+        OpacityDirty = 1 << 5,
+        ActiveDirty = 1 << 6,
+        PickableDirty = 1 << 7,
+        SubNodeDirty = 1 << 8, // Sub-nodes should set/unest this if they "extend" the dirty flags provided by the node
+
+        GlobalValuesDirty = TransformDirty | OpacityDirty | ActiveDirty | PickableDirty,
+        DirtyMask = GlobalValuesDirty | SubNodeDirty
+    };
+    using FlagT = std::underlying_type_t<DirtyFlag>;
 
     static constexpr QVector3D initScale { 1.0f, 1.0f, 1.0f };
 
@@ -95,12 +97,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // Opacity of 1 means opaque, opacity of zero means transparent.
     float localOpacity = 1.0f;
 
-    // results of clearing dirty.
-    Flags flags {
-        Flag::Dirty,
-        Flag::TransformDirty,
-        Flag::Active,
-    };
+    // Nodes are initially dirty, but not active!
+    FlagT flags { FlagT(DirtyFlag::GlobalValuesDirty) };
     // These end up right handed
     QMatrix4x4 localTransform;
     QMatrix4x4 globalTransform;
@@ -127,7 +125,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // Sets this object dirty and walks down the graph setting all
     // children who are not dirty to be dirty.
-    void markDirty(TransformDirtyFlag inTransformDirty = TransformDirtyFlag::TransformNotDirty);
+    void markDirty(DirtyFlag dirtyFlag);
+    void clearDirty(DirtyFlag dirtyFlag);
+    [[nodiscard]] inline constexpr bool isDirty(DirtyFlag dirtyFlag = DirtyFlag::DirtyMask) const { return ((flags & FlagT(dirtyFlag)) != 0); }
+    void setState(LocalState state, bool on = true);
+    [[nodiscard]] inline constexpr bool getLocalState(LocalState stateFlag) const { return ((flags & FlagT(stateFlag)) != 0); }
+    [[nodiscard]] inline constexpr bool getGlobalState(GlobalState stateFlag) const { return ((flags & FlagT(stateFlag)) != 0); }
 
     void addChild(QSSGRenderNode &inChild);
     void removeChild(QSSGRenderNode &inChild);
@@ -168,8 +171,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // This should be in a utility file somewhere
     QMatrix3x3 calculateNormalMatrix() const;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderNode::Flags)
 
 QT_END_NAMESPACE
 

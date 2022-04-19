@@ -114,7 +114,7 @@ QSSGRenderGraphObject *QQuick3DCustomCamera::updateSpatialNode(QSSGRenderGraphOb
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
     if (camera) {
         if (qUpdateIfNeeded(camera->projection, m_projection))
-            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+            camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }
 
     return camera;

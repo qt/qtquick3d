@@ -123,11 +123,11 @@ void tst_QQuick3DNode::testProperties()
     // Visibility
     nodeItem.setVisible(false);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QVERIFY(!node->flags.testFlag(QSSGRenderNode::Flag::Active));
+    QVERIFY(!node->getLocalState(QSSGRenderNode::LocalState::Active));
     QSignalSpy spy(&nodeItem, SIGNAL(visibleChanged()));
     nodeItem.setVisible(true);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::Active));
+    QVERIFY(node->getLocalState(QSSGRenderNode::LocalState::Active));
     QCOMPARE(spy.count(), 1);
 
     QCOMPARE(originalNode, node);

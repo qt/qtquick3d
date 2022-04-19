@@ -65,7 +65,7 @@ void tst_QQuick3DCustomCamera::testCustomProjection()
     camera.setProjection(customProjection);
     node = static_cast<QSSGRenderCamera *>(camera.updateSpatialNode(node));
     QCOMPARE(originalNode, node);
-    QVERIFY(node->flags.testFlag(QSSGRenderNode::Flag::CameraDirty));
+    QVERIFY(node->isDirty(QSSGRenderCamera::DirtyFlag::CameraDirty));
     QCOMPARE(customProjection, node->projection);
 }
 

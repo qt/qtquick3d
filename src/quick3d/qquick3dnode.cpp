@@ -804,30 +804,36 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         spacialNode->pivot = d->m_pivot;
     }
 
-    auto localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);
-    if (!transformIsDirty)
-        transformIsDirty = (spacialNode->localTransform != localTransform);
+    if (!qFuzzyCompare(spacialNode->localOpacity, d->m_opacity)) {
+        spacialNode->localOpacity = d->m_opacity;
+        spacialNode->markDirty(QSSGRenderNode::DirtyFlag::OpacityDirty);
+    }
 
-    spacialNode->localTransform = localTransform;
-    spacialNode->staticFlags = d->m_staticFlags;
-    spacialNode->localOpacity = d->m_opacity;
+    if (!transformIsDirty && !qFuzzyCompare(d->m_position, mat44::getPosition(spacialNode->localTransform)))
+        transformIsDirty = true;
 
-    // The Hidden in Editor flag overrides the visible value
-    if (d->m_isHiddenInEditor)
-        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, false);
-    else
-        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Active, d->m_visible);
+    if (!transformIsDirty && !qFuzzyCompare(d->m_scale, mat44::getScale(spacialNode->localTransform)))
+        transformIsDirty = true;
+
+    if (!transformIsDirty && !qFuzzyCompare(d->m_rotation, QQuaternion::fromRotationMatrix(mat44::getUpper3x3(spacialNode->localTransform))))
+        transformIsDirty = true;
 
     if (transformIsDirty) {
-        spacialNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformIsDirty);
-        spacialNode->calculateGlobalVariables();
-        // Still needs to be marked dirty if it will show up correctly in the backend
-        // Note: no longer sure if this is still needed after we now do our own
-        // calculation of the global matrix from the front-end.
-        spacialNode->flags.setFlag(QSSGRenderNode::Flag::Dirty, true);
-    } else {
-        spacialNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
+        spacialNode->localTransform = QSSGRenderNode::calculateTransformMatrix(d->m_position, d->m_scale, d->m_pivot, d->m_rotation);;
+        spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
     }
+
+    spacialNode->staticFlags = d->m_staticFlags;
+
+    // The Hidden in Editor flag overrides the visible value
+    const bool nodeActive = spacialNode->getLocalState(QSSGRenderNode::LocalState::Active);
+    if (nodeActive && d->m_isHiddenInEditor)
+        spacialNode->setState(QSSGRenderNode::LocalState::Active, false);
+    else
+        spacialNode->setState(QSSGRenderNode::LocalState::Active, d->m_visible);
+
+    if (spacialNode->isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty))
+        spacialNode->calculateGlobalVariables();
 
     return spacialNode;
 }

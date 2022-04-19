@@ -98,7 +98,7 @@ static bool hasDirtyNonJointNodes(QSSGRenderNode *node, bool &hasChildJoints)
     // we might be non-joint dirty node, but if we do not have child joints we need to return false
     // Note! The frontend clears TransformDirty. Use dirty instead.
     bool dirtyNonJoint = ((node->type != QSSGRenderGraphObject::Type::Joint)
-                                              && node->flags.testFlag(QSSGRenderNode::Flag::Dirty));
+                                              && node->isDirty());
 
     // Tell our parent we are joint
     if (node->type == QSSGRenderGraphObject::Type::Joint)
@@ -157,7 +157,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                 const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
                 const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
                                                 && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
-                const bool dirtyTransform = skeletonNode->flags.testFlag(QSSGRenderNode::Flag::TransformDirty);
+                const bool dirtyTransform = skeletonNode->isDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
                 if (modelNode->skinningDirty || hasDirtyNonJoints || dirtyTransform) {
                     skeletonNode->boneTransformsDirty = false;
                     if (hasDirtyNonJoints && !dirtySkeleton)
@@ -854,7 +854,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
     // transparent materials still are.  This allows the artist to control pickability
     // in a somewhat fine-grained style.
     const bool canModelBePickable = (inModel.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
-                                    && (theModelContext.model.flags.testFlag(QSSGRenderModel::Flag::GloballyPickable));
+                                    && (theModelContext.model.getGlobalState(QSSGRenderModel::GlobalState::Pickable));
     if (canModelBePickable) {
         // Check if there is BVH data, if not generate it
         if (!theMesh->bvh) {
@@ -1186,12 +1186,12 @@ bool QSSGLayerRenderData::prepareRenderablesForRender(const QMatrix4x4 &inViewPr
     for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
         QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
         QSSGRenderNode *theNode = theNodeEntry.node;
-        wasDataDirty = wasDataDirty || theNode->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+        wasDataDirty = wasDataDirty || theNode->isDirty();
         switch (theNode->type) {
         case QSSGRenderGraphObject::Type::Model: {
             QSSGRenderModel *theModel = static_cast<QSSGRenderModel *>(theNode);
             theModel->calculateGlobalVariables();
-            if (theModel->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
+            if (theModel->getGlobalState(QSSGRenderModel::GlobalState::Active)) {
                 bool wasModelDirty = prepareModelForRender(*theModel, inViewProjection, inClipFrustum, theNodeEntry.lights, ioFlags);
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
@@ -1216,7 +1216,7 @@ bool QSSGLayerRenderData::prepareRenderablesForRender(const QMatrix4x4 &inViewPr
         case QSSGRenderGraphObject::Type::Particles: {
             QSSGRenderParticles *theParticles = static_cast<QSSGRenderParticles *>(theNode);
             theParticles->calculateGlobalVariables();
-            if (theParticles->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
+            if (theParticles->getGlobalState(QSSGRenderModel::GlobalState::Active)) {
                 bool wasModelDirty = prepareParticlesForRender(*theParticles, inClipFrustum, theNodeEntry.lights);
                 wasDataDirty = wasDataDirty || wasModelDirty;
             }
@@ -1224,7 +1224,7 @@ bool QSSGLayerRenderData::prepareRenderablesForRender(const QMatrix4x4 &inViewPr
         case QSSGRenderGraphObject::Type::Item2D: {
             QSSGRenderItem2D *theItem2D = static_cast<QSSGRenderItem2D *>(theNode);
             theItem2D->calculateGlobalVariables();
-            if (theItem2D->flags.testFlag(QSSGRenderModel::Flag::GloballyActive)) {
+            if (theItem2D->getGlobalState(QSSGRenderModel::GlobalState::Active)) {
                 theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
                 static const QMatrix4x4 flipMatrix(1.0f, 0.0f, 0.0f, 0.0f,
                                                    0.0f, -1.0f, 0.0f, 0.0f,
@@ -1263,7 +1263,7 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
     for (int i = 0; i < probeCount; i++) {
         QSSGRenderReflectionProbe* probe = reflectionProbes[i];
         probe->calculateGlobalVariables();
-        if (!probe->flags.testFlag(QSSGRenderNode::Flag::GloballyActive))
+        if (!probe->getGlobalState(QSSGRenderNode::GlobalState::Active))
             continue;
 
         int reflectionObjectCount = 0;
@@ -1338,7 +1338,7 @@ void QSSGLayerRenderData::prepareForRender()
 
     bool wasDirty = false;
     bool wasDataDirty = false;
-    wasDirty = layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty);
+    wasDirty = layer.isDirty();
     // The first pass is just to render the data.
     quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
@@ -1350,7 +1350,7 @@ void QSSGLayerRenderData::prepareForRender()
     bool requiresDepthTexture = SSAOEnabled;
     features.set(QSSGShaderFeatures::Feature::Ssm, false); // by default no shadow map generation
 
-    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+    if (layer.getLocalState(QSSGRenderLayer::LocalState::Active)) {
         for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
             if (theEffect->isDirty()) {
                 wasDirty = true;
@@ -1363,7 +1363,7 @@ void QSSGLayerRenderData::prepareForRender()
             }
         }
         // Get the layer's width and height.
-        if (layer.flags.testFlag(QSSGRenderLayer::Flag::Dirty)) {
+        if (layer.isDirty()) {
             wasDirty = true;
             layer.calculateGlobalVariables();
         }
@@ -1466,14 +1466,14 @@ void QSSGLayerRenderData::prepareForRender()
             if (camera != nullptr) {
                 // 1.
                 camera->dpr = renderer->contextInterface()->dpr();
-                wasDataDirty = wasDataDirty || camera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                wasDataDirty = wasDataDirty || camera->isDirty();
                 QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
                 wasDataDirty = wasDataDirty || theResult.m_wasDirty;
                 if (!theResult.m_computeFrustumSucceeded)
                     qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
 
                 // 2.
-                if (!camera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
+                if (!camera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
                     camera = nullptr;
             } else {
                 // 3.
@@ -1482,12 +1482,12 @@ void QSSGLayerRenderData::prepareForRender()
                     QSSGRenderCamera *theCamera = *iter;
                     theCamera->dpr = renderer->contextInterface()->dpr();
                     wasDataDirty = wasDataDirty
-                            || theCamera->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                            || theCamera->isDirty();
                     QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
                     wasDataDirty = wasDataDirty || theResult.m_wasDirty;
                     if (!theResult.m_computeFrustumSucceeded)
                         qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-                    if (theCamera->flags.testFlag(QSSGRenderCamera::Flag::GloballyActive))
+                    if (theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
                         camera = theCamera;
                 }
             }
@@ -1510,13 +1510,13 @@ void QSSGLayerRenderData::prepareForRender()
                 }
 
                 QSSGRenderLight *theLight = *rIt;
-                wasDataDirty = wasDataDirty || theLight->flags.testFlag(QSSGRenderNode::Flag::Dirty);
+                wasDataDirty = wasDataDirty || theLight->isDirty();
                 bool lightResult = theLight->calculateGlobalVariables();
                 wasDataDirty = lightResult || wasDataDirty;
 
                 QSSGShaderLight shaderLight;
                 shaderLight.light = theLight;
-                shaderLight.enabled = theLight->flags.testFlag(QSSGRenderLight::Flag::GloballyActive);
+                shaderLight.enabled = theLight->getGlobalState(QSSGRenderLight::GlobalState::Active);
                 shaderLight.enabled &= theLight->m_brightness > 0.0f;
                 shaderLight.shadows = theLight->m_castShadow;
                 if (shaderLight.shadows && shaderLight.enabled) {

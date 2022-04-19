@@ -169,11 +169,9 @@ QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *n
             jointNode->skeletonRoot = static_cast<QSSGRenderSkeleton *>(skeletonPriv->spatialNode);
         m_skeletonRootDirty = false;
     }
-    if (jointNode->flags.testFlag(QSSGRenderNode::Flag::TransformDirty)) {
+    if (jointNode->isDirty(QSSGRenderNode::DirtyFlag::TransformDirty)) {
         if (jointNode->skeletonRoot)
             markSkeletonDirty(jointNode->skeletonRoot);
-    } else {
-        jointNode->markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
     }
 
     if (m_indexDirty) {

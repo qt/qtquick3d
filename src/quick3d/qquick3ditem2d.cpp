@@ -184,7 +184,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
                 break;
             }
         }
-        itemNode->flags.setFlag(QSSGRenderNode::Flag::LocallyPickable, isPickable);
+        itemNode->setState(QSSGRenderNode::LocalState::Pickable, isPickable);
     }
 
     itemNode->m_renderer = m_renderer;

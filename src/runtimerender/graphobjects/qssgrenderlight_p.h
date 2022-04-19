@@ -50,6 +50,14 @@ struct QSSGRenderImage;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
 {
+    enum class DirtyFlag : quint8
+    {
+        LightDirty = 0x1
+    };
+    using FlagT = std::underlying_type_t<DirtyFlag>;
+
+    static constexpr DirtyFlag DirtyMask { std::numeric_limits<FlagT>::max() };
+
     QSSGRenderNode *m_scope;
     QVector3D m_diffuseColor; // colors are 0-1 normalized
     QVector3D m_specularColor; // colors are 0-1 normalized
@@ -65,6 +73,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     float m_coneAngle; // 0-180
     float m_innerConeAngle; // 0-180
 
+    FlagT m_lightDirtyFlags = 0;
     bool m_castShadow; // true if this light produce shadows
     float m_shadowBias; // depth shift to avoid self-shadowing artifacts
     float m_shadowFactor; // Darkening factor for ESMs
@@ -74,6 +83,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
 
     // Defaults to directional light
     explicit QSSGRenderLight(Type type = Type::DirectionalLight);
+
+    [[nodiscard]] inline bool isDirty(DirtyFlag dirtyFlag = DirtyMask) const
+    {
+        return ((m_lightDirtyFlags & FlagT(dirtyFlag)) != 0)
+                || ((dirtyFlag == DirtyMask) && QSSGRenderNode::isDirty());
+    }
+    void markDirty(DirtyFlag dirtyFlag);
+    void clearDirty(DirtyFlag dirtyFlag);
 };
 QT_END_NAMESPACE
 

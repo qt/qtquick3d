@@ -53,17 +53,40 @@ QSSGRenderNode::QSSGRenderNode(Type type)
 QSSGRenderNode::~QSSGRenderNode()
     = default;
 
-// Sets this object dirty and walks down the graph setting all
-// children who are not dirty to be dirty.
-void QSSGRenderNode::markDirty(TransformDirtyFlag inTransformDirty)
+void QSSGRenderNode::markDirty(DirtyFlag dirtyFlag)
 {
-    if (!flags.testFlag(Flag::TransformDirty))
-        flags.setFlag(Flag::TransformDirty, inTransformDirty != TransformDirtyFlag::TransformNotDirty);
-    if (!flags.testFlag(Flag::Dirty)) {
-        flags.setFlag(Flag::Dirty, true);
-        for (auto &cld : children)
-            cld.markDirty(inTransformDirty);
+    if ((flags & FlagT(dirtyFlag)) == 0) { // If not already marked
+        flags |= FlagT(dirtyFlag);
+        const bool markSubtreeDirty = ((FlagT(dirtyFlag) & FlagT(DirtyFlag::GlobalValuesDirty)) != 0);
+        if (markSubtreeDirty) {
+            for (auto &cld : children)
+                cld.markDirty(dirtyFlag);
+        }
     }
+}
+
+void QSSGRenderNode::clearDirty(DirtyFlag dirtyFlag)
+{
+    flags &= ~FlagT(dirtyFlag);
+}
+
+void QSSGRenderNode::setState(LocalState state, bool on)
+{
+    const bool changed = (getLocalState(state) != on);
+    if (changed) { // Mark state dirty
+        flags = on ? (flags | FlagT(state)) : (flags & ~FlagT(state));
+
+        // Mark state dirty
+        switch (state) {
+        case QSSGRenderNode::LocalState::Active:
+            markDirty(DirtyFlag::ActiveDirty);
+            break;
+        case QSSGRenderNode::LocalState::Pickable:
+            markDirty(DirtyFlag::PickableDirty);
+            break;
+        }
+    }
+
 }
 
 // Calculate global transform and opacity
@@ -72,9 +95,8 @@ void QSSGRenderNode::markDirty(TransformDirtyFlag inTransformDirty)
 
 bool QSSGRenderNode::calculateGlobalVariables()
 {
-    bool retval = flags.testFlag(Flag::Dirty);
+    bool retval = isDirty(DirtyFlag::GlobalValuesDirty);
     if (retval) {
-        flags.setFlag(Flag::Dirty, false);
         globalOpacity = localOpacity;
         if (parent) {
             // Layer transforms do not flow down but affect the final layer's rendered
@@ -82,10 +104,7 @@ bool QSSGRenderNode::calculateGlobalVariables()
             retval = parent->calculateGlobalVariables() || retval;
             if (parent->type != QSSGRenderGraphObject::Type::Layer) {
                 globalOpacity *= parent->globalOpacity;
-                if (!flags.testFlag(Flag::IgnoreParentTransform))
-                    globalTransform = parent->globalTransform * localTransform;
-                else
-                    globalTransform = localTransform;
+                globalTransform = parent->globalTransform * localTransform;
             } else {
                 globalTransform = localTransform;
             }
@@ -120,19 +139,25 @@ bool QSSGRenderNode::calculateGlobalVariables()
                 globalInstanceTransform.translate(localPos);
             }
 
-            flags.setFlag(Flag::GloballyActive, (flags.testFlag(Flag::Active) && parent->flags.testFlag(Flag::GloballyActive)));
-            flags.setFlag(Flag::GloballyPickable, (flags.testFlag(Flag::LocallyPickable) || parent->flags.testFlag(Flag::GloballyPickable)));
+            const bool globallyActive = getLocalState(LocalState::Active) && parent->getGlobalState(GlobalState::Active);
+            flags = globallyActive ? (flags | FlagT(GlobalState::Active)) : (flags & ~FlagT(GlobalState::Active));
+            const bool globallyPickable = getLocalState(LocalState::Pickable) && parent->getGlobalState(GlobalState::Pickable);
+            flags = globallyPickable ? (flags | FlagT(GlobalState::Pickable)) : (flags & ~FlagT(GlobalState::Pickable));
         } else {
             globalTransform = localTransform;
-            flags.setFlag(Flag::GloballyActive, flags.testFlag(Flag::Active));
-            flags.setFlag(Flag::GloballyPickable, flags.testFlag(Flag::LocallyPickable));
+            const bool globallyActive = getLocalState(LocalState::Active);
+            flags = globallyActive ? (flags | FlagT(GlobalState::Active)) : (flags & ~FlagT(GlobalState::Active));
+            const bool globallyPickable = getLocalState(LocalState::Pickable);
+            flags = globallyPickable ? (flags | FlagT(GlobalState::Pickable)) : (flags & ~FlagT(GlobalState::Pickable));
             localInstanceTransform = localTransform;
             globalInstanceTransform = {};
         }
+        // Clear dirty flags
+        clearDirty(DirtyFlag::GlobalValuesDirty);
     }
     // We always clear dirty in a reasonable manner but if we aren't active
     // there is no reason to tell the universe if we are dirty or not.
-    return retval && flags.testFlag(Flag::Active);
+    return retval && getLocalState(LocalState::Active);
 }
 
 QMatrix4x4 QSSGRenderNode::calculateTransformMatrix(QVector3D position, QVector3D scale, QVector3D pivot, QQuaternion rotation)
@@ -173,6 +198,7 @@ void QSSGRenderNode::addChild(QSSGRenderNode &inChild)
         inChild.parent = this;
     }
     children.push_back(inChild);
+    inChild.markDirty(DirtyFlag::GlobalValuesDirty);
 }
 
 void QSSGRenderNode::removeChild(QSSGRenderNode &inChild)
@@ -184,6 +210,7 @@ void QSSGRenderNode::removeChild(QSSGRenderNode &inChild)
 
     inChild.parent = nullptr;
     children.remove(inChild);
+    inChild.markDirty(DirtyFlag::GlobalValuesDirty);
 }
 
 void QSSGRenderNode::removeFromGraph()

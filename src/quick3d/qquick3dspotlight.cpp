@@ -259,7 +259,7 @@ QSSGRenderGraphObject *QQuick3DSpotLight::updateSpatialNode(QSSGRenderGraphObjec
         node = new QSSGRenderLight(QSSGRenderLight::Type::SpotLight);
     }
 
-    QQuick3DAbstractLight::updateSpatialNode(node);
+    QQuick3DAbstractLight::updateSpatialNode(node); // Marks the light node dirty if m_dirtyFlags != 0
 
     QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
 

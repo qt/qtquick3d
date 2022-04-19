@@ -87,11 +87,11 @@ void tst_QQuick3DModel::testProperties()
     model.setPickable(true);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
     QVERIFY(model.pickable());
-    QVERIFY(node->flags.testFlag(QSSGRenderModel::Flag::LocallyPickable));
+    QVERIFY(node->getLocalState(QSSGRenderModel::LocalState::Pickable));
     model.setPickable(false);
     node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
     QVERIFY(!model.receivesShadows());
-    QVERIFY(!node->flags.testFlag(QSSGRenderModel::Flag::LocallyPickable));
+    QVERIFY(!node->getLocalState(QSSGRenderModel::LocalState::Pickable));
 
     // mesh from source
     QUrl cubeUrl("#Cube");

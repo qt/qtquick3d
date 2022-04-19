@@ -174,7 +174,7 @@ QSSGRenderGraphObject *QQuick3DFrustumCamera::updateSpatialNode(QSSGRenderGraphO
                               | qUpdateIfNeeded(camera->right, m_right)
                               | qUpdateIfNeeded(camera->left, m_left)) != 0);
         if (changed)
-            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+            camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }
 
     return camera;

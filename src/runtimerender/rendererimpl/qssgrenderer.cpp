@@ -227,7 +227,7 @@ QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &la
                                                        const QSSGRenderRay &ray)
 {
     PickResultList pickResults;
-    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+    if (layer.getLocalState(QSSGRenderLayer::LocalState::Active)) {
         getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
         // Things are rendered in a particular order and we need to respect that ordering.
         std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
@@ -253,7 +253,7 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
     };
 
     PickResultList pickResults;
-    if (layer.flags.testFlag(QSSGRenderLayer::Flag::Active)) {
+    if (layer.getLocalState(QSSGRenderLayer::LocalState::Active)) {
         if (target) {
             // Pick against only one target
             intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
@@ -331,7 +331,7 @@ void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
 
     for (int idx = renderables.size() - 1; idx >= 0; --idx) {
         const auto &pickableObject = renderables.at(idx);
-        if (inPickEverything || pickableObject->flags.testFlag(QSSGRenderNode::Flag::LocallyPickable))
+        if (inPickEverything || pickableObject->getLocalState(QSSGRenderNode::LocalState::Pickable))
             intersectRayWithSubsetRenderable(bufferManager, ray, *pickableObject, outIntersectionResult);
     }
 }

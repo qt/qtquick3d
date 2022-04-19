@@ -608,7 +608,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     if (m_dirtyAttributes & SourceDirty)
         modelNode->meshPath = QSSGRenderPath(translateMeshSource(m_source, this));
     if (m_dirtyAttributes & PickingDirty)
-        modelNode->flags.setFlag(QSSGRenderModel::Flag::LocallyPickable, m_pickable);
+        modelNode->setState(QSSGRenderModel::LocalState::Pickable, m_pickable);
 
     if (m_dirtyAttributes & ShadowsDirty) {
         modelNode->castsShadows = m_castsShadows;

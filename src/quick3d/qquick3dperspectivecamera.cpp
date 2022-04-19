@@ -225,7 +225,7 @@ QSSGRenderGraphObject *QQuick3DPerspectiveCamera::updateSpatialNode(QSSGRenderGr
                                | qUpdateIfNeeded(camera->fov, qDegreesToRadians(m_fieldOfView))
                                | qUpdateIfNeeded(camera->fovHorizontal, m_fieldOfViewOrientation == QQuick3DPerspectiveCamera::FieldOfViewOrientation::Horizontal)) != 0);
         if (changed)
-            camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+            camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }
 
     return camera;

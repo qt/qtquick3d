@@ -537,8 +537,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     }
 
     // Generate layer node
-    if (!m_layer)
+    if (!m_layer) {
         m_layer = new QSSGRenderLayer();
+        m_layer->setState(QSSGRenderNode::LocalState::Active);
+    }
 
     // Update the layer node properties
     updateLayerNode(view3D, resourceLoaders);
@@ -955,8 +957,6 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
 
     layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(view3D.environment()->tonemapMode());
     layerNode.skyboxBlurAmount = view3D.environment()->skyboxBlurAmount();
-
-    layerNode.markDirty(QSSGRenderNode::TransformDirtyFlag::TransformNotDirty);
 }
 
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders)

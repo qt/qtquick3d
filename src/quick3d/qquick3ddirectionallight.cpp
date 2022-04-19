@@ -118,7 +118,7 @@ QSSGRenderGraphObject *QQuick3DDirectionalLight::updateSpatialNode(QSSGRenderGra
         node = new QSSGRenderLight(/* defaults to directional */);
     }
 
-    QQuick3DAbstractLight::updateSpatialNode(node);
+    QQuick3DAbstractLight::updateSpatialNode(node); // Marks the light node dirty if m_dirtyFlags != 0
 
     return node;
 }

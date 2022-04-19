@@ -59,7 +59,7 @@ QSSGRenderCamera::QSSGRenderCamera(QSSGRenderGraphObject::Type type)
     , enableFrustumClipping(true)
 {
     Q_ASSERT(QSSGRenderCamera::isCamera(type));
-    flags.setFlag(Flag::CameraDirty, true);
+    markDirty(DirtyFlag::CameraDirty);
 }
 
 // Code for testing
@@ -74,10 +74,10 @@ bool QSSGRenderCamera::calculateProjection(const QRectF &inViewport)
     bool retval = false;
 
     const bool argumentsChanged = inViewport != previousInViewport;
-    if (!argumentsChanged && !flags.testFlag(Flag::CameraDirty))
+    if (!argumentsChanged && !isDirty(DirtyFlag::CameraDirty))
         return true;
     previousInViewport = inViewport;
-    flags.setFlag(Flag::CameraDirty, false);
+    clearDirty(DirtyFlag::CameraDirty);
 
     switch (type) {
     case QSSGRenderGraphObject::Type::OrthographicCamera:
@@ -168,7 +168,7 @@ void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inU
 {
     QQuaternion rotation = rotationQuaternionForLookAt(inCameraPos, getScalingCorrectDirection(), inTargetPos, inUpDir.normalized());
     globalTransform = localTransform = QSSGRenderNode::calculateTransformMatrix(inCameraPos, QSSGRenderNode::initScale, pivot, rotation);
-    markDirty(TransformDirtyFlag::TransformIsDirty);
+    QSSGRenderNode::markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
 }
 
 void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const
@@ -231,6 +231,18 @@ float QSSGRenderCamera::verticalFov(float aspectRatio) const
 float QSSGRenderCamera::verticalFov(const QRectF &inViewport) const
 {
     return verticalFov(getAspectRatio(inViewport));
+}
+
+void QSSGRenderCamera::markDirty(DirtyFlag dirtyFlag)
+{
+    cameraDirtyFlags |= FlagT(dirtyFlag);
+    QSSGRenderNode::markDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
+}
+
+void QSSGRenderCamera::clearDirty(DirtyFlag dirtyFlag)
+{
+    cameraDirtyFlags &= ~FlagT(dirtyFlag);
+    QSSGRenderNode::clearDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
 }
 
 QT_END_NAMESPACE

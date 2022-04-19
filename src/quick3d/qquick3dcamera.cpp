@@ -372,7 +372,7 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
 
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(node);
     if (qUpdateIfNeeded(camera->enableFrustumClipping, m_frustumCullingEnabled))
-        camera->flags.setFlag(QSSGRenderNode::Flag::CameraDirty);
+        camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
 
     return node;
 }
