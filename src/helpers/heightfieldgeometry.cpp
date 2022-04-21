@@ -119,10 +119,11 @@ void HeightFieldGeometry::setExtents(const QVector3D &newExtents)
     emit extentsChanged();
 }
 
-struct Vertex
+struct HeightFieldVertex
 {
     QVector3D position;
     QVector3D normal;
+    QVector2D uv;
 };
 
 void HeightFieldGeometry::updateData()
@@ -158,7 +159,7 @@ void HeightFieldGeometry::updateData()
         }
     }
 
-    QVector<Vertex> vertices;
+    QVector<HeightFieldVertex> vertices;
     vertices.reserve(numVertices);
 
     const float rowF = m_extents.z() / (numRows - 1);
@@ -168,9 +169,10 @@ void HeightFieldGeometry::updateData()
     for (int x = 0; x < numCols; x++) {
         for (int y = 0; y < numRows; y++) {
             float f = heightMap.pixelColor(x, y).valueF() - 0.5;
-            Vertex vertex;
+            HeightFieldVertex vertex;
             vertex.position = QVector3D(x * colF + colOffs, f * m_extents.y(), y * rowF + rowOffs);
             vertex.normal = QVector3D(0, 0, 0);
+            vertex.uv = QVector2D(float(x) / (numCols - 1), 1.f - float(y) / (numRows - 1));
             vertices.push_back(vertex);
         }
     }
@@ -220,16 +222,15 @@ void HeightFieldGeometry::updateData()
     }
 
     addAttribute(QQuick3DGeometry::Attribute::PositionSemantic, 0, QQuick3DGeometry::Attribute::F32Type);
+    addAttribute(QQuick3DGeometry::Attribute::TexCoord0Semantic, sizeof(QVector3D) * 2, QQuick3DGeometry::Attribute::F32Type);
 
     if (m_smoothShading)
         addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, sizeof(QVector3D), QQuick3DGeometry::Attribute::F32Type);
 
-    setStride(sizeof(Vertex));
-
     addAttribute(QQuick3DGeometry::Attribute::IndexSemantic, 0, QQuick3DGeometry::Attribute::ComponentType::U32Type);
 
-    setStride(sizeof(Vertex));
-    QByteArray vertexBuffer(reinterpret_cast<char *>(vertices.data()), vertices.size() * sizeof(Vertex));
+    setStride(sizeof(HeightFieldVertex));
+    QByteArray vertexBuffer(reinterpret_cast<char *>(vertices.data()), vertices.size() * sizeof(HeightFieldVertex));
     setVertexData(vertexBuffer);
     setPrimitiveType(QQuick3DGeometry::PrimitiveType::Triangles);
     setBounds(boundsMin, boundsMax);
