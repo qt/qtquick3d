@@ -1293,8 +1293,8 @@ void QSSGLayerRenderPreparationData::prepareReflectionProbesForRender()
                     renderableObj->distanceFromReflectionProbe = distance;
                     renderableObj->reflectionProbe.parallaxCorrection = probe->parallaxCorrection;
                     renderableObj->reflectionProbe.probeBoxCenter = probeBoundCenter;
-                    renderableObj->reflectionProbe.probeBoxMax = probeExtent;
-                    renderableObj->reflectionProbe.probeBoxMin = probeExtent * -1;
+                    renderableObj->reflectionProbe.probeBoxMax = probeBound.maximum;
+                    renderableObj->reflectionProbe.probeBoxMin = probeBound.minimum;
                     renderableObj->reflectionProbe.enabled = true;
                     reflectionObjectCount++;
                 }
