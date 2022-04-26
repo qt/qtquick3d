@@ -330,6 +330,9 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
 
     QSSGRenderLight *light = static_cast<QSSGRenderLight *>(node);
 
+    if (m_dirtyFlags.toInt() != 0) // Some flag was set, so mark the light dirty!
+        light->markDirty(QSSGRenderLight::DirtyFlag::LightDirty);
+
     if (m_dirtyFlags.testFlag(DirtyFlag::ColorDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::ColorDirty, false);
         light->m_diffuseColor = color::sRGBToLinear(m_color).toVector3D();
@@ -351,9 +354,6 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
         light->m_shadowMapFar = m_shadowMapFar;
         light->m_shadowFilter = m_shadowFilter;
     }
-
-    if (m_dirtyFlags.toInt() != 0) // Some flag was set, so mark the light dirty!
-        light->markDirty(QSSGRenderLight::DirtyFlag::LightDirty);
 
     if (m_scope) {
         light->m_scope

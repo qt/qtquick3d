@@ -1512,6 +1512,7 @@ void QSSGLayerRenderData::prepareForRender()
                 QSSGRenderLight *theLight = *rIt;
                 wasDataDirty = wasDataDirty || theLight->isDirty();
                 bool lightResult = theLight->calculateGlobalVariables();
+                theLight->clearDirty(QSSGRenderLight::DirtyFlag::LightDirty);
                 wasDataDirty = lightResult || wasDataDirty;
 
                 QSSGShaderLight shaderLight;
