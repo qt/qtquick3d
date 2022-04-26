@@ -340,7 +340,7 @@ QVector3D QQuick3DNode::scenePosition() const
 }
 
 /*!
-    \qmlproperty vector3d QtQuick3D::Node::sceneRotation
+    \qmlproperty quaternion QtQuick3D::Node::sceneRotation
     \readonly
 
     This property returns the rotation of the node in scene space.
