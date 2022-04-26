@@ -47,6 +47,8 @@
 #include "qquick3dobject_p.h"
 #include "qquick3dnode_p.h"
 
+#include <QtQuick3DUtils/private/qssgutils_p.h>
+
 #include <QtGui/QVector3D>
 #include <QtGui/QQuaternion>
 #include <QtGui/QMatrix4x4>
@@ -80,8 +82,7 @@ public:
 
     static inline QQuick3DNodePrivate *get(QQuick3DNode *node) { return node->d_func(); }
 
-    QQuaternion m_rotation;
-    QVector3D m_eulerRotationAngles;
+    RotationData m_rotation;
     QVector3D m_position;
     QVector3D m_scale{ 1.0f, 1.0f, 1.0f };
     QVector3D m_pivot;
@@ -94,7 +95,6 @@ public:
     int m_directionConnectionCount = 0;
     bool m_isHiddenInEditor = false;
     bool m_hasInheritedUniformScale = true;
-    bool m_eulerRotationDirty = false;
 };
 
 
