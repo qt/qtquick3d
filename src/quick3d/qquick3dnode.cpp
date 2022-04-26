@@ -802,9 +802,6 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     else
         spacialNode->setState(QSSGRenderNode::LocalState::Active, d->m_visible);
 
-    if (spacialNode->isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty))
-        spacialNode->calculateGlobalVariables();
-
     return spacialNode;
 }
 
