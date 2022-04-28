@@ -80,9 +80,8 @@ Rectangle {
 
         Model {
             id: hfModel
-            position: Qt.vector3d(-5, 0, 0)
             geometry: HeightFieldGeometry {
-                heightFieldScale: Qt.vector3d(0.25, 2, 0.25)
+                extents: Qt.vector3d(10, 2, 5)
                 heightMap: "heightfield.png"
             }
             materials: PrincipledMaterial {
