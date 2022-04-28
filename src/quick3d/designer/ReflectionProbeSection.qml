@@ -106,6 +106,75 @@ Section {
         }
 
         PropertyLabel {
+            text: qsTr("Box Offset")
+            tooltip: qsTr("Sets the reflection probe box position relative to the probe position.")
+        }
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.boxOffset_x
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "box offset x"
+                color: StudioTheme.Values.theme3DAxisXColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.boxOffset_y
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "box offset y"
+                color: StudioTheme.Values.theme3DAxisYColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {}
+
+        SecondColumnLayout {
+            SpinBox {
+                minimumValue: 0
+                maximumValue: 9999999
+                decimals: 2
+                backendValue: backendValues.boxOffset_z
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+            ControlLabel {
+                text: "box offset z"
+                color: StudioTheme.Values.theme3DAxisZColor
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Parallax Correction")
             tooltip: qsTr("Reflection maps are considered to be at infinite distance by default. This is unsuitable for indoor area as it produces parallax issues.\nSetting this property to true, corrects the cubemap by taking the camera position and the box's dimension into account")
         }

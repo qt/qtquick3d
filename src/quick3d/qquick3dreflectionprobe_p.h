@@ -58,6 +58,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
     Q_PROPERTY(ReflectionTimeSlicing timeSlicing READ timeSlicing WRITE setTimeSlicing NOTIFY timeSlicingChanged)
     Q_PROPERTY(bool parallaxCorrection READ parallaxCorrection WRITE setParallaxCorrection NOTIFY parallaxCorrectionChanged)
     Q_PROPERTY(QVector3D boxSize READ boxSize WRITE setBoxSize NOTIFY boxSizeChanged)
+    Q_PROPERTY(QVector3D boxOffset READ boxOffset WRITE setBoxOffset NOTIFY boxOffsetChanged REVISION(6, 4))
     Q_PROPERTY(bool debugView READ debugView WRITE setDebugView NOTIFY debugViewChanged)
     QML_NAMED_ELEMENT(ReflectionProbe)
     QML_ADDED_IN_VERSION(6, 3)
@@ -95,6 +96,7 @@ public:
     bool parallaxCorrection() const;
     QVector3D boxSize() const;
     bool debugView() const;
+    Q_REVISION(6, 4) QVector3D boxOffset() const;
 
 public Q_SLOTS:
     void setQuality(ReflectionQuality reflectionQuality);
@@ -104,6 +106,7 @@ public Q_SLOTS:
     void setParallaxCorrection(bool parallaxCorrection);
     void setBoxSize(const QVector3D &newBoxSize);
     void setDebugView(bool debugView);
+    Q_REVISION(6, 4) void setBoxOffset(const QVector3D &boxOffset);
 
 Q_SIGNALS:
     void qualityChanged();
@@ -114,6 +117,7 @@ Q_SIGNALS:
 
     void boxSizeChanged();
     void debugViewChanged();
+    Q_REVISION(6, 4) void boxOffsetChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -150,6 +154,7 @@ private:
     QQuick3DGeometry *m_debugViewGeometry = nullptr;
     QQuick3DModel *m_debugViewModel = nullptr;
     QQuick3DDefaultMaterial *m_debugViewMaterial = nullptr;
+    QVector3D m_boxOffset;
 };
 
 QT_END_NAMESPACE

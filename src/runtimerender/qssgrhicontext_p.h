@@ -313,7 +313,7 @@ public:
         int shadowDepthAdjustIdx = -1;
         int pointSizeIdx = -1;
         int morphWeightsIdx = -1;
-        int reflectionProbeBoxCenter = -1;
+        int reflectionProbeCubeMapCenter = -1;
         int reflectionProbeBoxMax = -1;
         int reflectionProbeBoxMin = -1;
         int reflectionProbeCorrection = -1;

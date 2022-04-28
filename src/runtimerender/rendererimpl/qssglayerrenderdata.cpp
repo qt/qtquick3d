@@ -1273,7 +1273,7 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
 
         int reflectionObjectCount = 0;
         QVector3D probeExtent = probe->boxSize / 2;
-        QSSGBounds3 probeBound = QSSGBounds3::centerExtents(probe->getGlobalPos(), probeExtent);
+        QSSGBounds3 probeBound = QSSGBounds3::centerExtents(probe->getGlobalPos() + probe->boxOffset, probeExtent);
         for (QSSGRenderableObjectHandle handle : combinedList) {
             if (!handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections)
                     || handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::Particles))
@@ -1295,7 +1295,7 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
                     renderableObj->reflectionProbeIndex = i;
                     renderableObj->distanceFromReflectionProbe = distance;
                     renderableObj->reflectionProbe.parallaxCorrection = probe->parallaxCorrection;
-                    renderableObj->reflectionProbe.probeBoxCenter = probeBoundCenter;
+                    renderableObj->reflectionProbe.probeCubeMapCenter = probe->getGlobalPos();
                     renderableObj->reflectionProbe.probeBoxMax = probeBound.maximum;
                     renderableObj->reflectionProbe.probeBoxMin = probeBound.minimum;
                     renderableObj->reflectionProbe.enabled = true;

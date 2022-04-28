@@ -37,7 +37,7 @@
 /*{
     "uniforms": [
         { "type": "samplerCube", "name": "qt_reflectionMap" },
-        { "type": "vec3", "name": "qt_reflectionProbeBoxCenter" },
+        { "type": "vec3", "name": "qt_reflectionProbeCubeMapCenter" },
         { "type": "vec3", "name": "qt_reflectionProbeBoxMin" },
         { "type": "vec3", "name": "qt_reflectionProbeBoxMax" },
         { "type": "int", "name": "qt_reflectionProbeCorrection" }
@@ -58,7 +58,7 @@ vec3 qt_reflectionParallaxCorrection(vec3 reflectionVector)
         vec3 furthest = max(intersectionFirst, intersectionSecond);
         float distance = min(min(furthest.x, furthest.y), furthest.z);
         vec3 intersectionPosition = qt_varWorldPos + reflectionVector * distance;
-        reflectionVector = intersectionPosition - qt_reflectionProbeBoxCenter;
+        reflectionVector = intersectionPosition - qt_reflectionProbeCubeMapCenter;
     }
 
     return reflectionVector;

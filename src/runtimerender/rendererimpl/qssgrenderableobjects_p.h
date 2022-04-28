@@ -209,7 +209,7 @@ struct QSSGShaderLight
 
 struct QSSGShaderReflectionProbe
 {
-    QVector3D probeBoxCenter;
+    QVector3D probeCubeMapCenter;
     QVector3D probeBoxMax;
     QVector3D probeBoxMin;
     bool enabled = false;

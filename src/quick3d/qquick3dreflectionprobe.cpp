@@ -161,6 +161,24 @@ bool QQuick3DReflectionProbe::debugView() const
     return m_debugView;
 }
 
+/*!
+    \qmlproperty vector3d ReflectionProbe::boxOffset
+
+    Box offset is used to move the box relative to the reflection probe position. Since the probe
+    captures the environment from its position, this property can be used to move the box around
+    without affecting the position where the probe capture the environment. This property
+    alongside with \l ReflectionProbe::boxSize will be used to determine the object that fall
+    inside the box.
+    With \l ReflectionProbe::parallaxCorrection turned on, this property can be used to position
+    the box to get more accurate reflections.
+
+    \sa parallaxCorrection
+*/
+QVector3D QQuick3DReflectionProbe::boxOffset() const
+{
+    return m_boxOffset;
+}
+
 void QQuick3DReflectionProbe::setQuality(QQuick3DReflectionProbe::ReflectionQuality reflectionQuality)
 {
     if (m_quality == reflectionQuality)
@@ -232,6 +250,17 @@ void QQuick3DReflectionProbe::setDebugView(bool debugView)
     updateDebugView();
 }
 
+void QQuick3DReflectionProbe::setBoxOffset(const QVector3D &boxOffset)
+{
+    if (m_boxOffset == boxOffset)
+        return;
+    m_boxOffset = boxOffset;
+    m_dirtyFlags.setFlag(DirtyFlag::BoxDirty);
+    emit boxOffsetChanged();
+    updateDebugView();
+    update();
+}
+
 QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
@@ -288,6 +317,7 @@ QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGrap
     if (m_dirtyFlags.testFlag(DirtyFlag::BoxDirty)) {
         m_dirtyFlags.setFlag(DirtyFlag::BoxDirty, false);
         probe->boxSize = m_boxSize;
+        probe->boxOffset = m_boxOffset;
     }
 
     return node;
@@ -376,6 +406,8 @@ void QQuick3DReflectionProbe::updateDebugView()
             m_debugViewModel->setCastsShadows(false);
             m_debugViewModel->setGeometry(m_debugViewGeometry);
         }
+
+        m_debugViewModel->setPosition(m_boxOffset);
 
         if (!m_debugViewMaterial) {
             m_debugViewMaterial = new QQuick3DDefaultMaterial();

@@ -76,6 +76,12 @@ void tst_QQuick3DReflectionProbe::testProperties()
     QCOMPARE(size, probe.boxSize());
     QCOMPARE(size, node->boxSize);
 
+    QVector3D offset(10, 30, 50);
+    probe.setBoxOffset(offset);
+    node = static_cast<QSSGRenderReflectionProbe*>(probe.updateSpatialNode(node));
+    QCOMPARE(offset, probe.boxOffset());
+    QCOMPARE(offset, node->boxOffset);
+
     QColor clearColor(Qt::black);
     probe.setClearColor(clearColor);
     node = static_cast<QSSGRenderReflectionProbe*>(probe.updateSpatialNode(node));

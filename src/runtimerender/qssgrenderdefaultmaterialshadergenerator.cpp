@@ -1886,7 +1886,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     }
 
     if (receivesReflections && reflectionProbe.enabled) {
-        shaders->setUniform(ubufData, "qt_reflectionProbeBoxCenter", &reflectionProbe.probeBoxCenter, 3 * sizeof(float), &cui.reflectionProbeBoxCenter);
+        shaders->setUniform(ubufData, "qt_reflectionProbeCubeMapCenter", &reflectionProbe.probeCubeMapCenter, 3 * sizeof(float), &cui.reflectionProbeCubeMapCenter);
         shaders->setUniform(ubufData, "qt_reflectionProbeBoxMin", &reflectionProbe.probeBoxMin, 3 * sizeof(float), &cui.reflectionProbeBoxMin);
         shaders->setUniform(ubufData, "qt_reflectionProbeBoxMax", &reflectionProbe.probeBoxMax, 3 * sizeof(float), &cui.reflectionProbeBoxMax);
         shaders->setUniform(ubufData, "qt_reflectionProbeCorrection", &reflectionProbe.parallaxCorrection, sizeof(int), &cui.reflectionProbeCorrection);
