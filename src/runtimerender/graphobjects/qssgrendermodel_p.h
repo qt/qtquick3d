@@ -42,7 +42,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QSSGRenderSkeleton *skeleton = nullptr;
     QSSGRenderSkin *skin = nullptr;
     QVector<QMatrix4x4> inverseBindPoses;
-    float m_depthBias = 0.0f;
+    float m_depthBiasSq = 0.0f; // Depth bias is expected to be squared!
     bool castsShadows = true;
     bool receivesShadows = true;
     bool skinningDirty = false;

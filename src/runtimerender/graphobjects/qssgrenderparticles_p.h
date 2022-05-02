@@ -145,7 +145,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     QSSGRenderParticles::BlendMode m_blendMode = BlendMode::SourceOver;
     QSSGRenderImage *m_sprite = nullptr;
     int m_spriteImageCount = 1;
-    float m_depthBias = 0.0f;
+    float m_depthBiasSq = 0.0f; // Squared as our sorting is based on the squared distance!
     float m_sizeModifier = 0.0f;
     float m_alphaFade = 0.0f;
     float m_texcoordScale = 1.0f;

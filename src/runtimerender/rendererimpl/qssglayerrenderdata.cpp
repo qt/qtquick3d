@@ -157,12 +157,6 @@ QVector3D QSSGLayerRenderData::getCameraDirection()
     return *cameraDirection;
 }
 
-static inline float signedSquare(float val)
-{
-    const float sign = (val >= 0.0f) ? 1.0f : -1.0f;
-    return sign * val * val;
-}
-
 static inline void generateRenderableSortingKey(QSSGLayerRenderData::TRenderableObjectList &renderables,
                                                 const QVector3D &cameraPosition,
                                                 const QVector3D &cameraDirection)
@@ -170,7 +164,7 @@ static inline void generateRenderableSortingKey(QSSGLayerRenderData::TRenderable
     for (int idx = 0, end = renderables.size(); idx < end; ++idx) {
         QSSGRenderableObjectHandle &info = renderables[idx];
         const QVector3D difference = info.obj->worldCenterPoint - cameraPosition;
-        info.cameraDistanceSq = QVector3D::dotProduct(difference, cameraDirection) + signedSquare(info.obj->depthBias);
+        info.cameraDistanceSq = QVector3D::dotProduct(difference, cameraDirection) + info.obj->depthBiasSq;
     }
 }
 

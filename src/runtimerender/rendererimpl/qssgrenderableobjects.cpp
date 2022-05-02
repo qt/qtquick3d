@@ -29,7 +29,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                            inSubset.bounds,
                            inModelContext.model.particleBuffer != nullptr ? inModelContext.model.particleBuffer->bounds()
                                                                           : QSSGBounds3(),
-                           inModelContext.model.m_depthBias)
+                           inModelContext.model.m_depthBiasSq)
     , generator(gen)
     , modelContext(inModelContext)
     , subset(inSubset)
@@ -61,7 +61,7 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                            inParticles.globalTransform,
                            QSSGBounds3(),
                            inParticles.m_particleBuffer.bounds(),
-                           inParticles.m_depthBias)
+                           inParticles.m_depthBiasSq)
     , generator(gen)
     , particles(inParticles)
     , firstImage(inFirstImage)

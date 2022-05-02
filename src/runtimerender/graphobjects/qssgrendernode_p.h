@@ -143,6 +143,15 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
 
     // This should be in a utility file somewhere
     QMatrix3x3 calculateNormalMatrix() const;
+
+    // The Squared value of \a val
+    // This is mainly used for setting the sorting bias on models and particles
+    // since we're using the squared distance when sorting.
+    [[nodiscard]] static inline float signedSquared(float val)
+    {
+        const float sign = (val >= 0.0f) ? 1.0f : -1.0f;
+        return sign * val * val;
+    }
 };
 
 QT_END_NAMESPACE

@@ -237,7 +237,7 @@ struct QSSGRenderableObject
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
-    float depthBias;
+    float depthBiasSq; // Squared as our sorting is based on the square distance!
     QSSGDepthDrawMode depthWriteMode = QSSGDepthDrawMode::OpaqueOnly;
 
     QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
@@ -252,7 +252,7 @@ struct QSSGRenderableObject
         , particleBounds(inParticleBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
-        , depthBias(inDepthBias)
+        , depthBiasSq(inDepthBias)
     {
     }
 };
