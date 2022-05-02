@@ -77,6 +77,7 @@ QQuick3DJoint::QQuick3DJoint(QQuick3DNode *parent)
 
 QQuick3DJoint::~QQuick3DJoint()
 {
+    disconnect(m_skeletonConnection);
 }
 
 /*!
@@ -126,9 +127,11 @@ void QQuick3DJoint::setSkeletonRoot(QQuick3DSkeleton *skeleton)
     if (skeleton == m_skeletonRoot)
         return;
 
+    disconnect(m_skeletonConnection);
     m_skeletonRootDirty = true;
     m_skeletonRoot = skeleton;
-
+    m_skeletonConnection = connect(this, &QQuick3DJoint::sceneTransformChanged,
+                                   m_skeletonRoot, &QQuick3DSkeleton::skeletonNodeDirty);
     emit skeletonRootChanged();
 }
 
@@ -138,14 +141,6 @@ void QQuick3DJoint::markAllDirty()
     m_indexDirty = true;
     m_skeletonRootDirty = true;
     QQuick3DNode::markAllDirty();
-}
-
-void QQuick3DJoint::markSkeletonDirty(QSSGRenderSkeleton *skeletonNode)
-{
-    if (!skeletonNode->boneTransformsDirty) {
-        skeletonNode->boneTransformsDirty = true;
-        m_skeletonRoot->skeletonNodeDirty();
-    }
 }
 
 QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *node)
@@ -167,11 +162,6 @@ QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *n
     if (m_skeletonRootDirty) {
         if (skeletonPriv && skeletonPriv->spatialNode)
             jointNode->skeletonRoot = static_cast<QSSGRenderSkeleton *>(skeletonPriv->spatialNode);
-        m_skeletonRootDirty = false;
-    }
-    if (jointNode->isDirty(QSSGRenderNode::DirtyFlag::TransformDirty)) {
-        if (jointNode->skeletonRoot)
-            markSkeletonDirty(jointNode->skeletonRoot);
     }
 
     if (m_indexDirty) {
@@ -179,7 +169,9 @@ QSSGRenderGraphObject *QQuick3DJoint::updateSpatialNode(QSSGRenderGraphObject *n
         m_indexDirty = false;
 
         if (jointNode->skeletonRoot) {
-            markSkeletonDirty(jointNode->skeletonRoot);
+            Q_ASSERT(m_skeletonRoot);
+            m_skeletonRoot->skeletonNodeDirty();
+
             if (jointNode->skeletonRoot->maxIndex < m_index) {
                 jointNode->skeletonRoot->maxIndex = m_index;
             }

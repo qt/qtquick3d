@@ -78,13 +78,13 @@ protected:
 private Q_SLOTS:
 
 private:
-    void markSkeletonDirty(QSSGRenderSkeleton *skeletonNode);
-
     bool m_indexDirty = true;
     bool m_skeletonRootDirty = true;
     int m_index = 0;
 
     QQuick3DSkeleton *m_skeletonRoot = nullptr;
+
+    QMetaObject::Connection m_skeletonConnection;
 };
 
 QT_END_NAMESPACE
