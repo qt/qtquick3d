@@ -921,6 +921,8 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
 
     layerNode.temporalAAStrength = view3D.environment()->temporalAAStrength();
 
+    layerNode.specularAAEnabled = view3D.environment()->specularAAEnabled();
+
     layerNode.background = QSSGRenderLayer::Background(view3D.environment()->backgroundMode());
     layerNode.clearColor = QVector3D(float(view3D.environment()->clearColor().redF()),
                                       float(view3D.environment()->clearColor().greenF()),

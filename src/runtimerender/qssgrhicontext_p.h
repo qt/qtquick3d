@@ -317,6 +317,7 @@ public:
         int reflectionProbeBoxMax = -1;
         int reflectionProbeBoxMin = -1;
         int reflectionProbeCorrection = -1;
+        int specularAAIdx = -1;
 
         struct ImageIndices
         {

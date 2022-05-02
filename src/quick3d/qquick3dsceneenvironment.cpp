@@ -428,6 +428,17 @@ float QQuick3DSceneEnvironment::temporalAAStrength() const
 }
 
 /*!
+    \qmlproperty bool QtQuick3D::SceneEnvironment::specularAAEnabled
+    \since 6.4
+
+    When this property is enabled specular aliasing will be mitigated.
+*/
+bool QQuick3DSceneEnvironment::specularAAEnabled() const
+{
+    return m_specularAAEnabled;
+}
+
+/*!
     \qmlproperty bool QtQuick3D::SceneEnvironment::depthTestEnabled
 
     The default value is \c true. By default the renderer classifies the objects
@@ -780,6 +791,16 @@ void QQuick3DSceneEnvironment::setTemporalAAStrength(float strength)
 
     m_temporalAAStrength = strength;
     emit temporalAAStrengthChanged();
+    update();
+}
+
+void QQuick3DSceneEnvironment::setSpecularAAEnabled(bool enabled)
+{
+    if (m_specularAAEnabled == enabled)
+        return;
+
+    m_specularAAEnabled = enabled;
+    emit specularAAEnabledChanged();
     update();
 }
 

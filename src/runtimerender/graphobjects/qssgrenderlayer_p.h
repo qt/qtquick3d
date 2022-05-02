@@ -175,6 +175,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float temporalAAStrength;
     bool ssaaEnabled;
     float ssaaMultiplier;
+    bool specularAAEnabled;
 
     //TODO: move render state somewhere more suitable
     bool temporalAAIsActive;

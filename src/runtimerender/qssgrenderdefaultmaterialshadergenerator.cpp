@@ -510,6 +510,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
 
     bool hasIblProbe = keyProps.m_hasIbl.getValue(inKey);
     bool specularLightingEnabled = metalnessEnabled || materialAdapter->isSpecularEnabled() || hasIblProbe; // always true for Custom, depends for others
+    bool specularAAEnabled = keyProps.m_specularAAEnabled.getValue(inKey);
     quint32 numMorphTargets = keyProps.m_morphTargetCount.getValue(inKey);
     // Pull the bump out as
     QSSGRenderableImage *bumpImage = nullptr;
@@ -1106,6 +1107,14 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                 fragmentShader.addInclude("principledMaterialFresnel.glsllib");
                 addLocalVariable(fragmentShader, "qt_f0", "vec3");
                 fragmentShader << "    qt_f0 = qt_F0_ior(qt_material_specular.w, qt_metalnessAmount, qt_diffuseColor.rgb);\n";
+
+                if (specularAAEnabled) {
+                    fragmentShader.append("    vec3 vNormalWsDdx = dFdx(qt_world_normal.xyz);\n");
+                    fragmentShader.append("    vec3 vNormalWsDdy = dFdy(qt_world_normal.xyz);\n");
+                    fragmentShader.append("    float flGeometricRoughnessFactor = pow(clamp(max(dot(vNormalWsDdx, vNormalWsDdx), dot(vNormalWsDdy, vNormalWsDdy)), 0.0, 1.0), 0.333);\n");
+                    fragmentShader.append("    qt_roughnessAmount = max(flGeometricRoughnessFactor, qt_roughnessAmount);\n");
+                }
+
                 if (hasCustomFrag)
                     fragmentShader << "    float qt_fresnelPower = qt_customFresnelPower;\n";
                 else

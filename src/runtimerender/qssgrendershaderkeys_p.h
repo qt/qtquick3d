@@ -594,6 +594,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
     QSSGShaderKeyBoolean m_blendParticles;
     QSSGShaderKeyBoolean m_clearcoatEnabled;
     QSSGShaderKeyBoolean m_transmissionEnabled;
+    QSSGShaderKeyBoolean m_specularAAEnabled;
 
     QSSGShaderDefaultMaterialKeyProperties()
         : m_hasLighting("hasLighting")
@@ -618,6 +619,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         , m_blendParticles("blendParticles")
         , m_clearcoatEnabled("clearcoatEnabled")
         , m_transmissionEnabled("transmissionEnabled")
+        , m_specularAAEnabled("specularAAEnabled")
     {
         m_lightFlags[0].name = "light0HasPosition";
         m_lightFlags[1].name = "light1HasPosition";
@@ -772,6 +774,7 @@ struct QSSGShaderDefaultMaterialKeyProperties
         inVisitor.visit(m_blendParticles);
         inVisitor.visit(m_clearcoatEnabled);
         inVisitor.visit(m_transmissionEnabled);
+        inVisitor.visit(m_specularAAEnabled);
     }
 
     struct OffsetVisitor

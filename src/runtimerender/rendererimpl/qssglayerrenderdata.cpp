@@ -578,6 +578,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
     QSSGRenderableImage *firstImage = nullptr;
 
+    renderer->defaultMaterialShaderKeyProperties().m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
+
     // isDoubleSided
     renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey, theMaterial->cullMode == QSSGCullFaceMode::Disabled);
 
@@ -764,6 +766,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
         subsetOpacity = 1.f;
     else
         renderableFlags |= QSSGRenderableObjectFlag::HasTransparency;
+
+    renderer->defaultMaterialShaderKeyProperties().m_specularAAEnabled.setValue(theGeneratedKey, layer.specularAAEnabled);
 
     // isDoubleSided
     renderer->defaultMaterialShaderKeyProperties().m_isDoubleSided.setValue(theGeneratedKey,

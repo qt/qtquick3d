@@ -85,6 +85,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(QQmlListProperty<QQuick3DEffect> effects READ effects)
 
     Q_PROPERTY(float skyboxBlurAmount READ skyboxBlurAmount WRITE setSkyboxBlurAmount NOTIFY skyboxBlurAmountChanged REVISION(6, 4))
+    Q_PROPERTY(bool specularAAEnabled READ specularAAEnabled WRITE setSpecularAAEnabled NOTIFY specularAAEnabledChanged REVISION(6, 4))
 
     QML_NAMED_ELEMENT(SceneEnvironment)
 
@@ -153,6 +154,7 @@ public:
     QQmlListProperty<QQuick3DEffect> effects();
 
     Q_REVISION(6, 4) float skyboxBlurAmount() const;
+    Q_REVISION(6, 4) bool specularAAEnabled() const;
 
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode);
@@ -181,6 +183,7 @@ public Q_SLOTS:
     void setTonemapMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes tonemapMode);
 
     Q_REVISION(6, 4) void setSkyboxBlurAmount(float newSkyboxBlurAmount);
+    Q_REVISION(6, 4) void setSpecularAAEnabled(bool enabled);
 
 Q_SIGNALS:
     void antialiasingModeChanged();
@@ -209,6 +212,7 @@ Q_SIGNALS:
     void tonemapModeChanged();
 
     Q_REVISION(6, 4) void skyboxBlurAmountChanged();
+    Q_REVISION(6, 4) void specularAAEnabledChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -230,6 +234,7 @@ private:
     QQuick3DEnvironmentAAQualityValues m_antialiasingQuality = High;
     bool m_temporalAAEnabled = false;
     float m_temporalAAStrength = 0.3f;
+    bool m_specularAAEnabled = false;
 
     QQuick3DEnvironmentBackgroundTypes m_backgroundMode = Transparent;
     QColor m_clearColor = Qt::black;
