@@ -113,51 +113,12 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     int &ioLightCount,
                                     QVector<QSSGRenderReflectionProbe *> &outReflectionProbes,
                                     int &ioReflectionProbeCount,
-                                    quint32 &ioDFSIndex,
-                                    QVector<QSSGRenderSkeleton*> &dirtySkeletons)
+                                    quint32 &ioDFSIndex)
 {
     ++ioDFSIndex;
     inNode.dfsIndex = ioDFSIndex;
     if (QSSGRenderGraphObject::isRenderable(inNode.type)) {
         collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
-        if (inNode.type == QSSGRenderGraphObject::Type::Model) {
-            auto modelNode = static_cast<QSSGRenderModel *>(&inNode);
-            auto skeletonNode = modelNode->skeleton;
-            bool hcj = false;
-            if (modelNode->skin) {
-                modelNode->boneData = modelNode->skin->boneData;
-                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
-            } else if (skeletonNode) {
-                const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
-                const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
-                                                && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
-                const bool dirtyTransform = skeletonNode->isDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
-                if (modelNode->skinningDirty || hasDirtyNonJoints || dirtyTransform) {
-                    skeletonNode->boneTransformsDirty = false;
-                    if (hasDirtyNonJoints && !dirtySkeleton)
-                        dirtySkeletons.append(skeletonNode);
-                    modelNode->skinningDirty = false;
-                    const quint32 dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
-                    if (modelNode->boneData.size() < dataSize)
-                        modelNode->boneData.resize(dataSize);
-                    skeletonNode->calculateGlobalVariables();
-                    modelNode->skeletonContainsNonJointNodes = false;
-                    for (auto &child : skeletonNode->children)
-                        collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
-                }
-                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
-            }
-            const int numMorphTarget = modelNode->morphTargets.size();
-            for (int i = 0; i < numMorphTarget; ++i) {
-                auto morphTarget = static_cast<const QSSGRenderMorphTarget *>(modelNode->morphTargets.at(i));
-                modelNode->morphWeights[i] = morphTarget->weight;
-                modelNode->morphAttributes[i] = morphTarget->attributes;
-                if (i > MAX_MORPH_TARGET_INDEX_SUPPORTS_NORMALS)
-                    modelNode->morphAttributes[i] &= 0x1; // MorphTarget.Position
-                else if (i > MAX_MORPH_TARGET_INDEX_SUPPORTS_TANGENTS)
-                    modelNode->morphAttributes[i] &= 0x3; // MorphTarget.Position | MorphTarget.Normal
-            }
-        }
     } else if (QSSGRenderGraphObject::isCamera(inNode.type)) {
         collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
     } else if (QSSGRenderGraphObject::isLight(inNode.type)) {
@@ -176,8 +137,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                 ioLightCount,
                                 outReflectionProbes,
                                 ioReflectionProbeCount,
-                                ioDFSIndex,
-                                dirtySkeletons);
+                                ioDFSIndex);
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
@@ -1356,6 +1316,55 @@ static inline int effectiveMaxLightCount(const QSSGShaderFeatures &features)
     return QSSG_MAX_NUM_LIGHTS;
 }
 
+void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNodes)
+{
+    // First model using skeleton clears the dirty flag so we need another mechanism
+    // to tell to the other models the skeleton is dirty.
+    QSet<QSSGRenderSkeleton *> dirtySkeletons;
+    for (const auto &node : qAsConst(renderableNodes)) {
+        if (node.node->type == QSSGRenderGraphObject::Type::Model) {
+            auto modelNode = static_cast<QSSGRenderModel *>(node.node);
+            auto skeletonNode = modelNode->skeleton;
+            bool hcj = false;
+            if (modelNode->skin) {
+                modelNode->boneData = modelNode->skin->boneData;
+                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
+            } else if (skeletonNode) {
+                const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
+                const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
+                                                && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
+                const bool dirtyTransform = skeletonNode->isDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
+                if (modelNode->skinningDirty || hasDirtyNonJoints || dirtyTransform) {
+                    skeletonNode->boneTransformsDirty = false;
+                    if (hasDirtyNonJoints && !dirtySkeleton)
+                        dirtySkeletons.insert(skeletonNode);
+                    modelNode->skinningDirty = false;
+                    const quint32 dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
+                    if (modelNode->boneData.size() < dataSize)
+                        modelNode->boneData.resize(dataSize);
+                    skeletonNode->calculateGlobalVariables();
+                    modelNode->skeletonContainsNonJointNodes = false;
+                    for (auto &child : skeletonNode->children)
+                        collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
+                }
+                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
+            }
+            const int numMorphTarget = modelNode->morphTargets.size();
+            for (int i = 0; i < numMorphTarget; ++i) {
+                auto morphTarget = static_cast<const QSSGRenderMorphTarget *>(modelNode->morphTargets.at(i));
+                modelNode->morphWeights[i] = morphTarget->weight;
+                modelNode->morphAttributes[i] = morphTarget->attributes;
+                if (i > MAX_MORPH_TARGET_INDEX_SUPPORTS_NORMALS)
+                    modelNode->morphAttributes[i] &= 0x1; // MorphTarget.Position
+                else if (i > MAX_MORPH_TARGET_INDEX_SUPPORTS_TANGENTS)
+                    modelNode->morphAttributes[i] &= 0x3; // MorphTarget.Position | MorphTarget.Normal
+            }
+        }
+    }
+
+    dirtySkeletons.clear();
+}
+
 void QSSGLayerRenderData::prepareForRender()
 {
     if (layerPrepResult.hasValue())
@@ -1459,9 +1468,6 @@ void QSSGLayerRenderData::prepareForRender()
             int lightNodeCount = 0;
             int reflectionProbeCount = 0;
             quint32 dfsIndex = 0;
-            // First model using skeleton clears the dirty flag so we need another mechanism
-            // to tell to the other models the skeleton is dirty.
-            QVector<QSSGRenderSkeleton*> dirtySkeletons;
             for (auto &theChild : layer.children)
                 maybeQueueNodeForRender(theChild,
                                         renderableNodes,
@@ -1472,9 +1478,9 @@ void QSSGLayerRenderData::prepareForRender()
                                         lightNodeCount,
                                         reflectionProbes,
                                         reflectionProbeCount,
-                                        dfsIndex,
-                                        dirtySkeletons);
-            dirtySkeletons.clear();
+                                        dfsIndex);
+
+            updateDirtySkeletons(renderableNodes);
 
             if (renderableNodes.size() != renderableNodeCount)
                 renderableNodes.resize(renderableNodeCount);
