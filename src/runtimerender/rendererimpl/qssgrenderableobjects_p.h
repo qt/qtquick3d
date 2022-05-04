@@ -301,12 +301,9 @@ struct QSSGModelContext
         // an identity matrix will be used for the normalMatrix
         if (model.boneCount == 0) {
             model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
-        } else if (model.skin) {
+        } else {
             modelViewProjection = inViewProjection;
             normalMatrix = QMatrix3x3();
-        } else {
-            Q_ASSERT(model.skeleton);
-            model.skeleton->calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
         }
     }
 };
