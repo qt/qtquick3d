@@ -152,8 +152,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
     const auto &modelNode = renderable.modelContext.model;
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix((modelNode.boneCount == 0) ? renderable.globalTransform
-                                : modelNode.skin ? QMatrix4x4() : modelNode.skeleton->globalTransform);
+    const QMatrix4x4 &modelMatrix((modelNode.boneCount == 0) ? renderable.globalTransform : QMatrix4x4());
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*context,
                                                           shaderPipeline,

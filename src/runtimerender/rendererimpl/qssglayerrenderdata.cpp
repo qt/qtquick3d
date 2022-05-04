@@ -68,7 +68,7 @@ Q_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
 #define POS4BONENORM(x)     (sizeof(float) * 16 * ((x) * 2 + 1))
 #define BONEDATASIZE4ID(x)  POS4BONETRANS(x + 1)
 
-static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QMatrix4x4 &inverseRootM, const QVector<QMatrix4x4> &poses)
+static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
         QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
@@ -77,7 +77,6 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
         // if user doesn't give the inverseBindPose, identity matrices are used.
         if (poses.size() > jointNode->index)
             M *= poses[jointNode->index];
-        M = inverseRootM * M;
         modelNode->boneData.replace(POS4BONETRANS(jointNode->index),
                                     sizeof(float) * 16,
                                     reinterpret_cast<const char *>(M.constData()),
@@ -91,7 +90,7 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
         modelNode->skeletonContainsNonJointNodes = true;
     }
     for (auto &child : node->children)
-        collectBoneTransforms(&child, modelNode, inverseRootM, poses);
+        collectBoneTransforms(&child, modelNode, poses);
 }
 
 static bool hasDirtyNonJointNodes(QSSGRenderNode *node, bool &hasChildJoints)
@@ -170,10 +169,9 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                     if (modelNode->boneData.size() < dataSize)
                         modelNode->boneData.resize(dataSize);
                     skeletonNode->calculateGlobalVariables();
-                    const QMatrix4x4 inverseRootM = skeletonNode->globalTransform.inverted();
                     modelNode->skeletonContainsNonJointNodes = false;
                     for (auto &child : skeletonNode->children)
-                        collectBoneTransforms(&child, modelNode, inverseRootM, modelNode->inverseBindPoses);
+                        collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
                 }
                 modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
             }
@@ -1814,8 +1812,7 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
     const auto &modelNode = subsetRenderable.modelContext.model;
     const QMatrix4x4 &localInstanceTransform(modelNode.localInstanceTransform);
     const QMatrix4x4 &globalInstanceTransform(modelNode.globalInstanceTransform);
-    const QMatrix4x4 &modelMatrix((modelNode.boneCount == 0) ? subsetRenderable.globalTransform
-                                    : modelNode.skin ? QMatrix4x4() : modelNode.skeleton->globalTransform);
+    const QMatrix4x4 &modelMatrix((modelNode.boneCount == 0) ? subsetRenderable.globalTransform : QMatrix4x4());
 
     QSSGMaterialShaderGenerator::setRhiMaterialProperties(*generator->contextInterface(),
                                                           shaderPipeline,
