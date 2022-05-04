@@ -269,6 +269,11 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
     return QSSGPickResultProcessResult();
 }
 
+bool QSSGRenderer::isGlobalPickingEnabled() const
+{
+    return m_globalPickingEnabled;
+}
+
 void QSSGRenderer::setGlobalPickingEnabled(bool isEnabled)
 {
     m_globalPickingEnabled = isEnabled;

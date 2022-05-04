@@ -109,6 +109,7 @@ public:
 
     // Setting this true enables picking for all the models, regardless of
     // the models pickable property.
+    bool isGlobalPickingEnabled() const;
     void setGlobalPickingEnabled(bool isEnabled);
 
     QSSGRhiQuadRenderer *rhiQuadRenderer();

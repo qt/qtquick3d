@@ -858,7 +858,8 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
     // transparent materials still are.  This allows the artist to control pickability
     // in a somewhat fine-grained style.
     const bool canModelBePickable = (inModel.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
-                                    && (theModelContext.model.getGlobalState(QSSGRenderModel::GlobalState::Pickable));
+                                    && (renderer->isGlobalPickingEnabled()
+                                        || theModelContext.model.getGlobalState(QSSGRenderModel::GlobalState::Pickable));
     if (canModelBePickable) {
         // Check if there is BVH data, if not generate it
         if (!theMesh->bvh) {
