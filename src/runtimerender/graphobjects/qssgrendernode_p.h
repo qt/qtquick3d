@@ -105,7 +105,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     QMatrix4x4 localInstanceTransform;
     QMatrix4x4 globalInstanceTransform;
     float globalOpacity = 1.0f;
-    qint32 skeletonId = -1;
 
     // node graph members.
     QSSGRenderNode *parent = nullptr;
