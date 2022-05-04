@@ -307,6 +307,11 @@ inline bool pickResultLessThan(const QSSGRenderPickResult &lhs, const QSSGRender
     return lhs.m_distanceSq < rhs.m_distanceSq;
 }
 
+bool QSSGRenderer::isGlobalPickingEnabled() const
+{
+    return m_globalPickingEnabled;
+}
+
 void QSSGRenderer::setGlobalPickingEnabled(bool isEnabled)
 {
     m_globalPickingEnabled = isEnabled;
