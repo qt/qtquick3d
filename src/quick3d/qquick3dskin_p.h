@@ -88,8 +88,6 @@ private:
     QByteArray m_boneData;
     QList<QMatrix4x4> m_inverseBindPoses;
     bool m_dirty = false;
-
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
 };
 
 QT_END_NAMESPACE
