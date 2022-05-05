@@ -220,9 +220,13 @@ struct QSSGRenderableObject;
 // Used for sorting
 struct QSSGRenderableObjectHandle
 {
-    QSSGRenderableObject *obj;
-    float cameraDistanceSq;
-    static inline QSSGRenderableObjectHandle create(QSSGRenderableObject *o, float camDistSq = 0.0f) { return {o, camDistSq};}
+    QSSGRenderableObjectHandle() = default;
+    QSSGRenderableObjectHandle(QSSGRenderableObject *o, float camDistSq)
+        : obj(o)
+        , cameraDistanceSq(camDistSq)
+    {}
+    QSSGRenderableObject *obj = nullptr;
+    float cameraDistanceSq = 0.0f;
 };
 Q_DECLARE_TYPEINFO(QSSGRenderableObjectHandle, Q_PRIMITIVE_TYPE);
 

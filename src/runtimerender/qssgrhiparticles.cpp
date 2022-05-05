@@ -378,7 +378,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
     if (renderable.particles.m_depthSorting) {
         bool animatedParticles = renderable.particles.m_featureLevel == QSSGRenderParticles::FeatureLevel::Animated;
         if (!camera)
-            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, *inData.cameraDirection, animatedParticles);
+            sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, inData.cameraData->direction, animatedParticles);
         else
             sortParticles(particleData.sortedData, particleData.sortData, particleBuffer, renderable.particles, camera->getScalingCorrectDirection(), animatedParticles);
         uploadData = convertParticleData(particleData.convertData, particleData.sortedData, needsConversion);

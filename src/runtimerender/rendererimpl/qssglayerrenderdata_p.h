@@ -119,6 +119,20 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
     }
 };
 
+struct QSSGCameraData
+{
+    QSSGCameraData() = default;
+    QSSGCameraData(const QVector3D &dir, const QVector3D &pos)
+        : direction(dir)
+        , position(pos)
+    {}
+    QSSGCameraData(const QSSGRenderCamera &camera)
+        : QSSGCameraData(camera.getScalingCorrectDirection(), camera.getGlobalPos())
+    {}
+    QVector3D direction;
+    QVector3D position;
+};
+
 struct QSSGLayerRenderPreparationResult
 {
     QSSGLayerRenderPreparationResultFlags flags;
@@ -237,10 +251,11 @@ public:
                                const QMatrix4x4 &inViewProjection,
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGShaderLightList &lights,
-                               QSSGLayerRenderPreparationResultFlags &ioFlags);
+                               QSSGLayerRenderPreparationResultFlags &ioFlags,
+                               const QSSGCameraData &cameraData);
     bool prepareParticlesForRender(const QSSGRenderParticles &inParticles,
                                    const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                   QSSGShaderLightList &lights);
+                                   QSSGShaderLightList &lights, const QSSGCameraData &cameraData);
 
     // Helper function used during PrepareForRender and PrepareAndRender
     bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
@@ -253,7 +268,7 @@ public:
     // Helper function used during prepareForRender
     void prepareReflectionProbesForRender();
 
-    QVector3D getCameraDirection();
+    [[nodiscard]] QSSGCameraData getCameraDirectionAndPosition();
     // Per-frame cache of renderable objects post-sort.
     const TRenderableObjectList &getSortedOpaqueRenderableObjects();
     // If layer depth test is false, this may also contain opaque objects.
@@ -298,7 +313,7 @@ public:
 
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
-    QSSGOption<QVector3D> cameraDirection;
+    QSSGOption<QSSGCameraData> cameraData;
 
     TModelContextPtrList modelContexts;
 

@@ -109,7 +109,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
     {
         layerData.layer,
         camera,
-        layerData.cameraDirection,
+        layerData.cameraData->direction,
         layerData.shadowMapManager,
         layerData.rhiDepthTexture.texture,
         layerData.rhiAoTexture.texture,
@@ -214,7 +214,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
         bool instancing = false;
         if (!camera)
-            instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraDirection);
+            instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraData->direction);
         else
             instancing = renderable.prepareInstancing(rhiCtx, camera->getScalingCorrectDirection());
 
