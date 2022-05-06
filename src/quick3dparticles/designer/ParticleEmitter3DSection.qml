@@ -95,7 +95,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Particle")
-                tooltip: qsTr("This property defines the scale multiplier of the particles at the beginning.")
+                tooltip: qsTr("This property defines the logical particle which this emitter emits.")
             }
 
             SecondColumnLayout {
