@@ -4070,6 +4070,13 @@ void QSSGLayerRenderData::rhiRender()
             cb->debugMarkEnd();
         }
 
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
+        for (const auto &handle : theOpaqueObjects) {
+            QSSGRenderableObject *theObject = handle.obj;
+            rhiRenderRenderable(rhiCtx, *this, *theObject, &needsSetViewport);
+        }
+        cb->debugMarkEnd();
+
         if (layer.background == QSSGRenderLayer::Background::SkyBox
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
                 && layer.skyBoxSrb)
@@ -4080,15 +4087,8 @@ void QSSGLayerRenderData::rhiRender()
             ps->shaderPipeline = shaderPipeline.data();
             QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
             QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, {});
+            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
         }
-
-        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
-        for (const auto &handle : theOpaqueObjects) {
-            QSSGRenderableObject *theObject = handle.obj;
-            rhiRenderRenderable(rhiCtx, *this, *theObject, &needsSetViewport);
-        }
-        cb->debugMarkEnd();
 
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render screen texture dependent"));
         const auto &theScreenTextureObjects = getSortedScreenTextureRenderableObjects();

@@ -58,7 +58,8 @@ public:
         UvCoords = 0x01,
         DepthTest = 0x02,
         DepthWrite = 0x04,
-        PremulBlend = 0x08
+        PremulBlend = 0x08,
+        RenderBehind = 0x10
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

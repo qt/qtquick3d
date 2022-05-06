@@ -32,11 +32,16 @@
 
 QT_BEGIN_NAMESPACE
 
-static const QVector3D g_fullScreenRectFace[] = {
+static const QVector3D g_fullScreenRectFaces[] = {
     QVector3D(-1, -1, 0),
     QVector3D(-1, 1, 0),
     QVector3D(1, 1, 0),
     QVector3D(1, -1, 0),
+
+    QVector3D(-1, -1, 1),
+    QVector3D(-1, 1, 1),
+    QVector3D(1, 1, 1),
+    QVector3D(1, -1, 1),
 };
 
 static const QVector2D g_fullScreenRectUVs[] = {
@@ -49,20 +54,21 @@ static const QVector2D g_fullScreenRectUVs[] = {
 void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub)
 {
     if (!m_vbuf) {
+        constexpr int vertexCount = sizeof(g_fullScreenRectFaces) / sizeof(QVector3D);
         m_vbuf = new QSSGRhiBuffer(*rhiCtx,
                                    QRhiBuffer::Immutable,
                                    QRhiBuffer::VertexBuffer,
                                    5 * sizeof(float),
-                                   5 * 4 * sizeof(float));
+                                   5 * 8 * sizeof(float));
         m_vbuf->buffer()->setName(QByteArrayLiteral("quad vertex buffer"));
-        float buf[20];
+        float buf[5 * 8];
         float *p = buf;
-        for (int i = 0; i < 4; ++i) {
-            *p++ = g_fullScreenRectFace[i].x();
-            *p++ = g_fullScreenRectFace[i].y();
-            *p++ = g_fullScreenRectFace[i].z();
-            *p++ = g_fullScreenRectUVs[i].x();
-            *p++ = g_fullScreenRectUVs[i].y();
+        for (int i = 0; i < vertexCount; ++i) {
+            *p++ = g_fullScreenRectFaces[i].x();
+            *p++ = g_fullScreenRectFaces[i].y();
+            *p++ = g_fullScreenRectFaces[i].z();
+            *p++ = g_fullScreenRectUVs[i % 4].x();
+            *p++ = g_fullScreenRectUVs[i % 4].y();
         }
         rub->uploadStaticBuffer(m_vbuf->buffer(), buf);
     }
@@ -119,7 +125,9 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
     cb->setGraphicsPipeline(rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb));
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
-    QRhiCommandBuffer::VertexInput vb(m_vbuf->buffer(), 0);
+
+    quint32 vertexOffset = flags.testFlag(RenderBehind) ? 5 * 4 * sizeof(float) : 0;
+    QRhiCommandBuffer::VertexInput vb(m_vbuf->buffer(), vertexOffset);
     cb->setVertexInput(0, 1, &vb, m_ibuf->buffer(), m_ibuf->indexFormat());
     cb->drawIndexed(6);
     QSSGRHICTX_STAT(rhiCtx, drawIndexed(6, 1));
