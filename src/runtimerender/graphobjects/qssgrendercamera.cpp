@@ -176,6 +176,28 @@ void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) cons
     outMatrix = projection * globalTransform.inverted();
 }
 
+static QMatrix4x4 getUpper3x3(const QMatrix4x4 &m)
+{
+    const float values[16] = { m(0, 0), m(0, 1), m(0, 2), 0,
+                               m(1, 0), m(1, 1), m(1, 2), 0,
+                               m(2, 0), m(2, 1), m(2, 2), 0,
+                               0, 0, 0, 1 };
+    return QMatrix4x4(values);
+}
+
+void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(float clipNear, float clipFar, QMatrix4x4 &outMatrix) const
+{
+    if (qFuzzyIsNull(clipFar - clipNear)) {
+        qWarning() << "QSSGRenderCamera::calculateViewProjection: far == near";
+        return;
+    }
+
+    QMatrix4x4 proj = projection;
+    proj(2, 2) = -(clipFar + clipNear) / (clipFar - clipNear);
+    proj(2, 3) = -2 * clipFar * clipNear / (clipFar - clipNear);
+    outMatrix = proj * getUpper3x3(globalTransform).inverted();
+}
+
 QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,
                                               const QRectF &inViewport) const
 {

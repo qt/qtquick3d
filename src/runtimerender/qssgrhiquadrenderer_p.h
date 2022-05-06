@@ -82,6 +82,23 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiQuadRenderer::Flags)
 
+
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiCubeRenderer
+{
+public:
+    void prepareCube(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *maybeRub);
+
+    void recordRenderCube(QSSGRhiContext *rhiCtx,
+                          QSSGRhiGraphicsPipelineState *ps, QRhiShaderResourceBindings *srb,
+                          QRhiRenderPassDescriptor *rpDesc, QSSGRhiQuadRenderer::Flags flags);
+private:
+    void ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub);
+
+    QSSGRef<QSSGRhiBuffer> m_vbuf;
+    QSSGRef<QSSGRhiBuffer> m_ibuf;
+};
+
+
 QT_END_NAMESPACE
 
 #endif

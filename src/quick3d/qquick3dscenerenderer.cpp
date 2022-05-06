@@ -27,6 +27,7 @@
 **
 ****************************************************************************/
 
+#include "qquick3dcubemaptexture_p.h"
 #include "qquick3dscenerenderer_p.h"
 #include "qquick3dsceneenvironment_p.h"
 #include "qquick3dobject_p.h"
@@ -302,6 +303,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         // actually began recording a renderpass. Do our own.
         QColor clearColor = Qt::transparent;
         if (m_backgroundMode == QSSGRenderLayer::Background::Color
+                || (m_backgroundMode == QSSGRenderLayer::Background::SkyBoxCubeMap && !m_layer->skyBoxCubeMap)
                 || (m_backgroundMode == QSSGRenderLayer::Background::SkyBox && !m_layer->lightProbe)) {
             clearColor = m_backgroundColor;
         }
@@ -960,6 +962,10 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
         layerNode.lightProbe = environment->lightProbe()->getRenderImage();
     else
         layerNode.lightProbe = nullptr;
+    if (view3D.environment()->skyBoxCubeMap())
+        layerNode.skyBoxCubeMap = view3D.environment()->skyBoxCubeMap()->getRenderImage();
+    else
+        layerNode.skyBoxCubeMap = nullptr;
 
     layerNode.probeExposure = environment->probeExposure();
     // Remap the probeHorizon to the expected Range

@@ -368,6 +368,9 @@ QRhiTexture::Format QSSGBufferManager::toRhiFormat(const QSSGRenderTextureFormat
         return QRhiTexture::ASTC_12x12;
 
 
+    case QSSGRenderTextureFormat::SRGB8A8:
+        return QRhiTexture::RGBA8; // Note: user must keep track of color space manually
+
     default:
         qWarning() << "Unsupported texture format" << format.format;
         return QRhiTexture::UnknownFormat;

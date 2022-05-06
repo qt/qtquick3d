@@ -67,6 +67,7 @@
 QT_BEGIN_NAMESPACE
 
 class QSSGRhiQuadRenderer;
+class QSSGRhiCubeRenderer;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
@@ -113,6 +114,7 @@ public:
     void setGlobalPickingEnabled(bool isEnabled);
 
     QSSGRhiQuadRenderer *rhiQuadRenderer();
+    QSSGRhiCubeRenderer *rhiCubeRenderer();
 
     // Callback during the layer render process.
     void beginLayerDepthPassRender(QSSGLayerRenderData &inLayer);
@@ -152,6 +154,7 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurXShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurYShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiSsaoShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiSkyBoxCubeShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
     QSSGRef<QSSGRhiShaderPipeline> getRhiSupersampleResolveShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiProgressiveAAShader();
@@ -192,6 +195,7 @@ private:
     QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_ssaoRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_skyBoxRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_skyBoxCubeRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_supersampleResolveRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
@@ -222,6 +226,7 @@ private:
     QSet<QSSGRenderGraphObject *> m_materialClearDirty;
 
     QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
+    QSSGRhiCubeRenderer *m_rhiCubeRenderer = nullptr;
 
     QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> m_shaderMap;
 

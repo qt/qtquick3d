@@ -2896,8 +2896,11 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
 
-    const QSSGRenderImageTexture lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe,
-                                                                                                                    QSSGBufferManager::MipModeBsdf);
+    bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
+
+    const QSSGRenderImageTexture lightProbeTexture =
+            cubeMapMode ? renderer->contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap)
+                        : renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
     const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
     if (hasValidTexture) {
         if (cubeFace < 0)
@@ -2905,10 +2908,14 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
 
         QSSGRhiShaderResourceBindingList bindings;
 
-        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear, //We have mipmaps
-                                                 QRhiSampler::Repeat, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+        QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear,
+                                                 QRhiSampler::Linear,
+                                                 cubeMapMode ? QRhiSampler::None : QRhiSampler::Linear, // cube map doesn't have mipmaps
+                                                 QRhiSampler::Repeat,
+                                                 QRhiSampler::ClampToEdge,
+                                                 QRhiSampler::Repeat });
         int samplerBinding = 1; //the shader code is hand-written, so we don't need to look that up
-        const int ubufSize = 2 * 4 * 3 * sizeof(float) + 4 * 4 * sizeof(float) + 2 * sizeof(float); // 2x mat3 + mat4 + 2 floats
+        const int ubufSize = 2 * 4 * 3 * sizeof(float) + 2 * 4 * 4 * sizeof(float) + 2 * sizeof(float); // 2x mat3 + 2x mat4 + 2 floats
         bindings.addTexture(samplerBinding,
                             QRhiShaderResourceBinding::FragmentStage,
                             lightProbeTexture.m_texture, sampler);
@@ -2924,6 +2931,9 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
 
         const QMatrix4x4 &inverseProjection = inCamera.projection.inverted();
         const QMatrix4x4 &viewMatrix = inCamera.globalTransform;
+        QMatrix4x4 viewProjection(Qt::Uninitialized); // For cube mode
+        inCamera.calculateViewProjectionWithoutTranslation(0.1f, 5.0f, viewProjection);
+
         float adjustY = rhi->isYUpInNDC() ? 1.0f : -1.0f;
         const float exposure = layer.probeExposure;
         // orientation
@@ -2945,6 +2955,7 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
         memcpy(ubufData + 128, (char *)rotationMatrix.constData() + 12, 12);
         memcpy(ubufData + 144, (char *)rotationMatrix.constData() + 24, 12);
         memcpy(ubufData + 160, &skyboxProperties, 16);
+        memcpy(ubufData + 176, viewProjection.constData(), 64); //###
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
@@ -2954,7 +2965,10 @@ static void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
         else
             layer.skyBoxSrb = rhiCtx->srb(bindings);
 
-        renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+        if (cubeMapMode)
+            renderer->rhiCubeRenderer()->prepareCube(rhiCtx, nullptr);
+        else
+            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
     }
 
     cb->debugMarkEnd();
@@ -3888,7 +3902,7 @@ void QSSGLayerRenderData::rhiPrepare()
         ps->depthFunc = QRhiGraphicsPipeline::LessOrEqual;
         ps->blendEnable = false;
 
-        if (layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+        if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
             rhiPrepareSkyBox(rhiCtx, layer, *camera, renderer);
 
         const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
@@ -3921,6 +3935,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
                 cb->beginPass(rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture.rt));
+
                 if (layer.background == QSSGRenderLayer::Background::SkyBox
                         && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
                     // This is offscreen, so rendered untonemapped
@@ -3931,6 +3946,15 @@ void QSSGLayerRenderData::rhiPrepare()
                     QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
                     QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
                     renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, rpDesc, {});
+                } else if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
+                           && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
+                    auto shaderPipeline = renderer->getRhiSkyBoxCubeShader();
+                    Q_ASSERT(shaderPipeline);
+                    QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
+                    ps->shaderPipeline = shaderPipeline.data();
+                    QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+                    QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+                    renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx, ps, srb, rpDesc, {});
                 }
                 bool needsSetViewport = true;
                 for (const auto &handle : sortedOpaqueObjects)
@@ -4151,7 +4175,19 @@ void QSSGLayerRenderData::rhiRender()
         }
         cb->debugMarkEnd();
 
-        if (layer.background == QSSGRenderLayer::Background::SkyBox
+        if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
+                && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
+                && layer.skyBoxSrb)
+        {
+            auto shaderPipeline = renderer->getRhiSkyBoxCubeShader();
+            Q_ASSERT(shaderPipeline);
+            QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
+            ps->shaderPipeline = shaderPipeline.data();
+            QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+            QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+            renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx, ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
+
+        } else if (layer.background == QSSGRenderLayer::Background::SkyBox
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
                 && layer.skyBoxSrb)
         {

@@ -116,6 +116,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
 
     void calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const;
 
+    void calculateViewProjectionWithoutTranslation(float near, float far, QMatrix4x4 &outMatrix) const;
+
     // Unproject a point (x,y) in viewport relative coordinates meaning
     // left, bottom is 0,0 and values are increasing right,up respectively.
     QSSGRenderRay unproject(const QVector2D &inLayerRelativeMouseCoords, const QRectF &inViewport) const;

@@ -42,7 +42,8 @@ QT_BEGIN_NAMESPACE
     texture has 6 faces (X+, X-, Y+, Y-, Z+, Z-), where each face is an
     individual 2D image. CubeMapTexture allows \l{CustomMaterial}{custom
     materials} and \l{Effect}{post-processing effects} to work with cube map
-    textures in their shaders.
+    textures in their shaders. A cube map can also be used to define the scene
+    environment's \l{SceneEnvironment::skyBoxCubeMap}{skybox}.
 
     \qml
     CustomMaterial {

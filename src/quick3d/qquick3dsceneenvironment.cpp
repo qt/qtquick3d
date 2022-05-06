@@ -30,6 +30,7 @@
 #include "qquick3dsceneenvironment_p.h"
 #include "qquick3dobject_p.h"
 #include "qquick3dtexture_p.h"
+#include "qquick3dcubemaptexture_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -183,6 +184,9 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
     \value SceneEnvironment.SkyBox
         The scene will not be cleared, but instead a SkyBox or Skydome will be rendered. The SkyBox
         is defined using the HDRI map defined in the lightProbe property.
+    \value SceneEnvironment.SkyBoxCubeMap
+        The scene will not be cleared, but instead a SkyBox or Skydome will be rendered. The SkyBox
+        is defined using the cubemap defined in the skyBoxCubeMap property.
 
     The default value is \c SceneEnvironment.Transparent
 
@@ -564,7 +568,7 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironme
     This property determines how much much the skybox should be blurred when
     using \c SceneEnvironment.SkyBox for the
     \l{QtQuick3D::View3D::backgroundMode}{backgroundMode} property. The default
-    value is \c 0.0 which means there is no bluring.
+    value is \c 0.0 which means there is no blurring.
 
     Acceptable values range between 0.0 and 1.0, all other values will be clamped
     to this range.
@@ -768,10 +772,13 @@ void QQuick3DSceneEnvironment::itemChange(QQuick3DObject::ItemChange change, con
 
 void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)
 {
-    if (manager)
+    if (manager) {
         QQuick3DObjectPrivate::refSceneManager(m_lightProbe, *manager);
-    else
+        QQuick3DObjectPrivate::refSceneManager(m_skyBoxCubeMap, *manager);
+    } else {
         QQuick3DObjectPrivate::derefSceneManager(m_lightProbe);
+        QQuick3DObjectPrivate::derefSceneManager(m_skyBoxCubeMap);
+    }
 }
 
 void QQuick3DSceneEnvironment::setTemporalAAEnabled(bool temporalAAEnabled)
@@ -894,6 +901,33 @@ void QQuick3DSceneEnvironment::setLightmapper(QQuick3DLightmapper *lightmapper)
 
     emit lightmapperChanged();
     update();
+}
+
+/*!
+    \qmlproperty QtQuick3D::CubeMapTexture QtQuick3D::SceneEnvironment::skyBoxCubeMap
+
+    This property defines a cubemap to be used as a skybox when the background mode is \c SkyBoxCubeMap.
+
+    \since 6.4
+*/
+QQuick3DCubeMapTexture *QQuick3DSceneEnvironment::skyBoxCubeMap() const
+{
+    return m_skyBoxCubeMap;
+}
+
+void QQuick3DSceneEnvironment::setSkyBoxCubeMap(QQuick3DCubeMapTexture *newSkyBoxCubeMap)
+{
+    if (m_skyBoxCubeMap == newSkyBoxCubeMap)
+        return;
+
+
+    QQuick3DObjectPrivate::updatePropertyListener(newSkyBoxCubeMap, m_skyBoxCubeMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skyboxCubeMap"), m_connections,
+                           [this](QQuick3DObject *n) {
+        setSkyBoxCubeMap(qobject_cast<QQuick3DCubeMapTexture *>(n));
+    });
+
+    m_skyBoxCubeMap = newSkyBoxCubeMap;
+    emit skyBoxCubeMapChanged();
 }
 
 QT_END_NAMESPACE

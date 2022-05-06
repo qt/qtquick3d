@@ -78,6 +78,11 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSsaoShader()
     return getBuiltinRhiShader(QByteArrayLiteral("ssao"), m_ssaoRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSkyBoxCubeShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("skyboxcube"), m_skyBoxCubeRhiShader);
+}
+
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE)
 {
     // Skybox shader is special and has multiple possible shaders so we have to do

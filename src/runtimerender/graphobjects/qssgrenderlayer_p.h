@@ -103,7 +103,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
         Transparent = 0,
         Unspecified,
         Color,
-        SkyBox
+        SkyBox,
+        SkyBoxCubeMap
     };
 
     enum class TonemapMode : quint8
@@ -171,6 +172,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float probeHorizon;
     QMatrix3x3 probeOrientation;
     QVector3D probeOrientationAngles;
+
+    QSSGRenderImage *skyBoxCubeMap = nullptr;
 
     bool temporalAAEnabled;
     float temporalAAStrength;

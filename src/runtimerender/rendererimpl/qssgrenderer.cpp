@@ -290,6 +290,18 @@ QSSGRhiQuadRenderer *QSSGRenderer::rhiQuadRenderer()
     return m_rhiQuadRenderer;
 }
 
+QSSGRhiCubeRenderer *QSSGRenderer::rhiCubeRenderer()
+{
+    if (!m_contextInterface->rhiContext()->isValid())
+        return nullptr;
+
+    if (!m_rhiCubeRenderer)
+        m_rhiCubeRenderer = new QSSGRhiCubeRenderer;
+
+    return m_rhiCubeRenderer;
+
+}
+
 void QSSGRenderer::beginLayerDepthPassRender(QSSGLayerRenderData &inLayer)
 {
     m_currentLayer = &inLayer;

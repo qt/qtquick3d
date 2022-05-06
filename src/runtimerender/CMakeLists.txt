@@ -244,6 +244,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_es3_gl3"
         res/rhishaders/environmentmapprefilter.frag
         res/rhishaders/reflectionprobeprefilter.vert
         res/rhishaders/reflectionprobeprefilter.frag
+        res/rhishaders/skyboxcube.vert
+        res/rhishaders/skyboxcube.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_lightprobe_rgbe"
     SILENT
