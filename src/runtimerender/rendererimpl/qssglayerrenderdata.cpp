@@ -73,19 +73,17 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
         QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
         jointNode->calculateGlobalVariables();
-        QMatrix4x4 M = jointNode->globalTransform;
+        QMatrix4x4 globalTrans = jointNode->globalTransform;
         // if user doesn't give the inverseBindPose, identity matrices are used.
         if (poses.size() > jointNode->index)
-            M *= poses[jointNode->index];
-        modelNode->boneData.replace(POS4BONETRANS(jointNode->index),
-                                    sizeof(float) * 16,
-                                    reinterpret_cast<const char *>(M.constData()),
-                                    sizeof(float) * 16);
+            globalTrans *= poses[jointNode->index];
+        memcpy(modelNode->boneData.data() + POS4BONETRANS(jointNode->index),
+               reinterpret_cast<const void *>(globalTrans.constData()),
+               sizeof(float) * 16);
         // only upper 3x3 is meaningful
-        modelNode->boneData.replace(POS4BONENORM(jointNode->index),
-                                    sizeof(float) * 11,
-                                    reinterpret_cast<const char *>(QMatrix4x4(M.normalMatrix()).constData()),
-                                    sizeof(float) * 11);
+        memcpy(modelNode->boneData.data() + POS4BONENORM(jointNode->index),
+               reinterpret_cast<const void *>(QMatrix4x4(globalTrans.normalMatrix()).constData()),
+               sizeof(float) * 11);
     } else {
         modelNode->skeletonContainsNonJointNodes = true;
     }
