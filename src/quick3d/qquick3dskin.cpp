@@ -81,15 +81,12 @@ void QQuick3DSkin::onJointChanged(QQuick3DNode *node)
             QMatrix4x4 jointGlobal = m_joints.at(i)->sceneTransform();
             if (m_inverseBindPoses.count() > i)
                 jointGlobal *= m_inverseBindPoses.at(i);
-            m_boneData.replace(POS4BONETRANS(i),
-                               sizeof(float) * 16,
-                               reinterpret_cast<const char *>(jointGlobal.constData()),
-                               sizeof(float) * 16);
-            // only upper 3x3 is meaningful
-            m_boneData.replace(POS4BONENORM(i),
-                               sizeof(float) * 11,
-                               reinterpret_cast<const char *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
-                               sizeof(float) * 11);
+            memcpy(m_boneData.data() + POS4BONETRANS(i),
+                   reinterpret_cast<const void *>(jointGlobal.constData()),
+                   sizeof(float) * 16);
+            memcpy(m_boneData.data() + POS4BONENORM(i),
+                   reinterpret_cast<const void *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
+                   sizeof(float) * 11);
             markDirty();
         }
     }
@@ -180,15 +177,12 @@ void QQuick3DSkin::setInverseBindPoses(const QList<QMatrix4x4> &poses)
         QMatrix4x4 jointGlobal = m_joints.at(i)->sceneTransform();
         if (m_inverseBindPoses.count() > i)
             jointGlobal *= m_inverseBindPoses.at(i);
-        m_boneData.replace(POS4BONETRANS(i),
-                           sizeof(float) * 16,
-                           reinterpret_cast<const char *>(jointGlobal.constData()),
-                           sizeof(float) * 16);
-        // only upper 3x3 is meaningful
-        m_boneData.replace(POS4BONENORM(i),
-                           sizeof(float) * 11,
-                           reinterpret_cast<const char *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
-                           sizeof(float) * 11);
+        memcpy(m_boneData.data() + POS4BONETRANS(i),
+               reinterpret_cast<const void *>(jointGlobal.constData()),
+               sizeof(float) * 16);
+        memcpy(m_boneData.data() + POS4BONENORM(i),
+               reinterpret_cast<const void *>(QMatrix4x4(jointGlobal.normalMatrix()).constData()),
+               sizeof(float) * 11);
     }
 
     markDirty();
