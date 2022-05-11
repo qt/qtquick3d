@@ -219,7 +219,7 @@ private:
     std::vector<Value> _symStack;
     std::vector<Token> _tokens;
 };
-
+Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, GLSLParserTable::VariousConstants, Lexer::Variant)
 } // namespace GLSL
 
 QT_END_NAMESPACE

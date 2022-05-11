@@ -80,8 +80,7 @@ public:
     Lexer(Engine *engine, const char *source, unsigned size);
     ~Lexer();
 
-    enum
-    {
+    enum Variant {
         // Extra flag bits added to tokens by Lexer::classify() that
         // indicate which variant of GLSL the keyword belongs to.
         Variant_GLSL_120            = 0x00010000,   // 1.20 and higher
