@@ -474,7 +474,8 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     material.setHeightChannel(channelMapping1);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(channelMapping1, material.heightChannel());
-    QCOMPARE(channelMapping1, node->heightChannel);
+    QCOMPARE(qToUnderlying(channelMapping1),      // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->heightChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 
     // ClearcoatMap
     QVERIFY(!material.clearcoatMap());
@@ -487,7 +488,8 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     material.setClearcoatChannel(channelMapping);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(channelMapping, material.clearcoatChannel());
-    QCOMPARE(channelMapping, node->clearcoatChannel);
+    QCOMPARE(qToUnderlying(channelMapping),          // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->clearcoatChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 
     // ClearcoatRoughnessMap
     QVERIFY(!material.clearcoatRoughnessMap());
@@ -499,7 +501,8 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     material.setClearcoatRoughnessChannel(channelMapping2);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(channelMapping2, material.clearcoatRoughnessChannel());
-    QCOMPARE(channelMapping2, node->clearcoatRoughnessChannel);
+    QCOMPARE(qToUnderlying(channelMapping2),                  // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->clearcoatRoughnessChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 
     // ClearcoatNormalMap
     QVERIFY(!material.clearcoatNormalMap());
@@ -518,7 +521,8 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     material.setTransmissionChannel(channelMapping3);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(channelMapping3, material.transmissionChannel());
-    QCOMPARE(channelMapping3, node->transmissionChannel);
+    QCOMPARE(qToUnderlying(channelMapping3),            // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->transmissionChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 
     // Thickness Map
     QVERIFY(!material.thicknessMap());
@@ -530,7 +534,8 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     material.setThicknessChannel(channelMapping4);
     node = static_cast<QSSGRenderDefaultMaterial *>(material.updateSpatialNode(node));
     QCOMPARE(channelMapping4, material.thicknessChannel());
-    QCOMPARE(channelMapping4, node->thicknessChannel);
+    QCOMPARE(qToUnderlying(channelMapping4),         // QQuick3DMaterial::TextureChannelMapping
+             qToUnderlying(node->thicknessChannel)); // QSSGRenderDefaultMaterial::TextureChannelMapping
 }
 
 void tst_QQuick3DMaterials::testPrincipledEnums()
