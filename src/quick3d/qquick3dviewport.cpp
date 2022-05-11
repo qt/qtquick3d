@@ -54,6 +54,8 @@
 
 #include <QtGui/private/qeventpoint_p.h>
 
+#include <QtCore/private/qnumeric_p.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
@@ -1151,10 +1153,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                 subscene.obj = frontendObject;
                 if (subscene.eventPointScenePositions.size() != event->pointCount()) {
                     // ensure capacity, and use an out-of-scene position rather than 0,0 by default
-                    // (if only QVarLengthArray.resize() would take an optional prototype argument...)
-                    subscene.eventPointScenePositions.resize(event->pointCount());
-                    for (auto &pt : subscene.eventPointScenePositions)
-                        pt = QPointF(-qInf(), -qInf());
+                    constexpr QPointF inf(-qt_inf(), -qt_inf());
+                    subscene.eventPointScenePositions.resize(event->pointCount(), inf);
                 }
                 subscene.eventPointScenePositions[pointIndex] = subscenePosition;
             }
