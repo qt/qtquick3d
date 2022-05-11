@@ -518,22 +518,35 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     QList<QSSGRenderGraphObject *> resourceLoaders;
 
-    if (auto sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager) {
-        sceneManager->rci = m_sgContext.data();
-        sceneManager->updateDirtyNodes();
-        sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
-        resourceLoaders.append(sceneManager->resourceLoaders.values());
-    }
-
+    QQuick3DSceneManager *importSceneManager = nullptr;
     QQuick3DNode *importScene = view3D->importScene();
     if (importScene) {
-        if (auto importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager) {
-            if (!importSceneManager->rci)
-                importSceneManager->rci = m_sgContext.data();
-            importSceneManager->updateDirtyNodes();
+        importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
+        importSceneManager->rci = m_sgContext.data();
+    }
+
+    if (auto sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager) {
+        // Cleanup
+        sceneManager->rci = m_sgContext.data();
+        sceneManager->cleanupNodes();
+        if (importSceneManager)
+            importSceneManager->cleanupNodes();
+        // Resources
+        if (importSceneManager)
+            importSceneManager->updateDirtyResourceNodes();
+        sceneManager->updateDirtyResourceNodes();
+        // Spatial Nodes
+        if (importSceneManager)
+            importSceneManager->updateDirtySpatialNodes();
+        sceneManager->updateDirtySpatialNodes();
+        // Bounding Boxes
+        if (importSceneManager)
             importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+        sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
+        // Resource Loaders
+        resourceLoaders.append(sceneManager->resourceLoaders.values());
+        if (importSceneManager)
             resourceLoaders.append(importSceneManager->resourceLoaders.values());
-        }
     }
 
     // Generate layer node

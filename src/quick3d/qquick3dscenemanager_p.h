@@ -73,15 +73,16 @@ public:
     void forcePolish();
     void sync();
 
-    void updateDirtyNodes();
+    void cleanupNodes();
+    void updateDirtyResourceNodes();
+    void updateDirtySpatialNodes();
+
     void updateDirtyNode(QQuick3DObject *object);
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);
     void updateBoundingBoxes(const QSSGRef<QSSGBufferManager> &mgr);
 
     QQuick3DObject *lookUpNode(const QSSGRenderGraphObject *node) const;
-
-    void cleanupNodes();
 
     QQuick3DObject *dirtySpatialNodeList;
     QQuick3DObject *dirtyResourceList;
@@ -104,6 +105,7 @@ Q_SIGNALS:
     void windowChanged();
 
 private Q_SLOTS:
+    void updateNodes(QQuick3DObject **listHead);
     void preSync();
 };
 
