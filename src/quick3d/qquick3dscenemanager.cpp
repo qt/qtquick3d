@@ -114,31 +114,13 @@ void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> 
     }
 }
 
-void QQuick3DSceneManager::updateDirtyNodes()
-{
-    cleanupNodes();
-
-    auto updateNodes = [this](QQuick3DObject **listHead) {
-        // Detach the current list head first, and consume all reachable entries.
-        // New entries may be added to the new list while traversing, which will be
-        // visited on the next updateDirtyNodes() call.
-        QQuick3DObject *updateList = *listHead;
-        *listHead = nullptr;
-        if (updateList)
-            QQuick3DObjectPrivate::get(updateList)->prevDirtyItem = &updateList;
-
-        while (updateList) {
-            QQuick3DObject *item = updateList;
-            QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(item);
-            itemPriv->removeFromDirtyList();
-
-            updateDirtyNode(item);
-        }
-    };
-
+void QQuick3DSceneManager::updateDirtyResourceNodes() {
     updateNodes(&dirtyTextureDataList);
     updateNodes(&dirtyImageList);
     updateNodes(&dirtyResourceList);
+}
+
+void QQuick3DSceneManager::updateDirtySpatialNodes() {
     updateNodes(&dirtySpatialNodeList);
     // Lights have to be last because of scoped lights
     for (const auto light : dirtyLightList)
@@ -277,6 +259,25 @@ void QQuick3DSceneManager::cleanupNodes()
 
     // Nodes are now "cleaned up" so clear the cleanup list
     cleanupNodeList.clear();
+}
+
+void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
+{
+    // Detach the current list head first, and consume all reachable entries.
+    // New entries may be added to the new list while traversing, which will be
+    // visited on the next updateDirtyNodes() call.
+    QQuick3DObject *updateList = *listHead;
+    *listHead = nullptr;
+    if (updateList)
+        QQuick3DObjectPrivate::get(updateList)->prevDirtyItem = &updateList;
+
+    while (updateList) {
+        QQuick3DObject *item = updateList;
+        QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(item);
+        itemPriv->removeFromDirtyList();
+
+        updateDirtyNode(item);
+    }
 }
 
 void QQuick3DSceneManager::preSync()
