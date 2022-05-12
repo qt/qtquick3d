@@ -294,8 +294,6 @@ protected:
     void markAllDirty() override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 private:
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
-
     enum DirtyType {
         LightingModeDirty = 0x00000001,
         BlendModeDirty = 0x00000002,

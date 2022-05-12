@@ -25,8 +25,6 @@ QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
 
 QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
 {
-    for (const auto& connection : m_connections)
-        disconnect(connection);
 }
 
 /*!
@@ -659,10 +657,7 @@ void QQuick3DSceneEnvironment::setLightProbe(QQuick3DTexture *lightProbe)
     if (m_lightProbe == lightProbe)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(lightProbe, m_lightProbe, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightProbe"), m_connections,
-                           [this](QQuick3DObject *n) {
-        setLightProbe(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSceneEnvironment::setLightProbe, lightProbe, m_lightProbe);
 
     m_lightProbe = lightProbe;
     emit lightProbeChanged();
@@ -894,11 +889,7 @@ void QQuick3DSceneEnvironment::setSkyBoxCubeMap(QQuick3DCubeMapTexture *newSkyBo
     if (m_skyBoxCubeMap == newSkyBoxCubeMap)
         return;
 
-
-    QQuick3DObjectPrivate::updatePropertyListener(newSkyBoxCubeMap, m_skyBoxCubeMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skyboxCubeMap"), m_connections,
-                           [this](QQuick3DObject *n) {
-        setSkyBoxCubeMap(qobject_cast<QQuick3DCubeMapTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSceneEnvironment::setSkyBoxCubeMap, newSkyBoxCubeMap, m_skyBoxCubeMap);
 
     m_skyBoxCubeMap = newSkyBoxCubeMap;
     emit skyBoxCubeMapChanged();

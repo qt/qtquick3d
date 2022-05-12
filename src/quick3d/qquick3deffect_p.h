@@ -72,7 +72,6 @@ private:
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
 
     QVector<QQuick3DShaderUtilsRenderPass *> m_passes;
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
     QSet<QQuick3DShaderUtilsTextureInput *> m_dynamicTextureMaps;
 };
 

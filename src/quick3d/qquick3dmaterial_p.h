@@ -80,8 +80,6 @@ protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(ItemChange, const ItemChangeData &) override;
 
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
-
 private:
     void updateSceneManager(QQuick3DSceneManager *sceneManager);
     QQuick3DTexture *m_iblProbe = nullptr;

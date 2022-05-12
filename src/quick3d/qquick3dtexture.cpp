@@ -114,9 +114,6 @@ QQuick3DTexture::~QQuick3DTexture()
         QQuickItemPrivate *sourcePrivate = QQuickItemPrivate::get(m_sourceItem);
         sourcePrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
-
-    for (const auto &connection : qAsConst(m_connections))
-        disconnect(connection);
 }
 
 /*!
@@ -877,9 +874,7 @@ void QQuick3DTexture::setTextureData(QQuick3DTextureData *textureData)
         return;
 
     // Make sure to disconnect if the geometry gets deleted out from under us
-    QQuick3DObjectPrivate::updatePropertyListener(textureData, m_textureData, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("textureData"), m_connections, [this](QQuick3DObject *n) {
-        setTextureData(qobject_cast<QQuick3DTextureData *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DTexture::setTextureData, textureData, m_textureData);
 
     if (m_textureData)
         QObject::disconnect(m_textureDataConnection);

@@ -6,6 +6,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -765,9 +766,7 @@ void QQuick3DSpecularGlossyMaterial::setAlbedoMap(QQuick3DTexture *albedoMap)
     if (m_albedoMap == albedoMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(albedoMap, m_albedoMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("albedoMap"), m_connections, [this](QQuick3DObject *n) {
-        setAlbedoMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setAlbedoMap, albedoMap, m_albedoMap);
 
     m_albedoMap = albedoMap;
     emit albedoMapChanged();
@@ -779,9 +778,7 @@ void QQuick3DSpecularGlossyMaterial::setEmissiveMap(QQuick3DTexture *emissiveMap
     if (m_emissiveMap == emissiveMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(emissiveMap, m_emissiveMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("emissiveMap"), m_connections, [this](QQuick3DObject *n) {
-        setEmissiveMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setEmissiveMap, emissiveMap, m_emissiveMap);
 
     m_emissiveMap = emissiveMap;
     emit emissiveMapChanged();
@@ -814,9 +811,7 @@ void QQuick3DSpecularGlossyMaterial::setGlossinessMap(QQuick3DTexture *glossines
     if (m_glossinessMap == glossinessMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(glossinessMap, m_glossinessMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("glossinessMap"), m_connections, [this](QQuick3DObject *n) {
-        setGlossinessMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setGlossinessMap, glossinessMap, m_glossinessMap);
 
     m_glossinessMap = glossinessMap;
     emit glossinessMapChanged();
@@ -839,9 +834,7 @@ void QQuick3DSpecularGlossyMaterial::setOpacityMap(QQuick3DTexture *opacityMap)
     if (m_opacityMap == opacityMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(opacityMap, m_opacityMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("opacityMap"), m_connections, [this](QQuick3DObject *n) {
-        setOpacityMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setOpacityMap, opacityMap, m_opacityMap);
 
     m_opacityMap = opacityMap;
     emit opacityMapChanged();
@@ -853,9 +846,7 @@ void QQuick3DSpecularGlossyMaterial::setNormalMap(QQuick3DTexture *normalMap)
     if (m_normalMap == normalMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(normalMap, m_normalMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("normalMap"), m_connections, [this](QQuick3DObject *n) {
-        setNormalMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setNormalMap, normalMap, m_normalMap);
 
     m_normalMap = normalMap;
     emit normalMapChanged();
@@ -877,9 +868,7 @@ void QQuick3DSpecularGlossyMaterial::setSpecularMap(QQuick3DTexture *specularMap
     if (m_specularMap == specularMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(specularMap, m_specularMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("specularMap"), m_connections, [this](QQuick3DObject *n) {
-        setSpecularMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setSpecularMap, specularMap, m_specularMap);
 
     m_specularMap = specularMap;
     emit specularMapChanged();
@@ -902,9 +891,7 @@ void QQuick3DSpecularGlossyMaterial::setOcclusionMap(QQuick3DTexture *occlusionM
     if (m_occlusionMap == occlusionMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(occlusionMap, m_occlusionMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("occlusionMap"), m_connections, [this](QQuick3DObject *n) {
-        setOcclusionMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setOcclusionMap, occlusionMap, m_occlusionMap);
 
     m_occlusionMap = occlusionMap;
     emit occlusionMapChanged();
@@ -994,9 +981,7 @@ void QQuick3DSpecularGlossyMaterial::setHeightMap(QQuick3DTexture *heightMap)
     if (m_heightMap == heightMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(heightMap, m_heightMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("heightMap"), m_connections, [this](QQuick3DObject *n) {
-        setHeightMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setHeightMap, heightMap, m_heightMap);
 
     m_heightMap = heightMap;
     emit heightMapChanged();
@@ -1274,9 +1259,7 @@ void QQuick3DSpecularGlossyMaterial::setClearcoatMap(QQuick3DTexture *newClearco
     if (m_clearcoatMap == newClearcoatMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(newClearcoatMap, m_clearcoatMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("clearcoatMap"), m_connections, [this](QQuick3DObject *n) {
-        setClearcoatMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setClearcoatMap, newClearcoatMap, m_clearcoatMap);
 
     m_clearcoatMap = newClearcoatMap;
     emit clearcoatMapChanged();
@@ -1335,9 +1318,7 @@ void QQuick3DSpecularGlossyMaterial::setClearcoatRoughnessMap(QQuick3DTexture *n
     if (m_clearcoatRoughnessMap == newClearcoatRoughnessMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(newClearcoatRoughnessMap, m_clearcoatRoughnessMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("clearcoatRoughnessMap"), m_connections, [this](QQuick3DObject *n) {
-        setClearcoatRoughnessMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setClearcoatRoughnessMap, newClearcoatRoughnessMap, m_clearcoatRoughnessMap);
 
     m_clearcoatRoughnessMap = newClearcoatRoughnessMap;
     emit clearcoatRoughnessMapChanged();
@@ -1354,9 +1335,7 @@ void QQuick3DSpecularGlossyMaterial::setClearcoatNormalMap(QQuick3DTexture *newC
     if (m_clearcoatNormalMap == newClearcoatNormalMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(newClearcoatNormalMap, m_clearcoatNormalMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("clearcoatNormalMap"), m_connections, [this](QQuick3DObject *n) {
-        setClearcoatNormalMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setClearcoatNormalMap, newClearcoatNormalMap, m_clearcoatNormalMap);
 
     m_clearcoatNormalMap = newClearcoatNormalMap;
     emit clearcoatNormalMapChanged();
@@ -1387,9 +1366,7 @@ void QQuick3DSpecularGlossyMaterial::setTransmissionMap(QQuick3DTexture *newTran
     if (m_transmissionMap == newTransmissionMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(newTransmissionMap, m_transmissionMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("transmissionMap"), m_connections, [this](QQuick3DObject *n) {
-        setTransmissionMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setTransmissionMap, newTransmissionMap, m_transmissionMap);
 
     m_transmissionMap = newTransmissionMap;
     emit transmissionMapChanged();
@@ -1434,9 +1411,7 @@ void QQuick3DSpecularGlossyMaterial::setThicknessMap(QQuick3DTexture *newThickne
     if (m_thicknessMap == newThicknessMap)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(newThicknessMap, m_thicknessMap, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("thicknessMap"), m_connections, [this](QQuick3DObject *n) {
-        setThicknessMap(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DSpecularGlossyMaterial::setThicknessMap, newThicknessMap, m_thicknessMap);
 
     m_thicknessMap = newThicknessMap;
     emit thicknessMapChanged();

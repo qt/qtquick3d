@@ -238,7 +238,6 @@ private:
     float m_probeHorizon = 0.0f;
     QVector3D m_probeOrientation;
 
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
     bool m_depthTestEnabled = true;
     bool m_depthPrePassEnabled = false;
     QQuick3DEnvironmentTonemapModes m_tonemapMode = QQuick3DEnvironmentTonemapModes::TonemapModeLinear;

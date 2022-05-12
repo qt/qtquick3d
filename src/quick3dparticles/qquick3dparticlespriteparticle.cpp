@@ -232,12 +232,7 @@ void QQuick3DParticleSpriteParticle::setSprite(QQuick3DTexture *sprite)
     if (m_sprite == sprite)
         return;
 
-    auto sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager;
-    QQuick3DObjectPrivate::updatePropertyListener(sprite, m_sprite, sceneManager,
-                                                  QByteArrayLiteral("sprite"), m_connections,
-                                                  [this](QQuick3DObject *n) {
-        setSprite(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DParticleSpriteParticle::setSprite, sprite, m_sprite);
 
     m_sprite = sprite;
     markNodesDirty();
@@ -278,12 +273,7 @@ void QQuick3DParticleSpriteParticle::setColorTable(QQuick3DTexture *colorTable)
     if (m_colorTable == colorTable)
         return;
 
-    auto sceneManager = QQuick3DObjectPrivate::get(this)->sceneManager;
-    QQuick3DObjectPrivate::updatePropertyListener(colorTable, m_colorTable, sceneManager,
-                                                  QByteArrayLiteral("colorTable"), m_connections,
-                                                  [this](QQuick3DObject *n) {
-        setColorTable(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DParticleSpriteParticle::setColorTable, colorTable, m_colorTable);
 
     m_colorTable = colorTable;
     updateFeatureLevel();
