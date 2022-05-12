@@ -60,6 +60,7 @@ qt_add_qml_module(particles3d
         qml/TrailEmitterBurst.qml
         qml/ModelShape.qml
         qml/main.qml
+        qml/LineParticles.qml
     RESOURCES
         qml/images/arrow_icon.png
         qml/images/bear_black.png

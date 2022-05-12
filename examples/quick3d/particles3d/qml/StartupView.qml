@@ -71,6 +71,10 @@ Item {
             file: "Snowing.qml"
         }
         ListElement {
+            name: "Line Particles"
+            file: "LineParticles.qml"
+        }
+        ListElement {
             name: "HeartTrail"
             file: "HeartTrail.qml"
         }

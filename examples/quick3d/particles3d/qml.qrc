@@ -64,5 +64,6 @@
         <file>qml/data/qt_logo_out_4096.cbor</file>
         <file>qml/data/heart_4096.cbor</file>
         <file>qml/Lights.qml</file>
+        <file>qml/LineParticles.qml</file>
     </qresource>
 </RCC>
