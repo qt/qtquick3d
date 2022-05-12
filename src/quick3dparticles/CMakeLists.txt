@@ -38,6 +38,7 @@ qt_internal_add_qml_module(Quick3DParticles
         qquick3dparticlewander.cpp qquick3dparticlewander_p.h
         qquick3dparticleutils.cpp qquick3dparticleutils_p.h
         qquick3dparticlespritesequence.cpp qquick3dparticlespritesequence_p.h
+        qquick3dparticlescaleaffector.cpp qquick3dparticlescaleaffector_p.h
         qquick3dparticlemodelblendparticle_p.h qquick3dparticlemodelblendparticle.cpp
         qquick3dparticledynamicburst.cpp qquick3dparticledynamicburst_p.h
         qquick3dparticlelineparticle.cpp qquick3dparticlelineparticle_p.h
