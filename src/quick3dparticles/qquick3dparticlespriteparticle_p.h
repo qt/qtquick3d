@@ -112,14 +112,14 @@ protected:
     void reset() override;
     void componentComplete() override;
     int nextCurrentIndex(const QQuick3DParticleEmitter *emitter) override;
-    void setParticleData(int particleIndex,
+    virtual void setParticleData(int particleIndex,
                          const QVector3D &position,
                          const QVector3D &rotation,
                          const QVector4D &color,
                          float size, float age,
                          float animationFrame);
-    void resetParticleData(int particleIndex);
-    void commitParticles();
+    virtual void resetParticleData(int particleIndex);
+    virtual void commitParticles(float);
     void setDepthBias(float bias) override
     {
         QQuick3DParticle::setDepthBias(bias);
@@ -129,7 +129,7 @@ protected:
 private Q_SLOTS:
     void onLightDestroyed(QObject *object);
 
-private:
+public:
     friend class QQuick3DParticleSystem;
     friend class QQuick3DParticleEmitter;
     friend class QQuick3DParticleSpriteSequence;
@@ -163,8 +163,7 @@ private:
         {
         }
         QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
-        QQuick3DParticleSpriteParticle *m_spriteParticle = nullptr;
-
+        QQuick3DParticleSpriteParticle *m_particle = nullptr;
         bool m_nodeDirty = true;
     };
     friend class ParticleUpdateNode;
@@ -177,33 +176,40 @@ private:
         const QQuick3DParticleEmitter *emitter = nullptr;
     };
 
-    static QSSGRenderParticles::FeatureLevel mapFeatureLevel(QQuick3DParticleSpriteParticle::FeatureLevel level);
-
-    void updateParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
-    void updateAnimatedParticleBuffer(const PerEmitterData &perEmitter, QSSGRenderGraphObject *node);
+    PerEmitterData &perEmitterData(const QQuick3DNode *updateNode);
+    PerEmitterData &perEmitterData(int emitterIndex);
     QSSGRenderGraphObject *updateParticleNode(const ParticleUpdateNode *updateNode, QSSGRenderGraphObject *node);
-    void updateSceneManager(QQuick3DSceneManager *window);
-    void handleMaxAmountChanged(int amount);
-    void handleSystemChanged(QQuick3DParticleSystem *system);
+
+protected:
+    virtual void handleMaxAmountChanged(int amount);
+    virtual void handleSystemChanged(QQuick3DParticleSystem *system);
     void updateNodes();
     void deleteNodes();
     void markNodesDirty();
+
+    QMap<const QQuick3DParticleEmitter *, PerEmitterData> m_perEmitterData;
+    QVector<SpriteParticleData> m_spriteParticleData;
+    int m_nextEmitterIndex = 0;
+    FeatureLevel m_featureLevel = FeatureLevel::Simple;
+
+private:
+    static QSSGRenderParticles::FeatureLevel mapFeatureLevel(QQuick3DParticleSpriteParticle::FeatureLevel level);
+
+    void updateParticleBuffer(ParticleUpdateNode *updateNode, QSSGRenderGraphObject *node);
+    void updateAnimatedParticleBuffer(ParticleUpdateNode *updateNode, QSSGRenderGraphObject *node);
+    void updateSceneManager(QQuick3DSceneManager *window);
+
+
     // Call this whenever features which may affect the level change
     void updateFeatureLevel();
-    PerEmitterData &perEmitterData(const ParticleUpdateNode *updateNode);
-    PerEmitterData &perEmitterData(int emitterIndex);
 
-    QVector<SpriteParticleData> m_spriteParticleData;
     QHash<QByteArray, QMetaObject::Connection> m_connections;
-    QMap<const QQuick3DParticleEmitter *, PerEmitterData> m_perEmitterData;
     PerEmitterData n_noPerEmitterData;
     BlendMode m_blendMode = SourceOver;
     QQuick3DTexture *m_sprite = nullptr;
     QQuick3DTexture *m_colorTable = nullptr;
     float m_particleScale = 5.0f;
-    int m_nextEmitterIndex = 0;
     bool m_billboard = false;
-    FeatureLevel m_featureLevel = FeatureLevel::Simple;
     bool m_useAnimatedParticle = false;
 
     // Lights
@@ -218,3 +224,4 @@ private:
 QT_END_NAMESPACE
 
 #endif
+

@@ -61,6 +61,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleSimple
     // total 48 bytes
 };
 
+Q_STATIC_ASSERT_X(sizeof(QSSGParticleSimple) == 48, "size of QSSGParticleSimple must be 48");
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleAnimated
 {
     QVector3D position;
@@ -75,6 +77,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleAnimated
     // total 64 bytes
 };
 
+Q_STATIC_ASSERT_X(sizeof(QSSGParticleAnimated) == 64, "size of QSSGParticleAnimated must be 64");
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGTriangleParticle
 {
     QVector3D position; // particle position
@@ -84,11 +88,30 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGTriangleParticle
     QVector4D color;
     QVector3D center;   // center of the origin triangle
     float fill;
+    // total 64 bytes
 };
+
+Q_STATIC_ASSERT_X(sizeof(QSSGTriangleParticle) == 64, "size of QSSGTriangleParticle must be 64");
+
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLineParticle
+{
+    QVector3D position;
+    float size;
+    QVector4D color;
+    QVector3D binormal;
+    float animationFrame;
+    float age;
+    float length;
+    QVector2D fill;
+    // total 64 bytes
+};
+
+Q_STATIC_ASSERT_X(sizeof(QSSGLineParticle) == 64, "size of QSSGLineParticle must be 64");
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
 {
     void resize(int particleCount, int particleSize = sizeof(QSSGParticleSimple));
+    void resizeLine(int particleCount, int segmentCount);
     void setBounds(const QSSGBounds3& bounds);
 
     char *pointer();
@@ -102,12 +125,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticleBuffer
     QSSGBounds3 bounds() const;
     int bufferSize() const;
     int serial() const;
+    int segments() const;
 
 private:
     int m_particlesPerSlice = 0;
     int m_sliceStride = 0;
     int m_particleCount = 0;
     int m_serial = 0;
+    int m_segments = 0;
     QSize m_size;
     QByteArray m_particleBuffer;
     QSSGBounds3 m_bounds;
@@ -128,7 +153,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
         Animated,
         SimpleVLight,
         MappedVLight,
-        AnimatedVLight
+        AnimatedVLight,
+        Line,
+        LineMapped,
+        LineAnimated,
+        LineVLight,
+        LineMappedVLight,
+        LineAnimatedVLight,
     };
 
     Q_DISABLE_COPY(QSSGRenderParticles)
@@ -141,6 +172,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     QSSGRenderImage *m_sprite = nullptr;
     int m_spriteImageCount = 1;
     float m_depthBias = 0.0f;
+    float m_sizeModifier = 0.0f;
+    float m_alphaFade = 0.0f;
+    float m_texcoordScale = 1.0f;
     bool m_blendImages = true;
     bool m_billboard = true;
     bool m_hasTransparency = true;

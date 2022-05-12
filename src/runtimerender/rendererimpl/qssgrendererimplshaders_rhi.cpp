@@ -157,6 +157,24 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiParticleShader(QSSGRenderPart
     case QSSGRenderParticles::FeatureLevel::AnimatedVLight:
         return getBuiltinRhiShader(QByteArrayLiteral("particlesvlightanimated"), m_particlesVLightingAnimatedRhiShader);
         break;
+    case QSSGRenderParticles::FeatureLevel::Line:
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticles"), m_lineParticlesRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::LineMapped:
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesmapped"), m_lineParticlesMappedRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::LineAnimated:
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesanimated"), m_lineParticlesAnimatedRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::LineVLight:
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightsimple"), m_lineParticlesVLightRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::LineMappedVLight:
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightmapped"), m_lineParticlesMappedVLightRhiShader);
+        break;
+    case QSSGRenderParticles::FeatureLevel::LineAnimatedVLight:
+        return getBuiltinRhiShader(QByteArrayLiteral("lineparticlesvlightanimated"), m_lineParticlesAnimatedVLightRhiShader);
+        break;
     }
     return getBuiltinRhiShader(QByteArrayLiteral("particlesnolightanimated"), m_particlesNoLightingAnimatedRhiShader);
 }

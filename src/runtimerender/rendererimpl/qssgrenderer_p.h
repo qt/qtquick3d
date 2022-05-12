@@ -212,6 +212,12 @@ private:
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesMappedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesAnimatedRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesVLightRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesMappedVLightRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesAnimatedVLightRhiShader;
 
     bool m_globalPickingEnabled = false;
 

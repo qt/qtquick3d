@@ -36,6 +36,7 @@
 #include <private/qqmldelegatemodel_p.h>
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticlespriteparticle_p.h"
+#include "qquick3dparticlelineparticle_p.h"
 #include "qquick3dparticlemodelblendparticle_p.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <cmath>
@@ -768,6 +769,9 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
             if (timeS > particleTimeEnd && particleData.age > 0.0f) {
                 for (auto trailEmit : qAsConst(trailEmits))
                     trailEmit.emitter->emitTrailParticles(particleData.position, 0, QQuick3DParticleDynamicBurst::TriggerEnd);
+                auto *lineParticle = qobject_cast<QQuick3DParticleLineParticle *>(spriteParticle);
+                if (lineParticle)
+                    lineParticle->saveLineSegment(i, timeS);
             }
             // Particle not alive currently
             spriteParticle->resetParticleData(i);
@@ -842,7 +846,7 @@ void QQuick3DParticleSystem::processSpriteParticle(QQuick3DParticleSpriteParticl
                                         currentData.rotation, color, currentData.scale.x(), timeChange,
                                         animationFrame);
     }
-    spriteParticle->commitParticles();
+    spriteParticle->commitParticles(timeS);
 }
 
 void QQuick3DParticleSystem::processParticleCommon(QQuick3DParticleDataCurrent &currentData, const QQuick3DParticleData *d, float particleTimeS)

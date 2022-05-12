@@ -152,6 +152,22 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
     int enableSpotLights = spotLight > 0 ? 1 : 0;
     shaders->setUniform(ubufData, "qt_pointLights", &enablePointLights, sizeof(int));
     shaders->setUniform(ubufData, "qt_spotLights", &enableSpotLights, sizeof(int));
+
+    // Line particle uniform
+    int segmentCount = particleBuffer.segments();
+    if (segmentCount) {
+        shaders->setUniform(ubufData, "qt_lineSegmentCount", &segmentCount, sizeof(int));
+        float alphaFade = renderable.particles.m_alphaFade;
+        float sizeModifier = renderable.particles.m_sizeModifier;
+        float texcoordScale = renderable.particles.m_texcoordScale;
+        if (renderable.firstImage) {
+            const auto size = renderable.firstImage->m_texture.m_texture->pixelSize();
+            texcoordScale *= float(size.height()) / float(size.width());
+        }
+        shaders->setUniform(ubufData, "qt_alphaFade", &alphaFade, sizeof(float));
+        shaders->setUniform(ubufData, "qt_sizeModifier", &sizeModifier, sizeof(float));
+        shaders->setUniform(ubufData, "qt_texcoordScale", &texcoordScale, sizeof(float));
+    }
 }
 
 void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
@@ -202,9 +218,18 @@ static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
     const QMatrix4x4 &invModelMatrix = particles.globalTransform.inverted();
     QVector3D dir = invModelMatrix.map(cameraDirection);
     QVector3D n = dir.normalized();
-    const auto particleCount = buffer.particleCount();
+    const auto segments = buffer.segments();
+    auto particleCount = buffer.particleCount() / segments;
     sortData.resize(particleCount);
     sortData.fill({});
+    bool lineParticles = segments > 0;
+
+    const auto srcParticlePointer = [](int line, int segment, int sc, int ss, int pps, const char *source) -> const QSSGLineParticle * {
+        int pi = (line * sc + segment) / pps;
+        int i = (line * sc + segment) % pps;
+        const QSSGLineParticle *sp = reinterpret_cast<const QSSGLineParticle *>(source + pi * ss);
+        return sp + i;
+    };
 
     // create sort data
     {
@@ -216,7 +241,19 @@ static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
         const char *source = buffer.pointer();
         const char *begin = source;
         int i = 0;
-        if (animatedParticles) {
+        if (lineParticles) {
+            for (i = 0; i < particleCount; i++) {
+                QSSGRhiSortData lineData;
+                const QSSGLineParticle *lineBegin = srcParticlePointer(i, 0, segments, ss, pps, source);
+                lineData.indexOrOffset = i;
+                lineData.d = QVector3D::dotProduct(lineBegin->position, n);
+                for (int j = 1; j < buffer.segments(); j++) {
+                    const QSSGLineParticle *p = srcParticlePointer(i, j, segments, ss, pps, source);
+                    lineData.d = qMin(lineData.d, QVector3D::dotProduct(p->position, n));
+                }
+                *dst++ = lineData;
+            }
+        } else if (animatedParticles) {
             for (int s = 0; s < slices; s++) {
                 const QSSGParticleAnimated *sp = reinterpret_cast<const QSSGParticleAnimated *>(source);
                 for (int p = 0; p < pps && i < particleCount; p++) {
@@ -255,7 +292,23 @@ static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
         char *dest = dst.data();
         const char *source = buffer.pointer();
         int i = 0;
-        if (animatedParticles) {
+        if (lineParticles) {
+            int seg = 0;
+            for (int s = 0; s < slices; s++) {
+                QSSGLineParticle *dp = reinterpret_cast<QSSGLineParticle *>(dest);
+                for (int p = 0; p < pps && i < particleCount; p++) {
+                    *dp = *srcParticlePointer(sdata->indexOrOffset, seg, segments, ss, pps, source);
+                    dp++;
+                    seg++;
+                    if (seg == segments) {
+                        sdata++;
+                        i++;
+                        seg = 0;
+                    }
+                }
+                dest += ss;
+            }
+        } else if (animatedParticles) {
             for (int s = 0; s < slices; s++) {
                 QSSGParticleAnimated *dp = reinterpret_cast<QSSGParticleAnimated *>(dest);
                 for (int p = 0; p < pps && i < particleCount; p++) {
@@ -581,9 +634,17 @@ void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             cb->setViewport(state->viewport);
         *needsSetViewport = false;
     }
-    // draw triangle strip with 2 triangles N times
-    cb->draw(4, renderable.particles.m_particleBuffer.particleCount());
-    QSSGRHICTX_STAT(rhiCtx, draw(4, renderable.particles.m_particleBuffer.particleCount()));
+    if (renderable.particles.m_featureLevel >= QSSGRenderParticles::FeatureLevel::Line) {
+        // draw triangle strip with 2 * segmentCount vertices N times
+        int S = renderable.particles.m_particleBuffer.segments();
+        int N = renderable.particles.m_particleBuffer.particleCount() / S;
+        cb->draw(2 * S, N);
+        QSSGRHICTX_STAT(rhiCtx, draw(2 * S, N));
+    } else {
+        // draw triangle strip with 2 triangles N times
+        cb->draw(4, renderable.particles.m_particleBuffer.particleCount());
+        QSSGRHICTX_STAT(rhiCtx, draw(4, renderable.particles.m_particleBuffer.particleCount()));
+    }
 }
 
 QT_END_NAMESPACE

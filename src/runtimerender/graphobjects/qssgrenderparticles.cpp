@@ -66,6 +66,12 @@ void QSSGParticleBuffer::resize(int particleCount, int particleSize)
     m_particleBuffer.resize(m_sliceStride * height);
 }
 
+void QSSGParticleBuffer::resizeLine(int particleCount, int segmentCount)
+{
+    m_segments = segmentCount;
+    resize(particleCount * segmentCount, sizeof(QSSGLineParticle));
+}
+
 void QSSGParticleBuffer::setBounds(const QSSGBounds3& bounds)
 {
     m_bounds = bounds;
@@ -120,6 +126,11 @@ int QSSGParticleBuffer::bufferSize() const
 int QSSGParticleBuffer::serial() const
 {
     return m_serial;
+}
+
+int QSSGParticleBuffer::segments() const
+{
+    return m_segments;
 }
 
 QSSGBounds3 QSSGParticleBuffer::bounds() const

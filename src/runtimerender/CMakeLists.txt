@@ -584,7 +584,104 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_both"
         QSSG_LIGHTMAPUVRASTER_BASECOLORMAP
         QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP
 )
-
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lineparticles.vert
+        res/rhishaders/lineparticles.frag
+    OUTPUTS
+        res/rhishaders/lineparticles.vert.qsb
+        res/rhishaders/lineparticles.frag.qsb
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles_mapped"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lineparticles.vert
+        res/rhishaders/lineparticles.frag
+    OUTPUTS
+        res/rhishaders/lineparticlesmapped.vert.qsb
+        res/rhishaders/lineparticlesmapped.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles_animated"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lineparticles.vert
+        res/rhishaders/lineparticles.frag
+    OUTPUTS
+        res/rhishaders/lineparticlesanimated.vert.qsb
+        res/rhishaders/lineparticlesanimated.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+        QSSG_PARTICLES_ENABLE_ANIMATED
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles_vlight"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lineparticles.vert
+        res/rhishaders/lineparticles.frag
+    OUTPUTS
+        res/rhishaders/lineparticlesvlightsimple.vert.qsb
+        res/rhishaders/lineparticlesvlightsimple.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles_vlight_mapped"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lineparticles.vert
+        res/rhishaders/lineparticles.frag
+    OUTPUTS
+        res/rhishaders/lineparticlesvlightmapped.vert.qsb
+        res/rhishaders/lineparticlesvlightmapped.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+        QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
+qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles_vlight_animated"
+    SILENT
+    PRECOMPILE
+    OPTIMIZED
+    GLSL "300es,150"
+    PREFIX
+        "/"
+    FILES
+        res/rhishaders/lineparticles.vert
+        res/rhishaders/lineparticles.frag
+    OUTPUTS
+        res/rhishaders/lineparticlesvlightanimated.vert.qsb
+        res/rhishaders/lineparticlesvlightanimated.frag.qsb
+    DEFINES
+        QSSG_PARTICLES_ENABLE_MAPPED
+        QSSG_PARTICLES_ENABLE_ANIMATED
+        QSSG_PARTICLES_ENABLE_VERTEX_LIGHTING
+)
 # special case end
 
 #### Keys ignored in scope 1:.:.:runtimerender.pro:<TRUE>:
