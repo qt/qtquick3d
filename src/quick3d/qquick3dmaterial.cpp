@@ -83,8 +83,6 @@ QQuick3DMaterial::QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *pa
 
 QQuick3DMaterial::~QQuick3DMaterial()
 {
-    for (const auto &connection : std::as_const(m_connections))
-        disconnect(connection);
 }
 
 QQuick3DTexture *QQuick3DMaterial::lightProbe() const
@@ -107,9 +105,7 @@ void QQuick3DMaterial::setLightProbe(QQuick3DTexture *iblProbe)
     if (m_iblProbe == iblProbe)
         return;
 
-    QQuick3DObjectPrivate::updatePropertyListener(iblProbe, m_iblProbe, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("lightProbe"), m_connections, [this](QQuick3DObject *n) {
-        setLightProbe(qobject_cast<QQuick3DTexture *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DMaterial::setLightProbe, iblProbe, m_iblProbe);
 
     m_iblProbe = iblProbe;
     emit lightProbeChanged(m_iblProbe);

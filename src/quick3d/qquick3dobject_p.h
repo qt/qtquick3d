@@ -39,18 +39,72 @@ class Q_QUICK3D_PRIVATE_EXPORT QQuick3DObjectPrivate : public QObjectPrivate
 public:
     using Type = QSSGRenderGraphObject::Type;
 
-    using ConnectionMap = QHash<QByteArray, QMetaObject::Connection>;
+    struct ConnectionKey
+    {
+        using Handle = void (QQuick3DObject::*)(QObject *);
+        QObject *context = nullptr;
+        Handle unusable = nullptr;
+        friend bool operator==(const ConnectionKey &a, const ConnectionKey &b) noexcept { return (a.context == b.context) && (a.unusable == b.unusable); }
+    };
+    using ConnectionMap = QHash<ConnectionKey, QMetaObject::Connection>;
+
+    template<typename SceneContext, typename CallContext, typename Setter>
+    static void attachWatcherPriv(SceneContext *sceneContext, CallContext *callContext, Setter setter, QQuick3DObject *newO, QQuick3DObject *oldO)
+    {
+        static_assert(std::is_base_of_v<QQuick3DObject, SceneContext>, "The scene context must be a QQuick3DObject");
+        static_assert(std::is_member_function_pointer_v<Setter>, "The assumption is that the setter is a member function!");
+        static_assert(sizeof(ConnectionKey::Handle) >= sizeof(Setter), "The handle needs to be able to store the value of the setter");
+        auto sceneManager = QQuick3DObjectPrivate::get(sceneContext)->sceneManager;
+        auto &connectionMap = QQuick3DObjectPrivate::get(sceneContext)->connectionMap;
+        union
+        {
+            Setter s;
+            ConnectionKey::Handle h;
+        }; s = setter;
+        ConnectionKey key{static_cast<QObject *>(callContext), h};
+        // disconnect previous destruction listener
+        if (oldO) {
+            QQuick3DObjectPrivate::derefSceneManager(oldO);
+
+            auto it = connectionMap.constFind(key);
+            if (it != connectionMap.cend()) {
+                QObject::disconnect(*it);
+                connectionMap.erase(it);
+            }
+        }
+
+        // Watch new object
+        if (newO) {
+            if (sceneManager)
+                QQuick3DObjectPrivate::refSceneManager(newO, *sceneManager);
+            auto connection = QObject::connect(newO, &QQuick3DObject::detachWatchers, callContext, [callContext, setter](){ (callContext->*setter)(nullptr); });
+            connectionMap.insert(key, connection);
+        }
+    }
+
+    /*!
+      Attach a object-destroyed-watcher to an object that's not owned.
+      There are few checks here just to keep it simple
+      (The compiler should still fail with a varying degree of helpful messages when used incorrectly).
+
+      \a sceneContext - ususally the same as the callContext and only different if the calledContext is a non-QQuick3DObject class
+      (as is the case for QQuick3DShaderUtilsTextureInput)!
+      \a callContext - The object watching another object
+      \a setter - The function/slot that is called for the object (context).
+      \a newO - The new object being watched
+      \b oldO - The previous object that should no longer be watched.
+
+      Note: The \a setter is a function that takes one argument with a discardable return value.
+    */
+    template<typename Context, typename Setter, typename Object3D>
+    static void attachWatcher(Context *context, Setter setter, Object3D *newO, Object3D *oldO)
+    {
+        attachWatcherPriv(context, context, setter, newO, oldO);
+    }
 
     static QQuick3DObjectPrivate *get(QQuick3DObject *item) { return item->d_func(); }
     static const QQuick3DObjectPrivate *get(const QQuick3DObject *item) { return item->d_func(); }
     static QSSGRenderGraphObject *updateSpatialNode(QQuick3DObject *o, QSSGRenderGraphObject *n) { return o->updateSpatialNode(n); }
-
-    static void updatePropertyListener(QQuick3DObject *newO,
-                                       QQuick3DObject *oldO,
-                                       QQuick3DSceneManager *sceneManager,
-                                       const QByteArray &propertyKey,
-                                       ConnectionMap &connections,
-                                       const std::function<void(QQuick3DObject *o)> &callFn);
 
     explicit QQuick3DObjectPrivate(Type t);
     ~QQuick3DObjectPrivate() override;
@@ -226,10 +280,17 @@ public:
     bool culled;
     bool sharedResource = false;
     QQuick3DItem2D *contentItem2d = nullptr;
+    ConnectionMap connectionMap;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuick3DObjectPrivate::ChangeTypes)
 Q_DECLARE_TYPEINFO(QQuick3DObjectPrivate::ChangeListener, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQuick3DObjectPrivate::ConnectionKey, Q_PRIMITIVE_TYPE);
+
+inline size_t qHash(const QQuick3DObjectPrivate::ConnectionKey &con, size_t seed = 0) noexcept
+{
+    return qHashBits(&con, sizeof(QQuick3DObjectPrivate::ConnectionKey), seed);
+}
 
 QT_END_NAMESPACE
 

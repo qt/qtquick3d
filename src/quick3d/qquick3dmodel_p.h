@@ -218,8 +218,6 @@ private:
     QQuick3DBakedLightmap *m_bakedLightmap = nullptr;
     QMetaObject::Connection m_bakedLightmapSignalConnection;
     QQuick3DSkin *m_skin = nullptr;
-
-    QHash<QByteArray, QMetaObject::Connection> m_connections;
 };
 
 QT_END_NAMESPACE

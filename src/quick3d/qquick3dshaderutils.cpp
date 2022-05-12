@@ -659,15 +659,11 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     while (p != nullptr) {
         if (QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(p)) {
             mat->setDynamicTextureMap(this);
-            QQuick3DObjectPrivate::updatePropertyListener(texture, m_texture, QQuick3DObjectPrivate::get(mat)->sceneManager, name, mat->m_connections, [this](QQuick3DObject *) {
-                setTexture(nullptr);
-            });
+            QQuick3DObjectPrivate::attachWatcherPriv(mat, this, &QQuick3DShaderUtilsTextureInput::setTexture, texture, m_texture);
             break;
         } else if (QQuick3DEffect *efx = qobject_cast<QQuick3DEffect *>(p)) {
             efx->setDynamicTextureMap(this);
-            QQuick3DObjectPrivate::updatePropertyListener(texture, m_texture, QQuick3DObjectPrivate::get(efx)->sceneManager, name, efx->m_connections, [this](QQuick3DObject *) {
-                setTexture(nullptr);
-            });
+            QQuick3DObjectPrivate::attachWatcherPriv(efx, this, &QQuick3DShaderUtilsTextureInput::setTexture, texture, m_texture);
             break;
         }
         p = p->parent();

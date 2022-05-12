@@ -93,6 +93,10 @@ QQuick3DObject::~QQuick3DObject()
     if (d->sceneRefCount > 1)
         d->sceneRefCount = 1; // Make sure the scene is set to null in next call to derefSceneManager().
 
+    // Right about now would be a good time for any objects whatching the lifetime of this object
+    // to release its referense to this.
+    emit detachWatchers(QPrivateSignal());
+
     if (!d->parentItem && d->sceneManager)
         QQuick3DObjectPrivate::derefSceneManager(this);
 }
@@ -251,36 +255,6 @@ bool QQuick3DObject::isComponentComplete() const
 void QQuick3DObject::preSync()
 {
 
-}
-
-void QQuick3DObjectPrivate::updatePropertyListener(QQuick3DObject *newO,
-                                                   QQuick3DObject *oldO,
-                                                   QQuick3DSceneManager *sceneManager,
-                                                   const QByteArray &propertyKey,
-                                                   ConnectionMap &connections,
-                                                   const std::function<void(QQuick3DObject *)> &callFn)
-{
-    // disconnect previous destruction listener
-    if (oldO) {
-        if (sceneManager)
-            QQuick3DObjectPrivate::derefSceneManager(oldO);
-
-        auto connection = connections.find(propertyKey);
-        if (connection != connections.end()) {
-            QObject::disconnect(connection.value());
-            connections.erase(connection);
-        }
-    }
-
-    // listen for new map's destruction
-    if (newO) {
-        if (sceneManager)
-            QQuick3DObjectPrivate::refSceneManager(newO, *sceneManager);
-        auto connection = QObject::connect(newO, &QObject::destroyed, [callFn](){
-            callFn(nullptr);
-        });
-        connections.insert(propertyKey, connection);
-    }
 }
 
 QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)

@@ -104,8 +104,6 @@ QQuick3DModel::~QQuick3DModel()
 {
     disconnect(m_skeletonConnection);
     disconnect(m_geometryConnection);
-    for (const auto &connection : std::as_const(m_connections))
-        disconnect(connection);
 
     auto matList = materials();
     qmlClearMaterials(&matList);
@@ -557,9 +555,7 @@ void QQuick3DModel::setGeometry(QQuick3DGeometry *geometry)
         return;
 
     // Make sure to disconnect if the geometry gets deleted out from under us
-    QQuick3DObjectPrivate::updatePropertyListener(geometry, m_geometry, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("geometry"), m_connections, [this](QQuick3DObject *n) {
-        setGeometry(qobject_cast<QQuick3DGeometry *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DModel::setGeometry, geometry, m_geometry);
 
     if (m_geometry)
         QObject::disconnect(m_geometryConnection);
@@ -581,9 +577,7 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
         return;
 
     // Make sure to disconnect if the skeleton gets deleted out from under us
-    QQuick3DObjectPrivate::updatePropertyListener(skeleton, m_skeleton, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skeleton"), m_connections, [this](QQuick3DObject *n) {
-        setSkeleton(qobject_cast<QQuick3DSkeleton *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DModel::setSkeleton, skeleton, m_skeleton);
 
     if (m_skeleton)
         QObject::disconnect(m_skeletonConnection);
@@ -606,9 +600,7 @@ void QQuick3DModel::setSkin(QQuick3DSkin *skin)
         return;
 
     // Make sure to disconnect if the skin gets deleted out from under us
-    QQuick3DObjectPrivate::updatePropertyListener(skin, m_skin, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("skin"), m_connections, [this](QQuick3DObject *n) {
-        setSkin(qobject_cast<QQuick3DSkin *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DModel::setSkin, skin, m_skin);
 
     m_skin = skin;
     emit skinChanged();
@@ -641,9 +633,7 @@ void QQuick3DModel::setInstancing(QQuick3DInstancing *instancing)
         return;
 
     // Make sure to disconnect if the instance table gets deleted out from under us
-    QQuick3DObjectPrivate::updatePropertyListener(instancing, m_instancing, QQuick3DObjectPrivate::get(this)->sceneManager, QByteArrayLiteral("instancing"), m_connections, [this](QQuick3DObject *n) {
-        setInstancing(qobject_cast<QQuick3DInstancing *>(n));
-    });
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DModel::setInstancing, instancing, m_instancing);
     if (m_instancing)
         QObject::disconnect(m_instancingConnection);
     m_instancing = instancing;
