@@ -59,12 +59,6 @@ View3D {
             eulerRotation.y: 45
 
             source: "#Cube"
-
-            materials: cubeMaterial
-            DefaultMaterial {
-                id: cubeMaterial
-                diffuseColor: "#4aee45"
-            }
         }
     }
 }
