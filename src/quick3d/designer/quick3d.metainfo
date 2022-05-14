@@ -84,7 +84,7 @@ MetaInfo {
         icon: "images/custommaterial16.png"
 
         Hints {
-            visibleInNavigator: true
+            visibleInNavigator: false
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
         }
@@ -104,7 +104,7 @@ MetaInfo {
         icon: "images/material16.png"
 
         Hints {
-            visibleInNavigator: true
+            visibleInNavigator: false
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
         }
@@ -123,7 +123,7 @@ MetaInfo {
         icon: "images/material16.png"
 
         Hints {
-            visibleInNavigator: true
+            visibleInNavigator: false
             canBeDroppedInNavigator: true
             canBeDroppedInFormEditor: false
         }
@@ -251,7 +251,7 @@ MetaInfo {
             libraryIcon: "images/cube.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            QmlSource { source: "./source/cube_model_template.qml" }
+            Property { name: "source"; type: "QUrl"; value: "#Cube"; }
         }
     }
     Type {
@@ -272,7 +272,7 @@ MetaInfo {
             libraryIcon: "images/sphere.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            QmlSource { source: "./source/sphere_model_template.qml" }
+            Property { name: "source"; type: "QUrl"; value: "#Sphere"; }
         }
     }
     Type {
@@ -293,7 +293,7 @@ MetaInfo {
             libraryIcon: "images/cylinder.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            QmlSource { source: "./source/cylinder_model_template.qml" }
+            Property { name: "source"; type: "QUrl"; value: "#Cylinder"; }
         }
     }
     Type {
@@ -314,7 +314,7 @@ MetaInfo {
             libraryIcon: "images/plane.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            QmlSource { source: "./source/plane_model_template.qml" }
+            Property { name: "source"; type: "QUrl"; value: "#Rectangle"; }
         }
     }
     Type {
@@ -335,7 +335,7 @@ MetaInfo {
             libraryIcon: "images/cone.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
-            QmlSource { source: "./source/cone_model_template.qml" }
+            Property { name: "source"; type: "QUrl"; value: "#Cone"; }
         }
     }
     Type {
