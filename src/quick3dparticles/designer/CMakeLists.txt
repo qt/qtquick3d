@@ -30,6 +30,8 @@ qt_copy_or_install(
         PointRotator3DSpecifics.qml
         ParticleShape3DSection.qml
         ParticleShape3DSpecifics.qml
+        Repeller3DSection.qml
+        Repeller3DSpecifics.qml
         SpriteParticle3DSection.qml
         SpriteParticle3DSpecifics.qml
         SpriteSequence3DSection.qml

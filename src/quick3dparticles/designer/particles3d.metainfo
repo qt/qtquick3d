@@ -502,4 +502,23 @@ MetaInfo {
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
+    Type {
+        name: "QtQuick3D.Particles3D.Repeller3D"
+        icon: "images/repeller-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Repeller"
+            category: "Qt Quick 3D Particles 3D"
+            libraryIcon: "images/repeller-24px.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Particles3D"
+        }
+    }
 }

@@ -37,6 +37,9 @@ qt_copy_or_install(
         point-rotator-16px.png
         point-rotator-24px.png
         point-rotator-24px@2x.png
+        repeller-16px.png
+        repeller-24px.png
+        repeller-24px@2x.png
         sprite-particle-16px.png
         sprite-particle-24px.png
         sprite-particle-24px@2x.png
