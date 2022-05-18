@@ -15,6 +15,8 @@ qt_copy_or_install(
         ParticleEmitter3DSpecifics.qml
         Gravity3DSection.qml
         Gravity3DSpecifics.qml
+        LineParticle3DSection.qml
+        LineParticle3DSpecifics.qml
         ModelBlendParticle3DSection.qml
         ModelBlendParticle3DSpecifics.qml
         ModelParticle3DSection.qml

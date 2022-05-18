@@ -483,4 +483,23 @@ MetaInfo {
             QmlSource { source: "./source/particlesystem_wander_template.qml" }
         }
     }
+    Type {
+        name: "QtQuick3D.Particles3D.LineParticle3D"
+        icon: "images/line-particle-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Line Particle"
+            category: "Qt Quick 3D Particles 3D"
+            libraryIcon: "images/line-particle-24px.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Particles3D"
+        }
+    }
 }

@@ -16,6 +16,9 @@ qt_copy_or_install(
         gravity-16px.png
         gravity-24px.png
         gravity-24px@2x.png
+        line-particle-16px.png
+        line-particle-24px.png
+        line-particle-24px@2x.png
         model-blend-particle-16px.png
         model-blend-particle-24px.png
         model-blend-particle-24px@2x.png
