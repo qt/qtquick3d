@@ -690,6 +690,9 @@ void QSSGShaderCache::importShaderCache(const QByteArray &shaderCache, QByteArra
     if (shaderCache.isEmpty())
         BAILOUT("Shader cache Empty")
 
+    if (m_renderContext.isNull())
+        BAILOUT("Render context is nullptr")
+
     QDataStream data(shaderCache);
     quint32 type;
     quint32 version;
@@ -745,11 +748,13 @@ void QSSGShaderCache::importShaderCache(const QByteArray &shaderCache, QByteArra
             qCInfo(TRACE_INFO) << "Loading binary program from shader cache: '<" << key << ">'";
 
             QSSGRenderVertFragCompilationResult result = m_renderContext->compileBinary(key, format, binary);
-            theShader = result.m_shader;
-            if (theShader.isNull())
-                errors += theShader->errorMessage();
-            else
+            if (result.m_success) {
+                theShader = result.m_shader;
                 m_shaders.insert(tempKey, theShader);
+            } else {
+                if (!theShader.isNull())
+                    errors += theShader->errorMessage();
+            }
         } else {
             QByteArray loadVertexData;
             QByteArray loadFragmentData;
@@ -765,16 +770,17 @@ void QSSGShaderCache::importShaderCache(const QByteArray &shaderCache, QByteArra
 
             if (!loadVertexData.isEmpty() && (!loadFragmentData.isEmpty()
                                               || !loadGeometryData.isEmpty())) {
-                QByteArray error;
                 QSSGRenderVertFragCompilationResult result
                         = m_renderContext->compileSource(key, QSSGByteView(loadVertexData), QSSGByteView(loadFragmentData),
                                                          QSSGByteView(loadTessControlData), QSSGByteView(loadTessControlData),
                                                          QSSGByteView(loadGeometryData));
-                theShader = result.m_shader;
-                if (theShader.isNull())
-                    errors += theShader->errorMessage();
-                else
+                if (result.m_success) {
+                    theShader = result.m_shader;
                     m_shaders.insert(tempKey, theShader);
+                } else {
+                    if (!theShader.isNull())
+                        errors += theShader->errorMessage();
+                }
             }
         }
         // If something doesn't save or load correctly, get the runtime to re-generate.

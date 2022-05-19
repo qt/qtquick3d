@@ -307,7 +307,7 @@ void QQuick3DViewport::writeShaderCache(const QUrl &shaderCacheFile)
     QSaveFile file(filePath);
     QFileInfo(filePath).dir().mkpath(QStringLiteral("."));
     bool success = false;
-    if (file.open(QIODevice::WriteOnly) && file.write(m_shaderCacheData) != -1) {
+    if (file.open(QIODevice::WriteOnly) && file.write(m_shaderCacheIO) != -1) {
         file.commit();
         success = true;
     } else {
@@ -350,9 +350,13 @@ void QQuick3DViewport::doImportShaderCache()
     if (!m_shaderCacheData.isNull()) {
         QByteArray error;
         auto rci = QSSGRenderContextInterface::getRenderContextInterface(quintptr(window()));
-        rci->shaderCache()->importShaderCache(m_shaderCacheData, error);
-        if (!error.isEmpty())
-            Q_EMIT shaderCacheLoadErrors(error);
+        if (!rci.isNull() && !rci->shaderCache().isNull()) {
+            rci->shaderCache()->importShaderCache(m_shaderCacheData, error);
+            if (!error.isEmpty())
+                Q_EMIT shaderCacheLoadErrors(error);
+        } else {
+            qWarning () << "Unable to load shader cache, not initialized.";
+        }
     }
 }
 

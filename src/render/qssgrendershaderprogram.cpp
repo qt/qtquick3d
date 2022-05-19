@@ -1104,6 +1104,7 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(const QSSGRe
             result.m_shader->detach(teShader);
         if (geShader)
             result.m_shader->detach(geShader);
+        result.m_success = true;
     }
 
     backend->releaseVertexShader(vtxShader);
@@ -1122,7 +1123,7 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::create(
     QSSGRenderVertFragCompilationResult result;
     result.m_shaderName = programName;
     result.m_shader = new QSSGRenderShaderProgram(context, programName, false);
-    result.m_shader->link(format, binary);
+    result.m_success = result.m_shader->link(format, binary);
     return result;
 }
 
@@ -1175,6 +1176,7 @@ QSSGRenderVertFragCompilationResult QSSGRenderShaderProgram::createCompute(const
 
     // set program
     result.m_shader = pProgram;
+    result.m_success = bProgramIsValid;
 
     return result;
 }
