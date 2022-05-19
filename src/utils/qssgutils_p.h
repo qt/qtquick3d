@@ -162,13 +162,13 @@ public:
         , m_dirty(Dirty::Euler)
     {}
 
-    inline const RotationData &operator=(const QVector3D &r) noexcept
+    RotationData &operator=(const QVector3D &r) noexcept
     {
         m_eulerRot = r;
         m_dirty = Dirty::Quaternion;
         return *this;
     }
-    inline const RotationData &operator=(const QQuaternion &r) noexcept
+    RotationData &operator=(const QQuaternion &r) noexcept
     {
         m_quatRot = r.normalized();
         m_dirty = Dirty::Euler;
