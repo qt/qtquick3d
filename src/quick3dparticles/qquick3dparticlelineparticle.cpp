@@ -592,9 +592,11 @@ void QQuick3DParticleLineParticle::handleSegmentCountChanged()
     m_lineHeaderData.resize(m_maxAmount);
     m_lineHeaderData.fill({});
     m_fadeOutData.clear();
-    if (m_spriteParticleData.size() > 0)
-        for (int i = 0; i < m_maxAmount; i++)
+    if (!m_spriteParticleData.isEmpty()) {
+        auto count = qMin(m_maxAmount, m_spriteParticleData.size());
+        for (int i = 0; i < count; i++)
             m_lineHeaderData[i].emitterIndex = m_spriteParticleData[i].emitterIndex;
+    }
 }
 
 void QQuick3DParticleLineParticle::updateLineSegment(int particleIndex)
