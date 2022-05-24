@@ -232,7 +232,7 @@ private:
 
     [[nodiscard]] constexpr static inline bool fuzzyQuaternionCompare(const QQuaternion &a, const QQuaternion &b)
     {
-        constexpr float e = 0.00001f;
+        constexpr float e = 0.000001f;
         return ((1.0f - qAbs(QQuaternion::dotProduct(a, b))) <= e);
     }
 
