@@ -46,6 +46,9 @@ qt_copy_or_install(
         sprite-sequence-16px.png
         sprite-sequence-24px.png
         sprite-sequence-24px@2x.png
+        scale-affector-16px.png
+        scale-affector-24px.png
+        scale-affector-24px@2x.png
         target-direction-16px.png
         target-direction-24px.png
         target-direction-24px@2x.png

@@ -521,4 +521,23 @@ MetaInfo {
             requiredImport: "QtQuick3D.Particles3D"
         }
     }
+    Type {
+        name: "QtQuick3D.Particles3D.ScaleAffector3D"
+        icon: "images/scale-affector-16px.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Scale Affector"
+            category: "Qt Quick 3D Particles 3D"
+            libraryIcon: "images/scale-affector-24px.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Particles3D"
+        }
+    }
 }

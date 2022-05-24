@@ -36,6 +36,8 @@ qt_copy_or_install(
         SpriteParticle3DSpecifics.qml
         SpriteSequence3DSection.qml
         SpriteSequence3DSpecifics.qml
+        ScaleAffector3DSection.qml
+        ScaleAffector3DSpecifics.qml
         ParticleSystem3DSection.qml
         ParticleSystem3DSpecifics.qml
         TargetDirection3DSection.qml
