@@ -59,6 +59,9 @@ qt_copy_or_install(
         plane.png
         plane16.png
         plane@2x.png
+        reflectionProbe.png
+        reflectionProbe16.png
+        reflectionProbe@2x.png
         repeater3d.png
         repeater3d16.png
         repeater3d@2x.png
