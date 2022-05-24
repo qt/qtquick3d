@@ -422,6 +422,18 @@ bool QQuick3DModel::receivesReflections() const
 }
 
 /*!
+    \qmlproperty bool Model::castsReflections
+    \since 6.4
+
+    When this property is set to \c true, the model is rendered by reflection probes and can be
+    seen in the reflections.
+*/
+bool QQuick3DModel::castsReflections() const
+{
+    return m_castsReflections;
+}
+
+/*!
     \qmlproperty bool Model::usedInBakedLighting
 
     When this property is set to \c true, the model contributes to baked
@@ -694,6 +706,15 @@ void QQuick3DModel::setReceivesReflections(bool receivesReflections)
     markDirty(ReflectionDirty);
 }
 
+void QQuick3DModel::setCastsReflections(bool castsReflections)
+{
+    if (m_castsReflections == castsReflections)
+        return;
+    m_castsReflections = castsReflections;
+    emit castsReflectionsChanged();
+    markDirty(ReflectionDirty);
+}
+
 void QQuick3DModel::setUsedInBakedLighting(bool enable)
 {
     if (m_usedInBakedLighting == enable)
@@ -874,8 +895,10 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         }
     }
 
-    if (m_dirtyAttributes & ReflectionDirty)
+    if (m_dirtyAttributes & ReflectionDirty) {
         modelNode->receivesReflections = m_receivesReflections;
+        modelNode->castsReflections = m_castsReflections;
+    }
 
     m_dirtyAttributes = dirtyAttribute;
 

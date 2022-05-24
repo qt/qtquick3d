@@ -115,6 +115,22 @@ Section {
         }
 
         PropertyLabel {
+            text: qsTr("Casts Reflections")
+            tooltip: qsTr("Enables reflection probes to reflect this model.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.castsReflections.valueToString
+                backendValue: backendValues.castsReflections
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Pickable")
             tooltip: qsTr("Controls whether the model is pickable or not.")
         }

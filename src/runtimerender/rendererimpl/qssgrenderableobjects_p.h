@@ -85,7 +85,8 @@ enum class QSSGRenderableObjectFlag
     ReceivesReflections = 1 << 22,
     UsedInBakedLighting = 1 << 23,
     RendersWithLightmap = 1 << 24,
-    HasAttributeTexCoordLightmap = 1 << 25
+    HasAttributeTexCoordLightmap = 1 << 25,
+    CastsReflections = 1 << 26
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -116,6 +117,9 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
 
     void setReceivesReflections(bool inReceivesReflections) { setFlag(QSSGRenderableObjectFlag::ReceivesReflections, inReceivesReflections); }
     bool receivesReflections() const { return this->operator&(QSSGRenderableObjectFlag::ReceivesReflections); }
+
+    void setCastsReflections(bool inCastsReflections) { setFlag(QSSGRenderableObjectFlag::CastsReflections, inCastsReflections); }
+    bool castsReflections() const { return this->operator&(QSSGRenderableObjectFlag::CastsReflections); }
 
     void setUsedInBakedLighting(bool inUsedInBakedLighting) { setFlag(QSSGRenderableObjectFlag::UsedInBakedLighting, inUsedInBakedLighting); }
     bool usedInBakedLighting() const { return this->operator&(QSSGRenderableObjectFlag::UsedInBakedLighting); }

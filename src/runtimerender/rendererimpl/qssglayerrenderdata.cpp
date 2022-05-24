@@ -918,6 +918,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
         renderableFlagsForModel.setCastsShadows(inModel.castsShadows);
         renderableFlagsForModel.setReceivesShadows(inModel.receivesShadows);
         renderableFlagsForModel.setReceivesReflections(inModel.receivesReflections);
+        renderableFlagsForModel.setCastsReflections(inModel.castsReflections);
 
         renderableFlagsForModel.setUsedInBakedLighting(inModel.usedInBakedLighting);
         if (inModel.hasLightmap()) {
@@ -3473,8 +3474,10 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             }
 
             bool needsSetViewport = true;
-            for (const auto &handle : reflectionPassObjects)
-                rhiRenderRenderable(rhiCtx, inData, *handle.obj, &needsSetViewport, face, &ps);
+            for (const auto &handle : reflectionPassObjects) {
+                if (handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::CastsReflections))
+                    rhiRenderRenderable(rhiCtx, inData, *handle.obj, &needsSetViewport, face, &ps);
+            }
 
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
