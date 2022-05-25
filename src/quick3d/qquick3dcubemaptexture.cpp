@@ -75,8 +75,26 @@ QT_BEGIN_NAMESPACE
 
     CubeMapTexture inherits all its properties from Texture. The important
     difference is that \l source must refer to a image file containing a
-    cubemap. In practice this means a \l{https://www.khronos.org/ktx/}{KTX}
-    container containing 6 face images.
+    cubemap, or to a list of image files. In practice a single file means a
+    \l{https://www.khronos.org/ktx/}{KTX} container containing 6 face images.
+
+    Sourcing a CubeMapTexture from 6 individual images can be done in two
+    different ways. Either as a semicolon-separated list of file names in
+    X+, X-, Y+, Y-, Z+, Z- order:
+    \qml
+    CubeMapTexture {
+        source: "maps/right.jpg;maps/left.jpg;maps/top.jpg;maps/bottom.jpg;maps/front.jpg;maps/back.jpg"
+    }
+    \endqml
+    or as a string containing a "%p" placeholder, where "%p" will be replaced by the strings
+    "posx", "negx", "posy", "negy", "posz", and "negz" to generate the six filenames:
+    \qml
+    CubeMapTexture {
+        source: "maps/sky_%p.png"
+        // equivalent to:
+        // source: "maps/sky_posx.png;maps/sky_negx.png;maps/sky_posy.png;maps/sky_negy.png;maps/sky_posz.png;maps/sky_negz.png"
+    }
+    \endqml
 
     \note Sourcing image data via other means, such as \l sourceItem or \l
     textureData is not supported for CubeMapTexture at the moment.

@@ -292,11 +292,11 @@ static inline QSSGRenderTextureFormat fromGLtoTextureFormat(quint32 internalForm
     }
 }
 
-QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 flipVertical)
+static QImage loadImage(const QString &inPath, bool flipVertical)
 {
     QImage image(inPath);
     if (image.isNull())
-        return nullptr;
+        return image;
     const QPixelFormat pixFormat = image.pixelFormat();
     QImage::Format targetFormat = QImage::Format_RGBA8888_Premultiplied;
     if (image.colorCount()) // a palleted image
@@ -311,7 +311,14 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 f
     image.convertTo(targetFormat); // convert to a format mappable to QRhiTexture::Format
     if (flipVertical)
         image.mirror(); // Flip vertically to the conventional Y-up orientation
+    return image;
+}
 
+QSSGLoadedTexture *QSSGLoadedTexture::loadQImage(const QString &inPath, qint32 flipVertical)
+{
+    QImage image = loadImage(inPath, flipVertical);
+    if (image.isNull())
+        return nullptr;
     QSSGLoadedTexture *retval = new QSSGLoadedTexture;
     retval->width = image.width();
     retval->height = image.height();
@@ -867,6 +874,71 @@ bool QSSGLoadedTexture::scanForTransparency() const
     return false;
 }
 
+static bool isCompatible(const QImage &img1, const QImage &img2)
+{
+    if (img1.size() != img2.size())
+        return false;
+    if (img1.pixelFormat().channelCount() != img2.pixelFormat().channelCount())
+        return false;
+
+    return true;
+}
+
+static QSSGLoadedTexture *loadCubeMap(const QString &inPath, bool flipY)
+{
+    QStringList fileNames;
+    if (inPath.contains(QStringLiteral("%p"))) {
+        fileNames.reserve(6);
+        const char *faces[6] = { "posx", "negx", "posy", "negy", "posz", "negz" };
+        for (const auto face : faces) {
+            QString fileName = inPath;
+            fileName.replace(QStringLiteral("%p"), QLatin1StringView(face));
+            fileNames << fileName;
+        }
+
+    } else if (inPath.contains(QStringLiteral(";"))) {
+        fileNames = inPath.split(QChar(u';'));
+    }
+    if (fileNames.length() != 6)
+        return nullptr; // TODO: allow sparse cube maps (with some faces missing)
+    std::unique_ptr<QTextureFileData> textureFileData = std::make_unique<QTextureFileData>(QTextureFileData::ImageMode);
+    textureFileData->setNumFaces(6);
+    textureFileData->setNumLevels(1);
+    textureFileData->setLogName(inPath.toUtf8());
+    QImage prevImage;
+    for (int i = 0; i < 6; ++i) {
+        QString searchName = fileNames[i];
+        QString filePath;
+        auto stream = QSSGInputUtil::getStreamForFile(searchName, true, &filePath);
+        if (!stream)
+            return nullptr;
+
+        QImage face = loadImage(filePath, !flipY); // Cube maps are flipped the other way
+        if (face.isNull() || (!prevImage.isNull() && !isCompatible(prevImage, face))) {
+            return nullptr;
+        }
+        textureFileData->setData(face, 0, i);
+        textureFileData->setSize(face.size());
+        prevImage = face;
+    }
+
+    QSSGLoadedTexture *retval = new QSSGLoadedTexture;
+
+    retval->textureFileData = *textureFileData;
+
+    retval->width = prevImage.width();
+    retval->height = prevImage.height();
+    retval->components = prevImage.pixelFormat().channelCount();
+    retval->image = prevImage;
+    retval->data = (void *)retval->image.bits();
+    retval->dataSizeInBytes = prevImage.sizeInBytes();
+    retval->setFormatFromComponents();
+    // #TODO: This is a very crude way detect color space
+    retval->isSRGB = prevImage.colorSpace().transferFunction() != QColorSpace::TransferFunction::Linear;
+
+    return retval;
+}
+
 QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
                                            const QSSGRenderTextureFormat &inFormat,
                                            bool inFlipY)
@@ -894,6 +966,9 @@ QSSGLoadedTexture *QSSGLoadedTexture::load(const QString &inPath,
             theLoadedImage = loadQImage(fileName, inFlipY);
             break;
         }
+    } else {
+        // Check to see if we can find a cubemap
+        return loadCubeMap(inPath, inFlipY);
     }
     return theLoadedImage;
 }
