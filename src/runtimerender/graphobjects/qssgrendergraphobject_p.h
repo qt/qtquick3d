@@ -101,6 +101,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         DefaultMaterial = BaseType::Material | BaseType::Resource, // Resource
         PrincipledMaterial, // Resource
         CustomMaterial, // Resource
+        SpecularGlossyMaterial, //Resource
         Skin, // Resource
         // Textures
         Image2D = BaseType::Texture | BaseType::Resource, // Resource

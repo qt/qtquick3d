@@ -630,6 +630,8 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     // propagate the flag indicating the presence of a lightmap
     renderer->defaultMaterialShaderKeyProperties().m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
 
+    renderer->defaultMaterialShaderKeyProperties().m_specularGlossyEnabled.setValue(theGeneratedKey, theMaterial->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial);
+
     //    if (theMaterial->iblProbe && checkLightProbeDirty(*theMaterial->iblProbe)) {
 //        renderer->prepareImageForIbl(*theMaterial->iblProbe);
 //    }
@@ -688,13 +690,11 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
         prepareImageForRender(*(img), imgtype, firstImage, nextImage, renderableFlags,  \
                               theGeneratedKey, shadercomponent, &inMaterial)
 
-        if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+        if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
+            theMaterial->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGRenderableImage::Type::BaseColor,
                                     QSSGShaderDefaultMaterialKeyProperties::BaseColorMap);
-            CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
-                                    QSSGRenderableImage::Type::Metalness,
-                                    QSSGShaderDefaultMaterialKeyProperties::MetalnessMap);
             CHECK_IMAGE_AND_PREPARE(theMaterial->occlusionMap,
                                     QSSGRenderableImage::Type::Occlusion,
                                     QSSGShaderDefaultMaterialKeyProperties::OcclusionMap);
@@ -716,6 +716,11 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
             CHECK_IMAGE_AND_PREPARE(theMaterial->thicknessMap,
                                     QSSGRenderableImage::Type::Thickness,
                                     QSSGShaderDefaultMaterialKeyProperties::ThicknessMap);
+            if (theMaterial->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+                CHECK_IMAGE_AND_PREPARE(theMaterial->metalnessMap,
+                                        QSSGRenderableImage::Type::Metalness,
+                                        QSSGShaderDefaultMaterialKeyProperties::MetalnessMap);
+            }
         } else {
             CHECK_IMAGE_AND_PREPARE(theMaterial->colorMap,
                                     QSSGRenderableImage::Type::Diffuse,
@@ -1030,7 +1035,9 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
             usesBlendParticles = false;
         }
 
-        if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial || theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+        if (theMaterialObject->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
+            theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
+            theMaterialObject->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
             QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
             // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
             // if the mesh has it.

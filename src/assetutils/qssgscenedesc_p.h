@@ -47,6 +47,7 @@
 #include <QtQuick3D/private/qquick3dcustommaterial_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dprincipledmaterial_p.h>
+#include <QtQuick3D/private/qquick3dspecularglossymaterial_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 // cameras
 #include <QtQuick3D/private/qquick3dorthographiccamera_p.h>

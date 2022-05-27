@@ -338,7 +338,7 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
     }
 }
 
-static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMaterial &source, const SceneInfo &sceneInfo)
+static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMaterial &source, const SceneInfo &sceneInfo, QSSGSceneDesc::Material::RuntimeType type)
 {
     if (target.name.isNull()) {
         aiString materialName = source.GetName();
@@ -426,8 +426,9 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         return tex;
     };
 
-    if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
-        aiReturn result;
+    aiReturn result;
+
+    if (type == QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial) {
         {
             aiColor4D baseColorFactor;
             result = source.Get(AI_MATKEY_BASE_COLOR, baseColorFactor);
@@ -530,6 +531,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
             if (result == aiReturn_SUCCESS && shadingModel == aiShadingMode_Unlit)
                 QSSGSceneDesc::setProperty(target, "lighting", &QQuick3DPrincipledMaterial::setLighting, QQuick3DPrincipledMaterial::Lighting::NoLighting);
         }
+
 
         {
             // Clearcoat Properties (KHR_materials_clearcoat)
@@ -646,11 +648,8 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                                            float(ior));
         }
 
-
-
-    } else { // Ver1
+    } else if (type == QSSGSceneDesc::Material::RuntimeType::DefaultMaterial) { // Ver1
         int shadingModel = 0;
-        aiReturn result;
         auto material = &source;
         result = material->Get(AI_MATKEY_SHADING_MODEL, shadingModel);
         // lighting
@@ -698,6 +697,212 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         // normalMap aiTextureType_NORMALS 0
         if (auto normalTexture = createTextureNode(source, aiTextureType_NORMALS, 0))
             QSSGSceneDesc::setProperty(target, "normalMap", &QQuick3DDefaultMaterial::setNormalMap, normalTexture);
+    } else if (type == QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial) {
+        {
+            aiColor4D albedoFactor;
+            result = source.Get(AI_MATKEY_COLOR_DIFFUSE, albedoFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "albedoColor", &QQuick3DSpecularGlossyMaterial::setAlbedoColor, aiColorToQColor(albedoFactor));
+        }
+
+        if (auto albedoTexture = createTextureNode(source, aiTextureType_DIFFUSE, 0)) {
+            QSSGSceneDesc::setProperty(target, "albedoMap", &QQuick3DSpecularGlossyMaterial::setAlbedoMap, albedoTexture);
+            QSSGSceneDesc::setProperty(target, "opacityChannel", &QQuick3DSpecularGlossyMaterial::setOpacityChannel, QQuick3DSpecularGlossyMaterial::TextureChannelMapping::A);
+        }
+
+        if (auto specularGlossinessTexture = createTextureNode(source, aiTextureType_SPECULAR, 0)) {
+            QSSGSceneDesc::setProperty(target, "specularMap", &QQuick3DSpecularGlossyMaterial::setSpecularMap, specularGlossinessTexture);
+            QSSGSceneDesc::setProperty(target, "glossinessMap", &QQuick3DSpecularGlossyMaterial::setGlossinessMap, specularGlossinessTexture);
+            QSSGSceneDesc::setProperty(target, "glossinessChannel", &QQuick3DSpecularGlossyMaterial::setGlossinessChannel, QQuick3DSpecularGlossyMaterial::TextureChannelMapping::A);
+        }
+
+        {
+            aiColor4D specularColorFactor;
+            result = source.Get(AI_MATKEY_COLOR_SPECULAR, specularColorFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "specularColor", &QQuick3DSpecularGlossyMaterial::setSpecularColor, aiColorToQColor(specularColorFactor));
+        }
+
+        {
+            ai_real glossinessFactor;
+            result = source.Get(AI_MATKEY_GLOSSINESS_FACTOR, glossinessFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "glossiness", &QQuick3DSpecularGlossyMaterial::setGlossiness, float(glossinessFactor));
+        }
+
+        if (auto normalTexture = createTextureNode(source, aiTextureType_NORMALS, 0)) {
+            QSSGSceneDesc::setProperty(target, "normalMap", &QQuick3DSpecularGlossyMaterial::setNormalMap, normalTexture);
+            {
+                ai_real normalScale;
+                result = source.Get(AI_MATKEY_GLTF_TEXTURE_SCALE(aiTextureType_NORMALS, 0), normalScale);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target, "normalStrength", &QQuick3DSpecularGlossyMaterial::setNormalStrength, float(normalScale));
+            }
+        }
+
+        // Occlusion Textures are not implimented (yet)
+        if (auto occlusionTexture = createTextureNode(source, aiTextureType_LIGHTMAP, 0)) {
+            QSSGSceneDesc::setProperty(target, "occlusionMap", &QQuick3DSpecularGlossyMaterial::setOcclusionMap, occlusionTexture);
+            QSSGSceneDesc::setProperty(target, "occlusionChannel", &QQuick3DSpecularGlossyMaterial::setOcclusionChannel, QQuick3DSpecularGlossyMaterial::TextureChannelMapping::R);
+            {
+                ai_real occlusionAmount;
+                result = source.Get(AI_MATKEY_GLTF_TEXTURE_STRENGTH(aiTextureType_LIGHTMAP, 0), occlusionAmount);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target, "occlusionAmount", &QQuick3DSpecularGlossyMaterial::setOcclusionAmount, float(occlusionAmount));
+            }
+        }
+
+        if (auto emissiveTexture = createTextureNode(source, aiTextureType_EMISSIVE, 0))
+            QSSGSceneDesc::setProperty(target, "emissiveMap", &QQuick3DSpecularGlossyMaterial::setEmissiveMap, emissiveTexture);
+
+        {
+            aiColor3D emissiveColorFactor;
+            result = source.Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColorFactor);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "emissiveFactor", &QQuick3DSpecularGlossyMaterial::setEmissiveFactor, QVector3D { emissiveColorFactor.r, emissiveColorFactor.g, emissiveColorFactor.b });
+        }
+
+        {
+            bool isDoubleSided;
+            result = source.Get(AI_MATKEY_TWOSIDED, isDoubleSided);
+            if (result == aiReturn_SUCCESS && isDoubleSided)
+                QSSGSceneDesc::setProperty(target, "cullMode", &QQuick3DSpecularGlossyMaterial::setCullMode, QQuick3DSpecularGlossyMaterial::CullMode::NoCulling);
+        }
+
+        {
+            aiString alphaMode;
+            result = source.Get(AI_MATKEY_GLTF_ALPHAMODE, alphaMode);
+            if (result == aiReturn_SUCCESS) {
+                auto mode = QQuick3DSpecularGlossyMaterial::AlphaMode::Default;
+                if (QByteArrayView(alphaMode.C_Str()) == "OPAQUE")
+                    mode = QQuick3DSpecularGlossyMaterial::AlphaMode::Opaque;
+                else if (QByteArrayView(alphaMode.C_Str()) == "MASK")
+                    mode = QQuick3DSpecularGlossyMaterial::AlphaMode::Mask;
+                else if (QByteArrayView(alphaMode.C_Str()) == "BLEND")
+                    mode = QQuick3DSpecularGlossyMaterial::AlphaMode::Blend;
+
+                if (mode != QQuick3DSpecularGlossyMaterial::AlphaMode::Default)
+                    QSSGSceneDesc::setProperty(target, "alphaMode", &QQuick3DSpecularGlossyMaterial::setAlphaMode, mode);
+            }
+        }
+
+        {
+            ai_real alphaCutoff;
+            result = source.Get(AI_MATKEY_GLTF_ALPHACUTOFF, alphaCutoff);
+            if (result == aiReturn_SUCCESS)
+                QSSGSceneDesc::setProperty(target, "alphaCutoff", &QQuick3DSpecularGlossyMaterial::setAlphaCutoff, float(alphaCutoff));
+        }
+
+        {
+            int shadingModel = 0;
+            result = source.Get(AI_MATKEY_SHADING_MODEL, shadingModel);
+            if (result == aiReturn_SUCCESS && shadingModel == aiShadingMode_Unlit)
+                QSSGSceneDesc::setProperty(target, "lighting", &QQuick3DSpecularGlossyMaterial::setLighting, QQuick3DSpecularGlossyMaterial::Lighting::NoLighting);
+        }
+
+
+        {
+            // Clearcoat Properties (KHR_materials_clearcoat)
+            // factor
+            {
+                ai_real clearcoatFactor = 0.0f;
+                result = source.Get(AI_MATKEY_CLEARCOAT_FACTOR, clearcoatFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "clearcoatAmount",
+                                               &QQuick3DSpecularGlossyMaterial::setClearcoatAmount,
+                                               float(clearcoatFactor));
+            }
+
+            // roughness
+            {
+                ai_real clearcoatRoughnessFactor = 0.0f;
+                result = source.Get(AI_MATKEY_CLEARCOAT_ROUGHNESS_FACTOR, clearcoatRoughnessFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "clearcoatRoughnessAmount",
+                                               &QQuick3DSpecularGlossyMaterial::setClearcoatRoughnessAmount,
+                                               float(clearcoatRoughnessFactor));
+            }
+
+            // texture
+            if (auto clearcoatTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_TEXTURE))
+                QSSGSceneDesc::setProperty(target, "clearcoatMap", &QQuick3DSpecularGlossyMaterial::setClearcoatMap, clearcoatTexture);
+
+            // roughness texture
+            if (auto clearcoatRoughnessTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_ROUGHNESS_TEXTURE))
+                QSSGSceneDesc::setProperty(target,
+                                           "clearcoatRoughnessMap",
+                                           &QQuick3DSpecularGlossyMaterial::setClearcoatRoughnessMap,
+                                           clearcoatRoughnessTexture);
+
+            // normal texture
+            if (auto clearcoatNormalTexture = createTextureNode(source, AI_MATKEY_CLEARCOAT_NORMAL_TEXTURE))
+                QSSGSceneDesc::setProperty(target, "clearcoatNormalMap", &QQuick3DSpecularGlossyMaterial::setClearcoatNormalMap, clearcoatNormalTexture);
+        }
+
+        {
+            // Transmission Properties (KHR_materials_transmission)
+            // factor
+            {
+                ai_real transmissionFactor = 0.0f;
+                result = source.Get(AI_MATKEY_TRANSMISSION_FACTOR, transmissionFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "transmissionFactor",
+                                               &QQuick3DSpecularGlossyMaterial::setTransmissionFactor,
+                                               float(transmissionFactor));
+            }
+
+            // texture
+            {
+                if (auto transmissionImage = createTextureNode(source, AI_MATKEY_TRANSMISSION_TEXTURE))
+                    QSSGSceneDesc::setProperty(target,
+                                               "transmissionMap",
+                                               &QQuick3DSpecularGlossyMaterial::setTransmissionMap,
+                                               transmissionImage);
+            }
+
+        }
+
+        {
+            // Volume Properties (KHR_materials_volume) [only used with transmission]
+            // thicknessFactor
+            {
+                ai_real thicknessFactor = 0.0f;
+                result = source.Get(AI_MATKEY_VOLUME_THICKNESS_FACTOR, thicknessFactor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target, "thicknessFactor", &QQuick3DSpecularGlossyMaterial::setThicknessFactor, float(thicknessFactor));
+            }
+
+            // thicknessMap
+            {
+                if (auto thicknessImage = createTextureNode(source, AI_MATKEY_VOLUME_THICKNESS_TEXTURE))
+                    QSSGSceneDesc::setProperty(target, "thicknessMap", &QQuick3DSpecularGlossyMaterial::setThicknessMap, thicknessImage);
+            }
+
+            // attenuationDistance
+            {
+                ai_real attenuationDistance = 0.0f;
+                result = source.Get(AI_MATKEY_VOLUME_ATTENUATION_DISTANCE, attenuationDistance);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "attenuationDistance",
+                                               &QQuick3DSpecularGlossyMaterial::setAttenuationDistance,
+                                               float(attenuationDistance));
+            }
+
+            // attenuationColor
+            {
+                aiColor3D attenuationColor;
+                result = source.Get(AI_MATKEY_VOLUME_ATTENUATION_COLOR, attenuationColor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target,
+                                               "attenuationColor",
+                                               &QQuick3DSpecularGlossyMaterial::setAttenuationColor,
+                                               aiColorToQColor(attenuationColor));
+            }
+        }
     }
 }
 
@@ -919,9 +1124,18 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
         auto targetMat = material.second;
         if (targetMat == nullptr) {
             const aiMaterial *sourceMat = material.first;
-            targetMat = targetScene->create<QSSGSceneDesc::Material>(materialType);
+
+            auto currentMaterialType = materialType;
+            if (currentMaterialType == QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial) {
+                ai_real glossinessFactor;
+                aiReturn result = sourceMat->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossinessFactor);
+                if (result == aiReturn_SUCCESS)
+                    currentMaterialType = QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial;
+            }
+
+            targetMat = targetScene->create<QSSGSceneDesc::Material>(currentMaterialType);
             QSSGSceneDesc::addNode(target, *targetMat);
-            setMaterialProperties(*targetMat, *sourceMat, sceneInfo);
+            setMaterialProperties(*targetMat, *sourceMat, sceneInfo, currentMaterialType);
             material.second = targetMat;
         }
 

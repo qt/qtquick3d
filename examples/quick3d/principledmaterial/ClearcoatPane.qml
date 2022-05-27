@@ -55,7 +55,7 @@ import QtQuick3D
 
 ScrollView {
     id: rootView
-    required property PrincipledMaterial targetMaterial
+    required property Material targetMaterial
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
     width: availableWidth
 

@@ -168,7 +168,9 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
         return nullptr;
 
     // Set the common properties
-    if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial || node->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+    if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
+        node->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
+        node->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
         auto defaultMaterial = static_cast<QSSGRenderDefaultMaterial *>(node);
 
         if (!m_iblProbe)

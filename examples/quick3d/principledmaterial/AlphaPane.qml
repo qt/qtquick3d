@@ -55,24 +55,27 @@ import QtQuick3D
 
 ScrollView {
     id: rootView
-    required property PrincipledMaterial targetMaterial
+    required property Material targetMaterial
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
     width: availableWidth
+    property bool specularGlossyMode: false
+    property string colorString: specularGlossyMode ? "Albedo" : "Base"
 
     ColumnLayout {
         width: rootView.availableWidth
 
         MarkdownLabel {
-            text: "# Alpha Transparency
+
+            text: `# Alpha Transparency
 Material transparency can be achieved through Alpha Blending. The preferred method
-is to just use the Alpha channel of the Base Color property. This is just part
-of the Base Color and can be set either through the scalar Base Color value or by
-using a Texture for the Base Color that contains an alpha channel. When using this
-method it is important to set the correct Alpha mode to get the desired effect."
+is to just use the Alpha channel of the ${rootView.colorString} Color property. This is just part
+of the ${rootView.colorString} Color and can be set either through the scalar ${rootView.colorString} Color value or by
+using a Texture for the ${rootView.colorString} Color that contains an alpha channel. When using this
+method it is important to set the correct Alpha mode to get the desired effect.`
         }
 
         MarkdownLabel {
-            text: "## Base Color Alpha"
+            text: `## ${rootView.colorString} Color Alpha`
         }
         RowLayout {
             Label {
@@ -88,9 +91,9 @@ method it is important to set the correct Alpha mode to get the desired effect."
         }
 
         MarkdownLabel {
-            text: "## Alpha Mode
-The Alpha Mode defines how the alpha channel of the Base Color is used by the
-material.  If the mode is set to *Default* and you adjust the alpha value of Base
+            text: `## Alpha Mode
+The Alpha Mode defines how the alpha channel of the ${rootView.colorString} Color is used by the
+material.  If the mode is set to *Default* and you adjust the alpha value of ${rootView.colorString}
 Color you should notice a grid pattern.  That is because the *Default* mode will
 just write the alpha value to the output surface without blending. In our case
 there just so happens to be a grid pattern behind the 3D Viewport to demonstrate
@@ -104,7 +107,7 @@ alpha passthrough effect you get with the *Default* mode.
 The last mode is *Mask* which works in conjunction with the Alpha Cutoff property.
 If the Alpha is greater than the value in Alpha Cutoff, it will be rendered, and
 if it is not then it will not. This is useful for certain effects, as well as
-rendering leaves using on a plane and an image with alpha."
+rendering leaves using on a plane and an image with alpha.`
         }
         ComboBox {
             id: alphaModeComboBox
@@ -124,10 +127,10 @@ rendering leaves using on a plane and an image with alpha."
         VerticalSectionSeparator {}
 
         MarkdownLabel {
-            text: "## Alpha Cutoff
+            text: `## Alpha Cutoff
 To demonstrate the behavior of Alpha Cutoff with the *Mask* Alpha Mode we need to
-have a Base Color map with an Alpha map. Pressing the \"Enable Alpha Mask\"
-button will setup a BaseColorMap that looks like this:"
+have a ${rootView.colorString} Color map with an Alpha map. Pressing the \"Enable Alpha Mask\"
+button will setup a ${specularGlossyMode ? "AlbedoMap" : "BaseColorMap"} that looks like this:`
         }
         Item {
             height: 256
@@ -148,17 +151,26 @@ button will setup a BaseColorMap that looks like this:"
         Button {
             property bool isEnabled: false
             property Texture revertTexture: null
-            text: isEnabled ? "Revert Base Color Map" : "Enable Alpha Mask"
+            text: isEnabled ? specularGlossyMode ? "Revert Albedo Map" : "Revert Base Color Map" : "Enable Alpha Mask"
             onClicked:  {
                 if (!isEnabled) {
-                    revertTexture = targetMaterial.baseColorMap
-                    targetMaterial.baseColor.a = 1.0
-                    targetMaterial.baseColorMap = alphaGradientTexture
+                    if (specularGlossyMode) {
+                        revertTexture = targetMaterial.albedoMap
+                        targetMaterial.albedoColor.a = 1.0
+                        targetMaterial.albedoMap = alphaGradientTexture
+                    } else {
+                        revertTexture = targetMaterial.baseColorMap
+                        targetMaterial.baseColor.a = 1.0
+                        targetMaterial.baseColorMap = alphaGradientTexture
+                    }
                     targetMaterial.alphaMode = PrincipledMaterial.Mask
                     alphaModeComboBox.currentIndex = alphaModeComboBox.indexOfValue(targetMaterial.alphaMode)
                     isEnabled = true
                 } else {
-                    targetMaterial.baseColorMap = revertTexture
+                    if (specularGlossyMode)
+                        targetMaterial.albedoMap = revertTexture
+                    else
+                        targetMaterial.baseColorMap = revertTexture
                     revertTexture = null
                     isEnabled = false
                 }

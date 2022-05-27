@@ -48,6 +48,13 @@
     \l PrincipledMaterial into manageable chunks. Each section can be accessed by clicking
     on the tabs at the top of the explanation area.
 
+    \section1 SpecularGlossyMaterial
+
+    In addition to demonstrating the Metalness/Roughness PBR workflow provided by
+    \l PrincipledMaterial it is possible to switch to using the Specular/Glossy
+    workflow which uses the \l SpecularGlossyMaterial. This can be done by a switch in
+    the Basics section.
+
     \section1 Resource Loader
 
     The more complex nature of this example also gives an opportunity to demonstrate

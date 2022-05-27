@@ -42,6 +42,7 @@ QSSGShaderMaterialAdapter *QSSGShaderMaterialAdapter::create(const QSSGRenderGra
     switch (materialNode.type) {
     case QSSGRenderGraphObject::Type::DefaultMaterial:
     case QSSGRenderGraphObject::Type::PrincipledMaterial:
+    case QSSGRenderGraphObject::Type::SpecularGlossyMaterial:
         return new QSSGShaderDefaultMaterialAdapter(static_cast<const QSSGRenderDefaultMaterial &>(materialNode));
 
     case QSSGRenderGraphObject::Type::CustomMaterial:
@@ -98,6 +99,11 @@ QSSGShaderDefaultMaterialAdapter::QSSGShaderDefaultMaterialAdapter(const QSSGRen
 bool QSSGShaderDefaultMaterialAdapter::isPrincipled()
 {
     return m_material.type == QSSGRenderGraphObject::Type::PrincipledMaterial;
+}
+
+bool QSSGShaderDefaultMaterialAdapter::isSpecularGlossy()
+{
+    return m_material.type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial;
 }
 
 bool QSSGShaderDefaultMaterialAdapter::isMetalnessEnabled()
@@ -277,6 +283,11 @@ QSSGShaderCustomMaterialAdapter::QSSGShaderCustomMaterialAdapter(const QSSGRende
 bool QSSGShaderCustomMaterialAdapter::isPrincipled()
 {
     return true;
+}
+
+bool QSSGShaderCustomMaterialAdapter::isSpecularGlossy()
+{
+    return false;
 }
 
 bool QSSGShaderCustomMaterialAdapter::isMetalnessEnabled()

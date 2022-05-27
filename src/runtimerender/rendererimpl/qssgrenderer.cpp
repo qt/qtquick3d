@@ -212,8 +212,9 @@ void QSSGRenderer::endFrame()
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             static_cast<QSSGRenderCustomMaterial *>(matObj)->clearDirty();
-        } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial
-                   || matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
+        } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
+                   matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
+                   matObj->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
             static_cast<QSSGRenderDefaultMaterial *>(matObj)->clearDirty();
         }
     }

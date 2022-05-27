@@ -55,9 +55,10 @@ import QtQuick3D
 
 ScrollView {
     id: rootView
-    required property PrincipledMaterial targetMaterial
+    required property Material targetMaterial
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
     width: availableWidth
+    property bool specularGlossyMode: false
 
     ColumnLayout {
         width: rootView.availableWidth
@@ -151,8 +152,11 @@ Factor to 1.0.
 
         VerticalSectionSeparator {}
 
-        MarkdownLabel {
-            text: "## Index of Refraction (IOR)
+        ColumnLayout {
+            width: rootView.availableWidth
+            visible: !rootView.specularGlossyMode
+            MarkdownLabel {
+                text: "## Index of Refraction (IOR)
 The Index of Refraction or refraction index refers to the physical property of
 how fast light passes through a material. This number then is used to determine
 how light is bent or refracted when it enters a material. Since this value is
@@ -161,43 +165,44 @@ materials as well. The default value that the PrincipledMaterial uses for all
 lighting calculations is 1.5, which is very close to window glass. Below are
 several other materials' IOR values that will produce different results when
 used with a refractive material (especially ones with thickness)."
-        }
-
-        ComboBox {
-            id: iorChannelComboBox
-            textRole: "text"
-            valueRole: "value"
-            implicitContentWidthPolicy: ComboBox.WidestText
-            onActivated: targetMaterial.indexOfRefraction = currentValue
-            Component.onCompleted: currentIndex = 0
-            model: [
-                { value: 1.5, text: "Custom"},
-                { value: 1.4, text: "Acrylic glass"},
-                { value: 1.0, text: "Air"},
-                { value: 1.33, text: "Water"},
-                { value: 1.76, text: "Sapphire"},
-                { value: 2.42, text: "Diamond"}
-            ]
-        }
-        RowLayout {
-            Label {
-                text: "IOR (" + iorSlider.value.toFixed(2) + ")"
-                Layout.fillWidth: true
             }
-            Slider {
-                id: iorSlider
-                from: 1.0
-                to: 3.0
-                value: targetMaterial.indexOfRefraction
-                onValueChanged: {
-                    if (iorChannelComboBox.currentValue != value)
-                        iorChannelComboBox.currentIndex = 0;
-                    targetMaterial.indexOfRefraction = value
+
+            ComboBox {
+                id: iorChannelComboBox
+                textRole: "text"
+                valueRole: "value"
+                implicitContentWidthPolicy: ComboBox.WidestText
+                onActivated: targetMaterial.indexOfRefraction = currentValue
+                Component.onCompleted: currentIndex = 0
+                model: [
+                    { value: 1.5, text: "Custom"},
+                    { value: 1.4, text: "Acrylic glass"},
+                    { value: 1.0, text: "Air"},
+                    { value: 1.33, text: "Water"},
+                    { value: 1.76, text: "Sapphire"},
+                    { value: 2.42, text: "Diamond"}
+                ]
+            }
+            RowLayout {
+                Label {
+                    text: "IOR (" + iorSlider.value.toFixed(2) + ")"
+                    Layout.fillWidth: true
+                }
+                Slider {
+                    id: iorSlider
+                    from: 1.0
+                    to: 3.0
+                    value: targetMaterial.indexOfRefraction ?? 1.5
+                    onValueChanged: {
+                        if (iorChannelComboBox.currentValue != value)
+                            iorChannelComboBox.currentIndex = 0;
+                        targetMaterial.indexOfRefraction = value
+                    }
                 }
             }
-        }
 
-        VerticalSectionSeparator {}
+            VerticalSectionSeparator {}
+        }
 
         MarkdownLabel {
             text: "## Thickness

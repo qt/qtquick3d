@@ -41,6 +41,7 @@
 #include "qquick3ddefaultmaterial_p.h"
 #include "qquick3dprincipledmaterial_p.h"
 #include "qquick3dcustommaterial_p.h"
+#include "qquick3dspecularglossymaterial_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 
 #include <qsgtextureprovider.h>
@@ -1124,6 +1125,14 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                         // Just check for a baseColorMap for now
                         if (principledMaterial->baseColorMap() && principledMaterial->baseColorMap()->sourceItem())
                             subsceneRootItem = principledMaterial->baseColorMap()->sourceItem();
+                    }
+                } else if (frontendMaterialPrivate->type == QQuick3DObjectPrivate::Type::SpecularGlossyMaterial) {
+                    // SpecularGlossy Material
+                    const auto specularGlossyMaterial = qobject_cast<QQuick3DSpecularGlossyMaterial *>(frontendMaterial);
+                    if (specularGlossyMaterial) {
+                        // Just check for a albedoMap for now
+                        if (specularGlossyMaterial->albedoMap() && specularGlossyMaterial->albedoMap()->sourceItem())
+                            subsceneRootItem = specularGlossyMaterial->albedoMap()->sourceItem();
                     }
                 } else if (frontendMaterialPrivate->type == QQuick3DObjectPrivate::Type::CustomMaterial) {
                     // Custom Material

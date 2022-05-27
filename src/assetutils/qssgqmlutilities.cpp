@@ -440,6 +440,27 @@ PropertyMap::PropertyMap()
 
     m_properties.insert(Type::PrincipledMaterial, principledMaterial);
 
+    PropertiesMap *specularGlossyMaterial = new PropertiesMap;
+    specularGlossyMaterial->insert(QStringLiteral("lighting"), QStringLiteral("SpecularGlossyMaterial.FragmentLighting"));
+    specularGlossyMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("SpecularGlossyMaterial.SourceOver"));
+    specularGlossyMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("SpecularGlossyMaterial.Default"));
+    specularGlossyMaterial->insert(QStringLiteral("albedoColor"), QColor(Qt::white));
+    specularGlossyMaterial->insert(QStringLiteral("specularColor"), QColor(Qt::white));
+    specularGlossyMaterial->insert(QStringLiteral("glossiness"), 1.0f);
+    specularGlossyMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
+    specularGlossyMaterial->insert(QStringLiteral("opacity"), 1.0f);
+    specularGlossyMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
+    specularGlossyMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
+    specularGlossyMaterial->insert(QStringLiteral("occlusionAmount"), 1.0f);
+    specularGlossyMaterial->insert(QStringLiteral("clearcoatAmount"), 0.0f);
+    specularGlossyMaterial->insert(QStringLiteral("clearcoatRoughnessAmount"), 0.0f);
+    specularGlossyMaterial->insert(QStringLiteral("transmissionFactor"), 0.0f);
+    specularGlossyMaterial->insert(QStringLiteral("thicknessFactor"), 0.0f);
+    specularGlossyMaterial->insert(QStringLiteral("attenuationDistance"), std::numeric_limits<float>::infinity());
+    specularGlossyMaterial->insert(QStringLiteral("attenuationColor"), QColor(Qt::white));
+
+    m_properties.insert(Type::SpecularGlossyMaterial, specularGlossyMaterial);
+
     // Image
     PropertiesMap *texture = new PropertiesMap;
     texture->insert(QStringLiteral("scaleU"), 1.0f);

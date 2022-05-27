@@ -57,6 +57,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual ~QSSGShaderMaterialAdapter();
 
     virtual bool isPrincipled() = 0;
+    virtual bool isSpecularGlossy() = 0;
     virtual bool isMetalnessEnabled() = 0;
     virtual bool isSpecularEnabled() = 0;
     virtual bool isVertexColorsEnabled() = 0;
@@ -110,6 +111,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     QSSGShaderDefaultMaterialAdapter(const QSSGRenderDefaultMaterial &material);
 
     bool isPrincipled() override;
+    bool isSpecularGlossy() override;
     bool isMetalnessEnabled() override;
     bool isSpecularEnabled() override;
     bool isVertexColorsEnabled() override;
@@ -154,6 +156,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     QSSGShaderCustomMaterialAdapter(const QSSGRenderCustomMaterial &material);
 
     bool isPrincipled() override;
+    bool isSpecularGlossy() override;
     bool isMetalnessEnabled() override;
     bool isSpecularEnabled() override;
     bool isVertexColorsEnabled() override;

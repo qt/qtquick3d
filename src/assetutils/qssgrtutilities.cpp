@@ -241,6 +241,8 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
             obj = createRuntimeObject<QQuick3DDefaultMaterial>(static_cast<Material &>(node), parent);
         else if (node.runtimeType == Node::RuntimeType::CustomMaterial)
             obj = createRuntimeObject<QQuick3DCustomMaterial>(static_cast<Material &>(node), parent);
+        else if (node.runtimeType == Node::RuntimeType::SpecularGlossyMaterial)
+            obj = createRuntimeObject<QQuick3DSpecularGlossyMaterial>(static_cast<Material &>(node), parent);
         else
             Q_UNREACHABLE();
     }

@@ -109,30 +109,35 @@ Window {
                 currentIndex: tabBar.currentIndex
 
                 BasicsPane {
-                    targetMaterial: basicMaterial
+                    id: basicsPane
+                    principledMaterial: basicMaterial
+                    specularGlossyMaterial: specularGlossyMaterial
                 }
 
                 AlphaPane {
-                    targetMaterial: basicMaterial
+                    targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                    specularGlossyMode: viewport.specularGlossyMode
                 }
 
                 DetailsPane {
-                    targetMaterial: basicMaterial
+                    targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                     view3D: viewport
                 }
 
                 ClearcoatPane {
-                    targetMaterial: basicMaterial
+                    targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                 }
 
                 RefractionPane {
-                    targetMaterial: basicMaterial
+                    targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
+                    specularGlossyMode: viewport.specularGlossyMode
                 }
 
                 SpecialPane {
-                    targetMaterial: basicMaterial
+                    targetMaterial: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                     linesModel: linesLogo
                     pointsModel: pointsLogo
+                    specularGlossyMode: viewport.specularGlossyMode
                 }
             }
         }
@@ -169,15 +174,27 @@ Window {
                 }
             }
 
+            property bool specularGlossyMode: basicsPane.specularGlossyMode
+
             PrincipledMaterial {
                 id: basicMaterial
                 baseColor: "red"
             }
 
+            SpecularGlossyMaterial {
+                id: specularGlossyMaterial
+                property alias baseColor: specularGlossyMaterial.albedoColor
+                property real specularAmount: 1.0
+                property real specularTint: 1.0
+
+                specularColor: Qt.rgba(0.22, 0.22, 0.22, 1.0)
+                albedoColor: "red"
+            }
+
             Model {
                 id: cube
                 source: "#Cube"
-                materials: basicMaterial
+                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                 pickable: true
             }
 
@@ -186,7 +203,7 @@ Window {
                 x: -200
                 scale: Qt.vector3d(1.5, 1.5, 1.5)
                 source: "#Sphere"
-                materials: basicMaterial
+                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                 pickable: true
             }
 
@@ -194,7 +211,7 @@ Window {
                 id: monkeyMesh
                 x: 250
                 source: "meshes/suzanne.mesh"
-                materials: basicMaterial
+                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                 pickable: true
             }
 
@@ -203,7 +220,7 @@ Window {
                 y: 200
                 x: -100
                 source: "meshes/logo_lines.mesh"
-                materials: basicMaterial
+                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                 pickable: true
                 visible: false
             }
@@ -213,7 +230,7 @@ Window {
                 y: 200
                 x: 100
                 source: "meshes/logo_points.mesh"
-                materials: basicMaterial
+                materials: viewport.specularGlossyMode ? specularGlossyMaterial : basicMaterial
                 pickable: true
                 visible: false
             }

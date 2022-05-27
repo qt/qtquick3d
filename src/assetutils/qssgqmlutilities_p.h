@@ -79,6 +79,7 @@ public:
         SpotLight,
         DefaultMaterial,
         PrincipledMaterial,
+        SpecularGlossyMaterial,
         Texture,
     };
 
