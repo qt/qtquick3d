@@ -933,7 +933,6 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
             newVertexBuffer.append(newData[vbIdx].constData() + byteSize * vertexIdx, byteSize);
             dataOffset = newOffset + byteSize;
         }
-        Q_ASSERT(dataOffset == m_vertexBuffer.stride);
 
         const quint32 byteSize = 2 * sizeof(float);
         const quint32 newOffset = getAlignedOffset(dataOffset, byteSize);
