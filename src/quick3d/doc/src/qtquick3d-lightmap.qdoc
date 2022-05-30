@@ -63,14 +63,13 @@ meaning both direct and indirect illumination is baked. Indirect lighting uses
 256 samples and a maximum of 3 bounces. The resulting lightmaps were then
 denoised. This gives a significantly more realistic image.
 
-\table
-\header
-\li Real-time lighting
-\li Fully baked lighting
-\row
-\li \image lightmap_simple_none.jpg
-\li \image lightmap_simple_all.jpg
-\endtable
+\b{Real-time lighting}
+
+\image lightmap_simple_none.jpg "Simple scene with sphere, rectangles, and two lights"
+
+\b{Fully baked lighting}
+
+\image lightmap_simple_all.jpg "The same scene with both lights set to fully baked"
 
 Below is a snippet that shows how the lightmapped results were achieved. The
 difference lies in the \l{Model::usedInBakedLighting}{usedInBakedLighting},
@@ -135,14 +134,13 @@ right screenshot. While the direct lighting and shadows look identical, the
 right image looks significantly better due to a degree of global illumination
 added.
 
-\table
-\header
-\li Real-time lighting
-\li With baked indirect lighting added
-\row
-\li \image lightmap_sponza_none.jpg
-\li \image lightmap_sponza_indirect.jpg
-\endtable
+\b{Real-time lighting}
+
+\image lightmap_sponza_none.jpg "Scene with Sponza and Suzanne models and 5 point lights"
+
+\b{With baked indirect lighting added}
+
+\image lightmap_sponza_indirect.jpg "Same scene with baked indirect but real-time direct lighting"
 
 \section2 Important considerations when working with lightmaps
 
@@ -327,14 +325,18 @@ been run through a denoiser using the
 \l{https://www.openimagedenoise.org/}{Open Image Denoise} library. The results
 look significantly better, with the noise mostly gone.
 
-\table
-\header
-\li Original
-\li Denoised
-\row
-\li \image lightmap_noise_original.jpg
-\li \image lightmap_noise_denoised.jpg
-\endtable
+\b{Original}
+
+\image lightmap_noise_original.jpg "Cornell box scene with one point light, fully baked lightmap"
+
+\b{Denoised}
+
+\image lightmap_noise_denoised.jpg "Cornell box scene with the lightmaps denoised"
+
+A simple, Qt-based command-line wrapper for OIDN that works with the Qt Quick
+3D-generated \c{qlm_*.exr} images is available at
+\l{https://git.qt.io/laagocs/qlmdenoiser}. It currently needs to be built from
+source and no pre-built binaries are available.
 
 \section2 Lightmap UVs
 
