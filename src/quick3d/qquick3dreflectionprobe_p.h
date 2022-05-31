@@ -45,6 +45,7 @@
 #include <QtQuick3D/private/qquick3dgeometry_p.h>
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
+#include <QtQuick3D/private/qquick3dviewport_p.h>
 #include <QColor>
 
 QT_BEGIN_NAMESPACE
@@ -59,7 +60,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
     Q_PROPERTY(bool parallaxCorrection READ parallaxCorrection WRITE setParallaxCorrection NOTIFY parallaxCorrectionChanged)
     Q_PROPERTY(QVector3D boxSize READ boxSize WRITE setBoxSize NOTIFY boxSizeChanged)
     Q_PROPERTY(QVector3D boxOffset READ boxOffset WRITE setBoxOffset NOTIFY boxOffsetChanged REVISION(6, 4))
-    Q_PROPERTY(bool debugView READ debugView WRITE setDebugView NOTIFY debugViewChanged)
+    Q_PROPERTY(bool debugView READ debugView WRITE setDebugView NOTIFY debugViewChanged REVISION(6, 4))
     QML_NAMED_ELEMENT(ReflectionProbe)
     QML_ADDED_IN_VERSION(6, 3)
 
@@ -95,7 +96,7 @@ public:
     ReflectionTimeSlicing timeSlicing() const;
     bool parallaxCorrection() const;
     QVector3D boxSize() const;
-    bool debugView() const;
+    Q_REVISION(6, 4) bool debugView() const;
     Q_REVISION(6, 4) QVector3D boxOffset() const;
 
     Q_REVISION(6, 4) Q_INVOKABLE void scheduleUpdate();
@@ -107,7 +108,7 @@ public Q_SLOTS:
     void setTimeSlicing(ReflectionTimeSlicing newTimeSlicing);
     void setParallaxCorrection(bool parallaxCorrection);
     void setBoxSize(const QVector3D &newBoxSize);
-    void setDebugView(bool debugView);
+    Q_REVISION(6, 4) void setDebugView(bool debugView);
     Q_REVISION(6, 4) void setBoxOffset(const QVector3D &boxOffset);
 
 Q_SIGNALS:
@@ -118,7 +119,7 @@ Q_SIGNALS:
     void parallaxCorrectionChanged();
 
     void boxSizeChanged();
-    void debugViewChanged();
+    Q_REVISION(6, 4) void debugViewChanged();
     Q_REVISION(6, 4) void boxOffsetChanged();
 
 protected:
@@ -144,6 +145,8 @@ protected:
 
 private:
     quint32 mapToReflectionResolution(ReflectionQuality quality);
+    void findSceneView();
+    void createDebugView();
     void updateDebugView();
     ReflectionQuality m_quality = ReflectionQuality::Low;
     QColor m_clearColor = Qt::transparent;
@@ -157,6 +160,7 @@ private:
     QQuick3DModel *m_debugViewModel = nullptr;
     QQuick3DDefaultMaterial *m_debugViewMaterial = nullptr;
     QVector3D m_boxOffset;
+    QQuick3DViewport* m_sceneView = nullptr;
 };
 
 QT_END_NAMESPACE
