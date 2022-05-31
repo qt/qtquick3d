@@ -524,7 +524,7 @@ Column {
 
                     Connections {
                         target: normalMapComboBox.backendValue
-                        onExpressionChanged: {
+                        function onExpressionChanged() {
                             if (normalMapComboBox.backendValue.expression !== "")
                                 bumpMapComboBox.backendValue.resetValue()
                         }
@@ -549,7 +549,7 @@ Column {
 
                     Connections {
                         target: bumpMapComboBox.backendValue
-                        onExpressionChanged: {
+                        function onExpressionChanged() {
                             if (bumpMapComboBox.backendValue.expression !== "")
                                 normalMapComboBox.backendValue.resetValue()
                         }
