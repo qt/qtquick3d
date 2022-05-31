@@ -491,6 +491,11 @@ bool QQuick3DModel::isUsedInBakedLighting() const
 
     This property is relevant only when baking lightmaps. It has no effect
     afterwards, when using the generated lightmaps during rendering.
+
+    Models that have lightmap UV data pre-generated during asset import time
+    (e.g. via the balsam tool) will ignore this property because the lightmap
+    UV unwrapping and the lightmap size hint evaluation have already been done,
+    and will not be performed again during lightmap baking.
  */
 int QQuick3DModel::lightmapBaseResolution() const
 {

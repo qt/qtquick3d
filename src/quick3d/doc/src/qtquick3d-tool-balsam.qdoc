@@ -164,6 +164,12 @@ FBX assets (can create deep node hierarchies)
 \row \li \c {--generateMipMaps} \li Force all imported texture components to
 generate mip maps for mip map texture filtering
 \row \li \c {--useBinaryKeyframes} \li Record keyframe data as binary files
+
+\row \li \c {--generateLightmapUV} \li Perform lightmap UV unwrapping and
+generate an additional UV channel for the meshes. This UV data is then used by
+the \l{Lightmaps and Global Illumination}{lightmap baker and during run-time
+lightmapping}.
+
 \endtable
 
 */

@@ -954,7 +954,6 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     };
 
     const auto createMeshNode = [&](const aiString &name) {
-        // TODO: There's a bug here when the lightmap generation is enabled...
         auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, false, errorString);
         meshStorage.push_back(std::move(meshData));
 

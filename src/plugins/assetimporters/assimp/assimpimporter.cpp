@@ -848,9 +848,11 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const AssimpUtil
         return QStringLiteral("Could not open device to write mesh file");
 
     QString errorString;
-    const auto mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_useFloatJointIndices, errorString);
+    QSSGMesh::Mesh mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_useFloatJointIndices, errorString);
 
     if (mesh.isValid()) {
+        if (m_generateLightmapUV)
+            mesh.createLightmapUVChannel(m_lightmapBaseResolution);
         if (!mesh.save(&file))
             return QString::asprintf("Failed to serialize mesh to %s", qPrintable(file.fileName()));
     } else {
@@ -2116,6 +2118,12 @@ void AssimpImporter::processOptions(QJsonObject options)
     m_useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), options);
     m_forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), options);
     m_binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), options);
+
+    m_generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), options);
+    if (m_generateLightmapUV) {
+        qreal v = getRealOption(QStringLiteral("lightmapBaseResolution"), options);
+        m_lightmapBaseResolution = v == 0.0 ? 1024 : int(v);
+    }
 }
 
 bool AssimpImporter::checkBooleanOption(const QString &optionName, const QJsonObject &options)

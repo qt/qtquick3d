@@ -354,15 +354,28 @@ is always able to perform this at run (load) time, both when baking lightmaps
 and also when rendering a scene normally.
 
 In order to improve mesh load times by avoiding generating lightmap UV data for
-lightmapped models, the lightmap baking process also outputs a set of
-\c{qlm_*.mesh} files, the names generated based on the \l BakedLightmap::key,
-similarly to the with the \c{.exr} images. If the application wishes to, it can
-ship these extra \c{.mesh} files together with the \c{.exr} assets. When
-present, these mesh files will be used in place of the regular model data, with
-the lightmapping related data readily available. This is optional. When no
-qlm_\c{key}.mesh is found at run time, the UV unwrapping is done at run time,
-transparently to the application. Whereas for built-in primitive meshes or for
-models with custom geometry, run-time processing is the only option.
+lightmapped models at run time, there are two options:
+
+\list
+
+\li For models without lightmap UV data available the lightmap baking process
+also outputs a set of \c{qlm_*.mesh} files, the names generated based on the \l
+BakedLightmap::key, similarly to the with the \c{.exr} images. If the
+application wishes to, it can ship these extra \c{.mesh} files together with
+the \c{.exr} assets. When present, these mesh files will be used in place of
+the regular model data, with the lightmapping related data readily available.
+This is completely optional, however. When no qlm_\c{key}.mesh is found at run
+time, the UV unwrapping is done at run time, transparently to the application.
+
+\li Alternatively, the \l{Balsam Asset Import Tool}{balsam} tool offers the
+option to pre-generate the lightmap UV data at asset import time. This means
+that the model's \c{.mesh} file will contain the necessary data right from the
+start, and no extra meshes will be generated during lightmap baking time, and
+so there are no extra assets to ship with the application (apart from the
+lightmap images, of course). To do this, pass \c{--generateLightmapUV} to
+balsam.
+
+\endlist
 
 \section2 Lightmap texture size
 

@@ -346,6 +346,8 @@ bool QSSGLightmapperPrivate::commitGeometry()
 
             if (lm.model->hasLightmap())
                 drawInfo.meshWithLightmapUV = mesh;
+        } else {
+            qDebug() << "lm: Model" << lm.model << "already has a lightmap UV channel";
         }
 
         drawInfo.lightmapSize = mesh.subsets().first().lightmapSizeHint;
@@ -1546,7 +1548,7 @@ bool QSSGLightmapperPrivate::storeLightmaps()
             }
             qDebug() << "lm: Lightmap-compatible mesh saved for model" << lm.model << "to" << f.fileName()
                      << "in" << writeTimer.elapsed() << "ms";
-        }
+        } // else the mesh had a lightmap uv channel to begin with, no need to save another version of it
     }
 
     QFile listFile(QSSGLightmapper::lightmapAssetPathForSave(QSSGLightmapper::LightmapAsset::LightmapImageList));
