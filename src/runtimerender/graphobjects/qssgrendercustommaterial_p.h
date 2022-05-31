@@ -116,7 +116,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         ScreenMipTexture = 1 << 7,
         VarColor = 1 << 8,
         IblOrientation = 1 << 9,
-        Lightmap = 1 << 10
+        Lightmap = 1 << 10,
+        Skinning = 1 << 11
     };
     Q_DECLARE_FLAGS(RenderFlags, RenderFlag)
 

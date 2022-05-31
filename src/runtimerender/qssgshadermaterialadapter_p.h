@@ -64,6 +64,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
     virtual bool isClearcoatEnabled() = 0;
     virtual bool isTransmissionEnabled() = 0;
     virtual bool hasLighting() = 0;
+    virtual bool usesCustomSkinning() = 0;
     virtual QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() = 0;
     virtual QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() = 0;
 
@@ -118,6 +119,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderDefaultMaterialAdapter final : pu
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
     bool hasLighting() override;
+    bool usesCustomSkinning() override;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() override;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() override;
 
@@ -163,6 +165,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
     bool isClearcoatEnabled() override;
     bool isTransmissionEnabled() override;
     bool hasLighting() override;
+    bool usesCustomSkinning() override;
     QSSGRenderDefaultMaterial::MaterialSpecularModel specularModel() override;
     QSSGRenderDefaultMaterial::MaterialAlphaMode alphaMode() override;
 

@@ -136,6 +136,11 @@ bool QSSGShaderDefaultMaterialAdapter::hasLighting()
     return m_material.hasLighting();
 }
 
+bool QSSGShaderDefaultMaterialAdapter::usesCustomSkinning()
+{
+    return false;
+}
+
 QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderDefaultMaterialAdapter::specularModel()
 {
     return m_material.specularModel;
@@ -322,6 +327,11 @@ bool QSSGShaderCustomMaterialAdapter::isTransmissionEnabled()
 bool QSSGShaderCustomMaterialAdapter::hasLighting()
 {
     return true;
+}
+
+bool QSSGShaderCustomMaterialAdapter::usesCustomSkinning()
+{
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Skinning);
 }
 
 QSSGRenderDefaultMaterial::MaterialSpecularModel QSSGShaderCustomMaterialAdapter::specularModel()
@@ -828,10 +838,14 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
                 for (const QSSGCustomMaterialVariableSubstitution &subst : qssg_var_subst_tab) {
                     if (trimmedId == subst.builtin) {
                         id.replace(subst.builtin, subst.actualName); // replace, not assignment, to keep whitespace etc.
-                        if (trimmedId == QByteArrayLiteral("BONE_TRANSFORMS"))
+                        if (trimmedId == QByteArrayLiteral("BONE_TRANSFORMS")) {
                             useJointTexState = 0;
-                        else if (trimmedId == QByteArrayLiteral("BONE_NORMAL_TRANSFORMS"))
+                            md.flags |= QSSGCustomShaderMetaData::UsesSkinning;
+                        } else if (trimmedId == QByteArrayLiteral("BONE_NORMAL_TRANSFORMS")) {
                             useJointNormalTexState = 0;
+                            md.flags |= QSSGCustomShaderMetaData::UsesSkinning;
+                        }
+
                         break;
                     }
                 }

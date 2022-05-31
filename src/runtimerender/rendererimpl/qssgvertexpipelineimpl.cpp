@@ -204,9 +204,10 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             else
                 insertVertexMainArgs(snippet);
 
-            if (m_hasSkinning) {
+            if (materialAdapter->usesCustomSkinning()) {
                 vertexShader.addInclude("skinanim.glsllib");
                 vertexShader.addUniform("qt_boneTexture", "sampler2D");
+                m_hasSkinning = false;
             }
 
             if (!materialAdapter->isUnshaded()) {

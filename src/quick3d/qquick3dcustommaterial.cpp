@@ -1483,6 +1483,8 @@ static void setCustomMaterialFlagsFromShader(QSSGRenderCustomMaterial *material,
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::IblOrientation, true);
     if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesLightmap))
         material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Lightmap, true);
+    if (meta.flags.testFlag(QSSGCustomShaderMetaData::UsesSkinning))
+        material->m_renderFlags.setFlag(QSSGRenderCustomMaterial::RenderFlag::Skinning, true);
 }
 
 QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraphObject *node)
