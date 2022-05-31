@@ -3499,6 +3499,7 @@ static void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
         if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame)
             pEntry->m_rendered = true;
 
+        reflectionProbes[i]->hasScheduledUpdate = false;
         pEntry->m_needsRender = false;
     }
 }

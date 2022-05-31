@@ -179,6 +179,18 @@ QVector3D QQuick3DReflectionProbe::boxOffset() const
     return m_boxOffset;
 }
 
+/*!
+    \qmlmethod ReflectionProbe::scheduleUpdate()
+
+    Updates the reflection probe render when called while \l ReflectionProbe::refreshMode
+    is set as \c {ReflectionRefreshMode.FirstFrame}.
+*/
+void QQuick3DReflectionProbe::scheduleUpdate()
+{
+    m_dirtyFlags.setFlag(DirtyFlag::RefreshModeDirty);
+    update();
+}
+
 void QQuick3DReflectionProbe::setQuality(QQuick3DReflectionProbe::ReflectionQuality reflectionQuality)
 {
     if (m_quality == reflectionQuality)
@@ -292,6 +304,7 @@ QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGrap
             probe->refreshMode = QSSGRenderReflectionProbe::ReflectionRefreshMode::EveryFrame;
             break;
         }
+        probe->hasScheduledUpdate = true;
     }
 
     if (m_dirtyFlags.testFlag(DirtyFlag::TimeSlicingDirty)) {

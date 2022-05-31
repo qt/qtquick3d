@@ -98,6 +98,8 @@ public:
     bool debugView() const;
     Q_REVISION(6, 4) QVector3D boxOffset() const;
 
+    Q_REVISION(6, 4) Q_INVOKABLE void scheduleUpdate();
+
 public Q_SLOTS:
     void setQuality(ReflectionQuality reflectionQuality);
     void setClearColor(const QColor &clearColor);

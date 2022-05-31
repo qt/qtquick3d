@@ -68,6 +68,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderReflectionProbe : public QSSGRend
     bool parallaxCorrection = false;
     QVector3D boxSize { 0.0, 0.0, 0.0 };
     QVector3D boxOffset { 0.0, 0.0, 0.0 };
+    bool hasScheduledUpdate = false;
 
     explicit QSSGRenderReflectionProbe();
 };

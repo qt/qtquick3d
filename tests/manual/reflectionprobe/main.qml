@@ -123,6 +123,7 @@ Window {
             }
 
             ReflectionProbe {
+                id: probe
                 timeSlicing: {
                     if (comboTimeSlicing.currentIndex === 0) ReflectionProbe.None
                     else if (comboTimeSlicing.currentIndex === 1) ReflectionProbe.AllFacesAtOnce
@@ -252,6 +253,10 @@ Window {
                 from: 0
                 value: 0
                 to: 1000
+            }
+            Button {
+                text: "Schedule Update"
+                onClicked: probe.scheduleUpdate()
             }
         }
     }
