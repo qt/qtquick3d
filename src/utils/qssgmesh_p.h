@@ -156,6 +156,7 @@ public:
     // id 0 == generate new id; otherwise uses it as-is, and must be an unused one
     quint32 save(QIODevice *device, quint32 id = 0) const;
 
+    bool hasLightmapUVChannel() const;
     bool createLightmapUVChannel(uint lightmapBaseResolution);
 
 private:

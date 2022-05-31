@@ -95,6 +95,7 @@ struct QSSGLightmapperPrivate
         QRhiVertexInputAttribute::Format uvFormat = QRhiVertexInputAttribute::Float;
         quint32 lightmapUVOffset = UINT_MAX;
         QRhiVertexInputAttribute::Format lightmapUVFormat = QRhiVertexInputAttribute::Float;
+        QSSGMesh::Mesh meshWithLightmapUV; // only set when model->hasLightmap() == true
     };
     QVector<DrawInfo> drawInfos;
 
@@ -334,13 +335,18 @@ bool QSSGLightmapperPrivate::commitGeometry()
             return false;
         }
 
-        QElapsedTimer unwrapTimer;
-        unwrapTimer.start();
-        if (!mesh.createLightmapUVChannel(lm.model->lightmapBaseResolution)) {
-            qWarning("lm: Failed to do lightmap UV unwrapping");
-            return false;
+        if (!mesh.hasLightmapUVChannel()) {
+            QElapsedTimer unwrapTimer;
+            unwrapTimer.start();
+            if (!mesh.createLightmapUVChannel(lm.model->lightmapBaseResolution)) {
+                qWarning("lm: Failed to do lightmap UV unwrapping");
+                return false;
+            }
+            qDebug() << "lm: Lightmap UV unwrap done for model" << lm.model << "in" << unwrapTimer.elapsed() << "ms";
+
+            if (lm.model->hasLightmap())
+                drawInfo.meshWithLightmapUV = mesh;
         }
-        qDebug() << "lm: Lightmap UV unwrap done for model" << lm.model << "in" << unwrapTimer.elapsed() << "ms";
 
         drawInfo.lightmapSize = mesh.subsets().first().lightmapSizeHint;
         if (drawInfo.lightmapSize.isEmpty()) {
@@ -1510,7 +1516,7 @@ bool QSSGLightmapperPrivate::storeLightmaps()
         QElapsedTimer writeTimer;
         writeTimer.start();
 
-        const QString fn = QSSGLightmapper::lightmapFilePathForSave(*lm.model);
+        const QString fn = QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::LightmapImage);
         const QByteArray fns = fn.toUtf8();
         listContents += fns;
         listContents += '\n';
@@ -1526,9 +1532,24 @@ bool QSSGLightmapperPrivate::storeLightmaps()
 
         qDebug() << "lm: Lightmap saved for model" << lm.model << "to" << fn
                  << "in" << writeTimer.elapsed() << "ms";
+
+        const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
+        if (bakeModelDrawInfo.meshWithLightmapUV.isValid()) {
+            writeTimer.start();
+            QFile f(QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::MeshWithLightmapUV));
+            if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                bakeModelDrawInfo.meshWithLightmapUV.save(&f);
+            } else {
+                qWarning("lm: Failed to write mesh with lightmap UV data to '%s'",
+                         qPrintable(f.fileName()));
+                return false;
+            }
+            qDebug() << "lm: Lightmap-compatible mesh saved for model" << lm.model << "to" << f.fileName()
+                     << "in" << writeTimer.elapsed() << "ms";
+        }
     }
 
-    QFile listFile(QSSGLightmapper::lightmapListFilePath());
+    QFile listFile(QSSGLightmapper::lightmapAssetPathForSave(QSSGLightmapper::LightmapAsset::LightmapImageList));
     if (!listFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         qWarning("lm: Failed to create lightmap list file %s",
                  qPrintable(listFile.fileName()));
@@ -1598,25 +1619,48 @@ bool QSSGLightmapper::bake()
 
 #endif // QT_QUICK3D_HAS_LIGHTMAPPER
 
-QString QSSGLightmapper::lightmapFilePathForLoad(const QSSGRenderModel &model)
+QString QSSGLightmapper::lightmapAssetPathForLoad(const QSSGRenderModel &model, LightmapAsset asset)
 {
     QString result;
     if (!model.lightmapLoadPrefix.isEmpty()) {
         result += model.lightmapLoadPrefix;
         result += QLatin1Char('/');
     }
-    result += QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
+    switch (asset) {
+    case LightmapAsset::LightmapImage:
+        result += QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
+        break;
+    case LightmapAsset::MeshWithLightmapUV:
+        result += QStringLiteral("qlm_%1.mesh").arg(model.lightmapKey);
+        break;
+    default:
+        return QString();
+    }
     return result;
 }
 
-QString QSSGLightmapper::lightmapFilePathForSave(const QSSGRenderModel &model)
+QString QSSGLightmapper::lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset)
 {
-    return QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
+    switch (asset) {
+    case LightmapAsset::LightmapImage:
+        return QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
+    case LightmapAsset::MeshWithLightmapUV:
+        return QStringLiteral("qlm_%1.mesh").arg(model.lightmapKey);
+    default:
+        break;
+    }
+    return lightmapAssetPathForSave(asset);
 }
 
-QString QSSGLightmapper::lightmapListFilePath()
+QString QSSGLightmapper::lightmapAssetPathForSave(LightmapAsset asset)
 {
-    return QStringLiteral("qlm_list.txt");
+    switch (asset) {
+    case LightmapAsset::LightmapImageList:
+        return QStringLiteral("qlm_list.txt");
+    default:
+        break;
+    }
+    return QString();
 }
 
 QT_END_NAMESPACE

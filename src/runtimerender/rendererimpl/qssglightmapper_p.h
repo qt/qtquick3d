@@ -73,9 +73,14 @@ public:
     qsizetype add(const QSSGBakedLightingModel &model);
     bool bake();
 
-    static QString lightmapFilePathForLoad(const QSSGRenderModel &model);
-    static QString lightmapFilePathForSave(const QSSGRenderModel &model);
-    static QString lightmapListFilePath();
+    enum class LightmapAsset {
+        LightmapImage,
+        MeshWithLightmapUV,
+        LightmapImageList
+    };
+    static QString lightmapAssetPathForLoad(const QSSGRenderModel &model, LightmapAsset asset);
+    static QString lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset);
+    static QString lightmapAssetPathForSave(LightmapAsset asset);
 
 private:
     QSSGLightmapperPrivate *d = nullptr;

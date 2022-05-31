@@ -262,7 +262,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
 QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &model)
 {
     static const QSSGRenderTextureFormat format = QSSGRenderTextureFormat::RGBA16F;
-    const QString imagePath = QSSGLightmapper::lightmapFilePathForLoad(model);
+    const QString imagePath = QSSGLightmapper::lightmapAssetPathForLoad(model, QSSGLightmapper::LightmapAsset::LightmapImage);
 
     QSSGRenderImageTexture result;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
@@ -1030,10 +1030,15 @@ QSSGRenderMesh *QSSGBufferManager::loadMesh(const QSSGRenderModel *model)
     }
 
     QSSGRenderMesh *theMesh = nullptr;
-    if (model->meshPath.isNull() && model->geometry)
+    if (model->meshPath.isNull() && model->geometry) {
         theMesh = loadRenderMesh(model->geometry, options);
-    else
+    } else {
+        if (model->hasLightmap()) {
+            options.meshFileOverride = QSSGLightmapper::lightmapAssetPathForLoad(*model,
+                                                                                 QSSGLightmapper::LightmapAsset::MeshWithLightmapUV);
+        }
         theMesh = loadRenderMesh(model->meshPath, options);
+    }
 
     return theMesh;
 }
@@ -1497,7 +1502,19 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
 
-    QSSGMesh::Mesh result = loadMeshData(inMeshPath);
+    QSSGMesh::Mesh result;
+
+    if (options.wantsLightmapUVs && !options.meshFileOverride.isEmpty()) {
+        // So now we have a hint, e.g "qlm_xxxx.mesh" that says that if that
+        // file exists, then we should prefer that because it has the lightmap
+        // UV unwrapping and associated rebuilding already done.
+        if (QFileInfo(options.meshFileOverride).exists())
+            result = loadMeshData(QSSGRenderPath(options.meshFileOverride));
+    }
+
+    if (!result.isValid())
+        result = loadMeshData(inMeshPath);
+
     if (!result.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
@@ -1508,8 +1525,12 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
     qDebug() << "+ uploadGeometry: " << inMeshPath.path() << currentLayer;
 #endif
 
-    if (options.wantsLightmapUVs)
+    if (options.wantsLightmapUVs) {
+        // Does nothing if the lightmap uv attribute is already present,
+        // otherwise this is a potentially expensive step that will do UV
+        // unwrapping and rebuild much of the mesh's data.
         result.createLightmapUVChannel(options.lightmapBaseResolution);
+    }
 
     auto ret = createRenderMesh(result);
     meshMap.insert(inMeshPath, { ret, {{currentLayer, 1}}, 0, options });
@@ -1545,8 +1566,11 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, 
     #ifdef QSSG_RENDERBUFFER_DEBUGGING
             qDebug() << "+ uploadGeometry: " << geometry << currentLayer;
     #endif
-            if (options.wantsLightmapUVs)
+            if (options.wantsLightmapUVs) {
+                // Custom geometry will get a dynamically generated lightmap UV
+                // channel, unless attr_lightmapuv already exists.
                 mesh.createLightmapUVChannel(options.lightmapBaseResolution);
+            }
 
             meshIterator->mesh = createRenderMesh(mesh);
             meshIterator->usageCounts[currentLayer] = 1;

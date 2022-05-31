@@ -733,6 +733,16 @@ QSSGBounds3 MeshInternal::calculateSubsetBounds(const Mesh::VertexBufferEntry &e
     return result;
 }
 
+bool Mesh::hasLightmapUVChannel() const
+{
+    const char *lightmapAttrName = MeshInternal::getLightmapUVAttrName();
+    for (const VertexBufferEntry &vbe : qAsConst(m_vertexBuffer.entries)) {
+        if (vbe.name == lightmapAttrName)
+            return true;
+    }
+    return false;
+}
+
 bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
 {
     const char *posAttrName = MeshInternal::getPositionAttrName();
@@ -741,10 +751,8 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     const char *lightmapAttrName = MeshInternal::getLightmapUVAttrName();
 
     // this function should do nothing if there is already an attr_lightmapuv
-    for (const VertexBufferEntry &vbe : qAsConst(m_vertexBuffer.entries)) {
-        if (vbe.name == lightmapAttrName)
-            return true;
-    }
+    if (hasLightmapUVChannel())
+        return true;
 
     const char *srcVertexData = m_vertexBuffer.data.constData();
     const quint32 srcVertexStride = m_vertexBuffer.stride;

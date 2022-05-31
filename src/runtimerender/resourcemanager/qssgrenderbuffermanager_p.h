@@ -80,6 +80,7 @@ struct QSSGMeshProcessingOptions
 {
     bool wantsLightmapUVs = false;
     uint lightmapBaseResolution = 0;
+    QString meshFileOverride;
 
     inline bool isCompatible(const QSSGMeshProcessingOptions &other) const
     {
@@ -92,6 +93,8 @@ struct QSSGMeshProcessingOptions
         // if lightmap UVs are wanted, the request can only use other's data
         // if that generated lightmap UVs with the matching resolution
         return other.wantsLightmapUVs && lightmapBaseResolution == other.lightmapBaseResolution;
+
+        // meshFileOverride plays no role here
     }
 };
 
