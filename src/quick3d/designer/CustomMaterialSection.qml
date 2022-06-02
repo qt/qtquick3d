@@ -39,7 +39,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Shading Mode")
-            tooltip: qsTr("Specifies the type of the material.")
+            tooltip: qsTr("Sets the material type.\nUnshaded materials are not affected by the environment (for example, lights).")
         }
 
         SecondColumnLayout {
@@ -56,7 +56,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Vertex Shader")
-            tooltip: qsTr("Holds the location of a vertex shader file for this material.")
+            tooltip: qsTr("Sets the path to the vertex shader source file.")
         }
 
         SecondColumnLayout {
@@ -70,7 +70,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Fragment Shader")
-            tooltip: qsTr("Holds the location of a fragment shader file for this material.")
+            tooltip: qsTr("Sets the path to the fragment shader source file.")
         }
 
         SecondColumnLayout {
@@ -84,7 +84,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Source Blend")
-            tooltip: qsTr("Specifies the source blend factor.")
+            tooltip: qsTr("Sets the source blend factor.")
         }
 
         SecondColumnLayout {
@@ -101,7 +101,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Destination Blend")
-            tooltip: qsTr("Specifies the destination blend factor.")
+            tooltip: qsTr("Sets the destination blend factor.")
         }
 
         SecondColumnLayout {
@@ -118,7 +118,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Always Dirty")
-            tooltip: qsTr("Always dirty material is refreshed every time it is used by QtQuick3D.")
+            tooltip: qsTr("Sets the material to refresh every time it is used by QtQuick3D.")
         }
 
         SecondColumnLayout {
@@ -134,7 +134,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Line Width")
-            tooltip: qsTr("Determines the width of the lines when the geometry is using lines or line strips.")
+            tooltip: qsTr("Sets the width of the lines when the geometry is using a primitive type of lines or line strips.")
         }
 
         SecondColumnLayout {
