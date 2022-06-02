@@ -232,6 +232,18 @@ float QQuick3DParticleSpriteParticle::offsetY() const
     return m_offset.y();
 }
 
+/*!
+    \qmlproperty bool QQuick3DParticleSpriteParticle::castsReflections
+    \since 6.4
+
+    When this property is set to \c true, the sprite is rendered by reflection probes and can be
+    seen in the reflections.
+*/
+bool QQuick3DParticleSpriteParticle::castsReflections() const
+{
+    return m_castsReflections;
+}
+
 void QQuick3DParticleSpriteParticle::setBlendMode(BlendMode blendMode)
 {
     if (m_blendMode == blendMode)
@@ -321,6 +333,14 @@ void QQuick3DParticleSpriteParticle::setOffsetY(float value)
 
     m_offset.setY(value);
     emit offsetYChanged();
+}
+
+void QQuick3DParticleSpriteParticle::setCastsReflections(bool castsReflections)
+{
+    if (m_castsReflections == castsReflections)
+        return;
+    m_castsReflections = castsReflections;
+    emit castsReflectionsChanged();
 }
 
 void QQuick3DParticleSpriteParticle::itemChange(QQuick3DObject::ItemChange change,
@@ -455,6 +475,7 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const 
     particles->m_depthBias = perEmitter.emitter->depthBias();
     particles->m_featureLevel = mapFeatureLevel(m_featureLevel);
     particles->m_depthSorting = sortMode() == QQuick3DParticle::SortDistance;
+    particles->m_castsReflections = m_castsReflections;
 
     return particles;
 }

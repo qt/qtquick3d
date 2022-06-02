@@ -66,6 +66,7 @@ class Q_QUICK3DPARTICLES_EXPORT QQuick3DParticleSpriteParticle : public QQuick3D
     Q_PROPERTY(QQmlListProperty<QQuick3DAbstractLight> lights READ lights NOTIFY lightsChanged REVISION(6, 3))
     Q_PROPERTY(float offsetX READ offsetX WRITE setOffsetX NOTIFY offsetXChanged REVISION(6, 3))
     Q_PROPERTY(float offsetY READ offsetY WRITE setOffsetY NOTIFY offsetYChanged REVISION(6, 3))
+    Q_PROPERTY(bool castsReflections READ castsReflections WRITE setCastsReflections NOTIFY castsReflectionsChanged REVISION(6, 4))
     QML_NAMED_ELEMENT(SpriteParticle3D)
     QML_ADDED_IN_VERSION(6, 2)
 
@@ -85,6 +86,7 @@ public:
     Q_REVISION(6, 3) QQmlListProperty<QQuick3DAbstractLight> lights();
     float offsetX() const;
     float offsetY() const;
+    Q_REVISION(6, 4) bool castsReflections() const;
 
 public Q_SLOTS:
     void setBlendMode(QQuick3DParticleSpriteParticle::BlendMode blendMode);
@@ -95,6 +97,7 @@ public Q_SLOTS:
     void setColorTable(QQuick3DTexture *colorTable);
     void setOffsetX(float value);
     void setOffsetY(float value);
+    Q_REVISION(6, 4) void setCastsReflections(bool castsReflections);
 
 Q_SIGNALS:
     void blendModeChanged();
@@ -106,6 +109,7 @@ Q_SIGNALS:
     Q_REVISION(6, 3) void lightsChanged();
     Q_REVISION(6, 3) void offsetXChanged();
     Q_REVISION(6, 3) void offsetYChanged();
+    Q_REVISION(6, 4) void castsReflectionsChanged();
 
 protected:
     void itemChange(ItemChange, const ItemChangeData &) override;
@@ -219,6 +223,7 @@ private:
     Q_REVISION(6, 3) static void qmlClearLights(QQmlListProperty<QQuick3DAbstractLight> *list);
     QVector<QQuick3DAbstractLight *> m_lights;
     QVector3D m_offset = {};
+    bool m_castsReflections = true;
 };
 
 QT_END_NAMESPACE

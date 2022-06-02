@@ -181,6 +181,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderParticles : public QSSGRenderNode
     bool m_depthSorting = false;
     QSSGRenderImage *m_colorTable = nullptr;
     QSSGRenderParticles::FeatureLevel m_featureLevel = FeatureLevel::Simple;
+    bool m_castsReflections = true;
 
     QSSGRenderParticles();
     ~QSSGRenderParticles() = default;
