@@ -46,7 +46,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Light Probe")
-            tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with this material.")
+            tooltip: qsTr("Sets a texture to use as image based lighting.\nThis overrides the scene's light probe.")
         }
 
         SecondColumnLayout {
@@ -62,7 +62,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Culling Mode")
-            tooltip: qsTr("Defines whether culling is enabled and which mode is actually enabled.")
+            tooltip: qsTr("Sets which primitives to discard, if any.")
         }
 
         SecondColumnLayout {
@@ -79,7 +79,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Depth Draw Mode")
-            tooltip: qsTr("This property determines if and when depth rendering takes place for this material.")
+            tooltip: qsTr("Sets if and when depth rendering takes place.")
         }
 
         SecondColumnLayout {

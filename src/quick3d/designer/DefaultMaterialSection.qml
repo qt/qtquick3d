@@ -42,7 +42,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Lighting")
-                tooltip: qsTr("Defines which lighting method is used when generating this material.")
+                tooltip: qsTr("Sets the lighting method. NoLighting is faster while FragmentLighting\ncalculates diffuse and specular lighting for each rendered pixel.")
             }
 
             SecondColumnLayout {
@@ -59,7 +59,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Blend Mode")
-                tooltip: qsTr("Determines how the colors of the model rendered blend with those behind it.")
+                tooltip: qsTr("Sets how the colors of the model blend with colors behind it.")
             }
 
             SecondColumnLayout {
@@ -76,7 +76,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Enable Vertex Colors")
-                tooltip: qsTr("Enables the use of vertex colors from the mesh.")
+                tooltip: qsTr("Sets the material to use vertex colors from the mesh.\nVertex colors are multiplied with any other color for the material.")
             }
 
             SecondColumnLayout {
@@ -92,7 +92,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Point Size")
-                tooltip: qsTr("This property determines the size of the points rendered, when the geometry is using a primitive type of points.")
+                tooltip: qsTr("Sets the size of the points rendered when the geometry is using a primitive type of points.")
             }
 
             SecondColumnLayout {
@@ -108,7 +108,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Line Width")
-                tooltip: qsTr("This property determines the width of the lines rendered, when the geometry is using a primitive type of lines or line strips.")
+                tooltip: qsTr("Sets the width of the lines rendered when the geometry is using a primitive type of lines or line strips.")
             }
 
             SecondColumnLayout {
@@ -131,6 +131,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Diffuse Color")
+                tooltip: qsTr("Sets the base color.")
             }
 
             ColorEditor {
@@ -140,7 +141,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Diffuse Map")
-                tooltip: qsTr("Defines a texture to apply to the material.")
+                tooltip: qsTr("Sets a texture to apply to the material.")
             }
 
             SecondColumnLayout {
@@ -166,7 +167,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Emissive Factor")
-                    tooltip: qsTr("Determines the amount of self-illumination from the material (will not light other objects).")
+                    tooltip: qsTr("Sets the color of self-illumination.\nThe default value (0, 0, 0) means no self-illumination.")
                 }
 
                 SecondColumnLayout {
@@ -237,7 +238,7 @@ Column {
                 }
                 PropertyLabel {
                     text: qsTr("Emissive Map")
-                    tooltip: qsTr("Sets a texture to be used to set the emissive factor for different parts of the material.")
+                    tooltip: qsTr("Sets a texture to define the intensity of the emissive color.")
                 }
 
                 SecondColumnLayout {
@@ -261,6 +262,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Specular Tint")
+                tooltip: qsTr("Sets the color tint for the specular reflections.\nUse white for no color effect.")
             }
 
             ColorEditor {
@@ -270,7 +272,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Specular Amount")
-                tooltip: qsTr("Controls the strength of specularity (highlights and reflections).")
+                tooltip: qsTr("Sets the strength of specularity (highlights and reflections).\nThe default value (0) disables specularity.")
             }
 
             SecondColumnLayout {
@@ -289,7 +291,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Specular Map")
-                tooltip: qsTr("Defines a RGB texture to modulate the amount and the color of specularity across the surface of the material.")
+                tooltip: qsTr("Sets a texture to define the amount and the color of specularity.")
             }
 
             SecondColumnLayout {
@@ -305,7 +307,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Specular Model")
-                tooltip: qsTr("Determines which functions are used to calculate specular highlights for lights in the scene.")
+                tooltip: qsTr("Sets the functions to calculate specular highlights for lights in the scene.\nDefault is faster while KGGX is more physically accurate.")
             }
 
             SecondColumnLayout {
@@ -322,7 +324,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Reflection Map")
-                tooltip: qsTr("Sets a texture used for specular highlights on the material.")
+                tooltip: qsTr("Sets a texture to define specular highlights.")
             }
 
             SecondColumnLayout {
@@ -338,7 +340,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Index of Refraction")
-                tooltip: qsTr("Controls what angles of reflections are affected by the Fresnel power.")
+                tooltip: qsTr("Sets the angles of reflections affected by the fresnel power.")
             }
 
             SecondColumnLayout {
@@ -357,7 +359,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Fresnel Power")
-                tooltip: qsTr("Decreases head-on reflections (looking directly at the surface) while maintaining reflections seen at grazing angles.")
+                tooltip: qsTr("Sets the strength of the fresnel power. The default value (0) means no fresnel power while a higher value\ndecreases head-on reflections (looking directly at the surface) while maintaining reflections seen at grazing angles.")
             }
 
             SecondColumnLayout {
@@ -375,7 +377,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Specular Roughness")
-                tooltip: qsTr("Controls the size of the specular highlight generated from lights and the clarity of reflections in general.")
+                tooltip: qsTr("Sets the size of the specular highlight generated from lights and the clarity of reflections in general.")
             }
 
             SecondColumnLayout {
@@ -393,7 +395,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Roughness Map")
-                tooltip: qsTr("Defines a texture to control the specular roughness of the material.")
+                tooltip: qsTr("Sets a texture to define the specular roughness.")
             }
 
             SecondColumnLayout {
@@ -409,7 +411,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Roughness Channel")
-                tooltip: qsTr("This property defines the texture channel used to read the roughness value from roughnessMap.")
+                tooltip: qsTr("Sets the texture channel to read the roughness value from roughnessMap.")
             }
 
             SecondColumnLayout {
@@ -433,7 +435,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Opacity")
-                tooltip: qsTr("Sets the visibility of the geometry for this material.")
+                tooltip: qsTr("Sets the visibility of the geometry.")
             }
 
             SecondColumnLayout {
@@ -452,7 +454,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Opacity Map")
-                tooltip: qsTr("Defines a texture used to control the opacity differently for different parts of the material.")
+                tooltip: qsTr("Sets a texture to control the opacity differently for different parts.")
             }
 
             SecondColumnLayout {
@@ -468,7 +470,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Opacity Channel")
-                tooltip: qsTr("This property defines the texture channel used to read the opacity value from opacityMap.")
+                tooltip: qsTr("Sets the texture channel to read the opacity value from the opacity map.")
             }
 
             SecondColumnLayout {
@@ -492,7 +494,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Bump Amount")
-                tooltip: qsTr("Controls the amount of simulated displacement for the bump map or normal map.")
+                tooltip: qsTr("Sets the amount of simulated displacement for the bump map or normal map.")
             }
 
             SecondColumnLayout {
@@ -511,7 +513,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Bump Map")
-                tooltip: qsTr("Defines a grayscale texture to simulate fine geometry displacement across the surface of the material.")
+                tooltip: qsTr("Sets a grayscale texture to simulate fine geometry displacement across the surface.")
             }
 
             SecondColumnLayout {
@@ -536,7 +538,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Normal Map")
-                tooltip: qsTr("Defines a RGB image used to simulate fine geometry displacement across the surface of the material.")
+                tooltip: qsTr("Sets a image to simulate fine geometry displacement across the surface.")
             }
 
             SecondColumnLayout {
@@ -568,7 +570,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Translucency Falloff")
-                tooltip: qsTr("Defines the amount of falloff for the translucency based on the angle of the normals of the object to the light source.")
+                tooltip: qsTr("Sets the amount of falloff for the translucency based on the angle of the normals of the object to the light source.")
             }
 
             SecondColumnLayout {
@@ -586,7 +588,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Diffuse Light Wrap")
-                tooltip: qsTr("Determines the amount of light wrap for the translucency map.")
+                tooltip: qsTr("Sets the amount of light wrap for the translucency map.\nA value of 0 will not wrap the light at all, while a value of 1 will wrap the light all around the object.")
             }
 
             SecondColumnLayout {
@@ -605,7 +607,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Translucency Map")
-                tooltip: qsTr("Defines a grayscale texture controlling how much light can pass through the material from behind.")
+                tooltip: qsTr("Sets a grayscale texture to control how much light can pass through the material from behind.")
             }
 
             SecondColumnLayout {
@@ -621,7 +623,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Translucency Channel")
-                tooltip: qsTr("This property defines the texture channel used to read the translucency value from translucencyMap.")
+                tooltip: qsTr("Sets the texture channel to read the translucency value from translucencyMap.")
             }
 
             SecondColumnLayout {
