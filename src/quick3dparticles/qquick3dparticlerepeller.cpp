@@ -125,7 +125,7 @@ void QQuick3DParticleRepeller::affectParticle(const QQuick3DParticleData &, QQui
     QVector3D dir = d->position - pos;
     float radius = dir.length();
     float outerRadius = qMax(m_outerRadius, m_radius);
-    if (radius > outerRadius)
+    if (radius > outerRadius || qFuzzyIsNull(radius))
         return;
 
     if (radius < m_radius)
