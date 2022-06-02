@@ -73,7 +73,7 @@ Window {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.SkyBox
             lightProbe: Texture {
-                source: "maps/OpenfootageNET_lowerAustria01-1024.hdr"
+                textureData: ProceduralSkyTextureData{}
             }
         }
 
