@@ -116,6 +116,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D - Custom Effect Example}{Writing Custom Post-Processing Effects}
     \li \l{Qt Quick 3D - Custom Geometry Example}{Adding Custom Geometry from C++}
     \li \l{Qt Quick 3D - Procedural Texture Example}{Adding Custom Texture Data from C++}
+    \li \l{Qt Quick 3D - Baked Lightmap Example}{Using baked lightmaps}
     \li \l{Qt Quick 3D Examples and Tutorials}{All examples}
 \endlist
 

@@ -431,4 +431,6 @@ The loading rules also apply to the optional \c{.mesh} files, such as
 accelerate the scene load times, it should ship these extra \c{.mesh} files
 next to the \c{.exr} lightmap images.
 
+\sa {Qt Quick 3D - Baked Lightmap Example}
+
 */
