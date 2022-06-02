@@ -521,7 +521,7 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
         Q_ASSERT(header.pointCount <= m_segmentCount);
 
         if (header.length >= 0.0f) {
-            float L = plength;
+            float L = segments > 1 ? plength : 0;
             float prevLength = length0;
             for (s = 0; s < header.pointCount && L < header.length; s++) {
                 particle = nextParticle(buffer, slice, p, pps, ss);
@@ -577,7 +577,7 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
             idx = idx ? (idx - 1) : (segments - 1);
         }
         // Do only for full segment
-        if (prevGood == particle && header.length < 0.0f) {
+        if (prevGood == particle && header.length < 0.0f && segments > 1) {
             prevGood->position -= tdata[prevIdx].tangent * plength;
             if (!fill)
                 prevGood->length += plength * lengthScale;
@@ -616,8 +616,9 @@ void QQuick3DParticleLineParticle::handleSegmentCountChanged()
     m_lineHeaderData.fill({});
     m_activeLineCount.clear();
     m_fadeOutData.clear();
-    for (int i = 0; i < m_maxAmount; i++)
-        m_lineHeaderData[i].emitterIndex = m_spriteParticleData[i].emitterIndex;
+    if (m_spriteParticleData.size() > 0)
+        for (int i = 0; i < m_maxAmount; i++)
+            m_lineHeaderData[i].emitterIndex = m_spriteParticleData[i].emitterIndex;
 }
 
 void QQuick3DParticleLineParticle::updateLineSegment(int particleIndex)
@@ -632,10 +633,10 @@ void QQuick3DParticleLineParticle::updateLineSegment(int particleIndex)
     LineData *prev = header->pointCount ? cur + idx : nullptr;
     const SpriteParticleData &src = m_spriteParticleData.at(particleIndex);
 
-    if (prev) {
+    if (prev && m_segmentCount > 1) {
         float length = (prev->position - src.position).length();
         float minLength = m_lengthDeltaMin;
-        if (header->length)
+        if (header->length >= 0.0f)
             minLength = header->length / m_segmentCount;
         if (length < minLength)
             return;
@@ -651,13 +652,28 @@ void QQuick3DParticleLineParticle::updateLineSegment(int particleIndex)
     header->currentIndex = idx;
     cur = cur + idx;
 
-    cur->position = src.position;
     cur->color = src.color;
     cur->size = src.size;
     cur->normal = qt_normalFromRotation(src.rotation);
-    cur->length = 0.0f;
 
-    if (prev) {
+    if (prev && m_segmentCount == 1) {
+        QVector3D t = prev->position - src.position;
+        float l = t.length();
+        t.normalize();
+        float minLength = m_lengthDeltaMin;
+        if (header->length >= 0.0f)
+            minLength = header->length;
+        cur->position = src.position + minLength * t;
+        cur->length += l;
+        cur->tangent = t;
+        cur->binormal = QVector3D::crossProduct(cur->normal, t);
+    } else {
+        cur->position = src.position;
+        cur->length = 0.0f;
+    }
+
+
+    if (prev && prev != cur) {
         prev->tangent = prev->position - src.position;
         cur->length = prev->tangent.length();
         prev->tangent /= cur->length;

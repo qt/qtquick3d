@@ -240,7 +240,7 @@ Item {
         CustomSlider {
             id: sliderSegmentCount
             sliderValue: 10
-            fromValue: 2
+            fromValue: 1
             toValue: 250
             sliderStepSize: 1
         }
