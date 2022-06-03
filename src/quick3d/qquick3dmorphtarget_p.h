@@ -38,7 +38,10 @@ public:
         Position   = 0x01,
         Normal     = 0x02,
         Tangent    = 0x04,
-        Binormal   = 0x08
+        Binormal   = 0x08,
+        TexCoord0  = 0x10,
+        TexCoord1  = 0x20,
+        Color      = 0x40
     };
     Q_ENUM(MorphTargetAttribute)
     Q_DECLARE_FLAGS(MorphTargetAttributes , MorphTargetAttribute)

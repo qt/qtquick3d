@@ -877,11 +877,15 @@ Mesh Mesh::fromRuntimeData(const RuntimeMeshData &data, QString *error)
             }
             char *dstBuf = mesh.m_targetBuffer.data.data() + i * targetCompStride;
             const char *srcBuf = data.m_targetBuffer.constData() + att.offset;
-            for (quint32 j = 0; j < vertexCount; ++j) {
-                Q_ASSERT(att.componentType == Mesh::ComponentType::Float32);
-                memcpy(dstBuf + j * 4 * sizeof(float),
-                       srcBuf + j * stride,
-                       att.componentCount() * sizeof(float));
+            Q_ASSERT(att.componentType == Mesh::ComponentType::Float32);
+            if (stride == 4 * sizeof(float)) {
+                memcpy(dstBuf, srcBuf, vertexCount * stride);
+            } else {
+                for (quint32 j = 0; j < vertexCount; ++j) {
+                    memcpy(dstBuf + j * 4 * sizeof(float),
+                           srcBuf + j * stride,
+                           att.componentCount() * sizeof(float));
+                }
             }
 
             if (sortedAttribs[i].targetId == 0) {

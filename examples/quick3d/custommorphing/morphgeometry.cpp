@@ -8,6 +8,7 @@
 struct Vertex {
     QVector3D position;
     QVector3D normal;
+    QVector4D color;
 };
 //! [vertex struct]
 
@@ -42,10 +43,13 @@ void MorphGeometry::updateData()
                  QQuick3DGeometry::Attribute::ComponentType::F32Type);
     addAttribute(QQuick3DGeometry::Attribute::NormalSemantic, 3 * sizeof(float),
                  QQuick3DGeometry::Attribute::ComponentType::F32Type);
+    addAttribute(QQuick3DGeometry::Attribute::ColorSemantic, 6 * sizeof(float),
+                 QQuick3DGeometry::Attribute::ComponentType::F32Type);
 
     addTargetAttribute(0, QQuick3DGeometry::Attribute::PositionSemantic, 0);
-    addTargetAttribute(0, QQuick3DGeometry::Attribute::NormalSemantic, m_targetPositions.size() * sizeof(QVector3D));
-
+    addTargetAttribute(0, QQuick3DGeometry::Attribute::NormalSemantic, m_targetPositions.size() * sizeof(float) * 3);
+    addTargetAttribute(0, QQuick3DGeometry::Attribute::ColorSemantic,
+                       m_targetPositions.size() * sizeof(float) * 3 + m_targetNormals.size() * sizeof(float) * 3);
     addAttribute(QQuick3DGeometry::Attribute::IndexSemantic, 0,
                  QQuick3DGeometry::Attribute::ComponentType::U32Type);
 
@@ -57,9 +61,11 @@ void MorphGeometry::updateData()
         Vertex &v = vert[i];
         v.position = m_positions[i];
         v.normal = m_normals[i];
+        v.color = m_colors[i];
     }
     m_targetBuffer.append(QByteArray(reinterpret_cast<char *>(m_targetPositions.data()), m_targetPositions.size() * sizeof(QVector3D)));
     m_targetBuffer.append(QByteArray(reinterpret_cast<char *>(m_targetNormals.data()), m_targetNormals.size() * sizeof(QVector3D)));
+    m_targetBuffer.append(QByteArray(reinterpret_cast<char *>(m_targetColors.data()), m_targetColors.size() * sizeof(QVector4D)));
 
     setStride(sizeof(Vertex));
     setVertexData(m_vertexBuffer);
@@ -85,6 +91,7 @@ void MorphGeometry::calculateGeometry()
     m_indexes.clear();
     m_targetPositions.clear();
     m_targetNormals.clear();
+    m_targetColors.clear();
 
     constexpr float maxFloat = std::numeric_limits<float>::max();
     boundsMin = QVector3D(maxFloat, maxFloat, maxFloat);
@@ -141,9 +148,13 @@ void MorphGeometry::calculateGeometry()
 
             m_positions.append({x, y, z});
             m_normals.append(normal.normalized());
+            const float tmp = (y + 3.0f) / 8.0f;
+            m_colors.append({tmp, 0.0f, 1 - tmp, 1.0f});
 
             m_targetPositions.append(targetPosition);
             m_targetNormals.append(targetNormal.normalized());
+            const float ttmp = (targetPosition.y() + 3.0f) / 8.0f;
+            m_targetColors.append({0.0f, 1.0f - ttmp, ttmp, 1.0f});
 
             // Note: We only use the bounds of the target positions since they are strictly
             // bigger than the original

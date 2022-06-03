@@ -108,6 +108,8 @@ struct QSSGMaterialVertexPipeline
         if (inUVSet == 0) {
             if (hasCustomShadedMain || meshHasUV0) {
                 addInterpolationParameter("qt_varTexCoord0", "vec2");
+                if (m_hasMorphing)
+                    vertex().append("    qt_vertUV0 = qt_getTargetTex0(qt_vertUV0);");
                 vertex() << "    qt_varTexCoord0 = qt_vertUV0;\n";
                 fragment() <<"    vec2 qt_texCoord0 = qt_varTexCoord0;\n";
             } else {
@@ -117,6 +119,8 @@ struct QSSGMaterialVertexPipeline
         } else if (inUVSet == 1) {
             if (hasCustomShadedMain || meshHasUV1) {
                 addInterpolationParameter("qt_varTexCoord1", "vec2");
+                if (m_hasMorphing)
+                    vertex().append("    qt_vertUV1 = qt_getTargetTex0(qt_vertUV1);");
                 vertex() << "    qt_varTexCoord1 = qt_vertUV1;\n";
                 fragment() <<"    vec2 qt_texCoord1 = qt_varTexCoord1;\n";
             } else {
@@ -290,6 +294,8 @@ struct QSSGMaterialVertexPipeline
         const bool usesBlendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
         if (hasCustomShadedMain || usesVarColor || meshHasColor || usesInstancing || usesBlendParticles) {
             addInterpolationParameter("qt_varColor", "vec4");
+            if (m_hasMorphing)
+                vertex().append("    qt_vertColor = qt_getTargetColor(qt_vertColor);");
             vertex().append("    qt_varColor = qt_vertColor;");
             fragment().append("    vec4 qt_vertColor = qt_varColor;\n");
         } else {

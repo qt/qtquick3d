@@ -55,7 +55,7 @@ Window {
         //! [target]
         MorphTarget {
             id: morphtarget
-            attributes: MorphTarget.Position | MorphTarget.Normal
+            attributes: MorphTarget.Position | MorphTarget.Normal | MorphTarget.Color
             SequentialAnimation on weight {
                 PauseAnimation { duration: 1000 }
                 NumberAnimation { from: 0; to: 1; duration: 4000 }

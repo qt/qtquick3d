@@ -159,7 +159,8 @@ QQmlListProperty<QQuick3DMaterial> QQuick3DModel::materials()
 
     This property contains a list of \l [QtQuick3D QML] {MorphTarget}{MorphTarget}s used to
     render the provided geometry. Meshes should have at least one attribute
-    among positions, normals, tangents, and binormals for the morph targets.
+    among positions, normals, tangents, binormals, texture coordinates,
+    and vertex colors for the morph targets.
 
     \sa {MorphTarget}
 */
