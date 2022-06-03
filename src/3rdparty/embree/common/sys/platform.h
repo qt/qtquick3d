@@ -376,3 +376,11 @@ namespace embree
   }
 
 }
+
+// Qt's bundled build enforces EMBREE_TARGET_SSE2, it must not hit the AVX code paths
+#undef __AVX512VL__
+#undef __AVX512F__
+#undef __AVX2__
+#undef __AVXI__
+#undef __AVX__
+#undef __SSE4_2__
