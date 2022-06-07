@@ -315,7 +315,6 @@ void QQuick3DParticleLineParticle ::reset()
     QQuick3DParticleSpriteParticle::reset();
     m_lineData.fill({});
     m_lineHeaderData.fill({});
-    m_activeLineCount.clear();
     m_fadeOutData.clear();
 }
 
@@ -356,20 +355,21 @@ void QQuick3DParticleLineParticle::setParticleData(int particleIndex,
                      float size, float age,
                      float animationFrame)
 {
-    QQuick3DParticleSpriteParticle::setParticleData(particleIndex, position, rotation, color, size, age, animationFrame);
     auto &dst = m_spriteParticleData[particleIndex];
-    if (size <= 0.0f)
-        clearSegment(particleIndex);
-    else if (dst.size > 0.0f)
+    bool update = size > 0.0f || dst.size > 0.0f;
+    QQuick3DParticleSpriteParticle::setParticleData(particleIndex, position, rotation, color, size, age, animationFrame);
+    if (update)
         updateLineSegment(particleIndex);
 }
 
 void QQuick3DParticleLineParticle::resetParticleData(int particleIndex)
 {
+    LineDataHeader *header = m_lineHeaderData.data() + particleIndex;
+    if (header->pointCount) {
+        header->currentIndex = 0;
+        header->pointCount = 0;
+    }
     QQuick3DParticleSpriteParticle::resetParticleData(particleIndex);
-    auto &dst = m_spriteParticleData[particleIndex];
-    if (dst.size > 0.0f)
-        clearSegment(particleIndex);
 }
 
 void QQuick3DParticleLineParticle::saveLineSegment(int particleIndex, float time)
@@ -408,16 +408,19 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
     if (!node)
         return;
 
-    int lineCount = m_activeLineCount[perEmitter.emitterIndex];
+    int lineCount = 0;
+    for (int i = 0; i < m_lineHeaderData.size(); i++) {
+        if (m_lineHeaderData[i].pointCount && m_lineHeaderData[i].emitterIndex == perEmitter.emitterIndex)
+            lineCount++;
+    }
     int totalCount = lineCount;
-
     if (m_perEmitterData.size() > 1) {
         for (int i = 0; i < m_fadeOutData.size(); i++) {
             if (m_fadeOutData[i].emitterIndex == perEmitter.emitterIndex)
                 totalCount++;
         }
     } else {
-        totalCount = m_fadeOutData.size() + lineCount;
+        totalCount += m_fadeOutData.size();
     }
 
     if (node->m_particleBuffer.particleCount() != totalCount)
@@ -426,9 +429,9 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
     if (!totalCount) return;
 
     const int segments = m_segmentCount;
-    const int pps = node->m_particleBuffer.particlesPerSlice();
-    const int ss = node->m_particleBuffer.sliceStride();
-    int p = 0;
+    const int particlesPerSlice = node->m_particleBuffer.particlesPerSlice();
+    const int sliceStride = node->m_particleBuffer.sliceStride();
+    int sliceParticleIdx = 0;
     int slice = 0;
     char *dest = node->m_particleBuffer.pointer();
     QSSGBounds3 bounds;
@@ -437,21 +440,21 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
     const LineData *lineData = m_lineData.constData();
     const SpriteParticleData *src = m_spriteParticleData.constData();
 
-    auto nextParticle = [](char *&buffer, int &slice, int &p, int pps, int ss) -> QSSGLineParticle* {
-        QSSGLineParticle *ret = reinterpret_cast<QSSGLineParticle *>(buffer) + p;
-        p++;
-        if (p == pps) {
+    auto nextParticle = [](char *&buffer, int &slice, int &sliceParticleIdx, int particlesPerSlice, int sliceStride) -> QSSGLineParticle* {
+        QSSGLineParticle *ret = reinterpret_cast<QSSGLineParticle *>(buffer) + sliceParticleIdx;
+        sliceParticleIdx++;
+        if (sliceParticleIdx == particlesPerSlice) {
             slice++;
-            buffer += ss;
-            p = 0;
+            buffer += sliceStride;
+            sliceParticleIdx = 0;
         }
         return ret;
     };
 
     auto genLine = [&](const SpriteParticleData &sdata, const LineDataHeader &header, const LineData *tdata,
             QSSGBounds3 &bounds, int segments, float particleScale, float alpha,
-            char *&buffer, int &slice, int &p, int pps, int ss, bool absolute, bool fill) {
-        QSSGLineParticle *particle = nextParticle(buffer, slice, p, pps, ss);
+            char *&buffer, int &slice, int &sliceParticleIdx, int particlesPerSlice, int sliceStride, bool absolute, bool fill) {
+        QSSGLineParticle *particle = nextParticle(buffer, slice, sliceParticleIdx, particlesPerSlice, sliceStride);
         int idx = header.currentIndex;
         particle->color = sdata.color;
         particle->color.setW(sdata.color.w() * alpha);
@@ -462,44 +465,41 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
         particle->age = sdata.age;
         particle->animationFrame = sdata.animationFrame;
         particle->size = sdata.size * particleScale;
-        float plength = (tdata[idx].position - sdata.position).length();
-        float length0 = tdata[idx].length + plength;
+        float partialLength = (tdata[idx].position - sdata.position).length();
+        float length0 = tdata[idx].length + partialLength;
         particle->length = 0.0f;
         float lineLength = header.length;
         int lastIdx = (idx + 1 + segments - header.pointCount) % segments;
-        float L = tdata[idx].length - tdata[lastIdx].length + plength;
-        float eL = 0.0f;
-        if (L > lineLength)
-            eL = L - eL;
+        float lengthScale = -1.0f;
 
         if (absolute) {
             particle->length = length0;
             length0 = 0;
         }
-        float lengthScale = 1.0f;
+
         if (fill) {
-            int lastIdx = (idx + 1 + segments - header.pointCount) % segments;
-            float lineLength = tdata[idx].length - tdata[lastIdx].length;
-            if (header.pointCount < segments)
-                lineLength += plength;
-            else
-                lineLength -= eL;
-            if (!qFuzzyIsNull(lineLength))
-                lengthScale = 1.0f / lineLength;
+            if (lineLength > 0.0f) {
+                lengthScale = -1.0f / lineLength;
+            } else {
+                float totalLength = tdata[idx].length - tdata[lastIdx].length;
+                if (header.pointCount < segments)
+                    totalLength += partialLength;
+                if (!qFuzzyIsNull(totalLength))
+                    lengthScale = -1.0f / totalLength;
+            }
         }
         bounds.include(sdata.position);
 
         QSSGLineParticle *prevGood = particle;
-        int s = 0;
+        int segmentIdx = 0;
         int prevIdx = 0;
         Q_ASSERT(header.pointCount <= m_segmentCount);
 
         if (header.length >= 0.0f) {
-            float L = segments > 1 ? plength : 0;
-            float prevLength = length0;
-            for (s = 0; s < header.pointCount && L < header.length; s++) {
-                particle = nextParticle(buffer, slice, p, pps, ss);
-
+            float totalLength = 0;
+            float prevLength = tdata[idx].length + partialLength;
+            for (segmentIdx = 0; segmentIdx < header.pointCount && totalLength < header.length; segmentIdx++) {
+                particle = nextParticle(buffer, slice, sliceParticleIdx, particlesPerSlice, sliceStride);
                 particle->size = tdata[idx].size * particleScale;
                 if (particle->size > 0.0f) {
                     bounds.include(tdata[idx].position);
@@ -510,23 +510,23 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
                     particle->animationFrame = sdata.animationFrame;
                     particle->age = sdata.age;
                     particle->length = (length0 - tdata[idx].length) * lengthScale;
-                    float slen = prevLength - tdata[idx].length;
+                    float segmentLength = prevLength - tdata[idx].length;
                     prevLength = tdata[idx].length;
-                    if (L + slen > header.length) {
-                        float diff = L + slen - header.length;
+                    if (totalLength + segmentLength > header.length) {
+                        float diff = totalLength + segmentLength - header.length;
                         particle->position -= tdata[idx].tangent * diff;
-                        particle->length += diff * lengthScale;
+                        particle->length -= diff * lengthScale;
+                        segmentLength -= diff;
                     }
-                    L += slen;
+                    totalLength += segmentLength;
                     prevGood = particle;
                     prevIdx = idx;
                 }
                 idx = idx ? (idx - 1) : (segments - 1);
             }
         } else {
-            for (s = 0; s < header.pointCount; s++) {
-                particle = nextParticle(buffer, slice, p, pps, ss);
-
+            for (segmentIdx = 0; segmentIdx < header.pointCount; segmentIdx++) {
+                particle = nextParticle(buffer, slice, sliceParticleIdx, particlesPerSlice, sliceStride);
                 particle->size = tdata[idx].size * particleScale;
                 if (particle->size > 0.0f) {
                     bounds.include(tdata[idx].position);
@@ -543,8 +543,8 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
                 idx = idx ? (idx - 1) : (segments - 1);
             }
         }
-        for (;s < segments; s++) {
-            particle = nextParticle(buffer, slice, p, pps, ss);
+        for (;segmentIdx < segments; segmentIdx++) {
+            particle = nextParticle(buffer, slice, sliceParticleIdx, particlesPerSlice, sliceStride);
             *particle = *prevGood;
             particle->size = 0.0f;
             particle->length = 0.0f;
@@ -552,18 +552,19 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
         }
         // Do only for full segment
         if (prevGood == particle && header.length < 0.0f && segments > 1) {
-            prevGood->position -= tdata[prevIdx].tangent * plength;
+            prevGood->position -= tdata[prevIdx].tangent * partialLength;
             if (!fill)
-                prevGood->length += plength * lengthScale;
+                prevGood->length -= partialLength * lengthScale;
         }
     };
 
     const bool absolute = m_texcoordMode == TexcoordMode::Absolute;
     const bool fill = m_texcoordMode == TexcoordMode::Fill;
     int i = 0;
-    for (; i < lineCount; ) {
+    while (i < lineCount) {
         if (header->pointCount && header->emitterIndex == perEmitter.emitterIndex) {
-            genLine(*src, *header, lineData, bounds, segments, particleScale(), 1.0f, dest, slice, p, pps, ss, absolute, fill);
+            genLine(*src, *header, lineData, bounds, segments, particleScale(), 1.0f, dest,
+                    slice, sliceParticleIdx, particlesPerSlice, sliceStride, absolute, fill);
             i++;
         }
         header++;
@@ -575,7 +576,9 @@ void QQuick3DParticleLineParticle::updateLineBuffer(LineParticleUpdateNode *upda
     for (const FadeOutLineData &fdata : m_fadeOutData) {
         if (fdata.emitterIndex == perEmitter.emitterIndex) {
             float factor = 1.0f - (time - fdata.beginTime) * fdata.timeFactor;
-            genLine(fdata.endPoint, fdata.header, fdata.lineData.data(), bounds, segments, particleScale(), factor, dest, slice, p, pps, ss, absolute, fill);
+            genLine(fdata.endPoint, fdata.header, fdata.lineData.data(), bounds, segments,
+                    particleScale(), factor, dest, slice, sliceParticleIdx, particlesPerSlice,
+                    sliceStride, absolute, fill);
         }
     }
     node->m_particleBuffer.setBounds(bounds);
@@ -588,7 +591,6 @@ void QQuick3DParticleLineParticle::handleSegmentCountChanged()
     m_lineData.fill({});
     m_lineHeaderData.resize(m_maxAmount);
     m_lineHeaderData.fill({});
-    m_activeLineCount.clear();
     m_fadeOutData.clear();
     if (m_spriteParticleData.size() > 0)
         for (int i = 0; i < m_maxAmount; i++)
@@ -611,13 +613,11 @@ void QQuick3DParticleLineParticle::updateLineSegment(int particleIndex)
         float length = (prev->position - src.position).length();
         float minLength = m_lengthDeltaMin;
         if (header->length >= 0.0f)
-            minLength = header->length / m_segmentCount;
+            minLength = header->length / (m_segmentCount - 1);
         if (length < minLength)
             return;
     }
 
-    if (header->pointCount == 0)
-        m_activeLineCount[m_spriteParticleData[particleIndex].emitterIndex]++;
     if (header->pointCount < m_segmentCount)
         header->pointCount++;
 
@@ -646,7 +646,6 @@ void QQuick3DParticleLineParticle::updateLineSegment(int particleIndex)
         cur->length = 0.0f;
     }
 
-
     if (prev && prev != cur) {
         prev->tangent = prev->position - src.position;
         cur->length = prev->tangent.length();
@@ -666,9 +665,7 @@ void QQuick3DParticleLineParticle::clearSegment(int particleIndex)
         return;
     LineDataHeader *header = m_lineHeaderData.data() + particleIndex;
     if (header->pointCount) {
-        auto data = m_lineData.begin() + particleIndex;
-        if (m_activeLineCount[header->emitterIndex])
-            m_activeLineCount[header->emitterIndex]--;
+        auto data = m_lineData.begin() + particleIndex * m_segmentCount;
         std::fill_n(data, m_segmentCount, LineData());
     }
     header->emitterIndex = -1;
