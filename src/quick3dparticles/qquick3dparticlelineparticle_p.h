@@ -66,7 +66,7 @@ public Q_SLOTS:
     void setLengthVariation(float length);
     void setLengthDeltaMin(float min);
     void setEolFadeOutDuration(int duration);
-    void setTexcoordMode(TexcoordMode mode);
+    void setTexcoordMode(QQuick3DParticleLineParticle::TexcoordMode mode);
 
 Q_SIGNALS:
     void segmentCountChanged();
@@ -153,7 +153,6 @@ private:
     int m_segmentCount = 1;
     int m_eolFadeOutDuration = 0;
     TexcoordMode m_texcoordMode = TexcoordMode::Absolute;
-    QMap<int, int> m_activeLineCount;
 };
 
 QT_END_NAMESPACE
