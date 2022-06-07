@@ -86,6 +86,23 @@ int main(int argc, char *argv[])
                 qDebug() << "\t\tstride:" << vb.stride;
                 qDebug() << "\t\tdata size in bytes:" << vb.data.size();
 
+                // Target Buffer
+                if (header.hasSeparateTargetBuffer()) {
+                    const Mesh::TargetBuffer tb = mesh.targetBuffer();
+                    qDebug() << "\t\t -- Morph Target Buffers --";
+                    qDebug() << "\t\tentry count:" << tb.entries.count();
+                    for (quint32 idx = 0, end = tb.entries.count(); idx < end; ++idx) {
+                        qDebug() << "\t\t\t -- Target Buffer Entry" << idx << "--";
+                        const Mesh::VertexBufferEntry &entry(vb.entries[idx]);
+                        qDebug() << "\t\t\tname:" << entry.name;
+                        qDebug() << "\t\t\ttype:" << QSSGBaseTypeHelpers::toString(QSSGRenderComponentType(entry.componentType));
+                        qDebug() << "\t\t\tcomponentCount:" << entry.componentCount;
+                        qDebug() << "\t\t\tstart offset:" << entry.offset;
+                    }
+                    qDebug() << "\t\tnumber of targets:" << tb.numTargets;
+                    qDebug() << "\t\tdata size in bytes:" << tb.data.size();
+                }
+
                 // Index Buffer
                 const Mesh::IndexBuffer ib = mesh.indexBuffer();
                 qDebug() << "\t\t -- Index Buffer --";
