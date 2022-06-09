@@ -168,6 +168,9 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
 
     // vertex buffer entry names
     quint32 numTargets = 0;
+    // used for recording the target attributes supported by the mesh
+    // and re-construting it when meeting attr_unsupported
+    QList<QByteArray> attrNames;
     for (auto &entry : mesh->m_vertexBuffer.entries) {
         quint32 nameLength;
         inputStream >> nameLength;
@@ -177,33 +180,48 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
         alignAmount = offsetTracker.alignedAdvance(nameLength);
         if (alignAmount)
             device->read(alignPadding, alignAmount);
-        if (!header->hasSeparateTargetBuffer() && entry.name.startsWith("attr_t")) {
-            if (entry.name.mid(6, 3) == QByteArrayLiteral("pos")) {
-                const quint32 targetId_plus1 = entry.name.mid(9).toUInt() + 1;
-                if (targetId_plus1 > numTargets)
-                    numTargets = targetId_plus1;
+        // Old morph meshes' target attributes were appended sequentially
+        // behind vertex attributes. However, since the number of targets are restricted by 8
+        // the other attributes were named by "attr_unsupported"
+        // So just checking numTargets is safe with the above assumption and
+        // it will try to reconstruct the unsupported attributes.
+        if (numTargets > 0 || (!header->hasSeparateTargetBuffer() && entry.name.startsWith("attr_t"))) {
+            if (entry.name.sliced(6).startsWith("pos")) {
+                const quint32 targetId = entry.name.mid(9).toUInt();
+                // All the attributes of the first target should be recorded correctly.
+                if (targetId == 0)
+                    attrNames.append(MeshInternal::getPositionAttrName());
+                numTargets = qMax(numTargets, targetId + 1);
                 entry.name = MeshInternal::getPositionAttrName();
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
-            } else if (entry.name.mid(6, 4) == QByteArrayLiteral("norm")) {
-                const quint32 targetId_plus1 = entry.name.mid(10).toUInt() + 1;
-                if (targetId_plus1 > numTargets)
-                    numTargets = targetId_plus1;
+            } else if (entry.name.sliced(6).startsWith("norm")) {
+                const quint32 targetId = entry.name.mid(10).toUInt();
+                if (targetId == 0)
+                    attrNames.append(MeshInternal::getNormalAttrName());
+                numTargets = qMax(numTargets, targetId + 1);
                 entry.name = MeshInternal::getNormalAttrName();
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
-            } else if (entry.name.mid(6, 3) == QByteArrayLiteral("tan")) {
-                const quint32 targetId_plus1 = entry.name.mid(9).toUInt() + 1;
-                if (targetId_plus1 > numTargets)
-                    numTargets = targetId_plus1;
+            } else if (entry.name.sliced(6).startsWith("tan")) {
+                const quint32 targetId = entry.name.mid(9).toUInt();
+                if (targetId == 0)
+                    attrNames.append(MeshInternal::getTexTanAttrName());
+                numTargets = qMax(numTargets, targetId + 1);
                 entry.name = MeshInternal::getTexTanAttrName();
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
-            } else if (entry.name.mid(6, 6) == QByteArrayLiteral("binorm")) {
-                const quint32 targetId_plus1 = entry.name.mid(12).toUInt() + 1;
-                if (targetId_plus1 > numTargets)
-                    numTargets = targetId_plus1;
+            } else if (entry.name.sliced(6).startsWith("binorm")) {
+                const quint32 targetId = entry.name.mid(12).toUInt();
+                if (targetId == 0)
+                    attrNames.append(MeshInternal::getTexBinormalAttrName());
+                numTargets = qMax(numTargets, targetId + 1);
                 entry.name = MeshInternal::getTexBinormalAttrName();
+                mesh->m_targetBuffer.entries.append(entry);
+                targetBufferEntriesCount++;
+            } else if (entry.name.startsWith("attr_unsupported")) {
+                // Reconstruct
+                entry.name = attrNames[targetBufferEntriesCount % attrNames.size()];
                 mesh->m_targetBuffer.entries.append(entry);
                 targetBufferEntriesCount++;
             }
