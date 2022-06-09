@@ -61,6 +61,8 @@ void QSSGRenderer::releaseResources()
 {
     delete m_rhiQuadRenderer;
     m_rhiQuadRenderer = nullptr;
+    delete m_rhiCubeRenderer;
+    m_rhiCubeRenderer = nullptr;
 }
 
 QSSGRenderer::QSSGRenderer() = default;
