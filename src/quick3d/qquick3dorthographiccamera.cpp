@@ -193,10 +193,10 @@ QSSGRenderGraphObject *QQuick3DOrthographicCamera::updateSpatialNode(QSSGRenderG
 {
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(QQuick3DCamera::updateSpatialNode(node));
     if (camera) {
-        const bool changed = ((qUpdateIfNeeded(camera->clipNear, m_clipNear)
-                               | qUpdateIfNeeded(camera->clipFar, m_clipFar)
-                               | qUpdateIfNeeded(camera->horizontalMagnification, m_horizontalMagnification)
-                               | qUpdateIfNeeded(camera->verticalMagnification, m_verticalMagnification)) != 0);
+        const bool changed = ((int(qUpdateIfNeeded(camera->clipNear, m_clipNear))
+                               | int(qUpdateIfNeeded(camera->clipFar, m_clipFar))
+                               | int(qUpdateIfNeeded(camera->horizontalMagnification, m_horizontalMagnification))
+                               | int(qUpdateIfNeeded(camera->verticalMagnification, m_verticalMagnification))) != 0);
         if (changed)
             camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
     }
