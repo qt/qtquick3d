@@ -429,6 +429,15 @@ void AssimpImporter::processScene(QTextStream &output)
 
     output << QStringLiteral("\nNode {\n");
 
+    // Apply the global scale for a root node
+    if (m_globalScaleValue != 1.0) {
+        aiVector3D scaling(1, 1, 1);
+        scaling *= m_globalScaleValue;
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, 1, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.x"), scaling.x);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, 1, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.y"), scaling.y);
+        QSSGQmlUtilities::writeQmlPropertyHelper(output, 1, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.z"), scaling.z);
+    }
+
     processMaterials(output);
 
     processNode(node, output);
@@ -824,10 +833,6 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
     // scale
     if (!skipScaling) {
-        // Apply the global scale for a root node
-        if (tabLevel == 1)
-            scaling *= m_globalScaleValue;
-
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.x"), scaling.x);
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.y"), scaling.y);
         QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("scale.z"), scaling.z);
