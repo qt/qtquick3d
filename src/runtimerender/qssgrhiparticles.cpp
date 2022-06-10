@@ -160,8 +160,9 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
         float alphaFade = renderable.particles.m_alphaFade;
         float sizeModifier = renderable.particles.m_sizeModifier;
         float texcoordScale = renderable.particles.m_texcoordScale;
-        if (renderable.firstImage) {
-            const auto size = renderable.firstImage->m_texture.m_texture->pixelSize();
+        auto image = renderable.firstImage;
+        if (image && image->m_texture.m_texture) {
+            const auto size = image->m_texture.m_texture->pixelSize();
             texcoordScale *= float(size.height()) / float(size.width());
         }
         shaders->setUniform(ubufData, "qt_alphaFade", &alphaFade, sizeof(float));
