@@ -35,21 +35,18 @@ Window {
             ambientColor: "#333"
         }
 
-        PerspectiveCamera {
-            id: camera
-            position: "0, 150, 400"
-            Component.onCompleted: view3D.resetView()
+        Node {
+            id: cameraNode
+            PerspectiveCamera {
+                id: camera
+            }
         }
 
     //! [base scene]
-
-
         function resetView() {
-            camera.position = "0, 150, 400"
-            camera.eulerRotation = "-15, 0, 0"
-            importNode.eulerRotation = "0, 0, 0"
-            helper.resetScale()
-            helper.resetPosition()
+            if (importNode.status === RuntimeLoader.Success) {
+                helper.updateController(true)
+            }
         }
 
         //! [instancing]
@@ -70,15 +67,7 @@ Window {
             property real boundsDiameter: 0
             property vector3d boundsCenter
             property vector3d boundsSize
-            property alias scaleFactor: wheelHandler.factor
-            property alias position: importNode.position
-
-            function resetScale() {
-                wheelHandler.factor = boundsDiameter ? 300 / boundsDiameter : 1.0
-            }
-            function resetPosition() {
-                position = Qt.vector3d(-boundsCenter.x*scaleFactor, -boundsCenter.y*scaleFactor, -boundsCenter.z*scaleFactor)
-            }
+            property bool orbitControllerEnabled: true
 
             function updateBounds(bounds) {
                 boundsSize = Qt.vector3d(bounds.maximum.x - bounds.minimum.x,
@@ -90,14 +79,29 @@ Window {
                                            (bounds.maximum.z + bounds.minimum.z) / 2 )
                 console.log("Bounds changed: ", bounds.minimum, bounds.maximum,
                             " center:", boundsCenter, "diameter:", boundsDiameter)
+
+                wasdController.speed = boundsDiameter / 1000.0
+                wasdController.shiftSpeed = 3 * wasdController.speed
                 view3D.resetView()
+            }
+
+            function updateController(useOrbitController) {
+                orbitControllerEnabled = useOrbitController
+                cameraNode.eulerRotation = Qt.vector3d(0, 0, 0)
+
+                if (orbitControllerEnabled) {
+                    cameraNode.position = boundsCenter
+                    camera.position = Qt.vector3d(0, 0, 2 * helper.boundsDiameter)
+                    camera.lookAt(helper.boundsCenter)
+                } else {
+                    wasdController.focus = true
+                }
             }
         }
 
         //! [runtimeloader]
         RuntimeLoader {
             id: importNode
-            scale: Qt.vector3d(helper.scaleFactor, helper.scaleFactor, helper.scaleFactor)
             source: importUrl
             instancing: instancingButton.checked ? instancing : null
             onBoundsChanged: helper.updateBounds(bounds)
@@ -144,30 +148,16 @@ Window {
     }
 
     //! [camera control]
+    OrbitCameraController {
+        id: orbitController
+        origin: cameraNode
+        camera: camera
+        enabled: helper.orbitControllerEnabled
+    }
     WasdController {
+        id: wasdController
         controlledObject: camera
-    }
-
-    WheelHandler {
-        id: wheelHandler
-        property real factor: 10.0
-        onWheel: (event)=> {
-            if (event.angleDelta.y > 0)
-                factor *= 1.1
-            else
-                factor /= 1.1
-       }
-    }
-
-    PointHandler {
-        id: rotateHandler
-        acceptedButtons: Qt.MiddleButton
-        onPointChanged: {
-            if (Math.abs(point.velocity.x) >= Math.abs(point.velocity.y))
-                importNode.eulerRotation.y += point.velocity.x / 2000
-            else
-                importNode.eulerRotation.x += point.velocity.y / 2000
-        }
+        enabled: !helper.orbitControllerEnabled
     }
     //! [camera control]
 
@@ -185,12 +175,6 @@ Window {
             focusPolicy: Qt.NoFocus
         }
         RoundButton {
-            id: scaleButton
-            text: "Scale: " + helper.scaleFactor.toPrecision(3)
-            onClicked: helper.resetScale()
-            focusPolicy: Qt.NoFocus
-        }
-        RoundButton {
             id: visualizeButton
             checkable: true
             text: "Visualize bounds"
@@ -200,6 +184,12 @@ Window {
             id: instancingButton
             checkable: true
             text: "Instancing"
+            focusPolicy: Qt.NoFocus
+        }
+        RoundButton {
+            id: controllerButton
+            text: helper.orbitControllerEnabled ? "Orbit controller" : "WASD controller"
+            onClicked: helper.updateController(!helper.orbitControllerEnabled)
             focusPolicy: Qt.NoFocus
         }
     }
