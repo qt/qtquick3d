@@ -51,7 +51,7 @@ Window {
     //! [base scene]
         function resetView() {
             if (importNode.status === RuntimeLoader.Success) {
-                helper.updateController(true)
+                helper.resetController()
             }
         }
 
@@ -93,13 +93,27 @@ Window {
                 view3D.resetView()
             }
 
-            function updateController(useOrbitController) {
+            function resetController() {
+                orbitCameraNode.eulerRotation = Qt.vector3d(0, 0, 0)
+                orbitCameraNode.position = boundsCenter
+                orbitCamera.position = Qt.vector3d(0, 0, 2 * helper.boundsDiameter)
+                orbitCamera.eulerRotation = Qt.vector3d(0, 0, 0)
+                orbitControllerEnabled = true
+            }
 
+            function switchController(useOrbitController) {
                 if (useOrbitController) {
-                    orbitCameraNode.eulerRotation = Qt.vector3d(0, 0, 0)
+                    let wasdOffset = wasdCamera.position.minus(boundsCenter)
+                    let wasdDistance = wasdOffset.length()
+                    let wasdDistanceInPlane = Qt.vector3d(wasdOffset.x, 0, wasdOffset.z).length()
+                    let yAngle = Math.atan2(wasdOffset.x, wasdOffset.z) * 180 / Math.PI
+                    let xAngle = -Math.atan2(wasdOffset.y, wasdDistanceInPlane) * 180 / Math.PI
+
                     orbitCameraNode.position = boundsCenter
-                    orbitCamera.position = Qt.vector3d(0, 0, 2 * helper.boundsDiameter)
-                    orbitCamera.lookAt(helper.boundsCenter)
+                    orbitCameraNode.eulerRotation = Qt.vector3d(xAngle, yAngle, 0)
+                    orbitCamera.position = Qt.vector3d(0, 0, wasdDistance)
+
+                    orbitCamera.eulerRotation = Qt.vector3d(0, 0, 0)
                 } else {
                     wasdCamera.position = orbitCamera.scenePosition
                     wasdCamera.rotation = orbitCamera.sceneRotation
@@ -199,7 +213,7 @@ Window {
         RoundButton {
             id: controllerButton
             text: helper.orbitControllerEnabled ? "Orbit controller" : "WASD controller"
-            onClicked: helper.updateController(!helper.orbitControllerEnabled)
+            onClicked: helper.switchController(!helper.orbitControllerEnabled)
             focusPolicy: Qt.NoFocus
         }
     }
