@@ -102,6 +102,7 @@ AssimpImporter::AssimpImporter()
     m_importer = new Assimp::Importer();
     // Remove primatives that are not Triangles
     m_importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+    m_importer->SetPropertyInteger(AI_CONFIG_IMPORT_COLLADA_USE_COLLADA_NAMES, 1);
 }
 
 AssimpImporter::~AssimpImporter()
