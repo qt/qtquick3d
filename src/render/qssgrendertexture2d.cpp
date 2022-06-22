@@ -286,4 +286,12 @@ void QSSGRenderTexture2D::bind()
     applyTexSwizzle();
 }
 
+void QSSGRenderTexture2D::applyTextureParams()
+{
+    m_backend->bindTexture(m_handle, m_texTarget, 0);
+    applyTexParams();
+    applyTexSwizzle();
+    m_backend->bindTexture(0, m_texTarget, 0);
+}
+
 QT_END_NAMESPACE
