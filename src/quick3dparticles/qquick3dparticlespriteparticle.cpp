@@ -185,7 +185,7 @@ QQmlListProperty<QQuick3DAbstractLight> QQuick3DParticleSpriteParticle::lights()
 }
 
 /*!
-    \qmlproperty float QQuick3DParticleSpriteParticle::offsetX
+    \qmlproperty float SpriteParticle3D::offsetX
     \since 6.3
 
     This property defines the particles offset in the X axis
@@ -196,7 +196,7 @@ float QQuick3DParticleSpriteParticle::offsetX() const
 }
 
 /*!
-    \qmlproperty float QQuick3DParticleSpriteParticle::offsetY
+    \qmlproperty float SpriteParticle3D::offsetY
     \since 6.3
 
     This property defines the particles offset in the Y axis
@@ -207,7 +207,7 @@ float QQuick3DParticleSpriteParticle::offsetY() const
 }
 
 /*!
-    \qmlproperty bool QQuick3DParticleSpriteParticle::castsReflections
+    \qmlproperty bool SpriteParticle3D::castsReflections
     \since 6.4
 
     When this property is set to \c true, the sprite is rendered by reflection probes and can be
