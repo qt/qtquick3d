@@ -7,8 +7,9 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlfile.h>
 
-#include <QtQuick3D/private/qquick3dcustommaterial_p.h>
-#include <QtQuick3D/private/qquick3deffect_p.h>
+#include "qquick3dviewport_p.h"
+#include "qquick3dcustommaterial_p.h"
+#include "qquick3deffect_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -645,6 +646,10 @@ QQmlListProperty<QQuick3DShaderUtilsShader> QQuick3DShaderUtilsRenderPass::shade
 
 QQuick3DShaderUtilsTextureInput::QQuick3DShaderUtilsTextureInput(QObject *p) : QObject(p) {}
 
+QQuick3DShaderUtilsTextureInput::~QQuick3DShaderUtilsTextureInput()
+{
+}
+
 void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
 {
     if (m_texture == texture)
@@ -653,10 +658,16 @@ void QQuick3DShaderUtilsTextureInput::setTexture(QQuick3DTexture *texture)
     QObject *p = parent();
     while (p != nullptr) {
         if (QQuick3DCustomMaterial *mat = qobject_cast<QQuick3DCustomMaterial *>(p)) {
-            mat->setDynamicTextureMap(texture, name);
+            mat->setDynamicTextureMap(this);
+            QQuick3DObjectPrivate::updatePropertyListener(texture, m_texture, QQuick3DObjectPrivate::get(mat)->sceneManager, name, mat->m_connections, [this](QQuick3DObject *) {
+                setTexture(nullptr);
+            });
             break;
         } else if (QQuick3DEffect *efx = qobject_cast<QQuick3DEffect *>(p)) {
-            efx->setDynamicTextureMap(texture, name);
+            efx->setDynamicTextureMap(this);
+            QQuick3DObjectPrivate::updatePropertyListener(texture, m_texture, QQuick3DObjectPrivate::get(efx)->sceneManager, name, efx->m_connections, [this](QQuick3DObject *) {
+                setTexture(nullptr);
+            });
             break;
         }
         p = p->parent();

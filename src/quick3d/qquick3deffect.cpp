@@ -908,11 +908,15 @@ void QQuick3DEffect::markDirty(QQuick3DEffect::Dirty type)
 void QQuick3DEffect::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     if (sceneManager) {
-        for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::refSceneManager(it, *sceneManager);
+        for (const auto &it : qAsConst(m_dynamicTextureMaps)) {
+            if (auto tex = it->texture())
+                QQuick3DObjectPrivate::refSceneManager(tex, *sceneManager);
+        }
     } else {
-        for (auto it : m_dynamicTextureMaps)
-            QQuick3DObjectPrivate::derefSceneManager(it);
+        for (const auto &it : qAsConst(m_dynamicTextureMaps)) {
+            if (auto tex = it->texture())
+                QQuick3DObjectPrivate::derefSceneManager(tex);
+        }
     }
 }
 
@@ -949,27 +953,23 @@ void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass
     that->m_passes.clear();
 }
 
-void QQuick3DEffect::setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name)
+void QQuick3DEffect::setDynamicTextureMap(QQuick3DShaderUtilsTextureInput *textureMap)
 {
-    if (!textureMap)
-        return;
+    // There can only be one texture input per property, as the texture input is a combination
+    // of the texture used and the uniform name!
+    auto it = m_dynamicTextureMaps.constFind(textureMap);
 
-    auto it = m_dynamicTextureMaps.begin();
-    const auto end = m_dynamicTextureMaps.end();
-    for (; it != end; ++it) {
-        if (*it == textureMap)
-            break;
+    if (it == m_dynamicTextureMaps.constEnd()) {
+        // Track the object, if it's destroyed we need to remove it from our table.
+        connect(textureMap, &QQuick3DShaderUtilsTextureInput::destroyed, this, [this, textureMap]() {
+            auto it = m_dynamicTextureMaps.constFind(textureMap);
+            if (it != m_dynamicTextureMaps.constEnd())
+                m_dynamicTextureMaps.erase(it);
+        });
+        m_dynamicTextureMaps.insert(textureMap);
+
+        update();
     }
-
-    if (it != end)
-        return;
-
-    QQuick3DObjectPrivate::updatePropertyListener(textureMap, nullptr, QQuick3DObjectPrivate::get(this)->sceneManager, name, m_connections, [this, name](QQuick3DObject *n) {
-        setDynamicTextureMap(qobject_cast<QQuick3DTexture *>(n), name);
-    });
-
-    m_dynamicTextureMaps.push_back(textureMap);
-    update();
 }
 
 QT_END_NAMESPACE

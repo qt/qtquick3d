@@ -58,7 +58,7 @@ class Q_QUICK3D_EXPORT QQuick3DShaderUtilsTextureInput : public QObject
 
 public:
     explicit QQuick3DShaderUtilsTextureInput(QObject *p = nullptr);
-    virtual ~QQuick3DShaderUtilsTextureInput() = default;
+    virtual ~QQuick3DShaderUtilsTextureInput();
     QQuick3DTexture *m_texture = nullptr;
     bool enabled = true;
     QByteArray name;
