@@ -2,7 +2,7 @@ qt_internal_add_qml_module(Quick3DAssetUtils
     URI "QtQuick3D.AssetUtils"
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
-    CLASSNAME QtQuick3DAssetUtilsPlugin
+    CLASS_NAME QtQuick3DAssetUtilsPlugin
     PLUGIN_TARGET qtquick3dassetutilsplugin
     DEPENDENCIES
         QtQuick3D/auto

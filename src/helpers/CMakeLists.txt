@@ -6,7 +6,7 @@ qt_internal_add_qml_module(Quick3DHelpers
     URI "QtQuick3D.Helpers"
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
-    CLASSNAME QtQuick3DHelpersPlugin
+    CLASS_NAME QtQuick3DHelpersPlugin
     PLUGIN_TARGET qtquick3dhelpersplugin
     DEPENDENCIES
         QtQuick3D/auto

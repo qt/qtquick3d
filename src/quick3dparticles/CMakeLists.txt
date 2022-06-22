@@ -1,4 +1,3 @@
-
 #####################################################################
 ## Quick3DParticles Module:
 #####################################################################
@@ -7,7 +6,7 @@ qt_internal_add_qml_module(Quick3DParticles
     URI "QtQuick3D.Particles3D"
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
-    CLASSNAME QtQuick3DParticles3DPlugin
+    CLASS_NAME QtQuick3DParticles3DPlugin
     PLUGIN_TARGET qtquick3dparticles3dplugin
     DEPENDENCIES
         QtQuick3D/auto

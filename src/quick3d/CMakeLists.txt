@@ -9,7 +9,7 @@ qt_internal_add_qml_module(Quick3D
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     DEPENDENCIES QtQuick/auto
-    CLASSNAME QQuick3DPlugin
+    CLASS_NAME QQuick3DPlugin
     PLUGIN_TARGET qquick3dplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
