@@ -30,16 +30,22 @@ Window {
             }
         }
 
+        camera: helper.orbitControllerEnabled ? orbitCamera : wasdCamera
+
         DirectionalLight {
             eulerRotation: "-30, -20, -40"
             ambientColor: "#333"
         }
 
         Node {
-            id: cameraNode
+            id: orbitCameraNode
             PerspectiveCamera {
-                id: camera
+                id: orbitCamera
             }
+        }
+
+        PerspectiveCamera {
+            id: wasdCamera
         }
 
     //! [base scene]
@@ -82,20 +88,24 @@ Window {
 
                 wasdController.speed = boundsDiameter / 1000.0
                 wasdController.shiftSpeed = 3 * wasdController.speed
+                wasdCamera.clipNear = boundsDiameter / 100
+                wasdCamera.clipFar = boundsDiameter * 10
                 view3D.resetView()
             }
 
             function updateController(useOrbitController) {
-                orbitControllerEnabled = useOrbitController
-                cameraNode.eulerRotation = Qt.vector3d(0, 0, 0)
 
-                if (orbitControllerEnabled) {
-                    cameraNode.position = boundsCenter
-                    camera.position = Qt.vector3d(0, 0, 2 * helper.boundsDiameter)
-                    camera.lookAt(helper.boundsCenter)
+                if (useOrbitController) {
+                    orbitCameraNode.eulerRotation = Qt.vector3d(0, 0, 0)
+                    orbitCameraNode.position = boundsCenter
+                    orbitCamera.position = Qt.vector3d(0, 0, 2 * helper.boundsDiameter)
+                    orbitCamera.lookAt(helper.boundsCenter)
                 } else {
+                    wasdCamera.position = orbitCamera.scenePosition
+                    wasdCamera.rotation = orbitCamera.sceneRotation
                     wasdController.focus = true
                 }
+                orbitControllerEnabled = useOrbitController
             }
         }
 
@@ -150,13 +160,13 @@ Window {
     //! [camera control]
     OrbitCameraController {
         id: orbitController
-        origin: cameraNode
-        camera: camera
+        origin: orbitCameraNode
+        camera: orbitCamera
         enabled: helper.orbitControllerEnabled
     }
     WasdController {
         id: wasdController
-        controlledObject: camera
+        controlledObject: wasdCamera
         enabled: !helper.orbitControllerEnabled
     }
     //! [camera control]
