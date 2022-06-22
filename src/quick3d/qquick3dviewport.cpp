@@ -1113,10 +1113,13 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                     const auto customMaterial = qobject_cast<QQuick3DCustomMaterial *>(frontendMaterial);
                     if (customMaterial) {
                         // This case is a bit harder because we can not know how the textures will be used
-                        for (const auto texture : customMaterial->dynamicTextureMaps()) {
-                            if (texture->sourceItem()) {
-                                subsceneRootItem = texture->sourceItem();
-                                break;
+                        const auto &texturesInputs = customMaterial->m_dynamicTextureMaps;
+                        for (const auto &textureInput : texturesInputs) {
+                            if (auto texture = textureInput->texture()) {
+                                if (texture->sourceItem()) {
+                                    subsceneRootItem = texture->sourceItem();
+                                    break;
+                                }
                             }
                         }
                     }

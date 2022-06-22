@@ -77,8 +77,6 @@ public:
     bool alwaysDirty() const;
     float lineWidth() const;
 
-    QVector<QQuick3DTexture *> dynamicTextureMaps() const;
-
 public Q_SLOTS:
     void setShadingMode(QQuick3DCustomMaterial::ShadingMode mode);
     void setVertexShader(const QUrl &url);
@@ -117,9 +115,11 @@ private Q_SLOTS:
 
 private:
     friend class QQuick3DShaderUtilsTextureInput;
-    void setDynamicTextureMap(QQuick3DTexture *textureMap, const QByteArray &name);
+    friend class QQuick3DViewport;
 
-    QVector<QQuick3DTexture *> m_dynamicTextureMaps;
+    void setDynamicTextureMap(QQuick3DShaderUtilsTextureInput *textureMap);
+
+    QSet<QQuick3DShaderUtilsTextureInput *> m_dynamicTextureMaps;
     quint32 m_dirtyAttributes = Dirty::AllDirty;
     BlendMode m_srcBlend = BlendMode::NoBlend;
     BlendMode m_dstBlend = BlendMode::NoBlend;
