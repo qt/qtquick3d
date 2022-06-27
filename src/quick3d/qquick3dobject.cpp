@@ -291,7 +291,6 @@ QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
     , sceneManager(nullptr)
     , sceneRefCount(0)
     , parentItem(nullptr)
-    , sortedChildItems(&childItems)
     , subFocusItem(nullptr)
     , type(t)
 {
@@ -299,8 +298,6 @@ QQuick3DObjectPrivate::QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type t)
 
 QQuick3DObjectPrivate::~QQuick3DObjectPrivate()
 {
-    if (sortedChildItems != &childItems)
-        delete sortedChildItems;
 }
 
 void QQuick3DObjectPrivate::init(QQuick3DObject *parent)
@@ -843,16 +840,6 @@ void QQuick3DObjectPrivate::setCulled(bool cull)
         dirty(HideReference);
 }
 
-QList<QQuick3DObject *> QQuick3DObjectPrivate::paintOrderChildItems() const
-{
-    if (sortedChildItems)
-        return *sortedChildItems;
-
-    sortedChildItems = const_cast<QList<QQuick3DObject *> *>(&childItems);
-
-    return childItems;
-}
-
 void QQuick3DObjectPrivate::addChild(QQuick3DObject *child)
 {
     Q_Q(QQuick3DObject);
@@ -861,7 +848,6 @@ void QQuick3DObjectPrivate::addChild(QQuick3DObject *child)
 
     childItems.append(child);
 
-    markSortedChildrenDirty(child);
     dirty(QQuick3DObjectPrivate::ChildrenChanged);
 
     itemChange(QQuick3DObject::ItemChildAddedChange, child);
@@ -878,7 +864,6 @@ void QQuick3DObjectPrivate::removeChild(QQuick3DObject *child)
     childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
-    markSortedChildrenDirty(child);
     dirty(QQuick3DObjectPrivate::ChildrenChanged);
 
     itemChange(QQuick3DObject::ItemChildRemovedChange, child);
@@ -897,11 +882,6 @@ void QQuick3DObjectPrivate::siblingOrderChanged()
             }
         }
     }
-}
-
-void QQuick3DObjectPrivate::markSortedChildrenDirty(QQuick3DObject *child)
-{
-    Q_UNUSED(child);
 }
 
 void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)

@@ -189,13 +189,9 @@ public:
     QQuick3DObject *parentItem;
 
     QList<QQuick3DObject *> childItems;
-    mutable QList<QQuick3DObject *> *sortedChildItems;
-    QList<QQuick3DObject *> paintOrderChildItems() const;
     void addChild(QQuick3DObject *);
     void removeChild(QQuick3DObject *);
     void siblingOrderChanged();
-
-    void markSortedChildrenDirty(QQuick3DObject *child);
 
     void refSceneManager(QQuick3DSceneManager &);
     void derefSceneManager();
