@@ -12,7 +12,7 @@ import QtQuick3D.Helpers
 Item {
     id: previewRoot
 
-    property url skyBoxTexturePath: "qrc:/assets/skybox/OpenfootageNET_lowerAustria01-1024.hdr"
+    property url skyBoxTexturePath: "assets/skybox/OpenfootageNET_lowerAustria01-1024.hdr"
     property CustomMaterial currentMaterial: CustomMaterial {
 
     }

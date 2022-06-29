@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
-import MaterialEditorHelpers 1.0
+import QtQuick3D.MaterialEditor
 
 Pane {
     required property MaterialAdapter targetMaterial

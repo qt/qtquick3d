@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import MaterialEditorHelpers 1.0
+import QtQuick3D.MaterialEditor
 
 Flickable {
     id: flickable

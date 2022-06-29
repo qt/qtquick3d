@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls
-import MaterialEditorHelpers
+import QtQuick3D.MaterialEditor
 
 Dialog {
     id: root

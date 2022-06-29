@@ -7,7 +7,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
 import QtQuick.Dialogs
-import MaterialEditorHelpers 1.0
+import QtQuick3D.MaterialEditor
 import Qt.labs.qmlmodels
 
 Pane {

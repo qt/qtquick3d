@@ -75,7 +75,7 @@ Item {
         }
         ToolButton {
             id: iblEnableButton
-            icon.source: "qrc:/assets/icons/texture.png"
+            icon.source: "assets/icons/texture.png"
             checkable: true
             checked: true
             hoverEnabled: true
@@ -102,7 +102,7 @@ Item {
         }
         ToolButton {
             id: directionalLightEnabledButton
-            icon.source: "qrc:/assets/icons/lightdirectional.png"
+            icon.source: "assets/icons/lightdirectional.png"
             checkable: true
             checked: true
             hoverEnabled: true

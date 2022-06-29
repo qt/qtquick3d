@@ -9,7 +9,7 @@ import QtQuick.Dialogs
 import Qt.labs.settings
 
 import QtQuick3D
-import MaterialEditorHelpers 1.0
+import QtQuick3D.MaterialEditor
 
 ApplicationWindow {
     id: window
