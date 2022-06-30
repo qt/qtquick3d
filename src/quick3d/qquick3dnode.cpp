@@ -110,6 +110,8 @@ QQuick3DNode::QQuick3DNode(QQuick3DNode *parent)
 QQuick3DNode::QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent)
     : QQuick3DObject(dd, parent)
 {
+    Q_ASSERT_X(QSSGRenderGraphObject::isNodeType(dd.type), "", "Type needs to be identified as a node type!");
+
     Q_D(QQuick3DNode);
     d->init();
 }

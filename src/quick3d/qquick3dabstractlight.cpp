@@ -403,8 +403,13 @@ QSSGRenderGraphObject *QQuick3DAbstractLight::updateSpatialNode(QSSGRenderGraphO
     }
 
     if (m_scope) {
-        light->m_scope
-                = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(m_scope)->spatialNode);
+        // Special case:
+        // If the 'scope' is 'this' and this is the first call, then the spatial node is the one we just created.
+        // This is not unlikely, as it can make sense to put all child nodes that should receive light under the light node...
+        if (m_scope == this)
+            light->m_scope = light;
+        else
+            light->m_scope = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(m_scope)->spatialNode);
     } else {
         light->m_scope = nullptr;
     }

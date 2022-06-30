@@ -51,18 +51,46 @@ public:
     void updateDirtyResourceNodes();
     void updateDirtySpatialNodes();
 
-    void updateDirtyNode(QQuick3DObject *object);
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);
     void updateBoundingBoxes(const QSSGRef<QSSGBufferManager> &mgr);
 
     QQuick3DObject *lookUpNode(const QSSGRenderGraphObject *node) const;
 
-    QQuick3DObject *dirtySpatialNodeList;
-    QQuick3DObject *dirtyResourceList;
-    QQuick3DObject *dirtyImageList;
-    QQuick3DObject *dirtyTextureDataList;
-    QList<QQuick3DObject *> dirtyLightList;
+    // Where the enumerator is placed will decide the priority it gets.
+    // NOTE: Place new list types before 'Count'.
+    enum class NodePriority { Skeleton, Other, Lights, Count };
+    enum class ResourcePriority { TextureData, Texture, Other, Count };
+
+    static inline size_t resourceListIndex(QSSGRenderGraphObject::Type type)
+    {
+        Q_ASSERT(!QSSGRenderGraphObject::isNodeType(type));
+
+        if (QSSGRenderGraphObject::isTexture(type))
+            return size_t(ResourcePriority::Texture);
+
+        if (type == QSSGRenderGraphObject::Type::TextureData)
+            return size_t(ResourcePriority::TextureData);
+
+        return size_t(ResourcePriority::Other);
+    }
+
+    static inline size_t nodeListIndex(QSSGRenderGraphObject::Type type)
+    {
+        Q_ASSERT(QSSGRenderGraphObject::isNodeType(type));
+
+        if (QSSGRenderGraphObject::isLight(type))
+            return size_t(NodePriority::Lights);
+
+        if (type == QSSGRenderGraphObject::Type::Skeleton)
+            return size_t(NodePriority::Skeleton);
+
+        return size_t(NodePriority::Other);
+    }
+
+    QQuick3DObject *dirtyResources[size_t(ResourcePriority::Count)] {};
+    QQuick3DObject *dirtyNodes[size_t(NodePriority::Count)] {};
+
     QList<QQuick3DObject *> dirtyBoundingBoxList;
     QList<QSSGRenderGraphObject *> cleanupNodeList;
     QList<QSSGRenderGraphObject *> resourceCleanupQueue;
@@ -79,6 +107,7 @@ Q_SIGNALS:
     void windowChanged();
 
 private Q_SLOTS:
+    void updateResources(QQuick3DObject **listHead);
     void updateNodes(QQuick3DObject **listHead);
     void preSync();
 };

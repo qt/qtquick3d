@@ -15,10 +15,6 @@ QT_BEGIN_NAMESPACE
 
 QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
     : QObject(parent)
-    , dirtySpatialNodeList(nullptr)
-    , dirtyResourceList(nullptr)
-    , dirtyImageList(nullptr)
-    , dirtyTextureDataList(nullptr)
 {
 }
 
@@ -92,33 +88,20 @@ void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> 
     }
 }
 
-void QQuick3DSceneManager::updateDirtyResourceNodes() {
-    updateNodes(&dirtyTextureDataList);
-    updateNodes(&dirtyImageList);
-    updateNodes(&dirtyResourceList);
-}
-
-void QQuick3DSceneManager::updateDirtySpatialNodes() {
-    updateNodes(&dirtySpatialNodeList);
-    // Lights have to be last because of scoped lights
-    for (const auto light : dirtyLightList)
-        updateDirtyNode(light);
-    dirtyLightList.clear();
-}
-
-void QQuick3DSceneManager::updateDirtyNode(QQuick3DObject *object)
+void QQuick3DSceneManager::updateDirtyResourceNodes()
 {
-    // Different processing for resource nodes vs hierarchical nodes
-    const auto type = QQuick3DObjectPrivate::get(object)->type;
-    if (QSSGRenderGraphObject::isNodeType(type)) {
-        // handle hierarchical nodes
-        QQuick3DNode *spatialNode = qobject_cast<QQuick3DNode *>(object);
-        if (spatialNode)
-            updateDirtySpatialNode(spatialNode);
-    } else if (QSSGRenderGraphObject::isResource(type)) {
-        // handle resource nodes
-        updateDirtyResource(object);
-    } // we don't need to do anything with the other nodes
+    auto it = std::begin(dirtyResources);
+    const auto end = std::end(dirtyResources);
+    for (; it != end; ++it)
+        updateResources(it);
+}
+
+void QQuick3DSceneManager::updateDirtySpatialNodes()
+{
+    auto it = std::begin(dirtyNodes);
+    const auto end = std::end(dirtyNodes);
+    for (; it != end; ++it)
+        updateNodes(it);
 }
 
 void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
@@ -234,6 +217,27 @@ void QQuick3DSceneManager::cleanupNodes()
     cleanupNodeList.clear();
 }
 
+void QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
+{
+    // Detach the current list head first, and consume all reachable entries.
+    // New entries may be added to the new list while traversing, which will be
+    // visited on the next updateDirtyNodes() call.
+    QQuick3DObject *updateList = *listHead;
+    *listHead = nullptr;
+    if (updateList)
+        QQuick3DObjectPrivate::get(updateList)->prevDirtyItem = &updateList;
+
+    QQuick3DObject *item = updateList;
+    while (item) {
+        // Different processing for resource nodes vs hierarchical nodes
+        Q_ASSERT(QSSGRenderGraphObject::isResource(QQuick3DObjectPrivate::get(item)->type));
+        // handle hierarchical nodes
+        updateDirtyResource(item);
+        QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
+        item = updateList;
+    }
+}
+
 void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
 {
     // Detach the current list head first, and consume all reachable entries.
@@ -244,22 +248,33 @@ void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
     if (updateList)
         QQuick3DObjectPrivate::get(updateList)->prevDirtyItem = &updateList;
 
-    while (updateList) {
-        QQuick3DObject *item = updateList;
-        QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(item);
-        itemPriv->removeFromDirtyList();
-
-        updateDirtyNode(item);
+    QQuick3DObject *item = updateList;
+    while (item) {
+        // Different processing for resource nodes vs hierarchical nodes (anything that's _not_ a resource)
+        Q_ASSERT(!QSSGRenderGraphObject::isResource(QQuick3DObjectPrivate::get(item)->type));
+        // handle hierarchical nodes
+        updateDirtySpatialNode(static_cast<QQuick3DNode *>(item));
+        QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
+        item = updateList;
     }
 }
 
 void QQuick3DSceneManager::preSync()
 {
-    QQuick3DObject *next = dirtySpatialNodeList;
+    for (auto it = std::begin(dirtyResources), end = std::end(dirtyResources); it != end; ++it) {
+        QQuick3DObject *next = *it;
+        while (next) {
+            next->preSync();
+            next = QQuick3DObjectPrivate::get(next)->nextDirtyItem;
+        }
+    }
 
-    while (next) {
-        next->preSync();
-        next = QQuick3DObjectPrivate::get(next)->nextDirtyItem;
+    for (auto it = std::begin(dirtyNodes), end = std::end(dirtyNodes); it != end; ++it) {
+        QQuick3DObject *next = *it;
+        while (next) {
+            next->preSync();
+            next = QQuick3DObjectPrivate::get(next)->nextDirtyItem;
+        }
     }
 }
 

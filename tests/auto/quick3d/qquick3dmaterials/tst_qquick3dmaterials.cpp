@@ -129,8 +129,8 @@ void tst_QQuick3DMaterials::testDefaultTextures()
     texture2.setSource(QUrl(":/Built_with_Qt_2.png"));
 
     QQuick3DSceneManager sceneManager;
-    sceneManager.updateDirtyNode(&texture1);
-    sceneManager.updateDirtyNode(&texture2);
+    sceneManager.updateDirtyResource(&texture1);
+    sceneManager.updateDirtyResource(&texture2);
 
     // Diffusemaps
     material.setDiffuseMap(&texture1);
@@ -378,8 +378,8 @@ void tst_QQuick3DMaterials::testPrincipledTextures()
     texture2.setSource(QUrl(":/Built_with_Qt_2.png"));
 
     QQuick3DSceneManager sceneManager;
-    sceneManager.updateDirtyNode(&texture1);
-    sceneManager.updateDirtyNode(&texture2);
+    sceneManager.updateDirtyResource(&texture1);
+    sceneManager.updateDirtyResource(&texture2);
 
     // BasecolorMap
     QVERIFY(!material.baseColorMap());
@@ -703,8 +703,8 @@ void tst_QQuick3DMaterials::testSpecularGlossyTextures()
     texture2.setSource(QUrl(":/Built_with_Qt_2.png"));
 
     QQuick3DSceneManager sceneManager;
-    sceneManager.updateDirtyNode(&texture1);
-    sceneManager.updateDirtyNode(&texture2);
+    sceneManager.updateDirtyResource(&texture1);
+    sceneManager.updateDirtyResource(&texture2);
 
     // Albedo
     QVERIFY(!material.albedoMap());

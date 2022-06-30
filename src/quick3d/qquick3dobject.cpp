@@ -775,42 +775,20 @@ void QQuick3DObjectPrivate::addToDirtyList()
     if (!prevDirtyItem) {
         Q_ASSERT(!nextDirtyItem);
 
-        // NOTE: Skeleton node will be treated as a resources when creating/updating the backend nodes
-        // (as it's a resource to the model node).
-        if (QSSGRenderGraphObject::isResource(type) || type == QSSGRenderGraphObject::Type::Skeleton) {
-            if (QSSGRenderGraphObject::isTexture(type)) {
-                // Will likely need to refactor this, but images need to come before other
-                // resources
-                nextDirtyItem = sceneManager->dirtyImageList;
-                if (nextDirtyItem)
-                    QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
-                prevDirtyItem = &sceneManager->dirtyImageList;
-                sceneManager->dirtyImageList = q;
-            } else if (type == Type::TextureData) {
-                // Will likely need to refactor this, but textureData needs to come before images
-                nextDirtyItem = sceneManager->dirtyTextureDataList;
-                if (nextDirtyItem)
-                    QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
-                prevDirtyItem = &sceneManager->dirtyTextureDataList;
-                sceneManager->dirtyTextureDataList = q;
-            } else {
-                nextDirtyItem = sceneManager->dirtyResourceList;
-                if (nextDirtyItem)
-                    QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
-                prevDirtyItem = &sceneManager->dirtyResourceList;
-                sceneManager->dirtyResourceList = q;
-            }
-        } else {
-            if (QSSGRenderGraphObject::isLight(type)) {
-                // needed for scoped lights second pass
-               sceneManager->dirtyLightList.append(q);
-            }
-
-            nextDirtyItem = sceneManager->dirtySpatialNodeList;
+        if (QSSGRenderGraphObject::isNodeType(type)) {
+            const auto dirtyListIdx = QQuick3DSceneManager::nodeListIndex(type);
+            nextDirtyItem = sceneManager->dirtyNodes[dirtyListIdx];
             if (nextDirtyItem)
                 QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
-            prevDirtyItem = &sceneManager->dirtySpatialNodeList;
-            sceneManager->dirtySpatialNodeList = q;
+            prevDirtyItem = &sceneManager->dirtyNodes[dirtyListIdx];
+            sceneManager->dirtyNodes[dirtyListIdx] = q;
+        } else {
+            const auto dirtyListIdx = QQuick3DSceneManager::resourceListIndex(type);
+            nextDirtyItem = sceneManager->dirtyResources[dirtyListIdx];
+            if (nextDirtyItem)
+                QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
+            prevDirtyItem = &sceneManager->dirtyResources[dirtyListIdx];
+            sceneManager->dirtyResources[dirtyListIdx] = q;
         }
     }
     sceneManager->dirtyItem(q);
@@ -939,10 +917,8 @@ void QQuick3DObjectPrivate::derefSceneManager()
         return; // There are still other references, so don't set the scene manager to null yet.
 
     removeFromDirtyList();
-    if (sceneManager) {
+    if (sceneManager)
         sceneManager->dirtyBoundingBoxList.removeAll(q);
-        sceneManager->dirtyLightList.removeAll(q);
-    }
 
     if (spatialNode)
         sceneManager->cleanup(spatialNode);
