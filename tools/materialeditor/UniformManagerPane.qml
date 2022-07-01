@@ -161,7 +161,7 @@ Pane {
                         }
                         Label {
                             width: uniformTable.columnWidth(2)
-                            RowLayout.fillWidth: true
+                            Layout.fillWidth: true
                             text: uniformTable.convertValueToString(value, type)
                         }
                     }

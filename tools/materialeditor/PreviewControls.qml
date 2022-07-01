@@ -92,7 +92,7 @@ Item {
         Slider {
             visible: enableIBL
             id: environmentOrientationSlider
-            RowLayout.fillWidth: true
+            Layout.fillWidth: true
             from: -180
             to: 180
             value: 0
