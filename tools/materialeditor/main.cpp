@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
         const auto value = cmdLineparser.value(projectDirOption);
         QFileInfo fi(value);
         if (fi.isDir())
-            projectPath = fi.canonicalPath();
+            projectPath = fi.canonicalFilePath();
         else
             qWarning("%s : %s - Not a directory", qPrintable(app.applicationName()), qPrintable(value));
     }
