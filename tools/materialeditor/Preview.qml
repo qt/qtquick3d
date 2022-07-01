@@ -9,7 +9,7 @@ import Qt.labs.settings
 import QtQuick3D
 import QtQuick3D.Helpers
 
-ColumnLayout {
+Item {
     id: previewRoot
 
     property url skyBoxTexturePath: "qrc:/assets/skybox/OpenfootageNET_lowerAustria01-1024.hdr"
@@ -32,8 +32,7 @@ ColumnLayout {
 
     View3D {
         id: view
-        Layout.preferredHeight: previewRoot.height
-        Layout.preferredWidth: previewRoot.width
+        anchors.fill: parent
         environment: SceneEnvironment {
             id: sceneEnvironment
             backgroundMode: previewControls.enableIBL ? SceneEnvironment.SkyBox : SceneEnvironment.Transparent
