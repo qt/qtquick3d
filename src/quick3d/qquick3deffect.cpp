@@ -4,7 +4,6 @@
 #include "qquick3deffect_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
 #include <QtQuick/qquickwindow.h>
@@ -531,29 +530,6 @@ static const char *default_effect_fragment_shader =
         "    FRAGCOLOR = texture(INPUT, INPUT_UV);\n"
         "}\n";
 
-// Suffix snippets added to the end of the shader strings. These are appended
-// after processing so it must be valid GLSL as-is, no more magic keywords.
-
-static const char *effect_vertex_main_pre =
-        "void main()\n"
-        "{\n"
-        "    qt_inputUV = attr_uv;\n"
-        "    qt_textureUV = qt_effectTextureMapUV(attr_uv);\n"
-        "    vec4 qt_vertPosition = vec4(attr_pos, 1.0);\n"
-        "    qt_customMain(qt_vertPosition.xyz);\n";
-
-static const char *effect_vertex_main_position =
-        "    gl_Position = qt_modelViewProjection * qt_vertPosition;\n";
-
-static const char *effect_vertex_main_post =
-        "}\n";
-
-static const char *effect_fragment_main =
-        "void main()\n"
-        "{\n"
-        "    qt_customMain();\n"
-        "}\n";
-
 static inline void insertVertexMainArgs(QByteArray &snippet)
 {
     static const char *argKey =  "/*%QT_ARGS_MAIN%*/";
@@ -730,7 +706,6 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         // fragOutput is added automatically by the program generator
 
-        bool needsDepthTexture = false;
         if (!m_passes.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
             for (QQuick3DShaderUtilsRenderPass *pass : qAsConst(m_passes)) {
@@ -741,8 +716,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 // set of shader files can be used in multiple different passes, or in multiple active effects.
                 // But that's the effect system's problem.
                 QByteArray shaderPathKey("effect pipeline--");
-                QByteArray shaderSource[2];
-                QSSGCustomShaderMetaData shaderMeta[2];
+                QSSGRenderEffect::ShaderPrepPassData passData;
                 for (QQuick3DShaderUtilsShader::Stage stage : { QQuick3DShaderUtilsShader::Stage::Vertex, QQuick3DShaderUtilsShader::Stage::Fragment }) {
                     QQuick3DShaderUtilsShader *shader = nullptr;
                     for (QQuick3DShaderUtilsShader *s : pass->m_shaders) {
@@ -798,43 +772,31 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                         result = QSSGShaderCustomMaterialAdapter::prepareCustomShader(shaderCodeMeta, code, type,
                                                                                       uniforms, builtinVertexOutputs);
                     }
-                    code = result.first;
-                    code.append(shaderCodeMeta);
+
+                    if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
+                        effectNode->requiresDepthTexture = true;
+
+                    code = result.first + shaderCodeMeta;
 
                     if (type == QSSGShaderCache::ShaderType::Vertex) {
                         // qt_customMain() has an argument list which gets injected here
                         insertVertexMainArgs(code);
-                        // add the real main(), with or without assigning gl_Position at the end
-                        code.append(effect_vertex_main_pre);
-                        if (!result.second.flags.testFlag(QSSGCustomShaderMetaData::OverridesPosition))
-                            code.append(effect_vertex_main_position);
-                        code.append(effect_vertex_main_post);
+                        passData.vertexShaderCode = code;
+                        passData.vertexMetaData = result.second;
                     } else {
-                        code.append(effect_fragment_main);
+                        passData.fragmentShaderCode = code;
+                        passData.fragmentMetaData = result.second;
                     }
-
-                    if (result.second.flags.testFlag(QSSGCustomShaderMetaData::UsesDepthTexture))
-                        needsDepthTexture = true;
-
-                    shaderSource[int(type)] = code;
-                    shaderMeta[int(type)] = result.second;
                 }
 
-                {
-                    const auto &vertex = shaderSource[int(QSSGShaderCache::ShaderType::Vertex)];
-                    const auto &fragment = shaderSource[int(QSSGShaderCache::ShaderType::Fragment)];
-                    const QByteArray key = vertex + fragment;
-                    shaderPathKey.append(':' + QCryptographicHash::hash(key, QCryptographicHash::Algorithm::Sha1).toHex());
-                }
+                effectNode->commands.push_back(nullptr); // will be changed to QSSGBindShader in finalizeShaders
+                passData.bindShaderCmdIndex = effectNode->commands.count() - 1;
 
-                // Now that the final shaderPathKey is known, store the source and
-                // related data; it will be retrieved later by the QSSGRhiEffectSystem.
-                for (QSSGShaderCache::ShaderType type : { QSSGShaderCache::ShaderType::Vertex, QSSGShaderCache::ShaderType::Fragment }) {
-                    renderContext->shaderLibraryManager()->setShaderSource(shaderPathKey, type,
-                                                                           shaderSource[int(type)], shaderMeta[int(type)]);
-                }
+                // finalizing the shader code happens in a separate step later on by the backend node
+                passData.shaderPathKeyPrefix = shaderPathKey;
+                effectNode->shaderPrepData.passes.append(passData);
+                effectNode->shaderPrepData.valid = true;
 
-                effectNode->commands.push_back(new QSSGBindShader(shaderPathKey));
                 effectNode->commands.push_back(new QSSGApplyInstanceValue);
 
                 // Buffers
@@ -870,7 +832,6 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 effectNode->commands.push_back(new QSSGRender);
             }
         }
-        effectNode->requiresDepthTexture = needsDepthTexture;
     }
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {

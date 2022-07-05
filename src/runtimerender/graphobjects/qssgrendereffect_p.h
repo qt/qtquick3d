@@ -19,6 +19,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendershaderlibrarymanager_p.h>
 
 #include <QtCore/QVariant>
 
@@ -26,11 +27,14 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGRenderLayer;
 struct QSSGCommand;
+class QSSGRenderContextInterface;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphObject
 {
     QSSGRenderEffect();
     ~QSSGRenderEffect();
+
+    void finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderContextInterface *renderContext);
 
     enum class Flags : quint8
     {
@@ -81,6 +85,21 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     bool requiresDepthTexture = false;
     bool incompleteBuildTimeObject = false; // Used by the shadergen tool
     QSSGRenderTextureFormat::Format outputFormat = QSSGRenderTextureFormat::Unknown;
+
+    struct ShaderPrepPassData
+    {
+        QByteArray shaderPathKeyPrefix; // to be completed in finalizeShaders
+        QByteArray vertexShaderCode; // without main(), to be completed in finalizeShaders
+        QByteArray fragmentShaderCode; // same here
+        QSSGCustomShaderMetaData vertexMetaData;
+        QSSGCustomShaderMetaData fragmentMetaData;
+        int bindShaderCmdIndex = 0;
+    };
+
+    struct {
+        bool valid = false;
+        QVector<ShaderPrepPassData> passes;
+    } shaderPrepData;
 };
 
 QT_END_NAMESPACE

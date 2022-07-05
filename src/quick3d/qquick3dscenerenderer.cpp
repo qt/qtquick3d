@@ -1010,6 +1010,11 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
         }
     }
 
+    // Now that we have the effect list used for rendering, finalize the shader
+    // code based on the layer (scene.env.) settings.
+    for (QSSGRenderEffect *effectNode = layerNode->firstEffect; effectNode; effectNode = effectNode->m_nextEffect)
+        effectNode->finalizeShaders(*layerNode, m_sgContext.data());
+
     // ResourceLoaders
     layerNode->resourceLoaders.clear();
     layerNode->resourceLoaders = resourceLoaders;
