@@ -17,7 +17,6 @@ QSSGRenderEffect::~QSSGRenderEffect()
 
 void QSSGRenderEffect::initialize()
 {
-    m_layer = nullptr;
     m_nextEffect = nullptr;
 }
 

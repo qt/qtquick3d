@@ -74,7 +74,6 @@ void QSSGRenderLayer::addEffect(QSSGRenderEffect &inEffect)
     // Effects need to be rendered in reverse order as described in the file.
     inEffect.m_nextEffect = firstEffect;
     firstEffect = &inEffect;
-    inEffect.m_layer = this;
 }
 
 void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
