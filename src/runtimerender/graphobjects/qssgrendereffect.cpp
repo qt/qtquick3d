@@ -15,11 +15,6 @@ QSSGRenderEffect::~QSSGRenderEffect()
 
 }
 
-void QSSGRenderEffect::initialize()
-{
-    m_nextEffect = nullptr;
-}
-
 void QSSGRenderEffect::setActive(bool inActive)
 {
    const bool wasActive = ((flags & FlagT(Flags::Active)) != 0);

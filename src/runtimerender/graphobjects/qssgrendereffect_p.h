@@ -71,8 +71,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     QSSGRenderEffect *m_nextEffect = nullptr;
 
-    void initialize();
-
     // If our active flag value changes, then we ask the effect manager
     // to reset our context.
     void setActive(bool inActive);
