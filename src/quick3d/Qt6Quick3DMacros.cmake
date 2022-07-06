@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 
 #quick3d version of qrc to resource
 function(_qt_internal_quick3d_generate_resource_from_qrc target qrcfile)
