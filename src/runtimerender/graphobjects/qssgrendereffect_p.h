@@ -34,8 +34,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     enum class Flags : quint8
     {
-        Active = 0x1u,
-        Dirty = 0x2u
+        Dirty = 0x1u
     };
     using FlagT = std::underlying_type_t<Flags>;
 
@@ -71,11 +70,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
 
     QSSGRenderEffect *m_nextEffect = nullptr;
 
-    // If our active flag value changes, then we ask the effect manager
-    // to reset our context.
-    void setActive(bool inActive);
-    [[nodiscard]] inline bool isActive() const { return ((flags & FlagT(Flags::Active)) != 0); }
-
     void markDirty();
     void clearDirty();
     [[nodiscard]] inline bool isDirty() const { return ((flags & FlagT(Flags::Dirty)) != 0); }
@@ -83,7 +77,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     QVector<QSSGCommand *> commands;
 
     const char *className = nullptr;
-    FlagT flags { FlagT(Flags::Active) | FlagT(Flags::Dirty) };
+    FlagT flags = FlagT(Flags::Dirty);
     bool requiresDepthTexture = false;
     bool incompleteBuildTimeObject = false; // Used by the shadergen tool
     QSSGRenderTextureFormat::Format outputFormat = QSSGRenderTextureFormat::Unknown;

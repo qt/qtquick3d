@@ -1389,10 +1389,8 @@ void QSSGLayerRenderData::prepareForRender()
                 wasDirty = true;
                 theEffect->clearDirty();
             }
-            if (theEffect->isActive()) {
-                if (theEffect->requiresDepthTexture)
-                    requiresDepthTexture = true;
-            }
+            if (theEffect->requiresDepthTexture)
+                requiresDepthTexture = true;
         }
         // Get the layer's width and height.
         if (layer.isDirty()) {

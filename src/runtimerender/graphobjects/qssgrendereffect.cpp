@@ -15,18 +15,6 @@ QSSGRenderEffect::~QSSGRenderEffect()
 
 }
 
-void QSSGRenderEffect::setActive(bool inActive)
-{
-   const bool wasActive = ((flags & FlagT(Flags::Active)) != 0);
-   if (inActive)
-       flags |= FlagT(Flags::Active);
-   else
-       flags &= ~FlagT(Flags::Active);
-
-   if (wasActive != inActive)
-       markDirty();
-}
-
 void QSSGRenderEffect::markDirty()
 {
     flags |= FlagT(Flags::Dirty);

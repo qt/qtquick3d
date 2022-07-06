@@ -578,7 +578,6 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         markAllDirty();
         if (!effectNode)
             effectNode = new QSSGRenderEffect;
-        effectNode->setActive(true);
 
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
