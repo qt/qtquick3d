@@ -193,8 +193,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
 
     void addEffect(QSSGRenderEffect &inEffect);
 
-    QSSGRenderEffect *getLastEffect();
-
     QSSGRenderNode *importSceneNode = nullptr;
 
     // Special function(s) for importScene

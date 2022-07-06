@@ -103,16 +103,4 @@ void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
     }
 }
 
-QSSGRenderEffect *QSSGRenderLayer::getLastEffect()
-{
-    if (firstEffect) {
-        QSSGRenderEffect *theEffect = firstEffect;
-        // Empty loop intentional
-        for (; theEffect->m_nextEffect; theEffect = theEffect->m_nextEffect);
-        Q_ASSERT(theEffect->m_nextEffect == nullptr);
-        return theEffect;
-    }
-    return nullptr;
-}
-
 QT_END_NAMESPACE

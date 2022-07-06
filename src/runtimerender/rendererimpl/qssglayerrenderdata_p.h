@@ -121,7 +121,6 @@ struct QSSGLayerRenderPreparationResultFlags : public QFlags<QSSGLayerRenderPrep
 
 struct QSSGLayerRenderPreparationResult
 {
-    QSSGRenderEffect *lastEffect = nullptr;
     QSSGLayerRenderPreparationResultFlags flags;
     quint32 maxAAPassIndex = 0;
     QRectF viewport;
