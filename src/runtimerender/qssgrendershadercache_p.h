@@ -105,6 +105,21 @@ void disableTonemapping()
     set(Feature::HejlDawsonTonemapping, false);
 }
 
+inline friend QDebug operator<<(QDebug stream, const QSSGShaderFeatures &features)
+{
+    QVarLengthArray<const char *, Count> enabledFeatureStrings;
+    for (quint32 idx = 0; idx < Count; ++idx) {
+        const Feature feature = fromIndex(idx);
+        if (features.isSet(feature))
+            enabledFeatureStrings.append(asDefineString(feature));
+    }
+    stream.nospace() << "QSSGShaderFeatures(";
+    for (int i = 0; i < enabledFeatureStrings.count(); ++i)
+        stream.nospace() << (i > 0 ? ", " : "") << enabledFeatureStrings[i];
+    stream.nospace() << ")";
+    return stream;
+}
+
 };
 
 Q_QUICK3DRUNTIMERENDER_EXPORT size_t qHash(QSSGShaderFeatures features) noexcept;
