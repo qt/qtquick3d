@@ -230,7 +230,7 @@ void QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
     QQuick3DObject *item = updateList;
     while (item) {
         // Different processing for resource nodes vs hierarchical nodes
-        Q_ASSERT(QSSGRenderGraphObject::isResource(QQuick3DObjectPrivate::get(item)->type));
+        Q_ASSERT(!QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
         updateDirtyResource(item);
         QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
@@ -251,7 +251,7 @@ void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
     QQuick3DObject *item = updateList;
     while (item) {
         // Different processing for resource nodes vs hierarchical nodes (anything that's _not_ a resource)
-        Q_ASSERT(!QSSGRenderGraphObject::isResource(QQuick3DObjectPrivate::get(item)->type));
+        Q_ASSERT(QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
         updateDirtySpatialNode(static_cast<QQuick3DNode *>(item));
         QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
