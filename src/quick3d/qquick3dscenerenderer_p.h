@@ -119,7 +119,7 @@ private:
     int m_samples = 1;
     QSSGRhiEffectSystem *m_effectSystem = nullptr;
 
-    QQuick3DRenderStats *m_renderStats = nullptr;
+    QPointer<QQuick3DRenderStats> m_renderStats;
 
     QSSGRenderNode *m_sceneRootNode = nullptr;
     QSSGRenderNode *m_importRootNode = nullptr;
