@@ -221,9 +221,9 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
         desc = { { 0,
                    0,
                    { inImage->textureFileData.data().constData() + inImage->textureFileData.dataOffset(0),
-                     int(inImage->textureFileData.dataLength(0)) } } };
+                     quint32(inImage->textureFileData.dataLength(0)) } } };
     } else {
-        desc = { { 0, 0, { inImage->data, int(inImage->dataSizeInBytes) } } };
+        desc = { { 0, 0, { inImage->data, inImage->dataSizeInBytes } } };
     }
     auto *rub = rhi->nextResourceUpdateBatch();
     rub->uploadTexture(sourceTexture, desc);

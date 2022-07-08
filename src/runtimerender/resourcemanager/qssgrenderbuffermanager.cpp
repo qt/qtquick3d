@@ -531,7 +531,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     const auto desc = inImage->textureFileData.isValid()
             ? QRhiTextureUploadDescription(
                     { 0, 0, QRhiTextureSubresourceUploadDescription(inImage->textureFileData.getDataView().toByteArray()) })
-            : QRhiTextureUploadDescription({ 0, 0, { inImage->data, int(inImage->dataSizeInBytes) } });
+            : QRhiTextureUploadDescription({ 0, 0, { inImage->data, inImage->dataSizeInBytes } });
 
     auto *rub = rhi->nextResourceUpdateBatch();
     rub->uploadTexture(sourceTexture, desc);

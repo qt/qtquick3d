@@ -854,7 +854,7 @@ void QSSGRhiShaderPipeline::setUniformArray(char *ubufData, const char *name, co
 
 void QSSGRhiShaderPipeline::ensureCombinedMainLightsUniformBuffer(QRhiBuffer **ubuf)
 {
-    const int totalBufferSize = m_ub0NextUBufOffset + int(sizeof(QSSGShaderLightsUniformData));
+    const quint32 totalBufferSize = m_ub0NextUBufOffset + sizeof(QSSGShaderLightsUniformData);
     if (!*ubuf) {
         *ubuf = m_context.rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalBufferSize);
         (*ubuf)->create();
