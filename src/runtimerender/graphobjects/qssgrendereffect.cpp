@@ -15,7 +15,7 @@ QSSGRenderEffect::QSSGRenderEffect() : QSSGRenderGraphObject(Type::Effect) {}
 
 QSSGRenderEffect::~QSSGRenderEffect()
 {
-
+    qDeleteAll(commands);
 }
 
 void QSSGRenderEffect::markDirty()
@@ -104,6 +104,7 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
         }
 
         // and update the command
+        delete commands[pass.bindShaderCmdIndex];
         commands[pass.bindShaderCmdIndex] = new QSSGBindShader(shaderPathKey);
     }
 
