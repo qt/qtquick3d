@@ -138,6 +138,8 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapDilateShader();
 
+    static void setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode);
+
 protected:
     static void getLayerHitObjectList(const QSSGRenderLayer &layer,
                                       const QSSGRef<QSSGBufferManager> &bufferManager,

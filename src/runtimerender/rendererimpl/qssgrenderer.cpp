@@ -525,4 +525,16 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
                                               isClipDepthZeroToOne};
 }
 
+void QSSGRenderer::setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode)
+{
+    features.set(QSSGShaderFeatures::Feature::LinearTonemapping,
+                 tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
+    features.set(QSSGShaderFeatures::Feature::AcesTonemapping,
+                 tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
+    features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping,
+                 tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
+    features.set(QSSGShaderFeatures::Feature::FilmicTonemapping,
+                 tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
+}
+
 QT_END_NAMESPACE

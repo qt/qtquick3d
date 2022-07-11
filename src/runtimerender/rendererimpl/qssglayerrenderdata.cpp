@@ -1632,15 +1632,10 @@ void QSSGLayerRenderData::prepareForRender()
 
         features.set(QSSGShaderFeatures::Feature::Ssao, thePrepResult.flags.requiresSsaoPass());
 
-        // Tonemapping
-        features.set(QSSGShaderFeatures::Feature::LinearTonemapping,
-                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::Linear);
-        features.set(QSSGShaderFeatures::Feature::AcesTonemapping,
-                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::Aces);
-        features.set(QSSGShaderFeatures::Feature::HejlDawsonTonemapping,
-                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::HejlDawson);
-        features.set(QSSGShaderFeatures::Feature::FilmicTonemapping,
-                         layer.tonemapMode == QSSGRenderLayer::TonemapMode::Filmic);
+        // Tonemapping. Except when there are effects, then it is up to the
+        // last pass of the last effect to perform tonemapping.
+        if (!layer.firstEffect)
+            QSSGRenderer::setTonemapFeatures(features, layer.tonemapMode);
     }
     wasDirty = wasDirty || wasDataDirty;
     thePrepResult.flags.setWasDirty(wasDirty);
@@ -4157,7 +4152,14 @@ void QSSGLayerRenderData::rhiRender()
                 && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
                 && layer.skyBoxSrb)
         {
-            auto shaderPipeline = renderer->getRhiSkyBoxShader(layer.tonemapMode, layer.skyBoxIsRgbe8);
+            QSSGRenderLayer::TonemapMode tonemapMode = layer.tonemapMode;
+            // When there are effects, then it is up to the last pass of the
+            // last effect to perform tonemapping, neither the skybox nor the
+            // main render pass should alter the colors then.
+            if (layer.firstEffect)
+                tonemapMode = QSSGRenderLayer::TonemapMode::None;
+
+            auto shaderPipeline = renderer->getRhiSkyBoxShader(tonemapMode, layer.skyBoxIsRgbe8);
             Q_ASSERT(shaderPipeline);
             QSSGRhiGraphicsPipelineState *ps = rhiCtx->graphicsPipelineState(this);
             ps->shaderPipeline = shaderPipeline.data();

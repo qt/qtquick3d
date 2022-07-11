@@ -73,8 +73,18 @@ QT_BEGIN_NAMESPACE
     \c Underlay or \c Overlay. Effects will not be rendered for \c Inline mode.
 
     \note When using post-processing effects, the application-provided shaders
-    usually expect linear color data without tonemapping applied. It is then
-    essential to bypass the built-in tonemapping by setting
+    should expect linear color data without tonemapping applied. The
+    tonemapping that is performed during the main render pass (or during skybox
+    rendering, if there is a skybox) when
+    \l{SceneEnvironment::tonemapMode}{tonemapMode} is set to a value other than
+    \c SceneEnvironment.TonemapModeNone, is automatically disabled when there
+    is at least one post-processing effect specified in the SceneEnvironment.
+    The last effect in the chain (more precisely, the last pass of the last
+    effect in the chain) will automatically get its fragment shader amended to
+    perform the same tonemapping the main render pass would.
+
+    \note Effects that perform their own tonemapping should be used in a
+    SceneEnvironment that has the built-in tonemapping disabled by setting
     \l{SceneEnvironment::tonemapMode}{tonemapMode} to \c
     SceneEnvironment.TonemapModeNone.
 

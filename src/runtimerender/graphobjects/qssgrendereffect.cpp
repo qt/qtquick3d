@@ -51,6 +51,14 @@ static const char *effect_fragment_main =
         "    qt_customMain();\n"
         "}\n";
 
+static const char *effect_fragment_main_with_tonemapping =
+        "#include \"tonemapping.glsllib\"\n"
+        "void main()\n"
+        "{\n"
+        "    qt_customMain();\n"
+        "    fragOutput = qt_tonemap(fragOutput);\n"
+        "}\n";
+
 void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderContextInterface *renderContext)
 {
     Q_UNUSED(layer);
@@ -61,6 +69,12 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
 
     for (int i = 0, ie = shaderPrepData.passes.count(); i != ie; ++i) {
         const ShaderPrepPassData &pass(shaderPrepData.passes[i]);
+
+        // The fragment shader of the last pass of the last effect may need to
+        // perform the built-in tonemapping.
+        const bool isLastEffect = m_nextEffect == nullptr;
+        const bool isLastPass = i == ie - 1;
+        const bool shouldTonemapIfEnabled = isLastEffect && isLastPass;
 
         QSSGShaderFeatures features;
         QByteArray completeVertexShader;
@@ -78,13 +92,25 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
         }
         if (!pass.fragmentShaderCode.isEmpty()) {
             QByteArray code = pass.fragmentShaderCode;
-            code.append(effect_fragment_main);
+            if (shouldTonemapIfEnabled)
+                code.append(effect_fragment_main_with_tonemapping);
+            else
+                code.append(effect_fragment_main);
             completeFragmentShader = code;
             sourceCodeForHash += code;
         }
 
         QByteArray shaderPathKey = pass.shaderPathKeyPrefix;
         shaderPathKey.append(':' + QCryptographicHash::hash(sourceCodeForHash, QCryptographicHash::Algorithm::Sha1).toHex());
+
+        if (shouldTonemapIfEnabled) {
+            // This does not always mean there will be tonemapping: if the mode
+            // is TonemapModeNone, then no extra feature defines are set, and
+            // so qt_tonemap() in the shader will not alter the color.
+            const QSSGRenderLayer::TonemapMode tonemapMode = layer.tonemapMode;
+            shaderPathKey.append(':' + QByteArray::number(int(tonemapMode)));
+            QSSGRenderer::setTonemapFeatures(features, tonemapMode);
+        }
 
         // Now that the final shaderPathKey is known, store the source and
         // related data; it will be retrieved later by the QSSGRhiEffectSystem.
