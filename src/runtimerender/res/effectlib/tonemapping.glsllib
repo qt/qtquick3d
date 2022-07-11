@@ -3,7 +3,10 @@
 
 // This file is also included from the static shader skybox.frag, therefore pay
 // attention that it should be suitable both as a generator-included and as a
-// static-shader-included snippet.
+// static-shader-included snippet. It may also be included from post-processing
+// effect fragment shaders.
+
+// Any changes to the calculations must be reflected in qssgcputonemapper_p.h.
 
 #ifndef QSSG_ENABLE_LINEAR_TONEMAPPING
 #define QSSG_ENABLE_LINEAR_TONEMAPPING 0

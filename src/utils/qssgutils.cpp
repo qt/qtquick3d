@@ -167,5 +167,11 @@ QVector4D color::sRGBToLinear(const QColor &color)
     return QVector4D(rgb * (rgb * (rgb * C1 + C2) + C3), color.alphaF());
 }
 
+QColor color::sRGBToLinearColor(const QColor &color)
+{
+    const QVector4D c = sRGBToLinear(color);
+    return QColor::fromRgbF(c.x(), c.y(), c.z(), c.w());
+}
+
 QT_END_NAMESPACE
 

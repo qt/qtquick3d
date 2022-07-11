@@ -102,6 +102,7 @@ QVector3D Q_QUICK3DUTILS_EXPORT inverseRotated(const QQuaternion &q, const QVect
 
 namespace color {
 QVector4D Q_QUICK3DUTILS_EXPORT sRGBToLinear(const QColor &color);
+QColor Q_QUICK3DUTILS_EXPORT sRGBToLinearColor(const QColor &color);
 }
 
 template<typename TDataType>

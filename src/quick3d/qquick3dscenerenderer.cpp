@@ -28,6 +28,8 @@
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #include <QtCore/QObject>
 
@@ -273,14 +275,18 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
 
-        // This is called from the node's preprocess() meaning Qt Quick has not
-        // actually began recording a renderpass. Do our own.
         QColor clearColor = Qt::transparent;
         if (m_backgroundMode == QSSGRenderLayer::Background::Color
                 || (m_backgroundMode == QSSGRenderLayer::Background::SkyBoxCubeMap && !m_layer->skyBoxCubeMap)
-                || (m_backgroundMode == QSSGRenderLayer::Background::SkyBox && !m_layer->lightProbe)) {
-            clearColor = m_backgroundColor;
+                || (m_backgroundMode == QSSGRenderLayer::Background::SkyBox && !m_layer->lightProbe))
+        {
+            // Same logic as with the main render pass and skybox: tonemap
+            // based on tonemapMode (unless it is None), unless there are effects.
+            clearColor = m_layer->firstEffect ? m_linearBackgroundColor : m_tonemappedBackgroundColor;
         }
+
+        // This is called from the node's preprocess() meaning Qt Quick has not
+        // actually began recording a renderpass. Do our own.
         cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_textureRenderTarget));
         rhiRender();
@@ -477,6 +483,23 @@ static QRhiTexture::Format toRhiTextureFormat(QQuickShaderEffectSource::Format f
     }
 }
 
+static QVector3D tonemapRgb(const QVector3D &c, QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes tonemapMode)
+{
+    switch (tonemapMode) {
+    case QQuick3DSceneEnvironment::TonemapModeLinear:
+        return QSSGTonemapper::tonemapLinearToSrgb(c);
+    case QQuick3DSceneEnvironment::TonemapModeHejlDawson:
+        return QSSGTonemapper::tonemapHejlDawson(c);
+    case QQuick3DSceneEnvironment::TonemapModeAces:
+        return QSSGTonemapper::tonemapAces(c);
+    case QQuick3DSceneEnvironment::TonemapModeFilmic:
+        return QSSGTonemapper::tonemapFilmic(c);
+    default:
+        break;
+    }
+    return c;
+}
+
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr)
 {
     Q_ASSERT(view3D != nullptr); // This is not an option!
@@ -574,7 +597,19 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     // Store from the layer properties the ones we need to handle ourselves (with the RHI code path)
     m_backgroundMode = QSSGRenderLayer::Background(view3D->environment()->backgroundMode());
-    m_backgroundColor = view3D->environment()->clearColor();
+
+    // This is stateful since we only want to recalculate the tonemapped color
+    // when the color changes, not in every frame.
+    QColor currentUserBackgroundColor = view3D->environment()->clearColor();
+    if (m_userBackgroundColor != currentUserBackgroundColor) {
+        m_userBackgroundColor = currentUserBackgroundColor;
+        m_linearBackgroundColor = color::sRGBToLinearColor(m_userBackgroundColor);
+        const QVector3D tc = tonemapRgb(QVector3D(m_linearBackgroundColor.redF(),
+                                                  m_linearBackgroundColor.greenF(),
+                                                  m_linearBackgroundColor.blueF()),
+                                        view3D->environment()->tonemapMode());
+        m_tonemappedBackgroundColor = QColor::fromRgbF(tc.x(), tc.y(), tc.z(), m_linearBackgroundColor.alphaF());
+    }
 
     // Set the root item for the scene to the layer
     auto rootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(view3D->scene())->spatialNode);
