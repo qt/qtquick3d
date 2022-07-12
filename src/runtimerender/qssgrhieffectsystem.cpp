@@ -181,7 +181,8 @@ void QSSGRhiEffectSystem::releaseResources()
 QSSGRenderTextureFormat::Format QSSGRhiEffectSystem::overriddenOutputFormat(const QSSGRenderEffect *inEffect)
 {
     QSSGRenderTextureFormat::Format format = QSSGRenderTextureFormat::Unknown;
-    for (QSSGCommand *cmd : inEffect->commands) {
+    for (const QSSGRenderEffect::Command &c : inEffect->commands) {
+        QSSGCommand *cmd = c.command;
         if (cmd->m_type == CommandType::BindTarget) {
             QSSGBindTarget *targetCmd = static_cast<QSSGBindTarget *>(cmd);
             format = targetCmd->m_outputFormat == QSSGRenderTextureFormat::Unknown
@@ -199,7 +200,8 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
     QSSGRhiEffectTexture *finalOutputTexture = nullptr;
     QSSGRhiEffectTexture *currentOutput = nullptr;
     QSSGRhiEffectTexture *currentInput = inTexture;
-    for (QSSGCommand *theCommand : inEffect->commands) {
+    for (const QSSGRenderEffect::Command &c : inEffect->commands) {
+        QSSGCommand *theCommand = c.command;
         qCDebug(lcEffectSystem).noquote() << "    >" << theCommand->typeAsString() << "--" << theCommand->debugString();
 
         switch (theCommand->m_type) {

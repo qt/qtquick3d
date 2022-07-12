@@ -307,7 +307,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         nodes.append(renderEffect);
 
         const auto &commands = renderEffect->commands;
-        for (const auto &command : commands) {
+        for (const QSSGRenderEffect::Command &c : commands) {
+            QSSGCommand *command = c.command;
             if (command->m_type == CommandType::BindShader) {
                 auto bindShaderCommand = static_cast<const QSSGBindShader &>(*command);
                 for (const auto isYUpInFramebuffer : { true, false }) { // Generate effects for both up-directions.

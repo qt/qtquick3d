@@ -48,6 +48,8 @@ public:
     static qsizetype qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
     static void qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list);
 
+    void effectChainDirty();
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(QQuick3DObject::ItemChange , const QQuick3DObject::ItemChangeData &) override;
@@ -61,7 +63,8 @@ private:
 
     enum Dirty {
         TextureDirty = 0x1,
-        PropertyDirty = 0x2
+        PropertyDirty = 0x2,
+        EffectChainDirty = 0x4
     };
 
     void setDynamicTextureMap(QQuick3DShaderUtilsTextureInput *textureMap);

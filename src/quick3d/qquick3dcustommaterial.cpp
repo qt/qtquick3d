@@ -1508,12 +1508,6 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             if (Q_UNLIKELY(!property.isValid()))
                 continue;
 
-            if (newBackendNode) {
-                // Track the property changes
-                if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
-                    connect(this, property.notifySignal(), this, propertyDirtyMethod);
-            } // else already connected
-
             const auto name = property.name();
             QMetaType propType = property.metaType();
             QVariant propValue = property.read(this);
@@ -1533,9 +1527,11 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 if (type != QSSGRenderShaderDataType::Unknown) {
                     uniforms.append({ uniformTypeName(propType), name });
                     customMaterial->m_properties.push_back({ name, propValue, uniformType(propType), i});
-                    // Track the property changes
-                    if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
-                        connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                    if (newBackendNode) {
+                        // Track the property changes
+                        if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
+                            connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                    } // else already connected
                 } else {
                     // ### figure out how _not_ to warn when there are no dynamic
                     // properties defined (because warnings like Blah blah objectName etc. are not helpful)

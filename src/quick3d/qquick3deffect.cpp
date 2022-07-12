@@ -560,10 +560,20 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     }
 
     QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(node);
-    if (!effectNode || effectNode->incompleteBuildTimeObject) {
+    bool newBackendNode = false;
+    if (!effectNode) {
+        effectNode = new QSSGRenderEffect;
+        newBackendNode = true;
+    }
+
+    bool shadersMayChange = false;
+    if (m_dirtyAttributes & Dirty::EffectChainDirty)
+        shadersMayChange = true;
+
+    const bool fullUpdate = newBackendNode || effectNode->incompleteBuildTimeObject;
+
+    if (fullUpdate || shadersMayChange) {
         markAllDirty();
-        if (!effectNode)
-            effectNode = new QSSGRenderEffect;
 
         QMetaMethod propertyDirtyMethod;
         const int idx = metaObject()->indexOfSlot("onPropertyDirty()");
@@ -611,8 +621,10 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     effectNode->properties.push_back({ name, uniformTypeName(propType),
                                                        propValue, uniformType(propType), i});
                     // Track the property changes
-                    if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
-                        connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                    if (fullUpdate) {
+                        if (property.hasNotifySignal() && propertyDirtyMethod.isValid())
+                            connect(this, property.notifySignal(), this, propertyDirtyMethod);
+                    } // else already connected
                 } else {
                     // ### figure out how _not_ to warn when there are no dynamic
                     // properties defined (because warnings like Blah blah objectName etc. are not helpful)
@@ -624,8 +636,10 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         const auto processTextureProperty = [&](QQuick3DShaderUtilsTextureInput &texture, const QByteArray &name) {
             QSSGRenderEffect::TextureProperty texProp;
             QQuick3DTexture *tex = texture.texture(); // may be null if the TextureInput has no 'texture' set
-            connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DEffect::onTextureDirty);
-            connect(&texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DEffect::onTextureDirty);
+            if (fullUpdate) {
+                connect(&texture, &QQuick3DShaderUtilsTextureInput::enabledChanged, this, &QQuick3DEffect::onTextureDirty);
+                connect(&texture, &QQuick3DShaderUtilsTextureInput::textureChanged, this, &QQuick3DEffect::onTextureDirty);
+            } // else already connected
             texProp.name = name;
             if (texture.enabled && tex)
                 texProp.texImage = tex->getRenderImage();
@@ -718,6 +732,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
         if (!m_passes.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
+            effectNode->resetCommands();
             for (QQuick3DShaderUtilsRenderPass *pass : qAsConst(m_passes)) {
                 // Have a key composed more or less of the vertex and fragment filenames.
                 // The shaderLibraryManager uses stage+shaderPathKey as the key.
@@ -799,15 +814,15 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     }
                 }
 
-                effectNode->commands.push_back(nullptr); // will be changed to QSSGBindShader in finalizeShaders
+                effectNode->commands.push_back({ nullptr, true }); // will be changed to QSSGBindShader in finalizeShaders
                 passData.bindShaderCmdIndex = effectNode->commands.count() - 1;
 
                 // finalizing the shader code happens in a separate step later on by the backend node
                 passData.shaderPathKeyPrefix = shaderPathKey;
                 effectNode->shaderPrepData.passes.append(passData);
-                effectNode->shaderPrepData.valid = true;
+                effectNode->shaderPrepData.valid = true; // trigger reprocessing the shader code later on
 
-                effectNode->commands.push_back(new QSSGApplyInstanceValue);
+                effectNode->commands.push_back({ new QSSGApplyInstanceValue, true });
 
                 // Buffers
                 QQuick3DShaderUtilsBuffer *outputBuffer = pass->outputBuffer;
@@ -816,17 +831,17 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                     if (outBufferName.isEmpty()) {
                         // default output buffer (with settings)
                         auto outputFormat = QQuick3DShaderUtilsBuffer::mapTextureFormat(outputBuffer->format());
-                        effectNode->commands.push_back(new QSSGBindTarget(outputFormat));
+                        effectNode->commands.push_back({ new QSSGBindTarget(outputFormat), true });
                         effectNode->outputFormat = outputFormat;
                     } else {
                         // Allocate buffer command
-                        effectNode->commands.push_back(outputBuffer->getCommand());
+                        effectNode->commands.push_back({ outputBuffer->getCommand(), false });
                         // bind buffer
-                        effectNode->commands.push_back(new QSSGBindBuffer(outBufferName));
+                        effectNode->commands.push_back({ new QSSGBindBuffer(outBufferName), true });
                     }
                 } else {
                     // Use the default output buffer, same format as the source buffer
-                    effectNode->commands.push_back(new QSSGBindTarget(QSSGRenderTextureFormat::Unknown));
+                    effectNode->commands.push_back({ new QSSGBindTarget(QSSGRenderTextureFormat::Unknown), true });
                     effectNode->outputFormat = QSSGRenderTextureFormat::Unknown;
                 }
 
@@ -835,11 +850,11 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 for (const auto &command : extraCommands) {
                     const int bufferCount = command->bufferCount();
                     for (int i = 0; i != bufferCount; ++i)
-                        effectNode->commands.push_back(command->bufferAt(i)->getCommand());
-                    effectNode->commands.push_back(command->getCommand());
+                        effectNode->commands.push_back({ command->bufferAt(i)->getCommand(), false });
+                    effectNode->commands.push_back({ command->getCommand(), false });
                 }
 
-                effectNode->commands.push_back(new QSSGRender);
+                effectNode->commands.push_back({ new QSSGRender, true });
             }
         }
     }
@@ -865,6 +880,11 @@ void QQuick3DEffect::onPropertyDirty()
 void QQuick3DEffect::onTextureDirty()
 {
     markDirty(Dirty::TextureDirty);
+}
+
+void QQuick3DEffect::effectChainDirty()
+{
+    markDirty(Dirty::EffectChainDirty);
 }
 
 void QQuick3DEffect::markDirty(QQuick3DEffect::Dirty type)

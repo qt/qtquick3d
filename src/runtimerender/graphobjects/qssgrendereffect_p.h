@@ -78,7 +78,13 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     void clearDirty();
     [[nodiscard]] inline bool isDirty() const { return ((flags & FlagT(Flags::Dirty)) != 0); }
 
-    QVector<QSSGCommand *> commands;
+    struct Command {
+        QSSGCommand *command;
+        quint8 own : 1;
+    };
+    QVector<Command> commands;
+
+    void resetCommands();
 
     const char *className = nullptr;
     FlagT flags = FlagT(Flags::Dirty);

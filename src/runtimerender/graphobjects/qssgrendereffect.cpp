@@ -15,7 +15,7 @@ QSSGRenderEffect::QSSGRenderEffect() : QSSGRenderGraphObject(Type::Effect) {}
 
 QSSGRenderEffect::~QSSGRenderEffect()
 {
-    qDeleteAll(commands);
+    resetCommands();
 }
 
 void QSSGRenderEffect::markDirty()
@@ -130,11 +130,21 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
         }
 
         // and update the command
-        delete commands[pass.bindShaderCmdIndex];
-        commands[pass.bindShaderCmdIndex] = new QSSGBindShader(shaderPathKey);
+        delete commands[pass.bindShaderCmdIndex].command;
+        commands[pass.bindShaderCmdIndex] = { new QSSGBindShader(shaderPathKey), true };
     }
 
     shaderPrepData.valid = false;
+}
+
+void QSSGRenderEffect::resetCommands()
+{
+    for (const Command &cmd : commands) {
+        if (cmd.own)
+            delete cmd.command;
+    }
+    commands.clear();
+    shaderPrepData.passes.clear();
 }
 
 QT_END_NAMESPACE
