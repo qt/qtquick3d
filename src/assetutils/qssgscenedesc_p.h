@@ -585,7 +585,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     auto prop = node.scene->create<Property>();
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<T>();
+    prop->value.mt = QMetaType::fromType<rm_cvref_t<T>>();
     prop->value.dptr = node.scene->create<T>(std::forward<T>(value));
     node.properties.push_back(*prop);
 }
@@ -598,7 +598,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value.mt = flagMetaType();
-    prop->value.dptr = node.scene->create<Flag>(Flag{ QMetaEnum::fromType<T>(), quintptr(value) });
+    prop->value.dptr = node.scene->create<Flag>(Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) });
     node.properties.push_back(*prop);
 }
 
@@ -618,7 +618,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         prop->name = name;
         prop->call = node.scene->create<decltype(PropertyListSetter(setter))>(setter);
         prop->value.mt = listViewMetaType();
-        prop->value.dptr = node.scene->create<ListView>(ListView{ { QMetaType::fromType<T>(), data }, count });
+        prop->value.dptr = node.scene->create<ListView>(ListView{ { QMetaType::fromType<rm_cvref_t<T>>(), data }, count });
         node.properties.push_back(*prop);
     }
 }
@@ -644,7 +644,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     Property *prop = node.scene->create<Property>();
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertyProxySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<Value>();
+    prop->value.mt = QMetaType::fromType<rm_cvref_t<Value>>();
     if constexpr (std::is_pointer_v<rm_cvref_t<Value>>)
         prop->value.dptr = value;
     else
@@ -661,7 +661,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     Property *prop = node.scene->create<Property>();
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<ViewValue>();
+    prop->value.mt = QMetaType::fromType<rm_cvref_t<ViewValue>>();
     prop->value.dptr = node.scene->create<ViewValue>(std::move(view));
     node.properties.push_back(*prop);
 }
