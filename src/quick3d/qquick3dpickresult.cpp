@@ -26,13 +26,15 @@ QQuick3DPickResult::QQuick3DPickResult(QQuick3DModel *hitObject,
                                        const QVector2D &uvPosition,
                                        const QVector3D &scenePosition,
                                        const QVector3D &position,
-                                       const QVector3D &normal)
+                                       const QVector3D &normal,
+                                       int instanceIndex)
     : m_objectHit(hitObject)
     , m_distance(distanceFromCamera)
     , m_uvPosition(uvPosition)
     , m_scenePosition(scenePosition)
     , m_position(position)
     , m_normal(normal)
+    , m_instanceIndex(instanceIndex)
 {
 }
 
@@ -122,6 +124,20 @@ QVector3D QQuick3DPickResult::sceneNormal() const
         return QVector3D();
 
     return m_objectHit->mapDirectionToScene(m_normal);
+}
+
+
+/*!
+    \qmlproperty int PickResult::instanceIndex
+    \readonly
+    \since 6.5
+
+    This property holds the index in the instance table for the case
+    where the pick hit an instance of an instanced model.
+*/
+int QQuick3DPickResult::instanceIndex() const
+{
+    return m_instanceIndex;
 }
 
 QT_END_NAMESPACE

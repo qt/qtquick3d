@@ -34,6 +34,7 @@ struct QSSGRenderPickResult
     QVector3D m_faceNormal;
     // The subset index
     int m_subset = 0;
+    int m_instanceIndex = -1;
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderPickResult>::value);

@@ -1,4 +1,3 @@
-// Copyright (C) 2008-2012 NVIDIA Corporation.
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
@@ -45,6 +44,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRender
     void setHasTransparency( bool t) { transparency = t; }
     void setDepthSorting(bool enable) { depthSorting = enable; }
     bool isDepthSortingEnabled() { return depthSorting; }
+    QMatrix4x4 getTransform(int index) const;
 
 private:
     int instanceCount = 0;

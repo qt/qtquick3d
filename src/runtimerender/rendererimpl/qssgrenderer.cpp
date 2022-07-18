@@ -356,8 +356,6 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     if (!mesh)
         return;
 
-    const auto &globalTransform = model.globalTransform;
-    auto rayData = QSSGRenderRay::createRayData(globalTransform, inRay);
     const auto &subMeshes = mesh->subsets;
     QSSGBounds3 modelBounds;
     for (const auto &subMesh : subMeshes)
@@ -366,57 +364,71 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     if (modelBounds.isEmpty())
         return;
 
-    auto hit = QSSGRenderRay::intersectWithAABBv2(rayData, modelBounds);
+    const bool instancing = model.instancing(); // && instancePickingEnabled
+    int instanceCount = instancing ? model.instanceTable->count() : 1;
 
-    // If we don't intersect with the model at all, then there's no need to go furher down!
-    if (!hit.intersects())
-        return;
+    for (int instanceIndex = 0; instanceIndex < instanceCount; ++instanceIndex) {
 
-    // Check each submesh to find the closest intersection point
-    float minRayLength = std::numeric_limits<float>::max();
-    QSSGRenderRay::IntersectionResult intersectionResult;
-    QVector<QSSGRenderRay::IntersectionResult> results;
+        QMatrix4x4 modelTransform;
+        if (instancing) {
+            modelTransform = model.globalInstanceTransform * model.instanceTable->getTransform(instanceIndex) * model.localInstanceTransform;
+        } else {
+            modelTransform = model.globalTransform;
+        }
+        auto rayData = QSSGRenderRay::createRayData(modelTransform, inRay);
 
-    int subset = 0;
-    int resultSubset = 0;
-    for (const auto &subMesh : subMeshes) {
-        QSSGRenderRay::IntersectionResult result;
-        if (subMesh.bvhRoot) {
-            hit = QSSGRenderRay::intersectWithAABBv2(rayData, subMesh.bvhRoot->boundingData);
-            if (hit.intersects()) {
-                results.clear();
-                inRay.intersectWithBVH(rayData, subMesh.bvhRoot, mesh, results);
-                float subMeshMinRayLength = std::numeric_limits<float>::max();
-                for (const auto &subMeshResult : qAsConst(results)) {
-                    if (subMeshResult.rayLengthSquared < subMeshMinRayLength) {
-                        result = subMeshResult;
-                        subMeshMinRayLength = result.rayLengthSquared;
+        auto hit = QSSGRenderRay::intersectWithAABBv2(rayData, modelBounds);
+
+        // If we don't intersect with the model at all, then there's no need to go furher down!
+        if (!hit.intersects())
+            continue;
+
+        // Check each submesh to find the closest intersection point
+        float minRayLength = std::numeric_limits<float>::max();
+        QSSGRenderRay::IntersectionResult intersectionResult;
+        QVector<QSSGRenderRay::IntersectionResult> results;
+
+        int subset = 0;
+        int resultSubset = 0;
+        for (const auto &subMesh : subMeshes) {
+            QSSGRenderRay::IntersectionResult result;
+            if (subMesh.bvhRoot) {
+                hit = QSSGRenderRay::intersectWithAABBv2(rayData, subMesh.bvhRoot->boundingData);
+                if (hit.intersects()) {
+                    results.clear();
+                    inRay.intersectWithBVH(rayData, subMesh.bvhRoot, mesh, results);
+                    float subMeshMinRayLength = std::numeric_limits<float>::max();
+                    for (const auto &subMeshResult : qAsConst(results)) {
+                        if (subMeshResult.rayLengthSquared < subMeshMinRayLength) {
+                            result = subMeshResult;
+                            subMeshMinRayLength = result.rayLengthSquared;
+                        }
                     }
                 }
+            } else {
+                hit = QSSGRenderRay::intersectWithAABBv2(rayData, subMesh.bounds);
+                if (hit.intersects())
+                    result = QSSGRenderRay::createIntersectionResult(rayData, hit);
             }
-        } else {
-            hit = QSSGRenderRay::intersectWithAABBv2(rayData, subMesh.bounds);
-            if (hit.intersects())
-                result = QSSGRenderRay::createIntersectionResult(rayData, hit);
+            if (result.intersects && result.rayLengthSquared < minRayLength) {
+                intersectionResult = result;
+                minRayLength = intersectionResult.rayLengthSquared;
+                resultSubset = subset;
+            }
+            subset++;
         }
-        if (result.intersects && result.rayLengthSquared < minRayLength) {
-            intersectionResult = result;
-            minRayLength = intersectionResult.rayLengthSquared;
-            resultSubset = subset;
-        }
-        subset++;
+
+        if (intersectionResult.intersects)
+            outIntersectionResultList.push_back(QSSGRenderPickResult { &model,
+                                                                       intersectionResult.rayLengthSquared,
+                                                                       intersectionResult.relXY,
+                                                                       intersectionResult.scenePosition,
+                                                                       intersectionResult.localPosition,
+                                                                       intersectionResult.faceNormal,
+                                                                       resultSubset,
+                                                                       instanceIndex
+                                                });
     }
-
-    if (!intersectionResult.intersects)
-        return;
-
-    outIntersectionResultList.push_back(QSSGRenderPickResult { &model,
-                                                               intersectionResult.rayLengthSquared,
-                                                               intersectionResult.relXY,
-                                                               intersectionResult.scenePosition,
-                                                               intersectionResult.localPosition,
-                                                               intersectionResult.faceNormal,
-                                                               resultSubset });
 }
 
 void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSGRenderItem2D &item2D, QSSGRenderer::PickResultList &outIntersectionResultList)

@@ -52,4 +52,31 @@ View3D {
             }
         }
     }
+    InstanceList {
+        id: instanceList
+        instances: [
+            InstanceListEntry {
+                position: Qt.vector3d(-200, 0, 200)
+                color: "magenta"
+            },
+            InstanceListEntry {
+                position: Qt.vector3d(-25, 75, -100)
+                color: "blue"
+            },
+            InstanceListEntry {
+                position: Qt.vector3d(200, 0, 0)
+                color: "orange"
+            }
+        ]
+    }
+    Model {
+        id: instancedModel
+        objectName: "instancedModel"
+        source: "#Cube"
+        pickable: true
+        instancing: instanceList
+        materials: PrincipledMaterial {
+            baseColor: "white"
+        }
+    }
 }

@@ -158,4 +158,11 @@ Each model in a hierarchy still needs to specify the \c instancing property: in 
 }
 \endqml
 
+\section1 Picking and instancing
+
+\l{View3D::pick}{Picking} is a mechanism that enables selecting a model from a user interface
+interaction. With instanced rendering, there are several representations of the same model, so the
+pick result will include an \l {PickResult::instanceIndex}{instance index}. Instanced picking is
+enabled by setting the \l {Model::pickable}{pickable} property on the base model.
+
 */

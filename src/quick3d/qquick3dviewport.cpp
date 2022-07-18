@@ -1242,7 +1242,8 @@ QQuick3DPickResult QQuick3DViewport::processPickResult(const QSSGRenderPickResul
                               pickResult.m_localUVCoords,
                               pickResult.m_scenePosition,
                               pickResult.m_localPosition,
-                              pickResult.m_faceNormal);
+                              pickResult.m_faceNormal,
+                              pickResult.m_instanceIndex);
 }
 
 // Returns the first found scene manager of objects children

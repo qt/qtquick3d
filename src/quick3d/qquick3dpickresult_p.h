@@ -35,6 +35,7 @@ class Q_QUICK3D_EXPORT QQuick3DPickResult
     Q_PROPERTY(QVector3D position READ position CONSTANT)
     Q_PROPERTY(QVector3D normal READ normal CONSTANT)
     Q_PROPERTY(QVector3D sceneNormal READ sceneNormal CONSTANT)
+    Q_PROPERTY(int instanceIndex READ instanceIndex CONSTANT)
 
 public:
 
@@ -44,7 +45,8 @@ public:
                                 const QVector2D &uvPosition,
                                 const QVector3D &scenePosition,
                                 const QVector3D &position,
-                                const QVector3D &normal);
+                                const QVector3D &normal,
+                                int instanceIndex);
     QQuick3DModel *objectHit() const;
     float distance() const;
     QVector2D uvPosition() const;
@@ -52,6 +54,7 @@ public:
     QVector3D position() const;
     QVector3D normal() const;
     QVector3D sceneNormal() const;
+    int instanceIndex() const;
 
 private:
     QQuick3DModel *m_objectHit;
@@ -60,6 +63,7 @@ private:
     QVector3D m_scenePosition;
     QVector3D m_position;
     QVector3D m_normal;
+    int m_instanceIndex;
 };
 
 QT_END_NAMESPACE

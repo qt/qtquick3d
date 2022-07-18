@@ -56,6 +56,8 @@ void tst_Picking::test_object_picking()
     QVERIFY(model1);
     QQuick3DModel *model2 = view3d->findChild<QQuick3DModel *>(QStringLiteral("model2"));
     QVERIFY(model2);
+    QQuick3DModel *instancedModel = view3d->findChild<QQuick3DModel *>(QStringLiteral("instancedModel"));
+    QVERIFY(instancedModel);
     QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
     QVERIFY(item2d);
 
@@ -84,6 +86,11 @@ void tst_Picking::test_object_picking()
     // Just outside model2's upper right corner, so there should be no hit
     result = view3d->pick(301, 99);
     QCOMPARE(result.objectHit(), nullptr);
+
+    // Center of the third entry in the instance table
+    result = view3d->pick(350, 200);
+    QCOMPARE(result.objectHit(), instancedModel);
+    QCOMPARE(result.instanceIndex(), 2);
 
     // Enable the 2D item
     item2d->setEnabled(true);
@@ -117,6 +124,15 @@ void tst_Picking::test_object_picking()
     resultList = view3d->pickAll(251, 151);
     QCOMPARE(resultList.count(), 1);
     QCOMPARE(resultList[0].objectHit(), model2);
+
+    // The bottom right of the second entry in the instance table,
+    // overlapping model1 and model2
+    resultList = view3d->pickAll(225, 175);
+    QCOMPARE(resultList.count(), 3);
+    QCOMPARE(resultList[0].objectHit(), model1);
+    QCOMPARE(resultList[1].objectHit(), model2);
+    QCOMPARE(resultList[2].objectHit(), instancedModel);
+    QCOMPARE(resultList[2].instanceIndex(), 1);
 
     // Just outside model2's upper right corner, so there should be no hit
     resultList = view3d->pickAll(301, 99);

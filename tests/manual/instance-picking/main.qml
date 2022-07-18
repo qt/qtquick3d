@@ -24,33 +24,13 @@ Window {
         Node {
             PerspectiveCamera {
                 z: 1000
-                SequentialAnimation  on z {
-                    running: false
-                    loops: -1
-                    PauseAnimation {
-                        duration: 4000
-                    }
-                    NumberAnimation {
-                        from: 5000
-                        to: 0
-                        duration: 15000
-                    }
-                    PauseAnimation {
-                        duration: 300
-                    }
-                    NumberAnimation {
-                        from: 0
-                        to: 5000
-                        duration: 5000
-                    }
-                }
             }
 
             PropertyAnimation on eulerRotation.y {
                 from: 0
                 to: 360
-                running: false
-                duration: 17000
+                running: true
+                duration: 57000
                 loops: -1
             }
         }
@@ -67,36 +47,9 @@ Window {
             shadowFactor: 90
         }
 
-        InstanceList {
-            id: manualInstancing
-            instances: [
-                InstanceListEntry {
-                    position: Qt.vector3d(0, 0, 0)
-                    color: "green"
-                },
-                InstanceListEntry {
-                    position: Qt.vector3d(-300, 0, 200)
-                    color: "red"
-                    customData: Qt.vector4d(1.0, 0.0, 1.0, 1.0)
-                },
-                InstanceListEntry {
-                    position: Qt.vector3d(200, 200, 100)
-                    color: "blue"
-                    customData: Qt.vector4d(0.0, 0.3, 1.0, 1.0)
-                },
-                InstanceListEntry {
-                    position: Qt.vector3d(300, 0, 00)
-                    eulerRotation: Qt.vector3d(-10, 0, 30)
-                    color: "orange"
-                    customData: Qt.vector4d(0.0, 0.5, 1.0, 1.0)
-                }
-
-            ]
-        }
-
         RandomInstancing {
             id: randomWithData
-            instanceCount: 100
+            instanceCount: 1000
 
             position: InstanceRange {
                 from: Qt.vector3d(-500, -400, -500)
@@ -140,16 +93,24 @@ Window {
             source: "#Cube"
             instancing: randomWithData
 
-            materials: DefaultMaterial {
-                diffuseColor: "white"
+            materials: PrincipledMaterial {
+                baseColor: "white"
             }
+            PropertyAnimation on eulerRotation.x {
+                from: 0
+                to: 360
+                duration: 5000
+                loops: -1
+            }
+
+            pickable: true
 
             Model {
                 id: sphereModel
                 source: "#Sphere"
                 instancing: parent.instancing
                 instanceRoot: parent
-
+                pickable: true
                 property real scaleFactor: 0.5
                 scale: Qt.vector3d(scaleFactor, scaleFactor, scaleFactor);
                 position: Qt.vector3d(-50, -50, -50)
@@ -179,8 +140,8 @@ Window {
 //                scale: modelScale
 //                rotation: modelRotation
 //                materials: [
-//                DefaultMaterial {
-//                    diffuseColor: modelColor
+//                PrincipledMaterial {
+//                    baseColor: modelColor
 //                }
 //                ]
 //                opacity: 0.5
@@ -188,18 +149,20 @@ Window {
 //        }
 
 
-        InstanceRepeater {
-            instancingTable: randomWithData
-            Model {
-                id: delegate
-                source: "#Cube"
-                pickable: true
-                property int instanceIndex: index // used for indexLabel.text
-                property color instanceColor: modelColor
-                opacity: 0
-            }
-        }
+// The old way of doing things: using an InstanceRepeater
 
+//        InstanceRepeater {
+//            instancingTable: randomWithData
+//            Model {
+//                id: delegate
+//                source: "#Cube"
+//                pickable: true
+//                property int instanceIndex: index // used for indexLabel.text
+//                property color instanceColor: modelColor
+//                opacity: 0
+//            }
+//        }
+//
 
 
     } // View3D
@@ -210,7 +173,7 @@ Window {
 
         //! [mouse area]
 
-        onClicked: {
+        onClicked: (mouse) => {
             // Get screen coordinates of the click
             positionLabel.text = "(" + mouse.x + ", " + mouse.y + ")"
             //! [pick result]
@@ -220,14 +183,8 @@ Window {
             if (result.objectHit) {
                 var pickedObject = result.objectHit;
 
-
-                // Toggle the isPicked property for the model
-///////                pickedObject.isPicked = !pickedObject.isPicked;
-
-
-
                 // Get picked model index
-                indexLabel.text = pickedObject.instanceIndex
+                indexLabel.text = result.instanceIndex
                 // Get other pick specifics
                 uvPosition.text = "("
                         + result.uvPosition.x.toFixed(2) + ", "
@@ -241,7 +198,7 @@ Window {
                         + result.position.x.toFixed(2) + ", "
                         + result.position.y.toFixed(2) + ", "
                         + result.position.z.toFixed(2) + ")";
-                colorRect.color = pickedObject.instanceColor
+                colorRect.color =  (pickedObject === cubeModel) ? randomWithData.instanceColor(result.instanceIndex)  : "transparent"
                 //! [pick specifics]
             } else {
                 indexLabel.text = "None";
