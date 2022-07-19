@@ -102,10 +102,13 @@ struct HeightFieldVertex
 
 void HeightFieldGeometry::updateData()
 {
-    clear();
     const QQmlContext *context = qmlContext(this);
 
     const auto resolvedUrl = context ? context->resolvedUrl(m_heightMapSource) : m_heightMapSource;
+    if (!resolvedUrl.isValid())
+        return;
+
+    clear();
     const auto qmlSource = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
 
     QImage heightMap(qmlSource);
