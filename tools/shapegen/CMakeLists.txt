@@ -7,7 +7,7 @@ qt_internal_add_tool(${target_name}
     SOURCES
         shapemanager.cpp shapemanager.h
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::Qml

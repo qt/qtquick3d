@@ -17,7 +17,7 @@ qt_internal_add_tool(${target_name}
         main.cpp
         mainwindow.cpp mainwindow.h
         settingstab.cpp settingstab.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Concurrent
         Qt::Gui
         Qt::Quick3DAssetImportPrivate

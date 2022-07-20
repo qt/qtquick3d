@@ -14,7 +14,7 @@ qt_internal_add_tool(${target_name}
         genshaders.cpp genshaders.h
         main.cpp
         parser.cpp parser.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::Qml

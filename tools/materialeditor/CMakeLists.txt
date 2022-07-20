@@ -18,13 +18,12 @@ qt_internal_add_tool(${target_name}
         message.h message.cpp
         buildmessage.h buildmessage.cpp
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Quick
         Qt::Quick3D
         Qt::Quick3DUtils
-    LIBRARIES
         Qt::Quick3DGlslParserPrivate
         Qt::Quick3DAssetUtilsPrivate
         Qt::Quick3DRuntimeRenderPrivate

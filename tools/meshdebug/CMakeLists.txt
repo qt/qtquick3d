@@ -12,7 +12,7 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Quick3D # special case
     SOURCES
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml # special case
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
