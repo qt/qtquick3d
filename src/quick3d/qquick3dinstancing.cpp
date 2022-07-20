@@ -664,7 +664,7 @@ void QQuick3DInstanceListEntry::setScale(QVector3D scale)
 */
 void QQuick3DInstanceListEntry::setEulerRotation(QVector3D eulerRotation)
 {
-    if (m_eulerRotation == eulerRotation)
+    if (m_useEulerRotation && m_eulerRotation == eulerRotation)
         return;
     m_eulerRotation = eulerRotation;
     m_useEulerRotation = true;
@@ -679,7 +679,7 @@ void QQuick3DInstanceListEntry::setEulerRotation(QVector3D eulerRotation)
 */
 void QQuick3DInstanceListEntry::setRotation(QQuaternion rotation)
 {
-    if (m_rotation == rotation)
+    if (!m_useEulerRotation && m_rotation == rotation)
         return;
 
     m_rotation = rotation;
