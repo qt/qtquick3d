@@ -142,7 +142,6 @@ void InstanceModel::reset()
     m_instanceData.clear();
 }
 
-
 /*!
     \qmltype InstanceRepeater
     \inherits Repeater3D
@@ -151,15 +150,12 @@ void InstanceModel::reset()
     \brief Instantiates components based on an instance table.
 
     The InstanceRepeater type is used to create a number of objects based on an
-    \l Instancing table.  The primary use case is to implement \l {View3D::pick}{picking}.
-
-    Instances do not exist as individual objects in the scene graph, so they cannot be
-    discovered by picking, and they are not individual objects, so there is nothing that
-    can be returned from a picking API. The solution is to create invisible dummy objects
-    that match the rendered instances.
-
-    \c InstanceRepeater is a \l Repeater3D subtype that takes an \l Instancing table instead
+    \l Instancing table. It is a \l Repeater3D subtype that takes an Instancing table instead
     of a data model, and automatically applies \c position, \c scale, and \c rotation.
+
+    One use case is to implement \l {View3D::pick}{picking} by creating invisible dummy objects
+    that match the rendered instances. To improve performance, the dummy objects can be created with a
+    simpler geometry than the instanced models.
 
     For example:
     \qml
