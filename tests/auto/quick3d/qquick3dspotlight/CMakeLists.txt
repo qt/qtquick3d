@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquick3dspotlight
     SOURCES
         tst_qquick3dspotlight.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
 )

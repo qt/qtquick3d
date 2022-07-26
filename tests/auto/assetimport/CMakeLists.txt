@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquick3dassetimport
     SOURCES
         tst_assetimport.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick3DAssetImportPrivate
 )

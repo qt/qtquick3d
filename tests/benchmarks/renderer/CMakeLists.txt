@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquick3drenderer
     SOURCES
         tst_renderer.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
 )

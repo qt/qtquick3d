@@ -14,7 +14,7 @@ endif()
 qt_internal_add_test(tst_qquick3dshadercollection
     SOURCES
         tst_shadercollection.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::Quick3DUtilsPrivate

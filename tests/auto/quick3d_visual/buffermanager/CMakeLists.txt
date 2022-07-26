@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qquick3dbuffermanager
         gradienttexture.cpp gradienttexture.h
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate

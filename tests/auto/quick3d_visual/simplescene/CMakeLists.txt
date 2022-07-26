@@ -19,7 +19,7 @@ qt_internal_add_test(tst_qquick3dsimplescene
         tst_simplescene.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate

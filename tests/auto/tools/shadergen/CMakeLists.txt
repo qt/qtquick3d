@@ -13,7 +13,7 @@ qt_internal_add_test(tst_qquick3dshadergen # special case
         tst_shadergen.cpp
     INCLUDE_DIRECTORIES
         ../../../../tools/shadergen
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate

@@ -7,7 +7,7 @@ qt_internal_add_manual_test(manual_test_view3DDeleteTest
         main.cpp
     DEFINES
         QT_DEPRECATED_WARNINGS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
 )

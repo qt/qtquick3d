@@ -7,7 +7,7 @@ qt_internal_add_manual_test(manual_test_instancing
         main.cpp
         customgeometry.cpp customgeometry.h
         custominstancing.cpp custominstancing.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::Quick3D

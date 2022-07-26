@@ -16,7 +16,7 @@ qt_internal_add_test(tst_qquick3drendercontrol
         tst_rendercontrol.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate

@@ -5,7 +5,7 @@ qt_internal_add_manual_test(manual_test_unlit_lit
     GUI
     SOURCES
         rhitest.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::Quick3DPrivate

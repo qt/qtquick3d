@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquick3dintersection
     SOURCES
         tst_intersection.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick3DRuntimeRenderPrivate
 )
 

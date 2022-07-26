@@ -17,7 +17,7 @@ qt_internal_add_executable(qquick3d_qmlscenegrabber
         nonindextrianglestopology.cpp nonindextrianglestopology.h
         pointstopology.cpp pointstopology.h
         skingeometry.cpp skingeometry.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::Quick3DPrivate

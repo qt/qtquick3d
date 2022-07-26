@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquick3dinvasivelist
     SOURCES
         tst_invasivelist.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick3DUtilsPrivate
 )
 

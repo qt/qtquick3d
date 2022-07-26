@@ -21,7 +21,7 @@ qt_internal_add_test(tst_qquick3d
         QMAKESPEC=\\\"\\\"
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Network
     TESTDATA ${test_data}

@@ -6,7 +6,7 @@ qt_internal_add_manual_test(manual_test_vertexAttributes
     SOURCES
         main.cpp
         testgeometry.cpp testgeometry.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::Quick3D
