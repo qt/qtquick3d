@@ -194,10 +194,12 @@ static void sortParticles(QByteArray &result, QList<QSSGRhiSortData> &sortData,
     QVector3D dir = invModelMatrix.map(cameraDirection);
     QVector3D n = dir.normalized();
     const auto segments = buffer.segments();
-    auto particleCount = buffer.particleCount() / segments;
+    auto particleCount = buffer.particleCount();
+    const bool lineParticles = segments > 0;
+    if (lineParticles)
+        particleCount /= segments;
     sortData.resize(particleCount);
     sortData.fill({});
-    bool lineParticles = segments > 0;
 
     const auto srcParticlePointer = [](int line, int segment, int sc, int ss, int pps, const char *source) -> const QSSGLineParticle * {
         int pi = (line * sc + segment) / pps;
