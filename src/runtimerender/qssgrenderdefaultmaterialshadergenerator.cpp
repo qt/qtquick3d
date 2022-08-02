@@ -676,7 +676,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldNormal(inKey);
         vertexShader.generateWorldPosition(inKey);
 
-        if (hasCustomFrag || includeSSAOVars || specularLightingEnabled || hasIblProbe || enableBumpNormal || enableClearcoat) {
+        const bool usingDefaultMaterialSpecularGGX = !(materialAdapter->isPrincipled() || materialAdapter->isSpecularGlossy()) && materialAdapter->specularModel() == QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
+
+        if (hasCustomFrag || enableParallaxMapping || clearcoatNormalImage || enableBumpNormal || usingDefaultMaterialSpecularGGX) {
             bool genTangent = false;
             bool genBinormal = false;
             vertexShader.generateVarTangentAndBinormal(inKey, genTangent, genBinormal);
@@ -934,7 +936,9 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         }
 
         fragmentShader.append("    vec3 global_specular_light = vec3(0.0);");
-        fragmentShader.append("    float qt_shadow_map_occl = 1.0;");
+
+        if (!lights.isEmpty() || hasCustomFrag)
+            fragmentShader.append("    float qt_shadow_map_occl = 1.0;");
 
         // Fragment lighting means we can perhaps attenuate the specular amount by a texture
         // lookup.
@@ -973,7 +977,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    float qt_translucent_thickness_exp = exp(qt_translucent_thickness * qt_material_properties2.z);\n";
         }
 
-        fragmentShader.append("    float qt_lightAttenuation = 1.0;");
+        if (!lights.isEmpty() || hasCustomFrag)
+            addLocalVariable(fragmentShader, "qt_lightAttenuation", "float");
 
         addLocalVariable(fragmentShader, "qt_aoFactor", "float");
 
@@ -1103,18 +1108,22 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         if (specularLightingEnabled) {
             if (materialAdapter->isPrincipled() || materialAdapter->isSpecularGlossy()) {
                 fragmentShader.addInclude("principledMaterialFresnel.glsllib");
+                const bool useF90 = !lights.isEmpty() || enableTransmission;
                 addLocalVariable(fragmentShader, "qt_f0", "vec3");
-                addLocalVariable(fragmentShader, "qt_f90", "vec3");
+                if (useF90)
+                    addLocalVariable(fragmentShader, "qt_f90", "vec3");
                 if (materialAdapter->isPrincipled()) {
                     fragmentShader << "    qt_f0 = qt_F0_ior(qt_material_specular.w, qt_metalnessAmount, qt_diffuseColor.rgb);\n";
-                    fragmentShader << "    qt_f90 = vec3(1.0);\n";
+                    if (useF90)
+                        fragmentShader << "    qt_f90 = vec3(1.0);\n";
                 } else {
                     addLocalVariable(fragmentShader, "qt_reflectance", "float");
 
                     fragmentShader << "    qt_reflectance = max(max(qt_specularTint.r, qt_specularTint.g), qt_specularTint.b);\n";
                     fragmentShader << "    qt_f0 = qt_specularTint;\n";
                     fragmentShader << "    qt_specularTint = vec3(1.0);\n";
-                    fragmentShader << "    qt_f90 = vec3(clamp(qt_reflectance * 50.0, 0.0, 1.0));\n";
+                    if (useF90)
+                        fragmentShader << "    qt_f90 = vec3(clamp(qt_reflectance * 50.0, 0.0, 1.0));\n";
                     fragmentShader << "    qt_diffuseColor.rgb *= (1 - qt_reflectance);\n";
                 }
 
