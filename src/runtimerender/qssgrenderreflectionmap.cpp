@@ -511,7 +511,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
         const float roughness = 0.0f; // doesn't matter for irradiance
         const float lodBias = 0.0f;
         const int distribution = 0;
-        const int sampleCount = prefilterSampleCount;
+        const int sampleCount = resolution / 4;
 
         rub->updateDynamicBuffer(m_irradianceFragBuffer, 0, 4, &roughness);
         rub->updateDynamicBuffer(m_irradianceFragBuffer, 4, 4, &resolution);
