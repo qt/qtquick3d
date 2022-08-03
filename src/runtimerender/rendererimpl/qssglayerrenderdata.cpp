@@ -4078,6 +4078,12 @@ static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         quint32 instances = 1;
         if ( subsetRenderable.modelContext.model.instancing()) {
             instances = subsetRenderable.modelContext.model.instanceCount();
+            // If the instance count is 0, the bail out before trying to do any
+            // draw calls. Making an instanced draw call with a count of 0 is invalid
+            // for Metal and likely other API's as well.
+            // It is possible that the particale system may produce 0 instances here
+            if (instances == 0)
+                return;
             vertexBuffers[1] = QRhiCommandBuffer::VertexInput(subsetRenderable.instanceBuffer, 0);
             vertexBufferCount = 2;
         }
