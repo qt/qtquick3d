@@ -3997,8 +3997,6 @@ void QSSGLayerRenderData::rhiPrepare()
             const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
             item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
             item2D->m_renderer->setDeviceRect(deviceRect);
-            item2D->m_renderer->setRenderTarget(renderTarget);
-            item2D->m_renderer->setCommandBuffer(rhiCtx->commandBuffer());
             QRhiRenderPassDescriptor *oldRp = nullptr;
             if (item2D->m_rp) {
                 // Changing render target, and so incompatible renderpass
@@ -4013,7 +4011,7 @@ void QSSGLayerRenderData::rhiPrepare()
                 item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
                 Q_ASSERT(item2D->m_rp);
             }
-            item2D->m_renderer->setRenderPassDescriptor(item2D->m_rp);
+            item2D->m_renderer->setRenderTarget({ renderTarget, item2D->m_rp, rhiCtx->commandBuffer() });
             delete oldRp;
             item2D->m_renderer->prepareSceneInline();
         }
