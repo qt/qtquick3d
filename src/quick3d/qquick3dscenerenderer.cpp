@@ -1128,6 +1128,17 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         rhiCtx->setMainPassSampleCount(sampleCount);
     }
 }
+
+// The alternative to queryMainRenderPassDescriptorAndCommandBuffer()
+// specifically for the Inline render mode when there is a QSGRenderNode.
+inline void queryInlineRenderPassDescriptorAndCommandBuffer(QSGRenderNode *node, QSSGRhiContext *rhiCtx)
+{
+    QSGRenderNodePrivate *d = QSGRenderNodePrivate::get(node);
+    rhiCtx->setMainRenderPassDescriptor(d->m_rt.rpDesc);
+    rhiCtx->setCommandBuffer(d->m_rt.cb);
+    rhiCtx->setRenderTarget(d->m_rt.rt);
+    rhiCtx->setMainPassSampleCount(d->m_rt.rt->sampleCount());
+}
 }
 
 QQuick3DSGRenderNode::~QQuick3DSGRenderNode()
@@ -1137,12 +1148,14 @@ QQuick3DSGRenderNode::~QQuick3DSGRenderNode()
 
 void QQuick3DSGRenderNode::prepare()
 {
+    // this is outside the main renderpass
+
     if (!renderer->m_sgContext->rhiContext()->isValid())
         return;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
-    // this is outside the main renderpass
-    queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
+    queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().data());
+
     qreal dpr = window->devicePixelRatio();
     const QSizeF itemSize = renderer->surfaceSize() / dpr;
     QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
@@ -1160,7 +1173,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     if (renderer->m_sgContext->rhiContext()->isValid()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
 
-        queryMainRenderPassDescriptorAndCommandBuffer(window, renderer->m_sgContext->rhiContext().data());
+        queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().data());
+
         renderer->rhiRender();
         renderer->endFrame();
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
