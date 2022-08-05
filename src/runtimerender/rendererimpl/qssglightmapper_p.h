@@ -57,7 +57,9 @@ public:
     static QString lightmapAssetPathForSave(LightmapAsset asset);
 
 private:
+#ifdef QT_QUICK3D_HAS_LIGHTMAPPER
     QSSGLightmapperPrivate *d = nullptr;
+#endif
 };
 
 QT_END_NAMESPACE
