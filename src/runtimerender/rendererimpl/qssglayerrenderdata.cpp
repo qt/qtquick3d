@@ -1434,14 +1434,18 @@ void QSSGLayerRenderData::prepareForRender()
                     wasDataDirty = true;
 
                 lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
+                if (lightProbeTexture.m_texture) {
 
-                features.set(QSSGShaderFeatures::Feature::LightProbe, true);
-                features.set(QSSGShaderFeatures::Feature::IblOrientation, !layer.probeOrientation.isIdentity());
+                    features.set(QSSGShaderFeatures::Feature::LightProbe, true);
+                    features.set(QSSGShaderFeatures::Feature::IblOrientation, !layer.probeOrientation.isIdentity());
 
-                // By this point we will know what the actual texture format of the light probe is
-                // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
-                if (lightProbeTexture.m_flags.isRgbe8())
-                    features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
+                    // By this point we will know what the actual texture format of the light probe is
+                    // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
+                    if (lightProbeTexture.m_flags.isRgbe8())
+                        features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
+                } else {
+                    layer.lightProbe = nullptr;
+                }
             }
 
             // Do not just clear() renderableNodes and friends. Rather, reuse
