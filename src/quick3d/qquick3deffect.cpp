@@ -882,6 +882,11 @@ void QQuick3DEffect::onTextureDirty()
     markDirty(Dirty::TextureDirty);
 }
 
+void QQuick3DEffect::onPassDirty()
+{
+    markDirty(Dirty::EffectChainDirty);
+}
+
 void QQuick3DEffect::effectChainDirty()
 {
     markDirty(Dirty::EffectChainDirty);
@@ -923,6 +928,8 @@ void QQuick3DEffect::qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPas
 
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
     that->m_passes.push_back(pass);
+
+    connect(pass, &QQuick3DShaderUtilsRenderPass::changed, that, &QQuick3DEffect::onPassDirty);
 }
 
 QQuick3DShaderUtilsRenderPass *QQuick3DEffect::qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, qsizetype index)
@@ -940,6 +947,10 @@ qsizetype QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRende
 void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
+
+    for (QQuick3DShaderUtilsRenderPass *pass : that->m_passes)
+        pass->disconnect(that);
+
     that->m_passes.clear();
 }
 

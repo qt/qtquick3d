@@ -6,6 +6,7 @@ import QtQuick3D
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D.Effects
+import Qt.labs.platform
 
 Window {
     visible: true
@@ -849,6 +850,46 @@ Window {
                     text: "FXAA effect"
                     effect : Fxaa {}
                 }
+
+                EffectBox {
+                    id: customFileBox
+                    text: "Load from file"
+                    effect: FileEffect {
+                        id: fileEffect
+                        vertexShaderFile: "default.vert"
+                        fragmentShaderFile: "default.frag"
+                    }
+                    FileDialog {
+                        id: vertexShaderFileDialog
+                        nameFilters: ["Vertex shader files (*.vert)", "All files (*)"]
+                        acceptLabel: "Use this vertex shader"
+                        onAccepted: fileEffect.vertexShaderFile = file
+                    }
+                    FileDialog {
+                        id: fragmentShaderFileDialog
+                        nameFilters: ["Fragment shader files (*.frag)", "All files (*)"]
+                        acceptLabel: "Use this fragment shader"
+                        onAccepted: fileEffect.fragmentShaderFile = file
+                    }
+                }
+                SettingsGroup {
+                    visible: customFileBox.checked
+                    Label {
+                        text: "Vertex shader: " + fileEffect.vertexShaderFile
+                    }
+                    Button {
+                        text: "Change vertex shader"
+                        onClicked: vertexShaderFileDialog.open()
+                    }
+                    Label {
+                        text: "Fragment shader: " + fileEffect.fragmentShaderFile
+                    }
+                    Button {
+                        text: "Change fragment shader"
+                        onClicked: fragmentShaderFileDialog.open()
+                    }
+                }
+
 
                 ColumnLayout {
                     id: antialiasingSettings

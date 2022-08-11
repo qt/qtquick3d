@@ -245,13 +245,16 @@ public:
     QQuick3DShaderUtilsBuffer *outputBuffer = nullptr;
     QQmlListProperty<QQuick3DShaderUtilsShader> shaders();
     QVarLengthArray<QQuick3DShaderUtilsShader *, 2> m_shaders;
+
+Q_SIGNALS:
+    void changed();
 };
 
 class Q_QUICK3D_EXPORT QQuick3DShaderUtilsShader : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl shader MEMBER shader)
-    Q_PROPERTY(Stage stage MEMBER stage)
+    Q_PROPERTY(QUrl shader MEMBER shader NOTIFY shaderChanged)
+    Q_PROPERTY(Stage stage MEMBER stage NOTIFY stageChanged)
 
     QML_NAMED_ELEMENT(Shader)
 
@@ -267,6 +270,10 @@ public:
 
     QUrl shader;
     Stage stage = Stage::Fragment;
+
+Q_SIGNALS:
+    void shaderChanged();
+    void stageChanged();
 };
 
 QT_END_NAMESPACE

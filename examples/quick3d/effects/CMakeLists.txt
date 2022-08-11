@@ -38,11 +38,14 @@ qt_add_qml_module(effects
         EffectBox.qml
         EffectColor.qml
         EffectSlider.qml
+        FileEffect.qml
         SettingsGroup.qml
         main.qml
     RESOURCES
         cork.jpg
         texture.png
+        default.vert
+        default.frag
     NO_RESOURCE_TARGET_PATH
 )
 

@@ -57,6 +57,8 @@ protected:
 private Q_SLOTS:
     void onPropertyDirty();
     void onTextureDirty();
+    void onPassDirty();
+
 private:
     friend class QQuick3DShaderUtilsTextureInput;
     friend class QQuick3DSceneRenderer;
