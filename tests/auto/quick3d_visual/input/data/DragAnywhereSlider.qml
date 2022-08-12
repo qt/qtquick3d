@@ -38,6 +38,7 @@ Item {
 
     DragHandler {
         id: dragHandler
+        objectName: root.objectName + " draghandler"
         target: knob
         xAxis.enabled: false
         yAxis.minimum: slot.y
