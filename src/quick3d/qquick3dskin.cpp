@@ -59,6 +59,9 @@ QQuick3DSkin::~QQuick3DSkin()
     The order in the list becomes the index of the joint, which is used in the
     \c SkinSemantic \l {QQuick3DGeometry::addAttribute}{custom geometry attribute}.
 
+    \note A value 'undefined' will be ignored and if a node which doesn't exist is
+    described, the result is unpredictable.
+
     \sa {QQuick3DGeometry::addAttribute}, {Qt Quick 3D - Simple Skinning Example}
 */
 QQmlListProperty<QQuick3DNode> QQuick3DSkin::joints()
