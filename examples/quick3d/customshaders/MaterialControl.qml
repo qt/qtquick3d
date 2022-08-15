@@ -129,8 +129,10 @@ Rectangle {
                 property bool checkBoxSet: false
                 sourceComponent: propertyCheckBox
             }
+            Layout.rightMargin: texControl.checkBoxSet ? 0 : texControl2.width + 10
             Loader {
                 id: texControl2
+                visible: texControl.checkBoxSet
                 property string checkBoxText: "Texture with Item"
                 property bool checkBoxSet: false
                 sourceComponent: propertyCheckBox
