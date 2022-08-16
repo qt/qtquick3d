@@ -72,53 +72,50 @@ bool QSSGRenderNode::calculateGlobalVariables()
     bool retval = isDirty(DirtyFlag::GlobalValuesDirty);
     if (retval) {
         globalOpacity = localOpacity;
+        globalTransform = localTransform;
+
         if (parent) {
-            // Layer transforms do not flow down but affect the final layer's rendered
-            // representation.
             retval = parent->calculateGlobalVariables() || retval;
-            if (parent->type != QSSGRenderGraphObject::Type::Layer) {
-                globalOpacity *= parent->globalOpacity;
-                globalTransform = parent->globalTransform * localTransform;
-            } else {
-                globalTransform = localTransform;
-            }
-            if (this == instanceRoot) {
-                globalInstanceTransform = parent->globalTransform;
-                localInstanceTransform = localTransform;
-            } else if (instanceRoot) {
-                globalInstanceTransform = instanceRoot->globalInstanceTransform;
-                //### technically O(n^2) -- we could cache localInstanceTransform if every node in the
-                // tree is guaranteed to have the same instance root. That would require an API change.
-                localInstanceTransform = localTransform;
-                auto *p = parent;
-                while (p) {
-                    if (p == instanceRoot) {
-                        localInstanceTransform = p->localInstanceTransform * localInstanceTransform;
-                        break;
-                    }
-                    localInstanceTransform = p->localTransform * localInstanceTransform;
-                    p = p->parent;
-                }
-            } else {
-                // By default, we do magic: translation is applied to the global instance transform,
-                // while scale/rotation is local
-
-                localInstanceTransform = localTransform;
-                auto &localInstanceMatrix =  *reinterpret_cast<float (*)[4][4]>(localInstanceTransform.data());
-                QVector3D localPos{localInstanceMatrix[3][0], localInstanceMatrix[3][1], localInstanceMatrix[3][2]};
-                localInstanceMatrix[3][0] = 0;
-                localInstanceMatrix[3][1] = 0;
-                localInstanceMatrix[3][2] = 0;
-                globalInstanceTransform = parent->globalTransform;
-                globalInstanceTransform.translate(localPos);
-            }
-
             const bool globallyActive = getLocalState(LocalState::Active) && parent->getGlobalState(GlobalState::Active);
             flags = globallyActive ? (flags | FlagT(GlobalState::Active)) : (flags & ~FlagT(GlobalState::Active));
             const bool globallyPickable = getLocalState(LocalState::Pickable) && parent->getGlobalState(GlobalState::Pickable);
             flags = globallyPickable ? (flags | FlagT(GlobalState::Pickable)) : (flags & ~FlagT(GlobalState::Pickable));
+            globalOpacity *= parent->globalOpacity;
+            // Skip calculating the transform for non-active nodes
+            if (globallyActive && parent->type != QSSGRenderGraphObject::Type::Layer) {
+                globalTransform = parent->globalTransform * localTransform;
+                if (this == instanceRoot) {
+                    globalInstanceTransform = parent->globalTransform;
+                    localInstanceTransform = localTransform;
+                } else if (instanceRoot) {
+                    globalInstanceTransform = instanceRoot->globalInstanceTransform;
+                    //### technically O(n^2) -- we could cache localInstanceTransform if every node in the
+                    // tree is guaranteed to have the same instance root. That would require an API change.
+                    localInstanceTransform = localTransform;
+                    auto *p = parent;
+                    while (p) {
+                        if (p == instanceRoot) {
+                            localInstanceTransform = p->localInstanceTransform * localInstanceTransform;
+                            break;
+                        }
+                        localInstanceTransform = p->localTransform * localInstanceTransform;
+                        p = p->parent;
+                    }
+                } else {
+                    // By default, we do magic: translation is applied to the global instance transform,
+                    // while scale/rotation is local
+
+                    localInstanceTransform = localTransform;
+                    auto &localInstanceMatrix =  *reinterpret_cast<float (*)[4][4]>(localInstanceTransform.data());
+                    QVector3D localPos{localInstanceMatrix[3][0], localInstanceMatrix[3][1], localInstanceMatrix[3][2]};
+                    localInstanceMatrix[3][0] = 0;
+                    localInstanceMatrix[3][1] = 0;
+                    localInstanceMatrix[3][2] = 0;
+                    globalInstanceTransform = parent->globalTransform;
+                    globalInstanceTransform.translate(localPos);
+                }
+            }
         } else {
-            globalTransform = localTransform;
             const bool globallyActive = getLocalState(LocalState::Active);
             flags = globallyActive ? (flags | FlagT(GlobalState::Active)) : (flags & ~FlagT(GlobalState::Active));
             const bool globallyPickable = getLocalState(LocalState::Pickable);
