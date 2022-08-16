@@ -115,29 +115,33 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     int &ioReflectionProbeCount,
                                     quint32 &ioDFSIndex)
 {
-    ++ioDFSIndex;
-    inNode.dfsIndex = ioDFSIndex;
-    if (QSSGRenderGraphObject::isRenderable(inNode.type)) {
-        collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
-    } else if (QSSGRenderGraphObject::isCamera(inNode.type)) {
-        collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
-    } else if (QSSGRenderGraphObject::isLight(inNode.type)) {
-        collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
-    } else if (inNode.type == QSSGRenderGraphObject::Type::ReflectionProbe) {
-        collectNode(static_cast<QSSGRenderReflectionProbe *>(&inNode), outReflectionProbes, ioReflectionProbeCount);
-    }
+    if (inNode.isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty))
+        inNode.calculateGlobalVariables();
+    if (inNode.getGlobalState(QSSGRenderNode::GlobalState::Active)) {
+        ++ioDFSIndex;
+        inNode.dfsIndex = ioDFSIndex;
+        if (QSSGRenderGraphObject::isRenderable(inNode.type)) {
+            collectNode(QSSGRenderableNodeEntry(inNode), outRenderables, ioRenderableCount);
+        } else if (QSSGRenderGraphObject::isCamera(inNode.type)) {
+            collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
+        } else if (QSSGRenderGraphObject::isLight(inNode.type)) {
+            collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
+        } else if (inNode.type == QSSGRenderGraphObject::Type::ReflectionProbe) {
+            collectNode(static_cast<QSSGRenderReflectionProbe *>(&inNode), outReflectionProbes, ioReflectionProbeCount);
+        }
 
-    for (auto &theChild : inNode.children)
-        maybeQueueNodeForRender(theChild,
-                                outRenderables,
-                                ioRenderableCount,
-                                outCameras,
-                                ioCameraCount,
-                                outLights,
-                                ioLightCount,
-                                outReflectionProbes,
-                                ioReflectionProbeCount,
-                                ioDFSIndex);
+        for (auto &theChild : inNode.children)
+            maybeQueueNodeForRender(theChild,
+                                    outRenderables,
+                                    ioRenderableCount,
+                                    outCameras,
+                                    ioCameraCount,
+                                    outLights,
+                                    ioLightCount,
+                                    outReflectionProbes,
+                                    ioReflectionProbeCount,
+                                    ioDFSIndex);
+    }
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
