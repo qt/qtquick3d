@@ -1,0 +1,31 @@
+{
+    "Material": {
+        "Base":           ["lightProbe", "cullMode", "depthDrawMode"]
+    },
+    "DefaultMaterial": {
+        "Base":           ["lighting", "blendMode", "vertexColorsEnabled", "pointSize", "lineWidth"],
+        "Diffuse":        ["diffuseColor", "diffuseMap"],
+        "Emissive":       ["emissiveFactor.x", "emissiveFactor.y", "emissiveFactor.z", "emissiveMap"],
+        "Specular":       ["specularTint", "specularAmount", "specularMap", "specularModel", "specularReflectionMap", "indexOfRefraction", "fresnelPower", "specularRoughness", "roughnessMap", "roughnessChannel"],
+        "Opacity":        ["opacity", "opacityMap", "opacityChannel"],
+        "Bump / Normal":  ["bumpAmount", "bumpMap", "normalMap"],
+        "Translucency":   ["translucentFalloff", "diffuseLightWrap", "translucencyMap", "translucencyChannel"]
+    },
+    "PrincipledMaterial": {
+        "Base":           ["alphaMode", "alphaCutoff", "blendMode", "lighting", "pointSize", "lineWidth"],
+        "Metalness":      ["metalness", "metalnessMap", "metalnessChannel"],
+        "Normal":         ["normalMap", "normalStrength"],
+        "Occlusion":      ["occlusionAmount", "occlusionMap", "occlusionChannel"],
+        "Opacity":        ["opacity", "opacityMap", "opacityChannel"],
+        "Roughness":      ["roughness", "roughnessMap", "roughnessChannel"],
+        "Height":         ["heightMap", "heightChannel", "heightAmount", "minHeightMapSamples", "maxHeightMapSamples"],
+        "Clearcoat":      ["clearcoatAmount", "clearcoatMap", "clearcoatChannel", "clearcoatRoughnessAmount", "clearcoatRoughnessMap", "clearcoatRoughnessChannel", "clearcoatNormalMap"],
+        "Transmission":   ["transmissionFactor", "transmissionMap", "transmissionChannel"],
+        "Specular":       ["specularAmount", "specularMap", "specularReflectionMap", "specularTint"],
+        "Base Color":     ["baseColor", "baseColorMap"],
+        "Emissive":       ["emissiveMap", "emissiveFactor.x", "emissiveFactor.y", "emissiveFactor.z"]
+    },
+    "CustomMaterial": {
+        "Base":           ["shadingMode", "vertexShader", "fragmentShader", "sourceBlend", "destinationBlend", "alwaysDirty", "lineWidth"]
+    }
+}
