@@ -115,23 +115,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QSSGRenderLayer::Background background;
     QVector3D clearColor;
 
-    // TODO: pack
-    HorizontalField horizontalFieldValues;
-    float m_left;
-    UnitType leftUnits;
-    float m_width;
-    UnitType widthUnits;
-    float m_right;
-    UnitType rightUnits;
-
-    VerticalField verticalFieldValues;
-    float m_top;
-    UnitType topUnits;
-    float m_height;
-    UnitType heightUnits;
-    float m_bottom;
-    UnitType bottomUnits;
-
     // Ambient occlusion
     float aoStrength;
     float aoDistance;

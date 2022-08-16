@@ -954,11 +954,6 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
                                       float(environment->clearColor().greenF()),
                                       float(environment->clearColor().blueF()));
 
-    layerNode.m_width = 100.f;
-    layerNode.m_height = 100.f;
-    layerNode.widthUnits = QSSGRenderLayer::UnitType::Percent;
-    layerNode.heightUnits = QSSGRenderLayer::UnitType::Percent;
-
     layerNode.aoStrength = environment->aoStrength();
     layerNode.aoDistance = environment->aoDistance();
     layerNode.aoSoftness = environment->aoSoftness();
