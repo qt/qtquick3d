@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,25 +40,44 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Source")
                 tooltip: qsTr("Source blending for a pass.")
             }
-            ComboBox {
-                scope: "Blending"
-                model: ["Unknown", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor", "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha", "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor", "ConstantAlpha", "OneMinusConstantAlpha", "SrcAlphaSaturate"]
-                backendValue: backendValues.srcBlending
-                Layout.fillWidth: true
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Blending"
+                    model: ["Unknown", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor",
+                            "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha",
+                            "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor",
+                            "ConstantAlpha", "OneMinusConstantAlpha", "SrcAlphaSaturate"]
+                    backendValue: backendValues.srcBlending
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Destination")
                 tooltip: qsTr("Destination blending for a pass.")
             }
-            ComboBox {
-                scope: "Blending"
-                model: ["Unknown", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor", "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha", "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor", "ConstantAlpha", "OneMinusConstantAlpha"]
-                backendValue: backendValues.destBlending
-                Layout.fillWidth: true
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Blending"
+                    model: ["Unknown", "Zero", "One", "SrcColor", "OneMinusSrcColor", "DstColor",
+                            "OneMinusDstColor", "SrcAlpha", "OneMinusSrcAlpha", "DstAlpha",
+                            "OneMinusDstAlpha", "ConstantColor", "OneMinusConstantColor",
+                            "ConstantAlpha", "OneMinusConstantAlpha"]
+                    backendValue: backendValues.destBlending
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
             }
         }
     }

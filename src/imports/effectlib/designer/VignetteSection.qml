@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,23 +40,29 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Strength")
                 tooltip: qsTr("Set the vignette strength.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 15
                     minimumValue: 0
                     decimals: 2
                     backendValue: backendValues.vignetteStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Radius")
                 tooltip: qsTr("Set the vignette radius.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 5
@@ -63,21 +70,20 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.vignetteRadius
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-            }
-        }
-    }
 
-    Section {
-        caption: qsTr("Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Vignette Color")
-            backendValue: backendValues.vignetteColor
-            supportGradient: false
-            isVector3D: true
-            Layout.fillWidth: true
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel { text: qsTr("Vignette Color") }
+
+            ColorEditor {
+                backendValue: backendValues.vignetteColor
+                supportGradient: false
+                isVector3D: true
+            }
         }
     }
 }

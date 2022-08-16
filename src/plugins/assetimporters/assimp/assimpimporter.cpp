@@ -554,7 +554,7 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
 
     // Decompose Transform Matrix to get properties
     aiVector3D scaling;
-    aiVector3D rotation;
+    aiQuaternion rotation;
     aiVector3D translation;
     transformMatrix.Decompose(scaling, rotation, translation);
 
@@ -564,9 +564,8 @@ void AssimpImporter::generateNodeProperties(aiNode *node, QTextStream &output, i
     QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("z"), translation.z);
 
     // rotation
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("eulerRotation.x"), qRadiansToDegrees(rotation.x));
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("eulerRotation.y"), qRadiansToDegrees(rotation.y));
-    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("eulerRotation.z"), qRadiansToDegrees(rotation.z));
+    QQuaternion rot(rotation.w, rotation.x, rotation.y, rotation.z);
+    QSSGQmlUtilities::writeQmlPropertyHelper(output, tabLevel, QSSGQmlUtilities::PropertyMap::Node, QStringLiteral("rotation"), rot);
 
     // scale
     if (!skipScaling) {
@@ -1338,7 +1337,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
             aiNodeAnim *nodeAnim = itr.value();
             generateKeyframes(id, "position", nodeAnim->mNumPositionKeys, nodeAnim->mPositionKeys,
                               keyframeStream, endFrameTime);
-            generateKeyframes(id, "eulerRotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
+            generateKeyframes(id, "rotation", nodeAnim->mNumRotationKeys, nodeAnim->mRotationKeys,
                               keyframeStream, endFrameTime);
             generateKeyframes(id, "scale", nodeAnim->mNumScalingKeys, nodeAnim->mScalingKeys,
                               keyframeStream, endFrameTime);
@@ -1367,14 +1366,14 @@ void AssimpImporter::processAnimations(QTextStream &output)
 
 namespace {
 
-QVector3D convertToQVector3D(const aiVector3D &vec)
+QString convertToQString(const aiVector3D &vec)
 {
-    return QVector3D(vec.x, vec.y, vec.z);
+    return QString("Qt.vector3d(%1, %2, %3)").arg(vec.x, vec.y, vec.z);
 }
 
-QVector3D convertToQVector3D(const aiQuaternion &q)
+QString convertToQString(const aiQuaternion &q)
 {
-    return QQuaternion(q.w, q.x, q.y, q.z).toEulerAngles();
+    return QString("Qt.quaternion(%1, %2, %3, %4)").arg(q.w, q.x, q.y, q.z);
 }
 
 }
@@ -1389,37 +1388,25 @@ void AssimpImporter::generateKeyframes(const QString &id, const QString &propert
     output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("property: \"") << propertyName << QStringLiteral("\"\n");
     output << QStringLiteral("\n");
 
-    struct Keyframe {
-        qreal time;
-        QVector3D value;
-    };
-
-    // First, convert all the keyframe values to QVector3D
-    // so that adjacent keyframes can be compared with qFuzzyCompare.
-    QList<Keyframe> keyframes;
+    QList<T> keyframes;
     for (uint i = 0; i < numKeys; ++i) {
-        T key = keys[i];
-        Keyframe keyframe = {key.mTime, convertToQVector3D(key.mValue)};
-        keyframes.push_back(keyframe);
-        if (i == numKeys-1)
-            maxKeyframeTime = qMax(maxKeyframeTime, keyframe.time);
+        if (i > 0 && i < numKeys - 1
+           && (keys[i].mValue == keys[i-1].mValue)
+           && (keys[i].mValue == keys[i+1].mValue))
+            continue;
+
+        keyframes.push_back(keys[i]);
     }
+
+    if (numKeys > 0)
+        maxKeyframeTime = qMax(maxKeyframeTime, keys[numKeys - 1].mTime);
 
     // Output all the Keyframes except similar ones.
     for (int i = 0; i < keyframes.size(); ++i) {
-        const Keyframe &keyframe = keyframes[i];
-        // Skip keyframes if those are very similar to adjacent ones.
-        if (i > 0 && i < keyframes.size()-1
-           && qFuzzyCompare(keyframe.value, keyframes[i-1].value)
-           && qFuzzyCompare(keyframe.value, keyframes[i+1].value)) {
-            keyframes.removeAt(i--);
-            continue;
-        }
-
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("Keyframe {\n");
-        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("frame: ") << keyframe.time << QStringLiteral("\n");
+        output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("frame: ") << keyframes[i].mTime << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(4) << QStringLiteral("value: ")
-               << QSSGQmlUtilities::variantToQml(keyframe.value) << QStringLiteral("\n");
+               << convertToQString(keyframes[i].mValue) << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(3) << QStringLiteral("}\n");
     }
     output << QSSGQmlUtilities::insertTabs(2) << QStringLiteral("}\n");

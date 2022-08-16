@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,10 +40,11 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Shoulder Slope")
                 tooltip: qsTr("Set the slope of the curve shoulder.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 3
@@ -50,13 +52,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.shoulderSlope
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Shoulder Emphasis")
                 tooltip: qsTr("Set the emphasis of the curve shoulder.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -64,13 +71,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.shoulderEmphasis
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Toe Slope")
                 tooltip: qsTr("Set the slope of the curve toe.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 3
@@ -78,13 +90,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.toeSlope
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Toe Emphasis")
                 tooltip: qsTr("Set the emphasis of the curve toe.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -92,20 +109,25 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.toeEmphasis
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         caption: qsTr("Color")
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Contrast Boost")
                 tooltip: qsTr("Set the contrast boost amount.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 2
@@ -113,13 +135,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.contrastBoost
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Saturation Level")
                 tooltip: qsTr("Set the color saturation level.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 2
@@ -127,13 +154,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.saturationLevel
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Gamma")
                 tooltip: qsTr("Set the gamma value.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 8
@@ -141,45 +173,63 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.gammaValue
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Use Exposure")
                 tooltip: qsTr("Specifies if the exposure or white point should be used.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.useExposure.valueToString
                     backendValue: backendValues.useExposure
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("White Point")
                 tooltip: qsTr("Set the white point value.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 128
                     minimumValue: 0.01
                     decimals: 2
                     backendValue: backendValues.whitePoint
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Exposure")
                 tooltip: qsTr("Set the exposure value.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 16
                     minimumValue: 0.01
                     decimals: 2
                     backendValue: backendValues.exposureValue
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

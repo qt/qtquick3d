@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,10 +40,13 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Commands")
                 tooltip: qsTr("Render commands of the pass.")
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 5
             }
+
             SecondColumnLayout {
                 EditableListView {
                     backendValue: backendValues.commands
@@ -54,22 +58,33 @@ Column {
                     onRemove: function(idx) { backendValues.commands.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.commands.idListReplace(idx, value) }
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Buffer")
                 tooltip: qsTr("Output buffer for the pass.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Buffer"
-                    Layout.fillWidth: true
                     backendValue: backendValues.output
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Shaders")
                 tooltip: qsTr("Shaders for the pass.")
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 5
             }
+
             SecondColumnLayout {
                 EditableListView {
                     backendValue: backendValues.shaders
@@ -81,6 +96,8 @@ Column {
                     onRemove: function(idx) { backendValues.shaders.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.shaders.idListReplace(idx, value) }
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

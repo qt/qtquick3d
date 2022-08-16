@@ -28,244 +28,249 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
-    id: materialRoot
     width: parent.width
-
-    property int labelWidth: 10
-    property int labelSpinBoxSpacing: 0
-    property int spinBoxMinimumWidth: 120
-
-    Section {
-        caption: qsTr("Shadow Map")
-        width: parent.width
-
-        SectionLayout {
-            Label {
-                text: qsTr("Enabled")
-                tooltip: qsTr("Specifies if the shadow map is enabled.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.uShadowMappingEnabled.valueToString
-                    backendValue: backendValues.uShadowMappingEnabled
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for shadow map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.uBakedShadowTexture_texture
-                    defaultItem: qsTr("Default")
-                }
-            }
-        }
-    }
 
     Section {
         caption: qsTr("Transmission")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Transmission Weight")
                 tooltip: qsTr("Set the material transmission weight.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.transmission_weight
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Reflection Weight")
                 tooltip: qsTr("Set the material reflection weight.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.reflection_weight
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Texture")
                 tooltip: qsTr("Defines a texture for transmission map.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.transmission_texture_texture
                     defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         caption: qsTr("General")
         width: parent.width
 
-        ColumnLayout {
-            width: parent.width - 16
-            SectionLayout {
-                Label {
-                    text: qsTr("Translucency Falloff")
-                    tooltip: qsTr("Set the falloff of the translucency of the material.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 100
-                        minimumValue: 0
-                        decimals: 2
-                        backendValue: backendValues.uTranslucentFalloff
-                        Layout.fillWidth: true
-                    }
-                }
-                Label {
-                    text: qsTr("Opacity")
-                    tooltip: qsTr("Set the opacity of the material.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 100
-                        minimumValue: 0
-                        decimals: 2
-                        backendValue: backendValues.uOpacity
-                        Layout.fillWidth: true
-                    }
-                }
-            }
-
-            ColumnLayout {
-                width: parent.width
-                Label {
-                    width: 100
-                    text: qsTr("Texture Tiling")
-                    tooltip: qsTr("Sets the tiling repeat of the reflection map.")
-                }
-
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
-
-                    Label {
-                        text: qsTr("X")
-                        width: materialRoot.labelWidth
-                    }
-                    SpinBox {
-                        maximumValue: 100
-                        minimumValue: 1
-                        decimals: 0
-                        backendValue: backendValues.texture_tiling_x
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
-
-                    Label {
-                        text: qsTr("Y")
-                        width: materialRoot.labelWidth
-                    }
-                    SpinBox {
-                        maximumValue: 100
-                        minimumValue: 1
-                        decimals: 0
-                        backendValue: backendValues.texture_tiling_y
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
-            }
-        }
-    }
-    Section {
-        caption: qsTr("Paper Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Paper Color")
-            backendValue: backendValues.paper_color
-            supportGradient: false
-            isVector3D: true
-            Layout.fillWidth: true
-        }
-    }
-    Section {
-        caption: qsTr("Diffuse Map")
-        width: parent.width
         SectionLayout {
-            Label {
-                text: qsTr("Light Wrap")
-                tooltip: qsTr("Set the diffuse light bend of the material.")
+            PropertyLabel {
+                text: qsTr("Translucency Falloff")
+                tooltip: qsTr("Set the falloff of the translucency of the material.")
             }
+
             SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 100
+                    decimals: 2
+                    backendValue: backendValues.uTranslucentFalloff
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Opacity")
+                tooltip: qsTr("Set the opacity of the material.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 100
+                    decimals: 2
+                    backendValue: backendValues.uOpacity
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Texture Tiling")
+                tooltip: qsTr("Sets the tiling repeat of the reflection map.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 1
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.texture_tiling_x
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel { text: "X" }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
                 SpinBox {
                     maximumValue: 1
                     minimumValue: 0
                     decimals: 2
                     stepSize: 0.1
-                    backendValue: backendValues.uDiffuseLightWrap
-                    Layout.fillWidth: true
+                    backendValue: backendValues.texture_tiling_y
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel { text: "Y" }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
+                ExpandingSpacer {}
             }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for diffuse map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.diffuse_texture_texture
-                    defaultItem: qsTr("Default")
-                }
+
+            PropertyLabel { text: qsTr("Paper Color") }
+
+            ColorEditor {
+                backendValue: backendValues.paper_color
+                supportGradient: false
+                isVector3D: true
             }
         }
     }
+
     Section {
-        caption: qsTr("Bump")
+        caption: qsTr("Diffuse Map")
         width: parent.width
+
         SectionLayout {
-            Label {
-                text: qsTr("Amount")
-                tooltip: qsTr("Set the bump map bumpiness.")
+            PropertyLabel {
+                text: qsTr("Light Wrap")
+                tooltip: qsTr("Set the diffuse light bend of the material.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 2
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
-                    backendValue: backendValues.bump_amount
-                    Layout.fillWidth: true
+                    backendValue: backendValues.uDiffuseLightWrap
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for bump map.")
+                tooltip: qsTr("Defines a texture for diffuse map.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
+                    backendValue: backendValues.diffuse_texture_texture
+                    defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
+        caption: qsTr("Bump")
+        width: parent.width
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Amount")
+                tooltip: qsTr("Set the bump map bumpiness.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 2
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.bump_amount
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Texture")
+                tooltip: qsTr("Defines a texture for bump map.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.bump_texture_texture
                     defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

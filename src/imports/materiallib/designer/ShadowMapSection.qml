@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of Qt Quick 3D.
@@ -30,11 +30,44 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
+import StudioTheme 1.0 as StudioTheme
 
-Column {
+Section {
+    caption: qsTr("Shadow Map")
     width: parent.width
 
-    ShaderSection {
-        width: parent.width
+    SectionLayout {
+        PropertyLabel {
+            text: qsTr("Enabled")
+            tooltip: qsTr("Specifies if the shadow map is enabled.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.uShadowMappingEnabled.valueToString
+                backendValue: backendValues.uShadowMappingEnabled
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
+            text: qsTr("Texture")
+            tooltip: qsTr("Defines a texture for shadow map.")
+        }
+
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.Texture"
+                backendValue: backendValues.uBakedShadowTexture_texture
+                defaultItem: qsTr("Default")
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
     }
 }

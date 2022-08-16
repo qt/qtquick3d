@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,25 +40,35 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Source")
                 tooltip: qsTr("Shader source code.")
             }
+
             SecondColumnLayout {
                 UrlChooser {
                     backendValue: backendValues.shader
                     filter: "*.vert *.frag *.glslv *.glslf *.glsl *.vsh *.fsh"
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Stage")
                 tooltip: qsTr("Shader stage.")
             }
-            ComboBox {
-                scope: "Shader"
-                model: ["Shared", "Vertex", "Fragment", "Geometry", "Compute"]
-                backendValue: backendValues.stage
-                Layout.fillWidth: true
+
+            SecondColumnLayout {
+                ComboBox {
+                    scope: "Shader"
+                    model: ["Shared", "Vertex", "Fragment", "Geometry", "Compute"]
+                    backendValue: backendValues.stage
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
             }
         }
     }

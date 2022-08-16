@@ -28,54 +28,73 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
+
     Section {
         caption: qsTr("Scene Environment")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Antialiasing Mode")
                 tooltip: qsTr("Sets the antialiasing mode applied to the scene.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["NoAA", "SSAA", "MSAA", "ProgressiveAA"]
                     backendValue: backendValues.antialiasingMode
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Antialiasing Quality")
                 tooltip: qsTr("Sets the level of antialiasing applied to the scene.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["Medium", "High", "VeryHigh"]
                     backendValue: backendValues.antialiasingQuality
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Temporal AA")
                 tooltip: qsTr("Enables temporal antialiasing using camera jittering and frame blending.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.temporalAAEnabled.valueToString
                     backendValue: backendValues.temporalAAEnabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Temporal AA Strength")
                 tooltip: qsTr("Sets the amount of temporal antialiasing applied.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 2.0
@@ -83,49 +102,69 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.temporalAAStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Background Mode")
                 tooltip: qsTr("Controls if and how the background of the scene should be cleared.")
             }
+
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
                     model: ["Transparent", "Unspecified", "Color", "SkyBox"]
                     backendValue: backendValues.backgroundMode
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Enable Depth Test")
                 tooltip: qsTr("Enables depth testing. Disable to optimize render speed for layers with mostly transparent objects.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.depthTestEnabled.valueToString
                     backendValue: backendValues.depthTestEnabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Enable Depth Prepass")
                 tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.depthPrePassEnabled.valueToString
                     backendValue: backendValues.depthPrePassEnabled
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Effect")
                 tooltip: qsTr("A post-processing effect applied to this scene.")
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 5
             }
+
             SecondColumnLayout {
                 EditableListView {
                     backendValue: backendValues.effects
@@ -137,18 +176,16 @@ Column {
                     onRemove: function(idx) { backendValues.effects.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.effects.idListReplace(idx, value) }
                 }
-            }
-        }
-    }
 
-    Section {
-        caption: qsTr("Clear Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Clear Color")
-            backendValue: backendValues.clearColor
-            supportGradient: false
-            Layout.fillWidth: true
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel { text: qsTr("Clear Color") }
+
+            ColorEditor {
+                backendValue: backendValues.clearColor
+                supportGradient: false
+            }
         }
     }
 
@@ -158,78 +195,99 @@ Column {
 
         SectionLayout {
 
-            Label {
+            PropertyLabel {
                 text: qsTr("AO Strength")
                 tooltip: qsTr("Sets the amount of ambient occlusion applied.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 100
                     minimumValue: 0
                     decimals: 0
                     backendValue: backendValues.aoStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("AO Distance")
                 tooltip: qsTr("Sets how far ambient occlusion shadows spread away from objects.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 99999
                     minimumValue: 0
                     decimals: 0
                     backendValue: backendValues.aoDistance
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("AO Softness")
                 tooltip: qsTr("Sets how smooth the edges of the ambient occlusion shading are.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 50
                     minimumValue: 0
                     decimals: 0
                     backendValue: backendValues.aoSoftness
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("AO Dither")
                 tooltip: qsTr("Enables scattering of the ambient occlusion shadow band edges to improve smoothness (at the risk of sometimes producing obvious patterned artifacts).")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.aoDither.valueToString
                     backendValue: backendValues.aoDither
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("AO Sample Rate")
                 tooltip: qsTr("Sets the ambient occlusion quality (more shades of gray) at the expense of performance.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 4
                     minimumValue: 2
                     decimals: 0
                     backendValue: backendValues.aoSampleRate
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("AO Bias")
                 tooltip: qsTr("Sets the cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 999999
@@ -237,8 +295,11 @@ Column {
                     realDragRange: 5000
                     decimals: 2
                     backendValue: backendValues.aoBias
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
@@ -246,22 +307,29 @@ Column {
     Section {
         caption: qsTr("Image Based Lighting")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Light Probe")
                 tooltip: qsTr("Defines a texture for overriding or setting an image based lighting texture for use with the skybox of this scene.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.lightProbe
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Probe Brightness")
                 tooltip: qsTr("Sets the amount of light emitted by the light probe.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 999999
@@ -269,26 +337,34 @@ Column {
                     realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.probeBrightness
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Fast IBL")
                 tooltip: qsTr("Use a faster approximation to image-based lighting.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.aoDither.valueToString
                     backendValue: backendValues.fastIBL
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Probe Horizon")
                 tooltip: qsTr("Upper limit for horizon darkening of the light probe.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: -0.001
@@ -296,22 +372,29 @@ Column {
                     decimals: 3
                     stepSize: 0.1
                     backendValue: backendValues.probeHorizon
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Probe FOV")
                 tooltip: qsTr("Image source FOV for the case of using a camera-source as the IBL probe.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 180
                     minimumValue: 1.0
                     decimals: 1
                     backendValue: backendValues.probeFieldOfView
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

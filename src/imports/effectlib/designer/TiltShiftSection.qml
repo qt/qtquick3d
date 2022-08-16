@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,10 +40,11 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Focus Position")
                 tooltip: qsTr("Set the focus position.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -50,13 +52,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.focusPosition
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Focus Width")
                 tooltip: qsTr("Set the focus width.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -64,43 +71,61 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.focusWidth
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Blur Amount")
                 tooltip: qsTr("Set the blur amount.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 10
                     minimumValue: 0
                     decimals: 2
                     backendValue: backendValues.blurAmount
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Vertical")
                 tooltip: qsTr("Specifies if the tilt shift is vertical.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.isVertical.valueToString
                     backendValue: backendValues.isVertical
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Inverted")
                 tooltip: qsTr("Specifies if the tilt shift is inverted.")
             }
+
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.isInverted.valueToString
                     backendValue: backendValues.isInverted
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

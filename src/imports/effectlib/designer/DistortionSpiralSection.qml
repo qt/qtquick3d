@@ -28,21 +28,23 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
 
     Section {
-        caption: qsTr("Distortion")
+        caption: qsTr("Distortion Spiral")
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Radius")
                 tooltip: qsTr("Radius of the effect.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -50,75 +52,70 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.radius
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Strength")
                 tooltip: qsTr("Strength of the distortion.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 10
                     minimumValue: -10
                     decimals: 2
                     backendValue: backendValues.distortionStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-        }
-    }
 
-    Section {
-        id: centerSection
-        width: parent.width
-        caption: qsTr("Position")
-
-        property int labelWidth: 10
-        property int labelSpinBoxSpacing: 0
-        property int spinBoxMinimumWidth: 120
-
-        ColumnLayout {
-            width: parent.width - 16
-
-            Label {
-                width: 100
+            PropertyLabel {
                 text: qsTr("Center")
                 tooltip: qsTr("Center of the distortion.")
             }
-            RowLayout {
-                spacing: centerSection.labelSpinBoxSpacing
 
-                Label {
-                    text: qsTr("X")
-                    width: centerSection.labelWidth
-                }
+            SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.center_x
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: centerSection.spinBoxMinimumWidth
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-            }
-            RowLayout {
-                spacing: centerSection.labelSpinBoxSpacing
 
-                Label {
-                    text: qsTr("Y")
-                    width: centerSection.labelWidth
-                }
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel { text: "X" }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.center_y
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: centerSection.spinBoxMinimumWidth
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel { text: "Y" }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
+                ExpandingSpacer {}
             }
         }
     }

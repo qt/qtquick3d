@@ -34,7 +34,9 @@ AUX_QML_FILES += \
     $$PWD/SteelMilledConcentricMaterialSection.qml \
     $$PWD/SteelMilledConcentricMaterialSpecifics.qml \
     $$PWD/CustomMaterialSection.qml \
-    $$PWD/CustomMaterialSpecifics.qml
+    $$PWD/CustomMaterialSpecifics.qml \
+    $$PWD/EnvironmentMapSection.qml \
+    $$PWD/ShadowMapSection.qml
 
 AUX_QML_FILES += \
     $$PWD/source/custommaterial_template.qml \

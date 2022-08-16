@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,10 +40,11 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Red Strength")
                 tooltip: qsTr("Red strength.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 2
@@ -50,13 +52,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.redStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Green Strength")
                 tooltip: qsTr("Green strength.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 2
@@ -64,13 +71,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.greenStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Blue Strength")
                 tooltip: qsTr("Blue strength.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 2
@@ -78,13 +90,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.blueStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Saturation")
                 tooltip: qsTr("Color saturation.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -92,8 +109,11 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.saturation
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

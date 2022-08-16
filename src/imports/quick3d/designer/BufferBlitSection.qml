@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,27 +40,36 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Source")
                 tooltip: qsTr("Source buffer for the buffer blit.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Buffer"
-                    Layout.fillWidth: true
                     backendValue: backendValues.source
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Destination")
                 tooltip: qsTr("Destination buffer for the buffer blit.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Buffer"
-                    Layout.fillWidth: true
                     backendValue: backendValues.destination
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

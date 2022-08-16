@@ -28,189 +28,123 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
 import StudioTheme 1.0 as StudioTheme
 
 Column {
-    id: materialRoot
     width: parent.width
-
-    property int labelWidth: 10
-    property int labelSpinBoxSpacing: 0
-    property int spinBoxMinimumWidth: 120
-
-    Section {
-        caption: qsTr("Environment Map")
-        width: parent.width
-
-        SectionLayout {
-            Label {
-                text: qsTr("Enabled")
-                tooltip: qsTr("Specifies if the environment map is enabled.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.uEnvironmentMappingEnabled.valueToString
-                    backendValue: backendValues.uEnvironmentMappingEnabled
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for environment map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.uEnvironmentTexture_texture
-                    defaultItem: qsTr("Default")
-                }
-            }
-        }
-    }
-
-    Section {
-        caption: qsTr("Shadow Map")
-        width: parent.width
-
-        SectionLayout {
-            Label {
-                text: qsTr("Enabled")
-                tooltip: qsTr("Specifies if the shadow map is enabled.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.uShadowMappingEnabled.valueToString
-                    backendValue: backendValues.uShadowMappingEnabled
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for shadow map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.uBakedShadowTexture_texture
-                    defaultItem: qsTr("Default")
-                }
-            }
-        }
-    }
-
-
-    Section {
-        caption: qsTr("Glass Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Glass Color")
-            backendValue: backendValues.glass_color
-            supportGradient: false
-            isVector3D: true
-            Layout.fillWidth: true
-        }
-    }
 
     Section {
         caption: qsTr("Bump")
         width: parent.width
-        ColumnLayout {
-            width: parent.width - 16
-            SectionLayout {
-                Label {
-                    text: qsTr("Scale")
-                    tooltip: qsTr("Set the scale of the bump bands.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 5
-                        minimumValue: 0
-                        decimals: 2
-                        stepSize: 0.1
-                        backendValue: backendValues.bumpScale
-                        Layout.fillWidth: true
-                    }
-                }
-                Label {
-                    text: qsTr("Bands")
-                    tooltip: qsTr("Set the number of the bump bands.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 10
-                        minimumValue: 0
-                        decimals: 0
-                        backendValue: backendValues.bumpBands
-                        Layout.fillWidth: true
-                    }
-                }
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Scale")
+                tooltip: qsTr("Set the scale of the bump bands.")
             }
-            ColumnLayout {
-                width: parent.width
-                Label {
-                    width: 100
-                    text: qsTr("Coordinates")
-                    tooltip: qsTr("Sets the bump coordinates of the refraction.")
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 5
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.bumpScale
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
+                ExpandingSpacer {}
+            }
 
-                    Label {
-                        text: qsTr("X")
-                        width: materialRoot.labelWidth
-                        color: StudioTheme.Values.theme3DAxisXColor
-                    }
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.bumpCoords_x
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
+            PropertyLabel {
+                text: qsTr("Bands")
+                tooltip: qsTr("Set the number of the bump bands.")
+            }
 
-                    Label {
-                        text: qsTr("Y")
-                        width: materialRoot.labelWidth
-                        color: StudioTheme.Values.theme3DAxisYColor
-                    }
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.bumpCoords_y
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10
+                    decimals: 0
+                    backendValue: backendValues.bumpBands
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
 
-                    Label {
-                        text: qsTr("Z")
-                        width: materialRoot.labelWidth
-                        color: StudioTheme.Values.theme3DAxisZColor
-                    }
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.bumpCoords_z
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Coordinates")
+                tooltip: qsTr("Sets the bump coordinates of the refraction.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 2
+                    backendValue: backendValues.bumpCoords_x
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "X"
+                    color: StudioTheme.Values.theme3DAxisXColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 2
+                    backendValue: backendValues.bumpCoords_y
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "Y"
+                    color: StudioTheme.Values.theme3DAxisYColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 2
+                    backendValue: backendValues.bumpCoords_z
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "Z"
+                    color: StudioTheme.Values.theme3DAxisZColor
+                }
+
+                ExpandingSpacer {}
             }
         }
     }
@@ -218,159 +152,203 @@ Column {
     Section {
         caption: qsTr("General")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel { text: qsTr("Glass Color") }
+
+            ColorEditor {
+                backendValue: backendValues.glass_color
+                supportGradient: false
+                isVector3D: true
+            }
+
+            PropertyLabel {
                 text: qsTr("Roughness")
                 tooltip: qsTr("Set the material roughness.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.roughness
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Blur Size")
                 tooltip: qsTr("Set the amount of blurring behind the glass.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 50
                     minimumValue: 0
+                    maximumValue: 50
                     decimals: 2
                     backendValue: backendValues.blur_size
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Fresnel Power")
                 tooltip: qsTr("Set the fresnel power of the material.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 100
                     minimumValue: 0
+                    maximumValue: 100
                     decimals: 2
                     backendValue: backendValues.uFresnelPower
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Reflectivity")
                 tooltip: qsTr("Set the reflectivity of the material.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.reflectivity_amount
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Index of Refraction")
                 tooltip: qsTr("Set the index of refraction for the material.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 2.1
                     minimumValue: 1.4
+                    maximumValue: 2.1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.glass_ior
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
+
     Section {
         caption: qsTr("Noise")
         width: parent.width
-        ColumnLayout {
-            width: parent.width - 16
-            SectionLayout {
-                Label {
-                    text: qsTr("Scale")
-                    tooltip: qsTr("Set the noise scale.")
-                }
-                SecondColumnLayout {
-                    SpinBox {
-                        maximumValue: 40
-                        minimumValue: 0
-                        decimals: 2
-                        backendValue: backendValues.noiseScale
-                        Layout.fillWidth: true
-                    }
-                }
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Scale")
+                tooltip: qsTr("Set the noise scale.")
             }
-            ColumnLayout {
-                width: parent.width
-                Label {
-                    width: 100
-                    text: qsTr("Coordinates")
-                    tooltip: qsTr("Sets the noise coordinates.")
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 40
+                    decimals: 2
+                    backendValue: backendValues.noiseScale
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
+                ExpandingSpacer {}
+            }
 
-                    Label {
-                        text: qsTr("X")
-                        width: materialRoot.labelWidth
-                        color: StudioTheme.Values.theme3DAxisXColor
-                    }
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.noiseCoords_x
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
+            PropertyLabel {
+                text: qsTr("Coordinates")
+                tooltip: qsTr("Sets the noise coordinates.")
+            }
 
-                    Label {
-                        text: qsTr("Y")
-                        width: materialRoot.labelWidth
-                        color: StudioTheme.Values.theme3DAxisYColor
-                    }
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.noiseCoords_y
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
 
-                    Label {
-                        text: qsTr("Z")
-                        width: materialRoot.labelWidth
-                        color: StudioTheme.Values.theme3DAxisZColor
-                    }
-                    SpinBox {
-                        maximumValue: 10000
-                        minimumValue: 0
-                        realDragRange: 1000
-                        decimals: 2
-                        backendValue: backendValues.noiseCoords_z
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 2
+                    backendValue: backendValues.noiseCoords_x
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "X"
+                    color: StudioTheme.Values.theme3DAxisXColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 2
+                    backendValue: backendValues.noiseCoords_y
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "Y"
+                    color: StudioTheme.Values.theme3DAxisYColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 2
+                    backendValue: backendValues.noiseCoords_z
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "Z"
+                    color: StudioTheme.Values.theme3DAxisZColor
+                }
+
+                ExpandingSpacer {}
             }
         }
     }
@@ -378,54 +356,74 @@ Column {
     Section {
         caption: qsTr("Random Gradient Maps")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("1D")
                 tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.randomGradient1D_texture
                     defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("2D")
                 tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.randomGradient2D_texture
                     defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("3D")
                 tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.randomGradient3D_texture
                     defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("4D")
                 tooltip: qsTr("Defines a texture map used to create the random bumpiness of the material.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
                     backendValue: backendValues.randomGradient4D_texture
                     defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

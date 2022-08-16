@@ -28,110 +28,54 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
-    id: materialRoot
     width: parent.width
-
-    property int labelWidth: 10
-    property int labelSpinBoxSpacing: 0
-    property int spinBoxMinimumWidth: 120
-
-    Section {
-        caption: qsTr("Environment Map")
-        width: parent.width
-
-        SectionLayout {
-            Label {
-                text: qsTr("Enabled")
-                tooltip: qsTr("Specifies if the environment map is enabled.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.uEnvironmentMappingEnabled.valueToString
-                    backendValue: backendValues.uEnvironmentMappingEnabled
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for environment map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.uEnvironmentTexture_texture
-                    defaultItem: qsTr("Default")
-                }
-            }
-        }
-    }
-
-    Section {
-        caption: qsTr("Shadow Map")
-        width: parent.width
-
-        SectionLayout {
-            Label {
-                text: qsTr("Enabled")
-                tooltip: qsTr("Specifies if the shadow map is enabled.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.uShadowMappingEnabled.valueToString
-                    backendValue: backendValues.uShadowMappingEnabled
-                    Layout.fillWidth: true
-                }
-            }
-            Label {
-                text: qsTr("Texture")
-                tooltip: qsTr("Defines a texture for shadow map.")
-            }
-            SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    Layout.fillWidth: true
-                    backendValue: backendValues.uBakedShadowTexture_texture
-                    defaultItem: qsTr("Default")
-                }
-            }
-        }
-    }
 
     Section {
         caption: qsTr("General")
         width: parent.width
+
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Index of Refraction")
                 tooltip: qsTr("Set the index of refraction for the material.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 2.97
                     minimumValue: 0.47
+                    maximumValue: 2.97
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.material_ior
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Anisotropy")
                 tooltip: qsTr("Set the anisotropy of the material.")
             }
+
             SecondColumnLayout {
                 SpinBox {
-                    maximumValue: 1
                     minimumValue: 0.01
+                    maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.anisotropy
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
@@ -140,74 +84,79 @@ Column {
         caption: qsTr("Textures")
         width: parent.width
 
-        ColumnLayout {
-            width: parent.width - 16
-            ColumnLayout {
-                width: parent.width
-                Label {
-                    width: 100
-                    text: qsTr("Tiling")
-                    tooltip: qsTr("Sets the tiling repeat of the texture maps.")
-                }
+        SectionLayout {
 
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
-
-                    Label {
-                        text: qsTr("X")
-                        width: materialRoot.labelWidth
-                    }
-                    SpinBox {
-                        maximumValue: 100
-                        minimumValue: 1
-                        decimals: 0
-                        backendValue: backendValues.texture_tiling_x
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
-                RowLayout {
-                    spacing: materialRoot.labelSpinBoxSpacing
-
-                    Label {
-                        text: qsTr("Y")
-                        width: materialRoot.labelWidth
-                    }
-                    SpinBox {
-                        maximumValue: 100
-                        minimumValue: 1
-                        decimals: 0
-                        backendValue: backendValues.texture_tiling_y
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: materialRoot.spinBoxMinimumWidth
-                    }
-                }
+            PropertyLabel {
+                text: qsTr("Tiling")
+                tooltip: qsTr("Sets the tiling repeat of the texture maps.")
             }
-            SectionLayout {
-                Label {
-                    text: qsTr("Diffuse")
-                    tooltip: qsTr("Defines a texture for diffuse map.")
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 1
+                    maximumValue: 100
+                    decimals: 0
+                    backendValue: backendValues.texture_tiling_x
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-                SecondColumnLayout {
-                    IdComboBox {
-                        typeFilter: "QtQuick3D.Texture"
-                        Layout.fillWidth: true
-                        backendValue: backendValues.diffuse_texture_texture
-                        defaultItem: qsTr("Default")
-                    }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel { text: "X" }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
+                SpinBox {
+                    minimumValue: 1
+                    maximumValue: 100
+                    decimals: 0
+                    backendValue: backendValues.texture_tiling_y
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-                Label {
-                    text: qsTr("Anisotropy")
-                    tooltip: qsTr("Defines a texture for anisotropy map.")
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel { text: "Y" }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlGap }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Diffuse")
+                tooltip: qsTr("Defines a texture for diffuse map.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.diffuse_texture_texture
+                    defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
-                SecondColumnLayout {
-                    IdComboBox {
-                        typeFilter: "QtQuick3D.Texture"
-                        Layout.fillWidth: true
-                        backendValue: backendValues.anisotropy_rot_texture_texture
-                        defaultItem: qsTr("Default")
-                    }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Anisotropy")
+                tooltip: qsTr("Defines a texture for anisotropy map.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.anisotropy_rot_texture_texture
+                    defaultItem: qsTr("Default")
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

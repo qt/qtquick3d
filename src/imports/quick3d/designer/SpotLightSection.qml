@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,21 +40,27 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Scope")
                 tooltip: qsTr("Sets the scope of the light. Only the node and its children are affected by this light.")
             }
+
             SecondColumnLayout {
                 IdComboBox {
                     typeFilter: "QtQuick3D.Node"
-                    Layout.fillWidth: true
                     backendValue: backendValues.scope
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Brightness")
                 tooltip: qsTr("Sets the strength of the light.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
@@ -61,14 +68,18 @@ Column {
                     realDragRange: 5000
                     decimals: 0
                     backendValue: backendValues.brightness
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Constant Fade")
                 tooltip: qsTr("Sets the constant attenuation of the light.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
@@ -76,14 +87,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.constantFade
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Linear Fade")
                 tooltip: qsTr("Sets the linear attenuation of the light.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
@@ -91,14 +106,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.linearFade
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Quadratic Fade")
                 tooltip: qsTr("Sets the quadratic attenuation of the light.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
@@ -106,65 +125,66 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.quadraticFade
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Cone Angle")
                 tooltip: qsTr("Sets the angle of the light cone.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
                     maximumValue: 180
                     decimals: 2
                     backendValue: backendValues.coneAngle
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
 
-            Label {
+            PropertyLabel {
                 text: qsTr("Inner Cone Angle")
                 tooltip: qsTr("Sets the angle of the inner light cone.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: 0
                     maximumValue: 180
                     decimals: 2
                     backendValue: backendValues.innerConeAngle
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-        }
-    }
 
-    Section {
-        caption: qsTr("Color")
-        width: parent.width
+            PropertyLabel { text: qsTr("Color") }
 
-        ColorEditor {
-            caption: qsTr("Color")
-            backendValue: backendValues.color
-            supportGradient: false
-            Layout.fillWidth: true
-        }
-    }
+            ColorEditor {
+                backendValue: backendValues.color
+                supportGradient: false
+            }
 
-    Section {
-        caption: qsTr("Ambient Color")
-        width: parent.width
-        ColorEditor {
-            caption: qsTr("Ambient Color")
-            backendValue: backendValues.ambientColor
-            supportGradient: false
-            Layout.fillWidth: true
+            PropertyLabel { text: qsTr("Ambient Color") }
+
+            ColorEditor {
+                backendValue: backendValues.ambientColor
+                supportGradient: false
+            }
         }
     }
 
     ShadowSection {
         width: parent.width
     }
-
 }

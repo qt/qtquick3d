@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,10 +40,11 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Amount")
                 tooltip: qsTr("Strength of the blur.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 0.1
@@ -50,8 +52,11 @@ Column {
                     decimals: 3
                     stepSize: 0.01
                     backendValue: backendValues.amount
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

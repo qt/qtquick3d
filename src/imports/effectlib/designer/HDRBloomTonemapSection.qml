@@ -28,8 +28,9 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
@@ -39,10 +40,11 @@ Column {
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Gamma")
                 tooltip: qsTr("Amount of gamma.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 4
@@ -50,39 +52,54 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.gamma
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Exposure")
                 tooltip: qsTr("Amount of exposure.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9
                     minimumValue: -9
                     decimals: 2
                     backendValue: backendValues.exposure
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Blur Falloff")
                 tooltip: qsTr("Amount of blur falloff.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 10
                     minimumValue: 0
                     decimals: 2
                     backendValue: backendValues.blurFalloff
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Tonemapping Lerp")
                 tooltip: qsTr("Tonemapping linear interpolation value.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -90,13 +107,18 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.tonemappingLerp
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Bloom Threshold")
                 tooltip: qsTr("Bloom color threshold value.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -104,13 +126,18 @@ Column {
                     decimals: 3
                     stepSize: 0.1
                     backendValue: backendValues.bloomThreshold
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
-            Label {
+
+            PropertyLabel {
                 text: qsTr("Channel Threshold")
                 tooltip: qsTr("Channel color threshold value.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -118,8 +145,11 @@ Column {
                     decimals: 3
                     stepSize: 0.1
                     backendValue: backendValues.channelThreshold
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }

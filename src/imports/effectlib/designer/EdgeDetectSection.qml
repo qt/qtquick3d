@@ -28,21 +28,23 @@
 ****************************************************************************/
 
 import QtQuick 2.15
+import QtQuick.Layouts 1.15
 import HelperWidgets 2.0
-import QtQuick.Layouts 1.12
+import StudioTheme 1.0 as StudioTheme
 
 Column {
     width: parent.width
 
     Section {
-        caption: qsTr("Edge")
+        caption: qsTr("Edge Detect")
         width: parent.width
 
         SectionLayout {
-            Label {
+            PropertyLabel {
                 text: qsTr("Strength")
                 tooltip: qsTr("Strength of the edge.")
             }
+
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 1
@@ -50,8 +52,11 @@ Column {
                     decimals: 2
                     stepSize: 0.1
                     backendValue: backendValues.edgeStrength
-                    Layout.fillWidth: true
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
+
+                ExpandingSpacer {}
             }
         }
     }
