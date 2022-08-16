@@ -13,7 +13,7 @@ Item {
     Layout.fillWidth: true
     height: label.implicitHeight
     implicitWidth: width
-    implicitHeight: height
+    implicitHeight: label.implicitHeight
     Label {
         id: label
         width: parent.width
