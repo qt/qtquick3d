@@ -71,8 +71,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     // Opacity of 1 means opaque, opacity of zero means transparent.
     float localOpacity = 1.0f;
 
-    // Nodes are initially dirty, but not active!
-    FlagT flags { FlagT(DirtyFlag::GlobalValuesDirty) };
+    // Nodes are initially dirty and locally active!
+    FlagT flags { FlagT(DirtyFlag::GlobalValuesDirty) | FlagT(LocalState::Active) };
     // These end up right handed
     QMatrix4x4 localTransform;
     QMatrix4x4 globalTransform;
