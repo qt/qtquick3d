@@ -1,7 +1,7 @@
 # Generated from screenspacereflections.pro.
 
 cmake_minimum_required(VERSION 3.16)
-project(custommaterial LANGUAGES CXX)
+project(screenspacereflections LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
