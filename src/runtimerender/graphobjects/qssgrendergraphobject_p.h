@@ -18,6 +18,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtCore/QString>
+#include <QtCore/QDebug>
 
 #define QSSG_DEBUG_ID 0
 
@@ -139,6 +140,48 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
     virtual ~QSSGRenderGraphObject();
 
     Q_DISABLE_COPY_MOVE(QSSGRenderGraphObject)
+
+    friend QDebug operator<<(QDebug stream, const QSSGRenderGraphObject::Type &type)
+    {
+#define CASE_AS_STRING_BASE(C, T) case T: stream.nospace() << #C << '{' << #T << '}'; break;
+#define CASE_AS_STRING(T) CASE_AS_STRING_BASE(QSSGRenderGraphObject, T)
+        switch (type) {
+            CASE_AS_STRING(Type::Unknown)
+            CASE_AS_STRING(Type::Node)
+            CASE_AS_STRING(Type::Layer)
+            CASE_AS_STRING(Type::Joint)
+            CASE_AS_STRING(Type::Skeleton)
+            CASE_AS_STRING(Type::ImportScene)
+            CASE_AS_STRING(Type::ReflectionProbe)
+            CASE_AS_STRING(Type::DirectionalLight)
+            CASE_AS_STRING(Type::PointLight)
+            CASE_AS_STRING(Type::SpotLight)
+            CASE_AS_STRING(Type::OrthographicCamera)
+            CASE_AS_STRING(Type::PerspectiveCamera)
+            CASE_AS_STRING(Type::CustomFrustumCamera)
+            CASE_AS_STRING(Type::CustomCamera)
+            CASE_AS_STRING(Type::Model)
+            CASE_AS_STRING(Type::Item2D)
+            CASE_AS_STRING(Type::Particles)
+            CASE_AS_STRING(Type::SceneEnvironment)
+            CASE_AS_STRING(Type::Effect)
+            CASE_AS_STRING(Type::Geometry)
+            CASE_AS_STRING(Type::TextureData)
+            CASE_AS_STRING(Type::MorphTarget)
+            CASE_AS_STRING(Type::ModelInstance)
+            CASE_AS_STRING(Type::ModelBlendParticle)
+            CASE_AS_STRING(Type::ResourceLoader)
+            CASE_AS_STRING(Type::DefaultMaterial)
+            CASE_AS_STRING(Type::PrincipledMaterial)
+            CASE_AS_STRING(Type::CustomMaterial)
+            CASE_AS_STRING(Type::SpecularGlossyMaterial)
+            CASE_AS_STRING(Type::Skin)
+            CASE_AS_STRING(Type::Image2D)
+            CASE_AS_STRING(Type::ImageCube)
+        }
+
+        return stream;
+    }
 };
 
 QT_END_NAMESPACE
