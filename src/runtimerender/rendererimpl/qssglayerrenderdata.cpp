@@ -1360,7 +1360,6 @@ void QSSGLayerRenderData::prepareForRender()
     if (layerPrepResult.hasValue())
         return;
 
-    features = QSSGShaderFeatures();
     QRect theViewport(renderer->contextInterface()->viewport());
     QRect theScissor(renderer->contextInterface()->scissorRect());
     if (theScissor.isNull() || (theScissor == theViewport))
@@ -1369,278 +1368,276 @@ void QSSGLayerRenderData::prepareForRender()
     bool wasDirty = false;
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
-    // The first pass is just to render the data.
+
+    QSSGLayerRenderPreparationResult thePrepResult(theViewport, theScissor, layer);
+
+    // If the scissor rect makes the layer non visible, bail out early
+    if (!thePrepResult.isLayerVisible()) {
+        layerPrepResult = thePrepResult;
+        return;
+    }
+
+    // AA
     quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
     maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
+    thePrepResult.maxAAPassIndex = maxNumAAPasses;
 
-    QSSGLayerRenderPreparationResult thePrepResult;
-
+    // SSAO
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
+    thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
+    features.set(QSSGShaderFeatures::Feature::Ssao, SSAOEnabled);
+
+    // Effects
     bool requiresDepthTexture = SSAOEnabled;
-    features.set(QSSGShaderFeatures::Feature::Ssm, false); // by default no shadow map generation
-
-    if (layer.getLocalState(QSSGRenderLayer::LocalState::Active)) {
-        for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
-            if (theEffect->isDirty()) {
-                wasDirty = true;
-                theEffect->clearDirty();
-            }
-            if (theEffect->requiresDepthTexture)
-                requiresDepthTexture = true;
-        }
-        // Get the layer's width and height.
-        if (layer.isDirty()) {
+    for (QSSGRenderEffect *theEffect = layer.firstEffect; theEffect; theEffect = theEffect->m_nextEffect) {
+        if (theEffect->isDirty()) {
             wasDirty = true;
-            layer.calculateGlobalVariables();
+            theEffect->clearDirty();
         }
-
-        const auto &rhiCtx = renderer->contextInterface()->rhiContext();
-
-        // We may not be able to have an array of 15 light struct elements in
-        // the shaders. Switch on the reduced-max-number-of-lights feature
-        // if necessary. In practice this is relevant with OpenGL ES 3.0 or
-        // 2.0, because there are still implementations in use that only
-        // support the spec mandated minimum of 224 vec4s (so 3584 bytes).
-        if (rhiCtx->maxUniformBufferRange() < REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
-            features.set(QSSGShaderFeatures::Feature::ReduceMaxNumLights, true);
-            static bool notified = false;
-            if (!notified) {
-                notified = true;
-                qCDebug(lcQuick3DRender, "Qt Quick 3D maximum number of lights has been reduced from %d to %d due to the graphics driver's limitations",
-                        QSSG_MAX_NUM_LIGHTS, QSSG_REDUCED_MAX_NUM_LIGHTS);
-            }
-        }
-
-        thePrepResult = QSSGLayerRenderPreparationResult(theViewport, theScissor, layer);
-        thePrepResult.maxAAPassIndex = maxNumAAPasses;
-
-        // these may still get modified due to custom materials below
-        thePrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
-        thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
-
-        if (thePrepResult.isLayerVisible()) {
-            QSSGRenderImageTexture lightProbeTexture;
-            if (layer.lightProbe) {
-                if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
-                    // Choose on a format that makes sense for a light probe
-                    // At this point it's just a suggestion
-                    if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F))
-                        layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBA16F;
-                    else
-                        layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBE8;
-                }
-
-                if (layer.lightProbe->clearDirty())
-                    wasDataDirty = true;
-
-                lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
-                if (lightProbeTexture.m_texture) {
-
-                    features.set(QSSGShaderFeatures::Feature::LightProbe, true);
-                    features.set(QSSGShaderFeatures::Feature::IblOrientation, !layer.probeOrientation.isIdentity());
-
-                    // By this point we will know what the actual texture format of the light probe is
-                    // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
-                    if (lightProbeTexture.m_flags.isRgbe8())
-                        features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
-                } else {
-                    layer.lightProbe = nullptr;
-                }
-            }
-
-            // Do not just clear() renderableNodes and friends. Rather, reuse
-            // the space (even if clear does not actually deallocate, it still
-            // costs time to run dtors and such). In scenes with a static node
-            // count in the range of thousands this may matter.
-            int renderableNodeCount = 0;
-            int cameraNodeCount = 0;
-            int lightNodeCount = 0;
-            int reflectionProbeCount = 0;
-            quint32 dfsIndex = 0;
-            for (auto &theChild : layer.children)
-                maybeQueueNodeForRender(theChild,
-                                        renderableNodes,
-                                        renderableNodeCount,
-                                        cameras,
-                                        cameraNodeCount,
-                                        lights,
-                                        lightNodeCount,
-                                        reflectionProbes,
-                                        reflectionProbeCount,
-                                        dfsIndex);
-
-            updateDirtySkeletons(renderableNodes);
-
-            if (renderableNodes.size() != renderableNodeCount)
-                renderableNodes.resize(renderableNodeCount);
-            if (cameras.size() != cameraNodeCount)
-                cameras.resize(cameraNodeCount);
-            if (lights.size() != lightNodeCount)
-                lights.resize(lightNodeCount);
-            if (reflectionProbes.size() != reflectionProbeCount)
-                reflectionProbes.resize(reflectionProbeCount);
-
-            renderableItem2Ds.clear();
-
-            globalLights.clear();
-
-            // Cameras
-            // 1. If there's an explicit camera set and it's active (visible) we'll use that.
-            // 2. ... if the explicitly set camera is not visible, no further attempts will be done.
-            // 3. If no explicit camera is set, we'll search and pick the first active camera.
-            camera = layer.explicitCamera;
-            if (camera != nullptr) {
-                // 1.
-                camera->dpr = renderer->contextInterface()->dpr();
-                wasDataDirty = wasDataDirty || camera->isDirty();
-                QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
-                wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                if (!theResult.m_computeFrustumSucceeded)
-                    qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-
-                // 2.
-                if (!camera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
-                    camera = nullptr;
-            } else {
-                // 3.
-                for (auto iter = cameras.cbegin();
-                     (camera == nullptr) && (iter != cameras.cend()); iter++) {
-                    QSSGRenderCamera *theCamera = *iter;
-                    theCamera->dpr = renderer->contextInterface()->dpr();
-                    wasDataDirty = wasDataDirty
-                            || theCamera->isDirty();
-                    QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
-                    wasDataDirty = wasDataDirty || theResult.m_wasDirty;
-                    if (!theResult.m_computeFrustumSucceeded)
-                        qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
-                    if (theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
-                        camera = theCamera;
-                }
-            }
-            layer.renderedCamera = camera;
-
-            // ResourceLoaders
-            prepareResourceLoaders();
-
-            QSSGShaderLightList renderableLights;
-            int shadowMapCount = 0;
-            // Lights
-            const int maxLightCount = effectiveMaxLightCount(features);
-            for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
-                if (renderableLights.count() == maxLightCount) {
-                    if (!tooManyLightsWarningShown) {
-                        qWarning("Too many lights in scene, maximum is %d", maxLightCount);
-                        tooManyLightsWarningShown = true;
-                    }
-                    break;
-                }
-
-                QSSGRenderLight *theLight = *rIt;
-                wasDataDirty = wasDataDirty || theLight->isDirty();
-                bool lightResult = theLight->calculateGlobalVariables();
-                theLight->clearDirty(QSSGRenderLight::DirtyFlag::LightDirty);
-                wasDataDirty = lightResult || wasDataDirty;
-
-                QSSGShaderLight shaderLight;
-                shaderLight.light = theLight;
-                shaderLight.enabled = theLight->getGlobalState(QSSGRenderLight::GlobalState::Active);
-                shaderLight.enabled &= theLight->m_brightness > 0.0f;
-                shaderLight.shadows = theLight->m_castShadow && !theLight->m_fullyBaked;
-                if (shaderLight.shadows && shaderLight.enabled) {
-                    if (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
-                        ++shadowMapCount;
-                    } else {
-                        shaderLight.shadows = false;
-                        if (!tooManyShadowLightsWarningShown) {
-                            qWarning("Too many shadow casting lights in scene, maximum is %d", QSSG_MAX_NUM_SHADOW_MAPS);
-                            tooManyShadowLightsWarningShown = true;
-                        }
-                    }
-                }
-
-                if (shaderLight.enabled)
-                    renderableLights.push_back(shaderLight);
-
-            }
-
-            const auto lightCount = renderableLights.size();
-            for (int lightIdx = 0; lightIdx < lightCount; lightIdx++) {
-                auto &shaderLight = renderableLights[lightIdx];
-                shaderLight.direction = shaderLight.light->getScalingCorrectDirection();
-                if (shaderLight.shadows) {
-                    if (!shadowMapManager)
-                        shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
-
-                    quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
-                    ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
-                            ? ShadowMapModes::CUBE
-                            : ShadowMapModes::VSM;
-                    shadowMapManager->addShadowMapEntry(lightIdx,
-                                                        mapSize,
-                                                        mapSize,
-                                                        mapMode);
-                    thePrepResult.flags.setRequiresShadowMapPass(true);
-                    // Any light with castShadow=true triggers shadow mapping
-                    // in the generated shaders. The fact that some (or even
-                    // all) objects may opt out from receiving shadows plays no
-                    // role here whatsoever.
-                    features.set(QSSGShaderFeatures::Feature::Ssm, true);
-                }
-            }
-
-            for (const QSSGShaderLight &shaderLight : qAsConst(renderableLights)) {
-                if (!shaderLight.light->m_scope)
-                    globalLights.append(shaderLight);
-            }
-
-            for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
-                QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
-                theNodeEntry.lights = renderableLights;
-                for (auto &light : theNodeEntry.lights) {
-                    if (light.light->m_scope)
-                        light.enabled = scopeLight(theNodeEntry.node, light.light->m_scope);
-                }
-            }
-
-            QMatrix4x4 viewProjection(Qt::Uninitialized);
-            if (camera) {
-                camera->calculateViewProjectionMatrix(viewProjection);
-                if (camera->enableFrustumClipping) {
-                    QSSGClipPlane nearPlane;
-                    QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
-
-                    QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
-                    dir.normalize();
-                    nearPlane.normal = dir;
-                    QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
-                    nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
-                    // the near plane's bbox edges are calculated in the clipping frustum's
-                    // constructor.
-                    clippingFrustum = QSSGClippingFrustum(viewProjection, nearPlane);
-                } else if (clippingFrustum.hasValue()) {
-                    clippingFrustum.setEmpty();
-                }
-            } else {
-                viewProjection = QMatrix4x4(/*identity*/);
-            }
-
-            modelContexts.clear();
-
-            bool renderablesDirty = prepareRenderablesForRender(viewProjection,
-                                                                clippingFrustum,
-                                                                thePrepResult.flags);
-            wasDataDirty = wasDataDirty || renderablesDirty;
-
-            prepareReflectionProbesForRender();
-        }
-
-        features.set(QSSGShaderFeatures::Feature::Ssao, thePrepResult.flags.requiresSsaoPass());
-
-        // Tonemapping. Except when there are effects, then it is up to the
-        // last pass of the last effect to perform tonemapping.
-        if (!layer.firstEffect)
-            QSSGRenderer::setTonemapFeatures(features, layer.tonemapMode);
+        if (theEffect->requiresDepthTexture)
+            requiresDepthTexture = true;
     }
+    thePrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
+
+    // Tonemapping. Except when there are effects, then it is up to the
+    // last pass of the last effect to perform tonemapping.
+    if (!layer.firstEffect)
+        QSSGRenderer::setTonemapFeatures(features, layer.tonemapMode);
+
+    // We may not be able to have an array of 15 light struct elements in
+    // the shaders. Switch on the reduced-max-number-of-lights feature
+    // if necessary. In practice this is relevant with OpenGL ES 3.0 or
+    // 2.0, because there are still implementations in use that only
+    // support the spec mandated minimum of 224 vec4s (so 3584 bytes).
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    if (rhiCtx->maxUniformBufferRange() < REDUCED_MAX_LIGHT_COUNT_THRESHOLD_BYTES) {
+        features.set(QSSGShaderFeatures::Feature::ReduceMaxNumLights, true);
+        static bool notified = false;
+        if (!notified) {
+            notified = true;
+            qCDebug(lcQuick3DRender, "Qt Quick 3D maximum number of lights has been reduced from %d to %d due to the graphics driver's limitations",
+                    QSSG_MAX_NUM_LIGHTS, QSSG_REDUCED_MAX_NUM_LIGHTS);
+        }
+    }
+
+    // IBL Lightprobe Image
+    QSSGRenderImageTexture lightProbeTexture;
+    if (layer.lightProbe) {
+        if (layer.lightProbe->m_format == QSSGRenderTextureFormat::Unknown) {
+            // Choose on a format that makes sense for a light probe
+            // At this point it's just a suggestion
+            if (renderer->contextInterface()->rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F))
+                layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBA16F;
+            else
+                layer.lightProbe->m_format = QSSGRenderTextureFormat::RGBE8;
+        }
+
+        if (layer.lightProbe->clearDirty())
+            wasDataDirty = true;
+
+        // NOTE: This call can lead to rendering (of envmap) and a texture upload
+        lightProbeTexture = renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
+        if (lightProbeTexture.m_texture) {
+
+            features.set(QSSGShaderFeatures::Feature::LightProbe, true);
+            features.set(QSSGShaderFeatures::Feature::IblOrientation, !layer.probeOrientation.isIdentity());
+
+            // By this point we will know what the actual texture format of the light probe is
+            // Check if using RGBE format light probe texture (the Rhi format will be RGBA8)
+            if (lightProbeTexture.m_flags.isRgbe8())
+                features.set(QSSGShaderFeatures::Feature::RGBELightProbe, true);
+        } else {
+            layer.lightProbe = nullptr;
+        }
+    }
+
+    // Gather Spatial Nodes from Render Tree
+    // Do not just clear() renderableNodes and friends. Rather, reuse
+    // the space (even if clear does not actually deallocate, it still
+    // costs time to run dtors and such). In scenes with a static node
+    // count in the range of thousands this may matter.
+    int renderableNodeCount = 0;
+    int cameraNodeCount = 0;
+    int lightNodeCount = 0;
+    int reflectionProbeCount = 0;
+    quint32 dfsIndex = 0;
+    for (auto &theChild : layer.children)
+        maybeQueueNodeForRender(theChild,
+                                renderableNodes,
+                                renderableNodeCount,
+                                cameras,
+                                cameraNodeCount,
+                                lights,
+                                lightNodeCount,
+                                reflectionProbes,
+                                reflectionProbeCount,
+                                dfsIndex);
+
+    if (renderableNodes.size() != renderableNodeCount)
+        renderableNodes.resize(renderableNodeCount);
+    if (cameras.size() != cameraNodeCount)
+        cameras.resize(cameraNodeCount);
+    if (lights.size() != lightNodeCount)
+        lights.resize(lightNodeCount);
+    if (reflectionProbes.size() != reflectionProbeCount)
+        reflectionProbes.resize(reflectionProbeCount);
+
+    // Cameras
+    // 1. If there's an explicit camera set and it's active (visible) we'll use that.
+    // 2. ... if the explicitly set camera is not visible, no further attempts will be done.
+    // 3. If no explicit camera is set, we'll search and pick the first active camera.
+    camera = layer.explicitCamera;
+    if (camera != nullptr) {
+        // 1.
+        camera->dpr = renderer->contextInterface()->dpr();
+        wasDataDirty = wasDataDirty || camera->isDirty();
+        QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
+        wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+        if (!theResult.m_computeFrustumSucceeded)
+            qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+
+        // 2.
+        if (!camera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
+            camera = nullptr;
+    } else {
+        // 3.
+        for (auto iter = cameras.cbegin();
+             (camera == nullptr) && (iter != cameras.cend()); iter++) {
+            QSSGRenderCamera *theCamera = *iter;
+            theCamera->dpr = renderer->contextInterface()->dpr();
+            wasDataDirty = wasDataDirty
+                    || theCamera->isDirty();
+            QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
+            wasDataDirty = wasDataDirty || theResult.m_wasDirty;
+            if (!theResult.m_computeFrustumSucceeded)
+                qCCritical(INTERNAL_ERROR, "Failed to calculate camera frustum");
+            if (theCamera->getGlobalState(QSSGRenderCamera::GlobalState::Active))
+                camera = theCamera;
+        }
+    }
+    layer.renderedCamera = camera;
+
+    // ResourceLoaders
+    prepareResourceLoaders();
+
+    // Skeletons
+    updateDirtySkeletons(renderableNodes);
+
+    // Lights
+    QSSGShaderLightList renderableLights;
+    int shadowMapCount = 0;
+    // Determine which lights will actually Render
+    // Determine how many lights will need shadow maps
+    // NOTE: This culling is specific to our Forward renderer
+    const int maxLightCount = effectiveMaxLightCount(features);
+    for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
+        if (renderableLights.count() == maxLightCount) {
+            if (!tooManyLightsWarningShown) {
+                qWarning("Too many lights in scene, maximum is %d", maxLightCount);
+                tooManyLightsWarningShown = true;
+            }
+            break;
+        }
+
+        QSSGRenderLight *theLight = *rIt;
+        wasDataDirty = wasDataDirty || theLight->isDirty();
+        bool lightResult = theLight->calculateGlobalVariables();
+        theLight->clearDirty(QSSGRenderLight::DirtyFlag::LightDirty);
+        wasDataDirty = lightResult || wasDataDirty;
+
+        QSSGShaderLight shaderLight;
+        shaderLight.light = theLight;
+        shaderLight.enabled = theLight->getGlobalState(QSSGRenderLight::GlobalState::Active);
+        shaderLight.enabled &= theLight->m_brightness > 0.0f;
+        shaderLight.shadows = theLight->m_castShadow && !theLight->m_fullyBaked;
+        if (shaderLight.shadows && shaderLight.enabled) {
+            if (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
+                ++shadowMapCount;
+            } else {
+                shaderLight.shadows = false;
+                if (!tooManyShadowLightsWarningShown) {
+                    qWarning("Too many shadow casting lights in scene, maximum is %d", QSSG_MAX_NUM_SHADOW_MAPS);
+                    tooManyShadowLightsWarningShown = true;
+                }
+            }
+        }
+
+        if (shaderLight.enabled)
+            renderableLights.push_back(shaderLight);
+
+    }
+    // Setup Shadow Maps Entries for Lights casting shadows
+    const auto lightCount = renderableLights.size();
+    for (int lightIdx = 0; lightIdx < lightCount; lightIdx++) {
+        auto &shaderLight = renderableLights[lightIdx];
+        if (!shaderLight.light->m_scope)
+            globalLights.append(shaderLight);
+        shaderLight.direction = shaderLight.light->getScalingCorrectDirection();
+        if (shaderLight.shadows) {
+            if (!shadowMapManager)
+                shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
+
+            quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
+            ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
+                    ? ShadowMapModes::CUBE
+                    : ShadowMapModes::VSM;
+            shadowMapManager->addShadowMapEntry(lightIdx,
+                                                mapSize,
+                                                mapSize,
+                                                mapMode);
+            thePrepResult.flags.setRequiresShadowMapPass(true);
+            // Any light with castShadow=true triggers shadow mapping
+            // in the generated shaders. The fact that some (or even
+            // all) objects may opt out from receiving shadows plays no
+            // role here whatsoever.
+            features.set(QSSGShaderFeatures::Feature::Ssm, true);
+        }
+    }
+
+    // Give each renderable a copy of the lights available
+    // Also setup scoping for scoped lights
+    const bool handleScopedLights = renderableLights.count() != globalLights.count();
+    for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
+        QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
+        theNodeEntry.lights = renderableLights;
+        if (handleScopedLights) {
+            for (auto &light : theNodeEntry.lights) {
+                if (light.light->m_scope)
+                    light.enabled = scopeLight(theNodeEntry.node, light.light->m_scope);
+            }
+        }
+    }
+
+    // Calculate viewProjection and clippingFrustum for Render Camera
+    QMatrix4x4 viewProjection(Qt::Uninitialized);
+    if (camera) {
+        camera->calculateViewProjectionMatrix(viewProjection);
+        if (camera->enableFrustumClipping) {
+            QSSGClipPlane nearPlane;
+            QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
+
+            QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
+            dir.normalize();
+            nearPlane.normal = dir;
+            QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
+            nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
+            // the near plane's bbox edges are calculated in the clipping frustum's
+            // constructor.
+            clippingFrustum = QSSGClippingFrustum(viewProjection, nearPlane);
+        } else if (clippingFrustum.hasValue()) {
+            clippingFrustum.setEmpty();
+        }
+    } else {
+        viewProjection = QMatrix4x4(/*identity*/);
+    }
+
+    bool renderablesDirty = prepareRenderablesForRender(viewProjection,
+                                                        clippingFrustum,
+                                                        thePrepResult.flags);
+    wasDataDirty = wasDataDirty || renderablesDirty;
+
+    prepareReflectionProbesForRender();
+
     wasDirty = wasDirty || wasDataDirty;
     thePrepResult.flags.setWasDirty(wasDirty);
     thePrepResult.flags.setLayerDataDirty(wasDataDirty);
@@ -1670,6 +1667,10 @@ void QSSGLayerRenderData::resetForFrame()
     renderedOpaqueDepthPrepassObjects.clear();
     renderedDepthWriteObjects.clear();
     renderedBakedLightingModels.clear();
+    renderableItem2Ds.clear();
+    globalLights.clear();
+    modelContexts.clear();
+    features = QSSGShaderFeatures();
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer)
