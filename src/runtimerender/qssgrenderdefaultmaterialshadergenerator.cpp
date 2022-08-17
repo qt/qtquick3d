@@ -680,7 +680,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             bool genTangent = false;
             bool genBinormal = false;
             vertexShader.generateVarTangentAndBinormal(inKey, genTangent, genBinormal);
-            if (enableBumpNormal) {
+            if (enableBumpNormal && !enableParallaxMapping) {
                 // It will not be generated for CustomMaterials.
                 int id = (bumpImage != nullptr) ? int(QSSGRenderableImage::Type::Bump) : int(QSSGRenderableImage::Type::Normal);
                 const auto &names = imageStringTable[id];
