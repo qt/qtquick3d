@@ -327,44 +327,48 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             uint *aaIndex = progressiveAA ? &m_layer->progAAPassIndex : &m_layer->tempAAPassIndex; // TODO: can we use only one index?
 
             if (*aaIndex > 0) {
-                const auto &renderer = m_sgContext->renderer();
+                if (temporalAA || *aaIndex < quint32(m_layer->antialiasingQuality)) {
+                    const auto &renderer = m_sgContext->renderer();
 
-                // The fragment shader relies on per-target compilation and
-                // QSHADER_ macros of qsb, hence no need to communicate a flip
-                // flag from here.
-                QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiProgressiveAAShader();
-                QRhiResourceUpdateBatch *rub = nullptr;
+                    // The fragment shader relies on per-target compilation and
+                    // QSHADER_ macros of qsb, hence no need to communicate a flip
+                    // flag from here.
+                    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiProgressiveAAShader();
+                    QRhiResourceUpdateBatch *rub = nullptr;
 
-                QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ProgressiveAA }));
-                QRhiBuffer *&ubuf = dcd.ubuf;
-                const int ubufSize = 2 * sizeof(float);
-                if (!ubuf) {
-                    ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-                    ubuf->create();
+                    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ProgressiveAA }));
+                    QRhiBuffer *&ubuf = dcd.ubuf;
+                    const int ubufSize = 2 * sizeof(float);
+                    if (!ubuf) {
+                        ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+                        ubuf->create();
+                    }
+
+                    rub = rhi->nextResourceUpdateBatch();
+                    int idx = *aaIndex - 1;
+                    const QVector2D *blendFactors = progressiveAA ? &s_ProgressiveAABlendFactors[idx] : &s_TemporalAABlendFactors;
+                    rub->updateDynamicBuffer(ubuf, 0, 2 * sizeof(float), blendFactors);
+                    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
+
+                    QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+                                                             QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+                    QSSGRhiShaderResourceBindingList bindings;
+                    bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
+                    bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler);
+                    bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, m_prevTempAATexture, sampler);
+
+                    QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
+
+                    QSSGRhiGraphicsPipelineState ps;
+                    const QSize textureSize = currentTexture->pixelSize();
+                    ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
+                    ps.shaderPipeline = shaderPipeline.data();
+
+                    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, QSSGRhiQuadRenderer::UvCoords);
+                    blendResult = m_temporalAATexture;
+                } else {
+                    blendResult = m_prevTempAATexture;
                 }
-
-                rub = rhi->nextResourceUpdateBatch();
-                int idx = *aaIndex - 1;
-                const QVector2D *blendFactors = progressiveAA ? &s_ProgressiveAABlendFactors[idx] : &s_TemporalAABlendFactors;
-                rub->updateDynamicBuffer(ubuf, 0, 2 * sizeof(float), blendFactors);
-                renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, rub);
-
-                QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
-                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                QSSGRhiShaderResourceBindingList bindings;
-                bindings.addUniformBuffer(0, QRhiShaderResourceBinding::FragmentStage, ubuf);
-                bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, currentTexture, sampler);
-                bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, m_prevTempAATexture, sampler);
-
-                QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
-
-                QSSGRhiGraphicsPipelineState ps;
-                const QSize textureSize = currentTexture->pixelSize();
-                ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
-                ps.shaderPipeline = shaderPipeline.data();
-
-                renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, QSSGRhiQuadRenderer::UvCoords);
-                blendResult = m_temporalAATexture;
             } else {
                 // For the first frame: no blend, only copy
                 blendResult = currentTexture;
@@ -372,12 +376,14 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-            auto *rub = rhi->nextResourceUpdateBatch();
-            if (progressiveAA)
-                rub->copyTexture(m_prevTempAATexture, blendResult);
-            else
-                rub->copyTexture(m_prevTempAATexture, currentTexture);
-            cb->resourceUpdate(rub);
+            if (temporalAA || (*aaIndex < quint32(m_layer->antialiasingQuality))) {
+                auto *rub = rhi->nextResourceUpdateBatch();
+                if (progressiveAA)
+                    rub->copyTexture(m_prevTempAATexture, blendResult);
+                else
+                    rub->copyTexture(m_prevTempAATexture, currentTexture);
+                cb->resourceUpdate(rub);
+            }
 
             (*aaIndex)++;
             cb->debugMarkEnd();

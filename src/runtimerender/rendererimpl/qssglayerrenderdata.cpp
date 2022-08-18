@@ -3673,7 +3673,7 @@ void QSSGLayerRenderData::rhiPrepare()
 
     QVector2D vertexOffsetsAA;
 
-    if (progressiveAA && layer.progAAPassIndex > 0) {
+    if (progressiveAA && layer.progAAPassIndex > 0 && layer.progAAPassIndex < quint32(layer.antialiasingQuality)) {
         int idx = layer.progAAPassIndex - 1;
         vertexOffsetsAA = s_ProgressiveAAVertexOffsets[idx] / QVector2D{ float(vp.width()/2.0), float(vp.height()/2.0) };
     }
@@ -3689,9 +3689,15 @@ void QSSGLayerRenderData::rhiPrepare()
             // TODO - optimize this exact matrix operation.
             for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
                 QMatrix4x4 offsetProjection = camera->projection;
-                offsetProjection(0, 2) = vertexOffsetsAA.x();
-                offsetProjection(1, 2) = vertexOffsetsAA.y();
-                modelContexts[idx]->modelViewProjection = offsetProjection * camera->projection.inverted() * modelContexts[idx]->modelViewProjection;
+                if (camera->type == QSSGRenderCamera::Type::OrthographicCamera) {
+                    offsetProjection(0, 3) -= vertexOffsetsAA.x();
+                    offsetProjection(1, 3) -= vertexOffsetsAA.y();
+                    modelContexts[idx]->modelViewProjection = offsetProjection * camera->projection.inverted() * modelContexts[idx]->modelViewProjection;
+                } else if (camera->type == QSSGRenderCamera::Type::PerspectiveCamera) {
+                    offsetProjection(0, 2) += vertexOffsetsAA.x();
+                    offsetProjection(1, 2) += vertexOffsetsAA.y();
+                    modelContexts[idx]->modelViewProjection = offsetProjection * camera->projection.inverted() * modelContexts[idx]->modelViewProjection;
+                }
             }
         }
 
