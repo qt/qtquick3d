@@ -136,7 +136,6 @@ struct QSSGCameraData
 struct QSSGLayerRenderPreparationResult
 {
     QSSGLayerRenderPreparationResultFlags flags;
-    quint32 maxAAPassIndex = 0;
     QRectF viewport;
     QRectF scissor;
     QSSGRenderLayer *layer = nullptr;

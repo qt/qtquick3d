@@ -1381,11 +1381,6 @@ void QSSGLayerRenderData::prepareForRender()
         return;
     }
 
-    // AA
-    quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
-    maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
-    thePrepResult.maxAAPassIndex = maxNumAAPasses;
-
     // SSAO
     bool SSAOEnabled = (layer.aoStrength > 0.0f && layer.aoDistance > 0.0f);
     thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
@@ -1678,7 +1673,7 @@ void QSSGLayerRenderData::resetForFrame()
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer)
-    : maxAAPassIndex(0), layer(&inLayer)
+    : layer(&inLayer)
 {
     viewport = inViewport;
 
