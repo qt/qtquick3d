@@ -51,6 +51,8 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \note When using CustomCamera, some anti-aliasing modes(Temporal AA and Progressive AA) cannot be applied correctly.
+
     \sa PerspectiveCamera, OrthographicCamera, FrustumCamera
 */
 
