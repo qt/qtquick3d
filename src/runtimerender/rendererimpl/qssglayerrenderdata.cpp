@@ -1377,8 +1377,6 @@ void QSSGLayerRenderData::prepareForRender()
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
     // The first pass is just to render the data.
-    quint32 maxNumAAPasses = layer.antialiasingMode == QSSGRenderLayer::AAMode::NoAA ? (quint32)0 : (quint32)(layer.antialiasingQuality) + 1;
-    maxNumAAPasses = qMin((quint32)(MAX_AA_LEVELS + 1), maxNumAAPasses);
     QSSGRenderEffect *theLastEffect = nullptr;
 
     QSSGLayerRenderPreparationResult thePrepResult;
@@ -1424,7 +1422,6 @@ void QSSGLayerRenderData::prepareForRender()
 
         thePrepResult = QSSGLayerRenderPreparationResult(theViewport, theScissor, layer);
         thePrepResult.lastEffect = theLastEffect;
-        thePrepResult.maxAAPassIndex = maxNumAAPasses;
 
         // these may still get modified due to custom materials below
         thePrepResult.flags.setRequiresDepthTexture(requiresDepthTexture);
@@ -1695,7 +1692,7 @@ void QSSGLayerRenderData::resetForFrame()
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer)
-    : lastEffect(nullptr), maxAAPassIndex(0), layer(&inLayer)
+    : lastEffect(nullptr), layer(&inLayer)
 {
     viewport = inViewport;
 

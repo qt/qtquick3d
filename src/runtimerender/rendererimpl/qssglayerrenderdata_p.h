@@ -123,7 +123,6 @@ struct QSSGLayerRenderPreparationResult
 {
     QSSGRenderEffect *lastEffect = nullptr;
     QSSGLayerRenderPreparationResultFlags flags;
-    quint32 maxAAPassIndex = 0;
     QRectF viewport;
     QRectF scissor;
     QSSGRenderLayer *layer = nullptr;
