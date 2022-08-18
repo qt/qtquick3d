@@ -214,6 +214,8 @@ public:
 
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
     typedef QVector<QSSGRenderableObjectHandle> TRenderableObjectList;
+    using RenderableNodeEntries = QVector<QSSGRenderableNodeEntry>;
+    using RenderableItem2DEntries = QVector<QSSGRenderItem2D *>;
 
     void rhiPrepare();
     void rhiRender();
@@ -245,21 +247,17 @@ public:
                                                                         const QSSGShaderLightList &lights,
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
+    // Helper functions used during PrepareForRender and PrepareAndRender
     // Updates lights with model receivesShadows. Do not pass globalLights.
-    bool prepareModelForRender(const QSSGRenderModel &inModel,
+    bool prepareModelForRender(const RenderableNodeEntries &renderableModels,
                                const QMatrix4x4 &inViewProjection,
                                const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                               QSSGShaderLightList &lights,
                                QSSGLayerRenderPreparationResultFlags &ioFlags,
                                const QSSGCameraData &cameraData);
-    bool prepareParticlesForRender(const QSSGRenderParticles &inParticles,
-                                   const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                   QSSGShaderLightList &lights, const QSSGCameraData &cameraData);
-
-    // Helper function used during PrepareForRender and PrepareAndRender
-    bool prepareRenderablesForRender(const QMatrix4x4 &inViewProjection,
-                                     const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
-                                     QSSGLayerRenderPreparationResultFlags &ioFlags);
+    bool prepareParticlesForRender(const RenderableNodeEntries &renderableParticles,
+                                   const QSSGOption<QSSGClippingFrustum> &inClipFrustum, const QSSGCameraData &cameraData);
+    static bool prepareItem2DsForRender(const QSSGRenderContextInterface &ctxIfc, const RenderableItem2DEntries &renderableItem2Ds,
+                                        const QMatrix4x4 &inViewProjection);
 
     void prepareResourceLoaders();
 
@@ -274,7 +272,7 @@ public:
     const TRenderableObjectList &getSortedTransparentRenderableObjects();
     const TRenderableObjectList &getSortedScreenTextureRenderableObjects();
     const QVector<QSSGBakedLightingModel> &getSortedBakedLightingModels();
-    const QVector<QSSGRenderableNodeEntry> &getRenderableItem2Ds();
+    const RenderableItem2DEntries &getRenderableItem2Ds();
 
     void resetForFrame();
 
@@ -286,12 +284,12 @@ public:
     // search through m_FirstChild if length is zero.
 
     // renderableNodes have all lights, but properties configured for specific node
-    QVector<QSSGRenderableNodeEntry> renderableNodes;
+    RenderableNodeEntries renderableModels;
+    RenderableNodeEntries renderableParticles;
+    QVector<QSSGRenderItem2D *> renderableItem2Ds;
     QVector<QSSGRenderCamera *> cameras;
     QVector<QSSGRenderLight *> lights;
     QVector<QSSGRenderReflectionProbe *> reflectionProbes;
-    QVector<QSSGRenderableNodeEntry> renderableItem2Ds;
-    QVector<QSSGRenderableNodeEntry> renderedItem2Ds;
 
     // Results of prepare for render.
 
@@ -309,6 +307,7 @@ public:
     TRenderableObjectList renderedOpaqueDepthPrepassObjects;
     TRenderableObjectList renderedDepthWriteObjects;
     QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
+    RenderableItem2DEntries renderedItem2Ds;
 
     QSSGOption<QSSGClippingFrustum> clippingFrustum;
     QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;

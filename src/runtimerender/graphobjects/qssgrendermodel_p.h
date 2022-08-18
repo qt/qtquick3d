@@ -48,7 +48,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     bool skinningDirty = false;
     bool skeletonContainsNonJointNodes = false;
     QByteArray boneData;
-    QRhiTexture *boneTexture = nullptr;
+    mutable QRhiTexture *boneTexture = nullptr;
     quint32 boneCount = 0;
 
     QSSGRenderInstanceTable *instanceTable = nullptr;
