@@ -77,7 +77,7 @@ cubemap} for more details.
 The following table lists the command-line options recognized by \c balsam when
 converting asset files:
 
-\note For each boolean option it is possible to use --disable-<option-name>
+\note For each boolean option it is possible to use \c{--disable-<option-name>}.
 
 \table
 \header \li Option \li Description
