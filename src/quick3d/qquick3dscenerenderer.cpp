@@ -555,10 +555,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     }
 
     // Generate layer node
-    if (!m_layer) {
+    if (!m_layer)
         m_layer = new QSSGRenderLayer();
-        m_layer->setState(QSSGRenderNode::LocalState::Active);
-    }
 
     // Update the layer node properties
     updateLayerNode(view3D, resourceLoaders);

@@ -203,13 +203,12 @@ QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &la
                                                        const QSSGRenderRay &ray)
 {
     PickResultList pickResults;
-    if (layer.getLocalState(QSSGRenderLayer::LocalState::Active)) {
-        getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
-        // Things are rendered in a particular order and we need to respect that ordering.
-        std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
-            return lhs.m_distanceSq < rhs.m_distanceSq;
-        });
-    }
+    Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
+    getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
+    // Things are rendered in a particular order and we need to respect that ordering.
+    std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+        return lhs.m_distanceSq < rhs.m_distanceSq;
+    });
     return pickResults;
 }
 
@@ -228,18 +227,17 @@ QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
         return QSSGPickResultProcessResult{ pickResults.at(0), true };
     };
 
+    Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
     PickResultList pickResults;
-    if (layer.getLocalState(QSSGRenderLayer::LocalState::Active)) {
-        if (target) {
-            // Pick against only one target
-            intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
-            return processResults(pickResults);
-        } else {
-            getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
-            QSSGPickResultProcessResult retval = processResults(pickResults);
-            if (retval.m_wasPickConsumed)
-                return retval;
-        }
+    if (target) {
+        // Pick against only one target
+        intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
+        return processResults(pickResults);
+    } else {
+        getLayerHitObjectList(layer, bufferManager, ray, m_globalPickingEnabled, pickResults);
+        QSSGPickResultProcessResult retval = processResults(pickResults);
+        if (retval.m_wasPickConsumed)
+            return retval;
     }
 
     return QSSGPickResultProcessResult();

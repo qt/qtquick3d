@@ -33,6 +33,7 @@ QSSGRenderLayer::QSSGRenderLayer()
     , renderedCamera(nullptr)
     , tonemapMode(TonemapMode::Linear)
 {
+    flags = { FlagT(LocalState::Active) | FlagT(GlobalState::Active) }; // The layer node is alway active and not dirty.
 }
 
 QSSGRenderLayer::~QSSGRenderLayer()
