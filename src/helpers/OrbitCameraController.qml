@@ -9,7 +9,6 @@ Item {
     required property Node origin
     required property Camera camera
 
-    property real speed: 1
     property real xSpeed: 0.1
     property real ySpeed: 0.1
 
@@ -144,20 +143,10 @@ Item {
         status.currentPanPos = newPos;
     }
 
-    function processInputs()
-    {
-        if (root.inputsNeedProcessing)
-            status.processInput();
-    }
-
-    Timer {
+    FrameAnimation {
         id: updateTimer
-        interval: 16
-        repeat: true
         running: root.inputsNeedProcessing
-        onTriggered: {
-            processInputs();
-        }
+        onTriggered: status.processInput(frameTime * 100)
     }
 
     QtObject {
@@ -175,20 +164,20 @@ Item {
             return Qt.vector3d(-vector.x, -vector.y, -vector.z)
         }
 
-        function processInput() {
+        function processInput(frameDelta) {
             if (useMouse) {
                 // Get the delta
                 var rotationVector = origin.eulerRotation;
                 var delta = Qt.vector2d(lastPos.x - currentPos.x,
                                         lastPos.y - currentPos.y);
                 // rotate x
-                var rotateX = delta.x * xSpeed
+                var rotateX = delta.x * xSpeed * frameDelta
                 if (xInvert)
                     rotateX = -rotateX;
                 rotationVector.y += rotateX;
 
                 // rotate y
-                var rotateY = delta.y * -ySpeed
+                var rotateY = delta.y * -ySpeed * frameDelta
                 if (yInvert)
                     rotateY = -rotateY;
                 rotationVector.x += rotateY;
@@ -199,8 +188,8 @@ Item {
                 let delta = currentPanPos.minus(lastPanPos);
                 delta.x = -delta.x
 
-                delta.x = (delta.x / root.width) * camera.z
-                delta.y = (delta.y / root.height) * camera.z
+                delta.x = (delta.x / root.width) * camera.z * frameDelta
+                delta.y = (delta.y / root.height) * camera.z * frameDelta
 
                 let velocity = Qt.vector3d(0, 0, 0)
                 // X Movement
