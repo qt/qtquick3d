@@ -4,7 +4,6 @@
 #include <QtTest>
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendererimpllayerrenderhelper_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 class intersection : public QObject
@@ -16,26 +15,8 @@ public:
     ~intersection() = default;
 
 private slots:
-    void bench_aabbIntersection();
     void bench_aabbIntersectionv2();
 };
-
-void intersection::bench_aabbIntersection()
-{
-    QSSGRenderRay::IntersectionResult res;
-    QMatrix4x4 globalTransform; // Identity
-    // Bounding box of size 1, placed at origin
-    QSSGBounds3 bounds { /*min=*/ QVector3D{ -0.5f, -0.5f, -0.5f }, /*max=*/ QVector3D{ 0.5f, 0.5f, 0.5f } };
-
-    // Pick ray goes directly down the z-axis and should hit directly in the middle of the box
-    const auto pickRay = QSSGRenderRay(/*Origin=*/{0.0f, 0.0f, 10.0f}, /*Direction=*/{0.0f, 0.0f, -1.0f});
-    res = QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
-    QCOMPARE(res.intersects, true);
-
-    QBENCHMARK {
-        QSSGRenderRay::intersectWithAABB(globalTransform, bounds, pickRay);
-    }
-}
 
 void intersection::bench_aabbIntersectionv2()
 {
