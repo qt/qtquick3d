@@ -26,6 +26,7 @@ Window {
 
         //! [picking]
         TapHandler {
+            gesturePolicy: TapHandler.WithinBounds
             onTapped: {
                 var result = view.pick(point.position.x, point.position.y);
                 if (result.objectHit) {
