@@ -3767,7 +3767,7 @@ void QSSGLayerRenderData::rhiPrepare()
                                         QSSGRhiDrawCallDataKey::DepthTexture,
                                         1))
                 {
-                    bool needsSetVieport = true;
+                    bool needsSetViewport = true;
                     cb->beginPass(rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                     QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiDepthTexture.rt));
                     // NB! We do not pass sortedTransparentObjects in the 4th
@@ -3777,7 +3777,7 @@ void QSSGLayerRenderData::rhiPrepare()
                     // opaque pass, not including transparent objects, is part
                     // of the contract for screen reading custom materials,
                     // both for depth and color.
-                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, &needsSetVieport);
+                    rhiRenderDepthPass(rhiCtx, *this, sortedOpaqueObjects, {}, &needsSetViewport);
                     cb->endPass();
                     QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 } else {
