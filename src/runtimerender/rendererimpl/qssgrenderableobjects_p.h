@@ -36,31 +36,30 @@ enum class QSSGRenderableObjectFlag
     HasTransparency = 1 << 0,
     CompletelyTransparent = 1 << 1,
     Dirty = 1 << 2,
-    Pickable = 1 << 3,
-    DefaultMaterialMeshSubset = 1 << 4,
-    Particles = 1 << 5,
-    CustomMaterialMeshSubset = 1 << 7,
-    CastsShadows = 1 << 9,
-    ReceivesShadows = 1 << 10,
-    HasAttributePosition = 1 << 11,
-    HasAttributeNormal = 1 << 12,
-    HasAttributeTexCoord0 = 1 << 13,
-    HasAttributeTexCoord1 = 1 << 14,
-    HasAttributeTangent = 1 << 15,
-    HasAttributeBinormal = 1 << 16,
-    HasAttributeColor = 1 << 17,
-    HasAttributeJointAndWeight = 1 << 18,
-    IsPointsTopology = 1 << 19,
+    DefaultMaterialMeshSubset = 1 << 3,
+    Particles = 1 << 4,
+    CustomMaterialMeshSubset = 1 << 5,
+    CastsShadows = 1 << 6,
+    ReceivesShadows = 1 << 7,
+    HasAttributePosition = 1 << 8,
+    HasAttributeNormal = 1 << 9,
+    HasAttributeTexCoord0 = 1 << 10,
+    HasAttributeTexCoord1 = 1 << 11,
+    HasAttributeTangent = 1 << 12,
+    HasAttributeBinormal = 1 << 13,
+    HasAttributeColor = 1 << 14,
+    HasAttributeJointAndWeight = 1 << 15,
+    IsPointsTopology = 1 << 16,
     // The number of target models' attributes are too many
     // to store in a renderable flag.
     // They will be recorded in shaderKey.
-    HasAttributeMorphTarget = 1 << 20,
-    RequiresScreenTexture = 1 << 21,
-    ReceivesReflections = 1 << 22,
-    UsedInBakedLighting = 1 << 23,
-    RendersWithLightmap = 1 << 24,
-    HasAttributeTexCoordLightmap = 1 << 25,
-    CastsReflections = 1 << 26
+    HasAttributeMorphTarget = 1 << 17,
+    RequiresScreenTexture = 1 << 18,
+    ReceivesReflections = 1 << 19,
+    UsedInBakedLighting = 1 << 20,
+    RendersWithLightmap = 1 << 21,
+    HasAttributeTexCoordLightmap = 1 << 22,
+    CastsReflections = 1 << 23
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -80,8 +79,6 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     }
     void setDirty(bool inDirty) { setFlag(QSSGRenderableObjectFlag::Dirty, inDirty); }
     bool isDirty() const { return this->operator&(QSSGRenderableObjectFlag::Dirty); }
-    void setPickable(bool inPickable) { setFlag(QSSGRenderableObjectFlag::Pickable, inPickable); }
-    bool isPickable() const { return this->operator&(QSSGRenderableObjectFlag::Pickable); }
 
     void setCastsShadows(bool inCastsShadows) { setFlag(QSSGRenderableObjectFlag::CastsShadows, inCastsShadows); }
     bool castsShadows() const { return this->operator&(QSSGRenderableObjectFlag::CastsShadows); }
@@ -299,7 +296,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     QSSGShaderReflectionProbe reflectionProbe;
     const QSSGRef<QSSGRenderer> &generator;
     const QSSGModelContext &modelContext;
-    QSSGRenderSubset &subset;
+    const QSSGRenderSubset &subset;
     QRhiBuffer *instanceBuffer = nullptr;
     float opacity;
     const QSSGRenderGraphObject &material;
@@ -332,7 +329,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QSSGRef<QSSGRenderer> &gen,
-                         QSSGRenderSubset &inSubset,
+                         const QSSGRenderSubset &inSubset,
                          const QSSGModelContext &inModelContext,
                          float inOpacity,
                          const QSSGRenderGraphObject &mat,

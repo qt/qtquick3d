@@ -151,6 +151,7 @@ struct QSSGLayerRenderPreparationResult
 struct QSSGRenderableNodeEntry
 {
     QSSGRenderNode *node = nullptr;
+    mutable QSSGRenderMesh *mesh = nullptr;
     QSSGShaderLightList lights;
     QSSGRenderableNodeEntry() = default;
     QSSGRenderableNodeEntry(QSSGRenderNode &inNode) : node(&inNode) {}
@@ -251,11 +252,9 @@ public:
     // Updates lights with model receivesShadows. Do not pass globalLights.
     bool prepareModelForRender(const RenderableNodeEntries &renderableModels,
                                const QMatrix4x4 &inViewProjection,
-                               const QSSGOption<QSSGClippingFrustum> &inClipFrustum,
                                QSSGLayerRenderPreparationResultFlags &ioFlags,
                                const QSSGCameraData &cameraData);
-    bool prepareParticlesForRender(const RenderableNodeEntries &renderableParticles,
-                                   const QSSGOption<QSSGClippingFrustum> &inClipFrustum, const QSSGCameraData &cameraData);
+    bool prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGCameraData &cameraData);
     static bool prepareItem2DsForRender(const QSSGRenderContextInterface &ctxIfc, const RenderableItem2DEntries &renderableItem2Ds,
                                         const QMatrix4x4 &inViewProjection);
 

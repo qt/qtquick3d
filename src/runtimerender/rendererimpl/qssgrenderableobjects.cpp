@@ -16,7 +16,7 @@ struct QSSGSubsetRenderable;
 QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            const QVector3D &inWorldCenterPt,
                                            const QSSGRef<QSSGRenderer> &gen,
-                                           QSSGRenderSubset &inSubset,
+                                           const QSSGRenderSubset &inSubset,
                                            const QSSGModelContext &inModelContext,
                                            float inOpacity,
                                            const QSSGRenderGraphObject &mat,
