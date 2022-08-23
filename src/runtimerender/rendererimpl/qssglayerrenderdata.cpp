@@ -1656,10 +1656,6 @@ void QSSGLayerRenderData::prepareForRender()
     thePrepResult.flags.setLayerDataDirty(wasDataDirty);
 
     layerPrepResult = thePrepResult;
-
-    // Per-frame cache of renderable objects post-sort.
-    getSortedOpaqueRenderableObjects();
-    getSortedTransparentRenderableObjects();
 }
 
 void QSSGLayerRenderData::resetForFrame()
