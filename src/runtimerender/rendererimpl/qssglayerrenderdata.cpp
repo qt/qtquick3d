@@ -3685,19 +3685,17 @@ void QSSGLayerRenderData::rhiPrepare()
 
     if (camera) {
         if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
-            // TODO - optimize this exact matrix operation.
-            for (qint32 idx = 0, end = modelContexts.size(); idx < end; ++idx) {
-                QMatrix4x4 offsetProjection = camera->projection;
-                if (camera->type == QSSGRenderCamera::Type::OrthographicCamera) {
-                    offsetProjection(0, 3) -= vertexOffsetsAA.x();
-                    offsetProjection(1, 3) -= vertexOffsetsAA.y();
-                    modelContexts[idx]->modelViewProjection = offsetProjection * camera->projection.inverted() * modelContexts[idx]->modelViewProjection;
-                } else if (camera->type == QSSGRenderCamera::Type::PerspectiveCamera) {
-                    offsetProjection(0, 2) += vertexOffsetsAA.x();
-                    offsetProjection(1, 2) += vertexOffsetsAA.y();
-                    modelContexts[idx]->modelViewProjection = offsetProjection * camera->projection.inverted() * modelContexts[idx]->modelViewProjection;
-                }
+            QMatrix4x4 offsetProjection = camera->projection;
+            QMatrix4x4 invProjection = camera->projection.inverted();
+            if (camera->type == QSSGRenderCamera::Type::OrthographicCamera) {
+                offsetProjection(0, 3) -= vertexOffsetsAA.x();
+                offsetProjection(1, 3) -= vertexOffsetsAA.y();
+            } else if (camera->type == QSSGRenderCamera::Type::PerspectiveCamera) {
+                offsetProjection(0, 2) += vertexOffsetsAA.x();
+                offsetProjection(1, 2) += vertexOffsetsAA.y();
             }
+            for (auto &modelContext : modelContexts)
+                modelContext->modelViewProjection = offsetProjection * invProjection * modelContext->modelViewProjection;
         }
 
         camera->dpr = renderer->contextInterface()->dpr();
