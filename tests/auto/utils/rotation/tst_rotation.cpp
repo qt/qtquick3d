@@ -24,6 +24,8 @@ private slots:
     void test_aba();
     void test_compare();
     void test_compare2();
+    void test_fuzzyQuatCompare();
+    void test_compare_precision();
 };
 
 void tst_RotationDataClass::test_initialState()
@@ -222,6 +224,127 @@ void tst_RotationDataClass::test_compare2()
         b = -a;
         QVERIFY(a == b);
         QVERIFY(b == a);
+    }
+}
+
+void tst_RotationDataClass::test_fuzzyQuatCompare()
+{
+    RotationData a;
+    RotationData b;
+    QVERIFY(a == b);
+    QVERIFY(b == a);
+
+    { // QTBUG-105918 (Verify that the divergence from 1.0f does not result in a negative number).
+      // (i.e., -0.00001 <= e)
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f + 0.00001f, 0.5f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(!qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+}
+
+void tst_RotationDataClass::test_compare_precision()
+{
+    // Compare precision between the component-by-component compare and the fuzzyQuaternion compare
+    // These are just for monitoring, it is possible that these fail if e.g., the fudge factor is changed.
+    RotationData a;
+    RotationData b;
+    QVERIFY(a == b);
+    QVERIFY(b == a);
+
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f + 0.00001f, 0.5f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(!qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.00001f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(!qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.0005f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(!qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.00005f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(!qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+    {
+        const QQuaternion qa = QQuaternion(1000.f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(1000.f + 0.000001f, 0.5f + 0.000001f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a == b);
+        b = -qb;
+        QVERIFY(a == b);
+    }
+    // RotationData is preciser than qFuzzyCompare(QQuaternion)
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f + 0.000001f, 0.5f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f, 0.5f + 0.000001f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
+    }
+    {
+        const QQuaternion qa = QQuaternion(0.5f, 0.5f, 0.5f, 0.5f);
+        const QQuaternion qb = QQuaternion(0.5f + 0.000001f, 0.5f + 0.000001f, 0.5f, 0.5f);
+        QVERIFY(qa != qb);
+        QVERIFY(qFuzzyCompare(qa, qb));
+        a = qa;
+        b = qb;
+        QVERIFY(a != b);
+        b = -qb;
+        QVERIFY(a != b);
     }
 }
 

@@ -206,8 +206,9 @@ private:
 
     [[nodiscard]] constexpr static inline bool fuzzyQuaternionCompare(const QQuaternion &a, const QQuaternion &b)
     {
-        constexpr float e = 0.000001f;
-        return ((1.0f - qAbs(QQuaternion::dotProduct(a, b))) <= e);
+        // This 'e' will give better precision than qtbase's qFuzzyCompare for QQuaternion
+        constexpr float e = 0.0000001f;
+        return (qAbs(1.0f - qAbs(QQuaternion::dotProduct(a, b))) <= e);
     }
 
     enum class Dirty
