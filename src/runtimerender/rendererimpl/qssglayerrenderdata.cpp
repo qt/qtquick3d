@@ -1188,6 +1188,10 @@ bool QSSGLayerRenderData::prepareRenderablesForRender(const QMatrix4x4 &inViewPr
                     theModel->boneTexture->setPixelSize(texSize);
                     theModel->boneTexture->create();
                 }
+                // Make sure boneData is the same size as the destination texture
+                const int textureSizeInBytes = boneTexWidth * boneTexWidth * 16; //NB: Assumes RGBA32F set above (16 bytes per color)
+                if (textureSizeInBytes != theModel->boneData.size())
+                    theModel->boneData.resize(textureSizeInBytes);
             } else if (theModel->boneTexture) {
                 // This model had a skin but it was removed
                 rhiCtx->releaseTexture(theModel->boneTexture);
