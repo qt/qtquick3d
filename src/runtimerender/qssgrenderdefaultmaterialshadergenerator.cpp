@@ -677,8 +677,10 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         vertexShader.generateWorldPosition(inKey);
 
         const bool usingDefaultMaterialSpecularGGX = !(materialAdapter->isPrincipled() || materialAdapter->isSpecularGlossy()) && materialAdapter->specularModel() == QSSGRenderDefaultMaterial::MaterialSpecularModel::KGGX;
+        const bool needsTangentAndBinormal = hasCustomFrag || enableParallaxMapping || clearcoatNormalImage || enableBumpNormal || usingDefaultMaterialSpecularGGX;
 
-        if (hasCustomFrag || enableParallaxMapping || clearcoatNormalImage || enableBumpNormal || usingDefaultMaterialSpecularGGX) {
+
+        if (needsTangentAndBinormal) {
             bool genTangent = false;
             bool genBinormal = false;
             vertexShader.generateVarTangentAndBinormal(inKey, genTangent, genBinormal);
@@ -696,10 +698,12 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
             if (!genBinormal)
                 fragmentShader << "    qt_binormal = cross(qt_world_normal, qt_tangent);\n";
+        }
 
-            if (isDoubleSided) {
-                fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;\n");
-                fragmentShader.append("    qt_world_normal *= qt_facing;\n");
+        if (isDoubleSided) {
+            fragmentShader.append("    const float qt_facing = gl_FrontFacing ? 1.0 : -1.0;\n");
+            fragmentShader.append("    qt_world_normal *= qt_facing;\n");
+            if (needsTangentAndBinormal) {
                 fragmentShader.append("    qt_tangent *= qt_facing;");
                 fragmentShader.append("    qt_binormal *= qt_facing;");
             }
