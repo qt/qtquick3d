@@ -98,6 +98,8 @@ class Q_QUICK3D_EXPORT QQuick3DPrincipledMaterial : public QQuick3DMaterial
 
     Q_PROPERTY(float indexOfRefraction READ indexOfRefraction WRITE setIndexOfRefraction NOTIFY indexOfRefractionChanged REVISION(6, 3))
 
+    Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged REVISION(6, 5))
+
     QML_NAMED_ELEMENT(PrincipledMaterial)
 
 public:
@@ -179,6 +181,8 @@ public:
 
     Q_REVISION(6, 3) float indexOfRefraction() const;
 
+    Q_REVISION(6, 5) bool vertexColorsEnabled() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DPrincipledMaterial::Lighting lighting);
     void setBlendMode(QQuick3DPrincipledMaterial::BlendMode blendMode);
@@ -233,6 +237,8 @@ public Q_SLOTS:
     Q_REVISION(6, 3) void setAttenuationColor(const QColor &newAttenuationColor);
 
     Q_REVISION(6, 3) void setIndexOfRefraction(float indexOfRefraction);
+
+    Q_REVISION(6, 5) void setVertexColorsEnabled(bool vertexColorsEnabled);
 
 Q_SIGNALS:
     void lightingChanged(QQuick3DPrincipledMaterial::Lighting lighting);
@@ -289,6 +295,8 @@ Q_SIGNALS:
 
     Q_REVISION(6, 3) void indexOfRefractionChanged(float indexOfRefraction);
 
+    Q_REVISION(6, 5) void vertexColorsEnabledChanged(bool vertexColorsEnabled);
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -311,7 +319,8 @@ private:
         HeightDirty = 0x00002000,
         ClearcoatDirty = 0x00004000,
         TransmissionDirty = 0x00008000,
-        VolumeDirty = 0x00010000
+        VolumeDirty = 0x00010000,
+        VertexColorsDirty = 0x00020000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -372,6 +381,7 @@ private:
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
     float m_indexOfRefraction = 1.5f;
+    bool m_vertexColorsEnabled = false;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);

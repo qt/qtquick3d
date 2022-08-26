@@ -702,6 +702,15 @@ QT_BEGIN_NAMESPACE
     \note No known material in the world have ior much greater than \c 3.0.
 */
 
+/*!
+    \qmlproperty bool PrincipledMaterial::vertexColorsEnabled
+    \since 6.5
+
+    When this property is enabled, the material will use vertex colors from the
+    mesh. These will be multiplied by any other colors specified for the
+    material.
+*/
+
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
 QQuick3DPrincipledMaterial::QQuick3DPrincipledMaterial(QQuick3DObject *parent)
@@ -1411,6 +1420,9 @@ QSSGRenderGraphObject *QQuick3DPrincipledMaterial::updateSpatialNode(QSSGRenderG
         material->attenuationColor = color::sRGBToLinear(m_attenuationColor).toVector3D();
     }
 
+    if (m_dirtyAttributes & VertexColorsDirty)
+        material->vertexColorsEnabled = m_vertexColorsEnabled;
+
     m_dirtyAttributes = 0;
 
     return node;
@@ -1616,6 +1628,11 @@ float QQuick3DPrincipledMaterial::indexOfRefraction() const
     return m_indexOfRefraction;
 }
 
+bool QQuick3DPrincipledMaterial::vertexColorsEnabled() const
+{
+    return m_vertexColorsEnabled;
+}
+
 void QQuick3DPrincipledMaterial::setTransmissionChannel(QQuick3DMaterial::TextureChannelMapping newTransmissionChannel)
 {
     if (m_transmissionChannel == newTransmissionChannel)
@@ -1706,6 +1723,16 @@ void QQuick3DPrincipledMaterial::setIndexOfRefraction(float indexOfRefraction)
     m_indexOfRefraction = indexOfRefraction;
     emit indexOfRefractionChanged(m_indexOfRefraction);
     markDirty(SpecularDirty);
+}
+
+void QQuick3DPrincipledMaterial::setVertexColorsEnabled(bool vertexColors)
+{
+    if (m_vertexColorsEnabled == vertexColors)
+        return;
+
+    m_vertexColorsEnabled = vertexColors;
+    emit vertexColorsEnabledChanged(m_vertexColorsEnabled);
+    markDirty(VertexColorsDirty);
 }
 
 QT_END_NAMESPACE
