@@ -338,14 +338,15 @@ void QQuick3DReflectionProbe::findSceneView()
     }
 
     // Breath-first search through children
-    QList<QObject *> children = parent->children();
-    while (!children.empty()) {
-        auto child = children.takeFirst();
-        if (auto converted = qobject_cast<QQuick3DViewport *>(child); converted != nullptr) {
+    QList<QObject *> queue;
+    queue.append(parent);
+    while (!queue.empty()) {
+        auto node = queue.takeFirst();
+        if (auto converted = qobject_cast<QQuick3DViewport *>(node); converted != nullptr) {
             m_sceneView = converted;
             break;
         }
-        children.append(child->children());
+        queue.append(node->children());
     }
 }
 
