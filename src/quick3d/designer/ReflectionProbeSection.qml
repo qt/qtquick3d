@@ -86,7 +86,7 @@ Section {
 
         SecondColumnLayout {
             SpinBox {
-                minimumValue: 0
+                minimumValue: -9999999
                 maximumValue: 9999999
                 decimals: 2
                 backendValue: backendValues.boxOffset_x
@@ -108,7 +108,7 @@ Section {
 
         SecondColumnLayout {
             SpinBox {
-                minimumValue: 0
+                minimumValue: -9999999
                 maximumValue: 9999999
                 decimals: 2
                 backendValue: backendValues.boxOffset_y
@@ -130,7 +130,7 @@ Section {
 
         SecondColumnLayout {
             SpinBox {
-                minimumValue: 0
+                minimumValue: -9999999
                 maximumValue: 9999999
                 decimals: 2
                 backendValue: backendValues.boxOffset_z
