@@ -227,6 +227,8 @@ struct QSSGRenderableObjectHandle
 };
 Q_DECLARE_TYPEINFO(QSSGRenderableObjectHandle, Q_PRIMITIVE_TYPE);
 
+using QSSGRenderableObjectList = QVector<QSSGRenderableObjectHandle>;
+
 struct QSSGRenderableObject
 {
     // Variables used for picking

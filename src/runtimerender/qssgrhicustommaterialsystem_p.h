@@ -83,16 +83,15 @@ public:
                                          QSSGRhiGraphicsPipelineState *ps,
                                          const QSSGRenderCustomMaterial &material,
                                          QSSGSubsetRenderable &renderable,
-                                         QSSGLayerRenderData &layerData,
-                                         QSSGRenderCamera &camera,
+                                         const QSSGRenderCamera &camera,
                                          const QVector2D *depthAdjust,
                                          const QMatrix4x4 *alteredModelViewProjection);
 
-    void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
+    void rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps, QSSGPassKey passKey,
                               QSSGSubsetRenderable &renderable,
                               const QSSGShaderFeatures &featureSet,
                               const QSSGRenderCustomMaterial &material,
-                              QSSGLayerRenderData &layerData,
+                              const QSSGLayerRenderData &layerData,
                               QRhiRenderPassDescriptor *renderPassDescriptor,
                               int samples,
                               QSSGRenderCamera *camera = nullptr,
@@ -104,10 +103,9 @@ public:
                                       const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                              QSSGSubsetRenderable &renderable,
-                             QSSGLayerRenderData &inData,
                              bool *needsSetViewport,
                              int cubeFace,
-                             QSSGRhiGraphicsPipelineState *state);
+                             const QSSGRhiGraphicsPipelineState &state);
 };
 
 QT_END_NAMESPACE

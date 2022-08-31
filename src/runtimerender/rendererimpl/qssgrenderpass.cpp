@@ -1,0 +1,732 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#include "qssgrenderpass_p.h"
+#include "qssgrhiquadrenderer_p.h"
+#include "qssglayerrenderdata_p.h"
+#include "qssgrendercontextcore_p.h"
+
+#include <QtQuick/private/qsgrenderer_p.h>
+
+QT_BEGIN_NAMESPACE
+
+// SHADOW PASS
+
+void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
+    const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
+
+    for (const auto &handles : { &renderedDepthWriteObjects, &renderedOpaqueDepthPrepassObjects }) {
+        for (const auto &handle : *handles)
+            shadowPassObjects.push_back(handle);
+    }
+
+    globalLights = data.globalLights;
+
+    enabled = !shadowPassObjects.isEmpty() || !globalLights.isEmpty();
+
+    if (enabled) {
+        if (!data.shadowMapManager)
+            data.shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
+
+        shadowMapManager = data.shadowMapManager;
+        camera = data.camera;
+
+        ps = data.getPipelineState();
+        ps.depthTestEnable = true;
+        ps.depthWriteEnable = true;
+        // Try reducing self-shadowing and artifacts.
+        ps.depthBias = 2;
+        ps.slopeScaledDepthBias = 1.5f;
+
+        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+        const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+        const auto [casting, receiving] = calculateSortedObjectBounds(sortedOpaqueObjects,
+                                                                      sortedTransparentObjects);
+        castingObjectsBox = casting;
+        receivingObjectsBox = receiving;
+    }
+}
+
+void ShadowMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: Sorted opaque and transparent + depth, global lights (scoped lights not supported) and camera.
+
+    // DEPENDECY: None
+
+    // OUTPUT: Textures or cube maps
+
+    // CONDITION: Lights (shadowPassObjects)
+
+    if (enabled) {
+        const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+        Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+        QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
+
+        Q_ASSERT(shadowMapManager);
+        rhiRenderShadowMap(rhiCtx.data(),
+                           this,
+                           ps,
+                           shadowMapManager,
+                           *camera,
+                           globalLights, // scoped lights are not relevant here
+                           shadowPassObjects,
+                           renderer,
+                           castingObjectsBox,
+                           receivingObjectsBox);
+
+        cb->debugMarkEnd();
+    }
+}
+
+void ShadowMapPass::release()
+{
+    enabled = false;
+    camera = nullptr;
+    castingObjectsBox = {};
+    receivingObjectsBox = {};
+    ps = {};
+    shadowPassObjects.clear();
+    globalLights.clear();
+}
+
+// REFLECTIONMAP PASS
+
+void ReflectionMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    Q_UNUSED(renderer);
+    Q_UNUSED(data);
+
+    ps = data.getPipelineState();
+    ps.depthTestEnable = true;
+    ps.depthWriteEnable = true;
+    ps.blendEnable = true;
+
+    reflectionProbes = data.reflectionProbes;
+
+    if (!data.reflectionMapManager)
+        data.reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
+
+    reflectionMapManager = data.reflectionMapManager;
+
+    const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+    const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+
+    // NOTE: We should consider keeping track of the reflection casting objects to avoid
+    // filtering this list on each prep.
+    for (const auto &handles : { &sortedOpaqueObjects, &sortedTransparentObjects }) {
+        for (const auto &handle : *handles) {
+            if (handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::CastsReflections))
+                reflectionPassObjects.push_back(handle);
+        }
+    }
+}
+
+void ReflectionMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: Reflection probes, sorted opaque and transparent
+
+    // DEPENDECY: None
+
+    // OUTPUT: Cube maps (1 per probe)
+
+    // NOTE: Full pass with a sky box pass
+
+    // CONDITION: Probes and sorted opaque and transparent
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    // TODO: Workaroud as we using the layer data in rhiRenderReflectionMap() consider
+    // if we can extract the data we need for rendering in the prep step...
+    Q_ASSERT(renderer->getLayerGlobalRenderProperties().layer.renderData);
+    const auto &data = *renderer->getLayerGlobalRenderProperties().layer.renderData;
+
+    Q_ASSERT(!reflectionMapManager.isNull());
+    if (!reflectionPassObjects.isEmpty() || !reflectionProbes.isEmpty()) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D reflection map"));
+
+        rhiRenderReflectionMap(rhiCtx.data(),
+                               this,
+                               data,
+                               &ps,
+                               reflectionMapManager,
+                               reflectionProbes,
+                               reflectionPassObjects,
+                               renderer);
+
+        cb->debugMarkEnd();
+    }
+}
+
+void ReflectionMapPass::release()
+{
+    ps = {};
+    reflectionProbes.clear();
+    reflectionPassObjects.clear();
+}
+
+// ZPrePass
+void ZPrePassPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: Item2Ds + depth write + depth prepass
+
+    // DEPENDECY: none
+
+    // OUTPUT: Depth buffer attchment for current target
+
+    // NOTE: Could we make the depth pass more complete and just do a blit here?
+
+    // CONDITION: Input + globally enabled or ?
+
+    renderedDepthWriteObjects = data.renderedDepthWriteObjects;
+    renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    ps = data.getPipelineState();
+
+    const auto &layer = data.layer;
+    const bool hasItem2Ds = data.renderableItem2Ds.isEmpty();
+    bool zPrePass = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass)
+            && layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)
+            && (!renderedDepthWriteObjects.isEmpty() || hasItem2Ds);
+    if (zPrePass || !renderedOpaqueDepthPrepassObjects.isEmpty()) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare Z prepass"));
+        if (!zPrePass) {
+            state = { State::Forced };
+            rhiPrepareDepthPass(rhiCtx.data(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
+                                {}, renderedOpaqueDepthPrepassObjects,
+                                QSSGRhiDrawCallDataKey::ZPrePass,
+                                rhiCtx->mainPassSampleCount());
+        } else if (rhiPrepareDepthPass(rhiCtx.data(), this, ps, rhiCtx->mainRenderPassDescriptor(), data,
+                                    renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects,
+                                    QSSGRhiDrawCallDataKey::ZPrePass,
+                                    rhiCtx->mainPassSampleCount())) {
+                state = { State::Active };
+        }
+        cb->debugMarkEnd();
+    }
+}
+
+void ZPrePassPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    bool needsSetViewport = true;
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    if (state == State::Active) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z prepass"));
+        rhiRenderDepthPass(rhiCtx.data(), ps, renderedDepthWriteObjects, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
+        cb->debugMarkEnd();
+    } else if (state == State::Forced) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render Z forced prepass"));
+        rhiRenderDepthPass(rhiCtx.data(), ps, {}, renderedOpaqueDepthPrepassObjects, &needsSetViewport);
+        cb->debugMarkEnd();
+    }
+}
+
+void ZPrePassPass::release()
+{
+    renderedDepthWriteObjects.clear();
+    renderedOpaqueDepthPrepassObjects.clear();
+    ps = {};
+    state = { State::Disabled };
+}
+
+// SSAO PASS
+void SSAOMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    // Assumption for now is that all passes are keept alive and only reset once a frame is done.
+    // I.e., holding data like this should be safe (If that's no longer the case we need to do ref counting
+    // for shared data).
+    rhiDepthTexture = &data.depthMapPass.rhiDepthTexture;
+    camera = data.camera;
+
+    if (!camera || !rhiDepthTexture->isValid()) {
+        qWarning() << "Preparing AO pass failed, missing camera or depth texture";
+        return;
+    }
+
+    ssaoShaderPipeline = data.renderer->getRhiSsaoShader();
+    ambientOcclusion = { data.layer.aoStrength, data.layer.aoDistance, data.layer.aoSoftness, data.layer.aoBias, data.layer.aoSamplerate, data.layer.aoDither };
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    ps = data.getPipelineState();
+    const auto &layerPrepResult = data.layerPrepResult;
+    const bool ready = rhiPrepareAoTexture(rhiCtx.data(), layerPrepResult->textureDimensions(), &rhiAoTexture);
+
+    if (Q_UNLIKELY(!ready))
+        rhiAoTexture.reset();
+}
+
+void SSAOMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: Camera + depth map
+
+    // DEPENDECY: Depth map (zprepass)
+
+    // OUTPUT: AO Texture
+
+    // NOTE:
+
+    // CONDITION: SSAO enabled
+    Q_ASSERT(camera);
+    Q_ASSERT(rhiDepthTexture && rhiDepthTexture->isValid());
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D SSAO map"));
+
+    if (Q_LIKELY(rhiAoTexture.isValid()))
+        rhiRenderAoTexture(rhiCtx.data(),
+                           this,
+                           renderer,
+                           ssaoShaderPipeline,
+                           ps,
+                           ambientOcclusion,
+                           rhiAoTexture,
+                           *rhiDepthTexture,
+                           *camera);
+
+    cb->debugMarkEnd();
+}
+
+void SSAOMapPass::release()
+{
+    rhiDepthTexture = nullptr;
+    camera = nullptr;
+    rhiAoTexture.reset();
+    ps = {};
+    ao = AmbientOcclusion();
+}
+
+// DEPTH TEXTURE PASS
+void DepthMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    const auto &layerPrepResult = data.layerPrepResult;
+    bool ready = false;
+    ps = data.getPipelineState();
+    if (Q_LIKELY(rhiPrepareDepthTexture(rhiCtx.data(), layerPrepResult->textureDimensions(), &rhiDepthTexture))) {
+        sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+        sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+        ready = rhiPrepareDepthPass(rhiCtx.data(), this, ps, rhiDepthTexture.rpDesc, data,
+                                    sortedOpaqueObjects, sortedTransparentObjects,
+                                    QSSGRhiDrawCallDataKey::DepthTexture,
+                                    1);
+    }
+
+    if (Q_UNLIKELY(!ready))
+        rhiDepthTexture.reset();
+}
+
+void DepthMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: sorted objects (opaque + transparent) (maybe...)
+
+    // DEPENDECY: If this is only used for the AO case, that dictates if this should be done or not.
+
+    // OUTPUT: Texture
+
+    // NOTE: Why are we prepping opaque + transparent object if we're not using them? And why are we staying compatible with 5.15?
+    //       Only used for AO? Merge into the AO pass?
+
+    // CONDITION:
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D depth texture"));
+
+    if (Q_LIKELY(rhiDepthTexture.isValid())) {
+        bool needsSetViewport = true;
+        cb->beginPass(rhiDepthTexture.rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiDepthTexture.rt));
+        // NB! We do not pass sortedTransparentObjects in the 4th
+        // argument to stay compatible with the 5.15 code base,
+        // which also does not include semi-transparent objects in
+        // the depth texture. In addition, capturing after the
+        // opaque pass, not including transparent objects, is part
+        // of the contract for screen reading custom materials,
+        // both for depth and color.
+        rhiRenderDepthPass(rhiCtx.data(), ps, sortedOpaqueObjects, {}, &needsSetViewport);
+        cb->endPass();
+        QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+    }
+
+    cb->debugMarkEnd();
+}
+
+void DepthMapPass::release()
+{
+    rhiDepthTexture.reset();
+    sortedOpaqueObjects.clear();
+    sortedTransparentObjects.clear();
+    ps = {};
+}
+
+// SCREEN TEXTURE PASS
+
+void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    const auto &layer = data.layer;
+    const auto &layerPrepResult = data.layerPrepResult;
+    wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
+    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+    const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
+    const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
+    ps = data.getPipelineState();
+
+    if (layer.background == QSSGRenderLayer::Background::Color)
+        clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
+
+    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
+    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
+    // enable depth write for opaque objects when there was no Z prepass
+    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));
+
+    ps.depthTestEnable = depthTestEnableDefault;
+    ps.depthWriteEnable = depthWriteEnableDefault;
+
+    bool ready = false;
+    if (Q_LIKELY(rhiPrepareScreenTexture(rhiCtx.data(), layerPrepResult->textureDimensions(), wantsMips, &rhiScreenTexture))) {
+        ready = true;
+        // NB: not compatible with disabling LayerEnableDepthTest
+        // because there are effectively no "opaque" objects then.
+        // Disable Tonemapping for all materials in the screen pass texture
+        shaderFeatures = data.getShaderFeatures();
+        shaderFeatures.disableTonemapping();
+        const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+        for (const auto &handle : sortedOpaqueObjects)
+            rhiPrepareRenderable(rhiCtx.data(), this, data, *handle.obj, rhiScreenTexture.rpDesc, &ps, shaderFeatures, 1);
+    }
+
+    if (Q_UNLIKELY(!ready))
+        rhiScreenTexture.reset();
+}
+
+void ScreenMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: Sorted opaque objects + depth objects
+
+    // DEPENDECY: Depth pass (if enabled)
+
+    // OUTPUT: Texture (screen texture).
+
+    // NOTE: Used for refrection and effects (?)
+
+    // CONDITION:
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
+
+    if (Q_LIKELY(rhiScreenTexture.isValid())) {
+        const auto &layer = renderer->getLayerGlobalRenderProperties().layer;
+        cb->beginPass(rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture.rt));
+
+        if (layer.background == QSSGRenderLayer::Background::SkyBox
+            && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
+            // This is offscreen, so rendered untonemapped
+            auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, layer.skyBoxIsRgbe8);
+            Q_ASSERT(shaderPipeline);
+            ps.shaderPipeline = shaderPipeline.data();
+            QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+            QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.data(), &ps, srb, rpDesc, {});
+        } else if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
+                   && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
+            auto shaderPipeline = renderer->getRhiSkyBoxCubeShader();
+            Q_ASSERT(shaderPipeline);
+            ps.shaderPipeline = shaderPipeline.data();
+            QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+            QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+            renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx.data(), &ps, srb, rpDesc, {});
+        }
+        bool needsSetViewport = true;
+        for (const auto &handle : qAsConst(sortedOpaqueObjects))
+            rhiRenderRenderable(rhiCtx.data(), ps, *handle.obj, &needsSetViewport);
+
+        QRhiResourceUpdateBatch *rub = nullptr;
+        if (wantsMips) {
+            rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+            rub->generateMips(rhiScreenTexture.texture);
+        }
+        cb->endPass(rub);
+        QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+    }
+
+    cb->debugMarkEnd();
+}
+
+void ScreenMapPass::release()
+{
+    rhiScreenTexture.reset();
+    ps = {};
+    wantsMips = false;
+    clearColor = Qt::transparent;
+    shaderFeatures = {};
+    sortedOpaqueObjects.clear();
+}
+
+// MAIN PASS
+void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+{
+    using namespace RenderHelpers;
+
+    // INPUT: Everything available
+
+    // DEPENDECY: Result from previous passes
+
+    // OUTPUT: Screen
+
+    // NOTE: (Does not write to the depth buffer as that's done in the ZPrePass).
+
+    // CONDITION: Always
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    ps = data.getPipelineState();
+    ps.depthFunc = QRhiGraphicsPipeline::LessOrEqual;
+    ps.blendEnable = false;
+
+    auto &layer = data.layer;
+    auto camera = data.camera;
+    shaderFeatures = data.getShaderFeatures();
+    Q_ASSERT(camera);
+
+    if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
+        rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
+
+    const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
+    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
+    const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
+    const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
+    const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());;
+    const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));;
+
+    ps.depthTestEnable = depthTestEnableDefault;
+    // enable depth write for opaque objects when there was no Z prepass
+    ps.depthWriteEnable = depthWriteEnableDefault;
+
+    // make the buffer copies and other stuff we put on the command buffer in
+    // here show up within a named section in tools like RenderDoc when running
+    // with QSG_RHI_PROFILE=1 (which enables debug markers)
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare renderables"));
+
+    QRhiRenderPassDescriptor *mainRpDesc = rhiCtx->mainRenderPassDescriptor();
+    const int samples = rhiCtx->mainPassSampleCount();
+
+    // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
+    for (const auto &handle : qAsConst(sortedOpaqueObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        const auto depthWriteMode = theObject->depthWriteMode;
+        ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never ||
+                                depthWriteMode == QSSGDepthDrawMode::OpaquePrePass ||
+                                (data.zPrePassPass.state == ZPrePassPass::State::Active) || !layerEnableDepthTest);
+        rhiPrepareRenderable(rhiCtx.data(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+    }
+
+    // objects that requires the screen texture
+    ps.depthTestEnable = depthTestEnableDefault;
+    ps.depthWriteEnable = depthWriteEnableDefault;
+    sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects();
+    for (const auto &handle : qAsConst(sortedScreenTextureObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        const auto depthWriteMode = theObject->depthWriteMode;
+        ps.blendEnable = theObject->renderableFlags.hasTransparency();
+        ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never || depthWriteMode == QSSGDepthDrawMode::OpaquePrePass
+                                 || (data.zPrePassPass.state == ZPrePassPass::State::Active) || !layerEnableDepthTest);
+        rhiPrepareRenderable(rhiCtx.data(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+    }
+
+    // objects rendered by Qt Quick 2D
+    ps.depthTestEnable = depthTestEnableDefault;
+    ps.depthWriteEnable = depthWriteEnableDefault;
+    ps.blendEnable = false;
+
+    item2Ds = data.getRenderableItem2Ds();
+    for (const auto &item2D: qAsConst(item2Ds)) {
+        // Set the projection matrix
+        if (!item2D->m_renderer)
+            continue;
+        if (item2D->m_rci != renderer->contextInterface()) {
+            if (!item2D->m_contextWarningShown) {
+                qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
+                item2D->m_contextWarningShown = true;
+            }
+            continue;
+        }
+
+        auto layerPrepResult = data.layerPrepResult;
+
+        item2D->m_renderer->setProjectionMatrix(item2D->MVP);
+        const auto &renderTarget = rhiCtx->renderTarget();
+        item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
+        const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
+        item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
+        item2D->m_renderer->setDeviceRect(deviceRect);
+        QRhiRenderPassDescriptor *oldRp = nullptr;
+        if (item2D->m_rp) {
+            // Changing render target, and so incompatible renderpass
+            // descriptors should be uncommon, but possible.
+            if (!item2D->m_rp->isCompatible(rhiCtx->mainRenderPassDescriptor()))
+                std::swap(item2D->m_rp, oldRp);
+        }
+        if (!item2D->m_rp) {
+            // Do not pass our object to the Qt Quick scenegraph. It may
+            // hold on to it, leading to lifetime and ownership issues.
+            // Rather, create a dedicated, compatible object.
+            item2D->m_rp = rhiCtx->mainRenderPassDescriptor()->newCompatibleRenderPassDescriptor();
+            Q_ASSERT(item2D->m_rp);
+        }
+        item2D->m_renderer->setRenderTarget({ renderTarget, item2D->m_rp, rhiCtx->commandBuffer() });
+        delete oldRp;
+        item2D->m_renderer->prepareSceneInline();
+    }
+
+    // transparent objects (or, without LayerEnableDepthTest, all objects)
+    ps.blendEnable = true;
+    ps.depthWriteEnable = false;
+
+    sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+    for (const auto &handle : qAsConst(sortedTransparentObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        const auto depthWriteMode = theObject->depthWriteMode;
+        ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && (data.zPrePassPass.state != ZPrePassPass::State::Active));
+        if (!(theObject->renderableFlags.isCompletelyTransparent()))
+            rhiPrepareRenderable(rhiCtx.data(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
+    }
+
+    cb->debugMarkEnd();
+}
+
+void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+{
+    using namespace RenderHelpers;
+
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+
+    bool needsSetViewport = true;
+
+    // 1. Render opaque objects
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
+    for (const auto &handle : qAsConst(sortedOpaqueObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);
+    }
+    cb->debugMarkEnd();
+
+    // 2. Render sky box (opt)
+    const auto &layer = renderer->getLayerGlobalRenderProperties().layer;
+    if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
+        && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
+        && layer.skyBoxSrb)
+    {
+        auto shaderPipeline = renderer->getRhiSkyBoxCubeShader();
+        Q_ASSERT(shaderPipeline);
+        ps.shaderPipeline = shaderPipeline.data();
+        QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+        QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+        renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx.data(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
+
+    } else if (layer.background == QSSGRenderLayer::Background::SkyBox
+               && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
+               && layer.skyBoxSrb)
+    {
+        QSSGRenderLayer::TonemapMode tonemapMode = layer.tonemapMode;
+        // When there are effects, then it is up to the last pass of the
+        // last effect to perform tonemapping, neither the skybox nor the
+        // main render pass should alter the colors then.
+        if (layer.firstEffect)
+            tonemapMode = QSSGRenderLayer::TonemapMode::None;
+
+        auto shaderPipeline = renderer->getRhiSkyBoxShader(tonemapMode, layer.skyBoxIsRgbe8);
+        Q_ASSERT(shaderPipeline);
+        ps.shaderPipeline = shaderPipeline.data();
+        QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
+        QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+        renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.data(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
+    }
+
+    // 3. Screen texture depended objects
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render screen texture dependent"));
+    for (const auto &handle : qAsConst(sortedScreenTextureObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);
+    }
+    cb->debugMarkEnd();
+
+    // 4. Item2Ds
+    if (!item2Ds.isEmpty()) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
+        for (const auto &item : qAsConst(item2Ds)) {
+            QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
+            if (item2D->m_rci == renderer->contextInterface())
+                item2D->m_renderer->renderSceneInline();
+        }
+        cb->debugMarkEnd();
+    }
+
+    // 5. Non-opaque objects
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
+    for (const auto &handle : qAsConst(sortedTransparentObjects)) {
+        QSSGRenderableObject *theObject = handle.obj;
+        if (!theObject->renderableFlags.isCompletelyTransparent())
+            rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);
+    }
+    cb->debugMarkEnd();
+}
+
+void MainPass::release()
+{
+    ps = {};
+    shaderFeatures = {};
+    sortedOpaqueObjects.clear();
+    sortedTransparentObjects.clear();
+    sortedScreenTextureObjects.clear();
+    item2Ds.clear();
+}
+
+QT_END_NAMESPACE

@@ -116,12 +116,14 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     QVector3D clearColor;
 
     // Ambient occlusion
-    float aoStrength;
-    float aoDistance;
-    float aoSoftness;
-    float aoBias;
-    qint32 aoSamplerate;
-    bool aoDither;
+    float aoStrength = 0.0f;
+    float aoDistance = 5.0f;
+    float aoSoftness = 50.0f;
+    float aoBias = 0.0f;
+    qint32 aoSamplerate = 2;
+    bool aoDither = false;
+
+    constexpr bool ssaoEnabled() const { return (aoStrength > 0.0f && aoDistance > 0.0f); }
 
     // IBL
     QSSGRenderImage *lightProbe;

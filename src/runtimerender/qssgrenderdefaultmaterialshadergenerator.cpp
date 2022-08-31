@@ -1680,7 +1680,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            const QSSGRenderGraphObject &inMaterial,
                                                            const QSSGShaderDefaultMaterialKey &inKey,
                                                            QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                                           QSSGRenderCamera &inCamera,
+                                                           const QSSGRenderCamera &inCamera,
                                                            const QMatrix4x4 &inModelViewProjection,
                                                            const QMatrix3x3 &inNormalMatrix,
                                                            const QMatrix4x4 &inGlobalTransform,
@@ -1707,7 +1707,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QVector2D camProperties(inCamera.clipNear, inCamera.clipFar);
 
     shaders->setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
-    shaders->setUniform(ubufData, "qt_cameraDirection", &inRenderProperties.cameraDirection, 3 * sizeof(float), &cui.cameraDirectionIdx);
+    shaders->setUniform(ubufData, "qt_cameraDirection", &inRenderProperties.cameraData, 3 * sizeof(float), &cui.cameraDirectionIdx);
     shaders->setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
     // Only calculate and update Matrix uniforms if they are needed

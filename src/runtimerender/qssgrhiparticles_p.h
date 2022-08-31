@@ -43,11 +43,11 @@ public:
                                                char *ubufData,
                                                const QSSGRenderModel *model, quint32 offset);
 
-    static void rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+    static void rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline, QSSGPassKey passKey,
                                      QSSGRhiContext *rhiCtx,
                                      QSSGRhiGraphicsPipelineState *ps,
                                      QSSGParticlesRenderable &renderable,
-                                     QSSGLayerRenderData &inData,
+                                     const QSSGLayerRenderData &inData,
                                      QRhiRenderPassDescriptor *renderPassDescriptor,
                                      int samples,
                                      QSSGRenderCamera *camera = nullptr,
@@ -55,10 +55,9 @@ public:
                                      QSSGReflectionMapEntry *entry = nullptr);
     static void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                     QSSGParticlesRenderable &renderable,
-                                    QSSGLayerRenderData &inData,
                                     bool *needsSetViewport,
                                     int cubeFace,
-                                    QSSGRhiGraphicsPipelineState *state);
+                                    const QSSGRhiGraphicsPipelineState &state);
     static void prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
                                          QSSGRhiShaderResourceBindingList &bindings,

@@ -211,7 +211,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         layer.addChild(model);
         layerData.prepareForRender();
 
-        const auto &features = layerData.features;
+        const auto &features = layerData.getShaderFeatures();
 
         auto &materialPropertis = layerData.renderer->defaultMaterialShaderKeyProperties();
 
@@ -238,10 +238,9 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             } else if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::CustomMaterialMeshSubset)) {
                 Q_ASSERT(layerData.camera);
                 QSSGSubsetRenderable &cmr(static_cast<QSSGSubsetRenderable &>(*renderable));
-                const auto &rhiContext = renderContext->rhiContext();
-                const auto pipelineState = rhiContext->graphicsPipelineState(&layerData);
+                auto pipelineState = layerData.getPipelineState();
                 const auto &cms = renderContext->customMaterialSystem();
-                auto shaderPipeline = cms->shadersForCustomMaterial(pipelineState,
+                auto shaderPipeline = cms->shadersForCustomMaterial(&pipelineState,
                                                                     cmr.customMaterial(),
                                                                     cmr,
                                                                     features);

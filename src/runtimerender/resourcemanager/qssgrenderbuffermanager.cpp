@@ -24,6 +24,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
 
 QT_BEGIN_NAMESPACE
 

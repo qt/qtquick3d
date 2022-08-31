@@ -5,6 +5,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
 #include <QtCore/qloggingcategory.h>
 

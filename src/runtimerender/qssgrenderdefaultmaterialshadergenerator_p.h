@@ -81,7 +81,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          const QSSGRenderGraphObject &inMaterial,
                                          const QSSGShaderDefaultMaterialKey &inKey,
                                          QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                         QSSGRenderCamera &inCamera,
+                                         const QSSGRenderCamera &inCamera,
                                          const QMatrix4x4 &inModelViewProjection,
                                          const QMatrix3x3 &inNormalMatrix,
                                          const QMatrix4x4 &inGlobalTransform,

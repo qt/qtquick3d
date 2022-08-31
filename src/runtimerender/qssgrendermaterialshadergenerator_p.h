@@ -35,12 +35,13 @@ struct QSSGRenderLight;
 class QSSGRenderShadowMap;
 struct QSSGRenderImage;
 class QRhiTexture;
+struct QSSGCameraData;
 
 struct QSSGLayerGlobalRenderProperties
 {
     const QSSGRenderLayer &layer;
-    QSSGRenderCamera &camera;
-    QVector3D cameraDirection;
+    const QSSGRenderCamera &camera;
+    const QSSGCameraData &cameraData;
     QSSGRenderShadowMap *shadowMapManager;
     QRhiTexture *rhiDepthTexture;
     QRhiTexture *rhiSsaoTexture;

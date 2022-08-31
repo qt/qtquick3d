@@ -4,6 +4,8 @@
 #include "qssglightmapper_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER

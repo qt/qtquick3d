@@ -704,6 +704,27 @@ struct QSSGRhiDrawCallData
     }
 };
 
+struct QSSGRhiRenderableTexture
+{
+    QRhiTexture *texture = nullptr;
+    QRhiRenderBuffer *depthStencil = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QRhiTextureRenderTarget *rt = nullptr;
+    bool isValid() const { return texture && rpDesc && rt; }
+    void resetRenderTarget() {
+        delete rt;
+        rt = nullptr;
+        delete rpDesc;
+        rpDesc = nullptr;
+    }
+    void reset() {
+        resetRenderTarget();
+        delete texture;
+        delete depthStencil;
+        *this = QSSGRhiRenderableTexture();
+    }
+};
+
 struct QSSGRhiSortData
 {
     float d = 0.0f;
@@ -895,17 +916,6 @@ public:
     void setMainPassSampleCount(int samples) { m_mainSamples = samples; }
     int mainPassSampleCount() const { return m_mainSamples; }
 
-    QSSGRhiGraphicsPipelineState *graphicsPipelineState(const void *key)
-    {
-        return &m_gfxPs[key];
-    }
-
-    QSSGRhiGraphicsPipelineState *resetGraphicsPipelineState(const void *key)
-    {
-        m_gfxPs[key] = QSSGRhiGraphicsPipelineState();
-        return &m_gfxPs[key];
-    }
-
     QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key,
                                    QRhiRenderPassDescriptor *rpDesc,
@@ -959,7 +969,6 @@ private:
     QRhiCommandBuffer *m_cb = nullptr;
     QRhiRenderTarget *m_rt = nullptr;
     int m_mainSamples = 1;
-    QHash<const void *, QSSGRhiGraphicsPipelineState> m_gfxPs;
     QHash<QSSGRhiShaderResourceBindingList, QRhiShaderResourceBindings *> m_srbCache;
     QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> m_pipelines;
     QHash<QSSGComputePipelineStateKey, QRhiComputePipeline *> m_computePipelines;

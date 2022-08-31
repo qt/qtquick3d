@@ -20,6 +20,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSSGRenderPass;
+using QSSGPassKey = const QSSGRenderPass *;
+
 template<typename T>
 class QSSGRef
 {

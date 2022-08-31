@@ -17,7 +17,6 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderableobjects_p.h>
-#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
@@ -25,7 +24,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderray_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
-#include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderclippingfrustum_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershaderkeys_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendershadercache_p.h>
@@ -33,6 +31,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderpickresult_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermapkey_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrenderpass_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgoption_p.h>
@@ -42,6 +41,8 @@ QT_BEGIN_NAMESPACE
 
 class QSSGRhiQuadRenderer;
 class QSSGRhiCubeRenderer;
+struct QSSGRenderItem2D;
+struct QSSGReflectionMapEntry;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
@@ -91,8 +92,6 @@ public:
     QSSGRhiCubeRenderer *rhiCubeRenderer();
 
     // Callback during the layer render process.
-    void beginLayerDepthPassRender(QSSGLayerRenderData &inLayer);
-    void endLayerDepthPassRender();
     void beginLayerRender(QSSGLayerRenderData &inLayer);
     void endLayerRender();
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
@@ -216,6 +215,87 @@ private:
     QSSGRenderLayer::TonemapMode m_skyboxTonemapMode = QSSGRenderLayer::TonemapMode::None;
     bool m_isSkyboxRGBE = false;
 };
+
+namespace RenderHelpers
+{
+
+std::pair<QSSGBoxPoints, QSSGBoxPoints> calculateSortedObjectBounds(const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                                                                    const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects);
+
+void rhiRenderShadowMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
+                        QSSGRhiGraphicsPipelineState &ps,
+                        const QSSGRef<QSSGRenderShadowMap> &shadowMapManager,
+                        const QSSGRenderCamera &camera,
+                        const QSSGShaderLightList &globalLights,
+                        const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                        const QSSGRef<QSSGRenderer> &renderer,
+                        const QSSGBoxPoints &castingObjectsBox,
+                        const QSSGBoxPoints &receivingObjectsBox);
+
+void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
+                            QSSGPassKey passKey,
+                            const QSSGLayerRenderData &inData, QSSGRhiGraphicsPipelineState *ps,
+                            const QSSGRef<QSSGRenderReflectionMap> &reflectionMapManager,
+                            const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
+                            const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
+                            const QSSGRef<QSSGRenderer> &renderer);
+
+bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
+                         const QSSGRhiGraphicsPipelineState &basePipelineState,
+                         QRhiRenderPassDescriptor *rpDesc,
+                         QSSGLayerRenderData &inData,
+                         const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                         const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
+                         QSSGRhiDrawCallDataKey::Selector ubufSel,
+                         int samples);
+
+void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineState &ps,
+                        const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
+                        const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects,
+                        bool *needsSetViewport);
+
+bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
+
+void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, const QSSGRef<QSSGRenderer> &renderer, const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                        QSSGRhiGraphicsPipelineState &ps, const SSAOMapPass::AmbientOcclusion &ao, const QSSGRhiRenderableTexture &rhiAoTexture, const QSSGRhiRenderableTexture &rhiDepthTexture,
+                        const QSSGRenderCamera &camera);
+
+bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex);
+
+void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
+                      QSSGRenderLayer &layer,
+                      QSSGRenderCamera &inCamera,
+                      const QSSGRef<QSSGRenderer> &renderer,
+                      QSSGReflectionMapEntry *entry = nullptr,
+                      int cubeFace = -1);
+
+void rhiPrepareRenderable(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
+                          const QSSGLayerRenderData &inData,
+                          QSSGRenderableObject &inObject,
+                          QRhiRenderPassDescriptor *renderPassDescriptor,
+                          QSSGRhiGraphicsPipelineState *ps,
+                          QSSGShaderFeatures featureSet,
+                          int samples,
+                          QSSGRenderCamera *inCamera = nullptr,
+                          QMatrix4x4 *alteredModelViewProjection = nullptr,
+                          int cubeFace = -1,
+                          QSSGReflectionMapEntry *entry = nullptr);
+
+void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                         const QSSGRhiGraphicsPipelineState &state,
+                         QSSGRenderableObject &object,
+                         bool *needsSetViewport,
+                         int cubeFace = -1);
+
+bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
+
+inline QRect correctViewportCoordinates(const QRectF &layerViewport, const QRect &deviceRect)
+{
+    const int y = deviceRect.bottom() - layerViewport.bottom() + 1;
+    return QRect(layerViewport.x(), y, layerViewport.width(), layerViewport.height());
+}
+}
+
 QT_END_NAMESPACE
 
 #endif

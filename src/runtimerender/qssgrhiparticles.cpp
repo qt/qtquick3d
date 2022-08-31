@@ -10,6 +10,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercamera_p.h>
+#include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -326,23 +327,23 @@ static QByteArray convertParticleData(QByteArray &dest, const QByteArray &data, 
 }
 
 void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                                QSSGPassKey passKey,
                                                 QSSGRhiContext *rhiCtx,
                                                 QSSGRhiGraphicsPipelineState *ps,
                                                 QSSGParticlesRenderable &renderable,
-                                                QSSGLayerRenderData &inData,
+                                                const QSSGLayerRenderData &inData,
                                                 QRhiRenderPassDescriptor *renderPassDescriptor,
                                                 int samples,
                                                 QSSGRenderCamera *camera,
                                                 int cubeFace,
                                                 QSSGReflectionMapEntry *entry)
 {
-    const void *layerNode = &inData.layer;
     const void *node = &renderable.particles;
     const bool needsConversion = !rhiCtx->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
 
-    QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ layerNode, node,
+    QSSGRhiDrawCallData &dcd(cubeFace < 0 ? rhiCtx->drawCallData({ passKey, node,
                                                     nullptr, 0, QSSGRhiDrawCallDataKey::Main })
-                                          : rhiCtx->drawCallData({ layerNode, node,
+                                          : rhiCtx->drawCallData({ passKey, node,
                                                                    entry, cubeFace, QSSGRhiDrawCallDataKey::Reflection }));
     shaderPipeline->ensureUniformBuffer(&dcd.ubuf);
 
@@ -582,10 +583,9 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
 
 void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                                                QSSGParticlesRenderable &renderable,
-                                               QSSGLayerRenderData &inData,
                                                bool *needsSetViewport,
                                                int cubeFace,
-                                               QSSGRhiGraphicsPipelineState *state)
+                                               const QSSGRhiGraphicsPipelineState &state)
 {
     QRhiGraphicsPipeline *ps = renderable.rhiRenderData.mainPass.pipeline;
     QRhiShaderResourceBindings *srb = renderable.rhiRenderData.mainPass.srb;
@@ -605,10 +605,7 @@ void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     cb->setShaderResources(srb);
 
     if (needsSetViewport && *needsSetViewport) {
-        if (!state)
-            cb->setViewport(rhiCtx->graphicsPipelineState(&inData)->viewport);
-        else
-            cb->setViewport(state->viewport);
+        cb->setViewport(state.viewport);
         *needsSetViewport = false;
     }
     if (renderable.particles.m_featureLevel >= QSSGRenderParticles::FeatureLevel::Line) {
