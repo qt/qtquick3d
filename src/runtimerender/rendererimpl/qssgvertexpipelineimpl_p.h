@@ -208,10 +208,14 @@ struct QSSGMaterialVertexPipeline
         activeStage().addUniform("qt_modelMatrix", "mat4");
         addInterpolationParameter("qt_varWorldPos", "vec3");
         const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
-        if (!usesInstancing)
-            vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * qt_vertPosition).xyz;");
-        else
+        if (!usesInstancing) {
+            if (m_hasSkinning)
+                vertex().append("    vec3 qt_local_model_world_position = qt_vertPosition.xyz;");
+            else
+                vertex().append("    vec3 qt_local_model_world_position = (qt_modelMatrix * qt_vertPosition).xyz;");
+        } else {
             vertex().append("    vec3 qt_local_model_world_position = (qt_instancedModelMatrix * qt_vertPosition).xyz;");
+        }
 
         assignOutput("qt_varWorldPos", "qt_local_model_world_position");
     }
@@ -234,10 +238,14 @@ struct QSSGMaterialVertexPipeline
         addInterpolationParameter("qt_varShadowWorldPos", "vec3");
 
         const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
-        if (!usesInstancing)
-            vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * qt_vertPosition;");
-        else
+        if (!usesInstancing) {
+            if (m_hasSkinning)
+                vertex().append("    vec4 qt_shadow_world_tmp = qt_vertPosition;");
+            else
+                vertex().append("    vec4 qt_shadow_world_tmp = qt_modelMatrix * qt_vertPosition;");
+        } else {
             vertex().append("    vec4 qt_shadow_world_tmp = qt_instancedModelMatrix * qt_vertPosition;");
+        }
         vertex().append("    qt_varShadowWorldPos = qt_shadow_world_tmp.xyz / qt_shadow_world_tmp.w;");
     }
 
