@@ -2958,7 +2958,9 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
         QMatrix4x4 modelViewProjection;
         if (inObject.renderableFlags.isDefaultMaterialMeshSubset() || inObject.renderableFlags.isCustomMaterialMeshSubset()) {
             QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(inObject));
-            modelViewProjection = pEntry->m_viewProjection * renderable.globalTransform;
+            const bool hasSkinning = renderer->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
+            modelViewProjection = hasSkinning ? pEntry->m_viewProjection
+                                              : pEntry->m_viewProjection * renderable.globalTransform;
         }
 
         rhiPrepareRenderable(rhiCtx, inData, inObject, pEntry->m_rhiRenderPassDesc, 1,
@@ -2994,11 +2996,14 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
         QSSGRhiDrawCallData *dcd = nullptr;
         QMatrix4x4 modelViewProjection;
+        QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(*theObject));
+        const QSSGRef<QSSGRenderer> &generator(renderable.generator);
         if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
-            QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(theObject));
-            modelViewProjection = pEntry->m_lightVP * renderable->globalTransform;
-            dcd = &rhiCtx->drawCallData({ &inData.layer, &renderable->modelContext.model,
-                                          pEntry, cubeFace + int(renderable->subset.offset << 3), QSSGRhiDrawCallDataKey::Shadow });
+            const bool hasSkinning = generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
+            modelViewProjection = hasSkinning ? pEntry->m_lightVP
+                                              : pEntry->m_lightVP * renderable.globalTransform;
+            dcd = &rhiCtx->drawCallData({ &inData.layer, &renderable.modelContext.model,
+                                          pEntry, cubeFace + int(renderable.subset.offset << 3), QSSGRhiDrawCallDataKey::Shadow });
         }
 
         QSSGRhiShaderResourceBindingList bindings;
