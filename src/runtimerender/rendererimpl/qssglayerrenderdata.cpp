@@ -3790,14 +3790,14 @@ void QSSGLayerRenderData::rhiPrepare()
 
         // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
         if (layerPrepResult->flags.requiresSsaoPass() && camera) {
-           cb->debugMarkBegin(QByteArrayLiteral("Quick3D SSAO map"));
+            cb->debugMarkBegin(QByteArrayLiteral("Quick3D SSAO map"));
 
-           if (rhiPrepareAoTexture(rhiCtx, layerPrepResult->textureDimensions(), &rhiAoTexture)) {
-               Q_ASSERT(rhiAoTexture.isValid());
-               rhiRenderAoTexture(rhiCtx, *ps, *this, *camera);
-           }
+            if (rhiPrepareAoTexture(rhiCtx, layerPrepResult->textureDimensions(), &rhiAoTexture)) {
+                Q_ASSERT(rhiAoTexture.isValid());
+                rhiRenderAoTexture(rhiCtx, *ps, *this, *camera);
+            }
 
-           cb->debugMarkEnd();
+            cb->debugMarkEnd();
         } else {
             rhiAoTexture.reset();
         }
