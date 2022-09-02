@@ -106,6 +106,4 @@ unavailable or disfunctional:
 \li Certain post-processing effects
 \li Custom materials that use shaders relying on GLSL features not present in GLSL ES 100
 \endlist
-
-\noautolist
 */
