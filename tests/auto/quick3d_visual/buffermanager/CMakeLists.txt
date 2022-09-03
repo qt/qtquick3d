@@ -34,4 +34,5 @@ qt_internal_extend_target(tst_qquick3dbuffermanager CONDITION NOT ANDROID AND NO
 qt6_add_qml_module(tst_qquick3dbuffermanager
     VERSION 1.0
     URI io.qt.tests.auto.BufferManager
+    RESOURCE_PREFIX "/"
 )
