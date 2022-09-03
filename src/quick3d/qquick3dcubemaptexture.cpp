@@ -48,9 +48,10 @@ QT_BEGIN_NAMESPACE
     same asset loads all 6 faces and results in a cubemap texture.
 
     CubeMapTexture inherits all its properties from Texture. The important
-    difference is that \l source must refer to a image file containing a
-    cubemap, or to a list of image files. In practice a single file means a
-    \l{https://www.khronos.org/ktx/}{KTX} container containing 6 face images.
+    difference is that \l {Texture::}{source} must refer to a image file
+    containing a cubemap, or to a list of image files. In practice a single
+    file means a \l{https://www.khronos.org/ktx/}{KTX} container containing 6
+    face images.
 
     Sourcing a CubeMapTexture from 6 individual images can be done in two
     different ways. Either as a semicolon-separated list of file names in
@@ -70,8 +71,9 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \note Sourcing image data via other means, such as \l sourceItem or \l
-    textureData is not supported for CubeMapTexture at the moment.
+    \note Sourcing image data via other means, such as \l {Texture::}{sourceItem}
+    or \l {Texture::}{textureData} is not supported for CubeMapTexture at the
+    moment.
 
     \sa Texture, CustomMaterial, Effect
 */

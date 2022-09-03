@@ -494,10 +494,10 @@ int QQuick3DModel::lightmapBaseResolution() const
     consistent state between the baking run and the subsequent runs that use
     the generated data is essential. For example, changing the lightmap key
     will make it impossible to load the previously generated data. An exception
-    is \l enabled, which can be used to dynamically toggle the usage of
-    lightmaps (outside of the baking run), but be aware that the rendered
-    results will depend on the Lights' \l{Light::bakeMode}{bakeMode} settings
-    in the scene.
+    is \l {BakedLightmap::}{enabled}, which can be used to dynamically toggle
+    the usage of lightmaps (outside of the baking run), but be aware that the
+    rendered results will depend on the Lights' \l{Light::bakeMode}{bakeMode}
+    settings in the scene.
 
     \sa usedInBakedLighting, Lightmapper
  */

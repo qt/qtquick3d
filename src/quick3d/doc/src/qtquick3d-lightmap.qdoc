@@ -36,8 +36,9 @@ perpendicular to the DirectionalLight's direction.
 On the right, the scene is rendered with lightmapping enabled, after having
 lightmaps baked for all five models. Both lights are set to fully baked,
 meaning both direct and indirect illumination is baked. Indirect lighting uses
-256 samples and a maximum of 3 bounces. The resulting lightmaps were then
-denoised. This gives a significantly more realistic image.
+256 \l{Lightmapper::}{samples} and a maximum of 3 \l{Lightmapper::}{bounces}.
+The resulting lightmaps were then denoised. This gives a significantly more
+realistic image.
 
 \b{Real-time lighting}
 
@@ -274,19 +275,21 @@ lightmaps loaded. The tuning can then begin:
 
     \li The Lightmapper object exposes numerous settings that have reasonable
     defaults, but it is not unlikely that some of these will need to be tuned
-    to match the designers' expectation. For example, \l samples and \l bounces
-    can be changed to affect the quality of indirect lighting, while \l
-    indirectLightFactor allows making the indirect contribution more prominent.
-    If artifacts, in particular around shadows, occur, \l bias can be
+    to match the designers' expectation. For example, \l {Lightmapper::}{samples}
+    and \l {Lightmapper::}{bounces} can be changed to affect the quality of
+    indirect lighting, while \l {Lightmapper::}{indirectLightFactor} allows
+    making the indirect contribution more prominent. If artifacts, in
+    particular around shadows, occur, \l {Lightmapper::}{bias} can be
     fine-tuned.
 
     \li Denoising the generate lightmaps is essential. Indirect lighting is
     calculated using \l{https://en.wikipedia.org/wiki/Path_tracing}{path
-    tracing}, which produces noisy images depending on the number of the \l
-    samples used. Increasing the sample count reduces noise, but increases the
-    time needed to generate the lightmap. Regardless of the sample count, it
-    will almost always make sense to run a denoiser on the generated lightmaps,
-    which are 32-bit RGBA floating point images stored in as .exr files.
+    tracing}, which produces noisy images depending on the number of the
+    \l {Lightmapper::}{samples} used. Increasing the sample count reduces noise,
+    but increases the time needed to generate the lightmap. Regardless of the
+    sample count, it will almost always make sense to run a denoiser on the
+    generated lightmaps, which are 32-bit RGBA floating point images stored
+    in as .exr files.
 
     \endlist
 
@@ -295,11 +298,11 @@ lightmaps loaded. The tuning can then begin:
 \section2 Denoising
 
 Below is an example of a \l{https://en.wikipedia.org/wiki/Cornell_box}{Cornell
-box} scene, rendered first using the lightmap baked with 256 \l samples and a
-maximum of 3 \l bounces. In the second example, the generated image file has
-been run through a denoiser using the
-\l{https://www.openimagedenoise.org/}{Open Image Denoise} library. The results
-look significantly better, with the noise mostly gone.
+box} scene, rendered first using the lightmap baked with 256
+\l {Lightmapper::}{samples} and a maximum of 3 \l {Lightmapper::}{bounces}. In
+the second example, the generated image file has been run through a denoiser
+using the \l{https://www.openimagedenoise.org/}{Open Image Denoise} library.
+The results look significantly better, with the noise mostly gone.
 
 \b{Original}
 

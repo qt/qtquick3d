@@ -538,9 +538,8 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironme
     \since 6.4
 
     This property determines how much much the skybox should be blurred when
-    using \c SceneEnvironment.SkyBox for the
-    \l{QtQuick3D::View3D::backgroundMode}{backgroundMode} property. The default
-    value is \c 0.0 which means there is no blurring.
+    using \c SceneEnvironment.SkyBox for the \l backgroundMode property. The
+    default value is \c 0.0 which means there is no blurring.
 
     Acceptable values range between 0.0 and 1.0, all other values will be clamped
     to this range.
