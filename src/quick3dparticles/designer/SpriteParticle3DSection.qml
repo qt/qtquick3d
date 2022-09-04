@@ -29,6 +29,23 @@ Section {
         }
 
         PropertyLabel {
+            text: qsTr("Casts Reflections")
+            tooltip: qsTr("Enables reflection probes to reflect sprite particles.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                id: castsReflectionsCheckBox
+                text: backendValues.castsReflections.valueToString
+                backendValue: backendValues.castsReflections
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Sprite")
             tooltip: qsTr("This property defines the Texture used for the particles.")
         }
