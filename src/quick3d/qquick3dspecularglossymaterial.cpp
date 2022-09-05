@@ -575,6 +575,15 @@ QT_BEGIN_NAMESPACE
 
 */
 
+/*!
+    \qmlproperty bool SpecularGlossyMaterial::vertexColorsEnabled
+    \since 6.5
+
+    When this property is enabled, the material will use vertex colors from the
+    mesh. These will be multiplied by any other colors specified for the
+    material.
+*/
+
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
 
 QQuick3DSpecularGlossyMaterial::QQuick3DSpecularGlossyMaterial(QQuick3DObject *parent)
@@ -1182,6 +1191,9 @@ QSSGRenderGraphObject *QQuick3DSpecularGlossyMaterial::updateSpatialNode(QSSGRen
         material->attenuationColor = color::sRGBToLinear(m_attenuationColor).toVector3D();
     }
 
+    if (m_dirtyAttributes & VertexColorsDirty)
+        material->vertexColorsEnabled = m_vertexColorsEnabled;
+
     m_dirtyAttributes = 0;
 
     return node;
@@ -1451,6 +1463,11 @@ QColor QQuick3DSpecularGlossyMaterial::attenuationColor() const
     return m_attenuationColor;
 }
 
+bool QQuick3DSpecularGlossyMaterial::vertexColorsEnabled() const
+{
+    return m_vertexColorsEnabled;
+}
+
 void QQuick3DSpecularGlossyMaterial::setAttenuationColor(const QColor &newAttenuationColor)
 {
     if (m_attenuationColor == newAttenuationColor)
@@ -1458,6 +1475,16 @@ void QQuick3DSpecularGlossyMaterial::setAttenuationColor(const QColor &newAttenu
     m_attenuationColor = newAttenuationColor;
     emit attenuationColorChanged();
     markDirty(VolumeDirty);
+}
+
+void QQuick3DSpecularGlossyMaterial::setVertexColorsEnabled(bool vertexColors)
+{
+    if (m_vertexColorsEnabled == vertexColors)
+        return;
+
+    m_vertexColorsEnabled = vertexColors;
+    emit vertexColorsEnabledChanged(m_vertexColorsEnabled);
+    markDirty(VertexColorsDirty);
 }
 
 QT_END_NAMESPACE

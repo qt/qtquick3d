@@ -89,6 +89,8 @@ class Q_QUICK3D_EXPORT QQuick3DSpecularGlossyMaterial : public QQuick3DMaterial
     Q_PROPERTY(float attenuationDistance READ attenuationDistance WRITE setAttenuationDistance NOTIFY attenuationDistanceChanged)
     Q_PROPERTY(QColor attenuationColor READ attenuationColor WRITE setAttenuationColor NOTIFY attenuationColorChanged)
 
+    Q_PROPERTY(bool vertexColorsEnabled READ vertexColorsEnabled WRITE setVertexColorsEnabled NOTIFY vertexColorsEnabledChanged REVISION(6, 5))
+
     QML_NAMED_ELEMENT(SpecularGlossyMaterial)
     QML_ADDED_IN_VERSION(6, 4)
 
@@ -164,6 +166,8 @@ public:
     float attenuationDistance() const;
     QColor attenuationColor() const;
 
+    Q_REVISION(6, 5) bool vertexColorsEnabled() const;
+
 public Q_SLOTS:
     void setLighting(QQuick3DSpecularGlossyMaterial::Lighting lighting);
     void setBlendMode(QQuick3DSpecularGlossyMaterial::BlendMode blendMode);
@@ -211,6 +215,8 @@ public Q_SLOTS:
     void setThicknessChannel(QQuick3DMaterial::TextureChannelMapping newThicknessChannel);
     void setAttenuationDistance(float newAttenuationDistance);
     void setAttenuationColor(const QColor &newAttenuationColor);
+
+    Q_REVISION(6, 5) void setVertexColorsEnabled(bool vertexColorsEnabled);
 
 Q_SIGNALS:
     void lightingChanged();
@@ -260,6 +266,8 @@ Q_SIGNALS:
     void attenuationDistanceChanged();
     void attenuationColorChanged();
 
+    Q_REVISION(6, 5) void vertexColorsEnabledChanged(bool vertexColorsEnabled);
+
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
@@ -282,7 +290,8 @@ private:
         HeightDirty =       0x00001000,
         ClearcoatDirty =    0x00002000,
         TransmissionDirty = 0x00004000,
-        VolumeDirty =       0x00008000
+        VolumeDirty =       0x00008000,
+        VertexColorsDirty = 0x00001000
     };
 
     void updateSceneManager(QQuick3DSceneManager *window);
@@ -330,6 +339,7 @@ private:
     TextureChannelMapping m_thicknessChannel = QQuick3DMaterial::G;
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
+    bool m_vertexColorsEnabled = false;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
