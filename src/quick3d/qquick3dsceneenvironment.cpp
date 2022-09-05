@@ -952,4 +952,43 @@ void QQuick3DSceneEnvironment::setDebugSettings(QQuick3DDebugSettings *newDebugS
     update();
 }
 
+bool QQuick3DSceneEnvironment::gridEnabled() const
+{
+    return m_gridEnabled;
+}
+
+void QQuick3DSceneEnvironment::setGridEnabled(bool newGridEnabled)
+{
+    if (m_gridEnabled == newGridEnabled)
+        return;
+    m_gridEnabled = newGridEnabled;
+    update();
+}
+
+float QQuick3DSceneEnvironment::gridScale() const
+{
+    return m_gridScale;
+}
+
+void QQuick3DSceneEnvironment::setGridScale(float newGridScale)
+{
+    if (qFuzzyCompare(m_gridScale, newGridScale))
+        return;
+    m_gridScale = newGridScale;
+    update();
+}
+
+uint QQuick3DSceneEnvironment::gridFlags() const
+{
+    return m_gridFlags;
+}
+
+void QQuick3DSceneEnvironment::setGridFlags(uint newGridFlags)
+{
+    if (m_gridFlags == newGridFlags)
+        return;
+    m_gridFlags = newGridFlags;
+    update();
+}
+
 QT_END_NAMESPACE

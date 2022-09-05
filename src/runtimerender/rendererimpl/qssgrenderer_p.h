@@ -124,6 +124,7 @@ public:
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
     QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurXShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurYShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiGridShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurXShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurYShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiSsaoShader();
@@ -166,6 +167,7 @@ private:
     // RHI
     QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurXRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurYRhiShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_gridShader;
     QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurXRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurYRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_ssaoRhiShader;
@@ -261,6 +263,10 @@ void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, const QSSGR
                         const QSSGRenderCamera &camera);
 
 bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex);
+
+void rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer,
+                    QSSGRenderCamera &inCamera, const QSSGRef<QSSGRenderer> &renderer);
+
 
 void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                       QSSGRenderLayer &layer,

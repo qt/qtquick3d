@@ -183,6 +183,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // Skybox
     float skyboxBlurAmount = 0.0f;
 
+    // Grid
+    bool gridEnabled = false;
+    float gridScale = 1.0f;
+    quint32 gridFlags = 0;
+    QRhiShaderResourceBindings *gridSrb = nullptr;
+
     // Lightmapper config
     QSSGLightmapperOptions lmOptions;
 

@@ -37,6 +37,11 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiCubemapShadowBlurYShader()
     return getBuiltinRhiShader(QByteArrayLiteral("cubeshadowblury"), m_cubemapShadowBlurYRhiShader);
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiGridShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("grid"), m_gridShader);
+}
+
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiOrthographicShadowBlurXShader()
 {
     return getBuiltinRhiShader(QByteArrayLiteral("orthoshadowblurx"), m_orthographicShadowBlurXRhiShader);

@@ -2115,6 +2115,54 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
     return true;
 }
 
+void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer, QSSGRenderCamera &inCamera, const QSSGRef<QSSGRenderer> &renderer)
+{
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare grid"));
+
+    QSSGRhiShaderResourceBindingList bindings;
+
+    int uniformBinding = 0;
+    const int ubufSize = 64 * 2 * sizeof(float) + 4 * sizeof(float) + 4 * sizeof(quint32); // 2x mat4 + 4x float + 1x bool
+
+    QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::Main })); // Change to Grid?
+
+    QRhi *rhi = rhiCtx->rhi();
+    if (!dcd.ubuf) {
+        dcd.ubuf = rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
+        dcd.ubuf->create();
+    }
+
+    // Param
+    const float nearF = inCamera.clipNear;
+    const float farF = inCamera.clipFar;
+    const float scale = layer.gridScale;
+    const quint32 gridFlags = layer.gridFlags;
+
+    const float yFactor = rhi->isYUpInNDC() ? 1.0f : -1.0f;
+
+    QMatrix4x4 viewProj(Qt::Uninitialized);
+    inCamera.calculateViewProjectionMatrix(viewProj);
+    QMatrix4x4 invViewProj = viewProj.inverted();
+
+    char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+    memcpy(ubufData + 64 * 0, viewProj.constData(), 64);
+    memcpy(ubufData + 64 * 1, invViewProj.constData(), 64);
+    memcpy(ubufData + 64 * 2 + 0, &nearF, 4);
+    memcpy(ubufData + 64 * 2 + 4 * 1, &farF, 4);
+    memcpy(ubufData + 64 * 2 + 4 * 2, &scale, 4);
+    memcpy(ubufData + 64 * 2 + 4 * 3, &yFactor, 4);
+    memcpy(ubufData + 64 * 2 + 4 * 4, &gridFlags, 4);
+    dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+    bindings.addUniformBuffer(uniformBinding, VISIBILITY_ALL, dcd.ubuf);
+
+    layer.gridSrb = rhiCtx->srb(bindings);
+    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+
+    cb->debugMarkEnd();
+}
+
 void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                                      QSSGPassKey passKey,
                                      QSSGRenderLayer &layer,

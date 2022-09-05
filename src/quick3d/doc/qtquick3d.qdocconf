@@ -35,6 +35,7 @@ headerdirs  += .. \
 
 headers += ../../helpers/gridgeometry_p.h \
            ../../helpers/randominstancing_p.h \
+           ../../helpers/infinitegrid_p.h \
            ../../helpers/instancerepeater_p.h \
            ../../helpers/lookatnode_p.h \
            ../../helpers/heightfieldgeometry_p.h \
@@ -47,6 +48,7 @@ sourcedirs  += .. \
 
 sources += ../../helpers/gridgeometry.cpp \
            ../../helpers/randominstancing.cpp \
+           ../../helpers/infinitegrid.cpp \
            ../../helpers/instancerepeater.cpp \
            ../../helpers/lookatnode.cpp \
            ../../helpers/heightfieldgeometry.cpp \

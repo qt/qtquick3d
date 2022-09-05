@@ -649,6 +649,10 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
             rhiPrepareRenderable(rhiCtx.data(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
 
+    if (layer.gridEnabled) {
+        rhiPrepareGrid(rhiCtx.data(), layer, *camera, renderer);
+    }
+
     cb->debugMarkEnd();
 }
 
@@ -733,6 +737,18 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
             rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);
     }
     cb->debugMarkEnd();
+
+    // 6. Infinite grid
+    if (layer.gridEnabled) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
+        auto shaderPipeline = renderer->getRhiGridShader();
+        Q_ASSERT(shaderPipeline);
+        ps.shaderPipeline = shaderPipeline.data();
+        QRhiShaderResourceBindings *srb = layer.gridSrb;
+        QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+        renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.data(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
+        cb->debugMarkEnd();
+    }
 }
 
 void MainPass::release()

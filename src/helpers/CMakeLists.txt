@@ -20,6 +20,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         randominstancing.cpp randominstancing_p.h
         lookatnode.cpp lookatnode_p.h
         instancerepeater.cpp instancerepeater_p.h
+        infinitegrid_p.h infinitegrid.cpp
         proceduralskytexturedata.cpp proceduralskytexturedata_p.h
         qtquick3dhelpersglobal_p.h
     QML_FILES

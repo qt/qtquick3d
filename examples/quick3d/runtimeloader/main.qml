@@ -30,6 +30,10 @@ Window {
             lightProbe: Texture {
                 textureData: ProceduralSkyTextureData{}
             }
+            InfiniteGrid {
+                visible: helper.gridEnabled
+                gridInterval: helper.gridInterval
+            }
         }
 
         camera: helper.orbitControllerEnabled ? orbitCamera : wasdCamera
@@ -50,6 +54,20 @@ Window {
 
         PerspectiveCamera {
             id: wasdCamera
+            onPositionChanged: {
+                // Near/far logic copied from OrbitController
+                let distance = position.length()
+                if (distance < 1) {
+                    clipNear = 0.01
+                    clipFar = 100
+                } else if (distance < 100) {
+                    clipNear = 0.1
+                    clipFar = 1000
+                } else {
+                    clipNear = 1
+                    clipFar = 10000
+                }
+            }
         }
 
     //! [base scene]
@@ -78,6 +96,9 @@ Window {
             property vector3d boundsCenter
             property vector3d boundsSize
             property bool orbitControllerEnabled: true
+            property bool gridEnabled: gridButton.checked
+            property real cameraDistance: orbitControllerEnabled ? orbitCamera.z : wasdCamera.position.length()
+            property real gridInterval: Math.pow(10, Math.round(Math.log10(cameraDistance)) - 1)
 
             function updateBounds(bounds) {
                 boundsSize = Qt.vector3d(bounds.maximum.x - bounds.minimum.x,
@@ -215,6 +236,13 @@ Window {
                 checkable: true
                 text: "Instancing"
                 focusPolicy: Qt.NoFocus
+            }
+            Button {
+                id: gridButton
+                text: "Show grid"
+                focusPolicy: Qt.NoFocus
+                checkable: true
+                checked: false
             }
             Button {
                 id: controllerButton

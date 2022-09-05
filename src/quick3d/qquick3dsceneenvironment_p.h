@@ -144,6 +144,15 @@ public:
 
     Q_REVISION(6, 5) QQuick3DDebugSettings *debugSettings() const;
 
+    bool gridEnabled() const;
+    void setGridEnabled(bool newGridEnabled);
+
+    float gridScale() const;
+    void setGridScale(float newGridScale);
+
+    uint gridFlags() const;
+    void setGridFlags(uint newGridFlags);
+
 public Q_SLOTS:
     void setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode);
     void setAntialiasingQuality(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues antialiasingQuality);
@@ -256,6 +265,9 @@ private:
     QQuick3DCubeMapTexture *m_skyBoxCubeMap = nullptr;
     QQuick3DDebugSettings *m_debugSettings = nullptr;
     QMetaObject::Connection m_debugSettingsSignalConnection;
+    bool m_gridEnabled = false;
+    uint m_gridFlags = 0;
+    float m_gridScale = 1.0f;
 };
 
 QT_END_NAMESPACE

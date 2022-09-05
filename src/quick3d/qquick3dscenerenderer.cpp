@@ -959,6 +959,10 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
                                       float(environment->clearColor().greenF()),
                                       float(environment->clearColor().blueF()));
 
+    layerNode.gridEnabled = environment->gridEnabled();
+    layerNode.gridScale = environment->gridScale();
+    layerNode.gridFlags = environment->gridFlags();
+
     layerNode.aoStrength = environment->aoStrength();
     layerNode.aoDistance = environment->aoDistance();
     layerNode.aoSoftness = environment->aoSoftness();
