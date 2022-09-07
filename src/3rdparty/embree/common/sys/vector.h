@@ -134,7 +134,7 @@ namespace embree
       {
         /* destroy elements */
         for (size_t i=0; i<size_active; i++)
-          alloc.destroy(&items[i]);
+          std::allocator_traits<decltype(alloc)>::destroy(alloc, &items[i]);
         
         /* free memory */
         alloc.deallocate(items,size_alloced); 
