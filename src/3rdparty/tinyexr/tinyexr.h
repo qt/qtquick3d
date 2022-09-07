@@ -7208,7 +7208,6 @@ static size_t SaveEXRNPartImageToMemory(const EXRImage* exr_images,
   // Writing header
   memcpy((*memory_out), &memory[0], memory.size());
   unsigned char* memory_ptr = *memory_out + memory.size();
-  size_t sum = memory.size();
 
   // Writing offset data for chunks
   for (unsigned int i = 0; i < num_parts; ++i) {
@@ -7219,8 +7218,6 @@ static size_t SaveEXRNPartImageToMemory(const EXRImage* exr_images,
       for (int level_index = 0; level_index < num_levels; ++level_index) {
         for (size_t j = 0; j < offset_data[i].offsets[level_index].size(); ++j) {
           size_t num_bytes = sizeof(tinyexr_uint64) * offset_data[i].offsets[level_index][j].size();
-          sum += num_bytes;
-          assert(sum <= total_size);
           memcpy(memory_ptr,
                  reinterpret_cast<unsigned char*>(&offset_data[i].offsets[level_index][j][0]),
                  num_bytes);
@@ -7230,8 +7227,6 @@ static size_t SaveEXRNPartImageToMemory(const EXRImage* exr_images,
       }
     } else {
       size_t num_bytes = sizeof(tinyexr::tinyexr_uint64) * static_cast<size_t>(chunk_count[i]);
-      sum += num_bytes;
-      assert(sum <= total_size);
       std::vector<tinyexr::tinyexr_uint64>& offsets = offset_data[i].offsets[0][0];
       memcpy(memory_ptr, reinterpret_cast<unsigned char*>(&offsets[0]), num_bytes);
       memory_ptr += num_bytes;
@@ -7242,20 +7237,15 @@ static size_t SaveEXRNPartImageToMemory(const EXRImage* exr_images,
   for (unsigned int i = 0; i < num_parts; ++i) {
     for (size_t j = 0; j < static_cast<size_t>(chunk_count[i]); ++j) {
       if (num_parts > 1) {
-        sum += 4;
-        assert(sum <= total_size);
         unsigned int part_number = i;
         swap4(&part_number);
         memcpy(memory_ptr, &part_number, 4);
         memory_ptr += 4;
       }
-      sum += data_lists[i][j].size();
-      assert(sum <= total_size);
       memcpy(memory_ptr, &data_lists[i][j][0], data_lists[i][j].size());
       memory_ptr += data_lists[i][j].size();
     }
   }
-  assert(sum == total_size);
   return total_size;  // OK
 }
 
