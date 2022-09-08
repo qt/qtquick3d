@@ -277,7 +277,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
         vertexShader.addIncoming("attr_color", "vec4");
     }
 
-    if (meshHasJointsAndWeights) {
+    if (meshHasJointsAndWeights && (m_hasSkinning || hasCustomVertexShader)) {
         if (usesFloatJointIndices) {
             vertexShader.addIncoming("attr_joints", "vec4");
             vertexShader.append("    qt_vertJoints = ivec4(attr_joints);");
