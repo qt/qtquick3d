@@ -4,7 +4,7 @@
 /*!
 
 \title Anti-Aliasing Best Practices
-\page quick3d-asset-conditioning-anti-aliasing howto
+\page quick3d-asset-conditioning-anti-aliasing
 
 Qt Quick 3D has multiple ways to combat aliasing (the jagged edges) while rendering 3D models. Each
 technique offers its own benefits and limitations. Multiple techniques can be combined, but with

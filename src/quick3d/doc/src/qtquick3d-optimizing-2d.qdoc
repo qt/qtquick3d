@@ -4,7 +4,7 @@
 /*!
 
 \title Optimizing 2D Assets
-\page quick3d-asset-conditioning-2d-assets howto
+\page quick3d-asset-conditioning-2d-assets
 
 Optimizing the images used by Texture components in your scene can substantially
 improve both the startup and runtime performance of your application, as well as
