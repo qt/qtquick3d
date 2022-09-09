@@ -1,0 +1,30 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#ifndef QSSGASSERT_P_H
+#define QSSGASSERT_P_H
+
+#include <QtCore/qglobal.h>
+#include <QtQuick3DUtils/private/qtquick3dutilsexports_p.h>
+
+QT_BEGIN_NAMESPACE
+
+Q_QUICK3DUTILS_PRIVATE_EXPORT void qssgWriteAssertLocation(const char *msg);
+
+QT_END_NAMESPACE
+
+#define QSSG_ASSERT_STRINGIFY_HELPER(x) #x
+#define QSSG_ASSERT_STRINGIFY(x) QSSG_ASSERT_STRINGIFY_HELPER(x)
+#define QSSG_ASSERT_STRING_X(msg) QT_PREPEND_NAMESPACE(qssgWriteAssertLocation)(msg)
+#define QSSG_ASSERT_STRING(cond) QSSG_ASSERT_STRING_X(\
+    "\"" cond"\" in file " __FILE__ ", line " QSSG_ASSERT_STRINGIFY(__LINE__))
+
+// The 'do {...} while (0)' idiom is not used for the main block here to be
+// able to use 'break' and 'continue' as 'actions'.
+
+#define QSSG_ASSERT(cond, action) if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING(#cond); action; } do {} while (0)
+#define QSSG_ASSERT_X(cond, msg, action) if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING_X(msg); action; } do {} while (0)
+#define QSSG_CHECK(cond) if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING(#cond); } do {} while (0)
+#define QSSG_GUARD(cond) ((Q_LIKELY(cond)) ? true : (QSSG_ASSERT_STRING(#cond), false))
+
+#endif // QSSGASSERT_P_H
