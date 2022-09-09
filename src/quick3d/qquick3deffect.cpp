@@ -930,6 +930,7 @@ void QQuick3DEffect::qmlAppendPass(QQmlListProperty<QQuick3DShaderUtilsRenderPas
     that->m_passes.push_back(pass);
 
     connect(pass, &QQuick3DShaderUtilsRenderPass::changed, that, &QQuick3DEffect::onPassDirty);
+    that->effectChainDirty();
 }
 
 QQuick3DShaderUtilsRenderPass *QQuick3DEffect::qmlPassAt(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list, qsizetype index)
@@ -952,6 +953,7 @@ void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass
         pass->disconnect(that);
 
     that->m_passes.clear();
+    that->effectChainDirty();
 }
 
 void QQuick3DEffect::setDynamicTextureMap(QQuick3DShaderUtilsTextureInput *textureMap)
