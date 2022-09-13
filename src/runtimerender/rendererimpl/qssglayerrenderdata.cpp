@@ -115,7 +115,7 @@ static inline void collectNodeFront(V node, QVector<T> &dst, int &dstPos)
 #define MAX_MORPH_TARGET_INDEX_SUPPORTS_NORMALS 3
 #define MAX_MORPH_TARGET_INDEX_SUPPORTS_TANGENTS 1
 
-static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
+static bool maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     QVector<QSSGRenderableNodeEntry> &outRenderableModels,
                                     int &ioRenderableModelsCount,
                                     QVector<QSSGRenderableNodeEntry> &outRenderableParticles,
@@ -130,8 +130,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                                     int &ioReflectionProbeCount,
                                     quint32 &ioDFSIndex)
 {
-    if (inNode.isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty))
-        inNode.calculateGlobalVariables();
+    bool wasDirty = inNode.isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty) && inNode.calculateGlobalVariables();
     if (inNode.getGlobalState(QSSGRenderNode::GlobalState::Active)) {
         ++ioDFSIndex;
         inNode.dfsIndex = ioDFSIndex;
@@ -151,21 +150,22 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
         }
 
         for (auto &theChild : inNode.children)
-            maybeQueueNodeForRender(theChild,
-                                    outRenderableModels,
-                                    ioRenderableModelsCount,
-                                    outRenderableParticles,
-                                    ioRenderableParticlesCount,
-                                    outRenderableItem2Ds,
-                                    ioRenderableItem2DsCount,
-                                    outCameras,
-                                    ioCameraCount,
-                                    outLights,
-                                    ioLightCount,
-                                    outReflectionProbes,
-                                    ioReflectionProbeCount,
-                                    ioDFSIndex);
+            wasDirty |= maybeQueueNodeForRender(theChild,
+                                                outRenderableModels,
+                                                ioRenderableModelsCount,
+                                                outRenderableParticles,
+                                                ioRenderableParticlesCount,
+                                                outRenderableItem2Ds,
+                                                ioRenderableItem2DsCount,
+                                                outCameras,
+                                                ioCameraCount,
+                                                outLights,
+                                                ioLightCount,
+                                                outReflectionProbes,
+                                                ioReflectionProbeCount,
+                                                ioDFSIndex);
     }
+    return wasDirty;
 }
 
 QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGShaderDefaultMaterialKey inKey)
@@ -1461,20 +1461,20 @@ void QSSGLayerRenderData::prepareForRender()
     int reflectionProbeCount = 0;
     quint32 dfsIndex = 0;
     for (auto &theChild : layer.children)
-        maybeQueueNodeForRender(theChild,
-                                renderableModels,
-                                renderableModelsCount,
-                                renderableParticles,
-                                renderableParticlesCount,
-                                renderableItem2Ds,
-                                renderableItem2DsCount,
-                                cameras,
-                                cameraNodeCount,
-                                lights,
-                                lightNodeCount,
-                                reflectionProbes,
-                                reflectionProbeCount,
-                                dfsIndex);
+        wasDataDirty |= maybeQueueNodeForRender(theChild,
+                                                renderableModels,
+                                                renderableModelsCount,
+                                                renderableParticles,
+                                                renderableParticlesCount,
+                                                renderableItem2Ds,
+                                                renderableItem2DsCount,
+                                                cameras,
+                                                cameraNodeCount,
+                                                lights,
+                                                lightNodeCount,
+                                                reflectionProbes,
+                                                reflectionProbeCount,
+                                                dfsIndex);
 
     if (renderableModels.size() != renderableModelsCount)
         renderableModels.resize(renderableModelsCount);
