@@ -178,6 +178,15 @@ void invasivelist::test_removeSll()
         list.push_back(items[i]);
     }
 
+    // Remove an item somewhere in the middel of the list
+    QCOMPARE(items[49].next, &items[50]);
+    QCOMPARE(items[49].prev, nullptr);
+    QCOMPARE(items[48].next, &items[49]);
+    list.remove(items[49]);
+    QCOMPARE(items[49].next, nullptr);
+    QCOMPARE(items[49].prev, nullptr);
+    QCOMPARE(items[48].next, &items[50]);
+
     QCOMPARE(items[0].prev, nullptr);
     QCOMPARE(items[0].next, &items[1]);
     list.remove(items[0]);

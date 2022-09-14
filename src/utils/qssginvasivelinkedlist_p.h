@@ -173,9 +173,24 @@ struct QSSGInvasiveSingleLinkedList : public QSSGInvasiveLinkListBase<T, QSSGNul
 
     void remove(T &inObj)
     {
-        if (m_head == &inObj)
+        if (m_head == &inObj) {
             m_head = TailOp::get(inObj);
-        BaseList::remove(inObj);
+            BaseList::remove(inObj);
+        } else if (m_head) {
+            // We need to find the node pointing to inObj
+            T *head = m_head;
+            T *tail = TailOp::get(*head);
+            while (head && tail != &inObj) {
+                head = TailOp::get(*head);
+                tail = head ? TailOp::get(*head) : nullptr;
+            }
+
+            if (head && tail == &inObj) {
+                T *oldTail = TailOp::get(inObj);
+                TailOp::set(inObj, nullptr); // deteach from the list
+                TailOp::set(*head, oldTail); // insert old tail to head of inObj
+            }
+        }
     }
 
     /*!
