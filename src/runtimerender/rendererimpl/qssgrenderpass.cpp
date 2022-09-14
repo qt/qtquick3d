@@ -24,6 +24,8 @@ void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
     const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
     const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
 
+    QSSG_ASSERT(shadowPassObjects.isEmpty(), shadowPassObjects.clear());
+
     for (const auto &handles : { &renderedDepthWriteObjects, &renderedOpaqueDepthPrepassObjects }) {
         for (const auto &handle : *handles)
             shadowPassObjects.push_back(handle);
@@ -121,6 +123,8 @@ void ReflectionMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLa
 
     const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
     const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
+
+    QSSG_ASSERT(reflectionPassObjects.isEmpty(), reflectionPassObjects.clear());
 
     // NOTE: We should consider keeping track of the reflection casting objects to avoid
     // filtering this list on each prep.

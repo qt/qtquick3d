@@ -1675,6 +1675,13 @@ void QSSGLayerRenderData::resetForFrame()
     renderableItem2Ds.clear();
     globalLights.clear();
     modelContexts.clear();
+    shadowMapPass.release();
+    reflectionMapPass.release();
+    zPrePassPass.release();
+    ssaoMapPass.release();
+    depthMapPass.release();
+    screenMapPass.release();
+    mainPass.release();
     features = QSSGShaderFeatures();
 }
 
