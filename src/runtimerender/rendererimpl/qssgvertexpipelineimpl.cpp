@@ -307,8 +307,11 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
             vertexShader.append("    qt_vertPosition.xyz = qt_getMorphPosition(qt_vertPosition.xyz);");
 
         if (m_hasSkinning) {
-            vertexShader.append("    if (qt_vertWeights != vec4(0.0))");
-            vertexShader.append("        qt_vertPosition = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * qt_vertPosition;");
+            vertexShader.append("    mat4 skinMat = mat4(1);");
+            vertexShader.append("    if (qt_vertWeights != vec4(0.0)) {");
+            vertexShader.append("        skinMat = qt_getSkinMatrix(qt_vertJoints, qt_vertWeights);");
+            vertexShader.append("        qt_vertPosition = skinMat * qt_vertPosition;");
+            vertexShader.append("    }");
         }
         if (blendParticles) {
             vertexShader.append("    qt_vertPosition.xyz = qt_applyParticle(qt_vertPosition.xyz, qt_vertNormal, qt_vertColor, qt_vertNormal, qt_vertColor, qt_particleMatrix);");
@@ -394,9 +397,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMat
     if (m_hasMorphing)
         vertex() << "    qt_vertTangent = qt_getMorphTangent(qt_vertTangent);\n";
     if (m_hasSkinning) {
-        vertex() << "    if (qt_vertWeights != vec4(0.0)) {\n"
-                 << "       qt_vertTangent = (qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * vec4(qt_vertTangent, 0.0)).xyz;\n"
-                 << "    }\n";
+        vertex() << "    if (qt_vertWeights != vec4(0.0))\n"
+                 << "       qt_vertTangent = (skinMat * vec4(qt_vertTangent, 0.0)).xyz;\n";
 
     }
     const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
@@ -415,9 +417,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarBinormal(const QSSGShaderDefaultMa
     if (m_hasMorphing)
         vertex() << "    qt_vertBinormal = qt_getMorphBinormal(qt_vertBinormal);\n";
     if (m_hasSkinning) {
-        vertex() << "    if (qt_vertWeights != vec4(0.0)) {\n"
-                 << "       qt_vertBinormal = (qt_getSkinMatrix(qt_vertJoints, qt_vertWeights) * vec4(qt_vertBinormal, 0.0)).xyz;\n"
-                 << "    }\n";
+        vertex() << "    if (qt_vertWeights != vec4(0.0))\n"
+                 << "       qt_vertBinormal = (skinMat * vec4(qt_vertBinormal, 0.0)).xyz;\n";
     }
     const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
     if (!usesInstancing) {
