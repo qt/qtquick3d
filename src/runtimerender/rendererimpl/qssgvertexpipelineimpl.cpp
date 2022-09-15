@@ -407,6 +407,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarTangent(const QSSGShaderDefaultMat
     if (!usesInstancing) {
         if (!m_hasSkinning)
             vertex() << "    qt_varTangent = (qt_modelMatrix * vec4(qt_vertTangent, 0.0)).xyz;\n";
+        else
+            vertex() << "    qt_varTangent = qt_vertTangent;\n";
     } else {
         vertex() << "    qt_varTangent = (qt_instancedModelMatrix * vec4(qt_vertTangent, 0.0)).xyz;\n";
     }
@@ -425,6 +427,8 @@ void QSSGMaterialVertexPipeline::doGenerateVarBinormal(const QSSGShaderDefaultMa
     if (!usesInstancing) {
         if (!m_hasSkinning)
             vertex() << "    qt_varBinormal = (qt_modelMatrix * vec4(qt_vertBinormal, 0.0)).xyz;\n";
+        else
+            vertex() << "    qt_varBinormal = qt_vertBinormal;\n";
     } else {
         vertex() << "    qt_varBinormal = (qt_instancedModelMatrix * vec4(qt_vertBinormal, 0.0)).xyz;\n";
     }
