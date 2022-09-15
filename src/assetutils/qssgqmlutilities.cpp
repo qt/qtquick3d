@@ -478,6 +478,7 @@ template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Node>() 
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::DefaultMaterial>() { return "DefaultMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial>() { return "PrincipledMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::CustomMaterial>() { return "CustomMaterial"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial>() { return "SpecularGlossyMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::OrthographicCamera>() { return "OrthographicCamera"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::PerspectiveCamera>() { return "PerspectiveCamera"; }
 
@@ -508,6 +509,8 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::DefaultMaterial>();
     case RuntimeType::CustomMaterial:
         return qmlElementName<RuntimeType::CustomMaterial>();
+    case RuntimeType::SpecularGlossyMaterial:
+        return qmlElementName<RuntimeType::SpecularGlossyMaterial>();
     case RuntimeType::Image2D:
         return qmlElementName<RuntimeType::Image2D>();
     case RuntimeType::ImageCube:
@@ -1111,6 +1114,8 @@ void writeQml(const QSSGSceneDesc::Material &material, OutputContext &output)
         indent(output) << qmlElementName<Material::RuntimeType::PrincipledMaterial>() << blockBegin(output);
     } else if (material.runtimeType == Material::RuntimeType::CustomMaterial) {
         indent(output) << qmlElementName<Material::RuntimeType::CustomMaterial>() << blockBegin(output);
+    } else if (material.runtimeType == Material::RuntimeType::SpecularGlossyMaterial) {
+        indent(output) << qmlElementName<Material::RuntimeType::SpecularGlossyMaterial>() << blockBegin(output);
     } else {
         Q_UNREACHABLE();
     }
