@@ -23,6 +23,7 @@
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QtCore/QMutexLocker>
 #include <QtCore/QBitArray>
@@ -1087,8 +1088,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
     for (const auto &handle : sortedOpaqueObjects) {
         QSSGRenderableObject *theObject = handle.obj;
-        if (!theObject->renderableFlags.castsShadows())
-            continue;
+        QSSG_ASSERT(theObject->renderableFlags.castsShadows(), continue);
 
         QSSGShaderFeatures objectFeatureSet = featureSet;
         const bool isOpaqueDepthPrePass = theObject->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
@@ -1582,9 +1582,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
         for (const auto &handle : sortedOpaqueObjects) {
             QSSGRenderableObject *theObject = handle.obj;
-            if (!theObject->renderableFlags.castsShadows())
-                continue;
-
+            QSSG_ASSERT(theObject->renderableFlags.castsShadows(), continue);
             if (theObject->renderableFlags.isDefaultMaterialMeshSubset() || theObject->renderableFlags.isCustomMaterialMeshSubset()) {
                 QSSGSubsetRenderable *renderable(static_cast<QSSGSubsetRenderable *>(theObject));
 

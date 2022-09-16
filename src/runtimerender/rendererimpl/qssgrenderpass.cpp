@@ -27,8 +27,10 @@ void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
     QSSG_ASSERT(shadowPassObjects.isEmpty(), shadowPassObjects.clear());
 
     for (const auto &handles : { &renderedDepthWriteObjects, &renderedOpaqueDepthPrepassObjects }) {
-        for (const auto &handle : *handles)
-            shadowPassObjects.push_back(handle);
+        for (const auto &handle : *handles) {
+            if (handle.obj->renderableFlags.castsShadows())
+                shadowPassObjects.push_back(handle);
+        }
     }
 
     globalLights = data.globalLights;
