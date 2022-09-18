@@ -889,6 +889,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             modelNode->lightmapKey.clear();
             modelNode->lightmapLoadPrefix.clear();
         }
+        modelNode->levelOfDetailBias = m_levelOfDetailBias;
     }
 
     if (m_dirtyAttributes & ReflectionDirty) {
@@ -1100,6 +1101,44 @@ void QQuick3DModel::setInstancingLodMax(float maxDistance)
     m_instancingLodMax = maxDistance;
     emit instancingLodMaxChanged();
     markDirty(LodDirty);
+}
+
+/*!
+    \qmlproperty real Model::levelOfDetailBias
+    \since 6.5
+
+    This property changes the size the model needs to be when rendered before the
+    automatic level of detail meshes are used. Each generated level of detail
+    mesh contains an ideal size value that each level should be shown, which is
+    a ratio of how much of the rendered scene will be that mesh. A model that
+    represents only a few pixels on screen will not require the full geometry
+    to look correct, so a lower level of detail mesh will be used instead in
+    this case. This value is a bias to the ideal value such that a value smaller
+    than \c 1.0 will require an even smaller rendered size before switching to
+    a lesser level of detail. Values above \c 1.0 will lead to lower levels of detail
+    being used sooner. A value of \c 0.0 will disable the usage of levels of detail
+    completely.
+
+    The default value is \c 1.0
+
+    \note This property will only have an effect when the Model's geometry contains
+    levels of detail.
+
+    \sa Camera::levelOfDetailBias
+*/
+
+float QQuick3DModel::levelOfDetailBias() const
+{
+    return m_levelOfDetailBias;
+}
+
+void QQuick3DModel::setLevelOfDetailBias(float newLevelOfDetailBias)
+{
+    if (qFuzzyCompare(m_levelOfDetailBias, newLevelOfDetailBias))
+        return;
+    m_levelOfDetailBias = newLevelOfDetailBias;
+    emit levelOfDetailBiasChanged();
+    markDirty(QQuick3DModel::PropertyDirty);
 }
 
 QT_END_NAMESPACE

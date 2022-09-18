@@ -35,6 +35,13 @@ struct QSSGRenderSubset
         QSSGRhiInputAssemblerState ia;
     } rhi;
 
+    struct Lod {
+        quint32 count = 0;
+        quint32 offset = 0;
+        float distance = 0.0f;
+    };
+    QVector<Lod> lods;
+
     QSSGRenderSubset() = default;
     QSSGRenderSubset(const QSSGRenderSubset &inOther)
         : count(inOther.count)
@@ -42,6 +49,7 @@ struct QSSGRenderSubset
         , bounds(inOther.bounds)
         , bvhRoot(inOther.bvhRoot)
         , rhi(inOther.rhi)
+        , lods(inOther.lods)
     {
     }
     QSSGRenderSubset &operator=(const QSSGRenderSubset &inOther)
@@ -52,9 +60,33 @@ struct QSSGRenderSubset
             bounds = inOther.bounds;
             bvhRoot = inOther.bvhRoot;
             rhi = inOther.rhi;
+            lods = inOther.lods;
         }
         return *this;
     }
+
+    quint32 lodCount(quint32 lodLevel) const {
+        if (lodLevel == 0 || lods.isEmpty())
+            return count;
+        if (lodLevel > lods.count())
+            lodLevel = lods.count() - 1;
+        else
+            lodLevel -= 1;
+
+        return lods[lodLevel].count;
+    }
+
+    quint32 lodOffset(quint32 lodLevel) const {
+        if (lodLevel == 0 || lods.isEmpty())
+            return offset;
+        if (lodLevel > lods.count())
+            lodLevel = lods.count() - 1;
+        else
+            lodLevel -= 1;
+
+        return lods[lodLevel].offset;
+    }
+
 };
 
 struct QSSGRenderMesh

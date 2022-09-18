@@ -241,4 +241,45 @@ void QSSGRenderCamera::clearDirty(DirtyFlag dirtyFlag)
     QSSGRenderNode::clearDirty(QSSGRenderNode::DirtyFlag::SubNodeDirty);
 }
 
+static float getZNear(const QMatrix4x4 &projection)
+{
+    const float *data = projection.constData();
+    QSSGPlane plane(QVector3D(data[3] + data[2], data[7] + data[6], data[11] + data[10]), -data[15] - data[14]);
+    plane.normalize();
+    return plane.d;
+}
+
+static QVector2D getViewportHalfExtents(const QMatrix4x4 &projection) {
+    const float *data = projection.constData();
+
+    QSSGPlane nearPlane(QVector3D(data[3] + data[2], data[7] + data[6], data[11] + data[10]), -data[15] - data[14]);
+    nearPlane.normalize();
+    QSSGPlane rightPlane(QVector3D(data[3] - data[0], data[7] - data[4], data[11] - data[8]), -data[15] + data[12]);
+    rightPlane.normalize();
+    QSSGPlane topPlane(QVector3D(data[3] - data[1], data[7] - data[5], data[11] - data[9]), -data[15] + data[13]);
+    topPlane.normalize();
+
+    // Get intersection the 3 planes
+    float denom = QVector3D::dotProduct(QVector3D::crossProduct(nearPlane.n, rightPlane.n), topPlane.n);
+    if (qFuzzyIsNull(denom))
+        return QVector2D();
+
+    QVector3D intersection = (QVector3D::crossProduct(rightPlane.n, topPlane.n) * nearPlane.d +
+                             (QVector3D::crossProduct(topPlane.n, nearPlane.n) * rightPlane.d) +
+                             (QVector3D::crossProduct(nearPlane.n, rightPlane.n) * topPlane.d)) / denom;
+
+    return QVector2D(intersection.x(), intersection.y());
+}
+
+float QSSGRenderCamera::getLevelOfDetailMultiplier() const
+{
+    if (type == QSSGRenderGraphObject::Type::OrthographicCamera)
+        return getViewportHalfExtents(projection).x();
+
+    float zn = getZNear(projection);
+    float width = getViewportHalfExtents(projection).x() * 2.0;
+    return 1.0 / (zn / width);
+
+}
+
 QT_END_NAMESPACE

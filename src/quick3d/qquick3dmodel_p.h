@@ -80,6 +80,7 @@ class Q_QUICK3D_EXPORT QQuick3DModel : public QQuick3DNode
     Q_PROPERTY(QQuick3DBakedLightmap *bakedLightmap READ bakedLightmap WRITE setBakedLightmap NOTIFY bakedLightmapChanged REVISION(6, 4))
     Q_PROPERTY(float instancingLodMin READ instancingLodMin WRITE setInstancingLodMin NOTIFY instancingLodMinChanged REVISION(6, 5))
     Q_PROPERTY(float instancingLodMax READ instancingLodMax WRITE setInstancingLodMax NOTIFY instancingLodMaxChanged REVISION(6, 5))
+    Q_PROPERTY(float levelOfDetailBias READ levelOfDetailBias WRITE setLevelOfDetailBias NOTIFY levelOfDetailBiasChanged REVISION(6, 5))
 
     QML_NAMED_ELEMENT(Model)
 
@@ -115,6 +116,7 @@ public:
 
     Q_REVISION(6, 5) float instancingLodMin() const;
     Q_REVISION(6, 5) float instancingLodMax() const;
+    Q_REVISION(6, 5) float levelOfDetailBias() const;
 
 public Q_SLOTS:
     void setSource(const QUrl &source);
@@ -134,8 +136,10 @@ public Q_SLOTS:
     Q_REVISION(6, 4) void setUsedInBakedLighting(bool enable);
     Q_REVISION(6, 4) void setLightmapBaseResolution(int resolution);
     Q_REVISION(6, 4) void setBakedLightmap(QQuick3DBakedLightmap *bakedLightmap);
+
     Q_REVISION(6, 5) void setInstancingLodMin(float minDistance);
     Q_REVISION(6, 5) void setInstancingLodMax(float maxDistance);
+    Q_REVISION(6, 5) void setLevelOfDetailBias(float newLevelOfDetailBias);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -156,8 +160,10 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void usedInBakedLightingChanged();
     Q_REVISION(6, 4) void lightmapBaseResolutionChanged();
     Q_REVISION(6, 4) void bakedLightmapChanged();
+
     Q_REVISION(6, 5) void instancingLodMinChanged();
     Q_REVISION(6, 5) void instancingLodMaxChanged();
+    Q_REVISION(6, 5) void levelOfDetailBiasChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -230,6 +236,7 @@ private:
     QQuick3DSkin *m_skin = nullptr;
     float m_instancingLodMin = -1;
     float m_instancingLodMax = -1;
+    float m_levelOfDetailBias = 1.0f;
 };
 
 QT_END_NAMESPACE

@@ -280,6 +280,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
 {
     int reflectionProbeIndex = -1;
     float distanceFromReflectionProbe;
+    quint32 subsetLevelOfDetail = 0;
     QSSGShaderReflectionProbe reflectionProbe;
     const QSSGRef<QSSGRenderer> &generator;
     const QSSGModelContext &modelContext;
@@ -320,6 +321,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
                          const QSSGRenderSubset &inSubset,
                          const QSSGModelContext &inModelContext,
                          float inOpacity,
+                         quint32 inSubsetLevelOfDetail,
                          const QSSGRenderGraphObject &mat,
                          QSSGRenderableImage *inFirstImage,
                          QSSGShaderDefaultMaterialKey inShaderKey,

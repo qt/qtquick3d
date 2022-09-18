@@ -72,6 +72,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     uint lightmapBaseResolution = 0;
     bool hasLightmap() const { return !lightmapKey.isEmpty(); }
 
+    float levelOfDetailBias = 1.0f; // values < 1.0 will decrease usage of LODs, values > 1.0 will increase usage of LODs
+
     QSSGRenderModel();
 };
 QT_END_NAMESPACE

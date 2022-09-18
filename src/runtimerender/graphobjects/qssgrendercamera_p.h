@@ -65,6 +65,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     bool enableFrustumClipping;
     FlagT cameraDirtyFlags = 0;
 
+    float levelOfDetailPixelThreshold = 1.0;
+
     QRectF previousInViewport;
 
     explicit QSSGRenderCamera(QSSGRenderGraphObject::Type type);
@@ -111,6 +113,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCamera : public QSSGRenderNode
     }
     void markDirty(DirtyFlag dirtyFlag);
     void clearDirty(DirtyFlag dirtyFlag);
+
+    float getLevelOfDetailMultiplier() const;
 };
 
 QT_END_NAMESPACE

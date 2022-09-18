@@ -111,6 +111,12 @@ int main(int argc, char *argv[])
                     qDebug() << "\t\tname:" << subset.name;
                     if (header.hasLightmapSizeHint())
                         qDebug() << "\t\tlightmap size hint:" << subset.lightmapSizeHint;
+                    if (header.hasLodDataHint()) {
+                        qDebug() << "\t\tlods: ";
+                        for (auto lod : subset.lods) {
+                            qDebug() << "\t\t\tcount: " << lod.count << "offset: " << lod.offset << "distance: " << lod.distance;
+                        }
+                    }
                 }
             }
 

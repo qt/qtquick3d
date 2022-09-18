@@ -1581,8 +1581,8 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
         if (indexBuffer) {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.indexBuffer->indexFormat());
-            cb->drawIndexed(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
-            QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable.subset.count, instances));
+            cb->drawIndexed(subsetRenderable.subset.lodCount(subsetRenderable.subsetLevelOfDetail), instances, subsetRenderable.subset.lodOffset(subsetRenderable.subsetLevelOfDetail));
+            QSSGRHICTX_STAT(rhiCtx, drawIndexed(subsetRenderable.subset.lodCount(subsetRenderable.subsetLevelOfDetail), instances));
         } else {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers);
             cb->draw(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);

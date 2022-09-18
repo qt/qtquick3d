@@ -146,6 +146,20 @@ generate an additional UV channel for the meshes. This UV data is then used by
 the \l{Lightmaps and Global Illumination}{lightmap baker and during run-time
 lightmapping}.
 
+\row \li \c {--generateMeshLevelsOfDetail} \li When possible create mesh Levels
+of Detail by automatically simplifying the source mesh.
+
+\row \li \c {--recalculateLodNormals} \li Calculate new normals when necessary
+for Generated Mesh levels of detail.
+
+\row \li \c {--recalculateLodNormalsMergeAngle <value>} \li Maximum angle in
+degrees to consider for normal smoothing/merging when recalculating normals
+for Generated Mesh levels of detail.
+
+\row \li \c {recalculateLodNormalsSplitAngle <value>} \li Maximum angle in
+degrees to consider for normal spliting when recalculating normals for
+Generated Mesh levels of detail.
+
 \endtable
 
 */

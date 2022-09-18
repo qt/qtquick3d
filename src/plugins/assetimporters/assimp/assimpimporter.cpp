@@ -172,7 +172,6 @@ QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, 
 
     // Create savePath if it doesn't exist already
     m_savePath.mkdir(".");
-
     // Release old data
     qDeleteAll(m_animations);
     m_animations.clear();
@@ -828,7 +827,13 @@ QString AssimpImporter::generateMeshFile(aiNode *, QFile &file, const AssimpUtil
         return QStringLiteral("Could not open device to write mesh file");
 
     QString errorString;
-    QSSGMesh::Mesh mesh = AssimpUtils::generateMeshData(*m_scene, meshes, m_useFloatJointIndices, errorString);
+    QSSGMesh::Mesh mesh = AssimpUtils::generateMeshData(*m_scene,
+                                                        meshes,
+                                                        m_useFloatJointIndices,
+                                                        m_generateMeshLODs,
+                                                        m_lodNormalMergeAngle,
+                                                        m_lodNormalSplitAngle,
+                                                        errorString);
 
     if (mesh.isValid()) {
         if (m_generateLightmapUV)
@@ -2134,6 +2139,20 @@ void AssimpImporter::processOptions(QJsonObject options)
     if (m_generateLightmapUV) {
         qreal v = getRealOption(QStringLiteral("lightmapBaseResolution"), options);
         m_lightmapBaseResolution = v == 0.0 ? 1024 : int(v);
+    }
+
+    m_generateMeshLODs = checkBooleanOption(QStringLiteral("generateMeshLevelsOfDetail"), options);
+    if (m_generateMeshLODs) {
+        bool recalculateLODNormals = checkBooleanOption(QStringLiteral("recalculateLodNormals"), options);
+        if (recalculateLODNormals) {
+            qreal mergeAngle = getRealOption(QStringLiteral("recalculateLodNormalsMergeAngle"), options);
+            m_lodNormalMergeAngle = qBound(0.0, mergeAngle, 270.0);
+            qreal splitAngle = getRealOption(QStringLiteral("recalculateLodNormalsSplitAngle"), options);
+            m_lodNormalSplitAngle = qBound(0.0, splitAngle, 270.0);
+        } else {
+            m_lodNormalMergeAngle = 0.0;
+            m_lodNormalSplitAngle = 0.0;
+        }
     }
 }
 

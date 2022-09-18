@@ -347,6 +347,8 @@ QSSGRenderGraphObject *QQuick3DCamera::updateSpatialNode(QSSGRenderGraphObject *
     QSSGRenderCamera *camera = static_cast<QSSGRenderCamera *>(node);
     if (qUpdateIfNeeded(camera->enableFrustumClipping, m_frustumCullingEnabled))
         camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
+    if (qUpdateIfNeeded(camera->levelOfDetailPixelThreshold, m_levelOfDetailBias))
+        camera->markDirty(QSSGRenderCamera::DirtyFlag::CameraDirty);
 
     return node;
 }
@@ -357,4 +359,43 @@ void QQuick3DCamera::updateLookAt()
         lookAt(m_lookAtNode);
 }
 
+/*!
+    \qmlproperty float Camera::levelOfDetailBias
+    \since 6.5
+
+    This property changes the size a model needs to be when rendered before the
+    automatic level of detail meshes are used. Each generated level of detail
+    mesh contains an ideal size value that each level should be shown, which is
+    a ratio of how much of the rendered scene will be that mesh. A model that
+    represents only a few pixels on screen will not require the full geometry
+    to look correct, so a lower level of detail mesh will be used instead in
+    this case. This value is a bias to the ideal value such that a value smaller
+    than \c 1.0 will require an even smaller rendered size before switching to
+    a lesser level of detail. Values above \c 1.0 will lead to lower levels of detail
+    being used sooner.  A value of \c 0.0 will disable the usage of levels of detail
+    completely.
+
+    The default value is \c 1.0
+
+    \note This property will only have an effect on Models with geomtry containing
+    levels of detail.
+
+    \sa Model::levelOfDetailBias
+*/
+
+float QQuick3DCamera::levelOfDetailBias() const
+{
+    return m_levelOfDetailBias;
+}
+
+void QQuick3DCamera::setLevelOfDetailBias(float newLevelOfDetailBias)
+{
+    if (qFuzzyCompare(m_levelOfDetailBias, newLevelOfDetailBias))
+        return;
+    m_levelOfDetailBias = newLevelOfDetailBias;
+    emit levelOfDetailBiasChanged();
+    update();
+}
+
 QT_END_NAMESPACE
+

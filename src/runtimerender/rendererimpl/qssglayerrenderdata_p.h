@@ -233,7 +233,8 @@ public:
     bool prepareModelForRender(const RenderableNodeEntries &renderableModels,
                                const QMatrix4x4 &inViewProjection,
                                QSSGLayerRenderPreparationResultFlags &ioFlags,
-                               const QSSGCameraData &cameraData);
+                               const QSSGCameraData &cameraData,
+                               float lodThreshold = 0.0f);
     bool prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGCameraData &cameraData);
     static bool prepareItem2DsForRender(const QSSGRenderContextInterface &ctxIfc, const RenderableItem2DEntries &renderableItem2Ds,
                                         const QMatrix4x4 &inViewProjection);

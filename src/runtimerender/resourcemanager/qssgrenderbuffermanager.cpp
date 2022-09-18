@@ -1260,6 +1260,9 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
         subset.bvhRoot = nullptr;
         subset.count = source.count;
         subset.offset = source.offset;
+        for (auto &lod : source.lods)
+            subset.lods.append(QSSGRenderSubset::Lod({lod.count, lod.offset, lod.distance}));
+
 
         if (rhi.vertexBuffer) {
             subset.rhi.vertexBuffer = rhi.vertexBuffer;

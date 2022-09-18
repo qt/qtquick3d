@@ -23,8 +23,17 @@ using MeshList = QVector<const aiMesh *>;
 QSSGMesh::Mesh generateMeshData(const aiScene &scene,
                                 const MeshList &meshes,
                                 bool useFloatJointIndices,
+                                bool generateLevelsOfDetail,
+                                float normalMergeAngle,
+                                float normalSplitAngle,
                                 QString &errorString);
 
+}
+
+inline size_t qHash(const QVector3D &vector, size_t seed = 0) {
+    if (vector.isNull())
+        return seed;
+    return qHashBits(&vector, sizeof(float) * 3, seed);
 }
 
 QT_END_NAMESPACE

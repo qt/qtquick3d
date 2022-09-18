@@ -20,6 +20,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                                            const QSSGRenderSubset &inSubset,
                                            const QSSGModelContext &inModelContext,
                                            float inOpacity,
+                                           quint32 inSubsetLevelOfDetail,
                                            const QSSGRenderGraphObject &mat,
                                            QSSGRenderableImage *inFirstImage,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
@@ -32,6 +33,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                            inModelContext.model.m_depthBiasSq,
                            inModelContext.model.instancingLodMin,
                            inModelContext.model.instancingLodMax)
+    , subsetLevelOfDetail(inSubsetLevelOfDetail)
     , generator(gen)
     , modelContext(inModelContext)
     , subset(inSubset)

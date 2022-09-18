@@ -64,4 +64,12 @@ void QSSGBounds3::transform(const QMatrix4x4 &inMatrix)
     }
 }
 
+QVector3D QSSGBounds3::getSupport(const QVector3D &direction) const
+{
+    const QVector3D halfExtents = extents();
+    return QVector3D(direction.x() > 0 ? halfExtents.x() : -halfExtents.x(),
+                     direction.y() > 0 ? halfExtents.y() : -halfExtents.y(),
+                     direction.z() > 0 ? halfExtents.z() : -halfExtents.z()) + center();
+}
+
 QT_END_NAMESPACE

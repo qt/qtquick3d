@@ -11,6 +11,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderbuffermanager_p.h>
 
+#include <QtQuick3DUtils/private/qssgplane_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QSSGRenderNode::QSSGRenderNode()

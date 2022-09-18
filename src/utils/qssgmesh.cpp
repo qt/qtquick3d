@@ -7,6 +7,8 @@
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssglightmapuvgenerator_p.h>
 
+#include "meshoptimizer.h"
+
 QT_BEGIN_NAMESPACE
 
 namespace QSSGMesh {
@@ -30,6 +32,11 @@ static const size_t VERTEX_BUFFER_ENTRY_STRUCT_SIZE = 16;
 static const size_t SUBSET_STRUCT_SIZE_V3_V4 = 40;
 // subset list: count, offset, minXYZ, maxXYZ, nameOffset, nameLength, lightmapSizeWidth, lightmapSizeHeight
 static const size_t SUBSET_STRUCT_SIZE_V5 = 48;
+// subset list: count, offset, minXYZ, maxXYZ, nameOffset, nameLength, lightmapSizeWidth, lightmapSizeHeight, lodCount
+static const size_t SUBSET_STRUCT_SIZE_V6 = 52;
+
+//lod entry: count, offset, distance
+static const size_t LOD_STRUCT_SIZE = 12;
 
 MeshInternal::MultiMeshInfo MeshInternal::readFileHeader(QIODevice *device)
 {
@@ -202,7 +209,14 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
             quint32 height = 0;
             inputStream >> width >> height;
             subset.lightmapSizeHint = QSize(width, height);
-            subsetByteSize += SUBSET_STRUCT_SIZE_V5;
+            if (header->hasLodDataHint()) {
+                quint32 lodCount = 0;
+                inputStream >> lodCount;
+                subset.lodCount = lodCount;
+                subsetByteSize += SUBSET_STRUCT_SIZE_V6;
+            } else {
+                subsetByteSize += SUBSET_STRUCT_SIZE_V5;
+            }
         } else {
             subset.lightmapSizeHint = QSize(0, 0);
             subsetByteSize += SUBSET_STRUCT_SIZE_V3_V4;
@@ -221,8 +235,27 @@ quint64 MeshInternal::readMeshData(QIODevice *device, quint64 offset, Mesh *mesh
             device->read(alignPadding, alignAmount);
     }
 
-    for (const MeshInternal::Subset &internalSubset : internalSubsets)
-        mesh->m_subsets.append(internalSubset.toMeshSubset());
+    quint32 lodByteSize = 0;
+    for (const MeshInternal::Subset &internalSubset : internalSubsets) {
+        auto meshSubset = internalSubset.toMeshSubset();
+        // Read Level of Detail data here
+        for (auto &lod : meshSubset.lods) {
+            quint32 count = 0;
+            quint32 offset = 0;
+            float distance = 0.0;
+            inputStream >> count >> offset >> distance;
+            lod.count = count;
+            lod.offset = offset;
+            lod.distance = distance;
+            lodByteSize += LOD_STRUCT_SIZE;
+        }
+
+        mesh->m_subsets.append(meshSubset);
+    }
+    alignAmount = offsetTracker.alignedAdvance(lodByteSize);
+    if (alignAmount)
+        device->read(alignPadding, alignAmount);
+
 
     return header->sizeInBytes;
 }
@@ -336,6 +369,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
         const quint32 nameLength = subset.name.size() + 1;
         const quint32 lightmapSizeHintWidth = qMax(0, subset.lightmapSizeHint.width());
         const quint32 lightmapSizeHintHeight = qMax(0, subset.lightmapSizeHint.height());
+        const quint32 lodCount = subset.lods.size();
         outputStream << subsetCount
                      << subsetOffset
                      << minX
@@ -348,7 +382,8 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
                      << nameLength;
         outputStream << lightmapSizeHintWidth
                      << lightmapSizeHintHeight;
-        subsetByteSize += SUBSET_STRUCT_SIZE_V5;
+        outputStream << lodCount;
+        subsetByteSize += SUBSET_STRUCT_SIZE_V6;
     }
     alignAmount = offsetTracker.alignedAdvance(subsetByteSize);
     if (alignAmount)
@@ -363,6 +398,22 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
         if (alignAmount)
             device->write(alignPadding, alignAmount);
     }
+
+    // LOD data
+    quint32 lodDataByteSize = 0;
+    for (quint32 i = 0; i < subsetsCount; ++i) {
+        const Mesh::Subset &subset(mesh.m_subsets[i]);
+        for (auto lod : subset.lods) {
+            const quint32 count = lod.count;
+            const quint32 offset = lod.offset;
+            const float distance = lod.distance;
+            outputStream << count << offset << distance;
+            lodDataByteSize += LOD_STRUCT_SIZE;
+        }
+    }
+    alignAmount = offsetTracker.alignedAdvance(lodDataByteSize);
+    if (alignAmount)
+        device->write(alignPadding, alignAmount);
 
     const quint32 endPos = device->pos();
     const quint32 sizeInBytes = endPos - startPos;
@@ -512,6 +563,7 @@ Mesh Mesh::fromAssetData(const QVector<AssetVertexEntry> &vbufEntries,
         }
 
         meshSubset.lightmapSizeHint = QSize(subset.lightmapWidth, subset.lightmapHeight);
+        meshSubset.lods = subset.lods;
 
         mesh.m_subsets.append(meshSubset);
     }
@@ -942,6 +994,21 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
         subset.lightmapSizeHint = lightmapSizeHint;
 
     return true;
+}
+
+size_t simplifyMesh(unsigned int *destination, const unsigned int *indices, size_t indexCount, const float *vertexPositions, size_t vertexCount, size_t vertexPositionsStride, size_t targetIndexCount, float targetError, unsigned int options, float *resultError)
+{
+    return meshopt_simplify(destination, indices, indexCount, vertexPositions, vertexCount, vertexPositionsStride, targetIndexCount, targetError, options, resultError);
+}
+
+float simplifyScale(const float *vertexPositions, size_t vertexCount, size_t vertexPositionsStride)
+{
+    return meshopt_simplifyScale(vertexPositions, vertexCount, vertexPositionsStride);
+}
+
+void optimizeVertexCache(unsigned int *destination, const unsigned int *indices, size_t indexCount, size_t vertexCount)
+{
+    meshopt_optimizeVertexCache(destination, indices, indexCount, vertexCount);
 }
 
 } // namespace QSSGMesh

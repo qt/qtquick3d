@@ -25,6 +25,7 @@ class Q_QUICK3D_EXPORT QQuick3DCamera : public QQuick3DNode
     Q_OBJECT
     Q_PROPERTY(bool frustumCullingEnabled READ frustumCullingEnabled WRITE setFrustumCullingEnabled NOTIFY frustumCullingEnabledChanged)
     Q_PROPERTY(QQuick3DNode *lookAtNode READ lookAtNode WRITE setLookAtNode NOTIFY lookAtNodeChanged REVISION(6, 4))
+    Q_PROPERTY(float levelOfDetailBias READ levelOfDetailBias WRITE setLevelOfDetailBias NOTIFY levelOfDetailBiasChanged REVISION(6, 5))
     QML_NAMED_ELEMENT(Camera)
     QML_UNCREATABLE("Camera is Abstract")
 public:
@@ -46,14 +47,17 @@ public:
 
     bool frustumCullingEnabled() const;
     QQuick3DNode *lookAtNode() const;
+    Q_REVISION(6, 5) float levelOfDetailBias() const;
 
 public Q_SLOTS:
     void setFrustumCullingEnabled(bool frustumCullingEnabled);
     void setLookAtNode(QQuick3DNode *node);
+    Q_REVISION(6, 5) void setLevelOfDetailBias(float newLevelOFDetailBias);
 
 Q_SIGNALS:
     void frustumCullingEnabledChanged();
     Q_REVISION(6, 4) void lookAtNodeChanged();
+    Q_REVISION(6, 5) void levelOfDetailBiasChanged();
 
 protected:
     explicit QQuick3DCamera(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
@@ -66,6 +70,7 @@ private Q_SLOTS:
 private:
     bool m_frustumCullingEnabled = false;
     QQuick3DNode *m_lookAtNode = nullptr;
+    float m_levelOfDetailBias = 1.0f;
 };
 
 QT_END_NAMESPACE

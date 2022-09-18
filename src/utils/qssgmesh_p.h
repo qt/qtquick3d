@@ -33,6 +33,7 @@ namespace QSSGMesh {
 struct AssetVertexEntry;
 struct AssetMeshSubset;
 struct RuntimeMeshData;
+struct AssetLodEntry;
 
 class Q_QUICK3DUTILS_EXPORT Mesh
 {
@@ -96,12 +97,19 @@ public:
         QVector3D max;
     };
 
+    struct Lod {
+        quint32 count = 0;
+        quint32 offset = 0;
+        float distance = 0.0f;
+    };
+
     struct Subset {
         QString name;
         SubsetBounds bounds;
         quint32 count = 0;
         quint32 offset = 0;
         QSize lightmapSizeHint;
+        QVector<Lod> lods;
     };
 
     // can just return by value (big data is all implicitly shared)
@@ -158,6 +166,7 @@ struct Q_QUICK3DUTILS_EXPORT AssetMeshSubset // for asset importer plugins (Assi
     quint32 boundsPositionEntryIndex = std::numeric_limits<quint32>::max();
     quint32 lightmapWidth = 0;
     quint32 lightmapHeight = 0;
+    QVector<Mesh::Lod> lods;
 };
 
 struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeometry, QSSGRenderGeometry)
@@ -260,7 +269,9 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
         static const quint32 LEGACY_MESH_FILE_VERSION = 3;
         // Version 5 differs from 4 with the added lightmapSizeHint per subset.
         // This needs branching in the deserializer.
-        static const quint32 FILE_VERSION = 5;
+        // Version 6 differs from 5 with additional lodCount per subset as well
+        // as a list of Level of Detail data after the subset names.
+        static const quint32 FILE_VERSION = 6;
 
         static MeshDataHeader withDefaults() {
             return { FILE_ID, FILE_VERSION, 0, 0 };
@@ -274,6 +285,10 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
 
         bool hasLightmapSizeHint() const {
             return fileVersion >= 5;
+        }
+
+        bool hasLodDataHint() const {
+            return fileVersion >= 6;
         }
     };
 
@@ -307,6 +322,7 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
         quint32 offset = 0;
         quint32 count = 0;
         QSize lightmapSizeHint;
+        quint32 lodCount = 0;
 
         Mesh::Subset toMeshSubset() const {
             Mesh::Subset subset;
@@ -317,6 +333,7 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
             subset.count = count;
             subset.offset = offset;
             subset.lightmapSizeHint = lightmapSizeHint;
+            subset.lods.resize(lodCount);
             return subset;
         }
     };
@@ -422,6 +439,26 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
                                              quint32 subsetCount,
                                              quint32 subsetOffset);
 };
+
+size_t Q_QUICK3DUTILS_EXPORT simplifyMesh(unsigned int* destination,
+                                          const unsigned int* indices,
+                                          size_t indexCount,
+                                          const float* vertexPositions,
+                                          size_t vertexCount,
+                                          size_t vertexPositionsStride,
+                                          size_t targetIndexCount,
+                                          float targetError,
+                                          unsigned int options,
+                                          float* resultError);
+
+float Q_QUICK3DUTILS_EXPORT simplifyScale(const float* vertexPositions,
+                                          size_t vertexCount,
+                                          size_t vertexPositionsStride);
+
+void Q_QUICK3DUTILS_EXPORT optimizeVertexCache(unsigned int* destination,
+                                               const unsigned int* indices,
+                                               size_t indexCount,
+                                               size_t vertexCount);
 
 } // namespace QSSGMesh
 

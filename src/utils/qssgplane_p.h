@@ -77,7 +77,7 @@ public:
     \brief equivalent plane with unit normal
     */
 
-    Q_ALWAYS_INLINE void normalize();
+    void normalize();
 
     QVector3D n; //!< The normal to the plane
     float d = 0.0f; //!< The distance from the origin

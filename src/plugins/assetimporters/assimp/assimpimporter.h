@@ -129,6 +129,10 @@ private:
     int m_lightmapBaseResolution = 1024;
     qreal m_globalScaleValue = 1.0;
 
+    bool m_generateMeshLODs = false;
+    qreal m_lodNormalMergeAngle = 60.0;
+    qreal m_lodNormalSplitAngle = 25.0;
+
     QJsonObject m_options;
     aiPostProcessSteps m_postProcessSteps;
 

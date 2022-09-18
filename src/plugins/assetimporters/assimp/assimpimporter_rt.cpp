@@ -1129,7 +1129,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     };
 
     const auto createMeshNode = [&](const aiString &name) {
-        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, false, errorString);
+        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, false, false, 0.0, 0.0, errorString);
         meshStorage.push_back(std::move(meshData));
 
         const auto idx = meshStorage.size() - 1;

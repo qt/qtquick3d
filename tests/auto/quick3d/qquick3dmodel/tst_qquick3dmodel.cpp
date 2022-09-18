@@ -67,6 +67,15 @@ void tst_QQuick3DModel::testProperties()
     QVERIFY(!model.receivesShadows());
     QVERIFY(!node->getLocalState(QSSGRenderModel::LocalState::Pickable));
 
+    model.setLevelOfDetailBias(0.0f);
+    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
+    QVERIFY(model.levelOfDetailBias() == 0.0f);
+    QVERIFY(node->levelOfDetailBias == 0.0f);
+    model.setLevelOfDetailBias(1.0f);
+    node = static_cast<QSSGRenderModel *>(model.updateSpatialNode(node));
+    QVERIFY(model.levelOfDetailBias() == 1.0f);
+    QVERIFY(node->levelOfDetailBias == 1.0f);
+
     // mesh from source
     QUrl cubeUrl("#Cube");
     QSignalSpy spy(&model, SIGNAL(sourceChanged()));

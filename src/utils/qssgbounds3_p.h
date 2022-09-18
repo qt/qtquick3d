@@ -184,6 +184,11 @@ public:
 
     void transform(const QMatrix4x4 &inMatrix);
 
+    /**
+    Returns the support point in a given direction
+    */
+    QVector3D getSupport(const QVector3D &direction) const;
+
     QVector3D minimum;
     QVector3D maximum;
 };
