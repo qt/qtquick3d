@@ -24,6 +24,7 @@
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
@@ -1647,6 +1648,31 @@ void QSSGLayerRenderData::prepareForRender()
 
     prepareReflectionProbesForRender();
 
+    // Prepare passes
+    QSSG_ASSERT(activePasses.isEmpty(), activePasses.clear());
+    // If needed, generate a depth texture with the opaque objects. This
+    // and the SSAO texture must come first since other passes may want to
+    // expose these textures to their shaders.
+    if (thePrepResult.flags.requiresDepthTexture())
+        activePasses.push_back(&depthMapPass);
+
+    // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
+    if (thePrepResult.flags.requiresSsaoPass())
+        activePasses.push_back(&ssaoMapPass);
+
+    // Shadows. Generates a 2D or cube shadow map. (opaque + pre-pass transparent objects)
+    if (thePrepResult.flags.requiresShadowMapPass())
+        activePasses.push_back(&shadowMapPass);
+
+    activePasses.push_back(&reflectionMapPass);
+    activePasses.push_back(&zPrePassPass);
+
+    // Screen texture with opaque objects.
+    if (thePrepResult.flags.requiresScreenTexture())
+        activePasses.push_back(&screenMapPass);
+
+    activePasses.push_back(&mainPass);
+
     wasDirty = wasDirty || wasDataDirty;
     thePrepResult.flags.setWasDirty(wasDirty);
     thePrepResult.flags.setLayerDataDirty(wasDataDirty);
@@ -1656,6 +1682,9 @@ void QSSGLayerRenderData::prepareForRender()
 
 void QSSGLayerRenderData::resetForFrame()
 {
+    for (const auto &pass : activePasses)
+        pass->release();
+    activePasses.clear();
     transparentObjects.clear();
     screenTextureObjects.clear();
     opaqueObjects.clear();
@@ -1675,13 +1704,6 @@ void QSSGLayerRenderData::resetForFrame()
     renderableItem2Ds.clear();
     globalLights.clear();
     modelContexts.clear();
-    shadowMapPass.release();
-    reflectionMapPass.release();
-    zPrePassPass.release();
-    ssaoMapPass.release();
-    depthMapPass.release();
-    screenMapPass.release();
-    mainPass.release();
     features = QSSGShaderFeatures();
 }
 
@@ -1938,38 +1960,15 @@ void QSSGLayerRenderData::rhiPrepare()
             }
         }
 
-        // If needed, generate a depth texture with the opaque objects. This
-        // and the SSAO texture must come first since other passes may want to
-        // expose these textures to their shaders.
-        if (layerPrepResult->flags.requiresDepthTexture()) {
-            depthMapPass.renderPrep(renderer, *this);
-            depthMapPass.renderPass(renderer);
-        } else {
-            depthMapPass.release();
+        // Process active passes. "PreMain" passes are individual passes
+        // that does can and should be done in the rhi prepare phase.
+        // It is assumed that passes are sorted in the list with regards to
+        // execution order.
+        for (const auto &pass : activePasses) {
+            pass->renderPrep(renderer, *this);
+            if (pass->passType() == QSSGRenderPass::Type::PreMain)
+                pass->renderPass(renderer);
         }
-        // Screen space ambient occlusion. Relies on the depth texture and generates an AO map.
-        if (layerPrepResult->flags.requiresSsaoPass()) {
-            ssaoMapPass.renderPrep(renderer, *this);
-            ssaoMapPass.renderPass(renderer);
-        } else {
-            ssaoMapPass.release();
-        }
-        // Shadows. Generates a 2D or cube shadow map. (opaque + pre-pass transparent objects)
-        if (layerPrepResult->flags.requiresShadowMapPass()) {
-            shadowMapPass.renderPrep(renderer, *this); // NOOP
-            shadowMapPass.renderPass(renderer);
-        }
-        reflectionMapPass.renderPrep(renderer, *this); // NOOP
-        reflectionMapPass.renderPass(renderer);
-        zPrePassPass.renderPrep(renderer, *this);
-        // Screen texture with opaque objects.
-        if (layerPrepResult->flags.requiresScreenTexture()) {
-            screenMapPass.renderPrep(renderer, *this); // NOOP
-            screenMapPass.renderPass(renderer);
-        } else {
-            screenMapPass.release();
-        }
-        mainPass.renderPrep(renderer, *this);
 
         renderer->endLayerRender();
     }
@@ -1980,8 +1979,10 @@ void QSSGLayerRenderData::rhiRender()
 {
     if (camera) {
         renderer->beginLayerRender(*this);
-        zPrePassPass.renderPass(renderer);
-        mainPass.renderPass(renderer);
+        for (const auto &pass : qAsConst(activePasses)) {
+            if (pass->passType() == QSSGRenderPass::Type::Main)
+                pass->renderPass(renderer);
+        }
         renderer->endLayerRender();
     }
 }

@@ -25,10 +25,16 @@ using QSSGBoxPoints = std::array<QVector3D, 8>;
 class QSSGRenderPass
 {
 public:
+    enum class Type
+    {
+        PreMain,
+        Main
+    };
     // Input:
 
     virtual void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) = 0;
     virtual void renderPass(const QSSGRef<QSSGRenderer> &renderer) = 0;
+    virtual Type passType() const = 0;
     virtual void release() = 0;
 
     // Output:
@@ -43,6 +49,7 @@ class ShadowMapPass : public QSSGRenderPass
 public:
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::PreMain; }
     void release() final;
 
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
@@ -60,6 +67,7 @@ class ReflectionMapPass : public QSSGRenderPass
 public:
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::PreMain; }
     void release() final;
 
     QSSGRef<QSSGRenderReflectionMap> reflectionMapManager;
@@ -81,6 +89,7 @@ public:
     // Note: prep phase, there's also the render phase... Should both be specified here?
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::Main; }
     void release() final;
 
     QSSGRenderableObjectList renderedDepthWriteObjects;
@@ -104,6 +113,7 @@ public:
 
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::PreMain; }
     void release() final;
 
     const QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
@@ -119,6 +129,7 @@ class DepthMapPass : public QSSGRenderPass
 public:
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::PreMain; }
     void release() final;
 
     QSSGRenderableObjectList sortedOpaqueObjects;
@@ -132,6 +143,7 @@ class ScreenMapPass : public QSSGRenderPass
 public:
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::PreMain; }
     void release() final;
 
     QSSGRhiRenderableTexture rhiScreenTexture;
@@ -147,6 +159,7 @@ class MainPass : public QSSGRenderPass
 public:
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
     void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    Type passType() const final { return Type::Main; }
     void release() final;
 
     QSSGRenderableObjectList sortedOpaqueObjects;

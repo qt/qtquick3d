@@ -266,6 +266,9 @@ public:
     ScreenMapPass screenMapPass;
     MainPass mainPass;
 
+    // Built-in passes
+    QVarLengthArray<QSSGRenderPass *, 8> activePasses;
+
     QSSGRenderLayer &layer;
     QSSGRef<QSSGRenderer> renderer;
     // List of nodes we can render, not all may be active.  Found by doing a depth-first
