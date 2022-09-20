@@ -18,6 +18,9 @@ int main(int argc, char *argv[])
 
     // Setup command line arguments
     QCommandLineParser cmdLineParser;
+    cmdLineParser.setApplicationDescription(
+            "Allows to debug the high level structure of .mesh files for use with Qt Quick 3D");
+    cmdLineParser.addHelpOption();
     cmdLineParser.process(app);
     QStringList meshFileNames = cmdLineParser.positionalArguments();
 

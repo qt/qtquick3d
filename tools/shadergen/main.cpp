@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     QCommandLineParser cmdLineparser;
+    cmdLineparser.setApplicationDescription("Pre-generates material shaders for Qt Quick 3D");
     cmdLineparser.addHelpOption();
     // File options
     QCommandLineOption changeDirOption({QChar(u'C'), QLatin1String("directory")},
