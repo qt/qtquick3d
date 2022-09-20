@@ -14,6 +14,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgperframeallocator_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
 
 #include <QtQuick/QQuickWindow>
 
@@ -88,6 +89,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
     , m_shaderLibraryManager(q3ds_shaderLibraryManager())
     , m_customMaterialSystem(new QSSGCustomMaterialSystem)
     , m_shaderProgramGenerator(new QSSGProgramGenerator)
+    , m_debugDrawSystem(new QSSGDebugDrawSystem)
 {
     init();
     if (window) {
@@ -137,6 +139,11 @@ const QSSGRef<QSSGCustomMaterialSystem> &QSSGRenderContextInterface::customMater
 const QSSGRef<QSSGProgramGenerator> &QSSGRenderContextInterface::shaderProgramGenerator() const
 {
     return m_shaderProgramGenerator;
+}
+
+const QSSGRef<QSSGDebugDrawSystem> &QSSGRenderContextInterface::debugDrawSystem() const
+{
+    return m_debugDrawSystem;
 }
 
 void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *> &resources)

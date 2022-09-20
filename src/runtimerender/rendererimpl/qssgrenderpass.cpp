@@ -5,6 +5,7 @@
 #include "qssgrhiquadrenderer_p.h"
 #include "qssglayerrenderdata_p.h"
 #include "qssgrendercontextcore_p.h"
+#include "qssgdebugdrawsystem_p.h"
 
 #include "../utils/qssgassert_p.h"
 
@@ -649,8 +650,32 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
             rhiPrepareRenderable(rhiCtx.data(), this, data, *theObject, mainRpDesc, &ps, shaderFeatures, samples);
     }
 
-    if (layer.gridEnabled) {
+
+    if (layer.gridEnabled)
         rhiPrepareGrid(rhiCtx.data(), layer, *camera, renderer);
+
+    // debug objects
+    const auto &debugDraw = renderer->contextInterface()->debugDrawSystem();
+    if (debugDraw->hasContent()) {
+        QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
+        debugDraw->prepareGeometry(rhiCtx.data(), rub);
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::DebugObjects });
+        if (!dcd.ubuf) {
+            dcd.ubuf = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 64);
+            dcd.ubuf->create();
+        }
+        char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+        QMatrix4x4 viewProjection(Qt::Uninitialized);
+        camera->calculateViewProjectionMatrix(viewProjection);
+        viewProjection = rhiCtx->rhi()->clipSpaceCorrMatrix() * viewProjection;
+        memcpy(ubufData, viewProjection.constData(), 64);
+        dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+
+        QSSGRhiShaderResourceBindingList bindings;
+        bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage, dcd.ubuf);
+        dcd.srb = rhiCtx->srb(bindings);
+
+        rhiCtx->commandBuffer()->resourceUpdate(rub);
     }
 
     cb->debugMarkEnd();
@@ -747,6 +772,19 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         QRhiShaderResourceBindings *srb = layer.gridSrb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.data(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
+    }
+
+    // 7. Debug Draw content
+    const auto &debugDraw = renderer->contextInterface()->debugDrawSystem();
+    if (debugDraw->hasContent()) {
+        cb->debugMarkBegin(QByteArrayLiteral("Quick 3D debug objects"));
+        auto shaderPipeline = renderer->getRhiDebugObjectShader();
+        QSSG_CHECK(shaderPipeline);
+        ps.shaderPipeline = shaderPipeline.data();
+        QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::DebugObjects });
+        QRhiShaderResourceBindings *srb = dcd.srb;
+        QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
+        debugDraw->recordRenderDebugObjects(rhiCtx.data(), &ps, srb, rpDesc);
         cb->debugMarkEnd();
     }
 }

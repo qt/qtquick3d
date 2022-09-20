@@ -77,6 +77,7 @@ qt_internal_add_module(Quick3DRuntimeRender
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h
         rendererimpl/qssgcputonemapper_p.h
+        qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
@@ -193,6 +194,8 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
         res/rhishaders/environmentmap.frag
         res/rhishaders/lightmapuvraster.vert
         res/rhishaders/lightmapuvraster.frag
+        res/rhishaders/debugobject.vert
+        res/rhishaders/debugobject.frag
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_pertarget"
     SILENT

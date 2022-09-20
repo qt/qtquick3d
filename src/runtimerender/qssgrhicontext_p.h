@@ -664,7 +664,8 @@ struct QSSGRhiDrawCallDataKey
         Effects,
         Item2D,
         Reflection,
-        Lightmap
+        Lightmap,
+        DebugObjects
     };
     const void *layer;
     const void *model;

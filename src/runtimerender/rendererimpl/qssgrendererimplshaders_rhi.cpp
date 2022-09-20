@@ -181,4 +181,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiLightmapDilateShader()
     return getBuiltinRhiShader(QByteArrayLiteral("lightmapdilate"), m_lightmapDilateShader);
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiDebugObjectShader()
+{
+    return getBuiltinRhiShader(QByteArrayLiteral("debugobject"), m_debugObjectShader);
+}
+
 QT_END_NAMESPACE

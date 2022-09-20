@@ -136,6 +136,7 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> getRhiSimpleQuadShader();
     QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
     QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapDilateShader();
+    QSSGRef<QSSGRhiShaderPipeline> getRhiDebugObjectShader();
 
     static void setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode);
 
@@ -180,6 +181,7 @@ private:
     QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_uv;
     QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_uv_tangent;
     QSSGRef<QSSGRhiShaderPipeline> m_lightmapDilateShader;
+    QSSGRef<QSSGRhiShaderPipeline> m_debugObjectShader;
 
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingMappedRhiShader;
