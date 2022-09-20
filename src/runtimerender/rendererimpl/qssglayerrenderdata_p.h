@@ -253,6 +253,9 @@ public:
     const QSSGRenderableObjectList &getSortedScreenTextureRenderableObjects();
     const QVector<QSSGBakedLightingModel> &getSortedBakedLightingModels();
     const RenderableItem2DEntries &getRenderableItem2Ds();
+    const QSSGRenderableObjectList &getSortedRenderedDepthWriteObjects();
+    const QSSGRenderableObjectList &getSortedrenderedOpaqueDepthPrepassObjects();
+
 
     void resetForFrame();
 
@@ -320,6 +323,7 @@ public:
     QSSGRhiGraphicsPipelineState getPipelineState() const { return ps; }
 
 private:
+    void updateSortedDepthObjectsListImp();
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
 };

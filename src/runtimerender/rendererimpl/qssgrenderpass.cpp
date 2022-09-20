@@ -21,8 +21,8 @@ void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
     camera = data.camera;
     QSSG_ASSERT(camera, return);
 
-    const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
-    const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
+    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
+    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
 
     QSSG_ASSERT(shadowPassObjects.isEmpty(), shadowPassObjects.clear());
 
@@ -205,8 +205,8 @@ void ZPrePassPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRe
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     ps = data.getPipelineState();
 
-    renderedDepthWriteObjects = data.renderedDepthWriteObjects;
-    renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
+    renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
+    renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
 
     const auto &layer = data.layer;
     const bool hasItem2Ds = data.renderableItem2Ds.isEmpty();
@@ -414,8 +414,8 @@ void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
     const auto &layerPrepResult = data.layerPrepResult;
     wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-    const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
-    const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
+    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
+    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
     ps = data.getPipelineState();
 
     if (layer.background == QSSGRenderLayer::Background::Color)
@@ -547,8 +547,8 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
 
     const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
-    const auto &renderedOpaqueDepthPrepassObjects = data.renderedOpaqueDepthPrepassObjects;
-    const auto &renderedDepthWriteObjects = data.renderedDepthWriteObjects;
+    const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
+    const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
     const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());;
     const bool depthWriteEnableDefault = depthTestEnableDefault && (!layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass) || (data.zPrePassPass.state != ZPrePassPass::State::Active));;
 

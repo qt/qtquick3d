@@ -43,6 +43,19 @@ Q_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
 #define POS4BONENORM(x)     (sizeof(float) * 16 * ((x) * 2 + 1))
 #define BONEDATASIZE4ID(x)  POS4BONETRANS(x + 1)
 
+// These are meant to be pixel offsets, so you need to divide them by the width/height
+// of the layer respectively.
+static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderData::MAX_AA_LEVELS] = {
+    QVector2D(-0.170840f, -0.553840f), // 1x
+    QVector2D(0.162960f, -0.319340f), // 2x
+    QVector2D(0.360260f, -0.245840f), // 3x
+    QVector2D(-0.561340f, -0.149540f), // 4x
+    QVector2D(0.249460f, 0.453460f), // 5x
+    QVector2D(-0.336340f, 0.378260f), // 6x
+    QVector2D(0.340000f, 0.166260f), // 7x
+    QVector2D(0.235760f, 0.527760f), // 8x
+};
+
 static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
@@ -304,6 +317,52 @@ const QSSGLayerRenderData::RenderableItem2DEntries &QSSGLayerRenderData::getRend
     }
 
     return renderedItem2Ds;
+}
+
+// Depth Write List
+void QSSGLayerRenderData::updateSortedDepthObjectsListImp()
+{
+    if (!renderedDepthWriteObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty())
+        return;
+
+    const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(); // front to back
+    const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(); // back to front
+    const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(); // back to front
+    if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
+        for (const auto &opaqueObject : sortedOpaqueObjects) {
+            const auto depthMode = opaqueObject.obj->depthWriteMode;
+            if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
+                renderedDepthWriteObjects.append(opaqueObject);
+            else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                renderedOpaqueDepthPrepassObjects.append(opaqueObject);
+        }
+        for (const auto &transparentObject : sortedTransparentObjects) {
+            const auto depthMode = transparentObject.obj->depthWriteMode;
+            if (depthMode == QSSGDepthDrawMode::Always)
+                renderedDepthWriteObjects.append(transparentObject);
+            else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                renderedOpaqueDepthPrepassObjects.append(transparentObject);
+        }
+        for (const auto &screenTextureObject : sortedScreenTextureObjects) {
+            const auto depthMode = screenTextureObject.obj->depthWriteMode;
+            if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
+                renderedDepthWriteObjects.append(screenTextureObject);
+            else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
+                renderedOpaqueDepthPrepassObjects.append(screenTextureObject);
+        }
+    }
+}
+
+const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedRenderedDepthWriteObjects()
+{
+    updateSortedDepthObjectsListImp();
+    return renderedDepthWriteObjects;
+}
+
+const QSSGRenderableObjectList &QSSGLayerRenderData::getSortedrenderedOpaqueDepthPrepassObjects()
+{
+    updateSortedDepthObjectsListImp();
+    return renderedOpaqueDepthPrepassObjects;
 }
 
 /**
@@ -1363,10 +1422,20 @@ void QSSGLayerRenderData::prepareForRender()
     if (layerPrepResult.hasValue())
         return;
 
+    // Verify that the depth write list(s) were cleared between frames
+    QSSG_ASSERT(renderedDepthWriteObjects.isEmpty(), renderedDepthWriteObjects.clear());
+    QSSG_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty(), renderedOpaqueDepthPrepassObjects.clear());
+
     QRect theViewport(renderer->contextInterface()->viewport());
     QRect theScissor(renderer->contextInterface()->scissorRect());
     if (theScissor.isNull() || (theScissor == theViewport))
         theScissor = theViewport;
+
+    // Create base pipeline state
+    ps = {}; // Reset
+    ps.viewport = { float(theViewport.x()), float(theViewport.y()), float(theViewport.width()), float(theViewport.height()), 0.0f, 1.0f };
+    ps.scissorEnable = true;
+    ps.scissor = { theScissor.x(), theScissor.y(), theScissor.width(), theScissor.height() };
 
     bool wasDirty = false;
     bool wasDataDirty = false;
@@ -1498,7 +1567,6 @@ void QSSGLayerRenderData::prepareForRender()
     camera = layer.explicitCamera;
     if (camera != nullptr) {
         // 1.
-        camera->dpr = renderer->contextInterface()->dpr();
         wasDataDirty = wasDataDirty || camera->isDirty();
         QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*camera);
         wasDataDirty = wasDataDirty || theResult.m_wasDirty;
@@ -1513,7 +1581,6 @@ void QSSGLayerRenderData::prepareForRender()
         for (auto iter = cameras.cbegin();
              (camera == nullptr) && (iter != cameras.cend()); iter++) {
             QSSGRenderCamera *theCamera = *iter;
-            theCamera->dpr = renderer->contextInterface()->dpr();
             wasDataDirty = wasDataDirty
                     || theCamera->isDirty();
             QSSGCameraGlobalCalculationResult theResult = thePrepResult.setupCameraForRender(*theCamera);
@@ -1635,10 +1702,12 @@ void QSSGLayerRenderData::prepareForRender()
 
     // Calculate viewProjection and clippingFrustum for Render Camera
     QMatrix4x4 viewProjection(Qt::Uninitialized);
-    if (camera)
+    if (camera) {
+        camera->dpr = renderer->contextInterface()->dpr();
         camera->calculateViewProjectionMatrix(viewProjection);
-    else
+    } else {
         viewProjection = QMatrix4x4(/*identity*/);
+    }
 
     const QSSGCameraData &cameraData = getCameraDirectionAndPosition();
 
@@ -1647,6 +1716,52 @@ void QSSGLayerRenderData::prepareForRender()
     wasDirty |= prepareItem2DsForRender(*renderer->contextInterface(), renderableItem2Ds, viewProjection);
 
     prepareReflectionProbesForRender();
+
+    wasDirty = wasDirty || wasDataDirty;
+    thePrepResult.flags.setWasDirty(wasDirty);
+    thePrepResult.flags.setLayerDataDirty(wasDataDirty);
+
+    layerPrepResult = thePrepResult;
+
+    //
+    const bool animating = wasDirty;
+    if (animating)
+        layer.progAAPassIndex = 0;
+
+    const bool progressiveAA = layer.antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA && !animating;
+    layer.progressiveAAIsActive = progressiveAA;
+    const bool temporalAA = layer.temporalAAEnabled && !progressiveAA &&  layer.antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
+
+    layer.temporalAAIsActive = temporalAA;
+
+    QVector2D vertexOffsetsAA;
+
+    if (progressiveAA && layer.progAAPassIndex > 0 && layer.progAAPassIndex < quint32(layer.antialiasingQuality)) {
+        int idx = layer.progAAPassIndex - 1;
+        vertexOffsetsAA = s_ProgressiveAAVertexOffsets[idx] / QVector2D{ float(theViewport.width()/2.0), float(theViewport.height()/2.0) };
+    }
+
+    if (temporalAA) {
+        const int t = 1 - 2 * (layer.tempAAPassIndex % 2);
+        const float f = t * layer.temporalAAStrength;
+        vertexOffsetsAA = { f / float(theViewport.width()/2.0), f / float(theViewport.height()/2.0) };
+    }
+
+    if (camera) {
+        if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
+            QMatrix4x4 offsetProjection = camera->projection;
+            QMatrix4x4 invProjection = camera->projection.inverted();
+            if (camera->type == QSSGRenderCamera::Type::OrthographicCamera) {
+                offsetProjection(0, 3) -= vertexOffsetsAA.x();
+                offsetProjection(1, 3) -= vertexOffsetsAA.y();
+            } else if (camera->type == QSSGRenderCamera::Type::PerspectiveCamera) {
+                offsetProjection(0, 2) += vertexOffsetsAA.x();
+                offsetProjection(1, 2) += vertexOffsetsAA.y();
+            }
+            for (auto &modelContext : qAsConst(modelContexts))
+                modelContext->modelViewProjection = offsetProjection * invProjection * modelContext->modelViewProjection;
+        }
+    }
 
     // Prepare passes
     QSSG_ASSERT(activePasses.isEmpty(), activePasses.clear());
@@ -1672,12 +1787,6 @@ void QSSGLayerRenderData::prepareForRender()
         activePasses.push_back(&screenMapPass);
 
     activePasses.push_back(&mainPass);
-
-    wasDirty = wasDirty || wasDataDirty;
-    thePrepResult.flags.setWasDirty(wasDirty);
-    thePrepResult.flags.setLayerDataDirty(wasDataDirty);
-
-    layerPrepResult = thePrepResult;
 }
 
 void QSSGLayerRenderData::resetForFrame()
@@ -1850,141 +1959,6 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
     }
     instanceBuffer = instanceData.buffer;
     return instanceBuffer;
-}
-
-// These are meant to be pixel offsets, so you need to divide them by the width/height
-// of the layer respectively.
-static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderData::MAX_AA_LEVELS] = {
-    QVector2D(-0.170840f, -0.553840f), // 1x
-    QVector2D(0.162960f, -0.319340f), // 2x
-    QVector2D(0.360260f, -0.245840f), // 3x
-    QVector2D(-0.561340f, -0.149540f), // 4x
-    QVector2D(0.249460f, 0.453460f), // 5x
-    QVector2D(-0.336340f, 0.378260f), // 6x
-    QVector2D(0.340000f, 0.166260f), // 7x
-    QVector2D(0.235760f, 0.527760f), // 8x
-};
-
-// Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
-void QSSGLayerRenderData::rhiPrepare()
-{
-    maybeBakeLightmap();
-
-    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
-    Q_ASSERT(rhiCtx->isValid());
-
-    ps = {}; // Reset the base graphics pipeline state
-
-    const QRectF vp = layerPrepResult->viewport;
-    ps.viewport = { float(vp.x()), float(vp.y()), float(vp.width()), float(vp.height()), 0.0f, 1.0f };
-    ps.scissorEnable = true;
-    const QRect sc = layerPrepResult->scissor.toRect();
-    ps.scissor = { sc.x(), sc.y(), sc.width(), sc.height() };
-
-
-    const bool animating = layerPrepResult->flags.wasLayerDataDirty();
-    if (animating)
-        layer.progAAPassIndex = 0;
-
-    const bool progressiveAA = layer.antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA && !animating;
-    layer.progressiveAAIsActive = progressiveAA;
-
-    const bool temporalAA = layer.temporalAAEnabled && !progressiveAA &&  layer.antialiasingMode != QSSGRenderLayer::AAMode::MSAA;
-
-    layer.temporalAAIsActive = temporalAA;
-
-    QVector2D vertexOffsetsAA;
-
-    if (progressiveAA && layer.progAAPassIndex > 0 && layer.progAAPassIndex < quint32(layer.antialiasingQuality)) {
-        int idx = layer.progAAPassIndex - 1;
-        vertexOffsetsAA = s_ProgressiveAAVertexOffsets[idx] / QVector2D{ float(vp.width()/2.0), float(vp.height()/2.0) };
-    }
-
-    if (temporalAA) {
-        const int t = 1 - 2 * (layer.tempAAPassIndex % 2);
-        const float f = t * layer.temporalAAStrength;
-        vertexOffsetsAA = { f / float(vp.width()/2.0), f / float(vp.height()/2.0) };
-    }
-
-    if (camera) {
-        if (temporalAA || progressiveAA /*&& !vertexOffsetsAA.isNull()*/) {
-            QMatrix4x4 offsetProjection = camera->projection;
-            QMatrix4x4 invProjection = camera->projection.inverted();
-            if (camera->type == QSSGRenderCamera::Type::OrthographicCamera) {
-                offsetProjection(0, 3) -= vertexOffsetsAA.x();
-                offsetProjection(1, 3) -= vertexOffsetsAA.y();
-            } else if (camera->type == QSSGRenderCamera::Type::PerspectiveCamera) {
-                offsetProjection(0, 2) += vertexOffsetsAA.x();
-                offsetProjection(1, 2) += vertexOffsetsAA.y();
-            }
-            for (auto &modelContext : modelContexts)
-                modelContext->modelViewProjection = offsetProjection * invProjection * modelContext->modelViewProjection;
-        }
-
-        camera->dpr = renderer->contextInterface()->dpr();
-        renderer->beginLayerRender(*this);
-
-        QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
-        Q_ASSERT(rhiCtx->rhi()->isRecordingFrame());
-
-        const auto &sortedOpaqueObjects = getSortedOpaqueRenderableObjects(); // front to back
-        const auto &sortedTransparentObjects = getSortedTransparentRenderableObjects(); // back to front
-        const auto &sortedScreenTextureObjects = getSortedScreenTextureRenderableObjects(); // back to front
-
-        // Verify that the depth write list(s) were cleared between frames
-        Q_ASSERT(renderedDepthWriteObjects.isEmpty());
-        Q_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty());
-
-        // Depth Write List
-        if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest)) {
-            for (const auto &opaqueObject : sortedOpaqueObjects) {
-                const auto depthMode = opaqueObject.obj->depthWriteMode;
-                if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
-                    renderedDepthWriteObjects.append(opaqueObject);
-                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                    renderedOpaqueDepthPrepassObjects.append(opaqueObject);
-            }
-            for (const auto &transparentObject : sortedTransparentObjects) {
-                const auto depthMode = transparentObject.obj->depthWriteMode;
-                if (depthMode == QSSGDepthDrawMode::Always)
-                    renderedDepthWriteObjects.append(transparentObject);
-                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                    renderedOpaqueDepthPrepassObjects.append(transparentObject);
-            }
-            for (const auto &screenTextureObject : sortedScreenTextureObjects) {
-                const auto depthMode = screenTextureObject.obj->depthWriteMode;
-                if (depthMode == QSSGDepthDrawMode::Always || depthMode == QSSGDepthDrawMode::OpaqueOnly)
-                    renderedDepthWriteObjects.append(screenTextureObject);
-                else if (depthMode == QSSGDepthDrawMode::OpaquePrePass)
-                    renderedOpaqueDepthPrepassObjects.append(screenTextureObject);
-            }
-        }
-
-        // Process active passes. "PreMain" passes are individual passes
-        // that does can and should be done in the rhi prepare phase.
-        // It is assumed that passes are sorted in the list with regards to
-        // execution order.
-        for (const auto &pass : activePasses) {
-            pass->renderPrep(renderer, *this);
-            if (pass->passType() == QSSGRenderPass::Type::PreMain)
-                pass->renderPass(renderer);
-        }
-
-        renderer->endLayerRender();
-    }
-}
-
-// Phase 2: render. Called within an active renderpass on the command buffer.
-void QSSGLayerRenderData::rhiRender()
-{
-    if (camera) {
-        renderer->beginLayerRender(*this);
-        for (const auto &pass : qAsConst(activePasses)) {
-            if (pass->passType() == QSSGRenderPass::Type::Main)
-                pass->renderPass(renderer);
-        }
-        renderer->endLayerRender();
-    }
 }
 
 void QSSGLayerRenderData::maybeBakeLightmap()

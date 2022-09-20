@@ -140,20 +140,49 @@ bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
     return theRenderData->layerPrepResult->flags.wasDirty();
 }
 
+// Phase 1: prepare. Called when the renderpass is not yet started on the command buffer.
 void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
-    Q_ASSERT(theRenderData);
-    if (theRenderData->layerPrepResult->isLayerVisible())
-        theRenderData->rhiPrepare();
+    QSSG_ASSERT(theRenderData && theRenderData->camera, return);
+
+    const auto layerPrepResult = theRenderData->layerPrepResult;
+    if (layerPrepResult->isLayerVisible()) {
+        ///
+        QSSGRhiContext *rhiCtx = contextInterface()->rhiContext().data();
+        QSSG_ASSERT(rhiCtx->isValid() && rhiCtx->rhi()->isRecordingFrame(), return);
+        theRenderData->maybeBakeLightmap();
+        beginLayerRender(*theRenderData);
+        // Process active passes. "PreMain" passes are individual passes
+        // that does can and should be done in the rhi prepare phase.
+        // It is assumed that passes are sorted in the list with regards to
+        // execution order.
+        const auto &activePasses = theRenderData->activePasses;
+        for (const auto &pass : activePasses) {
+            pass->renderPrep(this, *theRenderData);
+            if (pass->passType() == QSSGRenderPass::Type::PreMain)
+                pass->renderPass(this);
+        }
+
+        endLayerRender();
+    }
 }
 
+// Phase 2: render. Called within an active renderpass on the command buffer.
 void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
-    Q_ASSERT(theRenderData);
-    if (theRenderData->layerPrepResult->isLayerVisible())
-        theRenderData->rhiRender();
+    QSSG_ASSERT(theRenderData && theRenderData->camera, return);
+    if (theRenderData->layerPrepResult->isLayerVisible()) {
+        QSSG_ASSERT(theRenderData->camera, return);
+        beginLayerRender(*theRenderData);
+        const auto &activePasses = theRenderData->activePasses;
+        for (const auto &pass : activePasses) {
+            if (pass->passType() == QSSGRenderPass::Type::Main)
+                pass->renderPass(this);
+        }
+        endLayerRender();
+    }
 }
 
 void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
