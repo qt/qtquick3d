@@ -15,6 +15,9 @@ calculations in the fragment shader, and, in case of shadows, generating the
 potentially costly shadow maps in real time, the pre-generated image map is
 sampled instead.
 
+\note As of Qt 6.4, lightmap baking is in an early technical preview state.
+Changes to features, quality, and API are likely to happen in future releases.
+
 A lightmap is generated per Model. Even if a Model has multiple submeshes, and
 is therefore associated with multiple materials, there will be one single
 lightmap image generated for the entire model.
@@ -174,8 +177,12 @@ test-and-tune loop where different lightmap baking and quality settings are
 explored and tested before deciding on the final approach and the related
 settings.
 
-\note As of Qt 6.4, lightmap baking is in an early technical preview state.
-Changes to features, quality, and API are likely to happen in future releases.
+\note Lightmaps do not support two-sided surfaces. With real time lighting a
+material with a \l{QQuick3DMaterial::cullMode}{cull mode} of \l
+Material.NoCulling automatically inverts the normal as appropriate based on the
+facing of the fragment. This is not an option for lightmaps since lightmap
+baking does not operate in view space. Therefore, avoid baked lighting for
+models that would rely on this.
 
 \section1 Baking Lightmaps
 
