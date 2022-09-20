@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
 
     // Setup command line arguments
     QCommandLineParser cmdLineParser;
+    cmdLineParser.setApplicationDescription(
+            QStringLiteral("Converts graphical assets to a runtime format for use with Qt Quick 3D"));
     cmdLineParser.addHelpOption();
     cmdLineParser.addPositionalArgument(QStringLiteral("sourceFilename"), QStringLiteral("Asset file to be imported"));
     QCommandLineOption outputPathOption({ "outputPath", "o" }, QStringLiteral("Sets the location to place the generated file(s). Default is the current directory"), QStringLiteral("outputPath"), QDir::currentPath());

@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
     QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat(4));
 
     QCommandLineParser cmdLineparser;
+    cmdLineparser.setApplicationDescription("Editor for creating custom materials for use with Qt Quick 3D");
     cmdLineparser.addHelpOption();
 
     QCommandLineOption modeOption({QChar(u'm'), QLatin1String("mode")}, QLatin1String("sets editor mode"), QLatin1String("c"));
