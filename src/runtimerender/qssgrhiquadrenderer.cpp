@@ -109,8 +109,14 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
+    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb);
+    // Make sure that we were able to create the pipeline before trying to use it
+    // When GraphicsPipeline creation fails it should return nullptr and print a warning
+    if (!pipeline)
+        return;
+
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->setGraphicsPipeline(rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb));
+    cb->setGraphicsPipeline(pipeline);
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
 
@@ -162,8 +168,13 @@ void QSSGRhiCubeRenderer::recordRenderCube(QSSGRhiContext *rhiCtx, QSSGRhiGraphi
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
+    QRhiGraphicsPipeline *pipeline = rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb);
+    // Make sure that we were able to create the pipeline before trying to use it
+    // When GraphicsPipeline creation fails it should return nullptr and print a warning
+    if (!pipeline)
+        return;
+
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->setGraphicsPipeline(rhiCtx->pipeline(QSSGGraphicsPipelineStateKey::create(*ps, rpDesc, srb), rpDesc, srb));
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
 
