@@ -489,6 +489,9 @@ bool QQuick3DSceneEnvironment::depthPrePassEnabled() const
     This property contains a list of post-processing effects that will be
     applied to the entire viewport. The result of each effect is fed to the
     next so the order is significant.
+
+    \note For technical reasons, adding the same \l{QtQuick3D::Effect}{Effect}
+    node several times to the list is unsupported and will give unexpected results.
 */
 QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
 {
