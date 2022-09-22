@@ -177,6 +177,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     void setProbeOrientation(const QVector3D &angles);
 
     void addEffect(QSSGRenderEffect &inEffect);
+    bool hasEffect(QSSGRenderEffect *inEffect) const;
 
     QSSGRenderNode *importSceneNode = nullptr;
 

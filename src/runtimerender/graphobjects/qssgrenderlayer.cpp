@@ -57,6 +57,15 @@ void QSSGRenderLayer::addEffect(QSSGRenderEffect &inEffect)
     firstEffect = &inEffect;
 }
 
+bool QSSGRenderLayer::hasEffect(QSSGRenderEffect *inEffect) const
+{
+    for (auto currentEffect = firstEffect; currentEffect != nullptr; currentEffect = currentEffect->m_nextEffect) {
+        if (currentEffect == inEffect)
+            return true;
+    }
+    return false;
+}
+
 void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
 {
     // We create a dummy node to represent the imported scene tree, as we

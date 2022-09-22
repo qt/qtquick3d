@@ -1039,8 +1039,12 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
         QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(*rit);
         QSSGRenderEffect *effectNode = static_cast<QSSGRenderEffect *>(p->spatialNode);
         if (effectNode) {
-            effectNode->className = (*rit)->metaObject()->className(); //### persistent, but still icky to store a const char* returned from a function
-            layerNode->addEffect(*effectNode);
+            if (layerNode->hasEffect(effectNode)) {
+                qWarning() << "Duplicate effect found, skipping!";
+            } else {
+                effectNode->className = (*rit)->metaObject()->className(); //### persistent, but still icky to store a const char* returned from a function
+                layerNode->addEffect(*effectNode);
+            }
         }
     }
 
