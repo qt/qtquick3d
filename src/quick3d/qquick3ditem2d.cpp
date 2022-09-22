@@ -165,6 +165,21 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
                     QMetaObject::invokeMethod(this, &QQuick3DObject::update);
                 },
                 Qt::DirectConnection);
+        // item2D rendernode has its own render pass descriptor and it should
+        // be removed before deleting rhi context.
+        // Otherwise, rhi will complain about the unreleased resource.
+        connect(
+                m_renderer,
+                &QObject::destroyed,
+                this,
+                [this]() {
+                    auto itemNode = static_cast<QSSGRenderItem2D *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+                    if (itemNode) {
+                        itemNode->m_rp->deleteLater();
+                        itemNode->m_rp = nullptr;
+                    }
+                },
+                Qt::DirectConnection);
     }
     // Do not mark this object dirty on m_renderer->nodeChanged(). Otherwise we would end up
     // with constantly updating even when the 2D contents do not change.
