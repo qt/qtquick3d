@@ -7,6 +7,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrenderdefaultmaterial_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercustommaterial_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -150,8 +151,10 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
 
         defaultMaterial->cullMode = QSSGCullFaceMode(m_cullMode);
         defaultMaterial->depthDrawMode = QSSGDepthDrawMode(m_depthDrawMode);
-        node = defaultMaterial;
 
+        DebugViewHelpers::ensureDebugObjectName(defaultMaterial, this);
+
+        node = defaultMaterial;
     } else if (node->type == QSSGRenderGraphObject::Type::CustomMaterial) {
         auto customMaterial = static_cast<QSSGRenderCustomMaterial *>(node);
 
@@ -162,6 +165,9 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
 
         customMaterial->m_cullMode = QSSGCullFaceMode(m_cullMode);
         customMaterial->m_depthDrawMode = QSSGDepthDrawMode(m_depthDrawMode);
+
+        DebugViewHelpers::ensureDebugObjectName(customMaterial, this);
+
         node = customMaterial;
     }
 

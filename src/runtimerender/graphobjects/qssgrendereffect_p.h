@@ -106,6 +106,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
         bool valid = false;
         QVector<ShaderPrepPassData> passes;
     } shaderPrepData;
+
+    QString debugObjectName;
 };
 
 QT_END_NAMESPACE

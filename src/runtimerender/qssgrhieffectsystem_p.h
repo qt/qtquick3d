@@ -57,7 +57,7 @@ private:
     QSSGRhiEffectTexture *doRenderEffect(const QSSGRenderEffect *inEffect,
                         QSSGRhiEffectTexture *inTexture);
 
-    void allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture);
+    void allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture, const QSSGRenderEffect *inEffect);
     void applyInstanceValueCmd(const QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
     void applyValueCmd(const QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
     void bindShaderCmd(const QSSGBindShader *inCmd);
@@ -68,7 +68,8 @@ private:
 
     QSSGRhiEffectTexture *findTexture(const QByteArray &bufferName);
     QSSGRhiEffectTexture *getTexture(const QByteArray &bufferName, const QSize &size,
-                                     QRhiTexture::Format format, bool isFinalOutput);
+                                     QRhiTexture::Format format, bool isFinalOutput,
+                                     const QSSGRenderEffect *inEffect);
     void releaseTexture(QSSGRhiEffectTexture *texture);
     void releaseTextures();
 

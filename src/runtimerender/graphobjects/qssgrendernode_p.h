@@ -92,6 +92,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     using ChildList = QSSGInvasiveLinkedList<QSSGRenderNode, &QSSGRenderNode::previousSibling, &QSSGRenderNode::nextSibling>;
     ChildList children;
 
+    QString debugObjectName;
+
     QSSGRenderNode();
     explicit QSSGRenderNode(Type type);
     ~QSSGRenderNode() override;

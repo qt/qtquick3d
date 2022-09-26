@@ -156,8 +156,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             inMipMode = MipModeGenerated;
 
         result = loadTextureData(image->m_rawTextureData, inMipMode);
-        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
-        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
     } else if (!image->m_imagePath.isEmpty()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
         const ImageCacheKey imageKey = { image->m_imagePath, inMipMode, int(image->type) };
@@ -174,7 +172,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 CreateRhiTextureFlags rhiTexFlags = ScanForTransparency;
                 if (image->type == QSSGRenderGraphObject::Type::ImageCube)
                     rhiTexFlags |= CubeMap;
-                if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags)) {
+                if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags, QFileInfo(path).fileName())) {
                     foundIt.value() = ImageData();
                 } else {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
@@ -182,7 +180,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 #endif
                 }
                 result = foundIt.value().renderImageTexture;
-                Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
+                increaseMemoryStat(result.m_texture);
                 Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
@@ -218,13 +216,13 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
     if (!data->textureData().isNull()) {
         theLoadedTexture.reset(QSSGLoadedTexture::loadTextureData(data));
         theLoadedTexture->ownsData = false;
-        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, {})) {
+        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, {}, data->debugObjectName)) {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "+ uploadTexture: " << data << currentLayer;
 #endif
             theImageData.value().generationId = data->generationId();
-            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad,
-                                         increaseMemoryStat(theImageData.value().renderImageTexture.m_texture));
+            increaseMemoryStat(theImageData.value().renderImageTexture.m_texture);
+            Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
         } else {
             theImageData.value() = ImageData();
         }
@@ -252,11 +250,11 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
             qCWarning(WARNING, "Failed to load lightmap image: %s", qPrintable(imagePath));
         foundIt = imageMap.insert(imageKey, ImageData());
         if (theLoadedTexture) {
-            if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), MipModeNone, {}))
+            if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), MipModeNone, {}, imagePath))
                 foundIt.value() = ImageData();
             result = foundIt.value().renderImageTexture;
         }
-        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, increaseMemoryStat(result.m_texture));
+        increaseMemoryStat(result.m_texture);
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
     }
     foundIt.value().usageCounts[currentLayer]++;
@@ -440,7 +438,7 @@ static const float cube[] = {
     1.0f, 0.0f,
 };
 
-bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture)
+bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture, const QString &debugObjectName)
 {
     // The objective of this method is to take the equirectangular texture
     // provided by inImage and create a cubeMap that contains both pre-filtered
@@ -506,6 +504,8 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     }
     envMapRenderBuffer->deleteLater();
 
+    const QByteArray rtName = debugObjectName.toLatin1();
+
     // Setup the 6 render targets for each cube face
     QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
     QRhiRenderPassDescriptor *renderPassDesc = nullptr;
@@ -515,6 +515,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         QRhiTextureRenderTargetDescription rtDesc;
         rtDesc.setColorAttachments({att});
         auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+        renderTarget->setName(rtName + QByteArrayLiteral(" env cube face ") + QByteArray::number(face));
         renderTarget->setDescription(rtDesc);
         if (!renderPassDesc)
             renderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();
@@ -679,6 +680,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     QRhiTexture *preFilteredEnvCubeMap = rhi->newTexture(cubeTextureFormat, environmentMapSize, 1, QRhiTexture::RenderTarget | QRhiTexture::CubeMap| QRhiTexture::MipMapped);
     if (!preFilteredEnvCubeMap->create())
         qWarning("Failed to create Pre-filtered Environment Cube Map");
+    preFilteredEnvCubeMap->setName(rtName);
     int mipmapCount = rhi->mipLevelsForSize(environmentMapSize);
     mipmapCount = qMin(mipmapCount, 6);  // don't create more than 6 mip levels
     QMap<int, QSize> mipLevelSizes;
@@ -699,6 +701,8 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
             QRhiTextureRenderTargetDescription rtDesc;
             rtDesc.setColorAttachments({att});
             auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+            renderTarget->setName(rtName + QByteArrayLiteral(" env prefilter mip/face ")
+                                  + QByteArray::number(mipLevel) + QByteArrayLiteral("/") + QByteArray::number(face));
             renderTarget->setDescription(rtDesc);
             if (!renderPassDescriptorPhase2)
                 renderPassDescriptorPhase2 = renderTarget->newCompatibleRenderPassDescriptor();
@@ -828,7 +832,8 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
 bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
                                          const QSSGLoadedTexture *inTexture,
                                          MipMode inMipMode,
-                                         CreateRhiTextureFlags inFlags)
+                                         CreateRhiTextureFlags inFlags,
+                                         const QString &debugObjectName)
 {
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
@@ -856,6 +861,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
             mipmapCount = tex.numLevels();
             const int faceCount = tex.numFaces();
             QRhiTexture *environmentCubeMap = rhi->newTexture(rhiFormat, size, 1, QRhiTexture::CubeMap | QRhiTexture::MipMapped);
+            environmentCubeMap->setName(debugObjectName.toLatin1());
             environmentCubeMap->create();
             for (int layer = 0; layer < faceCount; ++layer) {
                 for (int level = 0; level < mipmapCount; ++level) {
@@ -878,7 +884,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
         }
 
         // If we get this far then we need to create an environment map at runtime.
-        if (createEnvironmentMap(inTexture, &texture)) {
+        if (createEnvironmentMap(inTexture, &texture, debugObjectName)) {
             context->registerTexture(texture.m_texture);
             return true;
         } else {
@@ -955,6 +961,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     }
 
     auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
+    tex->setName(debugObjectName.toLatin1());
     tex->create();
 
     if (checkTransp)
@@ -1062,7 +1069,7 @@ QSSGBounds3 QSSGBufferManager::getModelBounds(const QSSGRenderModel *model) cons
     return retval;
 }
 
-QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh)
+QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, const QString &debugObjectName)
 {
     QSSGRenderMesh *newMesh = new QSSGRenderMesh(QSSGRenderDrawMode(mesh.drawMode()),
                                                  QSSGRenderWinding(mesh.winding()));
@@ -1100,6 +1107,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh)
                                          QRhiBuffer::VertexBuffer,
                                          vertexBuffer.stride,
                                          vertexBuffer.data.size());
+    rhi.vertexBuffer->buffer()->setName(debugObjectName.toLatin1()); // this is what shows up in DebugView
     rub->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBuffer.data);
 
     if (!indexBuffer.data.isEmpty()) {
@@ -1256,8 +1264,8 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
         qDebug() << "- releaseGeometry: " << geometry << currentLayer;
 #endif
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
-        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, decreaseMemoryStat(meshItr.value().mesh));
-        delete meshItr.value().mesh;
+        decreaseMemoryStat(meshItr.value().mesh);
+        m_contextInterface->rhiContext()->releaseMesh(meshItr.value().mesh);
         customMeshMap.erase(meshItr);
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DCustomMeshLoad,
                                            stats.meshDataSize);
@@ -1274,7 +1282,7 @@ void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
             qDebug() << "- releaseTextureData: " << textureData << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, decreaseMemoryStat(rhiTexture));
+            decreaseMemoryStat(rhiTexture);
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
                                                stats.imageDataSize);
@@ -1293,8 +1301,8 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
         qDebug() << "- releaseMesh: " << inSourcePath.path() << currentLayer;
 #endif
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
-        Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DMeshLoad, decreaseMemoryStat(meshItr.value().mesh));
-        delete meshItr.value().mesh;
+        decreaseMemoryStat(meshItr.value().mesh);
+        m_contextInterface->rhiContext()->releaseMesh(meshItr.value().mesh);
         meshMap.erase(meshItr);
         Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
                                            stats.meshDataSize);
@@ -1311,7 +1319,7 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
             qDebug() << "- releaseTexture: " << key.path.path() << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DTextureLoad, decreaseMemoryStat(rhiTexture));
+            decreaseMemoryStat(rhiTexture);
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad,
                                                stats.imageDataSize);
@@ -1346,7 +1354,8 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "- releaseGeometry: " << meshIterator.key().path() << currentLayer;
 #endif
-                delete meshIterator.value().mesh;
+                decreaseMemoryStat(meshIterator.value().mesh);
+                m_contextInterface->rhiContext()->releaseMesh(meshIterator.value().mesh);
                 meshIterator = meshMap.erase(meshIterator);
             } else {
                 ++meshIterator;
@@ -1360,7 +1369,8 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "- releaseGeometry: " << customMeshIterator.key() << currentLayer;
 #endif
-                delete customMeshIterator.value().mesh;
+                decreaseMemoryStat(customMeshIterator.value().mesh);
+                m_contextInterface->rhiContext()->releaseMesh(customMeshIterator.value().mesh);
                 customMeshIterator = customMeshMap.erase(customMeshIterator);
             } else {
                 ++customMeshIterator;
@@ -1390,6 +1400,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "- releaseTexture: " << imageKeyIterator.key().path.path() << currentLayer;
 #endif
+                decreaseMemoryStat(rhiTexture);
                 m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             }
             imageKeyIterator = imageMap.erase(imageKeyIterator);
@@ -1407,6 +1418,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "- releaseTextureData: " << textureDataIterator.key() << currentLayer;
 #endif
+                decreaseMemoryStat(rhiTexture);
                 m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             }
             textureDataIterator = customTextureMap.erase(textureDataIterator);
@@ -1490,17 +1502,22 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
 
     QSSGMesh::Mesh result;
+    QString resultSourcePath;
 
     if (options.wantsLightmapUVs && !options.meshFileOverride.isEmpty()) {
         // So now we have a hint, e.g "qlm_xxxx.mesh" that says that if that
         // file exists, then we should prefer that because it has the lightmap
         // UV unwrapping and associated rebuilding already done.
-        if (QFileInfo(options.meshFileOverride).exists())
+        if (QFileInfo(options.meshFileOverride).exists()) {
+            resultSourcePath = options.meshFileOverride;
             result = loadMeshData(QSSGRenderPath(options.meshFileOverride));
+        }
     }
 
-    if (!result.isValid())
+    if (!result.isValid()) {
+        resultSourcePath = inMeshPath.path();
         result = loadMeshData(inMeshPath);
+    }
 
     if (!result.isValid()) {
         qCWarning(WARNING, "Failed to load mesh: %s", qPrintable(inMeshPath.path()));
@@ -1519,10 +1536,10 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
         result.createLightmapUVChannel(options.lightmapBaseResolution);
     }
 
-    auto ret = createRenderMesh(result);
+    auto ret = createRenderMesh(result, QFileInfo(resultSourcePath).fileName());
     meshMap.insert(inMeshPath, { ret, {{currentLayer, 1}}, 0, options });
-    Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DMeshLoad, increaseMemoryStat(ret));
-
+    m_contextInterface->rhiContext()->registerMesh(ret);
+    increaseMemoryStat(ret);
     Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DMeshLoad,
                                        stats.meshDataSize);
     return ret;
@@ -1559,11 +1576,12 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, 
                 mesh.createLightmapUVChannel(options.lightmapBaseResolution);
             }
 
-            meshIterator->mesh = createRenderMesh(mesh);
+            meshIterator->mesh = createRenderMesh(mesh, geometry->debugObjectName);
             meshIterator->usageCounts[currentLayer] = 1;
             meshIterator->generationId = geometry->generationId();
             meshIterator->options = options;
-            Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::Quick3DCustomMeshLoad, increaseMemoryStat(meshIterator->mesh));
+            m_contextInterface->rhiContext()->registerMesh(meshIterator->mesh);
+            increaseMemoryStat(meshIterator->mesh);
         } else {
             qWarning("Mesh building failed: %s", qPrintable(error));
         }
@@ -1703,7 +1721,8 @@ void QSSGBufferManager::clear()
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "- releaseGeometry: " << iter.key().path() << currentLayer;
 #endif
-                delete theMesh;
+                decreaseMemoryStat(theMesh);
+                m_contextInterface->rhiContext()->releaseMesh(theMesh);
             }
         }
         meshMap.clear();
@@ -1715,7 +1734,8 @@ void QSSGBufferManager::clear()
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "- releaseGeometry: " << iter.key() << currentLayer;
 #endif
-                delete theMesh;
+                decreaseMemoryStat(theMesh);
+                m_contextInterface->rhiContext()->releaseMesh(theMesh);
             }
         }
         customMeshMap.clear();
@@ -1770,15 +1790,9 @@ void QSSGBufferManager::processResourceLoader(const QSSGRenderResourceLoader *lo
     commitBufferResourceUpdates();
 }
 
-#if QT_CONFIG(qml_debug)
-QSSGBufferManager::MemoryStats QSSGBufferManager::memoryStats() const
+static inline quint64 textureMemorySize(QRhiTexture *texture)
 {
-    return stats;
-}
-
-static uint64_t textureMemorySize(QRhiTexture *texture)
-{
-    uint64_t s = 0;
+    quint64 s = 0;
     if (!texture)
         return s;
 
@@ -1805,7 +1819,7 @@ static uint64_t textureMemorySize(QRhiTexture *texture)
         D24,
         D24S8,
         D32F,*/
-    static const uint64_t pixelSizes[] = {0, 4, 4, 1, 2, 2, 4, 1, 2, 4, 2, 4, 4, 2, 4, 4, 4};
+    static const quint64 pixelSizes[] = {0, 4, 4, 1, 2, 2, 4, 1, 2, 4, 2, 4, 4, 2, 4, 4, 4};
     /*
         BC1,
         BC2,
@@ -1817,7 +1831,7 @@ static uint64_t textureMemorySize(QRhiTexture *texture)
         ETC2_RGB8,
         ETC2_RGB8A1,
         ETC2_RGBA8,*/
-    static const uint64_t blockSizes[] = {8, 16, 16, 8, 16, 16, 16, 8, 8, 16};
+    static const quint64 blockSizes[] = {8, 16, 16, 8, 16, 16, 16, 8, 8, 16};
     Q_STATIC_ASSERT_X(QRhiTexture::BC1 == 17 && QRhiTexture::ETC2_RGBA8 == 26,
                       "QRhiTexture format constant value missmatch.");
     if (format < QRhiTexture::BC1)
@@ -1834,38 +1848,40 @@ static uint64_t textureMemorySize(QRhiTexture *texture)
     return s;
 }
 
-static uint64_t bufferMemorySize(QRhiBuffer *buffer)
+static inline quint64 bufferMemorySize(const QSSGRef<QSSGRhiBuffer> &buffer)
 {
-    uint64_t s = 0;
+    quint64 s = 0;
     if (!buffer)
         return s;
-    s = buffer->size();
+    s = buffer->buffer()->size();
     return s;
 }
 
 void QSSGBufferManager::increaseMemoryStat(QRhiTexture *texture)
 {
     stats.imageDataSize += textureMemorySize(texture);
+    m_contextInterface->rhiContext()->stats().imageDataSizeChanges(stats.imageDataSize);
 }
 
 void QSSGBufferManager::decreaseMemoryStat(QRhiTexture *texture)
 {
     stats.imageDataSize = qMax(0u, stats.imageDataSize - textureMemorySize(texture));
+    m_contextInterface->rhiContext()->stats().imageDataSizeChanges(stats.imageDataSize);
 }
 
 void QSSGBufferManager::increaseMemoryStat(QSSGRenderMesh *mesh)
 {
-    stats.meshDataSize += bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer())
-            + bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer());
+    stats.meshDataSize += bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer)
+            + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
+    m_contextInterface->rhiContext()->stats().meshDataSizeChanges(stats.meshDataSize);
 }
 
 void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
 {
-    uint64_t s = bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer())
-            + bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer->buffer());
+    quint64 s = bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer)
+            + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
     stats.meshDataSize = qMax(0u, stats.meshDataSize - s);
+    m_contextInterface->rhiContext()->stats().meshDataSizeChanges(stats.meshDataSize);
 }
-
-#endif
 
 QT_END_NAMESPACE

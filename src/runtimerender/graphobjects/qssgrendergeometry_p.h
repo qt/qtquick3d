@@ -66,6 +66,8 @@ public:
     uint32_t generationId() const;
     const QSSGMesh::RuntimeMeshData &meshData() const;
 
+    QString debugObjectName;
+
 protected:
     Q_DISABLE_COPY(QSSGRenderGeometry)
 

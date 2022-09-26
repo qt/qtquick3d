@@ -63,9 +63,11 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::findTexture(const QByteArray &bufferN
 QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferName,
                                                       const QSize &size,
                                                       QRhiTexture::Format format,
-                                                      bool isFinalOutput)
+                                                      bool isFinalOutput,
+                                                      const QSSGRenderEffect *inEffect)
 {
     QSSGRhiEffectTexture *result = findTexture(bufferName);
+    const bool gotMatch = result != nullptr;
 
     // If not found, look for an unused texture
     if (!result) {
@@ -120,6 +122,13 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
         }
         result->renderTarget->create();
         m_pendingClears.insert(result->renderTarget);
+    }
+
+    if (!gotMatch) {
+        QByteArray rtName = inEffect->debugObjectName.toLatin1();
+        rtName += QByteArrayLiteral(" effect pass ");
+        rtName += bufferName;
+        result->renderTarget->setName(rtName);
     }
 
     result->name = bufferName;
@@ -207,7 +216,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
 
         switch (theCommand->m_type) {
         case CommandType::AllocateBuffer:
-            allocateBufferCmd(static_cast<QSSGAllocateBuffer *>(theCommand), inTexture);
+            allocateBufferCmd(static_cast<QSSGAllocateBuffer *>(theCommand), inTexture, inEffect);
             break;
 
         case CommandType::ApplyBufferValue: {
@@ -261,7 +270,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             qCDebug(lcEffectSystem) << "      Target format override" << toString(f) << "Effective RHI format" << rhiFormat;
             // Make sure we use different names for each effect inside one frame
             QByteArray tmpName = QByteArrayLiteral("__output_").append(QByteArray::number(m_currentUbufIndex));
-            currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true);
+            currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true, inEffect);
             finalOutputTexture = currentOutput;
             break;
         }
@@ -281,7 +290,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
     return finalOutputTexture;
 }
 
-void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture)
+void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture, const QSSGRenderEffect *inEffect)
 {
     // Note: Allocate is used both to allocate new, and refer to buffer created earlier
     QSize bufferSize(m_outSize * qreal(inCmd->m_sizeMultiplier));
@@ -290,7 +299,7 @@ void QSSGRhiEffectSystem::allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSS
     QRhiTexture::Format rhiFormat = (f == QSSGRenderTextureFormat::Unknown) ? inTexture->texture->format()
                                                                             : QSSGBufferManager::toRhiFormat(f);
 
-    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false);
+    QSSGRhiEffectTexture *buf = getTexture(inCmd->m_name, bufferSize, rhiFormat, false, inEffect);
     auto filter = toRhi(inCmd->m_filterOp);
     auto tiling = toRhi(inCmd->m_texCoordOp);
     buf->desc = { filter, filter, QRhiSampler::None, tiling, tiling, QRhiSampler::Repeat };

@@ -224,6 +224,20 @@ private:
     mutable Dirty m_dirty { Dirty::None };
 };
 
+namespace DebugViewHelpers {
+template<typename T>
+inline void ensureDebugObjectName(T *node, QObject *src)
+{
+    if (!node->debugObjectName.isEmpty())
+        return;
+    node->debugObjectName = src->objectName();
+    if (node->debugObjectName.isEmpty())
+        node->debugObjectName = QString::fromLatin1(src->metaObject()->className());
+    if (node->debugObjectName.isEmpty())
+        node->debugObjectName = QString::asprintf("%p", src);
+}
+}
+
 QT_END_NAMESPACE
 
 #endif // QSSGUTILS_H

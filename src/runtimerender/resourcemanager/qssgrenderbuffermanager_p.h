@@ -97,8 +97,8 @@ public:
     };
 
     struct MemoryStats {
-        uint64_t meshDataSize = 0;
-        uint64_t imageDataSize = 0;
+        quint64 meshDataSize = 0;
+        quint64 imageDataSize = 0;
     };
 
     enum MipMode {
@@ -152,13 +152,12 @@ public:
     static QString primitivePath(const QString &primitive);
 
     QMutex *meshUpdateMutex();
-#if QT_CONFIG(qml_debug)
-    MemoryStats memoryStats() const;
+
     void increaseMemoryStat(QRhiTexture *texture);
     void decreaseMemoryStat(QRhiTexture *texture);
     void increaseMemoryStat(QSSGRenderMesh *mesh);
     void decreaseMemoryStat(QSSGRenderMesh *mesh);
-#endif
+
     // Views for testing
     const QHash<ImageCacheKey, ImageData> &getImageMap() const { return imageMap; }
     const QHash<QSGTexture *, ImageData> &getSGImageMap() const { return qsgImageMap; }
@@ -178,15 +177,16 @@ private:
     Q_DECLARE_FLAGS(CreateRhiTextureFlags, CreateRhiTextureFlag)
     bool createRhiTexture(QSSGRenderImageTexture &texture,
                           const QSSGLoadedTexture *inTexture,
-                          MipMode inMipMode = MipModeNone,
-                          CreateRhiTextureFlags inFlags = {});
+                          MipMode inMipMode,
+                          CreateRhiTextureFlags inFlags,
+                          const QString &debugObjectName);
 
     QSSGRenderMesh *loadRenderMesh(const QSSGRenderPath &inSourcePath, QSSGMeshProcessingOptions options);
     QSSGRenderMesh *loadRenderMesh(QSSGRenderGeometry *geometry, QSSGMeshProcessingOptions options);
 
-    QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh);
+    QSSGRenderMesh *createRenderMesh(const QSSGMesh::Mesh &mesh, const QString &debugObjectName = {});
     QSSGRenderImageTexture loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode);
-    bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture);
+    bool createEnvironmentMap(const QSSGLoadedTexture *inImage, QSSGRenderImageTexture *outTexture, const QString &debugObjectName);
 
     void releaseMesh(const QSSGRenderPath &inSourcePath);
     void releaseImage(const ImageCacheKey &key);
@@ -206,9 +206,7 @@ private:
     quint32 frameCleanupIndex = 0;
     quint32 frameResetIndex = 0;
     QSSGRenderLayer *currentLayer = nullptr;
-#if QT_CONFIG(qml_debug)
     MemoryStats stats;
-#endif
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGBufferManager::LoadRenderImageFlags)

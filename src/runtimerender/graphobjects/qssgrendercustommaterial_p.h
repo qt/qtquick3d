@@ -124,6 +124,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
     [[nodiscard]] inline bool isDirty() const { return ((m_flags & (FlagT(Flags::Dirty) | FlagT(Flags::AlwaysDirty))) != 0); }
 
     QSSGShaderMaterialAdapter *adapter = nullptr;
+
+    QString debugObjectName;
 };
 
 

@@ -182,8 +182,12 @@
     \inherits Rectangle
     \brief View to show render statistics.
 
-    This helper allows viewing render performance statistics of a View3D.
-    It shows the FPS, sync and render times.
+    This helper allows viewing render performance statistics of a View3D. It
+    shows the FPS, sync and render times. In addition, it can also show
+    detailed statistics about draw calls, render passes, and the textures and
+    meshes used by the scene's assets. The showing of such extended information
+    is controlled by the resourceDetailsVisible property, which defaults to
+    false.
 
     For example, the following snippet shows how a DebugView can be added that
     shows its information in the top-left corner of the Qt Quick scene:
@@ -201,12 +205,24 @@
         }
         DebugView {
             source: v3d
+            resourceDetailsVisible: true
         }
     \endcode
 */
 
 /*! \qmlproperty var DebugView::source
     Specifies the source View3D to show the statistics from.
+*/
+
+/*! \qmlproperty bool DebugView::resourceDetailsVisible
+ *
+    Indicates whether the additional fields with detailed render pass, mesh,
+    texture, and other resource statistics should be shown.
+
+    The default value is false, which means only CPU timings from the last
+    rendered frame will be shown. Change the value to true to make more
+    information visible. This includes render pass details and the active
+    assets for the last rendered frame.
 */
 
 /*!

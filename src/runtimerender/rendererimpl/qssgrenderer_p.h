@@ -71,8 +71,8 @@ public:
     QSSGLayerRenderData *getOrCreateLayerRenderData(QSSGRenderLayer &layer);
 
     // The QSSGRenderContextInterface calls these, clients should not.
-    void beginFrame();
-    void endFrame();
+    void beginFrame(QSSGRenderLayer *layer);
+    void endFrame(QSSGRenderLayer *layer);
 
     PickResultList syncPickAll(const QSSGRenderLayer &layer,
                                const QSSGRef<QSSGBufferManager> &bufferManager,

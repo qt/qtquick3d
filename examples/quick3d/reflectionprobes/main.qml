@@ -58,6 +58,7 @@ Window {
             }
 
             ReflectionProbe {
+                objectName: "sphereReflProbe"
                 timeSlicing: {
                     if (settingsPanel.timeSlicingIndex == 0) ReflectionProbe.None
                     else if (settingsPanel.timeSlicingIndex == 1) ReflectionProbe.AllFacesAtOnce
@@ -117,6 +118,7 @@ Window {
         }
 
         ReflectionProbe {
+            objectName: "reflProbe"
             position: settingsPanel.probePosition
             timeSlicing: {
                 if (settingsPanel.timeSlicingIndex == 0) ReflectionProbe.None
@@ -213,5 +215,30 @@ Window {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
+    }
+
+    Item {
+        width: Math.min(100, dbg.width)
+        height: Math.min(100, dbg.height)
+        anchors.right: parent.right
+        Text {
+            text: "Click here for DebugView"
+            font.pointSize: 8
+            color: "white"
+            anchors.right: parent.right
+            anchors.top: parent.top
+            visible: !dbg.visible
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: dbg.visible = !dbg.visible
+            DebugView {
+                anchors.right: parent.right
+                source: view
+                id: dbg
+                visible: false
+                resourceDetailsVisible: true
+            }
+        }
     }
 }

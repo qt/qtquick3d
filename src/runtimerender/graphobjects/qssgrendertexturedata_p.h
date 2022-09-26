@@ -44,6 +44,8 @@ public:
 
     uint32_t generationId() const;
 
+    QString debugObjectName;
+
 protected:
     Q_DISABLE_COPY(QSSGRenderTextureData)
 

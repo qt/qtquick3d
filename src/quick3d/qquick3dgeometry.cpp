@@ -3,6 +3,7 @@
 
 #include "qquick3dgeometry_p.h"
 #include "qquick3dscenemanager_p.h"
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 
 /*!
     \qmltype Geometry
@@ -795,6 +796,8 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
         emit geometryNodeDirty();
         d->m_geometryBoundsChanged = false;
     }
+
+    DebugViewHelpers::ensureDebugObjectName(geometry, this);
 
     return node;
 }

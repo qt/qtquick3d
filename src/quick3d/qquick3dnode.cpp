@@ -802,6 +802,8 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     else
         spacialNode->setState(QSSGRenderNode::LocalState::Active, d->m_visible);
 
+    DebugViewHelpers::ensureDebugObjectName(spacialNode, this);
+
     return spacialNode;
 }
 

@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick.Controls
+import QtQuick3D.Helpers
 
 Window {
     width: 1280
@@ -12,6 +13,7 @@ Window {
     title: qsTr("Lights Example")
 
     View3D {
+        id: v3d
         anchors.fill: parent
 
         environment: SceneEnvironment {
@@ -259,6 +261,31 @@ Window {
                 sliderValue: 10
                 fromValue: 0
                 toValue: 30
+            }
+        }
+    }
+
+    Item {
+        width: Math.min(100, dbg.width)
+        height: Math.min(100, dbg.height)
+        anchors.right: parent.right
+        Text {
+            text: "Click here for DebugView"
+            font.pointSize: 8
+            color: "white"
+            anchors.right: parent.right
+            anchors.top: parent.top
+            visible: !dbg.visible
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: dbg.visible = !dbg.visible
+            DebugView {
+                anchors.right: parent.right
+                source: v3d
+                id: dbg
+                visible: false
+                resourceDetailsVisible: true
             }
         }
     }

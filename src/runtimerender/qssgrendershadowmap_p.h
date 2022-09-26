@@ -88,7 +88,8 @@ public:
     void addShadowMapEntry(qint32 lightIdx,
                            qint32 width,
                            qint32 height,
-                           ShadowMapModes mode);
+                           ShadowMapModes mode,
+                           const QString &renderNodeObjName);
 
     QSSGShadowMapEntry *shadowMapEntry(int lightIdx);
 

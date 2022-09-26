@@ -445,6 +445,8 @@ QSSGRenderGraphObject *QQuick3DTextureData::updateSpatialNode(QSSGRenderGraphObj
     if (changed)
         emit textureDataNodeDirty();
 
+    DebugViewHelpers::ensureDebugObjectName(textureData, this);
+
     return node;
 }
 

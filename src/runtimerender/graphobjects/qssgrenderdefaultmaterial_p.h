@@ -147,6 +147,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderDefaultMaterial : QSSGRenderGraph
     void clearDirty();
 
     QSSGShaderMaterialAdapter *adapter = nullptr;
+
+    QString debugObjectName;
 };
 
 QT_END_NAMESPACE

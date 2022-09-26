@@ -164,7 +164,7 @@ void QSSGRenderContextInterface::beginFrame(QSSGRenderLayer *layer, bool allowRe
     }
 
     m_perFrameAllocator.reset();
-    m_renderer->beginFrame();
+    m_renderer->beginFrame(layer);
     resetResourceCounters(layer);
 }
 
@@ -192,7 +192,7 @@ bool QSSGRenderContextInterface::endFrame(QSSGRenderLayer *layer, bool allowRecu
 
     cleanupUnreferencedBuffers(layer);
 
-    m_renderer->endFrame();
+    m_renderer->endFrame(layer);
     ++m_frameCount;
 
     return true;

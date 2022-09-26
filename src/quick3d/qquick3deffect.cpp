@@ -6,6 +6,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendereffect_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgshadermaterialadapter_p.h>
+#include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick3D/private/qquick3dobject_p.h>
 #include <QtQuick3D/private/qquick3dscenemanager_p.h>
@@ -868,6 +869,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     }
 
     m_dirtyAttributes = 0;
+
+    DebugViewHelpers::ensureDebugObjectName(effectNode, this);
 
     return effectNode;
 }

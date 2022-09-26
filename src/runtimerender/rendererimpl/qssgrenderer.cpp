@@ -284,12 +284,12 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubse
     return generateRhiShaderPipelineImpl(inRenderable, shaderLibraryManager, theCache, shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
-void QSSGRenderer::beginFrame()
+void QSSGRenderer::beginFrame(QSSGRenderLayer *layer)
 {
-    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), start(this));
+    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), start(layer));
 }
 
-void QSSGRenderer::endFrame()
+void QSSGRenderer::endFrame(QSSGRenderLayer *layer)
 {
     // We need to do this endFrame(), as the material nodes might not exist after this!
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
@@ -303,7 +303,7 @@ void QSSGRenderer::endFrame()
     }
     m_materialClearDirty.clear();
 
-    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), stop());
+    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), stop(layer));
 }
 
 QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer,
@@ -1979,6 +1979,7 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
         }
         renderableTex->resetRenderTarget();
         renderableTex->rt = rhi->newTextureRenderTarget({ renderableTex->texture });
+        renderableTex->rt->setName(QByteArrayLiteral("Ambient occlusion"));
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
         if (!renderableTex->rt->create()) {
@@ -2103,6 +2104,7 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
         desc.setColorAttachments({ QRhiColorAttachment(renderableTex->texture) });
         desc.setDepthStencilBuffer(renderableTex->depthStencil);
         renderableTex->rt = rhi->newTextureRenderTarget(desc);
+        renderableTex->rt->setName(QByteArrayLiteral("Screen texture"));
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
         if (!renderableTex->rt->create()) {
@@ -2472,6 +2474,7 @@ bool RenderHelpers::rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &
         QRhiTextureRenderTargetDescription rtDesc;
         rtDesc.setDepthTexture(renderableTex->texture);
         renderableTex->rt = rhi->newTextureRenderTarget(rtDesc);
+        renderableTex->rt->setName(QByteArrayLiteral("Depth texture"));
         renderableTex->rpDesc = renderableTex->rt->newCompatibleRenderPassDescriptor();
         renderableTex->rt->setRenderPassDescriptor(renderableTex->rpDesc);
         if (!renderableTex->rt->create()) {

@@ -54,6 +54,8 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
 
     QRhiTexture::Format rhiFormat = QRhiTexture::RGBA16F;
 
+    const QByteArray rtName = probe.debugObjectName.toLatin1();
+
     const int mapRes = 1 << probe.reflectionMapRes;
     QSize pixelSize(mapRes, mapRes);
     QSSGReflectionMapEntry *pEntry = reflectionMapEntry(probeIdx);
@@ -114,6 +116,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                 if (!rt->create())
                     qWarning("Failed to build reflection map render target");
             }
+            rt->setName(rtName + QByteArrayLiteral(" reflection cube face ") + QByteArray::number(face));
         }
 
         if (!pEntry->m_prefilterPipeline) {
@@ -136,6 +139,8 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                     QRhiTextureRenderTargetDescription rtDesc;
                     rtDesc.setColorAttachments({att});
                     auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
+                    renderTarget->setName(rtName + QByteArrayLiteral(" reflection prefilter mip/face ")
+                                          + QByteArray::number(mipLevel) + QByteArrayLiteral("/") + QByteArray::number(face));
                     renderTarget->setDescription(rtDesc);
                     if (!pEntry->m_rhiPrefilterRenderPassDesc)
                         pEntry->m_rhiPrefilterRenderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();

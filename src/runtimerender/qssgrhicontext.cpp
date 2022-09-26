@@ -4,6 +4,7 @@
 #include "qssgrhicontext_p.h"
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtCore/QVariant>
 
@@ -890,6 +891,7 @@ int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
 }
 
 QSSGRhiContext::QSSGRhiContext()
+    : m_stats(*this)
 {
     Q_STATIC_ASSERT(int(QSSGRhiSamplerBindingHints::LightProbe) > int(QSSGRenderableImage::Type::Occlusion));
 }
@@ -903,6 +905,7 @@ QSSGRhiContext::~QSSGRhiContext()
     qDeleteAll(m_computePipelines);
     qDeleteAll(m_srbCache);
     qDeleteAll(m_textures);
+    qDeleteAll(m_meshes);
     for (const auto &samplerInfo : qAsConst(m_samplers))
         delete samplerInfo.second;
     for (const auto &instanceData : qAsConst(m_instanceBuffers)) {
@@ -1032,10 +1035,26 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     return newSampler;
 }
 
+void QSSGRhiContext::registerTexture(QRhiTexture *texture)
+{
+    m_textures.insert(texture);
+}
+
 void QSSGRhiContext::releaseTexture(QRhiTexture *texture)
 {
     m_textures.remove(texture);
     delete texture;
+}
+
+void QSSGRhiContext::registerMesh(QSSGRenderMesh *mesh)
+{
+    m_meshes.insert(mesh);
+}
+
+void QSSGRhiContext::releaseMesh(QSSGRenderMesh *mesh)
+{
+    m_meshes.remove(mesh);
+    delete mesh;
 }
 
 void QSSGRhiContext::cleanupDrawCallData(const QSSGRenderModel *model)
@@ -1084,6 +1103,76 @@ bool QSSGRhiContext::editorMode()
 {
     static const bool isSet = (qEnvironmentVariableIntValue("QT_QUICK3D_EDITORMODE") != 0);
     return isSet;
+}
+
+void QSSGRhiContextStats::start(QSSGRenderLayer *layer)
+{
+    layerKey = layer;
+    PerLayerInfo &info(perLayerInfo[layerKey]);
+    info.renderPasses.clear();
+    info.externalRenderPass = {};
+    info.currentRenderPassIndex = -1;
+}
+
+void QSSGRhiContextStats::stop(QSSGRenderLayer *layer)
+{
+    if (rendererDebugEnabled()) {
+        PerLayerInfo &info(perLayerInfo[layer]);
+        const int rpCount = info.renderPasses.count();
+        qDebug("%d render passes in 3D renderer %p", rpCount, layer);
+        for (int i = 0; i < rpCount; ++i) {
+            const RenderPassInfo &rp(info.renderPasses[i]);
+            qDebug("Render pass %d: rt name='%s' target size %dx%d pixels",
+                   i, rp.rtName.constData(), rp.pixelSize.width(), rp.pixelSize.height());
+            printRenderPass(rp);
+        }
+        if (info.externalRenderPass.indexedDraws.callCount || info.externalRenderPass.instancedIndexedDraws.callCount
+                || info.externalRenderPass.draws.callCount || info.externalRenderPass.instancedDraws.callCount)
+        {
+            qDebug("Within external render passes:");
+            printRenderPass(info.externalRenderPass);
+        }
+    }
+
+    // a new start() may preceed stop() for the previous View3D, must handle this gracefully
+    if (layerKey == layer)
+        layerKey = nullptr;
+
+    // The data must stay valid until the next start() with the same key, the
+    // QQuick3DRenderStats and DebugView may read it.
+}
+
+void QSSGRhiContextStats::cleanupLayerInfo(QSSGRenderLayer *layer)
+{
+    perLayerInfo.remove(layer);
+    dynamicDataSources.remove(layer);
+}
+
+void QSSGRhiContextStats::beginRenderPass(QRhiTextureRenderTarget *rt)
+{
+    PerLayerInfo &info(perLayerInfo[layerKey]);
+    info.renderPasses.append({ rt->name(), rt->pixelSize(), {}, {}, {}, {} });
+    info.currentRenderPassIndex = info.renderPasses.count() - 1;
+}
+
+void QSSGRhiContextStats::endRenderPass()
+{
+    PerLayerInfo &info(perLayerInfo[layerKey]);
+    info.currentRenderPassIndex = -1;
+}
+
+void QSSGRhiContextStats::printRenderPass(const QSSGRhiContextStats::RenderPassInfo &rp)
+{
+    qDebug("%llu indexed draw calls with %llu indices in total, "
+           "%llu non-indexed draw calls with %llu vertices in total",
+           rp.indexedDraws.callCount, rp.indexedDraws.vertexOrIndexCount,
+           rp.draws.callCount, rp.draws.vertexOrIndexCount);
+    if (rp.instancedIndexedDraws.callCount || rp.instancedDraws.callCount) {
+        qDebug("%llu instanced indexed draw calls with %llu indices and %llu instances in total, "
+               "%llu instanced non-indexed draw calls with %llu indices and %llu instances in total",
+               rp.instancedIndexedDraws.callCount, rp.instancedIndexedDraws.vertexOrIndexCount, rp.instancedIndexedDraws.instanceCount,
+               rp.instancedDraws.callCount, rp.instancedDraws.vertexOrIndexCount, rp.instancedDraws.instanceCount);
+    }
 }
 
 QT_END_NAMESPACE

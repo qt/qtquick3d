@@ -936,6 +936,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 const QSize texSize(boneTexWidth, boneTexWidth);
                 if (!model.boneTexture) {
                     model.boneTexture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA32F, texSize);
+                    model.boneTexture->setName(QByteArrayLiteral("Bone texture"));
                     model.boneTexture->create();
                     rhiCtx->registerTexture(model.boneTexture);
                 } else if (model.boneTexture->pixelSize() != texSize) {
@@ -1656,7 +1657,8 @@ void QSSGLayerRenderData::prepareForRender()
             shadowMapManager->addShadowMapEntry(lightIdx,
                                                 mapSize,
                                                 mapSize,
-                                                mapMode);
+                                                mapMode,
+                                                shaderLight.light->debugObjectName);
             thePrepResult.flags.setRequiresShadowMapPass(true);
             // Any light with castShadow=true triggers shadow mapping
             // in the generated shaders. The fact that some (or even

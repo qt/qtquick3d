@@ -40,17 +40,18 @@ static bool dumpRenderTimes = false;
 
 #if QT_CONFIG(qml_debug)
 
-static quint64 statsDrawCalls(const QSSGRhiContextStats& stats)
+static inline quint64 statDrawCallCount(const QSSGRhiContextStats &stats)
 {
     quint64 count = 0;
-    for (auto pass : stats.renderPasses)
-        count += pass.draws.callCount + pass.indexedDraws.callCount;
-    count += stats.externalRenderPass.draws.callCount + stats.externalRenderPass.indexedDraws.callCount;
+    const QSSGRhiContextStats::PerLayerInfo &info(stats.perLayerInfo[stats.layerKey]);
+    for (const auto &pass : info.renderPasses)
+        count += QSSGRhiContextStats::totalDrawCallCountForPass(pass);
+    count += QSSGRhiContextStats::totalDrawCallCountForPass(info.externalRenderPass);
     return count;
 }
 
 #define STAT_PAYLOAD(stats) \
-    (statsDrawCalls(stats) | (quint64(stats.renderPasses.size()) << 32))
+    (statDrawCallCount(stats) | (quint64(stats.perLayerInfo[stats.layerKey].renderPasses.size()) << 32))
 
 #endif
 
@@ -157,6 +158,8 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInte
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
+    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+    rhiCtx->stats().cleanupLayerInfo(m_layer);
     delete m_layer;
 
     delete m_texture;
@@ -510,8 +513,14 @@ static QVector3D tonemapRgb(const QVector3D &c, QQuick3DSceneEnvironment::QQuick
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr)
 {
     Q_ASSERT(view3D != nullptr); // This is not an option!
-    if (!m_renderStats)
+    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+    Q_ASSERT(rhiCtx != nullptr);
+
+    bool newRenderStats = false;
+    if (!m_renderStats) {
         m_renderStats = view3D->renderStats();
+        newRenderStats = true;
+    }
 
     if (m_renderStats)
         m_renderStats->startSync();
@@ -558,6 +567,9 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     // Generate layer node
     if (!m_layer)
         m_layer = new QSSGRenderLayer();
+
+    if (newRenderStats)
+        m_renderStats->setRhiContext(rhiCtx, m_layer);
 
     // Update the layer node properties
     updateLayerNode(view3D, resourceLoaders);
@@ -667,183 +679,183 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     bool useFBO = view3D->renderMode() == QQuick3DViewport::RenderMode::Offscreen ||
                                           ((view3D->renderMode() == QQuick3DViewport::RenderMode::Underlay || view3D->renderMode() == QQuick3DViewport::RenderMode::Overlay)
                                            && m_postProcessingStack);
-    if (useFBO) {
-        QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
-        if (rhiCtx->isValid()) {
-            QRhi *rhi = rhiCtx->rhi();
-            const QSize renderSize = superSamplingAA ? m_surfaceSize * m_ssaaMultiplier : m_surfaceSize;
+    if (useFBO && rhiCtx->isValid()) {
+        QRhi *rhi = rhiCtx->rhi();
+        const QSize renderSize = superSamplingAA ? m_surfaceSize * m_ssaaMultiplier : m_surfaceSize;
 
-            if (m_texture) {
-                // the size changed, or the AA settings changed, or toggled between some effects - no effect
-                if (layerSizeIsDirty || postProcessingStateDirty) {
-                    m_texture->setPixelSize(m_surfaceSize);
-                    m_texture->setFormat(layerTextureFormat(rhi, postProcessingNeeded));
-                    m_texture->create();
+        if (m_texture) {
+            // the size changed, or the AA settings changed, or toggled between some effects - no effect
+            if (layerSizeIsDirty || postProcessingStateDirty) {
+                m_texture->setPixelSize(m_surfaceSize);
+                m_texture->setFormat(layerTextureFormat(rhi, postProcessingNeeded));
+                m_texture->create();
 
-                    // If AA settings changed, then we drop and recreate all
-                    // resources, otherwise use a lighter path if just the size
-                    // changed.
-                    if (!m_aaIsDirty) {
-                        // A special case: when toggling effects and AA is on,
-                        // use the heavier AA path because the renderbuffer for
-                        // MSAA and texture for SSAA may need a different
-                        // format now since m_texture's format could have
-                        // changed between RBGA8 and RGBA16F (due to layerTextureFormat()).
-                        if (postProcessingStateDirty && (m_layer->antialiasingMode != QSSGRenderLayer::AAMode::NoAA || temporalAA)) {
-                            releaseAaDependentRhiResources();
-                        } else {
-                            if (m_ssaaTexture) {
-                                m_ssaaTexture->setPixelSize(renderSize);
-                                m_ssaaTexture->create();
-                            }
-                            m_depthStencilBuffer->setPixelSize(renderSize);
-                            m_depthStencilBuffer->create();
-                            if (m_msaaRenderBuffer) {
-                                m_msaaRenderBuffer->setPixelSize(renderSize);
-                                m_msaaRenderBuffer->create();
-                            }
-                            // Toggling effects on and off will change the format
-                            // (assuming effects default to a floating point
-                            // format) and that needs on a different renderpass on
-                            // Vulkan. Hence renewing m_textureRenderPassDescriptor as well.
-                            if (postProcessingStateDirty) {
-                                delete m_textureRenderPassDescriptor;
-                                m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
-                                m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
-                            }
-                            m_textureRenderTarget->create();
-                            if (m_ssaaTextureToTextureRenderTarget)
-                                m_ssaaTextureToTextureRenderTarget->create();
-
-                            if (m_temporalAATexture) {
-                                m_temporalAATexture->setPixelSize(renderSize);
-                                m_temporalAATexture->create();
-                            }
-                            if (m_prevTempAATexture) {
-                                m_prevTempAATexture->setPixelSize(renderSize);
-                                m_prevTempAATexture->create();
-                            }
-                            if (m_temporalAARenderTarget)
-                                m_temporalAARenderTarget->create();
+                // If AA settings changed, then we drop and recreate all
+                // resources, otherwise use a lighter path if just the size
+                // changed.
+                if (!m_aaIsDirty) {
+                    // A special case: when toggling effects and AA is on,
+                    // use the heavier AA path because the renderbuffer for
+                    // MSAA and texture for SSAA may need a different
+                    // format now since m_texture's format could have
+                    // changed between RBGA8 and RGBA16F (due to layerTextureFormat()).
+                    if (postProcessingStateDirty && (m_layer->antialiasingMode != QSSGRenderLayer::AAMode::NoAA || temporalAA)) {
+                        releaseAaDependentRhiResources();
+                    } else {
+                        if (m_ssaaTexture) {
+                            m_ssaaTexture->setPixelSize(renderSize);
+                            m_ssaaTexture->create();
                         }
+                        m_depthStencilBuffer->setPixelSize(renderSize);
+                        m_depthStencilBuffer->create();
+                        if (m_msaaRenderBuffer) {
+                            m_msaaRenderBuffer->setPixelSize(renderSize);
+                            m_msaaRenderBuffer->create();
+                        }
+                        // Toggling effects on and off will change the format
+                        // (assuming effects default to a floating point
+                        // format) and that needs on a different renderpass on
+                        // Vulkan. Hence renewing m_textureRenderPassDescriptor as well.
+                        if (postProcessingStateDirty) {
+                            delete m_textureRenderPassDescriptor;
+                            m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
+                            m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
+                        }
+                        m_textureRenderTarget->create();
+                        if (m_ssaaTextureToTextureRenderTarget)
+                            m_ssaaTextureToTextureRenderTarget->create();
+
+                        if (m_temporalAATexture) {
+                            m_temporalAATexture->setPixelSize(renderSize);
+                            m_temporalAATexture->create();
+                        }
+                        if (m_prevTempAATexture) {
+                            m_prevTempAATexture->setPixelSize(renderSize);
+                            m_prevTempAATexture->create();
+                        }
+                        if (m_temporalAARenderTarget)
+                            m_temporalAARenderTarget->create();
                     }
-                } else if (m_aaIsDirty && rhi->backend() == QRhi::Metal) { // ### to avoid garbage upon enabling MSAA with macOS 10.14 (why is this needed?)
-                    m_texture->create();
                 }
-
-                if (m_aaIsDirty)
-                    releaseAaDependentRhiResources();
-            }
-
-            const QRhiTexture::Flags textureFlags = QRhiTexture::RenderTarget
-                    | QRhiTexture::UsedAsTransferSource; // transfer source is for progressive/temporal AA
-            const QRhiTexture::Format textureFormat = layerTextureFormat(rhi, postProcessingNeeded);
-
-            if (!m_texture) {
-                m_texture = rhi->newTexture(textureFormat, m_surfaceSize, 1, textureFlags);
+            } else if (m_aaIsDirty && rhi->backend() == QRhi::Metal) { // ### to avoid garbage upon enabling MSAA with macOS 10.14 (why is this needed?)
                 m_texture->create();
             }
 
-            if (!m_ssaaTexture && superSamplingAA) {
-                m_ssaaTexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
-                m_ssaaTexture->create();
-            }
+            if (m_aaIsDirty)
+                releaseAaDependentRhiResources();
+        }
 
-            if (timeBasedAA && !m_temporalAATexture) {
-                m_temporalAATexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
-                m_temporalAATexture->create();
-                m_prevTempAATexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
-                m_prevTempAATexture->create();
-            }
+        const QRhiTexture::Flags textureFlags = QRhiTexture::RenderTarget
+                | QRhiTexture::UsedAsTransferSource; // transfer source is for progressive/temporal AA
+        const QRhiTexture::Format textureFormat = layerTextureFormat(rhi, postProcessingNeeded);
 
-            // we need to re-render time-based AA not only when AA state changes, but also when resized
-            if (m_aaIsDirty || layerSizeIsDirty)
-                m_layer->tempAAPassIndex = m_layer->progAAPassIndex = 0;
+        if (!m_texture) {
+            m_texture = rhi->newTexture(textureFormat, m_surfaceSize, 1, textureFlags);
+            m_texture->create();
+        }
 
-            if (m_aaIsDirty) {
-                m_samples = 1;
-                if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA) {
-                    if (rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)) {
-                        m_samples = qMax(1, int(m_layer->antialiasingQuality));
-                        // The Quick3D API exposes high level values such as
-                        // Medium, High, VeryHigh instead of direct sample
-                        // count values. Therefore, be nice and find a sample
-                        // count that's actually supported in case the one
-                        // associated by default is not.
-                        const QVector<int> supported = rhi->supportedSampleCounts(); // assumed to be sorted
-                        if (!supported.contains(m_samples)) {
-                            if (!supported.isEmpty()) {
-                                auto it = std::lower_bound(supported.cbegin(), supported.cend(), m_samples);
-                                m_samples = it == supported.cend() ? supported.last() : *it;
-                            } else {
-                                m_samples = 1;
-                            }
+        if (!m_ssaaTexture && superSamplingAA) {
+            m_ssaaTexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
+            m_ssaaTexture->create();
+        }
+
+        if (timeBasedAA && !m_temporalAATexture) {
+            m_temporalAATexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
+            m_temporalAATexture->create();
+            m_prevTempAATexture = rhi->newTexture(textureFormat, renderSize, 1, textureFlags);
+            m_prevTempAATexture->create();
+        }
+
+        // we need to re-render time-based AA not only when AA state changes, but also when resized
+        if (m_aaIsDirty || layerSizeIsDirty)
+            m_layer->tempAAPassIndex = m_layer->progAAPassIndex = 0;
+
+        if (m_aaIsDirty) {
+            m_samples = 1;
+            if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA) {
+                if (rhi->isFeatureSupported(QRhi::MultisampleRenderBuffer)) {
+                    m_samples = qMax(1, int(m_layer->antialiasingQuality));
+                    // The Quick3D API exposes high level values such as
+                    // Medium, High, VeryHigh instead of direct sample
+                    // count values. Therefore, be nice and find a sample
+                    // count that's actually supported in case the one
+                    // associated by default is not.
+                    const QVector<int> supported = rhi->supportedSampleCounts(); // assumed to be sorted
+                    if (!supported.contains(m_samples)) {
+                        if (!supported.isEmpty()) {
+                            auto it = std::lower_bound(supported.cbegin(), supported.cend(), m_samples);
+                            m_samples = it == supported.cend() ? supported.last() : *it;
+                        } else {
+                            m_samples = 1;
                         }
-                    } else {
-                        static bool warned = false;
-                        if (!warned) {
-                            warned = true;
-                            qWarning("Multisample renderbuffers are not supported, disabling MSAA for Offscreen View3D");
-                        }
+                    }
+                } else {
+                    static bool warned = false;
+                    if (!warned) {
+                        warned = true;
+                        qWarning("Multisample renderbuffers are not supported, disabling MSAA for Offscreen View3D");
                     }
                 }
             }
-
-            if (!m_depthStencilBuffer) {
-                m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, renderSize, m_samples);
-                m_depthStencilBuffer->create();
-            }
-
-            if (!m_textureRenderTarget) {
-                QRhiTextureRenderTargetDescription rtDesc;
-                if (m_samples > 1) {
-                    // pass in the texture's format (which may be a floating point one!) as the preferred format hint
-                    m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples, {}, m_texture->format());
-                    m_msaaRenderBuffer->create();
-                    QRhiColorAttachment att;
-                    att.setRenderBuffer(m_msaaRenderBuffer);
-                    att.setResolveTexture(m_texture);
-                    rtDesc.setColorAttachments({ att });
-                } else {
-                    if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA)
-                        rtDesc.setColorAttachments({ m_ssaaTexture });
-                    else
-                        rtDesc.setColorAttachments({ m_texture });
-                }
-                rtDesc.setDepthStencilBuffer(m_depthStencilBuffer);
-
-                m_textureRenderTarget = rhi->newTextureRenderTarget(rtDesc);
-                m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
-                m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
-                m_textureRenderTarget->create();
-            }
-
-            if (!m_ssaaTextureToTextureRenderTarget && m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
-                m_ssaaTextureToTextureRenderTarget = rhi->newTextureRenderTarget({ m_texture });
-                m_ssaaTextureToTextureRenderPassDescriptor = m_ssaaTextureToTextureRenderTarget->newCompatibleRenderPassDescriptor();
-                m_ssaaTextureToTextureRenderTarget->setRenderPassDescriptor(m_ssaaTextureToTextureRenderPassDescriptor);
-                m_ssaaTextureToTextureRenderTarget->create();
-            }
-
-            if (m_layer->firstEffect) {
-                if (!m_effectSystem)
-                    m_effectSystem = new QSSGRhiEffectSystem(m_sgContext);
-                m_effectSystem->setup(renderSize);
-            } else if (m_effectSystem) {
-                delete m_effectSystem;
-                m_effectSystem = nullptr;
-            }
-
-            if (timeBasedAA && !m_temporalAARenderTarget) {
-                m_temporalAARenderTarget = rhi->newTextureRenderTarget({ m_temporalAATexture });
-                m_temporalAARenderPassDescriptor = m_temporalAARenderTarget->newCompatibleRenderPassDescriptor();
-                m_temporalAARenderTarget->setRenderPassDescriptor(m_temporalAARenderPassDescriptor);
-                m_temporalAARenderTarget->create();
-            }
-
-            m_textureNeedsFlip = rhi->isYUpInFramebuffer();
-            m_aaIsDirty = false;
         }
+
+        if (!m_depthStencilBuffer) {
+            m_depthStencilBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, renderSize, m_samples);
+            m_depthStencilBuffer->create();
+        }
+
+        if (!m_textureRenderTarget) {
+            QRhiTextureRenderTargetDescription rtDesc;
+            if (m_samples > 1) {
+                // pass in the texture's format (which may be a floating point one!) as the preferred format hint
+                m_msaaRenderBuffer = rhi->newRenderBuffer(QRhiRenderBuffer::Color, renderSize, m_samples, {}, m_texture->format());
+                m_msaaRenderBuffer->create();
+                QRhiColorAttachment att;
+                att.setRenderBuffer(m_msaaRenderBuffer);
+                att.setResolveTexture(m_texture);
+                rtDesc.setColorAttachments({ att });
+            } else {
+                if (m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA)
+                    rtDesc.setColorAttachments({ m_ssaaTexture });
+                else
+                    rtDesc.setColorAttachments({ m_texture });
+            }
+            rtDesc.setDepthStencilBuffer(m_depthStencilBuffer);
+
+            m_textureRenderTarget = rhi->newTextureRenderTarget(rtDesc);
+            m_textureRenderTarget->setName(QByteArrayLiteral("View3D"));
+            m_textureRenderPassDescriptor = m_textureRenderTarget->newCompatibleRenderPassDescriptor();
+            m_textureRenderTarget->setRenderPassDescriptor(m_textureRenderPassDescriptor);
+            m_textureRenderTarget->create();
+        }
+
+        if (!m_ssaaTextureToTextureRenderTarget && m_layer->antialiasingMode == QSSGRenderLayer::AAMode::SSAA) {
+            m_ssaaTextureToTextureRenderTarget = rhi->newTextureRenderTarget({ m_texture });
+            m_ssaaTextureToTextureRenderTarget->setName(QByteArrayLiteral("SSAA texture"));
+            m_ssaaTextureToTextureRenderPassDescriptor = m_ssaaTextureToTextureRenderTarget->newCompatibleRenderPassDescriptor();
+            m_ssaaTextureToTextureRenderTarget->setRenderPassDescriptor(m_ssaaTextureToTextureRenderPassDescriptor);
+            m_ssaaTextureToTextureRenderTarget->create();
+        }
+
+        if (m_layer->firstEffect) {
+            if (!m_effectSystem)
+                m_effectSystem = new QSSGRhiEffectSystem(m_sgContext);
+            m_effectSystem->setup(renderSize);
+        } else if (m_effectSystem) {
+            delete m_effectSystem;
+            m_effectSystem = nullptr;
+        }
+
+        if (timeBasedAA && !m_temporalAARenderTarget) {
+            m_temporalAARenderTarget = rhi->newTextureRenderTarget({ m_temporalAATexture });
+            m_temporalAARenderTarget->setName(QByteArrayLiteral("Temporal AA texture"));
+            m_temporalAARenderPassDescriptor = m_temporalAARenderTarget->newCompatibleRenderPassDescriptor();
+            m_temporalAARenderTarget->setRenderPassDescriptor(m_temporalAARenderPassDescriptor);
+            m_temporalAARenderTarget->create();
+        }
+
+        m_textureNeedsFlip = rhi->isYUpInFramebuffer();
+        m_aaIsDirty = false;
     }
 
     if (m_renderStats)
