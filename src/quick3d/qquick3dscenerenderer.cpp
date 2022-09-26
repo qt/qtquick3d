@@ -463,20 +463,26 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixel
     m_sgContext->setSceneColor(QColor(Qt::black));
 
     m_sgContext->prepareLayerForRender(*m_layer);
-    m_sgContext->rhiPrepare(*m_layer);
-
-    m_prepared = true;
+    // If sync was called the assumption is that the scene is dirty regardless of what
+    // the scene prep function says, we still should verify that we have a camera before
+    // we call render prep and render.
+    const bool renderReady = (m_layer->renderData->camera != nullptr);
+    if (renderReady) {
+        m_sgContext->rhiPrepare(*m_layer);
+        m_prepared = true;
+    }
 }
 
 void QQuick3DSceneRenderer::rhiRender()
 {
-    Q_ASSERT(m_prepared);
+    if (m_prepared) {
+        // There is no clearFirst flag - the rendering here does not record a
+        // beginPass() so it never clears on its own.
+
+        m_sgContext->rhiRender(*m_layer);
+    }
+
     m_prepared = false;
-
-    // There is no clearFirst flag - the rendering here does not record a
-    // beginPass() so it never clears on its own.
-
-    m_sgContext->rhiRender(*m_layer);
 }
 
 static QRhiTexture::Format toRhiTextureFormat(QQuickShaderEffectSource::Format format)
