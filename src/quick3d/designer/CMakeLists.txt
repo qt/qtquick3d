@@ -70,6 +70,7 @@ qt_copy_or_install(
         ReflectionProbeSection.qml
         ReflectionProbeSpecifics.qml
         quick3d.metainfo
+        propertyGroups.json
     DESTINATION "${destination}"
 )
 
