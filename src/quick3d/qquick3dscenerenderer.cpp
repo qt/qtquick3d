@@ -989,10 +989,13 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
 
     layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(environment->tonemapMode());
     layerNode.skyboxBlurAmount = environment->skyboxBlurAmount();
-    if (auto debugSettings = view3D.environment()->debugSettings())
+    if (auto debugSettings = view3D.environment()->debugSettings()) {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode(debugSettings->materialOverride());
-    else
+        layerNode.wireframeMode = debugSettings->wireframeEnabled();
+    } else {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode::None;
+        layerNode.wireframeMode = false;
+    }
 
     if (environment->lightmapper()) {
         QQuick3DLightmapper *lightmapper = environment->lightmapper();

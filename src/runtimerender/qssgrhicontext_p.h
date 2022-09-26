@@ -420,6 +420,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
     QSSGRhiInputAssemblerState ia;
     float lineWidth = 1.0f;
 
+    QRhiGraphicsPipeline::PolygonMode polygonMode = QRhiGraphicsPipeline::Fill;
+
     static QRhiGraphicsPipeline::CullMode toCullMode(QSSGCullFaceMode cullFaceMode);
 };
 
@@ -447,7 +449,8 @@ inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
             && a.targetBlend.dstAlpha == b.targetBlend.dstAlpha
             && a.targetBlend.opAlpha == b.targetBlend.opAlpha
             && a.colorAttachmentCount == b.colorAttachmentCount
-            && a.lineWidth == b.lineWidth;
+            && a.lineWidth == b.lineWidth
+            && a.polygonMode == b.polygonMode;
 }
 
 inline bool operator!=(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraphicsPipelineState &b) Q_DECL_NOTHROW
@@ -465,6 +468,7 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
             ^ qHash(s.cullMode)
             ^ qHash(s.colorAttachmentCount)
             ^ qHash(s.lineWidth)
+            ^ qHash(s.polygonMode)
             ^ (s.depthTestEnable << 1)
             ^ (s.depthWriteEnable << 2)
             ^ (s.blendEnable << 3)

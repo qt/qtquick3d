@@ -88,4 +88,32 @@ void QQuick3DDebugSettings::update()
     emit changed();
 }
 
+/*!
+    \qmlproperty bool QQuick3D::DebugSettings::wireframeEnabled
+    \since 6.5
+
+    This property changes how all materials are rendered by changing the polygon
+    fill mode to be lines instead of filled. This appears as a wireframe, but the
+    shaded color will still reflect the respective materials of the meshes.
+
+    The default value is \c false.
+
+*/
+
+
+bool QQuick3DDebugSettings::wireframeEnabled() const
+{
+    return m_wireframeEnabled;
+}
+
+void QQuick3DDebugSettings::setWireframeEnabled(bool newWireframeEnabled)
+{
+    if (m_wireframeEnabled == newWireframeEnabled)
+        return;
+    m_wireframeEnabled = newWireframeEnabled;
+    emit wireframeEnabledChanged();
+    update();
+}
+
 QT_END_NAMESPACE
+

@@ -254,6 +254,13 @@ Window {
                     ]
                 }
             }
+            CheckBox {
+                text: "Wireframe"
+                checked: debugSettingsInstance.wireframeEnabled
+                onCheckedChanged: {
+                    debugSettingsInstance.wireframeEnabled = checked
+                }
+            }
         }
     }
     FileDialog {

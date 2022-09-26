@@ -980,6 +980,7 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
 
     ps->setDepthBias(key.state.depthBias);
     ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
+    ps->setPolygonMode(key.state.polygonMode);
 
     if (!ps->create()) {
         qWarning("Failed to build graphics pipeline state");

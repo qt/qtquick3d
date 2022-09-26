@@ -556,6 +556,9 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     // enable depth write for opaque objects when there was no Z prepass
     ps.depthWriteEnable = depthWriteEnableDefault;
 
+    // Enable Wireframe mode
+    ps.polygonMode = layer.wireframeMode ? QRhiGraphicsPipeline::Line : QRhiGraphicsPipeline::Fill;
+
     // make the buffer copies and other stuff we put on the command buffer in
     // here show up within a named section in tools like RenderDoc when running
     // with QSG_RHI_PROFILE=1 (which enables debug markers)
@@ -668,7 +671,10 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
     cb->debugMarkEnd();
 
     // 2. Render sky box (opt)
+
     const auto &layer = renderer->getLayerGlobalRenderProperties().layer;
+    auto polygonMode = ps.polygonMode;
+    ps.polygonMode = QRhiGraphicsPipeline::Fill;
     if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
         && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch)
         && layer.skyBoxSrb)
@@ -698,6 +704,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.data(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
     }
+    ps.polygonMode = polygonMode;
 
     // 3. Screen texture depended objects
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render screen texture dependent"));
