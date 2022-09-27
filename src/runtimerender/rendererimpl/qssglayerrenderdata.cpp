@@ -1443,12 +1443,6 @@ void QSSGLayerRenderData::prepareForRender()
 
     QSSGLayerRenderPreparationResult thePrepResult(theViewport, theScissor, layer);
 
-    // If the scissor rect makes the layer non visible, bail out early
-    if (!thePrepResult.isLayerVisible()) {
-        layerPrepResult = thePrepResult;
-        return;
-    }
-
     // SSAO
     const bool SSAOEnabled = layer.ssaoEnabled();
     thePrepResult.flags.setRequiresSsaoPass(SSAOEnabled);
