@@ -51,13 +51,8 @@ QSSGRenderLayer::QSSGRenderLayer()
 
 QSSGRenderLayer::~QSSGRenderLayer()
 {
-    if (importSceneNode) {
-        // Remove the dummy from the list or it's siblings will still link to it.
-        children.remove(*importSceneNode);
-        importSceneNode->children.clear();
-        delete importSceneNode;
-        importSceneNode = nullptr;
-    }
+    delete importSceneNode;
+    importSceneNode = nullptr;
     delete renderData;
 }
 

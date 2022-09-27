@@ -1090,12 +1090,15 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                 imageNode->m_qsgTexture = provider->texture();
 
                 disconnect(m_textureProviderConnection);
-                m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [this, provider, imageNode] () {
+                m_textureProviderConnection = connect(provider, &QSGTextureProvider::textureChanged, this, [this, provider] () {
                     // called on the render thread, if there is one; the gui
                     // thread may or may not be blocked (e.g. if the source is
                     // a View3D, that emits textureChanged() from preprocess,
                     // so after sync, whereas an Image emits in
                     // updatePaintNode() where gui is blocked)
+                    auto imageNode = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+                    if (!imageNode)
+                        return;
 
                     imageNode->m_qsgTexture = provider->texture();
                     // the QSGTexture may be different now, go through loadRenderImage() again
@@ -1127,13 +1130,17 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
                     // This eliminates, or in the worst case reduces, the ugly effects of not
                     // having a texture ready when rendering the 3D scene.
 
-                    m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::afterSynchronizing, this, [this, imageNode, sourceItem]() {
+                    m_textureUpdateConnection = connect(sourcePrivate->window, &QQuickWindow::afterSynchronizing, this, [this, sourceItem]() {
                         // Called on the render thread with gui blocked (if there is a render thread, that is).
                         if (m_sourceItem != sourceItem) {
                             disconnect(m_textureProviderConnection);
                             disconnect(m_textureUpdateConnection);
                             return;
                         }
+                        auto imageNode = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+                        if (!imageNode)
+                            return;
+
                         if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(imageNode->m_qsgTexture)) {
                             if (t->updateTexture())
                                 update(); // safe because the gui thread is blocked
@@ -1162,7 +1169,11 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
 
                     // The earliest next point where we can do anything is
                     // after the scenegraph's QQuickItem sync round has completed.
-                    connect(window, &QQuickWindow::afterSynchronizing, this, [this, imageNode, window]() {
+                    connect(window, &QQuickWindow::afterSynchronizing, this, [this, window]() {
+                        auto imageNode = static_cast<QSSGRenderImage *>(QQuick3DObjectPrivate::get(this)->spatialNode);
+                        if (!imageNode)
+                            return;
+
                         // Called on the render thread with gui blocked (if there is a render thread, that is).
                         disconnect(window, &QQuickWindow::afterSynchronizing, this, nullptr);
                         if (m_layer) {
