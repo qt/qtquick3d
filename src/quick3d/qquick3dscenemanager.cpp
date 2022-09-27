@@ -20,6 +20,9 @@ QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
 
 QQuick3DSceneManager::~QQuick3DSceneManager()
 {
+    cleanupNodes();
+    // If there's resources queued for deletion it's too late for them, so clean them out now
+    qDeleteAll(resourceCleanupQueue);
 }
 
 void QQuick3DSceneManager::setWindow(QQuickWindow *window)
@@ -51,6 +54,9 @@ void QQuick3DSceneManager::cleanup(QSSGRenderGraphObject *item)
 {
     Q_ASSERT(!cleanupNodeList.contains(item));
     cleanupNodeList.append(item);
+
+    if (auto front = m_nodeMap[item])
+        QQuick3DObjectPrivate::get(front)->spatialNode = nullptr;
 
     // The front-end object is no longer reachable (destroyed) so make sure we don't return it
     // when doing a node look-up.
