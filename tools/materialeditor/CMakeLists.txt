@@ -77,4 +77,5 @@ qt_add_shaders(${target_name} "shaders"
         ${materialeditor_asset_prefix}
     FILES
         "assets/shaders/frostedGlass.frag"
+    SILENT
 )
