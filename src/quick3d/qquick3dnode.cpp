@@ -800,8 +800,13 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     else
         spacialNode->setState(QSSGRenderNode::LocalState::Active, d->m_visible);
 
-    if (spacialNode->isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty))
+    if (spacialNode->isDirty(QSSGRenderNode::DirtyFlag::GlobalValuesDirty)) {
         spacialNode->calculateGlobalVariables();
+        // calculateGlobalVariables clears the dirty flag so transform has to be set dirty again
+        // so that the layer can check node dirtiness afterwards
+        if (transformIsDirty)
+            spacialNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
+    }
 
     return spacialNode;
 }
