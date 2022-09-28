@@ -25,12 +25,10 @@ Window {
         id: view3D
         anchors.fill: parent
         environment: SceneEnvironment {
+            id: env
             backgroundMode: SceneEnvironment.SkyBox
             lightProbe: Texture {
                 textureData: ProceduralSkyTextureData{}
-            }
-            debugSettings: DebugSettings {
-                id: debugSettingsInstance
             }
         }
 
@@ -233,9 +231,9 @@ Window {
                     textRole: "text"
                     valueRole: "value"
                     implicitContentWidthPolicy: ComboBox.WidestText
-                    onActivated: debugSettingsInstance.materialOverride = currentValue
+                    onActivated: env.debugSettings.materialOverride = currentValue
 
-                    Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(debugSettingsInstance.materialOverride)
+                    Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(env.debugSettings.materialOverride)
 
                     model: [
                         { value: DebugSettings.None, text: "None"},
@@ -256,9 +254,9 @@ Window {
             }
             CheckBox {
                 text: "Wireframe"
-                checked: debugSettingsInstance.wireframeEnabled
+                checked: env.debugSettings.wireframeEnabled
                 onCheckedChanged: {
-                    debugSettingsInstance.wireframeEnabled = checked
+                    env.debugSettings.wireframeEnabled = checked
                 }
             }
         }

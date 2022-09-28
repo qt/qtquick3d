@@ -21,7 +21,16 @@ QT_BEGIN_NAMESPACE
 QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
     : QQuick3DObject(*(new QQuick3DObjectPrivate(QQuick3DObjectPrivate::Type::SceneEnvironment)), parent)
 {
-
+    m_debugSettings = new QQuick3DDebugSettings(this);
+    m_debugSettingsSignalConnection = QObject::connect(m_debugSettings, &QQuick3DDebugSettings::changed, this,
+                                                       [this] { update(); });
+    QObject::connect(m_debugSettings, &QObject::destroyed, this,
+                     [this](QObject *obj) {
+        if (m_debugSettings == obj) {
+            m_debugSettings = nullptr;
+            update();
+        }
+    });
 }
 
 QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
@@ -560,8 +569,10 @@ float QQuick3DSceneEnvironment::skyboxBlurAmount() const
     \since 6.5
 
     This property specifies a \c DebugSettings object which is used to
-    configure the Debugging tools of the renderer.
-
+    configure the debugging tools of the renderer. During construction
+    the SceneEnvironment automatically creates a DebugSettings object
+    associated with itself, and therefore setting a custom DebugSettings
+    is usually not required.
 */
 
 QQuick3DDebugSettings *QQuick3DSceneEnvironment::debugSettings() const
@@ -882,10 +893,12 @@ void QQuick3DSceneEnvironment::setLightmapper(QQuick3DLightmapper *lightmapper)
                                                      [this] { update(); });
 
     QObject::connect(m_lightmapper, &QObject::destroyed, this,
-                     [this]
+                     [this](QObject *obj)
     {
-        m_lightmapper = nullptr;
-        update();
+        if (m_lightmapper == obj) {
+            m_lightmapper = nullptr;
+            update();
+        }
     });
 
     emit lightmapperChanged();
@@ -928,9 +941,11 @@ void QQuick3DSceneEnvironment::setDebugSettings(QQuick3DDebugSettings *newDebugS
     m_debugSettingsSignalConnection = QObject::connect(m_debugSettings, &QQuick3DDebugSettings::changed, this,
                                                        [this] { update(); });
     QObject::connect(m_debugSettings, &QObject::destroyed, this,
-                     [this] {
-        m_debugSettings = nullptr;
-        update();
+                     [this](QObject *obj) {
+        if (m_debugSettings == obj) {
+            m_debugSettings = nullptr;
+            update();
+        }
     });
 
     emit debugSettingsChanged();
