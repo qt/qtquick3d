@@ -1639,7 +1639,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     };
     shaders->setUniform(ubufData, "qt_rhi_properties", rhiProperties, 4 * sizeof(float), &cui.rhiPropertiesIdx);
 
-    quint32 imageIdx = 0;
+    qsizetype imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {
         // we need to map image to uniform name: "image0_rotations", "image0_offsets", etc...
         const auto &names = imageStringTable[int(theImage->m_mapType)];
