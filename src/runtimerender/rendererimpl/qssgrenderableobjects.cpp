@@ -29,7 +29,9 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                            inWorldCenterPt,
                            inModelContext.model.globalTransform,
                            inSubset.bounds,
-                           inModelContext.model.m_depthBiasSq)
+                           inModelContext.model.m_depthBiasSq,
+                           inModelContext.model.instancingLodMin,
+                           inModelContext.model.instancingLodMax)
     , generator(gen)
     , modelContext(inModelContext)
     , subset(inSubset)

@@ -1022,10 +1022,10 @@ static void setupCubeShadowCameras(const QSSGRenderLight *inLight, QSSGRenderCam
     */
 }
 
-static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipelineState *ps, QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection)
+static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipelineState *ps, QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition)
 {
     // TODO: non-static so it can be used from QSSGCustomMaterialSystem::rhiPrepareRenderable()?
-    const bool instancing = renderable->prepareInstancing(rhiCtx, cameraDirection);
+    const bool instancing = renderable->prepareInstancing(rhiCtx, cameraDirection, cameraPosition, renderable->instancingLodMin, renderable->instancingLodMax);
     int instanceBufferBinding = 0;
     if (instancing) {
         // set up new bindings for instanced buffers
@@ -1173,7 +1173,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
             ps->shaderPipeline = shaderPipeline.data();
             ps->ia = subsetRenderable.subset.rhi.ia;
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, globalRenderProperties.cameraData.direction);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, globalRenderProperties.cameraData.direction, globalRenderProperties.cameraData.position);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
 
@@ -1329,7 +1329,10 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             QVector3D cameraDirection = inData.cameraData->direction;
             if (inCamera)
                 cameraDirection = inCamera->getScalingCorrectDirection();
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection);
+            QVector3D cameraPosition = inData.cameraData->position;
+            if (inCamera)
+                cameraPosition = inCamera->getGlobalPos();
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection, cameraPosition);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
@@ -2356,7 +2359,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
             ps->ia = subsetRenderable.subset.rhi.ia;
 
-            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraData->direction);
+            int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, inData.cameraData->direction, inData.cameraData->position);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;

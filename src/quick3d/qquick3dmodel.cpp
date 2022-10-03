@@ -507,6 +507,28 @@ QQuick3DBakedLightmap *QQuick3DModel::bakedLightmap() const
     return m_bakedLightmap;
 }
 
+/*!
+    \qmlproperty real Model::instancingLodMin
+
+    Defines the minimum distance from camera that an instance of this model is shown.
+    Used for a level of detail implementation.
+*/
+float QQuick3DModel::instancingLodMin() const
+{
+    return m_instancingLodMin;
+}
+
+/*!
+    \qmlproperty real Model::instancingLodMax
+
+    Defines the maximum distance from camera that an instance of this model is shown.
+    Used for a level of detail implementation.
+*/
+float QQuick3DModel::instancingLodMax() const
+{
+    return m_instancingLodMax;
+}
+
 void QQuick3DModel::setSource(const QUrl &source)
 {
     if (m_source == source)
@@ -846,6 +868,11 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             modelNode->skin = nullptr;
     }
 
+    if (m_dirtyAttributes & LodDirty) {
+        modelNode->instancingLodMin = m_instancingLodMin;
+        modelNode->instancingLodMax = m_instancingLodMax;
+    }
+
     if (m_dirtyAttributes & PoseDirty) {
         modelNode->inverseBindPoses = m_inverseBindPoses.toVector();
         modelNode->skinningDirty = true;
@@ -1055,6 +1082,24 @@ void QQuick3DModel::qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *
     self->m_morphTargets.clear();
     self->m_numMorphAttribs = 0;
     self->markDirty(QQuick3DModel::MorphTargetsDirty);
+}
+
+void QQuick3DModel::setInstancingLodMin(float minDistance)
+{
+    if (qFuzzyCompare(m_instancingLodMin, minDistance))
+        return;
+    m_instancingLodMin = minDistance;
+    emit instancingLodMinChanged();
+    markDirty(LodDirty);
+}
+
+void QQuick3DModel::setInstancingLodMax(float maxDistance)
+{
+    if (qFuzzyCompare(m_instancingLodMax, maxDistance))
+        return;
+    m_instancingLodMax = maxDistance;
+    emit instancingLodMaxChanged();
+    markDirty(LodDirty);
 }
 
 QT_END_NAMESPACE

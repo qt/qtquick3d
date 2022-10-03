@@ -745,6 +745,8 @@ struct QSSGRhiInstanceBufferData
     QByteArray sortedData;
     QList<QSSGRhiSortData> sortData;
     QVector3D sortedCameraDirection;
+    QVector3D cameraPosition;
+    QByteArray lodData;
     int serial = -1;
     bool owned = true;
     bool sorting = false;
@@ -1014,6 +1016,12 @@ public:
     {
         return m_instanceBuffers[instanceTable];
     }
+
+    QSSGRhiInstanceBufferData &instanceBufferData(const QSSGRenderModel *model)
+    {
+        return m_instanceBuffersLod[model];
+    }
+
     QSSGRhiParticleData &particleData(const QSSGRenderGraphObject *particlesOrModel)
     {
         return m_particleData[particlesOrModel];
@@ -1040,6 +1048,7 @@ private:
     QSet<QSSGRenderMesh *> m_meshes;
     QHash<QSSGRhiDummyTextureKey, QRhiTexture *> m_dummyTextures;
     QHash<QSSGRenderInstanceTable *, QSSGRhiInstanceBufferData> m_instanceBuffers;
+    QHash<const QSSGRenderModel *, QSSGRhiInstanceBufferData> m_instanceBuffersLod;
     QHash<const QSSGRenderGraphObject *, QSSGRhiParticleData> m_particleData;
     QSSGRhiContextStats m_stats;
 };

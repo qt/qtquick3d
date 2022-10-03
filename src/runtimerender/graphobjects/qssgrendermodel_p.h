@@ -50,6 +50,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     QByteArray boneData;
     mutable QRhiTexture *boneTexture = nullptr;
     quint32 boneCount = 0;
+    float instancingLodMin = -1;
+    float instancingLodMax = -1;
 
     QSSGRenderInstanceTable *instanceTable = nullptr;
     int instanceCount() const { return instanceTable ? instanceTable->count() : 0; }

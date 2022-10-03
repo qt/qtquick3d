@@ -937,6 +937,13 @@ void QSSGRhiContext::releaseCachedResources()
     }
 
     m_instanceBuffers.clear();
+
+    for (const auto &instanceData : std::as_const(m_instanceBuffersLod)) {
+        if (instanceData.owned)
+            delete instanceData.buffer;
+    }
+
+    m_instanceBuffersLod.clear();
 }
 
 void QSSGRhiContext::initialize(QRhi *rhi)

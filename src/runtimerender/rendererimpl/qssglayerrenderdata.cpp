@@ -1946,17 +1946,39 @@ static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortDa
     }
 }
 
-bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection)
+static void cullLodInstances(QByteArray &lodData, const void *instances, int count,
+                             const QVector3D &cameraPosition, float minThreshold, float maxThreshold)
+{
+    const QSSGRenderInstanceTableEntry *instance = reinterpret_cast<const QSSGRenderInstanceTableEntry *>(instances);
+    QSSGRenderInstanceTableEntry *dest = reinterpret_cast<QSSGRenderInstanceTableEntry *>(lodData.data());
+    for (int i = 0; i < count; ++i) {
+        const float x = cameraPosition.x() - instance->row0.w();
+        const float y = cameraPosition.y() - instance->row1.w();
+        const float z = cameraPosition.z() - instance->row2.w();
+        const float distanceSq = x * x + y * y + z * z;
+        if (distanceSq >= minThreshold * minThreshold && (maxThreshold < 0 || distanceSq < maxThreshold * maxThreshold))
+            *dest = *instance;
+        else
+            *dest= {};
+        dest++;
+        instance++;
+    }
+}
+
+bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition, float minThreshold, float maxThreshold)
 {
     if (!modelContext.model.instancing() || instanceBuffer)
         return instanceBuffer;
     auto *table = modelContext.model.instanceTable;
-    QSSGRhiInstanceBufferData &instanceData(rhiCtx->instanceBufferData(table));
+    bool usesLod = minThreshold >= 0 || maxThreshold >= 0;
+    QSSGRhiInstanceBufferData &instanceData(usesLod ? rhiCtx->instanceBufferData(&modelContext.model) : rhiCtx->instanceBufferData(table));
     qsizetype instanceBufferSize = table->dataSize();
     // Create or resize the instance buffer ### if (instanceData.owned)
     bool sortingChanged = table->isDepthSortingEnabled() != instanceData.sorting;
     bool cameraDirectionChanged = !qFuzzyCompare(instanceData.sortedCameraDirection, cameraDirection);
+    bool cameraPositionChanged = !qFuzzyCompare(instanceData.cameraPosition, cameraPosition);
     bool updateInstanceBuffer = table->serial() != instanceData.serial || sortingChanged || (cameraDirectionChanged && table->isDepthSortingEnabled());
+    bool updateForLod = cameraPositionChanged && usesLod;
     if (sortingChanged && !table->isDepthSortingEnabled()) {
         instanceData.sortedData.clear();
         instanceData.sortData.clear();
@@ -1975,23 +1997,36 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
         instanceData.buffer = rhiCtx->rhi()->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::VertexBuffer, instanceBufferSize);
         instanceData.buffer->create();
     }
-    if (updateInstanceBuffer) {
+    if (updateInstanceBuffer || updateForLod) {
         const void *data = nullptr;
         if (table->isDepthSortingEnabled()) {
-            QMatrix4x4 invGlobalTransform = modelContext.model.globalTransform.inverted();
-            instanceData.sortedData.resize(table->dataSize());
-            sortInstances(instanceData.sortedData,
-                          instanceData.sortData,
-                          table->constData(),
-                          table->stride(),
-                          table->count(),
-                          invGlobalTransform.map(cameraDirection).normalized());
+            if (updateInstanceBuffer) {
+                QMatrix4x4 invGlobalTransform = modelContext.model.globalTransform.inverted();
+                instanceData.sortedData.resize(table->dataSize());
+                sortInstances(instanceData.sortedData,
+                              instanceData.sortData,
+                              table->constData(),
+                              table->stride(),
+                              table->count(),
+                              invGlobalTransform.map(cameraDirection).normalized());
+            }
             data = instanceData.sortedData.constData();
             instanceData.sortedCameraDirection = cameraDirection;
         } else {
             data = table->constData();
         }
         if (data) {
+            if (updateForLod) {
+                if (table->isDepthSortingEnabled()) {
+                    instanceData.lodData.resize(table->dataSize());
+                    cullLodInstances(instanceData.lodData, instanceData.sortedData.constData(), instanceData.sortedData.size(), cameraPosition, minThreshold, maxThreshold);
+                    data = instanceData.lodData.constData();
+                } else {
+                    instanceData.lodData.resize(table->dataSize());
+                    cullLodInstances(instanceData.lodData, table->constData(), table->count(), cameraPosition, minThreshold, maxThreshold);
+                    data = instanceData.lodData.constData();
+                }
+            }
             QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
             rub->updateDynamicBuffer(instanceData.buffer, 0, instanceBufferSize, data);
             rhiCtx->commandBuffer()->resourceUpdate(rub);
@@ -2000,6 +2035,7 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
             qWarning() << "NO DATA IN INSTANCE TABLE";
         }
         instanceData.serial = table->serial();
+        instanceData.cameraPosition = cameraPosition;
     }
     instanceBuffer = instanceData.buffer;
     return instanceBuffer;

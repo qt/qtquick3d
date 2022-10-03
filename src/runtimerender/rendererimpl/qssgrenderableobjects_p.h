@@ -218,13 +218,17 @@ struct QSSGRenderableObject
     float depthBiasSq; // Squared as our sorting is based on the square distance!
     QSSGDepthDrawMode depthWriteMode = QSSGDepthDrawMode::OpaqueOnly;
     const Type type;
+    float instancingLodMin = -1;
+    float instancingLodMax = -1;
 
     QSSGRenderableObject(Type ty,
                          QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QMatrix4x4 &inGlobalTransform,
                          const QSSGBounds3 &inBounds,
-                         float inDepthBias)
+                         float inDepthBias,
+                         float inMinThreshold = -1,
+                         float inMaxThreshold = -1)
 
         : globalTransform(inGlobalTransform)
         , bounds(inBounds)
@@ -233,6 +237,8 @@ struct QSSGRenderableObject
         , worldCenterPoint(inWorldCenterPt)
         , depthBiasSq(inDepthBias)
         , type(ty)
+        , instancingLodMin(inMinThreshold)
+        , instancingLodMax(inMaxThreshold)
     {
         if (type != Type::Particles) // See: QSSGParticlesRenderable's ctor
             globalBounds.transform(globalTransform);
@@ -329,7 +335,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
         Q_ASSERT(material.type == QSSGRenderGraphObject::Type::CustomMaterial);
         return static_cast<const QSSGRenderCustomMaterial &>(material);
     }
-    bool prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection);
+    bool prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection, const QVector3D &cameraPosition, float minThreshold, float maxThreshold);
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
