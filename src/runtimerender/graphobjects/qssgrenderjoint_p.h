@@ -25,7 +25,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderJoint : public QSSGRenderNode
 {
     Q_DISABLE_COPY(QSSGRenderJoint)
 
-    quint32 index;
+    int index;
     QSSGRenderSkeleton *skeletonRoot = nullptr;
 
     QSSGRenderJoint();

@@ -813,7 +813,7 @@ static bool writeInstanceTable(QIODevice *out, const QByteArray &instanceData, i
     header.offset = sizeof(header);
     header.count = instanceCount;
 
-    if (instanceData.size() != header.stride * instanceCount) {
+    if (instanceData.size() != qsizetype(header.stride) * instanceCount) {
         qWarning() << "inconsistent data";
         return false;
     }

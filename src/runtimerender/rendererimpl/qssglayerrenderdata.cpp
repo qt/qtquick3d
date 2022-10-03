@@ -1391,7 +1391,7 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
                     if (hasDirtyNonJoints && !dirtySkeleton)
                         dirtySkeletons.insert(skeletonNode);
                     modelNode->skinningDirty = false;
-                    const quint32 dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
+                    const qsizetype dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
                     if (modelNode->boneData.size() < dataSize)
                         modelNode->boneData.resize(dataSize);
                     skeletonNode->calculateGlobalVariables();
