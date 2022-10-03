@@ -15,20 +15,6 @@ QT_BEGIN_NAMESPACE
 using TextureStore = QHash<QString, QImage *>;
 Q_GLOBAL_STATIC(TextureStore, s_textureStore);
 
-static QByteArrayView fromQString(QSSGSceneDesc::Scene::Allocator &allocator, const QString &s)
-{
-    const auto string = s.toUtf8();
-    const qsizetype size = string.size();
-    if (size > 0) {
-        const qsizetype asize = size + 1;
-        char *data = reinterpret_cast<char *>(allocator.allocate(asize));
-        qstrncpy(data, string.constData(), size + 1);
-        return QByteArrayView{data, size};
-    }
-
-    return QByteArrayView();
-}
-
 template<typename T>
 static void setProperty(QQuick3DObject &obj, const char *name, T v)
 {
@@ -94,10 +80,12 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
             if (it != end) {
                 const auto &image = *(*it);
                 const QSize resSize = image.size();
-                QByteArrayView dataref(image.constBits(), image.sizeInBytes());
+                // Note: the image must not be deleted or modified while the textureData node is in the scene
+                auto *imageData = reinterpret_cast<const char *>(image.constBits());
+                QByteArray dataref = QByteArray::fromRawData(imageData, image.sizeInBytes());
                 auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
                 const auto &baseName = QString(fi.baseName() + QString::number(material.id));
-                auto name = (baseName.size() > 0) ? fromQString(material.scene->allocator, baseName) : QByteArrayView();
+                auto name = baseName.toUtf8();
                 auto textureData = material.scene->create<QSSGSceneDesc::TextureData>(dataref, resSize, format, 0, name);
                 QSSGSceneDesc::addNode(material, *textureData);
                 auto texture = material.scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D);
@@ -142,9 +130,9 @@ QPointer<QQuick3DCustomMaterial> CustomMaterial::create(QQuick3DNode &parent, co
         setProperty(*material, "destinationBlend", &QQuick3DCustomMaterial::setDstBlend, properties.destinationBlend);
 
     if (!shaders.vert.isEmpty())
-        setProperty(*material, "vertexShader", &QQuick3DCustomMaterial::setVertexShader, QSSGSceneDesc::UrlView{ {fromQString(scene.allocator, shaders.vert.toString())} });
+        setProperty(*material, "vertexShader", &QQuick3DCustomMaterial::setVertexShader, QSSGSceneDesc::UrlView{ shaders.vert.toString().toUtf8() });
     if (!shaders.frag.isEmpty())
-        setProperty(*material, "fragmentShader", &QQuick3DCustomMaterial::setFragmentShader, QSSGSceneDesc::UrlView{ {fromQString(scene.allocator, shaders.frag.toString())} });
+        setProperty(*material, "fragmentShader", &QQuick3DCustomMaterial::setFragmentShader, QSSGSceneDesc::UrlView{ shaders.frag.toString().toUtf8() });
 
     auto resourceParent = std::make_unique<QQuick3DNode>();
     QSSGRuntimeUtils::createScene(parent, scene);

@@ -31,7 +31,7 @@ namespace QSSGRuntimeUtils
 {
 
 Q_QUICK3DASSETUTILS_EXPORT QQuick3DNode *createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene);
-Q_QUICK3DASSETUTILS_EXPORT void createGraphObject(QSSGSceneDesc::Node &node, QList<QSSGSceneDesc::Node *> &deferedNodes, QQuick3DObject &parent, bool traverse = true);
+Q_QUICK3DASSETUTILS_EXPORT void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverseChildrenAndSetProperties = true);
 
 }
 

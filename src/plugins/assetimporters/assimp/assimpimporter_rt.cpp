@@ -58,6 +58,12 @@ static QByteArrayView fromAiString(QSSGSceneDesc::Scene::Allocator &allocator, c
     return QByteArrayView();
 }
 
+static QByteArray fromAiString(const aiString &string)
+{
+    const qsizetype length = string.length;
+    return QByteArray(string.data, length);
+}
+
 struct NodeInfo
 {
     using Type = QSSGSceneDesc::Node::Type;
@@ -98,7 +104,7 @@ bool operator==(const TextureInfo &a, const TextureInfo &b)
 
 struct TextureEntry
 {
-    QByteArrayView name;
+    QByteArray name;
     TextureInfo info;
     QSSGSceneDesc::Texture *texture = nullptr;
 };
@@ -122,13 +128,6 @@ bool operator==(const TextureEntry &a, const TextureEntry &b)
 
 struct SceneInfo
 {
-    enum class GltfVersion : quint8
-    {
-        Unknown,
-        v1,
-        v2
-    };
-
     enum Options
     {
         None,
@@ -156,7 +155,6 @@ struct SceneInfo
     SkinMap &skinMap;
     Mesh2SkinMap &mesh2skin;
     QDir workingDir;
-    GltfVersion ver;
     Options opt;
 };
 
@@ -166,7 +164,7 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
 {
     // objectName
     if (target.name.isNull())
-        target.name = fromAiString(target.scene->allocator, source.mName);
+        target.name = fromAiString(source.mName);
 
     const aiMatrix4x4 &transformMatrix = source.mTransformation;
 
@@ -242,7 +240,7 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
     QSSGSceneDesc::setProperty(target, "tilingModeHorizontal", &QQuick3DTexture::setHorizontalTiling, asQtTilingMode(texInfo.modes[0]));
 
     // mapping mode V
-    QSSGSceneDesc::setProperty(target, "tilingModeVertical", &QQuick3DTexture::setHorizontalTiling, asQtTilingMode(texInfo.modes[1]));
+    QSSGSceneDesc::setProperty(target, "tilingModeVertical", &QQuick3DTexture::setVerticalTiling, asQtTilingMode(texInfo.modes[1]));
 
     const bool applyUvTransform = !isEqual(texInfo.transform, aiUVTransform());
     if (applyUvTransform) {
@@ -281,30 +279,28 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
     bool generateMipMaps = forceMipMapGeneration;
     auto mipFilter = forceMipMapGeneration ? QQuick3DTexture::Filter::Linear : QQuick3DTexture::Filter::None;
 
-    if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
-        // magFilter
-        auto filter = (texInfo.magFilter == AI_GLTF_FILTER_NEAREST) ? QQuick3DTexture::Filter::Nearest : QQuick3DTexture::Filter::Linear;
-        QSSGSceneDesc::setProperty(target, "magFilter", &QQuick3DTexture::setMagFilter, filter);
+    // magFilter
+    auto filter = (texInfo.magFilter == AI_GLTF_FILTER_NEAREST) ? QQuick3DTexture::Filter::Nearest : QQuick3DTexture::Filter::Linear;
+    QSSGSceneDesc::setProperty(target, "magFilter", &QQuick3DTexture::setMagFilter, filter);
 
-        // minFilter
-        if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST) {
-            filter = QQuick3DTexture::Filter::Nearest;
-        } else if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_NEAREST) {
-            filter = QQuick3DTexture::Filter::Nearest;
-            mipFilter = QQuick3DTexture::Filter::Nearest;
-        } else if (texInfo.magFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_NEAREST) {
-            mipFilter = QQuick3DTexture::Filter::Nearest;
-        } else if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR) {
-            filter = QQuick3DTexture::Filter::Nearest;
-            mipFilter = QQuick3DTexture::Filter::Linear;
-        } else if (texInfo.magFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_LINEAR) {
-            mipFilter = QQuick3DTexture::Filter::Linear;
-        }
-        QSSGSceneDesc::setProperty(target, "minFilter", &QQuick3DTexture::setMinFilter, filter);
-
-        // mipFilter
-        generateMipMaps = (mipFilter != QQuick3DTexture::Filter::None);
+    // minFilter
+    if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST) {
+        filter = QQuick3DTexture::Filter::Nearest;
+    } else if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_NEAREST) {
+        filter = QQuick3DTexture::Filter::Nearest;
+        mipFilter = QQuick3DTexture::Filter::Nearest;
+    } else if (texInfo.magFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_NEAREST) {
+        mipFilter = QQuick3DTexture::Filter::Nearest;
+    } else if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR) {
+        filter = QQuick3DTexture::Filter::Nearest;
+        mipFilter = QQuick3DTexture::Filter::Linear;
+    } else if (texInfo.magFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_LINEAR) {
+        mipFilter = QQuick3DTexture::Filter::Linear;
     }
+    QSSGSceneDesc::setProperty(target, "minFilter", &QQuick3DTexture::setMinFilter, filter);
+
+    // mipFilter
+    generateMipMaps = (mipFilter != QQuick3DTexture::Filter::None);
 
     if (generateMipMaps) {
         QSSGSceneDesc::setProperty(target, "generateMipmaps", &QQuick3DTexture::setGenerateMipmaps, true);
@@ -316,7 +312,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 {
     if (target.name.isNull()) {
         aiString materialName = source.GetName();
-        target.name = fromAiString(target.scene->allocator, materialName);
+        target.name = fromAiString(materialName);
     }
 
     const auto createTextureNode = [&sceneInfo, &target](const aiMaterial &material, aiTextureType textureType, unsigned int index) {
@@ -333,24 +329,24 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                 if (material.Get(AI_MATKEY_UVTRANSFORM(textureType, index), transform) == aiReturn_SUCCESS)
                     texInfo.transform = transform;
 
-                if (sceneInfo.ver == SceneInfo::GltfVersion::v2) {
-                    material.Get(AI_MATKEY_UVWSRC(textureType, index), texInfo.uvIndex);
-                    material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), texInfo.minFilter);
-                    material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), texInfo.magFilter);
-                }
+                material.Get(AI_MATKEY_UVWSRC(textureType, index), texInfo.uvIndex);
+                material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MIN(textureType, index), texInfo.minFilter);
+                material.Get(AI_MATKEY_GLTF_MAPPINGFILTER_MAG(textureType, index), texInfo.magFilter);
 
                 auto &textureMap = sceneInfo.textureMap;
 
                 // Check if we already processed this texture
-                const auto it = textureMap.constFind(TextureEntry{QByteArrayView{texturePath.C_Str(), qsizetype(texturePath.length)}, texInfo});
+                const auto it = textureMap.constFind(TextureEntry{QByteArray{texturePath.C_Str(), qsizetype(texturePath.length)}, texInfo});
                 if (it != textureMap.cend()) {
                     Q_ASSERT(it->texture);
                     tex = it->texture;
                 } else {
                     // Two types, externally referenced or embedded
-                    tex = scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D);
-                    // NOTE: We need a persistent zero terminated string!
-                    textureMap.insert(TextureEntry{fromAiString(scene->allocator, texturePath), texInfo, tex});
+                    // Use the source file name as the identifier, since that will hopefully be fairly stable for re-import.
+                    // If it's embedded, "*0" will be converted to "_0_texture" when writing to QML.
+                    QByteArray name = texturePath.C_Str();
+                    tex = scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D, name);
+                    textureMap.insert(TextureEntry{fromAiString(texturePath), texInfo, tex});
 
                     QSSGSceneDesc::addNode(target, *tex);
                     setTextureProperties(*tex, texInfo, sceneInfo); // both
@@ -372,10 +368,8 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 
                                 // For compressed textures this is the size of the image buffer (in bytes)
                                 const qsizetype asize = (isCompressed) ? sourceTexture->mWidth : (sourceTexture->mHeight * sourceTexture->mWidth) * sizeof(aiTexel);
-                                auto *data = scene->allocator.allocate(asize);
-                                ::memcpy(data, sourceTexture->pcData, asize);
                                 const QSize size = (!isCompressed) ? QSize(int(sourceTexture->mWidth), int(sourceTexture->mHeight)) : QSize();
-                                QByteArrayView imageData { reinterpret_cast<const char *>(data), asize };
+                                QByteArray imageData { reinterpret_cast<const char *>(sourceTexture->pcData), asize };
                                 const auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
                                 const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
                                 textureData = scene->create<QSSGSceneDesc::TextureData>(imageData, size, format, flags);
@@ -389,9 +383,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                             QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
                     } else {
                         const auto path = sceneInfo.workingDir.absoluteFilePath(QString::fromUtf8(texturePath.C_Str())).toUtf8();
-                        char *data = reinterpret_cast<char *>(scene->allocator.allocate(path.size() + 1));
-                        qstrncpy(data, path.constData(), path.size() + 1);
-                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ { QByteArrayView{data, path.size()} } });
+                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ path });
                     }
                 }
             }
@@ -1086,9 +1078,6 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     QVarLengthArray<QSSGSceneDesc::Material *> materials;
     materials.reserve(source.mNumMeshes); // Assumig there's max one material per mesh.
 
-    const auto materialType = (sceneInfo.ver == SceneInfo::GltfVersion::v1) ? QSSGSceneDesc::Material::RuntimeType::DefaultMaterial
-                                                                            : QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
-
     QString errorString;
 
     const auto ensureMaterial = [&](qsizetype materialIndex) {
@@ -1099,13 +1088,11 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
         if (targetMat == nullptr) {
             const aiMaterial *sourceMat = material.first;
 
-            auto currentMaterialType = materialType;
-            if (currentMaterialType == QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial) {
-                ai_real glossinessFactor;
-                aiReturn result = sourceMat->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossinessFactor);
-                if (result == aiReturn_SUCCESS)
-                    currentMaterialType = QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial;
-            }
+            auto currentMaterialType = QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial;
+            ai_real glossinessFactor;
+            aiReturn result = sourceMat->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossinessFactor);
+            if (result == aiReturn_SUCCESS)
+                currentMaterialType = QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial;
 
             targetMat = targetScene->create<QSSGSceneDesc::Material>(currentMaterialType);
             QSSGSceneDesc::addNode(target, *targetMat);
@@ -1147,7 +1134,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
         const auto idx = meshStorage.size() - 1;
         // For multimeshes we'll use the model name, but for single meshes we'll use the mesh name.
-        return targetScene->create<QSSGSceneDesc::Mesh>(fromAiString(targetScene->allocator, name), idx);
+        return targetScene->create<QSSGSceneDesc::Mesh>(fromAiString(name), idx);
     };
 
     QSSGSceneDesc::Mesh *meshNode = nullptr;
@@ -1349,48 +1336,18 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     if (!sourceFile.exists())
         return QLatin1String("File not found");
 
-    const auto extension = sourceFile.suffix().toLower();
-
-    if (extension != QLatin1String("gltf") && extension != QLatin1String("glb"))
-        return QLatin1String("Extension \'%1\' is not supported!").arg(extension);
-
     std::unique_ptr<Assimp::Importer> importer(new Assimp::Importer());
     // Remove primitives that are not Triangles
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
 
-    // Note: We do not do any post processing for runtime assets...
-    const auto postProcessSteps = aiPostProcessSteps(0);
+    // Always triangulate, to avoid triggering assert in AssimpUtils::generateMeshData
+    uint postProcessSteps = aiProcess_Triangulate;
 
     auto sourceScene = importer->ReadFile(filePath.toStdString(), postProcessSteps);
     if (!sourceScene) {
         // Scene failed to load, use logger to get the reason
         return QString::fromLocal8Bit(importer->GetErrorString());
     }
-
-    SceneInfo::GltfVersion gltfVersion = SceneInfo::GltfVersion::Unknown;
-
-    // gltf 1.x version's material will use DefaultMaterial
-    int impIndex = importer->GetPropertyInteger("importerIndex");
-    if (const aiImporterDesc *impInfo = importer->GetImporterInfo(impIndex)) {
-        // The name must be either "glTF Importer" or "glTF2 Importer"
-        if (impInfo->mName) {
-            // We're only interested in the 5 first letters
-            if (qstrnlen(impInfo->mName, 5) > 0) {
-                if (qstrncmp(impInfo->mName, "glTF", 4) == 0) {
-                    if (impInfo->mName[4] == '2')
-                        gltfVersion = SceneInfo::GltfVersion::v2;
-                    else
-                        gltfVersion = SceneInfo::GltfVersion::v1;
-                }
-            }
-        }
-    }
-
-    if (gltfVersion == SceneInfo::GltfVersion::v1)
-        return QLatin1String("Unsupported version");
-
-    if (gltfVersion == SceneInfo::GltfVersion::Unknown)
-        return QLatin1String("Unknown format version!");
 
     // For simplicity, and convenience, we'll just use the file path as the id.
     // DO NOT USE it for anything else, once the scene is created there's no
@@ -1511,7 +1468,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     }
 
     const auto opt = SceneInfo::Options::None;
-    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skins, mesh2skin, sourceFile.dir(), gltfVersion, opt };
+    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skins, mesh2skin, sourceFile.dir(), opt };
 
     // Now lets go through the scene
     if (sourceScene->mRootNode)
@@ -1571,11 +1528,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         for (It posKeyIdx = 0; posKeyIdx != posKeyEnd; ++posKeyIdx) {
                             const auto &posKey = srcChannel.mPositionKeys[posKeyIdx];
                             const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(posKey, freq));
-                            targetChannel.keys.push_back(*animationKey);
+                            targetChannel.keys.push_back(animationKey);
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
-                            channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                            channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
                             float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime);
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
@@ -1590,11 +1547,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         for (It rotKeyIdx = 0; rotKeyIdx != rotKeyEnd; ++rotKeyIdx) {
                             const auto &rotKey = srcChannel.mRotationKeys[rotKeyIdx];
                             const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(rotKey, freq));
-                            targetChannel.keys.push_back(*animationKey);
+                            targetChannel.keys.push_back(animationKey);
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
-                            channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                            channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
                             float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime);
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
@@ -1609,11 +1566,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         for (It scaleKeyIdx = 0; scaleKeyIdx != scaleKeyEnd; ++scaleKeyIdx) {
                             const auto &scaleKey = srcChannel.mScalingKeys[scaleKeyIdx];
                             const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(scaleKey, freq));
-                            targetChannel.keys.push_back(*animationKey);
+                            targetChannel.keys.push_back(animationKey);
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
-                            channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                            channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
                             float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime);
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
@@ -1641,10 +1598,10 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                     for (It wId = 0; wId != weightKeyEnd; ++wId) {
                         const auto &weightKey = srcMorphChannel.mKeys[wId];
                         const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(weightKey, freq, targetId));
-                        targetChannel.keys.push_back(*animationKey);
+                        targetChannel.keys.push_back(animationKey);
                     }
                     if (!targetChannel.keys.isEmpty()) {
-                        channels.push_back(*targetScene.create<Animation::Channel>(targetChannel));
+                        channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
                         float endTime = float(srcMorphChannel.mKeys[weightKeyEnd - 1].mTime);
                         if (targetAnimation.length < endTime)
                             targetAnimation.length = endTime;

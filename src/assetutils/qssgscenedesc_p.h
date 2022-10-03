@@ -76,16 +76,16 @@ struct Q_QUICK3DASSETUTILS_EXPORT Scene
     Node *root = nullptr;
     QString id; // Don't make any assumption about the content of this id...
     ResourceNodes resources;
-    Allocator allocator;
     MeshStorage meshStorage;
     Animations animations;
+    QString sourceDir;
     mutable quint16 nodeId = 0;
 
     template<typename T, typename... Args>
     Q_REQUIRED_RESULT inline auto create(Args&&... args)
     {
         using Tt = rm_cvref_t<T>;
-        return new (allocator.allocate(sizeof(Tt)))Tt(std::forward<Args>(args)...);
+        return new Tt(std::forward<Args>(args)...);
     }
 
     void reset();
@@ -103,6 +103,8 @@ struct Value
     void *dptr;
 };
 
+Q_QUICK3DASSETUTILS_EXPORT void destructValue(QSSGSceneDesc::Value &value);
+
 struct Flag
 {
     QMetaEnum me;
@@ -111,23 +113,31 @@ struct Flag
 
 struct BufferView {
     using type = QByteArray;
-    QByteArrayView view;
+    QByteArray view;
 };
 struct UrlView : BufferView { using type = QUrl; };
 struct StringView : BufferView { using type = QString; };
 
 struct Property
 {
+    ~Property();
     enum class Type { Static, Dynamic };
     Value value;
     const char *name = nullptr;
     QSSGSceneDesc::PropertyCall *call = nullptr;
-    Property *next = nullptr;
     Type type = Type::Static;
 };
 
+inline Property::~Property()
+{
+    destructValue(value);
+}
+
+Q_QUICK3DASSETUTILS_EXPORT void destructNode(QSSGSceneDesc::Node &node);
+
 struct NodeList
 {
+    ~NodeList() { if (head) free(head); }
     Node **head = nullptr;
     qsizetype count = -1;
 };
@@ -154,19 +164,20 @@ struct Node
     // Runtime type type mapping between this type and the QtQuick3D type
     using RuntimeType = QSSGRenderGraphObject::Type;
 
-    explicit Node(QByteArrayView name, Node::Type type, Node::RuntimeType rt)
+    explicit Node(QByteArray name, Node::Type type, Node::RuntimeType rt)
         : name(name)
         , runtimeType(rt)
         , nodeType(type) {}
     explicit Node(Node::Type type, Node::RuntimeType rt)
         : Node(nullptr, type, rt) {}
 
-    QByteArrayView name;
+    ~Node() { destructNode(*this); }
+
+    QByteArray name;
     Scene *scene = nullptr;
     QObject *obj = nullptr;
-    Node *next = nullptr;
-    using ChildList = QSSGInvasiveSingleLinkedList<Node, &Node::next>;
-    using PropertyList = QSSGInvasiveSingleLinkedList<Property, &Property::next>;
+    using ChildList = QList<Node *>;
+    using PropertyList = QList<Property *>;
     ChildList children;
     PropertyList properties;
     quint16 id = 0;
@@ -178,11 +189,9 @@ template<typename T>
 static constexpr bool is_node_v = std::is_base_of_v<Node, T>;
 
 // Set up type mapping from a QQuick3D type to a SceneDesc type
-// and verfiy that the node is trivially destructable.
 template <typename T> struct TypeMap {};
 #define QSSG_DECLARE_NODE(NODE) \
 static_assert(is_node_v<NODE>, #NODE " - does not inherit from Node!"); \
-static_assert (std::is_trivially_destructible_v<NODE>, #NODE " - needs to be trivially destructable!"); \
 template <> struct TypeMap<NODE::type> { using type = QSSGSceneDesc::NODE; };
 
 template<typename T>
@@ -195,7 +204,10 @@ QSSG_DECLARE_NODE(Node)
 struct Texture : Node
 {
     using type = QQuick3DTexture;
-    Texture(Node::RuntimeType rt) : Node(Node::Type::Texture, rt) {}
+    Texture(Node::RuntimeType rt, const QByteArray &name = {})
+        : Node(name, Node::Type::Texture, rt)
+    {
+    }
 };
 QSSG_DECLARE_NODE(Texture)
 
@@ -208,14 +220,14 @@ struct TextureData : Node
     };
 
     using Format = QQuick3DTextureData::Format;
-    explicit TextureData(QByteArrayView dataref, QSize size, Format format, quint8 flags = 0, QByteArrayView name = QByteArrayView())
+    explicit TextureData(const QByteArray &textureData, QSize size, Format format, quint8 flags = 0, QByteArray name = {})
         : Node(name, Node::Type::Texture, RuntimeType::TextureData)
-        , data(dataref)
+        , data(textureData)
         , sz(size)
         , fmt(format)
         , flgs(flags)
     {}
-    QByteArrayView data;
+    QByteArray data;
     QSize sz;
     Format fmt;
     quint8 flgs;
@@ -233,7 +245,7 @@ QSSG_DECLARE_NODE(Material)
 // a handle to a mesh that will be turned into a source URL...
 struct Mesh : Node
 {
-    explicit Mesh(QByteArrayView name, qsizetype index)
+    explicit Mesh(QByteArray name, qsizetype index)
         : Node(name, Node::Type::Mesh, RuntimeType::Node)
         , idx(index)
     {}
@@ -297,6 +309,7 @@ QSSG_DECLARE_NODE(MorphTarget)
 
 struct ListView
 {
+    ~ListView() { if (head.dptr) free(head.dptr); }
     Value head;
     qsizetype count = -1;
 };
@@ -358,9 +371,8 @@ struct Animation
         QVector4D value;
         float time = 0.0f;
         quint16 flag = 0;
-        KeyPosition *next = nullptr;
     };
-    using Keys = QSSGInvasiveSingleLinkedList<Animation::KeyPosition, &Animation::KeyPosition::next>;
+    using Keys = QList<Animation::KeyPosition *>;
 
     struct Channel
     {
@@ -381,11 +393,10 @@ struct Animation
 
         Node *target = nullptr;
         Keys keys;
-        Channel *next = nullptr;
         TargetType targetType = TargetType::Property;
         TargetProperty targetProperty = TargetProperty::Unknown;
     };
-    using Channels = QSSGInvasiveSingleLinkedList<Animation::Channel, &Animation::Channel::next>;
+    using Channels = QList<Animation::Channel *>;
 
     Channels channels;
     // It stores the length of this Animation, every keys in every channels in
@@ -457,15 +468,11 @@ struct PropertyProxySetter : PropertyCall
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
     bool set(QQuick3DObject &that, const char *name, const void *value) override
     {
-        if (value) {
-            if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg2>)
-                call(that, name, reinterpret_cast<typename FuncType<Setter>::Arg2>(const_cast<void *>(value)));
-            else
-                call(that, name, *reinterpret_cast<typename FuncType<Setter>::Arg2Base *>(const_cast<void *>(value)));
-            return true;
-        }
-
-        return false;
+        if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg2>)
+            call(that, name, reinterpret_cast<typename FuncType<Setter>::Arg2>(const_cast<void *>(value)));
+        else
+            call(that, name, *reinterpret_cast<typename FuncType<Setter>::Arg2Base *>(const_cast<void *>(value)));
+        return true;
     }
 };
 
@@ -478,15 +485,11 @@ struct PropertySetter : PropertyCall
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
     bool set(QQuick3DObject &that, const char *, const void *value) override
     {
-        if (value) {
-            if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg0>)
-                (qobject_cast<Class *>(&that)->*call)(reinterpret_cast<typename FuncType<Setter>::Arg0>(const_cast<void *>(value)));
-            else
-                (qobject_cast<Class *>(&that)->*call)(*reinterpret_cast<typename FuncType<Setter>::Arg0Base *>(const_cast<void *>(value)));
-            return true;
-        }
-
-        return false;
+        if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg0>)
+            (qobject_cast<Class *>(&that)->*call)(reinterpret_cast<typename FuncType<Setter>::Arg0>(const_cast<void *>(value)));
+        else
+            (qobject_cast<Class *>(&that)->*call)(*reinterpret_cast<typename FuncType<Setter>::Arg0Base *>(const_cast<void *>(value)));
+        return true;
     }
 };
 
@@ -502,9 +505,13 @@ struct PropertyListSetter : PropertyCall
     bool set(QQuick3DObject &that, const char *, const void *value) override
     {
         if (const auto listView = reinterpret_cast<const ListView *>(value)) {
-            const auto begin = reinterpret_cast<It *>(listView->head.dptr);
-            const auto end = reinterpret_cast<It *>(listView->head.dptr) + listView->count;
-            (qobject_cast<Class *>(&that)->*call)(ListT{begin, end});
+            if (listView->count > 0) {
+                const auto begin = reinterpret_cast<It *>(listView->head.dptr);
+                const auto end = reinterpret_cast<It *>(listView->head.dptr) + listView->count;
+                (qobject_cast<Class *>(&that)->*call)(ListT{begin, end});
+            } else {
+                (qobject_cast<Class *>(&that)->*call)(ListT{});
+            }
             return true;
         }
 
@@ -538,33 +545,6 @@ struct PropertyList : PropertyCall
     }
 };
 
-template <typename T, typename Class>
-struct PropertyGetter : PropertyCall
-{
-    using Getter = T (Class::*)() const;
-    constexpr explicit PropertyGetter(Getter fn) : call(fn) {}
-    Getter call = nullptr;
-    bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &, const char *, const void *) override { return false; }
-};
-
-template <typename T, typename Class>
-struct PropertyMember : PropertyCall
-{
-    using Getter = T (Class::*);
-    constexpr explicit PropertyMember(Getter fn) : call(fn) {}
-    Getter call = nullptr;
-    bool get(const QQuick3DObject &, const void *[]) const override { return false; }
-    bool set(QQuick3DObject &that, const char *, const void *value) override {
-        if (value) {
-            (qobject_cast<Class *>(&that)->*call) = (*reinterpret_cast<const T *>(value));
-            return true;
-        }
-
-        return false;
-    }
-};
-
 template <typename NodeT>
 using if_node = typename std::enable_if_t<is_node_v<NodeT>, bool>;
 template <typename Setter, typename Value>
@@ -587,7 +567,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value.mt = QMetaType::fromType<rm_cvref_t<T>>();
     prop->value.dptr = node.scene->create<T>(std::forward<T>(value));
-    node.properties.push_back(*prop);
+    node.properties.push_back(prop);
 }
 
 template<typename Setter, typename T, if_compatible_t<Setter, QFlags<T>> = false>
@@ -599,7 +579,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value.mt = flagMetaType();
     prop->value.dptr = node.scene->create<Flag>(Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) });
-    node.properties.push_back(*prop);
+    node.properties.push_back(prop);
 }
 
 template<typename Setter, typename T, if_compatible_t<Setter, QList<T>> = false>
@@ -609,18 +589,20 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     static_assert(!std::is_pointer_v<T>, "Type cannot be a pointer!");
     static_assert(std::is_trivially_destructible_v<T> && std::is_trivially_copy_constructible_v<T>,
             "List parameter type needs to be trivially constructable and trivially destructible!");
-    if (const auto count = value.size()) {
-        const auto asize = count * sizeof(T);
-        auto data = node.scene->allocator.allocate(asize);
-        memcpy(data, value.constData(), asize);
 
-        auto prop = node.scene->create<Property>();
-        prop->name = name;
-        prop->call = node.scene->create<decltype(PropertyListSetter(setter))>(setter);
-        prop->value.mt = listViewMetaType();
-        prop->value.dptr = node.scene->create<ListView>(ListView{ { QMetaType::fromType<rm_cvref_t<T>>(), data }, count });
-        node.properties.push_back(*prop);
+    const auto count = value.size();
+    void *data = nullptr;
+    if (count) {
+        const auto asize = count * sizeof(T);
+        data = malloc(asize); // is freed in ~ListView
+        memcpy(data, value.constData(), asize);
     }
+    auto prop = node.scene->create<Property>();
+    prop->name = name;
+    prop->call = node.scene->create<decltype(PropertyListSetter(setter))>(setter);
+    prop->value.mt = listViewMetaType();
+    prop->value.dptr = new ListView{ { QMetaType::fromType<rm_cvref_t<T>>(), data }, count };
+    node.properties.push_back(prop);
 }
 
 // Calling this will omit any type checking, so make sure the type is handled correctly
@@ -633,7 +615,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->name = name;
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value = value;
-    node.properties.push_back(*prop);
+    node.properties.push_back(prop);
 }
 
 template<typename Setter, typename Value, if_compatible_proxy_t<Setter, Value> = true>
@@ -650,7 +632,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     else
        prop->value.dptr = node.scene->create<Value>(std::forward<Value>(value));
     prop->type = type;
-    node.properties.push_back(*prop);
+    node.properties.push_back(prop);
 }
 
 template<typename Setter, typename ViewValue, if_compatible_t<Setter, typename ViewValue::type> = false>
@@ -663,7 +645,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value.mt = QMetaType::fromType<rm_cvref_t<ViewValue>>();
     prop->value.dptr = node.scene->create<ViewValue>(std::move(view));
-    node.properties.push_back(*prop);
+    node.properties.push_back(prop);
 }
 
 template<typename Setter, typename Value, if_compatible_t<Setter, as_scene_type_t<Value> *> = true>
@@ -676,7 +658,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->call = scene->create<decltype(PropertySetter(setter))>(setter);
     prop->value.mt = QMetaType::fromType<Node *>(); // Always 'Node', the Node class itself contains more fine grain type information.
     prop->value.dptr = value;
-    node.properties.push_back(*prop);
+    node.properties.push_back(prop);
 }
 
 // Overloaded function for setting a type to a property that's a QQmlListProperty.
@@ -688,8 +670,8 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         auto &scene = node.scene;
         NodeList *l = scene->create<NodeList>();
         {
-            const auto size = sizeof(Node *) * list.size();
-            l->head = reinterpret_cast<Node **>(scene->allocator.allocate(size));
+            const auto size = sizeof(Node *) * list.count();
+            l->head = reinterpret_cast<Node **>(malloc(size)); // is freed in ~NodeList()
             memcpy(l->head, list.data(), size);
             l->count = list.size();
         }
@@ -699,7 +681,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         prop->call = scene->create<decltype(PropertyList(setter))>(setter);
         prop->value.mt = QMetaType::fromType<QSSGSceneDesc::NodeList *>();
         prop->value.dptr = l;
-        node.properties.push_back(*prop);
+        node.properties.push_back(prop);
     }
 }
 

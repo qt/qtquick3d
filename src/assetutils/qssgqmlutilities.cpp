@@ -26,7 +26,6 @@
 #include <QtQuickTimeline/private/qquicktimeline_p.h>
 #endif // QT_QUICK3D_ENABLE_RT_ANIMATIONS
 
-
 QT_BEGIN_NAMESPACE
 
 namespace QSSGQmlUtilities {
@@ -118,8 +117,16 @@ QString sanitizeQmlId(const QString &id)
     idCopy.replace(regExp, QStringLiteral("_"));
 
     // first letter of id can not be upper case
-    if (!idCopy.isEmpty() && idCopy[0].isUpper())
-        idCopy[0] = idCopy[0].toLower();
+    // to make it look nicer, lower-case the initial run of all-upper-case characters
+    if (!idCopy.isEmpty() && idCopy[0].isUpper()) {
+
+        int i = 0;
+        int len = idCopy.length();
+        while (i < len && idCopy[i].isUpper()) {
+            idCopy[i] = idCopy[i].toLower();
+            ++i;
+        }
+    }
 
     // ### qml keywords as names
     static QSet<QByteArray> keywords {
@@ -370,10 +377,14 @@ PropertyMap::PropertyMap()
     spotLight->insert(QStringLiteral("innerConeAngle"), 30.0f);
     m_properties.insert(Type::SpotLight, spotLight);
 
-    // DefaultMaterial
+    // DefaultMaterial -- used by the balsam code path
     PropertiesMap *defaultMaterial = new PropertiesMap;
     defaultMaterial->insert(QStringLiteral("lighting"), QStringLiteral("DefaultMaterial.FragmentLighting"));
     defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.SourceOver"));
+    defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
+    defaultMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
+    defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
+    defaultMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::white));
     defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
     defaultMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
     defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
@@ -387,7 +398,6 @@ PropertyMap::PropertyMap()
     defaultMaterial->insert(QStringLiteral("translucentFalloff"), 0.0f);
     defaultMaterial->insert(QStringLiteral("diffuseLightWrap"), 0.0f);
     defaultMaterial->insert(QStringLiteral("vertexColorsEnabled"), false);
-
     m_properties.insert(Type::DefaultMaterial, defaultMaterial);
 
     PropertiesMap *principledMaterial = new PropertiesMap;
@@ -466,6 +476,7 @@ struct OutputContext
     enum Type : quint8 { Header, RootNode, NodeTree, Resource };
     QTextStream &stream;
     QDir outdir;
+    QString sourceDir;
     quint8 indent = 0;
     Type type = NodeTree;
     quint16 scopeDepth = 0;
@@ -475,10 +486,9 @@ template<QSSGSceneDesc::Material::RuntimeType T>
 const char *qmlElementName() { static_assert(!std::is_same_v<decltype(T), decltype(T)>, "Unknown type"); return nullptr; }
 template<> const char *qmlElementName<QSSGSceneDesc::Node::RuntimeType::Node>() { return "Node"; }
 
-template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::DefaultMaterial>() { return "DefaultMaterial"; }
+template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial>() { return "SpecularGlossyMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::PrincipledMaterial>() { return "PrincipledMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::CustomMaterial>() { return "CustomMaterial"; }
-template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial>() { return "SpecularGlossyMaterial"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::OrthographicCamera>() { return "OrthographicCamera"; }
 template<> const char *qmlElementName<QSSGSceneDesc::Material::RuntimeType::PerspectiveCamera>() { return "PerspectiveCamera"; }
 
@@ -505,12 +515,10 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
         return qmlElementName<RuntimeType::Node>();
     case RuntimeType::PrincipledMaterial:
         return qmlElementName<RuntimeType::PrincipledMaterial>();
-    case RuntimeType::DefaultMaterial:
-        return qmlElementName<RuntimeType::DefaultMaterial>();
-    case RuntimeType::CustomMaterial:
-        return qmlElementName<RuntimeType::CustomMaterial>();
     case RuntimeType::SpecularGlossyMaterial:
         return qmlElementName<RuntimeType::SpecularGlossyMaterial>();
+    case RuntimeType::CustomMaterial:
+        return qmlElementName<RuntimeType::CustomMaterial>();
     case RuntimeType::Image2D:
         return qmlElementName<RuntimeType::Image2D>();
     case RuntimeType::ImageCube:
@@ -659,8 +667,24 @@ Q_GLOBAL_STATIC(UniqueIdMap, g_idMap)
 
 static QString getIdForNode(const QSSGSceneDesc::Node &node)
 {
+    static constexpr const char *typeNames[] = {
+        "", // Transform
+        "_camera",
+        "", // Model
+        "_texture",
+        "_material",
+        "_light",
+        "_mesh",
+        "_skin",
+        "_skeleton",
+        "_joint",
+        "_morphtarget",
+        "_unknown"
+    };
+    constexpr uint nameCount = sizeof(typeNames)/sizeof(const char*);
     const bool nodeHasName = (node.name.size() > 0);
-    QString name = nodeHasName ? QString::fromUtf8(node.name) : QString::fromLatin1(getQmlElementName(node));
+    uint nameIdx = qMin(uint(node.nodeType), nameCount);
+    QString name = nodeHasName ? QString::fromUtf8(node.name  + typeNames[nameIdx]) : QString::fromLatin1(getQmlElementName(node));
     QString sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
 
     // Make sure we return a unique id.
@@ -1022,9 +1046,12 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.mt == QMetaType::fromType<QSSGSceneDesc::UrlView>()) {
             //
-            static const auto copyTextureAsset = [](const QByteArrayView &texturePath, const QDir &outdir) {
+            static const auto copyTextureAsset = [&output](const QByteArrayView &texturePath, const QDir &outdir) {
                 const auto assetPath = QString::fromUtf8(texturePath);
                 QFileInfo fi(assetPath);
+                if (fi.isRelative() && !output.sourceDir.isEmpty()) {
+                    fi = QFileInfo(output.sourceDir + QChar(u'/') + assetPath);
+                }
                 if (!fi.exists())
                     return assetPath;
 
@@ -1085,13 +1112,13 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto end = properties.end();
     bool ok = false;
     for (; it != end; ++it) {
-        const auto &[name, value] = valueToQml(node, (*it), output, &ok);
-        if (it->type != Property::Type::Dynamic) {
+        const auto &[name, value] = valueToQml(node, *(*it), output, &ok);
+        if ((*it)->type != Property::Type::Dynamic) {
             if (!ok)
                 indent(output) << comment();
             indent(output) << name << ": " << value << "\n";
-        } else if (ok && it->type == Property::Type::Dynamic) {
-            indent(output) << "property " << typeName(it->value.mt).toByteArray() << ' ' << name << ": " << value << "\n";
+        } else if (ok && (*it)->type == Property::Type::Dynamic) {
+            indent(output) << "property " << typeName((*it)->value.mt).toByteArray() << ' ' << name << ": " << value << "\n";
         }
     }
 }
@@ -1108,8 +1135,8 @@ void writeQml(const QSSGSceneDesc::Material &material, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
     Q_ASSERT(material.nodeType == QSSGSceneDesc::Model::Type::Material);
-    if (material.runtimeType == QSSGSceneDesc::Model::RuntimeType::DefaultMaterial) {
-        indent(output) << qmlElementName<Material::RuntimeType::DefaultMaterial>() << blockBegin(output);
+    if (material.runtimeType == QSSGSceneDesc::Model::RuntimeType::SpecularGlossyMaterial) {
+        indent(output) << qmlElementName<Material::RuntimeType::SpecularGlossyMaterial>() << blockBegin(output);
     } else if (material.runtimeType == Model::RuntimeType::PrincipledMaterial) {
         indent(output) << qmlElementName<Material::RuntimeType::PrincipledMaterial>() << blockBegin(output);
     } else if (material.runtimeType == Material::RuntimeType::CustomMaterial) {
@@ -1210,7 +1237,7 @@ static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContex
     if (!texData.isEmpty()) {
         QImage image;
         if (isCompressed) {
-            QByteArray data = texData.toByteArray();
+            QByteArray data = texData; // Shallow copy since QBuffer requires non-const. Should not lead to detach() as long as we only read.
             QBuffer readBuffer(&data);
             QImageReader imageReader(&readBuffer);
             image = imageReader.read();
@@ -1348,9 +1375,9 @@ static void writeQmlForNode(const QSSGSceneDesc::Node &node, OutputContext &outp
     }
 
     for (const auto &cld : node.children) {
-        if (!QSSGRenderGraphObject::isResource(cld.runtimeType) && output.type == OutputContext::NodeTree) {
+        if (!QSSGRenderGraphObject::isResource(cld->runtimeType) && output.type == OutputContext::NodeTree) {
             QSSGQmlScopedIndent scopedIndent(output);
-            writeQmlForNode(cld, output);
+            writeQmlForNode(*cld, output);
         }
     }
 
@@ -1392,11 +1419,11 @@ static void generateKeyframeData(const QSSGSceneDesc::Animation::Channel &channe
     // file version. Increase this if the format changes.
     const int keyframesDataVersion = 1;
     writer.append(keyframesDataVersion);
-    writer.append(int(channel.keys.m_head->getValueQMetaType()));
+    writer.append(int(channel.keys.at(0)->getValueQMetaType()));
 
     // Start Keyframes array
     writer.startArray();
-    quint8 compEnd = quint8(channel.keys.m_head->getValueType());
+    quint8 compEnd = quint8(channel.keys.at(0)->getValueType());
     bool isQuaternion = false;
     if (compEnd == quint8(QSSGSceneDesc::Animation::KeyPosition::ValueType::Quaternion)) {
         isQuaternion = true;
@@ -1405,13 +1432,13 @@ static void generateKeyframeData(const QSSGSceneDesc::Animation::Channel &channe
         compEnd++;
     }
     for (const auto &key : channel.keys) {
-        writer.append(key.time);
+        writer.append(key->time);
         // Easing always linear
         writer.append(QEasingCurve::Linear);
         if (isQuaternion)
-            writer.append(key.value[3]);
+            writer.append(key->value[3]);
         for (quint8 i = 0; i < compEnd; ++i)
-            writer.append(key.value[i]);
+            writer.append(key->value[i]);
     }
     // End Keyframes array
     writer.endArray();
@@ -1446,8 +1473,8 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
     indent(output) << blockEnd(output);
 
     for (const auto &channel : anim.channels) {
-        QString id = getIdForNode(*channel.target);
-        QString propertyName = asString(channel.targetProperty);
+        QString id = getIdForNode(*channel->target);
+        QString propertyName = asString(channel->targetProperty);
 
         indent(output) << "KeyframeGroup {\n";
         {
@@ -1468,18 +1495,18 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
                 // It is possible to store this keyframeData but we have to consider
                 // all the cases including runtime only or writeQml only.
                 // For now, we will generate it for each case.
-                generateKeyframeData(channel, keyframeData);
+                generateKeyframeData(*channel, keyframeData);
                 file.write(keyframeData);
                 file.close();
                 indent(output) << "keyframeSource: " << toQuotedString(animSourceName) << "\n";
             } else {
-                Q_ASSERT(!channel.keys.isEmpty());
-                for (const auto &key : channel.keys) {
+                Q_ASSERT(!channel->keys.isEmpty());
+                for (const auto &key : channel->keys) {
                     indent(output) << "Keyframe {\n";
                     {
                         QSSGQmlScopedIndent scopedIndent(output);
-                        indent(output) << "frame: " << key.time << "\n";
-                        indent(output) << "value: " << variantToQml(key.getValue()) << "\n";
+                        indent(output) << "frame: " << key->time << "\n";
+                        indent(output) << "value: " << variantToQml(key->getValue()) << "\n";
                     }
                     indent(output) << blockEnd(output);
                 }
@@ -1493,27 +1520,33 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
 {
     auto root = scene.root;
     Q_ASSERT(root);
-    OutputContext output { stream, outdir, 0, OutputContext::Header };
-    writeImportHeader(output, scene.animations.size() > 0);
+    OutputContext output { stream, outdir, scene.sourceDir, 0, OutputContext::Header };
+
+    writeImportHeader(output, scene.animations.count() > 0);
+
     output.type = OutputContext::RootNode;
     writeQml(*root, output); // Block scope will be left open!
+    stream << "\n";
+    stream << indent() << "// Resources\n";
     output.type = OutputContext::Resource;
     writeQmlForResources(scene.resources, output);
     output.type = OutputContext::NodeTree;
-    for (const auto &cld : root->children) {
-        if (!QSSGRenderGraphObject::isResource(cld.runtimeType)) // If the child is a resource we can skip it
-            writeQmlForNode(cld, output);
-    }
-    // close the root
+    stream << "\n";
+    stream << indent() << "// Nodes:\n";
+    for (const auto &cld : root->children)
+        writeQmlForNode(*cld, output);
 
     // animations
     qsizetype animId = 0;
+    stream << "\n";
+    stream << indent() << "// Animations:\n";
     for (const auto &cld : scene.animations) {
         QSSGQmlScopedIndent scopedIndent(output);
         writeQmlForAnimation(*cld, animId++, output);
         indent(output) << blockEnd(output);
     }
 
+    // close the root
     indent(output) << blockEnd(output);
 }
 
@@ -1524,21 +1557,21 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
     auto timelineKeyframeGroup = timeline->keyframeGroups();
     for (const auto &channel : anim.channels) {
         auto keyframeGroup = new QQuickKeyframeGroup(timeline);
-        keyframeGroup->setTargetObject(channel.target->obj);
-        keyframeGroup->setProperty(asString(channel.targetProperty));
+        keyframeGroup->setTargetObject(channel->target->obj);
+        keyframeGroup->setProperty(asString(channel->targetProperty));
 
-        Q_ASSERT(!channel.keys.isEmpty());
+        Q_ASSERT(!channel->keys.isEmpty());
         if (useBinaryKeyframes) {
             QByteArray keyframeData;
-            generateKeyframeData(channel, keyframeData);
+            generateKeyframeData(*channel, keyframeData);
 
             keyframeGroup->setKeyframeData(keyframeData);
         } else {
             auto keyframes = keyframeGroup->keyframes();
-            for (const auto &key : channel.keys) {
+            for (const auto &key : channel->keys) {
                 auto keyframe = new QQuickKeyframe(keyframeGroup);
-                keyframe->setFrame(key.time);
-                keyframe->setValue(key.getValue());
+                keyframe->setFrame(key->time);
+                keyframe->setValue(key->getValue());
                 keyframes.append(&keyframes, keyframe);
             }
         }
@@ -1570,7 +1603,8 @@ void writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream, con
 {
     using namespace QSSGSceneDesc;
     if (node.runtimeType == Material::RuntimeType::CustomMaterial) {
-        OutputContext output { stream, outDir, 0, OutputContext::Resource };
+        QString sourceDir = node.scene ? node.scene->sourceDir : QString{};
+        OutputContext output { stream, outDir, sourceDir, 0, OutputContext::Resource };
         writeImportHeader(output);
         writeQml(static_cast<const Material &>(node), output);
         // Resources, if any, are written out as properties on the component
