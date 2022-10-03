@@ -137,7 +137,7 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                     if (hasDirtyNonJoints && !dirtySkeleton)
                         dirtySkeletons.append(skeletonNode);
                     modelNode->skinningDirty = false;
-                    const quint32 dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
+                    const qsizetype dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
                     if (modelNode->boneData.size() < dataSize)
                         modelNode->boneData.resize(dataSize);
                     skeletonNode->calculateGlobalVariables();
