@@ -125,6 +125,12 @@ void tst_MultiWindow::cubeMultiViewportMultiWindow()
     QQuickWindow *window1 = qobject_cast<QQuickWindow*>(obj);
     QVERIFY(window1);
 
+    if (window1->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
+#ifdef Q_OS_MACOS
+        QSKIP("Skipping test due to sofware OpenGL renderer problems on macOS");
+#endif
+    }
+
     QQuickWindow *window2 = window1->findChild<QQuickWindow *>("window2");
     QVERIFY(window2);
 
