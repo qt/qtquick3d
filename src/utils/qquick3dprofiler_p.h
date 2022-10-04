@@ -84,17 +84,13 @@ private:
         qint64 values[size][s_numSceneGraphTimings + 1];
     };
 
-    QThreadStorage<TimingData<NumQuick3DRenderThreadFrameTypes> > renderThreadTimings;
-    TimingData<NumQuick3DGUIThreadFrameTypes> guiThreadTimings;
+    QThreadStorage<TimingData<MaximumQuick3DFrameType>> eventTimings;
 
 public:
     template<Quick3DFrameType type>
     qint64 *timings()
     {
-        if (type < NumQuick3DRenderThreadFrameTypes)
-            return renderThreadTimings.localData().values[type];
-        else
-            return guiThreadTimings.values[type - NumQuick3DRenderThreadFrameTypes];
+        return eventTimings.localData().values[type];
     }
 };
 
