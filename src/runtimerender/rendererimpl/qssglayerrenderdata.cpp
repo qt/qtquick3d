@@ -146,6 +146,9 @@ static void maybeQueueNodeForRender(QSSGRenderNode &inNode,
                         collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
                 }
                 modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
+            } else {
+                modelNode->boneData.clear();
+                modelNode->boneCount = 0;
             }
             const int numMorphTarget = modelNode->morphTargets.size();
             for (int i = 0; i < numMorphTarget; ++i) {
