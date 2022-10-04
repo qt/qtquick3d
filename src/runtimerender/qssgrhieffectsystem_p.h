@@ -60,7 +60,7 @@ private:
     void allocateBufferCmd(const QSSGAllocateBuffer *inCmd, QSSGRhiEffectTexture *inTexture, const QSSGRenderEffect *inEffect);
     void applyInstanceValueCmd(const QSSGApplyInstanceValue *inCmd, const QSSGRenderEffect *inEffect);
     void applyValueCmd(const QSSGApplyValue *inCmd, const QSSGRenderEffect *inEffect);
-    void bindShaderCmd(const QSSGBindShader *inCmd);
+    void bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect);
     void renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target);
 
     void addCommonEffectUniforms(const QSize &inputSize, const QSize &outputSize);

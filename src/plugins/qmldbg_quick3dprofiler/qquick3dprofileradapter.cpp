@@ -54,25 +54,12 @@ static void QQuick3DProfilerDataToByteArrays(const QQuick3DProfilerData &data,
     case QQuick3DProfiler::Event:
         break;
     case QQuick3DProfiler::Quick3DFrame:
-        switch (data.detailType) {
-        case QQuick3DProfiler::Quick3DSynchronizeFrame:
-        case QQuick3DProfiler::Quick3DPrepareFrame:
-        case QQuick3DProfiler::Quick3DLoadShader:
-        case QQuick3DProfiler::Quick3DGenerateShader:
-            ds << data.subdata1;
-            break;
-        case QQuick3DProfiler::Quick3DRenderFrame:
-        case QQuick3DProfiler::Quick3DMeshLoad:
-        case QQuick3DProfiler::Quick3DCustomMeshLoad:
-        case QQuick3DProfiler::Quick3DTextureLoad:
-        case QQuick3DProfiler::Quick3DParticleUpdate:
-            ds << data.subdata1 << data.subdata2;
-            break;
-        case QQuick3DProfiler::Quick3DEventData:
+        if (data.detailType == QQuick3DProfiler::Quick3DEventData) {
             ds << eventData[data.subdata1];
-            break;
-        default:
-            Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid decoded detail type");
+        } else {
+            ds << data.subdata1 << data.subdata2;
+            if (data.ids[0] || data.ids[1])
+                ds << data.ids[0] << data.ids[1];
         }
         break;
     default:

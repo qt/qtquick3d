@@ -518,6 +518,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
 
             cb->beginPass(m_rhiPrefilterRenderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             QSSGRHICTX_STAT(context, beginRenderPass(m_rhiPrefilterRenderTargetsMap[mipLevel][face]));
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             if (mipLevel < mipmapCount - 1) {
                 // Specular pre-filtered Cube Map levels
                 cb->setGraphicsPipeline(m_prefilterPipeline);
@@ -539,10 +540,14 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
                 };
                 cb->setShaderResources(m_irradianceSrb, 1, dynamicOffsets.constData());
             }
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
             cb->draw(36);
             QSSGRHICTX_STAT(context, draw(36, 1));
+            Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32), profilingId);
             cb->endPass();
             QSSGRHICTX_STAT(context, endRenderPass());
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("reflection_map_level_") + QByteArray::number(mipLevel) \
+                                              + QByteArrayLiteral("_face_") + QByteArrayView(toString(QSSGRenderTextureCubeFace(face))));
 
             if (m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;

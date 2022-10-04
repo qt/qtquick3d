@@ -70,7 +70,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
                                                                                 renderable.firstImage,
                                                                                 context->shaderLibraryManager(),
                                                                                 context->shaderCache());
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader);
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, material.profilingId);
 
         // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
         skey.detach();
@@ -542,6 +542,7 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     if (!ps || !srb)
         return;
 
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
     QRhiBuffer *vertexBuffer = renderable.subset.rhi.vertexBuffer->buffer();
     QRhiBuffer *indexBuffer = renderable.subset.rhi.indexBuffer ? renderable.subset.rhi.indexBuffer->buffer() : nullptr;
 
@@ -572,6 +573,9 @@ void QSSGCustomMaterialSystem::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         cb->draw(renderable.subset.count, instances, renderable.subset.offset);
         QSSGRHICTX_STAT(rhiCtx, draw(renderable.subset.count, instances));
     }
+    Q_QUICK3D_PROFILE_END_WITH_IDS(QQuick3DProfiler::Quick3DRenderCall, (renderable.subset.count | quint64(instances) << 32),
+                                     QVector<int>({renderable.modelContext.model.profilingId,
+                                      renderable.material.profilingId}));
 }
 
 QT_END_NAMESPACE

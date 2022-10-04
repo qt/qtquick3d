@@ -564,7 +564,7 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
     m_timeAnimation += m_perfTimer.nsecsElapsed();
     m_updateAnimation->setDirty(false);
-    Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DParticleUpdate, m_particlesUsed);
+    Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DParticleUpdate, m_particlesUsed, Q_QUICK3D_PROFILE_GET_ID(this));
 }
 
 void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS)

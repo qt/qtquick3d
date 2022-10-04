@@ -256,7 +256,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
         }
 
         case CommandType::BindShader:
-            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand));
+            bindShaderCmd(static_cast<QSSGBindShader *>(theCommand), inEffect);
             break;
 
         case CommandType::BindTarget: {
@@ -408,7 +408,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const Q
                                                 QSSGRhiShaderPipeline::UsedWithoutIa);
 }
 
-void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
+void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)
 {
     m_currentTextures.clear();
     m_pendingClears.clear();
@@ -434,7 +434,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
         const auto &shaderEntries = shaderLib->m_shaderEntries;
         const auto foundIt = shaderEntries.constFind(QQsbCollection::Entry{hkey});
         if (foundIt != shaderEntries.cend()) {
-            const auto &shader = shaderCache->loadGeneratedShader(key, *foundIt);
+            const auto &shader = shaderCache->loadGeneratedShader(key, *foundIt, *inEffect);
             m_shaderPipelines.insert(rkey, shader);
             m_currentShaderPipeline = shader.data();
         }
@@ -448,7 +448,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd)
             m_shaderPipelines.insert(rkey, stages);
             m_currentShaderPipeline = stages.data();
         }
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader);
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inEffect->profilingId);
     }
 
     if (m_currentShaderPipeline) {
@@ -476,6 +476,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     QRhiCommandBuffer *cb = m_rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
     for (QRhiTextureRenderTarget *rt : m_pendingClears) {
         // Effects like motion blur use an accumulator texture that should
@@ -531,6 +532,7 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
     m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);
     m_currentUbufIndex++;
     cb->debugMarkEnd();
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("post_processing_effect"));
 }
 
 void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const QSize &outputSize)

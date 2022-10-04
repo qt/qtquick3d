@@ -598,6 +598,8 @@ void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     if (!ps || !srb)
         return;
 
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
+
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     // QRhi optimizes out unnecessary binding of the same pipline
     cb->setGraphicsPipeline(ps);
@@ -614,10 +616,12 @@ void QSSGParticleRenderer::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
         int N = renderable.particles.m_particleBuffer.particleCount() / S;
         cb->draw(2 * S, N);
         QSSGRHICTX_STAT(rhiCtx, draw(2 * S, N));
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderCall, (2 * S | quint64(N) << 32), renderable.particles.profilingId);
     } else {
         // draw triangle strip with 2 triangles N times
         cb->draw(4, renderable.particles.m_particleBuffer.particleCount());
         QSSGRHICTX_STAT(rhiCtx, draw(4, renderable.particles.m_particleBuffer.particleCount()));
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderCall, (4 | quint64(renderable.particles.m_particleBuffer.particleCount()) << 32), renderable.particles.profilingId);
     }
 }
 

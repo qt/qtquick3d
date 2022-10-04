@@ -128,10 +128,11 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
     quint32 vertexOffset = flags.testAnyFlags(RenderBehind) ? 5 * 4 * sizeof(float) : 0;
 
     QRhiCommandBuffer::VertexInput vb(m_vbuf->buffer(), vertexOffset);
-
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
     cb->setVertexInput(0, 1, &vb, m_ibuf->buffer(), m_ibuf->indexFormat());
     cb->drawIndexed(6);
     QSSGRHICTX_STAT(rhiCtx, drawIndexed(6, 1));
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32), QByteArrayLiteral("render_quad"));
 }
 
 void QSSGRhiQuadRenderer::recordRenderQuadPass(QSSGRhiContext *rhiCtx,
@@ -189,10 +190,11 @@ void QSSGRhiCubeRenderer::recordRenderCube(QSSGRhiContext *rhiCtx, QSSGRhiGraphi
     cb->setViewport(ps->viewport);
 
     QRhiCommandBuffer::VertexInput vb(m_vbuf->buffer(), 0);
-
+    Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
     cb->setVertexInput(0, 1, &vb, m_ibuf->buffer(), m_ibuf->indexFormat());
     cb->drawIndexed(36);
     QSSGRHICTX_STAT(rhiCtx, drawIndexed(36, 1));
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderCall, 36, QByteArrayLiteral("render_cube"));
 }
 
 void QSSGRhiCubeRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub)

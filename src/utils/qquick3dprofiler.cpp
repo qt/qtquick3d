@@ -25,6 +25,15 @@ QHash<QByteArray, int> QQuick3DProfiler::s_eventData = {};
 QHash<int, QByteArray> QQuick3DProfiler::s_eventDataRev = {};
 QMutex QQuick3DProfiler::s_eventDataMutex;
 
+QQuick3DProfilerData::QQuick3DProfilerData(qint64 time, int messageType, int detailType, qint64 d1, qint64 d2, const QList<int> &ids)
+    : QQuick3DProfilerData(time, messageType, detailType, d1, d2)
+{
+    static int ID_MARKER = 0xed000000;
+    int size = qMin(ids.size(), s_numSupportedIds);
+    for (int i = 0; i < size; i++)
+        this->ids[i] = ids[i] | ID_MARKER;
+}
+
 int QQuick3DProfiler::registerObject(const QObject *object)
 {
     QMutexLocker lock(&s_eventDataMutex);

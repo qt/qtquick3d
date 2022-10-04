@@ -253,7 +253,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     const auto &shaderEntries = shaderLibraryManager->m_shaderEntries;
     const auto foundIt = shaderEntries.constFind(QQsbCollection::Entry{hkey});
     if (foundIt != shaderEntries.cend())
-        return shaderCache->loadGeneratedShader(key, *foundIt);
+        return shaderCache->loadGeneratedShader(key, *foundIt, renderable.material);
 
     const QSSGRef<QSSGRhiShaderPipeline> &cachedShaders = shaderCache->getRhiShaderPipeline(shaderString, featureSet);
     if (cachedShaders)
@@ -581,7 +581,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable 
     if (it == m_shaderMap.end()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DGenerateShader);
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.material.profilingId);
         // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
         skey.detach();
         // insert it no matter what, no point in trying over and over again
@@ -1568,6 +1568,7 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             vertexBuffers[1] = QRhiCommandBuffer::VertexInput(subsetRenderable.instanceBuffer, 0);
             vertexBufferCount = 2;
         }
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
         if (indexBuffer) {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
@@ -1577,6 +1578,9 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             cb->draw(subsetRenderable.subset.count, instances, subsetRenderable.subset.offset);
             QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable.subset.count, instances));
         }
+        Q_QUICK3D_PROFILE_END_WITH_IDS(QQuick3DProfiler::Quick3DRenderCall, (subsetRenderable.subset.count | quint64(instances) << 32),
+                                         QVector<int>({subsetRenderable.modelContext.model.profilingId,
+                                          subsetRenderable.material.profilingId}));
     } else if (object.renderableFlags.isCustomMaterialMeshSubset()) {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
@@ -1624,6 +1628,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 if (!renderable->rhiRenderData.shadowPass.pipeline)
                     continue;
 
+                Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
+
                 cb->setGraphicsPipeline(renderable->rhiRenderData.shadowPass.pipeline);
 
                 QRhiShaderResourceBindings *srb = renderable->rhiRenderData.shadowPass.srb[cubeFace];
@@ -1652,6 +1658,9 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                     cb->draw(renderable->subset.count, instances, renderable->subset.offset);
                     QSSGRHICTX_STAT(rhiCtx, draw(renderable->subset.count, instances));
                 }
+                Q_QUICK3D_PROFILE_END_WITH_IDS(QQuick3DProfiler::Quick3DRenderCall, (renderable->subset.count | quint64(instances) << 32),
+                                                 QVector<int>({renderable->modelContext.model.profilingId,
+                                                  renderable->material.profilingId}));
             }
         }
     };
@@ -1784,12 +1793,16 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
             QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[0];
             cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
             rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, 0);
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map"));
 
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, true);
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_map_blur"));
         } else {
             Q_ASSERT(pEntry->m_rhiDepthCube && pEntry->m_rhiCubeCopy);
             const QSize size = pEntry->m_rhiDepthCube->pixelSize();
@@ -1843,12 +1856,17 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
+                Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
                 rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, face);
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+                Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_")
+                                               + QByteArrayView(toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
             }
 
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             rhiBlurShadowMap(rhiCtx, pEntry, renderer, globalLights[i].light->m_shadowFilter, globalLights[i].light->m_shadowMapFar, false);
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_blur"));
         }
     }
 }
@@ -1916,6 +1934,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
             cb->beginPass(rt, reflectionProbes[i]->clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
             if (renderSkybox && pEntry->m_skyBoxSrbs[face]) {
                 auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
@@ -1934,6 +1953,8 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
 
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("reflection_cube_")
+                                           + QByteArrayView(toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
 
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;
@@ -2409,6 +2430,7 @@ void RenderHelpers::rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
                 if (!srb)
                     return;
 
+                Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
                 cb->setGraphicsPipeline(ps);
                 cb->setShaderResources(srb);
 
@@ -2436,6 +2458,9 @@ void RenderHelpers::rhiRenderDepthPass(QSSGRhiContext *rhiCtx,
                     cb->draw(subsetRenderable->subset.count, instances, subsetRenderable->subset.offset);
                     QSSGRHICTX_STAT(rhiCtx, draw(subsetRenderable->subset.count, instances));
                 }
+                Q_QUICK3D_PROFILE_END_WITH_IDS(QQuick3DProfiler::Quick3DRenderCall, (subsetRenderable->subset.count | quint64(instances) << 32),
+                                                 QVector<int>({subsetRenderable->modelContext.model.profilingId,
+                                                  subsetRenderable->material.profilingId}));
             }
         }
     };

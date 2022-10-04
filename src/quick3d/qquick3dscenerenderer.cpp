@@ -275,7 +275,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         if (m_renderStats)
             m_renderStats->endRenderPrepare();
 
-        Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame);
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(ssaaAdjustedWidth) | quint64(ssaaAdjustedHeight) << 32, profilingId);
 
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
 
@@ -292,10 +292,12 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         // This is called from the node's preprocess() meaning Qt Quick has not
         // actually began recording a renderpass. Do our own.
         cb->beginPass(m_textureRenderTarget, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(m_textureRenderTarget));
         rhiRender();
         cb->endPass();
         QSSGRHICTX_STAT(rhiCtx, endRenderPass());
+        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, quint64(ssaaAdjustedWidth) | quint64(ssaaAdjustedHeight) << 32, QByteArrayLiteral("main"));
 
         const bool temporalAA = m_layer->temporalAAIsActive;
         const bool progressiveAA = m_layer->progressiveAAIsActive;
@@ -326,7 +328,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         if ((progressiveAA || temporalAA) && m_prevTempAATexture) {
             cb->debugMarkBegin(QByteArrayLiteral("Temporal AA"));
-
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             QRhiTexture *blendResult;
             uint *aaIndex = progressiveAA ? &m_layer->progAAPassIndex : &m_layer->tempAAPassIndex; // TODO: can we use only one index?
 
@@ -391,6 +393,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             (*aaIndex)++;
             cb->debugMarkEnd();
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("temporal_aa"));
             currentTexture = blendResult;
         }
 
@@ -408,6 +411,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             const auto &renderer = m_sgContext->renderer();
 
             cb->debugMarkBegin(QByteArrayLiteral("SSAA downsample"));
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 
             // Instead of passing in a flip flag we choose to rely on qsb's
@@ -429,12 +433,14 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, QSSGRhiQuadRenderer::UvCoords);
             cb->debugMarkEnd();
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("ssaa_downsample"));
             currentTexture = m_texture;
         }
         endFrame();
 
-        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                           STAT_PAYLOAD(m_sgContext->rhiContext()->stats()));
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
+                                           STAT_PAYLOAD(m_sgContext->rhiContext()->stats()),
+                                           profilingId);
     }
 
     return currentTexture;
@@ -867,7 +873,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     if (m_renderStats)
         m_renderStats->endSync(dumpRenderTimes);
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DSynchronizeFrame);
+    Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DSynchronizeFrame, quint64(m_surfaceSize.width()) | quint64(m_surfaceSize.height()) << 32, profilingId);
 }
 
 void QQuick3DSceneRenderer::invalidateFramebufferObject()
@@ -1196,7 +1202,7 @@ void QQuick3DSGRenderNode::prepare()
     const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
     renderer->beginFrame();
     renderer->rhiPrepare(vp, dpr);
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame);
+    Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(vp.width()) | quint64(vp.height()) << 32, renderer->profilingId);
 }
 
 void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
@@ -1210,8 +1216,8 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 
         renderer->rhiRender();
         renderer->endFrame();
-        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                           STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()));
+        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
+                                        STAT_PAYLOAD(renderer->m_sgContext->rhiContext()->stats()), renderer->profilingId);
     }
 }
 
@@ -1298,7 +1304,7 @@ void QQuick3DSGDirectRenderer::prepare()
             const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
             m_renderer->beginFrame();
             m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
-            Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DPrepareFrame);
+            Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(vp.width()) | quint64(vp.height()) << 32, m_renderer->profilingId);
 
             if (renderStats)
                 renderStats->endRenderPrepare();
@@ -1358,8 +1364,9 @@ void QQuick3DSGDirectRenderer::render()
             m_renderer->rhiRender();
             m_renderer->endFrame();
 
-            Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderFrame,
-                                               STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()));
+            Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
+                                            STAT_PAYLOAD(m_renderer->m_sgContext->rhiContext()->stats()),
+                                            m_renderer->profilingId);
 
             if (m_renderer->renderStats())
                 m_renderer->renderStats()->endRender(dumpRenderTimes);

@@ -2,6 +2,7 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "graphobjects/qssgrendergraphobject_p.h"
 #include "qssgrendershadercache_p.h"
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -355,7 +356,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 #endif
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry, const QSSGRenderGraphObject &obj)
 {
     const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, QSSGShaderFeatures());
     if (rhiShaders)
@@ -389,7 +390,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
             qDebug("Loading of vertex and fragment stages succeeded");
     }
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DLoadShader);
+    Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DLoadShader, 0, obj.profilingId);
 
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = QSSGShaderFeatures();
@@ -450,7 +451,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
             qDebug("Loading of vertex and fragment stages succeeded");
     }
 
-    Q_QUICK3D_PROFILE_END(QQuick3DProfiler::Quick3DLoadShader);
+    Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DLoadShader, 0, inKey);
 
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = QSSGShaderFeatures();
