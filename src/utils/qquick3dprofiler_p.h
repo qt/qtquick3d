@@ -78,19 +78,33 @@ Q_DECLARE_TYPEINFO(QQuick3DProfilerData, Q_RELOCATABLE_TYPE);
 class QQuick3DProfilerSceneGraphData : public QQmlProfilerDefinitions {
 private:
     static const uint s_numSceneGraphTimings = 2;
-
-    template<uint size>
-    struct TimingData {
-        qint64 values[size][s_numSceneGraphTimings + 1];
+    static const uint s_numNestedTimings = 5;
+    struct Timings {
+        uint nesting = 0;
+        qint64 values[s_numNestedTimings][s_numSceneGraphTimings + 1];
     };
-
+    template<uint size>
+    struct TimingData
+    {
+        Timings timings[size];
+    };
     QThreadStorage<TimingData<MaximumQuick3DFrameType>> eventTimings;
-
 public:
-    template<Quick3DFrameType type>
+    template<int type, bool inc>
     qint64 *timings()
     {
-        return eventTimings.localData().values[type];
+        Timings *timings;
+        qint64 *t;
+        timings = &eventTimings.localData().timings[type];
+        if (inc) {
+            Q_ASSERT(timings->nesting < s_numNestedTimings);
+            t = timings->values[timings->nesting];
+            timings->nesting++;
+        } else {
+            timings->nesting--;
+            t = timings->values[timings->nesting];
+        }
+        return t;
     }
 };
 
@@ -106,12 +120,12 @@ public:
     template<Quick3DFrameType FrameType>
     static void recordSceneGraphTimestamp(uint position)
     {
-        s_instance->m_sceneGraphData.timings<FrameType>()[position] = s_instance->timestamp();
+        s_instance->m_sceneGraphData.timings<FrameType, true>()[position] = s_instance->timestamp();
     }
     template<Quick3DFrameType FrameType, bool Record>
     static void reportQuick3DFrame(uint position, quint64 payload = ~0)
     {
-        qint64 *timings = s_instance->m_sceneGraphData.timings<FrameType>();
+        qint64 *timings = s_instance->m_sceneGraphData.timings<FrameType, false>();
         if (Record)
             timings[position] = s_instance->timestamp();
         s_instance->processMessage(QQuick3DProfilerData(
@@ -124,7 +138,7 @@ public:
     static void reportQuick3DFrame(uint position, quint64 payload = ~0)
     {
         reportQuick3DFrame<FrameType, Record>(position, payload);
-        s_instance->m_sceneGraphData.timings<SwitchTo>()[0] =
+        s_instance->m_sceneGraphData.timings<SwitchTo, false>()[0] =
                 s_instance->m_sceneGraphData.timings<FrameType>()[position];
     }
 

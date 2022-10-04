@@ -178,7 +178,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                 }
                 result = foundIt.value().renderImageTexture;
                 increaseMemoryStat(result.m_texture);
-                Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
             } else {
                 // We want to make sure that bad path fails once and doesn't fail over and over
                 // again
@@ -188,6 +187,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             }
         }
         foundIt.value().usageCounts[currentLayer]++;
+        Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize);
     }
     return result;
 }
