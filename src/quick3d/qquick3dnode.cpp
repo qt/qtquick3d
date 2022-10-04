@@ -765,7 +765,7 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
         markAllDirty();
         node = new QSSGRenderNode();
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     auto spacialNode = static_cast<QSSGRenderNode *>(node);
     bool transformIsDirty = false;
 

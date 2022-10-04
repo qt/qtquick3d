@@ -4,15 +4,78 @@
 #include "qquick3dprofiler_p.h"
 
 #include <QtQml/private/qqmlabstractprofileradapter_p.h>
+#include <QtQml/qqmlfile.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qthread.h>
 
 QT_BEGIN_NAMESPACE
 
+// Enable to debug profiling without client app.
+//#define PROFILE_WITHOUT_CLIENT
+
 // instance will be set, unset in constructor. Allows static methods to be inlined.
 QQuick3DProfiler *QQuick3DProfiler::s_instance = nullptr;
+#ifdef PROFILE_WITHOUT_CLIENT
+quint64 QQuick3DProfiler::featuresEnabled = 0xffffffff;
+#else
 quint64 QQuick3DProfiler::featuresEnabled = 0;
+#endif
+QHash<QByteArray, int> QQuick3DProfiler::s_eventData = {};
+QHash<int, QByteArray> QQuick3DProfiler::s_eventDataRev = {};
+QMutex QQuick3DProfiler::s_eventDataMutex;
+
+int QQuick3DProfiler::registerObject(const QObject *object)
+{
+    QMutexLocker lock(&s_eventDataMutex);
+
+#ifdef PROFILE_WITHOUT_CLIENT
+    if (!s_instance)
+        s_instance = new QQuick3DProfiler(nullptr);
+#else
+    if (!s_instance)
+        return 0;
+#endif
+    QQmlData *qmlData = QQmlData::get(object);
+    QByteArray typeAndLocation;
+    int id = 0;
+    if (qmlData) {
+        QQmlType qmlType = QQmlMetaType::qmlType(object->metaObject());
+        QString fileName = qmlData->compilationUnit->fileName();
+        typeAndLocation = (qmlType.qmlTypeName() + QLatin1Char(' ') + fileName + QLatin1Char(':') + QString::number(qmlData->lineNumber)).toUtf8();
+        if (!s_eventData.contains(typeAndLocation)) {
+            id = s_eventData.size() + 1;
+            s_eventData.insert(typeAndLocation, id);
+            s_eventDataRev.insert(id, typeAndLocation);
+            s_instance->processMessage(QQuick3DProfilerData(s_instance->timestamp(), Quick3DFrame, Quick3DEventData, id, 0));
+        } else {
+            id = s_eventData.value(typeAndLocation);
+        }
+    }
+    return id;
+}
+
+int QQuick3DProfiler::registerString(const QByteArray &string)
+{
+    QMutexLocker lock(&s_eventDataMutex);
+#ifdef PROFILE_WITHOUT_CLIENT
+    if (!s_instance)
+        s_instance = new QQuick3DProfiler(nullptr);
+#else
+    if (!s_instance)
+        return 0;
+#endif
+    int id = 0;
+    if (!s_eventData.contains(string)) {
+        id = s_eventData.size() + 1;
+        s_eventData.insert(string, id);
+        s_eventDataRev.insert(id, string);
+        s_instance->processMessage(QQuick3DProfilerData(s_instance->timestamp(), Quick3DFrame, Quick3DEventData, id, 0));
+    } else {
+        id = s_eventData.value(string);
+    }
+    return id;
+}
 
 void QQuick3DProfiler::initialize(QObject *parent)
 {
@@ -43,14 +106,14 @@ void QQuick3DProfiler::stopProfilingImpl()
 {
     QMutexLocker lock(&m_dataMutex);
     featuresEnabled = 0;
-    emit dataReady(m_data);
+    emit dataReady(m_data, s_eventDataRev);
     m_data.clear();
 }
 
 void QQuick3DProfiler::reportDataImpl()
 {
     QMutexLocker lock(&m_dataMutex);
-    emit dataReady(m_data);
+    emit dataReady(m_data, s_eventDataRev);
     m_data.clear();
 }
 

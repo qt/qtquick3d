@@ -138,6 +138,8 @@ QSSGRenderGraphObject *QQuick3DMaterial::updateSpatialNode(QSSGRenderGraphObject
     if (!node)
         return nullptr;
 
+    QQuick3DObject::updateSpatialNode(node);
+
     // Set the common properties
     if (node->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
         node->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||

@@ -213,7 +213,7 @@ QSSGRenderGraphObject *QQuick3DSkin::updateSpatialNode(QSSGRenderGraphObject *no
         markAllDirty();
         node = new QSSGRenderSkin();
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     auto skinNode = static_cast<QSSGRenderSkin *>(node);
 
     if (m_dirty) {

@@ -17,6 +17,7 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
+#include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 #include <QtCore/QString>
 #include <QtCore/QDebug>
 
@@ -135,6 +136,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
 #endif
     // Type is used for RTTI purposes down the road.
     Type type;
+    Q_QUICK3D_PROFILE_ID
 
     explicit QSSGRenderGraphObject(QSSGRenderGraphObject::Type inType) : type(inType) {}
     virtual ~QSSGRenderGraphObject();

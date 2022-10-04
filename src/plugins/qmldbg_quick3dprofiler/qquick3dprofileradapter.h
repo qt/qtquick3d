@@ -26,11 +26,12 @@ public:
     QQuick3DProfilerAdapter(QObject *parent = 0);
     ~QQuick3DProfilerAdapter();
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
-    void receiveData(const QVector<QQuick3DProfilerData> &new_data);
+    void receiveData(const QVector<QQuick3DProfilerData> &new_data, const QHash<int, QByteArray> &eventData);
 
 private:
     int next;
     QVector<QQuick3DProfilerData> m_data;
+    QHash<int, QByteArray> m_eventData;
 };
 
 QT_END_NAMESPACE

@@ -5,6 +5,7 @@
 #include "qquick3dparticlesystem_p.h"
 #include "qquick3dparticlerandomizer_p.h"
 #include "qquick3dparticleutils_p.h"
+#include <private/qquick3dobject_p.h>
 
 #include <algorithm>
 
@@ -300,7 +301,7 @@ QSSGRenderGraphObject *QQuick3DParticleLineParticle::LineParticleUpdateNode::upd
         node = lineParticle->updateParticleNode(this, node);
         lineParticle->updateLineNode(node);
         QQuick3DNode::updateSpatialNode(node);
-
+        Q_QUICK3D_PROFILE_ASSIGN_ID_SG(lineParticle, node);
         auto particles = static_cast<QSSGRenderParticles *>(node);
 
         lineParticle->updateLineBuffer(this, particles);

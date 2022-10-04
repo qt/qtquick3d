@@ -106,6 +106,7 @@ private:
 
     int requestedFramesCount = 0;
     bool m_postProcessingStack = false;
+    Q_QUICK3D_PROFILE_ID
 
     friend class SGFramebufferObjectNode;
     friend class QQuick3DSGRenderNode;

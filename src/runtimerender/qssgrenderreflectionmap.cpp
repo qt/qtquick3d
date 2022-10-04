@@ -247,6 +247,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
 
         pEntry->m_timeSlicing = probe.timeSlicing;
         pEntry->m_probeIndex = probeIdx;
+        Q_QUICK3D_PROFILE_ASSIGN_ID(&probe, pEntry);
     }
 }
 

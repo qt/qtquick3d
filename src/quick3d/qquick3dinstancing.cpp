@@ -348,7 +348,7 @@ QSSGRenderGraphObject *QQuick3DInstancing::updateSpatialNode(QSSGRenderGraphObje
         emit instanceNodeDirty();
         d->m_instanceDataChanged = true;
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     auto effectiveInstanceCount = [d]() {
         if (d->m_instanceCountOverride >= 0)
             return qMin(d->m_instanceCount, d->m_instanceCountOverride);

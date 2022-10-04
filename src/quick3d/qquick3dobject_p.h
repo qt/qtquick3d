@@ -28,6 +28,7 @@
 #include <private/qqmlnotifier_p.h>
 #include <private/qlazilyallocated_p.h>
 #include <private/qssgrendergraphobject_p.h>
+#include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -276,6 +277,7 @@ public:
     bool culled;
     QQuick3DItem2D *contentItem2d = nullptr;
     ConnectionMap connectionMap;
+    Q_QUICK3D_PROFILE_ID
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuick3DObjectPrivate::ChangeTypes)

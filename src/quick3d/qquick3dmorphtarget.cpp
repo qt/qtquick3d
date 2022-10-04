@@ -106,7 +106,7 @@ QSSGRenderGraphObject *QQuick3DMorphTarget::updateSpatialNode(QSSGRenderGraphObj
         markAllDirty();
         node = new QSSGRenderMorphTarget();
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     auto modelNode = static_cast<QSSGRenderMorphTarget *>(node);
     if (m_dirtyAttributes & WeightDirty)
         modelNode->weight = m_weight;

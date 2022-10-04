@@ -89,7 +89,7 @@ Q_SIGNALS:
     void detachWatchers(QPrivateSignal);
 
 protected:
-    virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) = 0;
+    virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node);
     virtual void markAllDirty();
     virtual void itemChange(ItemChange, const ItemChangeData &);
     explicit QQuick3DObject(QQuick3DObjectPrivate &dd, QQuick3DObject *parent = nullptr);

@@ -744,7 +744,7 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
         node = new QSSGRenderGeometry();
         emit geometryNodeDirty();
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     QSSGRenderGeometry *geometry = static_cast<QSSGRenderGeometry *>(node);
     if (d->m_geometryChanged) {
         geometry->clear();

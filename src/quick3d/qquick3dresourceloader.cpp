@@ -136,7 +136,7 @@ QSSGRenderGraphObject *QQuick3DResourceLoader::updateSpatialNode(QSSGRenderGraph
         markAllDirty();
         node = new QSSGRenderResourceLoader();
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     int dirtyAttribute = 0;
 
     auto resourceLoaderNode = static_cast<QSSGRenderResourceLoader *>(node);

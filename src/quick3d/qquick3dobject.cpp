@@ -211,6 +211,12 @@ QQuick3DObject *QQuick3DObject::parentItem() const
     return d->parentItem;
 }
 
+QSSGRenderGraphObject *QQuick3DObject::updateSpatialNode(QSSGRenderGraphObject *node)
+{
+    Q_QUICK3D_PROFILE_ASSIGN_ID_SG(this, node);
+    return node;
+}
+
 void QQuick3DObject::markAllDirty()
 {
 }
@@ -244,6 +250,7 @@ void QQuick3DObject::componentComplete()
     if (d->sceneManager && d->dirtyAttributes) {
         d->addToDirtyList();
     }
+    Q_QUICK3D_PROFILE_REGISTER_D(this);
 }
 
 bool QQuick3DObject::isComponentComplete() const

@@ -99,6 +99,7 @@ protected:
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value) override;
 
     bool event(QEvent *) override;
+    void componentComplete() override;
 
 public Q_SLOTS:
     void setCamera(QQuick3DCamera *camera);
@@ -147,6 +148,7 @@ private:
     QQuick3DRenderStats *m_renderStats = nullptr;
     QHash<QObject*, QMetaObject::Connection> m_connections;
     bool m_enableInputProcessing = true;
+    Q_QUICK3D_PROFILE_ID
 };
 
 QT_END_NAMESPACE

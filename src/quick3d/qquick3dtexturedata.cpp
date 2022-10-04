@@ -413,7 +413,7 @@ QSSGRenderGraphObject *QQuick3DTextureData::updateSpatialNode(QSSGRenderGraphObj
         markAllDirty();
         node = new QSSGRenderTextureData();
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     auto *textureData = static_cast<QSSGRenderTextureData*>(node);
 
     bool changed = false;

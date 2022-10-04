@@ -40,6 +40,12 @@ struct QQuick3DProfiler {
 };
 
 #define Q_QUICK3D_PROFILING_ENABLED false
+#define Q_QUICK3D_PROFILE_REGISTER_D(obj)
+#define Q_QUICK3D_PROFILE_REGISTER(obj)
+#define Q_QUICK3D_PROFILE_ID
+#define Q_QUICK3D_PROFILE_GET_ID
+#define Q_QUICK3D_PROFILE_ASSIGN_ID_SG(obj, bgnode)
+#define Q_QUICK3D_PROFILE_ASSIGN_ID(bgnode, obj)
 
 #else
 
@@ -50,6 +56,15 @@ struct QQuick3DProfiler {
         (void)0
 
 #define Q_QUICK3D_PROFILING_ENABLED (QQuick3DProfiler::featuresEnabled > 0)
+#define Q_QUICK3D_PROFILE_REGISTER_D(obj) d->profilingId = QQuick3DProfiler::registerObject(obj)
+#define Q_QUICK3D_PROFILE_REGISTER(obj) profilingId = QQuick3DProfiler::registerObject(obj)
+#define Q_QUICK3D_PROFILE_ID int profilingId = -1;
+#define Q_QUICK3D_PROFILE_GET_ID(Object) \
+    QQuick3DObjectPrivate::get(Object)->profilingId
+#define Q_QUICK3D_PROFILE_ASSIGN_ID_SG(obj, bgnode) \
+    (bgnode)->profilingId = Q_QUICK3D_PROFILE_GET_ID(obj);
+#define Q_QUICK3D_PROFILE_ASSIGN_ID(bgnode, obj) \
+    (obj)->profilingId = (bgnode)->profilingId;
 
 // This struct is somewhat dangerous to use:
 // You can save values either with 32 or 64 bit precision. toByteArrays will
@@ -150,12 +165,17 @@ public:
 
     ~QQuick3DProfiler() override;
 
+    static int registerObject(const QObject *object);
+    static int registerString(const QByteArray &string);
+
 signals:
-    void dataReady(const QVector<QQuick3DProfilerData> &data);
+    void dataReady(const QVector<QQuick3DProfilerData> &data, const QHash<int, QByteArray> &eventData);
 
 protected:
     friend class QQuick3DProfilerAdapter;
-
+    static QMutex s_eventDataMutex;
+    static QHash<QByteArray, int> s_eventData;
+    static QHash<int, QByteArray> s_eventDataRev;
     static QQuick3DProfiler *s_instance;
     QMutex m_dataMutex;
     QElapsedTimer m_timer;

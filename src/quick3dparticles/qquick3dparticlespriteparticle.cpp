@@ -355,7 +355,7 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::ParticleUpdateNode::updat
     if (m_particle) {
         node = m_particle->updateParticleNode(this, node);
         QQuick3DNode::updateSpatialNode(node);
-
+        Q_QUICK3D_PROFILE_ASSIGN_ID_SG(m_particle, node);
         auto particles = static_cast<QSSGRenderParticles *>(node);
 
         if (m_particle->m_featureLevel == QQuick3DParticleSpriteParticle::Animated || m_particle->m_featureLevel == QQuick3DParticleSpriteParticle::AnimatedVLight)

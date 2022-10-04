@@ -1000,7 +1000,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         markAllDirty();
         node = new QSSGRenderImage(QQuick3DObjectPrivate::get(this)->type);
     }
-
+    QQuick3DObject::updateSpatialNode(node);
     auto imageNode = static_cast<QSSGRenderImage *>(node);
 
     if (m_dirtyFlags.testFlag(DirtyFlag::TransformDirty)) {

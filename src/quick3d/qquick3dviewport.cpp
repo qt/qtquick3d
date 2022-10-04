@@ -414,7 +414,7 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 rci = new QSSGRenderContextInterface(qw, rhiContext);
                 renderer = new QQuick3DSceneRenderer(rci);
             }
-
+            Q_QUICK3D_PROFILE_ASSIGN_ID(this, renderer);
             QObject::connect(qw, &QQuickWindow::afterFrameEnd, this, &QQuick3DViewport::cleanupResources, Qt::DirectConnection);
         }
     }
@@ -596,6 +596,12 @@ bool QQuick3DViewport::event(QEvent *event)
         return internalPick(static_cast<QPointerEvent *>(event));
     else
         return QQuickItem::event(event);
+}
+
+void QQuick3DViewport::componentComplete()
+{
+    QQuickItem::componentComplete();
+    Q_QUICK3D_PROFILE_REGISTER(this);
 }
 
 void QQuick3DViewport::setCamera(QQuick3DCamera *camera)
