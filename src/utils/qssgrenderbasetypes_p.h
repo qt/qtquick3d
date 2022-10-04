@@ -1298,6 +1298,35 @@ inline const char *toString(QSSGRenderTextureTypeValue value)
     return nullptr;
 }
 
+enum class QSSGRenderTextureCubeFace
+{
+    NegX,
+    PosX,
+    NegY,
+    PosY,
+    NegZ,
+    PosZ
+};
+
+inline const char *toString(QSSGRenderTextureCubeFace value)
+{
+    switch (value) {
+    case QSSGRenderTextureCubeFace::NegX:
+        return "NegX";
+    case QSSGRenderTextureCubeFace::NegZ:
+        return "NegZ";
+    case QSSGRenderTextureCubeFace::NegY:
+        return "NegY";
+    case QSSGRenderTextureCubeFace::PosY:
+        return "PosY";
+    case QSSGRenderTextureCubeFace::PosX:
+        return "PosX";
+    case QSSGRenderTextureCubeFace::PosZ:
+        return "PosZ";
+    }
+    return nullptr;
+}
+
 QT_END_NAMESPACE
 
 #endif
