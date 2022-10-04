@@ -119,7 +119,7 @@ public:
         if (Record)
             timings[position] = s_instance->timestamp();
         s_instance->processMessage(QQuick3DProfilerData(
-                timings[position], 1 << Quick3DFrame, 1 << FrameType,
+                timings[position], Quick3DFrame, FrameType,
                 position > 0 ? timings[1] - timings[0] : payload,
                 position > 1 ? timings[2] - timings[1] : payload));
     }
