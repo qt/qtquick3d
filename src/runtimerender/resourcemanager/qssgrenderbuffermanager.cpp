@@ -112,12 +112,13 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
     auto context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
     if (image->m_qsgTexture) {
+        QRhi *rhi = context->rhi();
         QSGTexture *qsgTexture = image->m_qsgTexture;
-        if (qsgTexture->thread() == QThread::currentThread()) {
+        QRhiTexture *rhiTex = qsgTexture->rhiTexture(); // this may not be valid until commit and that's ok
+        if (!rhiTex || rhiTex->rhi() == rhi) {
             // A QSGTexture from a textureprovider that is not a QSGDynamicTexture
             // needs to be pushed to get its content updated (or even to create a
             // QRhiTexture in the first place).
-            QRhi *rhi = context->rhi();
             QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
             if (qsgTexture->isAtlasTexture()) {
                 // This returns a non-atlased QSGTexture (or does nothing if the
@@ -145,9 +146,9 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             if (inMipMode == MipModeBsdf)
                 qWarning("Cannot use QSGTexture from Texture.sourceItem as light probe.");
         } else {
-            qWarning("Cannot use QSGTexture (presumably from Texture.sourceItem) on a thread "
-                     "that is different from the Qt Quick render thread that created the QSGTexture. "
-                     "Consider switching to the 'basic' render loop or avoid using View3D.importScene between multiple windows.");
+            qWarning("Cannot use QSGTexture (presumably from Texture.sourceItem) created in another "
+                     "window that was using a different graphics device/context. "
+                     "Avoid using View3D.importScene between multiple windows.");
         }
 
     } else if (image->m_rawTextureData) {
