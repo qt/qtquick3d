@@ -816,7 +816,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
 
                 effectNode->commands.push_back({ nullptr, true }); // will be changed to QSSGBindShader in finalizeShaders
-                passData.bindShaderCmdIndex = effectNode->commands.count() - 1;
+                passData.bindShaderCmdIndex = effectNode->commands.size() - 1;
 
                 // finalizing the shader code happens in a separate step later on by the backend node
                 passData.shaderPathKeyPrefix = shaderPathKey;
@@ -945,7 +945,7 @@ QQuick3DShaderUtilsRenderPass *QQuick3DEffect::qmlPassAt(QQmlListProperty<QQuick
 qsizetype QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
-    return that->m_passes.count();
+    return that->m_passes.size();
 }
 
 void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)

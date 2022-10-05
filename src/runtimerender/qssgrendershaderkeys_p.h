@@ -175,7 +175,7 @@ struct QSSGShaderKeyUnsigned : public QSSGShaderKeyPropertyBase
             /* The key is stored as name=val */
             if (ioStr[strOffset + nameLen] != '=')
                 return;
-            const QByteArray s = ioStr.right(ioStr.length() - strOffset - nameLen - 1);
+            const QByteArray s = ioStr.right(ioStr.size() - strOffset - nameLen - 1);
             int i = 0;
             while (QChar(QLatin1Char(s[i])).isDigit())
                 i++;

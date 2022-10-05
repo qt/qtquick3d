@@ -114,7 +114,7 @@ inline friend QDebug operator<<(QDebug stream, const QSSGShaderFeatures &feature
             enabledFeatureStrings.append(asDefineString(feature));
     }
     stream.nospace() << "QSSGShaderFeatures(";
-    for (int i = 0; i < enabledFeatureStrings.count(); ++i)
+    for (int i = 0; i < enabledFeatureStrings.size(); ++i)
         stream.nospace() << (i > 0 ? ", " : "") << enabledFeatureStrings[i];
     stream.nospace() << ")";
     return stream;

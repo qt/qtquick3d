@@ -1063,8 +1063,8 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                 int materialSubset = pickResult.m_subset;
                 const auto backendModel = static_cast<const QSSGRenderModel *>(backendObject);
                 // Get material
-                if (backendModel->materials.count() < (pickResult.m_subset + 1))
-                    materialSubset = backendModel->materials.count() - 1;
+                if (backendModel->materials.size() < (pickResult.m_subset + 1))
+                    materialSubset = backendModel->materials.size() - 1;
                 if (materialSubset < 0)
                     continue;
                 const auto backendMaterial = backendModel->materials.at(materialSubset);
@@ -1158,7 +1158,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
     for (auto subscene : visitedSubscenes) {
         QQuickItem *subsceneRoot = subscene.first;
         auto &subsceneInfo = subscene.second;
-        Q_ASSERT(subsceneInfo.eventPointScenePositions.count() == event->pointCount());
+        Q_ASSERT(subsceneInfo.eventPointScenePositions.size() == event->pointCount());
         auto da = QQuickItemPrivate::get(subsceneRoot)->deliveryAgent();
         if (!isHover)
             qCDebug(lcPick) << "delivering to" << subsceneRoot << "via" << da << event;

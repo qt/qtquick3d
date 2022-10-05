@@ -1273,8 +1273,8 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
             auto &targetScene = parent.scene;
             const QString nodeName(source.mName.C_Str());
             QVarLengthArray<QSSGSceneDesc::MorphTarget *> morphTargets;
-            morphTargets.reserve(morphProps.count());
-            for (int i = 0, end = morphProps.count(); i != end; ++i) {
+            morphTargets.reserve(morphProps.size());
+            for (int i = 0, end = morphProps.size(); i != end; ++i) {
                 const auto morphProp = morphProps.at(i);
 
                 auto morphNode = targetScene->create<QSSGSceneDesc::MorphTarget>();

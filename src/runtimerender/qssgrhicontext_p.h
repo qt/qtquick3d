@@ -328,7 +328,7 @@ public:
 
     void resetShadowMaps() { m_shadowMaps.clear(); }
     QSSGRhiShadowMapProperties &addShadowMap() { m_shadowMaps.append(QSSGRhiShadowMapProperties()); return m_shadowMaps.last(); }
-    int shadowMapCount() const { return m_shadowMaps.count(); }
+    int shadowMapCount() const { return m_shadowMaps.size(); }
     const QSSGRhiShadowMapProperties &shadowMapAt(int index) const { return m_shadowMaps[index]; }
     QSSGRhiShadowMapProperties &shadowMapAt(int index) { return m_shadowMaps[index]; }
 
@@ -361,7 +361,7 @@ public:
 
     void resetExtraTextures() { m_extraTextures.clear(); }
     void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
-    int extraTextureCount() const { return m_extraTextures.count(); }
+    int extraTextureCount() const { return m_extraTextures.size(); }
     const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }

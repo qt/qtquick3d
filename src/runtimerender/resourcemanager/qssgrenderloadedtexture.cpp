@@ -873,7 +873,7 @@ static QSSGLoadedTexture *loadCubeMap(const QString &inPath, bool flipY)
     } else if (inPath.contains(QStringLiteral(";"))) {
         fileNames = inPath.split(QChar(u';'));
     }
-    if (fileNames.length() != 6)
+    if (fileNames.size() != 6)
         return nullptr; // TODO: allow sparse cube maps (with some faces missing)
     std::unique_ptr<QTextureFileData> textureFileData = std::make_unique<QTextureFileData>(QTextureFileData::ImageMode);
     textureFileData->setNumFaces(6);

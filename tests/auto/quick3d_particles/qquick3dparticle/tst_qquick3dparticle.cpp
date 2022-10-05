@@ -44,7 +44,7 @@ void tst_QQuick3DParticle::testParticle()
     auto *newSystem = new QQuick3DParticleSystem();
     p->setSystem(newSystem);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     QCOMPARE(p->maxAmount(), 100);
     p->setMaxAmount(200);

@@ -625,13 +625,13 @@ void QQuick3DObjectPrivate::children_append(QQmlListProperty<QQuick3DObject> *pr
 qsizetype QQuick3DObjectPrivate::children_count(QQmlListProperty<QQuick3DObject> *prop)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
-    return p->childItems.count();
+    return p->childItems.size();
 }
 
 QQuick3DObject *QQuick3DObjectPrivate::children_at(QQmlListProperty<QQuick3DObject> *prop, qsizetype index)
 {
     QQuick3DObjectPrivate *p = QQuick3DObjectPrivate::get(static_cast<QQuick3DObject *>(prop->object));
-    if (index >= p->childItems.count() || index < 0)
+    if (index >= p->childItems.size() || index < 0)
         return nullptr;
 
     return p->childItems.at(index);
@@ -870,7 +870,7 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
     if (!parentItem)
         sceneManager->parentlessItems.insert(q);
 
-    for (int ii = 0; ii < childItems.count(); ++ii) {
+    for (int ii = 0; ii < childItems.size(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
         QQuick3DObjectPrivate::refSceneManager(child, c);
     }
@@ -901,7 +901,7 @@ void QQuick3DObjectPrivate::derefSceneManager()
 
     spatialNode = nullptr;
 
-    for (int ii = 0; ii < childItems.count(); ++ii) {
+    for (int ii = 0; ii < childItems.size(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
         QQuick3DObjectPrivate::derefSceneManager(child);
     }

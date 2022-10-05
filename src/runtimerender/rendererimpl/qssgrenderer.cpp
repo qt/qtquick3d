@@ -1033,7 +1033,7 @@ static int setupInstancing(QSSGSubsetRenderable *renderable, QSSGRhiGraphicsPipe
         QVarLengthArray<QRhiVertexInputBinding, 8> bindings;
         std::copy(ps->ia.inputLayout.cbeginBindings(), ps->ia.inputLayout.cendBindings(), std::back_inserter(bindings));
         bindings.append({ stride, QRhiVertexInputBinding::PerInstance });
-        instanceBufferBinding = bindings.count() - 1;
+        instanceBufferBinding = bindings.size() - 1;
         ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
     }
     return instanceBufferBinding;
@@ -1868,7 +1868,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
     const bool renderSkybox = (inData.layer.background == QSSGRenderLayer::Background::SkyBox)
             && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch);
 
-    for (int i = 0, ie = reflectionProbes.count(); i != ie; ++i) {
+    for (int i = 0, ie = reflectionProbes.size(); i != ie; ++i) {
         QSSGReflectionMapEntry *pEntry = reflectionMapManager->reflectionMapEntry(i);
         if (!pEntry)
             continue;

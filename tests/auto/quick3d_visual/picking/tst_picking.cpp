@@ -110,25 +110,25 @@ void tst_Picking::test_object_picking()
 
     // Center of model1, bottom left corner of model2
     auto resultList = view3d->pickAll(200, 200);
-    QCOMPARE(resultList.count(), 2);
+    QCOMPARE(resultList.size(), 2);
     QCOMPARE(resultList[0].objectHit(), model1);
     QCOMPARE(resultList[1].objectHit(), model2);
 
     // Top right corner of model1, center of model2
     resultList = view3d->pickAll(250, 150);
-    QCOMPARE(resultList.count(), 2);
+    QCOMPARE(resultList.size(), 2);
     QCOMPARE(resultList[0].objectHit(), model1);
     QCOMPARE(resultList[1].objectHit(), model2);
 
     // Just outside model1's upper right corner, so should hit the model behind (model2)
     resultList = view3d->pickAll(251, 151);
-    QCOMPARE(resultList.count(), 1);
+    QCOMPARE(resultList.size(), 1);
     QCOMPARE(resultList[0].objectHit(), model2);
 
     // The bottom right of the second entry in the instance table,
     // overlapping model1 and model2
     resultList = view3d->pickAll(225, 175);
-    QCOMPARE(resultList.count(), 3);
+    QCOMPARE(resultList.size(), 3);
     QCOMPARE(resultList[0].objectHit(), model1);
     QCOMPARE(resultList[1].objectHit(), model2);
     QCOMPARE(resultList[2].objectHit(), instancedModel);
@@ -166,7 +166,7 @@ void tst_Picking::test_object_picking()
     origin = QVector3D(0.0f, 0.0f, 100.0f);
     direction = QVector3D(0.0f, 0.0f, -1.0f);
     resultList = view3d->rayPickAll(origin, direction);
-    QCOMPARE(resultList.count(), 2);
+    QCOMPARE(resultList.size(), 2);
     QCOMPARE(resultList[0].objectHit(), model1);
     QCOMPARE(resultList[1].objectHit(), model2);
 
@@ -174,7 +174,7 @@ void tst_Picking::test_object_picking()
     origin = QVector3D(0.0f, 0.0f, -100.0f);
     direction = QVector3D(0.0f, 0.0f, 1.0f);
     resultList = view3d->rayPickAll(origin, direction);
-    QCOMPARE(resultList.count(), 2);
+    QCOMPARE(resultList.size(), 2);
     QCOMPARE(resultList[0].objectHit(), model2);
     QCOMPARE(resultList[1].objectHit(), model1);
 

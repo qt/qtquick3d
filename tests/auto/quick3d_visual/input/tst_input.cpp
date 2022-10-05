@@ -255,7 +255,7 @@ void tst_Input::fallthrough()
     QSignalSpy pressedChangedSpy(tapHandlerUnderneath, SIGNAL(pressedChanged()));
 
     QTest::mouseClick(view.data(), Qt::LeftButton, Qt::NoModifier, pos);
-    QTRY_COMPARE(pressedChangedSpy.count(), 2);
+    QTRY_COMPARE(pressedChangedSpy.size(), 2);
 
     if (mouseAreaCanBlock) {
         pressedChangedSpy.clear();
@@ -264,8 +264,8 @@ void tst_Input::fallthrough()
         QSignalSpy maPressedChangedSpy(mouseArea, SIGNAL(pressedChanged()));
         mouseArea->setEnabled(true); // accepts the mouse events
         QTest::mouseClick(view.data(), Qt::LeftButton, Qt::NoModifier, pos);
-        QTRY_COMPARE(maPressedChangedSpy.count(), 2);
-        QCOMPARE(pressedChangedSpy.count(), 0);
+        QTRY_COMPARE(maPressedChangedSpy.size(), 2);
+        QCOMPARE(pressedChangedSpy.size(), 0);
     }
 }
 

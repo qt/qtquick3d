@@ -67,7 +67,7 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
     if (!shaderPrepData.valid)
         return;
 
-    for (int i = 0, ie = shaderPrepData.passes.count(); i != ie; ++i) {
+    for (int i = 0, ie = shaderPrepData.passes.size(); i != ie; ++i) {
         const ShaderPrepPassData &pass(shaderPrepData.passes[i]);
 
         // The fragment shader of the last pass of the last effect may need to

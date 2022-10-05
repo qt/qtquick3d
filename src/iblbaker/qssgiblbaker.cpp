@@ -577,7 +577,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
             // Write imageSize once size is known
             if (imageSize == 0) {
-                imageSize = result.data.length();
+                imageSize = result.data.size();
                 writeUInt32(ktxOutputFile, quint32(imageSize));
             }
 

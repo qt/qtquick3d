@@ -312,7 +312,7 @@ QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, 
                 aiNodeAnim *channel = animation->mChannels[j];
                 auto nodes = findAnimationNodes(channel->mNodeName, nodeMap);
                 // ### TODO Support more than one node
-                aiNode *node = nodes.length() >= 1 ? nodes.first() : nullptr;
+                aiNode *node = nodes.size() >= 1 ? nodes.first() : nullptr;
                 if (channel && node) {
                     // remove redundant animations
                     // assimp generates animation keys with the transformation
@@ -350,7 +350,7 @@ QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, 
                 aiMeshMorphAnim *channel = animation->mMorphMeshChannels[j];
                 auto nodes = findAnimationNodes(channel->mName, nodeMap);
                 // ### TODO Support more than one node
-                aiNode *node = nodes.length() >= 1 ? nodes.first() : nullptr;
+                aiNode *node = nodes.size() >= 1 ? nodes.first() : nullptr;
                 if (channel && node)
                     m_morphAnimations.back()->insert(node, channel);
             }
@@ -580,9 +580,9 @@ void AssimpImporter::generateModelProperties(aiNode *modelNode, QTextStream &out
 
     // For each sub-mesh, generate a material reference for this list
     output << QSSGQmlUtilities::insertTabs(tabLevel) << QStringLiteral("materials: [\n");
-    for (int i = 0; i < materials.count(); ++i) {
+    for (int i = 0; i < materials.size(); ++i) {
         output << QSSGQmlUtilities::insertTabs(tabLevel + 1) << m_materialIdMap[materials[i]];
-        if (i < materials.count() - 1)
+        if (i < materials.size() - 1)
             output << QStringLiteral(",");
         output << QStringLiteral("\n");
     }

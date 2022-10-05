@@ -1199,7 +1199,7 @@ static bool interceptObjectDef(const QQmlJS::AST::UiObjectDefinition &def, Conte
     // If this is a new component register it
     if (ctx.type == Context::Type::Component && ctx.property.target == nullptr && type != -1) {
         const auto &fileName = ctx.currentFileInfo.fileName();
-        componentName = fileName.left(fileName.length() - 4);
+        componentName = fileName.left(fileName.size() - 4);
         doRegisterComponent = !componentName.isEmpty();
     }
 

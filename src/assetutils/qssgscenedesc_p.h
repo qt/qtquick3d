@@ -609,7 +609,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     static_assert(!std::is_pointer_v<T>, "Type cannot be a pointer!");
     static_assert(std::is_trivially_destructible_v<T> && std::is_trivially_copy_constructible_v<T>,
             "List parameter type needs to be trivially constructable and trivially destructible!");
-    if (const auto count = value.count()) {
+    if (const auto count = value.size()) {
         const auto asize = count * sizeof(T);
         auto data = node.scene->allocator.allocate(asize);
         memcpy(data, value.constData(), asize);
@@ -688,10 +688,10 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         auto &scene = node.scene;
         NodeList *l = scene->create<NodeList>();
         {
-            const auto size = sizeof(Node *) * list.count();
+            const auto size = sizeof(Node *) * list.size();
             l->head = reinterpret_cast<Node **>(scene->allocator.allocate(size));
             memcpy(l->head, list.data(), size);
-            l->count = list.count();
+            l->count = list.size();
         }
 
         Property *prop = scene->create<Property>();

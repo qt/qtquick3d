@@ -799,7 +799,7 @@ int QQuick3DParticleEmitter::getEmitAmountFromDynamicBursts(int triggerType)
         }
     }
     // Then go through the triggered emit bursts list
-    for (int burstIndex = 0; burstIndex < m_burstEmitData.count(); ++burstIndex) {
+    for (int burstIndex = 0; burstIndex < m_burstEmitData.size(); ++burstIndex) {
         auto &burstData = m_burstEmitData[burstIndex];
         const int amountLeft = burstData.emitAmount - burstData.emitCounter;
         if (currentTime >= burstData.endTime) {
@@ -1020,7 +1020,7 @@ void QQuick3DParticleEmitter::appendEmitBurst(QQuick3DParticleEmitBurst* n) {
 
 qsizetype QQuick3DParticleEmitter::emitBurstCount() const
 {
-    return m_emitBursts.count();
+    return m_emitBursts.size();
 }
 
 QQuick3DParticleEmitBurst *QQuick3DParticleEmitter::emitBurst(qsizetype index) const

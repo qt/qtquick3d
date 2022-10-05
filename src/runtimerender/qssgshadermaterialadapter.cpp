@@ -919,7 +919,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     StringPairList allInputs = baseInputs;
     for (const QByteArray &inputTypeAndName : inputs) {
         const QByteArrayList typeAndName = inputTypeAndName.split(' ');
-        if (typeAndName.count() == 2)
+        if (typeAndName.size() == 2)
             allInputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
     }
     if (!allInputs.isEmpty()) {
@@ -940,7 +940,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     StringPairList allOutputs = baseOutputs;
     for (const QByteArray &outputTypeAndName : outputs) {
         const QByteArrayList typeAndName = outputTypeAndName.split(' ');
-        if (typeAndName.count() == 2)
+        if (typeAndName.size() == 2)
             allOutputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
     }
     if (!allOutputs.isEmpty()) {

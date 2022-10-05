@@ -911,7 +911,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                             theMesh->bvh = bufferManager->loadMeshBVH(model.geometry);
 
                         if (theMesh->bvh) {
-                            for (int i = 0; i < theMesh->bvh->roots.count(); ++i)
+                            for (int i = 0; i < theMesh->bvh->roots.size(); ++i)
                                 theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
                         }
                     }
@@ -1044,7 +1044,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
             QSSGRenderGraphObject *theMaterialObject = nullptr;
             if (model.materials.isEmpty())
                 break;
-            if (idx + 1 > model.materials.count())
+            if (idx + 1 > model.materials.size())
                 theMaterialObject = model.materials.last();
             else
                 theMaterialObject = model.materials.at(idx);
@@ -1989,7 +1989,7 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     m_lightmapper->reset();
     m_lightmapper->setOptions(layer.lmOptions);
 
-    for (int i = 0, ie = sortedBakedLightingModels.count(); i != ie; ++i)
+    for (int i = 0, ie = sortedBakedLightingModels.size(); i != ie; ++i)
         m_lightmapper->add(sortedBakedLightingModels[i]);
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();

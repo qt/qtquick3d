@@ -318,19 +318,19 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
         }
 
         SubsetEntryData subsetEntry;
-        subsetEntry.indexOffset = indexBufferData.length() / QSSGMesh::MeshInternal::byteSizeForComponentType(indexType);
-        subsetEntry.indexLength = indexes.length();
+        subsetEntry.indexOffset = indexBufferData.size() / QSSGMesh::MeshInternal::byteSizeForComponentType(indexType);
+        subsetEntry.indexLength = indexes.size();
         if (indexType == QSSGMesh::Mesh::ComponentType::UnsignedInt32) {
             indexBufferData += QByteArray(reinterpret_cast<const char *>(indexes.constData()),
-                                          indexes.length() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
+                                          indexes.size() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
         } else {
             // convert data to quint16
             QVector<quint16> shortIndexes;
-            shortIndexes.resize(indexes.length());
-            for (int i = 0; i < shortIndexes.length(); ++i)
+            shortIndexes.resize(indexes.size());
+            for (int i = 0; i < shortIndexes.size(); ++i)
                 shortIndexes[i] = quint16(indexes[i]);
             indexBufferData += QByteArray(reinterpret_cast<const char *>(shortIndexes.constData()),
-                                          shortIndexes.length() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
+                                          shortIndexes.size() * QSSGMesh::MeshInternal::byteSizeForComponentType(indexType));
         }
 
         subsetEntry.name = QString::fromUtf8(scene.mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
@@ -340,7 +340,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
     }
 
     QVector<QSSGMesh::AssetVertexEntry> entries;
-    if (positionData.length() > 0) {
+    if (positionData.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getPositionAttrName(),
                            positionData,
@@ -348,7 +348,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                            3
                        });
     }
-    if (normalData.length() > 0) {
+    if (normalData.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getNormalAttrName(),
                            normalData,
@@ -356,7 +356,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                            3
                        });
     }
-    if (uv0Data.length() > 0) {
+    if (uv0Data.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getUV0AttrName(),
                            uv0Data,
@@ -364,7 +364,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                            uv0Components
                        });
     }
-    if (uv1Data.length() > 0) {
+    if (uv1Data.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getUV1AttrName(),
                            uv1Data,
@@ -373,7 +373,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
 
-    if (tangentData.length() > 0) {
+    if (tangentData.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getTexTanAttrName(),
                            tangentData,
@@ -382,7 +382,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
 
-    if (binormalData.length() > 0) {
+    if (binormalData.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getTexBinormalAttrName(),
                            binormalData,
@@ -391,7 +391,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
 
-    if (vertexColorData.length() > 0) {
+    if (vertexColorData.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getColorAttrName(),
                            vertexColorData,
@@ -400,7 +400,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
 
-    if (boneIndexData.length() > 0) {
+    if (boneIndexData.size() > 0) {
         entries.append({
                            QSSGMesh::MeshInternal::getJointAttrName(),
                            boneIndexData,
@@ -415,7 +415,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                        });
     }
     for (uint i = 0; i < numMorphTargets; ++i) {
-        if (targetPositionData[i].length() > 0) {
+        if (targetPositionData[i].size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getTargetPositionAttrName(i),
                                targetPositionData[i],
@@ -423,7 +423,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                3
                            });
         }
-        if (targetNormalData[i].length() > 0) {
+        if (targetNormalData[i].size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getTargetNormalAttrName(i),
                                targetNormalData[i],
@@ -431,7 +431,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                3
                            });
         }
-        if (targetTangentData[i].length() > 0) {
+        if (targetTangentData[i].size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getTargetTangentAttrName(i),
                                targetTangentData[i],
@@ -439,7 +439,7 @@ QSSGMesh::Mesh AssimpUtils::generateMeshData(const aiScene &scene,
                                3
                            });
         }
-        if (targetBinormalData[i].length() > 0) {
+        if (targetBinormalData[i].size() > 0) {
             entries.append({
                                QSSGMesh::MeshInternal::getTargetBinormalAttrName(i),
                                targetBinormalData[i],
