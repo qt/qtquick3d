@@ -1103,6 +1103,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                     renderer->defaultMaterialShaderKeyProperties().m_morphTargetAttributes[i].setValue(theGeneratedKey, model.morphAttributes[i] & morphTargetAttribs[i]);
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
+                                                                             QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset,
                                                                              renderableFlags,
                                                                              theModelCenter,
                                                                              renderer,
@@ -1152,6 +1153,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                     theMaterial.m_iblProbe->clearDirty();
 
                 theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
+                                                                             QSSGSubsetRenderable::Type::CustomMaterialMeshSubset,
                                                                              renderableFlags,
                                                                              theModelCenter,
                                                                              renderer,
@@ -1310,7 +1312,7 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
 
         const auto injectProbe = [&](const QSSGRenderableObjectHandle &handle) {
             if (handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections)
-                && !handle.obj->renderableFlags.testFlag(QSSGRenderableObjectFlag::Particles)) {
+                && !(handle.obj->type == QSSGRenderableObject::Type::Particles)) {
                 QSSGSubsetRenderable* renderableObj = static_cast<QSSGSubsetRenderable*>(handle.obj);
                 QSSGBounds3 nodeBound = renderableObj->bounds;
                 QVector4D vmin(nodeBound.minimum, 1.0);

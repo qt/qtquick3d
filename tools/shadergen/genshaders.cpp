@@ -211,7 +211,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             renderable = layerData.transparentObjects.at(0).obj;
 
         auto generateShader = [&](const QSSGShaderFeatures &features) {
-            if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset)) {
+            if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
                 auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
                 if (!shaderPipeline.isNull()) {
                     const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
@@ -224,7 +224,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                             qsbc.addEntry(hkey, { shaderString, QQsbCollection::toFeatureSet(features), vertexStage->shader(), fragmentStage->shader() });
                     }
                 }
-            } else if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::CustomMaterialMeshSubset)) {
+            } else if ((renderable->type == QSSGSubsetRenderable::Type::CustomMaterialMeshSubset)) {
                 Q_ASSERT(layerData.camera);
                 QSSGSubsetRenderable &cmr(static_cast<QSSGSubsetRenderable &>(*renderable));
                 auto pipelineState = layerData.getPipelineState();

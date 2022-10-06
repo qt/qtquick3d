@@ -36,30 +36,27 @@ enum class QSSGRenderableObjectFlag
     HasTransparency = 1 << 0,
     CompletelyTransparent = 1 << 1,
     Dirty = 1 << 2,
-    DefaultMaterialMeshSubset = 1 << 3,
-    Particles = 1 << 4,
-    CustomMaterialMeshSubset = 1 << 5,
-    CastsShadows = 1 << 6,
-    ReceivesShadows = 1 << 7,
-    HasAttributePosition = 1 << 8,
-    HasAttributeNormal = 1 << 9,
-    HasAttributeTexCoord0 = 1 << 10,
-    HasAttributeTexCoord1 = 1 << 11,
-    HasAttributeTangent = 1 << 12,
-    HasAttributeBinormal = 1 << 13,
-    HasAttributeColor = 1 << 14,
-    HasAttributeJointAndWeight = 1 << 15,
-    IsPointsTopology = 1 << 16,
+    CastsShadows = 1 << 3,
+    ReceivesShadows = 1 << 4,
+    HasAttributePosition = 1 << 5,
+    HasAttributeNormal = 1 << 6,
+    HasAttributeTexCoord0 = 1 << 7,
+    HasAttributeTexCoord1 = 1 << 8,
+    HasAttributeTangent = 1 << 9,
+    HasAttributeBinormal = 1 << 10,
+    HasAttributeColor = 1 << 11,
+    HasAttributeJointAndWeight = 1 << 12,
+    IsPointsTopology = 1 << 13,
     // The number of target models' attributes are too many
     // to store in a renderable flag.
     // They will be recorded in shaderKey.
-    HasAttributeMorphTarget = 1 << 17,
-    RequiresScreenTexture = 1 << 18,
-    ReceivesReflections = 1 << 19,
-    UsedInBakedLighting = 1 << 20,
-    RendersWithLightmap = 1 << 21,
-    HasAttributeTexCoordLightmap = 1 << 22,
-    CastsReflections = 1 << 23
+    HasAttributeMorphTarget = 1 << 14,
+    RequiresScreenTexture = 1 << 15,
+    ReceivesReflections = 1 << 16,
+    UsedInBakedLighting = 1 << 17,
+    RendersWithLightmap = 1 << 18,
+    HasAttributeTexCoordLightmap = 1 << 19,
+    CastsReflections = 1 << 20
 };
 
 struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
@@ -129,34 +126,6 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
     void setHasAttributeMorphTarget(bool b) { setFlag(QSSGRenderableObjectFlag::HasAttributeMorphTarget, b);
     }
     bool hasAttributeMorphTarget() const { return this->operator&(QSSGRenderableObjectFlag::HasAttributeMorphTarget); }
-
-    // Mutually exclusive values
-    void setDefaultMaterialMeshSubset(bool inMeshSubset)
-    {
-        setFlag(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset, inMeshSubset);
-    }
-    bool isDefaultMaterialMeshSubset() const
-    {
-        return this->operator&(QSSGRenderableObjectFlag::DefaultMaterialMeshSubset);
-    }
-
-    void setCustomMaterialMeshSubset(bool inMeshSubset)
-    {
-        setFlag(QSSGRenderableObjectFlag::CustomMaterialMeshSubset, inMeshSubset);
-    }
-    bool isCustomMaterialMeshSubset() const
-    {
-        return this->operator&(QSSGRenderableObjectFlag::CustomMaterialMeshSubset);
-    }
-
-    void setParticlesRenderable(bool set)
-    {
-        setFlag(QSSGRenderableObjectFlag::Particles, set);
-    }
-    bool isParticlesRenderable() const
-    {
-        return this->operator&(QSSGRenderableObjectFlag::Particles);
-    }
 
     void setPointsTopology(bool v)
     {
@@ -231,32 +200,42 @@ using QSSGRenderableObjectList = QVector<QSSGRenderableObjectHandle>;
 
 struct QSSGRenderableObject
 {
+    enum class Type : quint8
+    {
+        DefaultMaterialMeshSubset,
+        CustomMaterialMeshSubset,
+        Particles
+    };
+
     // Variables used for picking
     const QMatrix4x4 &globalTransform;
     const QSSGBounds3 &bounds;
-    // Special bounds variable for models with blend particles (in world-space)
-    QSSGBounds3 particleBounds;
+    QSSGBounds3 globalBounds;
 
     QSSGRenderableObjectFlags renderableFlags;
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
     float depthBiasSq; // Squared as our sorting is based on the square distance!
     QSSGDepthDrawMode depthWriteMode = QSSGDepthDrawMode::OpaqueOnly;
+    const Type type;
 
-    QSSGRenderableObject(QSSGRenderableObjectFlags inFlags,
+    QSSGRenderableObject(Type ty,
+                         QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QMatrix4x4 &inGlobalTransform,
                          const QSSGBounds3 &inBounds,
-                         const QSSGBounds3 &inParticleBounds,
                          float inDepthBias)
 
         : globalTransform(inGlobalTransform)
         , bounds(inBounds)
-        , particleBounds(inParticleBounds)
+        , globalBounds(inBounds)
         , renderableFlags(inFlags)
         , worldCenterPoint(inWorldCenterPt)
         , depthBiasSq(inDepthBias)
+        , type(ty)
     {
+        if (type != Type::Particles) // See: QSSGParticlesRenderable's ctor
+            globalBounds.transform(globalTransform);
     }
 };
 
@@ -328,7 +307,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
         } reflectionPass;
     } rhiRenderData;
 
-    QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
+    QSSGSubsetRenderable(Type type,
+                         QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
                          const QSSGRef<QSSGRenderer> &gen,
                          const QSSGRenderSubset &inSubset,
@@ -341,12 +321,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
 
     const QSSGRenderDefaultMaterial &defaultMaterial() const
     {
-        Q_ASSERT(renderableFlags.isDefaultMaterialMeshSubset());
+        Q_ASSERT(QSSGRenderGraphObject::isMaterial(material.type) && material.type != QSSGRenderGraphObject::Type::CustomMaterial);
         return static_cast<const QSSGRenderDefaultMaterial &>(material);
     }
     const QSSGRenderCustomMaterial &customMaterial() const
     {
-        Q_ASSERT(renderableFlags.isCustomMaterialMeshSubset());
+        Q_ASSERT(material.type == QSSGRenderGraphObject::Type::CustomMaterial);
         return static_cast<const QSSGRenderCustomMaterial &>(material);
     }
     bool prepareInstancing(QSSGRhiContext *rhiCtx, const QVector3D &cameraDirection);

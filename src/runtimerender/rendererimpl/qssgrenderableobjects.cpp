@@ -13,7 +13,8 @@ QT_BEGIN_NAMESPACE
 struct QSSGRenderableImage;
 struct QSSGSubsetRenderable;
 
-QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
+QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
+                                           QSSGRenderableObjectFlags inFlags,
                                            const QVector3D &inWorldCenterPt,
                                            const QSSGRef<QSSGRenderer> &gen,
                                            const QSSGRenderSubset &inSubset,
@@ -23,12 +24,11 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
                                            QSSGRenderableImage *inFirstImage,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
                                            const QSSGShaderLightList &inLights)
-    : QSSGRenderableObject(inFlags,
+    : QSSGRenderableObject(type,
+                           inFlags,
                            inWorldCenterPt,
                            inModelContext.model.globalTransform,
                            inSubset.bounds,
-                           inModelContext.model.particleBuffer != nullptr ? inModelContext.model.particleBuffer->bounds()
-                                                                          : QSSGBounds3(),
                            inModelContext.model.m_depthBiasSq)
     , generator(gen)
     , modelContext(inModelContext)
@@ -39,13 +39,10 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(QSSGRenderableObjectFlags inFlags,
     , shaderDescription(inShaderKey)
     , lights(inLights)
 {
-    if (mat.type == QSSGRenderGraphObject::Type::CustomMaterial) {
-        renderableFlags.setCustomMaterialMeshSubset(true);
+    if (mat.type == QSSGRenderGraphObject::Type::CustomMaterial)
         depthWriteMode = static_cast<const QSSGRenderCustomMaterial *>(&mat)->m_depthDrawMode;
-    } else {
-        renderableFlags.setDefaultMaterialMeshSubset(true);
+    else
         depthWriteMode = static_cast<const QSSGRenderDefaultMaterial *>(&mat)->depthDrawMode;
-    }
 }
 
 QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
@@ -56,11 +53,11 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                                                  QSSGRenderableImage *inColorTable,
                                                  const QSSGShaderLightList &inLights,
                                                  float inOpacity)
-    : QSSGRenderableObject(inFlags,
+    : QSSGRenderableObject(Type::Particles,
+                           inFlags,
                            inWorldCenterPt,
                            inParticles.globalTransform,
                            QSSGBounds3(),
-                           inParticles.m_particleBuffer.bounds(),
                            inParticles.m_depthBiasSq)
     , generator(gen)
     , particles(inParticles)
@@ -69,7 +66,8 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
     , lights(inLights)
     , opacity(inOpacity)
 {
-    renderableFlags.setParticlesRenderable(true);
+    // Bounds are in global space for particles
+    globalBounds = inParticles.m_particleBuffer.bounds();
 }
 
 QT_END_NAMESPACE

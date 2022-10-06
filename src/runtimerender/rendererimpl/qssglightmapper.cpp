@@ -270,14 +270,14 @@ bool QSSGLightmapperPrivate::commitGeometry()
 
         subMeshInfos[lmIdx].reserve(lm.renderables.size());
         for (const QSSGRenderableObjectHandle &handle : std::as_const(lm.renderables)) {
-            Q_ASSERT(handle.obj->renderableFlags.isDefaultMaterialMeshSubset()
-                     || handle.obj->renderableFlags.isCustomMaterialMeshSubset());
+            Q_ASSERT(handle.obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset
+                     || handle.obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset);
             QSSGSubsetRenderable *renderableObj = static_cast<QSSGSubsetRenderable *>(handle.obj);
             SubMeshInfo info;
             info.offset = renderableObj->subset.offset;
             info.count = renderableObj->subset.count;
             info.opacity = renderableObj->opacity;
-            if (handle.obj->renderableFlags.isDefaultMaterialMeshSubset()) {
+            if (handle.obj->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
                 const QSSGRenderDefaultMaterial *defMat = static_cast<const QSSGRenderDefaultMaterial *>(&renderableObj->material);
                 info.baseColor = defMat->color;
                 info.emissiveFactor = defMat->emissiveColor;
