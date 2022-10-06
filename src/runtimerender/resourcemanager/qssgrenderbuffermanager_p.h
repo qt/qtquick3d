@@ -123,6 +123,8 @@ public:
 
     void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
+    void releaseCachedResources();
+
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
                                            MipMode inMipMode = MipModeFollowRenderImage,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);

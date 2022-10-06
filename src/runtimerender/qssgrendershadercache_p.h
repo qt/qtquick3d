@@ -185,6 +185,8 @@ public:
                     const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 
+    void releaseCachedResources();
+
     QSSGRef<QSSGRhiShaderPipeline> getRhiShaderPipeline(const QByteArray &inKey,
                                                         const QSSGShaderFeatures &inFeatures);
 

@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtQuick3D
 
 Rectangle {
+    id: dbgView
     property var source: null
     property bool resourceDetailsVisible: false
     property int maxResourceDetailsHeight: 480
@@ -41,31 +42,13 @@ Rectangle {
             color: "white"
         }
         Text {
-            text: source.renderStats.renderPassCount + " render passes"
+            text: source.renderStats.drawCallCount + " draw calls with " + source.renderStats.drawVertexCount + " vertices in " + source.renderStats.renderPassCount + " render passes"
             font.pointSize: 9
             color: "white"
             visible: resourceDetailsVisible
         }
         Text {
-            text: source.renderStats.drawCallCount + " draw calls"
-            font.pointSize: 9
-            color: "white"
-            visible: resourceDetailsVisible
-        }
-        Text {
-            text: source.renderStats.drawVertexCount + " vertices"
-            font.pointSize: 9
-            color: "white"
-            visible: resourceDetailsVisible
-        }
-        Text {
-            text: "Image assets: " + (source.renderStats.imageDataSize / 1024).toFixed(2) + " KB"
-            font.pointSize: 9
-            color: "white"
-            visible: resourceDetailsVisible
-        }
-        Text {
-            text: "Mesh assets: " + (source.renderStats.meshDataSize / 1024).toFixed(2) + " KB"
+            text: "Window assets: " + (source.renderStats.imageDataSize / 1024).toFixed(2) + " KB tex., " + (source.renderStats.meshDataSize / 1024).toFixed(2) + " KB mesh, " + source.renderStats.pipelineCount + " pipl."
             font.pointSize: 9
             color: "white"
             visible: resourceDetailsVisible
@@ -95,7 +78,7 @@ Rectangle {
                 font.pointSize: 9
             }
             TabButton {
-                text: "Visualize"
+                text: "Debug"
                 font.pointSize: 9
             }
         }
@@ -128,43 +111,48 @@ Rectangle {
             }
         }
         Item {
-            id: visualizeControls
             visible: resourceDetailsVisible && bar.currentIndex === 3
             width: bar.width
             height: visCtrCol.height
             Column {
                 id: visCtrCol
                 width: parent.width
-                CheckBox {
-                    text: "Wireframe mode"
-                    onCheckedChanged: source.environment.debugSettings.wireframeEnabled = checked
-                }
-                RowLayout {
-                    Label {
-                        text: "Material override"
+                ColumnLayout {
+                    CheckBox {
+                        text: "Wireframe mode"
+                        onCheckedChanged: source.environment.debugSettings.wireframeEnabled = checked
                     }
-                    ComboBox {
-                        id: materialOverrideComboBox
-                        textRole: "text"
-                        valueRole: "value"
-                        implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: source.environment.debugSettings.materialOverride = currentValue
-                        Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(source.environment.debugSettings.materialOverride)
-                        model: [
-                            { value: DebugSettings.None, text: "None"},
-                            { value: DebugSettings.BaseColor, text: "Base Color"},
-                            { value: DebugSettings.Roughness, text: "Roughness"},
-                            { value: DebugSettings.Metalness, text: "Metalness"},
-                            { value: DebugSettings.Diffuse, text: "Diffuse"},
-                            { value: DebugSettings.Specular, text: "Specular"},
-                            { value: DebugSettings.ShadowOcclusion, text: "Shadow Occlusion"},
-                            { value: DebugSettings.Emission, text: "Emission"},
-                            { value: DebugSettings.AmbientOcclusion, text: "Ambient Occlusion"},
-                            { value: DebugSettings.Normals, text: "Normals"},
-                            { value: DebugSettings.Tangents, text: "Tangents"},
-                            { value: DebugSettings.Binormals, text: "Binormals"},
-                            { value: DebugSettings.F0, text: "F0"}
-                        ]
+                    RowLayout {
+                        Label {
+                            text: "Material override"
+                        }
+                        ComboBox {
+                            id: materialOverrideComboBox
+                            textRole: "text"
+                            valueRole: "value"
+                            implicitContentWidthPolicy: ComboBox.WidestText
+                            onActivated: source.environment.debugSettings.materialOverride = currentValue
+                            Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(source.environment.debugSettings.materialOverride)
+                            model: [
+                                { value: DebugSettings.None, text: "None"},
+                                { value: DebugSettings.BaseColor, text: "Base Color"},
+                                { value: DebugSettings.Roughness, text: "Roughness"},
+                                { value: DebugSettings.Metalness, text: "Metalness"},
+                                { value: DebugSettings.Diffuse, text: "Diffuse"},
+                                { value: DebugSettings.Specular, text: "Specular"},
+                                { value: DebugSettings.ShadowOcclusion, text: "Shadow Occlusion"},
+                                { value: DebugSettings.Emission, text: "Emission"},
+                                { value: DebugSettings.AmbientOcclusion, text: "Ambient Occlusion"},
+                                { value: DebugSettings.Normals, text: "Normals"},
+                                { value: DebugSettings.Tangents, text: "Tangents"},
+                                { value: DebugSettings.Binormals, text: "Binormals"},
+                                { value: DebugSettings.F0, text: "F0"}
+                            ]
+                        }
+                    }
+                    Button {
+                        text: "Release cached resources"
+                        onClicked: source.renderStats.releaseCachedResources(dbgView)
                     }
                 }
             }

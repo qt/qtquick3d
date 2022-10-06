@@ -979,6 +979,8 @@ public:
     void releaseMesh(QSSGRenderMesh *mesh);
     QSet<QSSGRenderMesh *> registeredMeshes() const { return m_meshes; }
 
+    QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelines() const { return m_pipelines; }
+
     void cleanupDrawCallData(const QSSGRenderModel *model);
 
     QRhiTexture *dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub,
@@ -1006,6 +1008,8 @@ public:
     QSSGRhiContextStats &stats() { return m_stats; }
 
     int maxUniformBufferRange() const { return m_rhi->resourceLimit(QRhi::MaxUniformBufferRange); }
+
+    void releaseCachedResources();
 
 private:
     QRhi *m_rhi = nullptr;

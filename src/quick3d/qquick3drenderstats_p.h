@@ -23,6 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderLayer;
+class QQuickItem;
 
 class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
 {
@@ -43,6 +44,7 @@ class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
     Q_PROPERTY(QString renderPassDetails READ renderPassDetails NOTIFY renderPassDetailsChanged)
     Q_PROPERTY(QString textureDetails READ textureDetails NOTIFY textureDetailsChanged)
     Q_PROPERTY(QString meshDetails READ meshDetails NOTIFY meshDetailsChanged)
+    Q_PROPERTY(int pipelineCount READ pipelineCount NOTIFY pipelineCountChanged)
 
 public:
     QQuick3DRenderStats(QObject *parent = nullptr);
@@ -75,6 +77,9 @@ public:
     QString renderPassDetails() const;
     QString textureDetails() const;
     QString meshDetails() const;
+    int pipelineCount() const;
+
+    Q_INVOKABLE void releaseCachedResources(QQuickItem *item);
 
 Q_SIGNALS:
     void fpsChanged();
@@ -91,6 +96,7 @@ Q_SIGNALS:
     void renderPassDetailsChanged();
     void textureDetailsChanged();
     void meshDetailsChanged();
+    void pipelineCountChanged();
 
 private:
     float timestamp() const;
@@ -125,6 +131,7 @@ private:
         QString meshDetails;
         QSet<QRhiTexture *> activeTextures;
         QSet<QSSGRenderMesh *> activeMeshes;
+        int pipelineCount = 0;
     };
 
     Results m_results;

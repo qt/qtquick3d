@@ -898,23 +898,45 @@ QSSGRhiContext::QSSGRhiContext()
 
 QSSGRhiContext::~QSSGRhiContext()
 {
+    releaseCachedResources();
+
+    qDeleteAll(m_textures);
+    qDeleteAll(m_meshes);
+}
+
+void QSSGRhiContext::releaseCachedResources()
+{
     for (QSSGRhiDrawCallData &dcd : m_drawCallData)
         dcd.reset();
+
+    m_drawCallData.clear();
 
     qDeleteAll(m_pipelines);
     qDeleteAll(m_computePipelines);
     qDeleteAll(m_srbCache);
-    qDeleteAll(m_textures);
-    qDeleteAll(m_meshes);
+    qDeleteAll(m_dummyTextures);
+
+    m_pipelines.clear();
+    m_computePipelines.clear();
+    m_srbCache.clear();
+    m_dummyTextures.clear();
+
     for (const auto &samplerInfo : std::as_const(m_samplers))
         delete samplerInfo.second;
+
+    m_samplers.clear();
+
+    for (const auto &particleData : std::as_const(m_particleData))
+        delete particleData.texture;
+
+    m_particleData.clear();
+
     for (const auto &instanceData : std::as_const(m_instanceBuffers)) {
         if (instanceData.owned)
             delete instanceData.buffer;
     }
-    for (const auto &particleData : std::as_const(m_particleData))
-        delete particleData.texture;
-    qDeleteAll(m_dummyTextures);
+
+    m_instanceBuffers.clear();
 }
 
 void QSSGRhiContext::initialize(QRhi *rhi)

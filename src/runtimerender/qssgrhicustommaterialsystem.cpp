@@ -41,6 +41,11 @@ void QSSGCustomMaterialSystem::setRenderContextInterface(QSSGRenderContextInterf
     context = inContext;
 }
 
+void QSSGCustomMaterialSystem::releaseCachedResources()
+{
+    shaderMap.clear();
+}
+
 QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
                                                                                   const QSSGRenderCustomMaterial &material,
                                                                                   QSSGSubsetRenderable &renderable,

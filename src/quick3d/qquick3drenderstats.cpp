@@ -3,6 +3,8 @@
 
 #include "qquick3drenderstats_p.h"
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
+#include <QtQuick/qquickwindow.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -368,6 +370,7 @@ void QQuick3DRenderStats::processRhiContextStats()
     const QSSGRhiContextStats::GlobalInfo globalData = m_contextStats->globalInfo;
     const QSet<QRhiTexture *> textures = m_contextStats->context.registeredTextures();
     const QSet<QSSGRenderMesh *> meshes = m_contextStats->context.registeredMeshes();
+    const QHash<QSSGGraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelines = m_contextStats->context.pipelines();
 
     m_results.drawCallCount = 0;
     m_results.drawVertexCount = 0;
@@ -466,6 +469,8 @@ void QQuick3DRenderStats::processRhiContextStats()
         meshDetails += QString::asprintf("\nAsset meshes registered with QSSGRhiContext %p", &m_contextStats->context);
         m_results.meshDetails = meshDetails;
     }
+
+    m_results.pipelineCount = pipelines.count();
 }
 
 void QQuick3DRenderStats::notifyRhiContextStats()
@@ -511,6 +516,11 @@ void QQuick3DRenderStats::notifyRhiContextStats()
     if (m_results.meshDetails != m_notifiedResults.meshDetails) {
         m_notifiedResults.meshDetails = m_results.meshDetails;
         emit meshDetailsChanged();
+    }
+
+    if (m_results.pipelineCount != m_notifiedResults.pipelineCount) {
+        m_notifiedResults.pipelineCount = m_results.pipelineCount;
+        emit pipelineCountChanged();
     }
 }
 
@@ -641,6 +651,31 @@ QString QQuick3DRenderStats::textureDetails() const
 QString QQuick3DRenderStats::meshDetails() const
 {
     return m_results.meshDetails;
+}
+
+/*!
+    \qmlproperty int QtQuick3D::RenderStats::pipelineCount
+    \readonly
+
+    This property holds the total number of cached graphics pipelines for the
+    window the \l View3D belongs to.
+
+    The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \since 6.5
+*/
+int QQuick3DRenderStats::pipelineCount() const
+{
+    return m_results.pipelineCount;
+}
+
+/*!
+    \internal
+ */
+void QQuick3DRenderStats::releaseCachedResources(QQuickItem *item)
+{
+    if (item && item->window())
+        item->window()->releaseResources();
 }
 
 QT_END_NAMESPACE

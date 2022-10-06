@@ -167,6 +167,11 @@ QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
 {
 }
 
+void QSSGShaderCache::releaseCachedResources()
+{
+    m_rhiShaders.clear();
+}
+
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::getRhiShaderPipeline(const QByteArray &inKey,
                                                                      const QSSGShaderFeatures &inFeatures)
 {

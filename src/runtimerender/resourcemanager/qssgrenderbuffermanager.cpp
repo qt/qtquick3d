@@ -102,6 +102,11 @@ void QSSGBufferManager::setRenderContextInterface(QSSGRenderContextInterface *ct
     m_contextInterface = ctx;
 }
 
+void QSSGBufferManager::releaseCachedResources()
+{
+    clear();
+}
+
 QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage *image,
                                                           MipMode inMipMode,
                                                           LoadRenderImageFlags flags)
@@ -1743,7 +1748,9 @@ void QSSGBufferManager::clear()
     {
         QMutexLocker meshMutexLocker(&meshBufferMutex);
         // Meshes (by path)
-        for (auto iter = meshMap.begin(), end = meshMap.end(); iter != end; ++iter) {
+        auto meshMapCopy = meshMap;
+        meshMapCopy.detach();
+        for (auto iter = meshMapCopy.begin(), end = meshMapCopy.end(); iter != end; ++iter) {
             QSSGRenderMesh *theMesh = iter.value().mesh;
             if (theMesh) {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
@@ -1756,7 +1763,9 @@ void QSSGBufferManager::clear()
         meshMap.clear();
 
         // Meshes (custom)
-        for (auto iter = customMeshMap.begin(), end = customMeshMap.end(); iter != end; ++iter) {
+        auto customMeshMapCopy = customMeshMap;
+        customMeshMapCopy.detach();
+        for (auto iter = customMeshMapCopy.begin(), end = customMeshMapCopy.end(); iter != end; ++iter) {
             QSSGRenderMesh *theMesh = iter.value().mesh;
             if (theMesh) {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
@@ -1770,15 +1779,15 @@ void QSSGBufferManager::clear()
     }
 
     // Textures (by path)
-    for (auto iter = imageMap.begin(), end = imageMap.end(); iter != end; ++iter) {
-        releaseImage(iter.key());
-    }
+    for (const auto &k : imageMap.keys())
+        releaseImage(k);
+
     imageMap.clear();
 
     // Textures (custom)
-    for (auto iter = customTextureMap.begin(), end = customTextureMap.end(); iter != end; ++iter) {
-        releaseTextureData(iter.key());
-    }
+    for (const auto &k : customTextureMap.keys())
+        releaseTextureData(k);
+
     customTextureMap.clear();
 
     // Textures (QSG)

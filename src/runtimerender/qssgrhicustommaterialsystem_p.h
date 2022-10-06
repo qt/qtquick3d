@@ -66,6 +66,8 @@ public:
 
     void setRenderContextInterface(QSSGRenderContextInterface *inContext);
 
+    void releaseCachedResources();
+
     // Returns true if the material is dirty and thus will produce a different render result
     // than previously.  This effects things like progressive AA.
     bool prepareForRender(const QSSGRenderModel &inModel,

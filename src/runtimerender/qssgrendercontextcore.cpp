@@ -16,7 +16,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgdebugdrawsystem_p.h>
 
-#include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -97,6 +97,26 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
         QObject::connect(window, &QWindow::destroyed, [&](QObject *o){
             g_windowReg->removeIf([o](const Binding &b) { return (b.first == o); });
         });
+
+        // Act when the application calls window->releaseResources() and the
+        // render loop emits the corresponding signal in order to forward the
+        // event to us as well. (do not confuse with other release-resources
+        // type of functions, this is about dropping pipeline and other resource
+        // caches than can be automatically recreated if needed on the next frame)
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        QSGRenderContext *rc = wd->context;
+        if (rc) {
+            // the signal is emitted on the render thread, if there is one
+            QObject::connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, [this] {
+                m_renderer->releaseResources();
+                m_shaderCache->releaseCachedResources();
+                m_customMaterialSystem->releaseCachedResources();
+                m_bufferManager->releaseCachedResources();
+                m_rhiContext->releaseCachedResources();
+            });
+        } else {
+            qWarning("QQuickWindow %p has no QSGRenderContext, this should not happen", window);
+        }
     }
 }
 
