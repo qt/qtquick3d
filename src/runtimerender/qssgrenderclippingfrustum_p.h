@@ -18,29 +18,28 @@
 
 #include <QtQuick3DUtils/private/qssgplane_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderexports_p.h>
 
 QT_BEGIN_NAMESPACE
 
-enum class BoxEdgeFlagValues
-{
-    None = 0,
-    xMax = 1,
-    yMax = 1 << 1,
-    zMax = 1 << 2,
-};
-
-Q_DECLARE_FLAGS(QSSGRenderBoxEdge, BoxEdgeFlagValues)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRenderBoxEdge)
-
 struct QSSGClipPlane
 {
+    enum BoxEdgeID : quint8
+    {
+        None = 0,
+        xMax = 1,
+        yMax = 1 << 1,
+        zMax = 1 << 2,
+    };
+    using BoxEdgeFlag = std::underlying_type_t<BoxEdgeID>;
+
     // For an intesection test, we only need two points of the bounding box.
     // There will be a point nearest to the plane, and a point furthest from the plane.
     // We can derive these points from the plane normal equation.
     struct BoxEdge
     {
-        QSSGRenderBoxEdge lowerEdge;
-        QSSGRenderBoxEdge upperEdge;
+        BoxEdgeFlag lowerEdge;
+        BoxEdgeFlag upperEdge;
     };
 
     QVector3D normal;
@@ -49,7 +48,7 @@ struct QSSGClipPlane
 
     // For intersection tests, we only need to know if the numerator is greater than, equal to,
     // or less than zero.
-    inline float distance(const QVector3D &pt) const { return QVector3D::dotProduct(normal, pt) + d; }
+    [[nodiscard]] constexpr inline float distance(const QVector3D &pt) const { return QVector3D::dotProduct(normal, pt) + d; }
 
     // Only works if p0 is above the line and p1 is below the plane.
     inline QVector3D intersectWithLine(const QVector3D &p0, const QVector3D &p1) const
@@ -73,11 +72,11 @@ struct QSSGClipPlane
         return retval;
     }
 
-    static inline QVector3D corner(const QSSGBounds3 &bounds, QSSGRenderBoxEdge edge)
+    static inline constexpr QVector3D corner(const QSSGBounds3 &bounds, BoxEdgeFlag edge)
     {
-        return QVector3D((edge & BoxEdgeFlagValues::xMax) ? bounds.maximum[0] : bounds.minimum[0],
-                         (edge & BoxEdgeFlagValues::yMax) ? bounds.maximum[1] : bounds.minimum[1],
-                         (edge & BoxEdgeFlagValues::zMax) ? bounds.maximum[2] : bounds.minimum[2]);
+        return QVector3D((edge & BoxEdgeID::xMax) ? bounds.maximum[0] : bounds.minimum[0],
+                         (edge & BoxEdgeID::yMax) ? bounds.maximum[1] : bounds.minimum[1],
+                         (edge & BoxEdgeID::zMax) ? bounds.maximum[2] : bounds.minimum[2]);
     }
 
     // dividing the distance numerator
@@ -103,17 +102,22 @@ struct QSSGClipPlane
         return 0;
     }
 
+    [[nodiscard]] constexpr bool intersectSimple(const QSSGBounds3 &bounds) const
+    {
+        return (distance(corner(bounds, mEdges.lowerEdge)) > 0.0f) || !(distance(corner(bounds, mEdges.upperEdge)) < 0.0f);
+    }
+
     inline void calculateBBoxEdges()
     {
-        mEdges.upperEdge = QSSGRenderBoxEdge(static_cast<quint8>((normal[0] >= 0.0f ? BoxEdgeFlagValues::xMax : BoxEdgeFlagValues::None)
-                                                              | (normal[1] >= 0.0f ? BoxEdgeFlagValues::yMax : BoxEdgeFlagValues::None)
-                                                              | (normal[2] >= 0.0f ? BoxEdgeFlagValues::zMax : BoxEdgeFlagValues::None)));
+        mEdges.upperEdge = (normal[0] >= 0.0f ? BoxEdgeID::xMax : BoxEdgeID::None)
+                | (normal[1] >= 0.0f ? BoxEdgeID::yMax : BoxEdgeID::None)
+                | (normal[2] >= 0.0f ? BoxEdgeID::zMax : BoxEdgeID::None);
 
-        mEdges.lowerEdge = QSSGRenderBoxEdge((~(quint8(mEdges.upperEdge))) & 7);
+        mEdges.lowerEdge = ((~(BoxEdgeFlag(mEdges.upperEdge))) & 7);
     }
 };
 
-struct QSSGClippingFrustum
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGClippingFrustum
 {
     QSSGClipPlane mPlanes[6];
 
@@ -123,20 +127,19 @@ struct QSSGClippingFrustum
 
     bool intersectsWith(const QSSGBounds3 &bounds) const
     {
-        for (quint32 idx = 0; idx < 6; ++idx) {
-            if (mPlanes[idx].intersect(bounds) < 0)
-                return false;
-        }
-        return true;
+        bool ret = true;
+
+        for (quint32 idx = 0; idx < 6 && ret; ++idx)
+            ret = mPlanes[idx].intersectSimple(bounds);
+        return ret;
     }
 
     bool intersectsWith(const QVector3D &point, float radius = 0.0f) const
     {
-        for (quint32 idx = 0; idx < 6; ++idx) {
-            if (mPlanes[idx].distance(point) < radius)
-                return false;
-        }
-        return true;
+        bool ret = true;
+        for (quint32 idx = 0; idx < 6 && ret; ++idx)
+            ret = !(mPlanes[idx].distance(point) < radius);
+        return ret;
     }
 };
 QT_END_NAMESPACE

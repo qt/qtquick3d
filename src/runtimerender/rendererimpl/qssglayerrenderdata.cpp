@@ -56,6 +56,37 @@ static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderData::MAX_AA_
     QVector2D(0.235760f, 0.527760f), // 8x
 };
 
+qsizetype QSSGLayerRenderData::frustumCulling(const QSSGClippingFrustum &clipFrustum, const QSSGRenderableObjectList &renderables, QSSGRenderableObjectList &visibleRenderables)
+{
+    QSSG_ASSERT(visibleRenderables.isEmpty(), visibleRenderables.clear());
+    visibleRenderables.reserve(renderables.size());
+    for (quint32 end = renderables.size(), idx = quint32(0); idx != end; ++idx) {
+        auto handle = renderables.at(idx);
+        const auto &b = handle.obj->globalBounds;
+        if (clipFrustum.intersectsWith(b))
+            visibleRenderables.push_back(handle);
+    }
+
+    return visibleRenderables.size();
+}
+
+qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &clipFrustum, QSSGRenderableObjectList &renderables)
+{
+    const qint32 end = renderables.size();
+    qint32 front = 0;
+    qint32 back = end - 1;
+
+    while (front <= back) {
+        const auto &b = renderables.at(front).obj->globalBounds;
+        if (clipFrustum.intersectsWith(b))
+            ++front;
+        else
+            renderables.swapItemsAt(front, back--);
+    }
+
+    return back + 1;
+}
+
 static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
@@ -211,11 +242,13 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueR
 {
     if (!renderedOpaqueObjects.empty() || camera == nullptr)
         return renderedOpaqueObjects;
+
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !opaqueObjects.empty()) {
         renderedOpaqueObjects = opaqueObjects;
         static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
             return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
         };
+
         // Render nearest to furthest objects
         std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
     }
@@ -1706,6 +1739,18 @@ void QSSGLayerRenderData::prepareForRender()
     if (camera) {
         camera->dpr = renderer->contextInterface()->dpr();
         camera->calculateViewProjectionMatrix(viewProjection);
+        if (camera->enableFrustumClipping) {
+            QSSGClipPlane nearPlane;
+            QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
+            QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
+            dir.normalize();
+            nearPlane.normal = dir;
+            QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
+            nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
+            // the near plane's bbox edges are calculated in the clipping frustum's
+            // constructor.
+            clippingFrustum = QSSGClippingFrustum{viewProjection, nearPlane};
+        }
     } else {
         viewProjection = QMatrix4x4(/*identity*/);
     }
@@ -1804,6 +1849,7 @@ void QSSGLayerRenderData::resetForFrame()
     // to figure out if this layer was rendered at all.
     camera = nullptr;
     cameraData.setEmpty();
+    clippingFrustum.setEmpty();
     renderedOpaqueObjects.clear();
     renderedTransparentObjects.clear();
     renderedScreenTextureObjects.clear();

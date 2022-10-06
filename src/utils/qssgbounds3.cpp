@@ -57,7 +57,7 @@ void QSSGBounds3::transform(const QMatrix4x4 &inMatrix)
 {
     if (!isEmpty()) {
         QSSGBounds2BoxPoints thePoints;
-        expand(thePoints);
+        expandNonEmpty(thePoints);
         setEmpty();
         for (quint32 idx = 0; idx < 8; ++idx)
             include(inMatrix.map(thePoints[idx]));

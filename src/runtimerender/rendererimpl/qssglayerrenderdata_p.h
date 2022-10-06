@@ -245,8 +245,11 @@ public:
     // Helper function used during prepareForRender
     void prepareReflectionProbesForRender();
 
+    static qsizetype frustumCulling(const QSSGClippingFrustum &clipFrustum, const QSSGRenderableObjectList &renderables, QSSGRenderableObjectList &visibleRenderables);
+    [[nodiscard]] static qsizetype frustumCullingInline(const QSSGClippingFrustum &clipFrustum, QSSGRenderableObjectList &renderables);
+
     [[nodiscard]] QSSGCameraData getCameraDirectionAndPosition();
-    // Per-frame cache of renderable objects post-sort.
+    // Per-frame cache of renderable objects post-sort (for the MAIN rendering camera, i.e., don't use these lists for rendering from a different camera).
     const QSSGRenderableObjectList &getSortedOpaqueRenderableObjects();
     // If layer depth test is false, this may also contain opaque objects.
     const QSSGRenderableObjectList &getSortedTransparentRenderableObjects();
@@ -255,7 +258,6 @@ public:
     const RenderableItem2DEntries &getRenderableItem2Ds();
     const QSSGRenderableObjectList &getSortedRenderedDepthWriteObjects();
     const QSSGRenderableObjectList &getSortedrenderedOpaqueDepthPrepassObjects();
-
 
     void resetForFrame();
 
@@ -286,7 +288,6 @@ public:
     QVector<QSSGRenderReflectionProbe *> reflectionProbes;
 
     // Results of prepare for render.
-
     QSSGRenderCamera *camera = nullptr;
     QSSGShaderLightList globalLights; // Contains all lights except ones with a scope set
     QSSGRenderableObjectList opaqueObjects;

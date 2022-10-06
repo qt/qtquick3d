@@ -561,8 +561,19 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
         rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
 
+    {
+        const auto &clippingFrustum = data.clippingFrustum;
+        const auto &opaqueObjects = data.getSortedOpaqueRenderableObjects();
+        const auto &transparentObject = data.getSortedTransparentRenderableObjects();
+        if (data.clippingFrustum.hasValue()) {
+            QSSGLayerRenderData::frustumCulling(clippingFrustum, opaqueObjects, sortedOpaqueObjects);
+            QSSGLayerRenderData::frustumCulling(clippingFrustum, transparentObject, sortedTransparentObjects);
+        } else {
+            sortedOpaqueObjects = opaqueObjects;
+            sortedTransparentObjects = transparentObject;
+        }
+    }
     const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
-    sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
     const auto &renderedOpaqueDepthPrepassObjects = data.getSortedrenderedOpaqueDepthPrepassObjects();
     const auto &renderedDepthWriteObjects = data.getSortedRenderedDepthWriteObjects();
     const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());;
@@ -657,7 +668,6 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     ps.blendEnable = true;
     ps.depthWriteEnable = false;
 
-    sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
     for (const auto &handle : std::as_const(sortedTransparentObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;

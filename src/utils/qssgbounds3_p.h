@@ -16,6 +16,7 @@
 // We mean it.
 //
 
+#include "qssgutils_p.h"
 #include <QtQuick3DUtils/private/qtquick3dutilsglobal_p.h>
 
 #include <QVector3D>
@@ -78,7 +79,7 @@ public:
     \param[in] matrix Transform to apply, can contain scaling as well
     \param[in] bounds The bounds to transform.
     */
-    static Q_ALWAYS_INLINE QSSGBounds3 transform(const QMatrix3x3 &matrix, const QSSGBounds3 &bounds);
+    static QSSGBounds3 transform(const QMatrix3x3 &matrix, const QSSGBounds3 &bounds);
 
     /**
     \brief Sets empty to true
@@ -171,7 +172,15 @@ public:
 
     bool isFinite() const;
 
+    /**
+    Use when the bounds is already verified to be non-empty!!!
+    */
+    Q_ALWAYS_INLINE void expandNonEmpty(QSSGBounds2BoxPoints &outPoints) const;
+    /**
+    Verifies that the bounds is non-empty.
+    */
     Q_ALWAYS_INLINE void expand(QSSGBounds2BoxPoints &outPoints) const;
+
 
     void transform(const QMatrix4x4 &inMatrix);
 
@@ -301,23 +310,28 @@ Q_ALWAYS_INLINE void QSSGBounds3::fatten(double distance)
     maximum += QVector3D(float(distance), float(distance), float(distance));
 }
 
+Q_ALWAYS_INLINE void QSSGBounds3::expandNonEmpty(QSSGBounds2BoxPoints &outPoints) const
+{
+    // Min corner of box
+    outPoints[0] = QVector3D(minimum[0], minimum[1], minimum[2]);
+    outPoints[1] = QVector3D(maximum[0], minimum[1], minimum[2]);
+    outPoints[2] = QVector3D(minimum[0], maximum[1], minimum[2]);
+    outPoints[3] = QVector3D(minimum[0], minimum[1], maximum[2]);
+
+    // Max corner of box
+    outPoints[4] = QVector3D(maximum[0], maximum[1], maximum[2]);
+    outPoints[5] = QVector3D(minimum[0], maximum[1], maximum[2]);
+    outPoints[6] = QVector3D(maximum[0], minimum[1], maximum[2]);
+    outPoints[7] = QVector3D(maximum[0], maximum[1], minimum[2]);
+}
+
 Q_ALWAYS_INLINE void QSSGBounds3::expand(QSSGBounds2BoxPoints &outPoints) const
 {
     if (isEmpty()) {
         for (quint32 idx = 0; idx < 8; ++idx)
             outPoints[idx] = QVector3D(0, 0, 0);
     } else {
-        // Min corner of box
-        outPoints[0] = QVector3D(minimum[0], minimum[1], minimum[2]);
-        outPoints[1] = QVector3D(maximum[0], minimum[1], minimum[2]);
-        outPoints[2] = QVector3D(minimum[0], maximum[1], minimum[2]);
-        outPoints[3] = QVector3D(minimum[0], minimum[1], maximum[2]);
-
-        // Max corner of box
-        outPoints[4] = QVector3D(maximum[0], maximum[1], maximum[2]);
-        outPoints[5] = QVector3D(minimum[0], maximum[1], maximum[2]);
-        outPoints[6] = QVector3D(maximum[0], minimum[1], maximum[2]);
-        outPoints[7] = QVector3D(maximum[0], maximum[1], minimum[2]);
+        expandNonEmpty(outPoints);
     }
 }
 
