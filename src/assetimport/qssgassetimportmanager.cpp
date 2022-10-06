@@ -142,7 +142,7 @@ QSSGAssetImportManager::PluginOptionMaps QSSGAssetImportManager::getAllOptions()
 QHash<QString, QStringList> QSSGAssetImportManager::getSupportedExtensions() const
 {
     QHash<QString, QStringList> extensionMap;
-    for (const auto importer : qAsConst(m_assetImporters))
+    for (const auto importer : std::as_const(m_assetImporters))
         extensionMap.insert(importer->typeDescription(), importer->inputExtensions());
     return extensionMap;
 }

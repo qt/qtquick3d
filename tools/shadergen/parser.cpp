@@ -1671,7 +1671,7 @@ int MaterialParser::parseQmlFiles(const QVector<QString> &filePaths, const QDir 
                     QVarLengthArray<const char *, 3> componentTypes { TypeInfo<QQuick3DPrincipledMaterial>::qmlTypeName(),
                                                                            TypeInfo<QQuick3DCustomMaterial>::qmlTypeName(),
                                                                            TypeInfo<QQuick3DDefaultMaterial>::qmlTypeName()};
-                    for (const auto compType : qAsConst(componentTypes)) {
+                    for (const auto compType : std::as_const(componentTypes)) {
                         if ((idx = section.indexOf(compType)) != -1)
                             break;
                     }

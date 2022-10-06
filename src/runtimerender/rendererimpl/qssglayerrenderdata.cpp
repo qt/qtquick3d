@@ -995,7 +995,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
             bool hasJoint = false;
             bool hasWeight = false;
             bool hasMorphTarget = false;
-            for (const QSSGRhiInputAssemblerState::InputSemantic &sem : qAsConst(theSubset.rhi.ia.inputs)) {
+            for (const QSSGRhiInputAssemblerState::InputSemantic &sem : std::as_const(theSubset.rhi.ia.inputs)) {
                 if (sem == QSSGRhiInputAssemblerState::PositionSemantic) {
                     renderableFlagsForModel.setHasAttributePosition(true);
                 } else if (sem == QSSGRhiInputAssemblerState::NormalSemantic) {
@@ -1290,7 +1290,7 @@ void QSSGLayerRenderData::prepareResourceLoaders()
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
 
-    for (const auto resourceLoader : qAsConst(layer.resourceLoaders))
+    for (const auto resourceLoader : std::as_const(layer.resourceLoaders))
         bufferManager->processResourceLoader(static_cast<QSSGRenderResourceLoader *>(resourceLoader));
 }
 
@@ -1336,10 +1336,10 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
             }
         };
 
-        for (const auto &handle : qAsConst(transparentObjects))
+        for (const auto &handle : std::as_const(transparentObjects))
             injectProbe(handle);
 
-        for (const auto &handle : qAsConst(opaqueObjects))
+        for (const auto &handle : std::as_const(opaqueObjects))
             injectProbe(handle);
 
         if (reflectionObjectCount > 0)
@@ -1373,7 +1373,7 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
     // First model using skeleton clears the dirty flag so we need another mechanism
     // to tell to the other models the skeleton is dirty.
     QSet<QSSGRenderSkeleton *> dirtySkeletons;
-    for (const auto &node : qAsConst(renderableNodes)) {
+    for (const auto &node : std::as_const(renderableNodes)) {
         if (node.node->type == QSSGRenderGraphObject::Type::Model) {
             auto modelNode = static_cast<QSSGRenderModel *>(node.node);
             auto skeletonNode = modelNode->skeleton;
@@ -1756,7 +1756,7 @@ void QSSGLayerRenderData::prepareForRender()
                 offsetProjection(0, 2) += vertexOffsetsAA.x();
                 offsetProjection(1, 2) += vertexOffsetsAA.y();
             }
-            for (auto &modelContext : qAsConst(modelContexts))
+            for (auto &modelContext : std::as_const(modelContexts))
                 modelContext->modelViewProjection = offsetProjection * invProjection * modelContext->modelViewProjection;
         }
     }

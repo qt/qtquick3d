@@ -710,7 +710,7 @@ QSSGBounds3 MeshInternal::calculateSubsetBounds(const Mesh::VertexBufferEntry &e
 bool Mesh::hasLightmapUVChannel() const
 {
     const char *lightmapAttrName = MeshInternal::getLightmapUVAttrName();
-    for (const VertexBufferEntry &vbe : qAsConst(m_vertexBuffer.entries)) {
+    for (const VertexBufferEntry &vbe : std::as_const(m_vertexBuffer.entries)) {
         if (vbe.name == lightmapAttrName)
             return true;
     }
@@ -743,7 +743,7 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     quint32 normalOffset = UINT32_MAX;
     quint32 uvOffset = UINT32_MAX;
 
-    for (const VertexBufferEntry &vbe : qAsConst(m_vertexBuffer.entries)) {
+    for (const VertexBufferEntry &vbe : std::as_const(m_vertexBuffer.entries)) {
         if (vbe.name == posAttrName) {
             if (vbe.componentCount != 3) {
                 qWarning("Lightmap UV unwrapping encountered a Mesh non-float3 position data, this cannot happen");
@@ -839,7 +839,7 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     QVarLengthArray<QByteArray, 8> newData;
     newData.reserve(m_vertexBuffer.entries.size());
 
-    for (const VertexBufferEntry &vbe : qAsConst(m_vertexBuffer.entries)) {
+    for (const VertexBufferEntry &vbe : std::as_const(m_vertexBuffer.entries)) {
         const qsizetype byteSize = vbe.componentCount * MeshInternal::byteSizeForComponentType(vbe.componentType);
         QByteArray data(byteSize * vertexCount, Qt::Uninitialized);
         char *dst = data.data();

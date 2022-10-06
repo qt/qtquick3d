@@ -788,7 +788,7 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
             const int numMorphTarget = m_morphTargets.size();
             if (modelNode->morphTargets.isEmpty()) {
                 // Easy mode, just add each morphTarget
-                for (const auto morphTarget : qAsConst(m_morphTargets)) {
+                for (const auto morphTarget : std::as_const(m_morphTargets)) {
                     QSSGRenderGraphObject *graphObject = QQuick3DObjectPrivate::get(morphTarget)->spatialNode;
                     if (graphObject)
                         modelNode->morphTargets.append(graphObject);
@@ -1047,7 +1047,7 @@ qsizetype QQuick3DModel::qmlMorphTargetsCount(QQmlListProperty<QQuick3DMorphTarg
 void QQuick3DModel::qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *list)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    for (const auto &morph : qAsConst(self->m_morphTargets)) {
+    for (const auto &morph : std::as_const(self->m_morphTargets)) {
         if (morph->parentItem() == nullptr)
             QQuick3DObjectPrivate::get(morph)->derefSceneManager();
         morph->disconnect(self, SLOT(onMorphTargetDestroyed(QObject*)));

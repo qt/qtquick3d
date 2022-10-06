@@ -445,7 +445,7 @@ void QQuick3DRenderStats::processRhiContextStats()
             quint32 vbufSize = 0;
             quint32 ibufSize = 0;
             if (subsetCount > 0) {
-                for (const QSSGRenderSubset &subset : qAsConst(mesh->subsets))
+                for (const QSSGRenderSubset &subset : std::as_const(mesh->subsets))
                     vertexCount += subset.count;
                 // submeshes ref into the same vertex and index buffer
                 const QSSGRhiBuffer *vbuf = mesh->subsets[0].rhi.vertexBuffer.data();

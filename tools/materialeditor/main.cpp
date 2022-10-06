@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     QString resourceFile;
     auto args = cmdLineparser.positionalArguments();
-    for (const auto &arg : qAsConst(args)) {
+    for (const auto &arg : std::as_const(args)) {
         if (arg.endsWith(".qml"))
             resourceFile = arg;
     }

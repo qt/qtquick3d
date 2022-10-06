@@ -78,7 +78,7 @@ public:
         return optionsObject;
     }
     void registerOptions(QCommandLineParser &parser) {
-        for (const auto &cmdLineOption : qAsConst(m_optionsMap))
+        for (const auto &cmdLineOption : std::as_const(m_optionsMap))
             parser.addOption(*cmdLineOption);
     }
 
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
     if (canUsePlugins) {
         assetImporter.reset(new QSSGAssetImportManager);
         auto pluginOptions = assetImporter->getAllOptions();
-        for (const auto &options : qAsConst(pluginOptions))
+        for (const auto &options : std::as_const(pluginOptions))
             optionsManager.generateCommandLineOptions(options);
         optionsManager.registerOptions(cmdLineParser);
     }

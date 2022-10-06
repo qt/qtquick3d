@@ -490,7 +490,7 @@ void ScreenMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
             renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx.data(), &ps, srb, rpDesc, {});
         }
         bool needsSetViewport = true;
-        for (const auto &handle : qAsConst(sortedOpaqueObjects))
+        for (const auto &handle : std::as_const(sortedOpaqueObjects))
             rhiRenderRenderable(rhiCtx.data(), ps, *handle.obj, &needsSetViewport);
 
         QRhiResourceUpdateBatch *rub = nullptr;
@@ -569,7 +569,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     const int samples = rhiCtx->mainPassSampleCount();
 
     // opaque objects (or, this list is empty when LayerEnableDepthTest is disabled)
-    for (const auto &handle : qAsConst(sortedOpaqueObjects)) {
+    for (const auto &handle : std::as_const(sortedOpaqueObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.depthWriteEnable = !(depthWriteMode == QSSGDepthDrawMode::Never ||
@@ -582,7 +582,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     ps.depthTestEnable = depthTestEnableDefault;
     ps.depthWriteEnable = depthWriteEnableDefault;
     sortedScreenTextureObjects = data.getSortedScreenTextureRenderableObjects();
-    for (const auto &handle : qAsConst(sortedScreenTextureObjects)) {
+    for (const auto &handle : std::as_const(sortedScreenTextureObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.blendEnable = theObject->renderableFlags.hasTransparency();
@@ -597,7 +597,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     ps.blendEnable = false;
 
     item2Ds = data.getRenderableItem2Ds();
-    for (const auto &item2D: qAsConst(item2Ds)) {
+    for (const auto &item2D: std::as_const(item2Ds)) {
         // Set the projection matrix
         if (!item2D->m_renderer)
             continue;
@@ -641,7 +641,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     ps.depthWriteEnable = false;
 
     sortedTransparentObjects = data.getSortedTransparentRenderableObjects();
-    for (const auto &handle : qAsConst(sortedTransparentObjects)) {
+    for (const auto &handle : std::as_const(sortedTransparentObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         const auto depthWriteMode = theObject->depthWriteMode;
         ps.depthWriteEnable = (depthWriteMode == QSSGDepthDrawMode::Always && (data.zPrePassPass.state != ZPrePassPass::State::Active));
@@ -668,7 +668,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // 1. Render opaque objects
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render opaque"));
-    for (const auto &handle : qAsConst(sortedOpaqueObjects)) {
+    for (const auto &handle : std::as_const(sortedOpaqueObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);
     }
@@ -712,7 +712,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // 3. Screen texture depended objects
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render screen texture dependent"));
-    for (const auto &handle : qAsConst(sortedScreenTextureObjects)) {
+    for (const auto &handle : std::as_const(sortedScreenTextureObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);
     }
@@ -721,7 +721,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
     // 4. Item2Ds
     if (!item2Ds.isEmpty()) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render 2D sub-scene"));
-        for (const auto &item : qAsConst(item2Ds)) {
+        for (const auto &item : std::as_const(item2Ds)) {
             QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
             if (item2D->m_rci == renderer->contextInterface())
                 item2D->m_renderer->renderSceneInline();
@@ -731,7 +731,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // 5. Non-opaque objects
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
-    for (const auto &handle : qAsConst(sortedTransparentObjects)) {
+    for (const auto &handle : std::as_const(sortedTransparentObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         if (!theObject->renderableFlags.isCompletelyTransparent())
             rhiRenderRenderable(rhiCtx.data(), ps, *theObject, &needsSetViewport);

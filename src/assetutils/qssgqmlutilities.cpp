@@ -457,7 +457,7 @@ PropertyMap::PropertyMap()
 
 PropertyMap::~PropertyMap()
 {
-    for (const auto &proprtyMap : qAsConst(m_properties))
+    for (const auto &proprtyMap : std::as_const(m_properties))
         delete proprtyMap;
 }
 
@@ -1377,7 +1377,7 @@ void writeQmlForResources(const QSSGSceneDesc::Scene::ResourceNodes &resources, 
 
         return false;
     });
-    for (const auto &res : qAsConst(sortedResources))
+    for (const auto &res : std::as_const(sortedResources))
         writeQmlForResourceNode(*res, output);
 }
 
