@@ -11,6 +11,7 @@ Rectangle {
     property var source: null
     property bool resourceDetailsVisible: false
     property int maxResourceDetailsHeight: 480
+    property alias layout: layout
     width: layout.width + 10
     height: layout.height + 10
     color: "#80778BA5"
