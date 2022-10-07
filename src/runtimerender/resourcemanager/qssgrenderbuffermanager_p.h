@@ -83,6 +83,11 @@ public:
         int type;
     };
 
+    struct CustomImageCacheKey {
+        QSSGRenderTextureData *data;
+        int mipMode;
+    };
+
     struct ImageData {
         QSSGRenderImageTexture renderImageTexture;
         QHash<QSSGRenderLayer*, uint32_t> usageCounts;
@@ -133,7 +138,8 @@ public:
     void resetUsageCounters(quint32 frameId, QSSGRenderLayer *layer);
 
     void releaseGeometry(QSSGRenderGeometry *geometry);
-    void releaseTextureData(QSSGRenderTextureData *textureData);
+    void releaseTextureData(const QSSGRenderTextureData *data);
+    void releaseTextureData(const CustomImageCacheKey &key);
 
     void commitBufferResourceUpdates();
 
@@ -161,10 +167,10 @@ public:
 
     // Views for testing
     const QHash<ImageCacheKey, ImageData> &getImageMap() const { return imageMap; }
+    const QHash<CustomImageCacheKey, ImageData> &getCustomTextureMap() const { return customTextureMap; }
     const QHash<QSGTexture *, ImageData> &getSGImageMap() const { return qsgImageMap; }
     const QHash<QSSGRenderPath, MeshData> &getMeshMap() const { return meshMap; }
     const QHash<QSSGRenderGeometry *, MeshData> &getCustomMeshMap() const { return customMeshMap; }
-    const QHash<QSSGRenderTextureData *, ImageData> &getCustomTextureMap() const { return customTextureMap; }
 
 private:
     void clear();
@@ -196,10 +202,10 @@ private:
 
     // These store the actual buffer handles
     QHash<ImageCacheKey, ImageData> imageMap;                   // Textures (specificed by path)
+    QHash<CustomImageCacheKey, ImageData> customTextureMap;     // Textures (QQuick3DTextureData)
     QHash<QSGTexture *, ImageData> qsgImageMap;                 // Textures (from Qt Quick)
     QHash<QSSGRenderPath, MeshData> meshMap;                    // Meshes (specififed by path)
     QHash<QSSGRenderGeometry *, MeshData> customMeshMap;        // Meshes (QQuick3DGeometry)
-    QHash<QSSGRenderTextureData *, ImageData> customTextureMap; // Textures (QQuick3DTextureData)
 
     QRhiResourceUpdateBatch *meshBufferUpdates = nullptr;
     QMutex meshBufferMutex;
@@ -220,6 +226,16 @@ inline size_t qHash(const QSSGBufferManager::ImageCacheKey &k, size_t seed) Q_DE
 inline bool operator==(const QSSGBufferManager::ImageCacheKey &a, const QSSGBufferManager::ImageCacheKey &b) Q_DECL_NOTHROW
 {
     return a.path == b.path && a.mipMode == b.mipMode && a.type == b.type;
+}
+
+inline size_t qHash(const QSSGBufferManager::CustomImageCacheKey &k, size_t seed) Q_DECL_NOTHROW
+{
+    return qHash(k.data, seed) ^ k.mipMode;
+}
+
+inline bool operator==(const QSSGBufferManager::CustomImageCacheKey &a, const QSSGBufferManager::CustomImageCacheKey &b) Q_DECL_NOTHROW
+{
+    return a.data == b.data && a.mipMode == b.mipMode;
 }
 
 QT_END_NAMESPACE

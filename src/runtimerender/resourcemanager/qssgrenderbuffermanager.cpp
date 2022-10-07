@@ -194,14 +194,15 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 
 QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData *data, MipMode inMipMode)
 {
-    auto theImageData = customTextureMap.find(data);
+    const CustomImageCacheKey imageKey = { data, inMipMode };
+    auto theImageData = customTextureMap.find(imageKey);
     if (theImageData == customTextureMap.end()) {
-        theImageData = customTextureMap.insert(data, ImageData());
+        theImageData = customTextureMap.insert(imageKey, ImageData());
     } else if (data->generationId() != theImageData->generationId) {
         // release first
-        releaseTextureData(data);
+        releaseTextureData(imageKey);
         // reinsert the placeholder since releaseTextureData removed from map
-        theImageData = customTextureMap.insert(data, ImageData());
+        theImageData = customTextureMap.insert(imageKey, ImageData());
     } else {
         // Return the currently loaded texture
         theImageData.value().usageCounts[currentLayer]++;
@@ -1270,9 +1271,20 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
     }
 }
 
-void QSSGBufferManager::releaseTextureData(QSSGRenderTextureData *textureData)
+void QSSGBufferManager::releaseTextureData(const QSSGRenderTextureData *data)
 {
-    const auto textureDataItr = customTextureMap.constFind(textureData);
+    QVarLengthArray<CustomImageCacheKey, 4> keys;
+    for (auto it = customTextureMap.cbegin(), end = customTextureMap.cend(); it != end; ++it) {
+        if (it.key().data == data)
+            keys.append(it.key());
+    }
+    for (const CustomImageCacheKey &key : keys)
+        releaseTextureData(key);
+}
+
+void QSSGBufferManager::releaseTextureData(const CustomImageCacheKey &key)
+{
+    const auto textureDataItr = customTextureMap.constFind(key);
     if (textureDataItr != customTextureMap.cend()) {
         auto rhiTexture = textureDataItr.value().renderImageTexture.m_texture;
         if (rhiTexture) {
