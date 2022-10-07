@@ -172,12 +172,9 @@ private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderPipeline>> TRhiShaderMap;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     TRhiShaderMap m_rhiShaders;
-    QString m_cacheFilePath;
     QByteArray m_vertexCode;
     QByteArray m_fragmentCode;
     QByteArray m_insertStr;
-    QString m_flagString;
-    QString m_contextTypeString;
     QSSGShaderCacheKey m_tempKey;
     const InitBakerFunc m_initBaker;
 
