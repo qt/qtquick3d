@@ -169,10 +169,10 @@ QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::getRhiShaderPipeline(const QByteArray &inKey,
                                                                      const QSSGShaderFeatures &inFeatures)
 {
-    m_tempKey.m_key = inKey;
-    m_tempKey.m_features = inFeatures;
-    m_tempKey.updateHashCode();
-    const auto theIter = m_rhiShaders.constFind(m_tempKey);
+    QSSGShaderCacheKey cacheKey(inKey);
+    cacheKey.m_features = inFeatures;
+    cacheKey.updateHashCode();
+    const auto theIter = m_rhiShaders.constFind(cacheKey);
     if (theIter != m_rhiShaders.cend())
         return theIter.value();
     return nullptr;
@@ -241,14 +241,14 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     tempKey.m_features = inFeatures;
     tempKey.updateHashCode();
 
-    m_vertexCode = inVert;
-    m_fragmentCode = inFrag;
+    QByteArray vertexCode = inVert;
+    QByteArray fragmentCode = inFrag;
 
-    if (!m_vertexCode.isEmpty())
-        addShaderPreprocessor(m_vertexCode, inKey, ShaderType::Vertex, inFeatures);
+    if (!vertexCode.isEmpty())
+        addShaderPreprocessor(vertexCode, inKey, ShaderType::Vertex, inFeatures);
 
-    if (!m_fragmentCode.isEmpty())
-        addShaderPreprocessor(m_fragmentCode, inKey, ShaderType::Fragment, inFeatures);
+    if (!fragmentCode.isEmpty())
+        addShaderPreprocessor(fragmentCode, inKey, ShaderType::Fragment, inFeatures);
 
     // lo and behold the final shader strings are ready
 
@@ -287,7 +287,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
        f.close();
    };
 
-    baker.setSourceString(m_vertexCode, QShader::VertexStage);
+    baker.setSourceString(vertexCode, QShader::VertexStage);
     QShader vertexShader = baker.bake();
     const auto vertShaderValid = vertexShader.isValid();
     if (!vertShaderValid) {
@@ -300,12 +300,12 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     }
 
     if (shaderDebug) {
-        dumpShader(QShader::Stage::VertexStage, m_vertexCode);
+        dumpShader(QShader::Stage::VertexStage, vertexCode);
         if (!vertShaderValid)
-            dumpShaderToFile(QShader::Stage::VertexStage, m_vertexCode);
+            dumpShaderToFile(QShader::Stage::VertexStage, vertexCode);
     }
 
-    baker.setSourceString(m_fragmentCode, QShader::FragmentStage);
+    baker.setSourceString(fragmentCode, QShader::FragmentStage);
     QShader fragmentShader = baker.bake();
     const bool fragShaderValid = fragmentShader.isValid();
     if (!fragShaderValid) {
@@ -318,9 +318,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     }
 
     if (shaderDebug) {
-        dumpShader(QShader::Stage::FragmentStage, m_fragmentCode);
+        dumpShader(QShader::Stage::FragmentStage, fragmentCode);
         if (!fragShaderValid)
-            dumpShaderToFile(QShader::Stage::FragmentStage, m_fragmentCode);
+            dumpShaderToFile(QShader::Stage::FragmentStage, fragmentCode);
     }
 
     if (vertShaderValid && fragShaderValid) {

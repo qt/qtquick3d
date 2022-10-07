@@ -172,10 +172,7 @@ private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderPipeline>> TRhiShaderMap;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     TRhiShaderMap m_rhiShaders;
-    QByteArray m_vertexCode;
-    QByteArray m_fragmentCode;
-    QByteArray m_insertStr;
-    QSSGShaderCacheKey m_tempKey;
+    QByteArray m_insertStr; // member to potentially reuse the allocation after clear
     const InitBakerFunc m_initBaker;
 
     void addShaderPreprocessor(QByteArray &str,
