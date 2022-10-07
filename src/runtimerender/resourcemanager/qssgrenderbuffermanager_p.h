@@ -102,9 +102,10 @@ public:
     };
 
     enum MipMode {
-        MipModeNone = 0,
-        MipModeBsdf,
-        MipModeGenerated,
+        MipModeFollowRenderImage,
+        MipModeEnable,
+        MipModeDisable,
+        MipModeBsdf
     };
 
     enum LoadRenderImageFlag {
@@ -118,7 +119,7 @@ public:
     void setRenderContextInterface(QSSGRenderContextInterface *ctx);
 
     QSSGRenderImageTexture loadRenderImage(const QSSGRenderImage *image,
-                                           MipMode inMipMode = MipModeNone,
+                                           MipMode inMipMode = MipModeFollowRenderImage,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
     QSSGRenderImageTexture loadLightmap(const QSSGRenderModel &model);
 

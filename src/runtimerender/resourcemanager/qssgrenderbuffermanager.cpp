@@ -106,6 +106,9 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
                                                           MipMode inMipMode,
                                                           LoadRenderImageFlags flags)
 {
+    if (inMipMode == MipModeFollowRenderImage)
+        inMipMode = image->m_generateMipmaps ? MipModeEnable : MipModeDisable;
+
     auto context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
     if (image->m_qsgTexture) {
@@ -149,12 +152,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
 
     } else if (image->m_rawTextureData) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-
-        // Textures using QSSGRenderTextureData
-        // QSSGRenderImage can override the mipmode for its texture data
-        if (inMipMode == MipModeNone && image->m_generateMipmaps)
-            inMipMode = MipModeGenerated;
-
         result = loadTextureData(image->m_rawTextureData, inMipMode);
     } else if (!image->m_imagePath.isEmpty()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
@@ -239,7 +236,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
 
     QSSGRenderImageTexture result;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
-    const ImageCacheKey imageKey = { QSSGRenderPath(imagePath), MipModeNone, int(QSSGRenderGraphObject::Type::Image2D) };
+    const ImageCacheKey imageKey = { QSSGRenderPath(imagePath), MipModeDisable, int(QSSGRenderGraphObject::Type::Image2D) };
     auto foundIt = imageMap.find(imageKey);
     if (foundIt != imageMap.end()) {
         result = foundIt.value().renderImageTexture;
@@ -250,7 +247,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
             qCWarning(WARNING, "Failed to load lightmap image: %s", qPrintable(imagePath));
         foundIt = imageMap.insert(imageKey, ImageData());
         if (theLoadedTexture) {
-            if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), MipModeNone, {}, imagePath))
+            if (!createRhiTexture(foundIt.value().renderImageTexture, theLoadedTexture.data(), MipModeDisable, {}, imagePath))
                 foundIt.value() = ImageData();
             result = foundIt.value().renderImageTexture;
         }
@@ -835,6 +832,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
                                          CreateRhiTextureFlags inFlags,
                                          const QString &debugObjectName)
 {
+    Q_ASSERT(inMipMode != MipModeFollowRenderImage);
     QVarLengthArray<QRhiTextureUploadEntry, 16> textureUploads;
     int textureSampleCount = 1;
     QRhiTexture::Flags textureFlags;
@@ -940,7 +938,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     }
 
     bool generateMipmaps = false;
-    if (inMipMode == MipModeGenerated && mipmapCount == 1) {
+    if (inMipMode == MipModeEnable && mipmapCount == 1) {
         textureFlags |= QRhiTexture::Flag::UsedWithGenerateMips;
         generateMipmaps = true;
         mipmapCount = rhi->mipLevelsForSize(size);
@@ -1783,7 +1781,7 @@ void QSSGBufferManager::processResourceLoader(const QSSGRenderResourceLoader *lo
 
     for (auto texture : std::as_const(loader->textures)) {
         const auto image = static_cast<QSSGRenderImage *>(texture);
-        loadRenderImage(image, image->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+        loadRenderImage(image);
     }
 
     // Make sure the uploads occur

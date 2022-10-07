@@ -433,7 +433,7 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
     // models (QSSGRenderModel -> QSSGRenderMesh retrieved from the
     // bufferManager in each prepareModelForRender, etc.).
 
-    const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(&inImage, inImage.m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+    const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(&inImage);
 
     if (texture.m_texture) {
         if (texture.m_flags.hasTransparency()
@@ -1224,8 +1224,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
             if (particles.m_sprite->clearDirty())
                 dirty = true;
 
-            const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(particles.m_sprite,
-                                                                                  particles.m_sprite->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+            const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(particles.m_sprite);
             QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *particles.m_sprite, texture);
             firstImage = theImage;
         }
@@ -1237,8 +1236,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
             if (particles.m_colorTable->clearDirty())
                 dirty = true;
 
-            const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(particles.m_colorTable,
-                                                                                  particles.m_colorTable->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+            const QSSGRenderImageTexture texture = bufferManager->loadRenderImage(particles.m_colorTable);
 
             QSSGRenderableImage *theImage = RENDER_FRAME_NEW<QSSGRenderableImage>(contextInterface, QSSGRenderableImage::Type::Diffuse, *particles.m_colorTable, texture);
             colorTable = theImage;

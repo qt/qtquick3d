@@ -276,8 +276,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
                 info.emissiveFactor = defMat->emissiveColor;
                 if (defMat->colorMap) {
                     info.baseColorNode = defMat->colorMap;
-                    QSSGRenderImageTexture texture = bufferManager->loadRenderImage(defMat->colorMap,
-                                                                                    defMat->colorMap->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
+                    QSSGRenderImageTexture texture = bufferManager->loadRenderImage(defMat->colorMap);
                     info.baseColorMap = texture.m_texture;
                 }
                 if (defMat->emissiveMap) {

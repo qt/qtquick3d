@@ -491,14 +491,7 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
         QSSGRenderImage *image = textureProperty->texImage;
         if (image) {
             const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
-
-            QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone;
-            // the mipFilterType here is only non-None when generateMipmaps was true on the Texture
-            if (textureProperty->mipFilterType != QSSGRenderTextureFilterOp::None)
-                mipMode = QSSGBufferManager::MipModeGenerated;
-            // ### would we want MipModeBsdf in some cases?
-
-            const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image, mipMode);
+            const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image);
             if (texture.m_texture) {
                 const QSSGRhiTexture t = {
                     inPropertyName,

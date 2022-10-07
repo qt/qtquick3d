@@ -2179,7 +2179,7 @@ void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
     bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
 
     const QSSGRenderImageTexture lightProbeTexture =
-            cubeMapMode ? renderer->contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap)
+            cubeMapMode ? renderer->contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap, QSSGBufferManager::MipModeDisable)
                         : renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
     const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
     if (hasValidTexture) {
