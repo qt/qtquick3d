@@ -631,7 +631,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
     renderer->defaultMaterialShaderKeyProperties().m_specularGlossyEnabled.setValue(theGeneratedKey, theMaterial->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial);
 
-        // debug modes
+    // debug modes
     renderer->defaultMaterialShaderKeyProperties().m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
 
     if (!renderer->defaultMaterialShaderKeyProperties().m_hasIbl.getValue(theGeneratedKey) && theMaterial->iblProbe) {
@@ -823,6 +823,9 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
 
     // propagate the flag indicating the presence of a lightmap
     renderer->defaultMaterialShaderKeyProperties().m_lightmapEnabled.setValue(theGeneratedKey, renderableFlags.rendersWithLightmap());
+
+    // debug modes
+    renderer->defaultMaterialShaderKeyProperties().m_debugMode.setValue(theGeneratedKey, int(layer.debugMode));
 
     // Knowing whether VAR_COLOR is used becomes relevant when there is no
     // custom vertex shader, but VAR_COLOR is present in the custom fragment
