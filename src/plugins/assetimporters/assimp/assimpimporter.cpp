@@ -1680,7 +1680,7 @@ void AssimpImporter::processAnimations(QTextStream &output)
         QHash<aiNode *, aiMeshMorphAnim *> *morphAnimation = m_morphAnimations[idx];
         const qreal &animFreq = m_animFreqs[idx];
         // skip empty animations
-        if (animation->count() == 0 && morphAnimation->count() == 0)
+        if (animation->size() == 0 && morphAnimation->size() == 0)
             continue;
         output << QStringLiteral("\n");
         output << QSSGQmlUtilities::insertTabs(1) << "Timeline {\n";

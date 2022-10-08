@@ -1118,7 +1118,7 @@ void QSSGRhiContextStats::stop(QSSGRenderLayer *layer)
 {
     if (rendererDebugEnabled()) {
         PerLayerInfo &info(perLayerInfo[layer]);
-        const int rpCount = info.renderPasses.count();
+        const int rpCount = info.renderPasses.size();
         qDebug("%d render passes in 3D renderer %p", rpCount, layer);
         for (int i = 0; i < rpCount; ++i) {
             const RenderPassInfo &rp(info.renderPasses[i]);
@@ -1152,7 +1152,7 @@ void QSSGRhiContextStats::beginRenderPass(QRhiTextureRenderTarget *rt)
 {
     PerLayerInfo &info(perLayerInfo[layerKey]);
     info.renderPasses.append({ rt->name(), rt->pixelSize(), {}, {}, {}, {} });
-    info.currentRenderPassIndex = info.renderPasses.count() - 1;
+    info.currentRenderPassIndex = info.renderPasses.size() - 1;
 }
 
 void QSSGRhiContextStats::endRenderPass()

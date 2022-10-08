@@ -381,7 +381,7 @@ void QQuick3DRenderStats::processRhiContextStats()
     m_results.imageDataSize = globalData.imageDataSize;
     m_results.meshDataSize = globalData.meshDataSize;
 
-    m_results.renderPassCount = data.renderPasses.count()
+    m_results.renderPassCount = data.renderPasses.size()
             + (data.externalRenderPass.pixelSize.isEmpty() ? 0 : 1);
 
     QString renderPassDetails = QLatin1String(R"(
@@ -440,7 +440,7 @@ void QQuick3DRenderStats::processRhiContextStats()
         });
         for (QSSGRenderMesh *mesh : meshList) {
             const QByteArray name = nameForRenderMesh(mesh);
-            const int subsetCount = int(mesh->subsets.count());
+            const int subsetCount = int(mesh->subsets.size());
             quint64 vertexCount = 0;
             quint32 vbufSize = 0;
             quint32 ibufSize = 0;

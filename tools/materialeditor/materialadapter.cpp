@@ -328,7 +328,7 @@ bool MaterialAdapter::saveMaterial(const QUrl &materialFile)
         out << int(m_material->depthDrawMode());
         out << int(m_material->shadingMode());
         // Uniforms
-        out << uniformTable.count();
+        out << uniformTable.size();
         for (const auto &uniform : std::as_const(uniformTable))
             out << uniform;
     } else {

@@ -1494,7 +1494,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     auto root = scene.root;
     Q_ASSERT(root);
     OutputContext output { stream, outdir, 0, OutputContext::Header };
-    writeImportHeader(output, scene.animations.count() > 0);
+    writeImportHeader(output, scene.animations.size() > 0);
     output.type = OutputContext::RootNode;
     writeQml(*root, output); // Block scope will be left open!
     output.type = OutputContext::Resource;

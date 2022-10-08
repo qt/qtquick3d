@@ -1605,7 +1605,7 @@ void QSSGLayerRenderData::prepareForRender()
     // NOTE: This culling is specific to our Forward renderer
     const int maxLightCount = effectiveMaxLightCount(features);
     for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
-        if (renderableLights.count() == maxLightCount) {
+        if (renderableLights.size() == maxLightCount) {
             if (!tooManyLightsWarningShown) {
                 qWarning("Too many lights in scene, maximum is %d", maxLightCount);
                 tooManyLightsWarningShown = true;
@@ -1671,7 +1671,7 @@ void QSSGLayerRenderData::prepareForRender()
 
     // Give each renderable a copy of the lights available
     // Also setup scoping for scoped lights
-    const bool handleScopedLights = renderableLights.count() != globalLights.count();
+    const bool handleScopedLights = renderableLights.size() != globalLights.size();
 
     const auto prepareLights = [&renderableLights](QVector<QSSGRenderableNodeEntry> &renderableNodes) {
         for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {

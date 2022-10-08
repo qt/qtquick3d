@@ -1756,7 +1756,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
     }
 
     // Create shadow map for each light in the scene
-    for (int i = 0, ie = globalLights.count(); i != ie; ++i) {
+    for (int i = 0, ie = globalLights.size(); i != ie; ++i) {
         if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
             continue;
 

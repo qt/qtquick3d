@@ -358,7 +358,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                     if (isEmbedded) {
                         QSSGSceneDesc::TextureData *textureData = nullptr;
                         auto &embeddedTextures = sceneInfo.embeddedTextureMap;
-                        const auto textureCount = embeddedTextures.count();
+                        const auto textureCount = embeddedTextures.size();
                         const auto &filename = texturePath.data;
                         const auto idx = qsizetype(std::atoi(filename + 1));
                         if (idx >= 0 && idx < textureCount)

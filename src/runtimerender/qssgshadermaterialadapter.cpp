@@ -906,7 +906,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
     static const char *metaEnd = "  ]\n}*/\n#endif\n";
     dst.append(metaStart);
-    for (int i = 0, count = allUniforms.count(); i < count; ++i) {
+    for (int i = 0, count = allUniforms.size(); i < count; ++i) {
         const auto &typeAndName(allUniforms[i]);
         dst.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
         if (i < count - 1)
@@ -926,7 +926,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"inputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
         dst.append(metaStart);
-        for (int i = 0, count = allInputs.count(); i < count; ++i) {
+        for (int i = 0, count = allInputs.size(); i < count; ++i) {
             dst.append("    { \"type\": \"" + allInputs[i].first
                     + "\", \"name\": \"" + allInputs[i].second
                     + "\", \"stage\": \"" + stageStr + "\" }");
@@ -947,7 +947,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"outputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
         dst.append(metaStart);
-        for (int i = 0, count = allOutputs.count(); i < count; ++i) {
+        for (int i = 0, count = allOutputs.size(); i < count; ++i) {
             dst.append("    { \"type\": \"" + allOutputs[i].first
                     + "\", \"name\": \"" + allOutputs[i].second
                     + "\", \"stage\": \"" + stageStr + "\" }");

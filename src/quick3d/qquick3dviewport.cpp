@@ -1019,7 +1019,7 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
                 pickResults = renderer->syncPickAll(rayResult.getValue());
         }
         if (!isHover)
-            qCDebug(lcPick) << pickResults.count() << "pick results for" << event->point(pointIndex);
+            qCDebug(lcPick) << pickResults.size() << "pick results for" << event->point(pointIndex);
         if (pickResults.isEmpty()) {
             eventPoint.setAccepted(false); // let it fall through the viewport to Items underneath
             continue; // next eventPoint
