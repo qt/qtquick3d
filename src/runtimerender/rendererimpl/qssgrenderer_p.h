@@ -116,9 +116,8 @@ public:
 
     enum class LightmapUVRasterizationShaderMode {
         Default,
-        BaseColorMap,
-        EmissiveMap,
-        BaseColorAndEmissiveMaps
+        Uv,
+        UvTangent
     };
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
@@ -178,9 +177,8 @@ private:
     QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_simpleQuadRhiShader;
     QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_basecolormap;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_emissivemap;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_both;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_uv;
+    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_uv_tangent;
     QSSGRef<QSSGRhiShaderPipeline> m_lightmapDilateShader;
 
     QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;

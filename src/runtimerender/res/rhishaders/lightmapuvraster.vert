@@ -3,7 +3,7 @@
 layout(location = 0) in vec3 attr_pos;
 layout(location = 1) in vec3 attr_normal;
 layout(location = 2) in vec2 attr_lightmap_uv;
-#if defined(QSSG_LIGHTMAPUVRASTER_BASECOLORMAP) || defined(QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP)
+#if defined(QSSG_LIGHTMAPUVRASTER_UV) || defined(QSSG_LIGHTMAPUVRASTER_UV_TANGENT)
 layout(location = 3) in vec2 attr_uv;
 #endif
 
@@ -15,13 +15,15 @@ layout(std140, binding = 0) uniform buf {
     vec4 baseColorLinear;
     vec3 emissiveFactor;
     int flipY;
+    int hasBaseColorMap;
+    int hasEmissiveMap;
 };
 
 void main()
 {
     v_pos = attr_pos;
     v_normal = attr_normal;
-#if defined(QSSG_LIGHTMAPUVRASTER_BASECOLORMAP) || defined(QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP)
+#if defined(QSSG_LIGHTMAPUVRASTER_UV) || defined(QSSG_LIGHTMAPUVRASTER_UV_TANGENT)
     v_uv = attr_uv;
 #else
     v_uv = vec2(0.0);

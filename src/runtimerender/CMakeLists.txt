@@ -546,7 +546,7 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_default"
         res/rhishaders/lightmapuvraster.vert.qsb
         res/rhishaders/lightmapuvraster.frag.qsb
 )
-qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_basecolormap"
+qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_uv"
     SILENT
     PRECOMPILE
     OPTIMIZED
@@ -556,12 +556,12 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_basecolormap"
         res/rhishaders/lightmapuvraster.vert
         res/rhishaders/lightmapuvraster.frag
     OUTPUTS
-        res/rhishaders/lightmapuvraster_basecolormap.vert.qsb
-        res/rhishaders/lightmapuvraster_basecolormap.frag.qsb
+        res/rhishaders/lightmapuvraster_uv.vert.qsb
+        res/rhishaders/lightmapuvraster_uv.frag.qsb
     DEFINES
-        QSSG_LIGHTMAPUVRASTER_BASECOLORMAP
+        QSSG_LIGHTMAPUVRASTER_UV
 )
-qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_emissivemap"
+qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_uv_tangent"
     SILENT
     PRECOMPILE
     OPTIMIZED
@@ -571,26 +571,10 @@ qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_emissivemap"
         res/rhishaders/lightmapuvraster.vert
         res/rhishaders/lightmapuvraster.frag
     OUTPUTS
-        res/rhishaders/lightmapuvraster_emissivemap.vert.qsb
-        res/rhishaders/lightmapuvraster_emissivemap.frag.qsb
+        res/rhishaders/lightmapuvraster_uv_tangent.vert.qsb
+        res/rhishaders/lightmapuvraster_uv_tangent.frag.qsb
     DEFINES
-        QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP
-)
-qt_internal_add_shaders(Quick3DRuntimeRender "res_lightmapuvraster_both"
-    SILENT
-    PRECOMPILE
-    OPTIMIZED
-    PREFIX
-        "/"
-    FILES
-        res/rhishaders/lightmapuvraster.vert
-        res/rhishaders/lightmapuvraster.frag
-    OUTPUTS
-        res/rhishaders/lightmapuvraster_both.vert.qsb
-        res/rhishaders/lightmapuvraster_both.frag.qsb
-    DEFINES
-        QSSG_LIGHTMAPUVRASTER_BASECOLORMAP
-        QSSG_LIGHTMAPUVRASTER_EMISSIVEMAP
+        QSSG_LIGHTMAPUVRASTER_UV_TANGENT
 )
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders_line_particles"
     SILENT

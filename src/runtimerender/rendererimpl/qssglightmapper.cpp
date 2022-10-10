@@ -617,6 +617,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         QRhiResourceUpdateBatch *resUpd = rhi->nextResourceUpdateBatch();
         resUpd->uploadStaticBuffer(vbuf.get(), bakeModelDrawInfo.vertexData.constData());
         resUpd->uploadStaticBuffer(ibuf.get(), bakeModelDrawInfo.indexData.constData());
+        QRhiTexture *dummyTexture = rhiCtx->dummyTexture({}, resUpd);
         cb->resourceUpdate(resUpd);
 
         std::unique_ptr<QRhiTexture> positionData(rhi->newTexture(QRhiTexture::RGBA32F, outputSize, 1,
@@ -666,7 +667,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             return false;
         }
 
-        static const int UBUF_SIZE = 32;
+        static const int UBUF_SIZE = 40;
         const int subMeshCount = subMeshInfos[lmIdx].size();
         const int alignedUbufSize = rhi->ubufAligned(UBUF_SIZE);
         const int totalUbufSize = alignedUbufSize * subMeshCount;
@@ -686,10 +687,14 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         char *ubufData = ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
             const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
+            qint32 hasBaseColorMap = subMeshInfo.baseColorMap ? 1 : 0;
+            qint32 hasEmissiveMap = subMeshInfo.emissiveMap ? 1 : 0;
             char *p = ubufData + subMeshIdx * alignedUbufSize;
             memcpy(p, &subMeshInfo.baseColor, 4 * sizeof(float));
             memcpy(p + 16, &subMeshInfo.emissiveFactor, 3 * sizeof(float));
             memcpy(p + 28, &flipY, sizeof(qint32));
+            memcpy(p + 32, &hasBaseColorMap, sizeof(qint32));
+            memcpy(p + 36, &hasEmissiveMap, sizeof(qint32));
         }
         ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
@@ -722,15 +727,12 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                         << QRhiVertexInputAttribute(0, 1, bakeModelDrawInfo.normalFormat, bakeModelDrawInfo.normalOffset)
                         << QRhiVertexInputAttribute(0, 2, bakeModelDrawInfo.lightmapUVFormat, bakeModelDrawInfo.lightmapUVOffset);
 
-            bool hasBaseColorMap = subMeshInfo.baseColorMap != nullptr;
-            bool hasEmissiveMap = subMeshInfo.emissiveMap != nullptr;
+            // Vertex inputs (just like the sampler uniforms) must match exactly on
+            // the shader and the application side, cannot just leave out or have
+            // unused inputs.
             QSSGRenderer::LightmapUVRasterizationShaderMode shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::Default;
-            if (hasBaseColorMap && hasEmissiveMap)
-                shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::BaseColorAndEmissiveMaps;
-            else if (hasEmissiveMap)
-                shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::EmissiveMap;
-            else if (hasBaseColorMap)
-                shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::BaseColorMap;
+            if (hasUV0)
+                shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::Uv;
 
             QSSGRef<QSSGRhiShaderPipeline> lmUvRastShaderPipeline = renderer->getRhiLightmapUVRasterizationShader(shaderVariant);
             if (!lmUvRastShaderPipeline) {
@@ -738,10 +740,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                 return false;
             }
 
-            // Vertex inputs (just like the sampler uniforms) must match exactly on
-            // the shader and the application side, cannot just leave out or have
-            // unused inputs.
-            if (hasUV0 && (hasBaseColorMap || hasEmissiveMap))
+            if (hasUV0)
                 vertexAttrs << QRhiVertexInputAttribute(0, 3, bakeModelDrawInfo.uvFormat, bakeModelDrawInfo.uvOffset);
 
             inputLayout.setAttributes(vertexAttrs.cbegin(), vertexAttrs.cend());
@@ -749,7 +748,9 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             QSSGRhiShaderResourceBindingList bindings;
             bindings.addUniformBuffer(0, QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage, ubuf.get(),
                                       subMeshIdx * alignedUbufSize, UBUF_SIZE);
-            if (hasBaseColorMap) {
+            QRhiSampler *dummySampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
+                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
+            if (subMeshInfo.baseColorMap) {
                 const bool mipmapped = subMeshInfo.baseColorMap->flags().testFlag(QRhiTexture::MipMapped);
                 QRhiSampler *sampler = rhiCtx->sampler({ toRhi(subMeshInfo.baseColorNode->m_minFilterType),
                                                          toRhi(subMeshInfo.baseColorNode->m_magFilterType),
@@ -759,8 +760,10 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                          QRhiSampler::Repeat
                                                        });
                 bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.baseColorMap, sampler);
+            } else {
+                bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
             }
-            if (hasEmissiveMap) {
+            if (subMeshInfo.emissiveMap) {
                 const bool mipmapped = subMeshInfo.emissiveMap->flags().testFlag(QRhiTexture::MipMapped);
                 QRhiSampler *sampler = rhiCtx->sampler({ toRhi(subMeshInfo.emissiveNode->m_minFilterType),
                                                          toRhi(subMeshInfo.emissiveNode->m_magFilterType),
@@ -770,6 +773,8 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                                                          QRhiSampler::Repeat
                                                        });
                 bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.emissiveMap, sampler);
+            } else {
+                bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
             }
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 

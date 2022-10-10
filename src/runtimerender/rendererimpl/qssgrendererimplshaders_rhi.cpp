@@ -166,12 +166,10 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiSimpleQuadShader()
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode)
 {
     switch (mode) {
-    case LightmapUVRasterizationShaderMode::BaseColorMap:
-        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_basecolormap"), m_lightmapUVRasterShader_basecolormap);
-    case LightmapUVRasterizationShaderMode::EmissiveMap:
-        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_emissivemap"), m_lightmapUVRasterShader_emissivemap);
-    case LightmapUVRasterizationShaderMode::BaseColorAndEmissiveMaps:
-        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_both"), m_lightmapUVRasterShader_both);
+    case LightmapUVRasterizationShaderMode::Uv:
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_uv"), m_lightmapUVRasterShader_uv);
+    case LightmapUVRasterizationShaderMode::UvTangent:
+        return getBuiltinRhiShader(QByteArrayLiteral("lightmapuvraster_uv_tangent"), m_lightmapUVRasterShader_uv_tangent);
     default:
         break;
     }
