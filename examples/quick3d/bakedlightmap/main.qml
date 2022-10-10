@@ -76,4 +76,29 @@ Window {
             }
         }
     }
+
+    Item {
+        width: Math.min(100, dbg.width)
+        height: Math.min(100, dbg.height)
+        anchors.right: parent.right
+        Text {
+            text: "Click here for DebugView"
+            font.pointSize: 8
+            color: "white"
+            anchors.right: parent.right
+            anchors.top: parent.top
+            visible: !dbg.visible
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: dbg.visible = !dbg.visible
+            DebugView {
+                anchors.right: parent.right
+                source: root
+                id: dbg
+                visible: false
+                resourceDetailsVisible: true
+            }
+        }
+    }
 }

@@ -52,6 +52,9 @@ struct QSSGLightmapperPrivate
         QVector3D emissiveFactor;
         QSSGRenderImage *emissiveNode = nullptr;
         QRhiTexture *emissiveMap = nullptr;
+        QSSGRenderImage *normalMapNode = nullptr;
+        QRhiTexture *normalMap = nullptr;
+        float normalStrength = 0.0f;
         float opacity = 0.0f;
     };
     using SubMeshInfoList = QVector<SubMeshInfo>;
@@ -71,6 +74,10 @@ struct QSSGLightmapperPrivate
         QRhiVertexInputAttribute::Format uvFormat = QRhiVertexInputAttribute::Float;
         quint32 lightmapUVOffset = UINT_MAX;
         QRhiVertexInputAttribute::Format lightmapUVFormat = QRhiVertexInputAttribute::Float;
+        quint32 tangentOffset = UINT_MAX;
+        QRhiVertexInputAttribute::Format tangentFormat = QRhiVertexInputAttribute::Float;
+        quint32 binormalOffset = UINT_MAX;
+        QRhiVertexInputAttribute::Format binormalFormat = QRhiVertexInputAttribute::Float;
         QSSGMesh::Mesh meshWithLightmapUV; // only set when model->hasLightmap() == true
     };
     QVector<DrawInfo> drawInfos;
@@ -284,6 +291,12 @@ bool QSSGLightmapperPrivate::commitGeometry()
                     QSSGRenderImageTexture texture = bufferManager->loadRenderImage(defMat->emissiveMap);
                     info.emissiveMap = texture.m_texture;
                 }
+                if (defMat->normalMap) {
+                    info.normalMapNode = defMat->normalMap;
+                    QSSGRenderImageTexture texture = bufferManager->loadRenderImage(defMat->normalMap);
+                    info.normalMap = texture.m_texture;
+                    info.normalStrength = defMat->bumpAmount;
+                }
             } else {
                 info.baseColor = QVector4D(1.0f, 1.0f, 1.0f, 1.0f);
                 info.emissiveFactor = QVector3D(0.0f, 0.0f, 0.0f);
@@ -370,6 +383,12 @@ bool QSSGLightmapperPrivate::commitGeometry()
             } else if (vbe.name == QSSGMesh::MeshInternal::getLightmapUVAttrName()) {
                 drawInfo.lightmapUVOffset = vbe.offset;
                 drawInfo.lightmapUVFormat = QSSGRhiInputAssemblerState::toVertexInputFormat(QSSGRenderComponentType(vbe.componentType), vbe.componentCount);
+            } else if (vbe.name == QSSGMesh::MeshInternal::getTexTanAttrName()) {
+                drawInfo.tangentOffset = vbe.offset;
+                drawInfo.tangentFormat = QSSGRhiInputAssemblerState::toVertexInputFormat(QSSGRenderComponentType(vbe.componentType), vbe.componentCount);
+            } else if (vbe.name == QSSGMesh::MeshInternal::getTexBinormalAttrName()) {
+                drawInfo.binormalOffset = vbe.offset;
+                drawInfo.binormalFormat = QSSGRhiInputAssemblerState::toVertexInputFormat(QSSGRenderComponentType(vbe.componentType), vbe.componentCount);
             }
         }
 
@@ -401,6 +420,19 @@ bool QSSGLightmapperPrivate::commitGeometry()
         if (drawInfo.uvOffset != UINT_MAX) {
             if (drawInfo.uvFormat != QRhiVertexInputAttribute::Float2) {
                 qWarning() << "lm: UV0 attribute format is not as expected (float2)" << lm.model;
+                return false;
+            }
+        }
+        // tangent and binormal are optional too
+        if (drawInfo.tangentOffset != UINT_MAX) {
+            if (drawInfo.tangentFormat != QRhiVertexInputAttribute::Float3) {
+                qWarning() << "lm: Tangent attribute format is not as expected (float3)" << lm.model;
+                return false;
+            }
+        }
+        if (drawInfo.binormalOffset != UINT_MAX) {
+            if (drawInfo.binormalFormat != QRhiVertexInputAttribute::Float3) {
+                qWarning() << "lm: Binormal attribute format is not as expected (float3)" << lm.model;
                 return false;
             }
         }
@@ -599,6 +631,8 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
 
         const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
         const bool hasUV0 = bakeModelDrawInfo.uvOffset != UINT_MAX;
+        const bool hasTangentAndBinormal = bakeModelDrawInfo.tangentOffset != UINT_MAX
+                && bakeModelDrawInfo.binormalOffset != UINT_MAX;
         const QSize outputSize = bakeModelDrawInfo.lightmapSize;
 
         QRhiVertexInputLayout inputLayout;
@@ -667,7 +701,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             return false;
         }
 
-        static const int UBUF_SIZE = 40;
+        static const int UBUF_SIZE = 48;
         const int subMeshCount = subMeshInfos[lmIdx].size();
         const int alignedUbufSize = rhi->ubufAligned(UBUF_SIZE);
         const int totalUbufSize = alignedUbufSize * subMeshCount;
@@ -689,12 +723,15 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
             qint32 hasBaseColorMap = subMeshInfo.baseColorMap ? 1 : 0;
             qint32 hasEmissiveMap = subMeshInfo.emissiveMap ? 1 : 0;
+            qint32 hasNormalMap = subMeshInfo.normalMap ? 1 : 0;
             char *p = ubufData + subMeshIdx * alignedUbufSize;
             memcpy(p, &subMeshInfo.baseColor, 4 * sizeof(float));
             memcpy(p + 16, &subMeshInfo.emissiveFactor, 3 * sizeof(float));
             memcpy(p + 28, &flipY, sizeof(qint32));
             memcpy(p + 32, &hasBaseColorMap, sizeof(qint32));
             memcpy(p + 36, &hasEmissiveMap, sizeof(qint32));
+            memcpy(p + 40, &hasNormalMap, sizeof(qint32));
+            memcpy(p + 44, &subMeshInfo.normalStrength, sizeof(float));
         }
         ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
@@ -722,7 +759,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
 
         for (int subMeshIdx = 0; subMeshIdx != subMeshCount; ++subMeshIdx) {
             const SubMeshInfo &subMeshInfo(subMeshInfos[lmIdx][subMeshIdx]);
-            QVarLengthArray<QRhiVertexInputAttribute, 4> vertexAttrs;
+            QVarLengthArray<QRhiVertexInputAttribute, 6> vertexAttrs;
             vertexAttrs << QRhiVertexInputAttribute(0, 0, bakeModelDrawInfo.positionFormat, bakeModelDrawInfo.positionOffset)
                         << QRhiVertexInputAttribute(0, 1, bakeModelDrawInfo.normalFormat, bakeModelDrawInfo.normalOffset)
                         << QRhiVertexInputAttribute(0, 2, bakeModelDrawInfo.lightmapUVFormat, bakeModelDrawInfo.lightmapUVOffset);
@@ -731,8 +768,11 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             // the shader and the application side, cannot just leave out or have
             // unused inputs.
             QSSGRenderer::LightmapUVRasterizationShaderMode shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::Default;
-            if (hasUV0)
+            if (hasUV0) {
                 shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::Uv;
+                if (hasTangentAndBinormal)
+                    shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::UvTangent;
+            }
 
             QSSGRef<QSSGRhiShaderPipeline> lmUvRastShaderPipeline = renderer->getRhiLightmapUVRasterizationShader(shaderVariant);
             if (!lmUvRastShaderPipeline) {
@@ -740,8 +780,13 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                 return false;
             }
 
-            if (hasUV0)
+            if (hasUV0) {
                 vertexAttrs << QRhiVertexInputAttribute(0, 3, bakeModelDrawInfo.uvFormat, bakeModelDrawInfo.uvOffset);
+                if (hasTangentAndBinormal) {
+                    vertexAttrs << QRhiVertexInputAttribute(0, 4, bakeModelDrawInfo.tangentFormat, bakeModelDrawInfo.tangentOffset);
+                    vertexAttrs << QRhiVertexInputAttribute(0, 5, bakeModelDrawInfo.binormalFormat, bakeModelDrawInfo.binormalOffset);
+                }
+            }
 
             inputLayout.setAttributes(vertexAttrs.cbegin(), vertexAttrs.cend());
 
@@ -775,6 +820,24 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                 bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.emissiveMap, sampler);
             } else {
                 bindings.addTexture(2, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
+            }
+            if (subMeshInfo.normalMap) {
+                if (!hasUV0 || !hasTangentAndBinormal) {
+                    qWarning() << "lm: submesh" << subMeshIdx << "has a normal map, "
+                                  "but the mesh does not provide all three of UV0, tangent, and binormal; "
+                                  "expect incorrect results";
+                }
+                const bool mipmapped = subMeshInfo.normalMap->flags().testFlag(QRhiTexture::MipMapped);
+                QRhiSampler *sampler = rhiCtx->sampler({ toRhi(subMeshInfo.normalMapNode->m_minFilterType),
+                                                         toRhi(subMeshInfo.normalMapNode->m_magFilterType),
+                                                         mipmapped ? toRhi(subMeshInfo.normalMapNode->m_mipFilterType) : QRhiSampler::None,
+                                                         toRhi(subMeshInfo.normalMapNode->m_horizontalTilingMode),
+                                                         toRhi(subMeshInfo.normalMapNode->m_verticalTilingMode),
+                                                         QRhiSampler::Repeat
+                                                       });
+                bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, subMeshInfo.normalMap, sampler);
+            } else {
+                bindings.addTexture(3, QRhiShaderResourceBinding::FragmentStage, dummyTexture, dummySampler);
             }
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
