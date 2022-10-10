@@ -107,6 +107,11 @@ void QSSGRhiQuadRenderer::recordRenderQuad(QSSGRhiContext *rhiCtx,
         ps->targetBlend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
         ps->targetBlend.srcAlpha = QRhiGraphicsPipeline::One;
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+    } else { // set to default, since we may not have had a renderable previously
+        ps->targetBlend.srcColor = QRhiGraphicsPipeline::SrcAlpha;
+        ps->targetBlend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        ps->targetBlend.srcAlpha = QRhiGraphicsPipeline::One;
+        ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     }
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -157,6 +162,11 @@ void QSSGRhiCubeRenderer::recordRenderCube(QSSGRhiContext *rhiCtx, QSSGRhiGraphi
     if (flags.testFlag(QSSGRhiQuadRenderer::PremulBlend)) {
         ps->blendEnable = true;
         ps->targetBlend.srcColor = QRhiGraphicsPipeline::One;
+        ps->targetBlend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+        ps->targetBlend.srcAlpha = QRhiGraphicsPipeline::One;
+        ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+    } else { // set to default, since we may not have had a renderable previously
+        ps->targetBlend.srcColor = QRhiGraphicsPipeline::SrcAlpha;
         ps->targetBlend.dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
         ps->targetBlend.srcAlpha = QRhiGraphicsPipeline::One;
         ps->targetBlend.dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
