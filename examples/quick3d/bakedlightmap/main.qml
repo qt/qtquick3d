@@ -54,10 +54,6 @@ Window {
         }
         //! [model]
 
-        WasdController {
-            controlledObject: camera
-        }
-
         Rectangle {
             color: "lightGray"
             width: 300
