@@ -14,49 +14,42 @@ Node {
         id: floor_material
         baseColor: "#ffb9b5ad"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
         id: ceiling_material
         baseColor: "#ffb9b5ad"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
         id: backWall_material
         baseColor: "#ffb9b5ad"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
         id: rightWall_material
         baseColor: "#ff247317"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
         id: leftWall_material
         baseColor: "#ffa1110d"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
         id: shortBox_material
         baseColor: "#ffb9b5ad"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
         id: tallBox_material
         baseColor: "#ffb9b5ad"
         roughness: 0.9
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -64,7 +57,6 @@ Node {
         baseColor: "#ffc7c7c7"
         roughness: 0.9
         emissiveFactor: Qt.vector3d(1, 1, 1)
-        cullMode: Material.NoCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {

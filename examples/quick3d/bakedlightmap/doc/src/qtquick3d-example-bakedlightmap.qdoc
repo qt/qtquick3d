@@ -12,8 +12,7 @@
     result, the rendered scene looks a lot more realistic, mainly because of
     the added indirect illumination. With the help of a checkbox it also allows
     disabling lightmapping, thus allowing comparing the rendering results of
-    the real-time and fully baked approaches. The scene can be navigated using
-    a \l WasdController.
+    the real-time and fully baked approaches.
 
     \section1 Setting up the Light
 
