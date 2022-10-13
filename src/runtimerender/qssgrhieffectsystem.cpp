@@ -429,12 +429,12 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     if (it != m_shaderPipelines.cend())
         m_currentShaderPipeline = (*it).data();
 
-    // Check if there's a build-time genereated entry for this effect
+    // Check if there's a build-time generated entry for this effect
     if (!m_currentShaderPipeline) {
-        const auto &shaderEntries = shaderLib->m_shaderEntries;
-        const auto foundIt = shaderEntries.constFind(QQsbCollection::Entry{hkey});
-        if (foundIt != shaderEntries.cend()) {
-            const auto &shader = shaderCache->loadGeneratedShader(key, *foundIt, *inEffect);
+        const auto &pregenEntries = shaderLib->m_preGeneratedShaderEntries;
+        const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry{hkey});
+        if (foundIt != pregenEntries.cend()) {
+            const auto &shader = shaderCache->loadPregeneratedShader(key, QSSGShaderFeatures(), *foundIt, *inEffect);
             m_shaderPipelines.insert(rkey, shader);
             m_currentShaderPipeline = shader.data();
         }

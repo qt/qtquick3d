@@ -50,17 +50,6 @@ static void initBaker(QShaderBaker *baker, QRhi *rhi)
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
 
-static QQsbShaderFeatureSet toQsbShaderFeatureSet(const QSSGShaderFeatures &featureSet)
-{
-    QQsbShaderFeatureSet ret;
-    for (quint32 i = 0, end = QSSGShaderFeatures::Count; i != end; ++i) {
-        auto def = QSSGShaderFeatures::fromIndex(i);
-        if (featureSet.isSet(def))
-            ret.insert(QSSGShaderFeatures::asDefineString(def), true);
-    }
-    return ret;
-}
-
 GenShaders::GenShaders()
 {
     sceneManager = new QQuick3DSceneManager;
@@ -201,8 +190,8 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     QQuick3DRenderLayerHelpers::updateLayerNodeHelper(*view3D, layer, aaIsDirty, temporalIsDirty, ssaaMultiplier);
 
     const QString outCollectionFile = outputFolder + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile());
-    QQsbCollection qsbc(outCollectionFile);
-    if (!dryRun && !qsbc.map(QQsbCollection::Write))
+    QQsbIODeviceCollection qsbc(outCollectionFile);
+    if (!dryRun && !qsbc.map(QQsbIODeviceCollection::Write))
         return false;
 
     QByteArray shaderString;
@@ -232,7 +221,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                         if (dryRun)
                             qDryRunPrintQsbcAdd(shaderString);
                         else
-                            qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
+                            qsbc.addEntry(hkey, { shaderString, QQsbCollection::toFeatureSet(features), vertexStage->shader(), fragmentStage->shader() });
                     }
                 }
             } else if (renderable->renderableFlags.testFlag(QSSGRenderableObjectFlag::CustomMaterialMeshSubset)) {
@@ -254,7 +243,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                         if (dryRun)
                             qDryRunPrintQsbcAdd(shaderString);
                         else
-                            qsbc.addQsbEntry(shaderString, toQsbShaderFeatureSet(features), vertexStage->shader(), fragmentStage->shader(), hkey);
+                            qsbc.addEntry(hkey, { shaderString, QQsbCollection::toFeatureSet(features), vertexStage->shader(), fragmentStage->shader() });
                     }
                 }
             }
@@ -326,7 +315,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                             if (dryRun)
                                 qDryRunPrintQsbcAdd(key);
                             else
-                                qsbc.addQsbEntry(key, toQsbShaderFeatureSet(QSSGShaderFeatures()), vertexStage->shader(), fragmentStage->shader(), hkey);
+                                qsbc.addEntry(hkey, { key, QQsbCollection::toFeatureSet(QSSGShaderFeatures()), vertexStage->shader(), fragmentStage->shader() });
                         }
                     }
                 }
@@ -349,7 +338,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     for (const auto &effect : std::as_const(sceneData.effects))
         generateEffectShader(*effect);
 
-    if (!qsbc.getEntries().isEmpty())
+    if (!qsbc.availableEntries().isEmpty())
         qsbcFiles.push_back(resourceFolderRelative + QDir::separator() + QString::fromLatin1(QSSGShaderCache::shaderCollectionFile()));
     qsbc.unmap();
 

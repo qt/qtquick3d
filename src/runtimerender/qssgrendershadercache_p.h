@@ -196,7 +196,11 @@ public:
                                                const QSSGShaderFeatures &inFeatures,
                                                QSSGRhiShaderPipeline::StageFlags stageFlags);
 
-    QSSGRef<QSSGRhiShaderPipeline> loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry, const QSSGRenderGraphObject &obj);
+    QSSGRef<QSSGRhiShaderPipeline> loadPregeneratedShader(const QByteArray &inKey,
+                                                          const QSSGShaderFeatures &inFeatures,
+                                                          QQsbCollection::Entry entry,
+                                                          const QSSGRenderGraphObject &obj);
+
     QSSGRef<QSSGRhiShaderPipeline> loadBuiltinForRhi(const QByteArray &inKey);
 
     static QByteArray resourceFolder();

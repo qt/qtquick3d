@@ -171,9 +171,9 @@ void QSSGShaderLibraryManager::loadPregeneratedShaderInfo()
     const auto collectionFilePath = QString::fromLatin1(QSSGShaderCache::resourceFolder() + QSSGShaderCache::shaderCollectionFile());
     QFile file(collectionFilePath);
     if (file.exists()) {
-        QQsbCollection qsbc(file);
-        if (qsbc.map(QQsbCollection::Read))
-            m_shaderEntries = qsbc.getEntries();
+        QQsbIODeviceCollection qsbc(file);
+        if (qsbc.map(QQsbIODeviceCollection::Read))
+            m_preGeneratedShaderEntries = qsbc.availableEntries();
         qsbc.unmap();
     }
 }

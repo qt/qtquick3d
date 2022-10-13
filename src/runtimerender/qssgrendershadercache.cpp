@@ -361,9 +361,14 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 #endif
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteArray &inKey, QQsbCollection::Entry entry, const QSSGRenderGraphObject &obj)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadPregeneratedShader(const QByteArray &inKey,
+                                                                       const QSSGShaderFeatures &inFeatures,
+                                                                       QQsbCollection::Entry entry,
+                                                                       const QSSGRenderGraphObject &obj)
 {
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, QSSGShaderFeatures());
+    // Check the local cache, some callers may do this before calling this
+    // function, but others might not.
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, inFeatures);
     if (rhiShaders)
         return rhiShaders;
 
@@ -378,19 +383,16 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
 
     const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
 
-    QShader vertexShader;
-    QShader fragmentShader;
-
-    QQsbCollection qsbc(collectionFile);
-    QQsbShaderFeatureSet featureSet;
-    if (qsbc.map(QQsbCollection::Read))
-        qsbc.extractQsbEntry(entry, nullptr, &featureSet, &vertexShader, &fragmentShader);
+    QQsbIODeviceCollection qsbc(collectionFile);
+    QQsbCollection::EntryDesc entryDesc;
+    if (qsbc.map(QQsbIODeviceCollection::Read))
+        qsbc.extractEntry(entry, entryDesc);
     else
-        qWarning("Failed to open entry %zu", entry.hkey);
+        qWarning("Failed to open entry %zu", entry.key);
 
-    if (vertexShader.isValid() && fragmentShader.isValid()) {
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader));
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader));
+    if (entryDesc.vertShader.isValid() && entryDesc.fragShader.isValid()) {
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader));
         if (shaderDebug)
             qDebug("Loading of vertex and fragment stages succeeded");
     }
@@ -398,7 +400,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadGeneratedShader(const QByteA
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DLoadShader, 0, obj.profilingId);
 
     QSSGShaderCacheKey cacheKey(inKey);
-    cacheKey.m_features = QSSGShaderFeatures();
+    cacheKey.m_features = inFeatures;
     cacheKey.updateHashCode();
 
     const auto inserted = m_rhiShaders.insert(cacheKey, shaders);

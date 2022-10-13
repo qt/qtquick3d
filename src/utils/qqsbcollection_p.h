@@ -26,58 +26,121 @@
 QT_BEGIN_NAMESPACE
 
 class QRhiShaderStage;
-typedef QMap<QByteArray, bool> QQsbShaderFeatureSet;
 
 class Q_QUICK3DUTILS_EXPORT QQsbCollection
 {
 public:
+    virtual ~QQsbCollection();
+
+    struct Entry
+    {
+        // 'value' is optional. hashing and comparison are based solely on 'key'.
+        Entry() = default;
+        explicit Entry(size_t key) : key(key) {}
+        Entry(size_t key, qint64 value) : key(key), value(value) {}
+        bool isValid() const { return key != 0; }
+        size_t key = 0;
+        qint64 value = -1;
+    };
+
+    using FeatureSet = QMap<QByteArray, bool>;
+
+    template<typename T>
+    static FeatureSet toFeatureSet(const T &ssgFeatureSet)
+    {
+        FeatureSet ret;
+        for (quint32 i = 0, end = T::Count; i != end; ++i) {
+            auto def = T::fromIndex(i);
+            if (ssgFeatureSet.isSet(def))
+                ret.insert(T::asDefineString(def), true);
+        }
+        return ret;
+    }
+
+    struct EntryDesc {
+        QByteArray materialKey;
+        FeatureSet featureSet;
+        QShader vertShader;
+        QShader fragShader;
+    };
+
+    using EntryMap = QSet<Entry>;
+    virtual EntryMap availableEntries() const = 0;
+    virtual Entry addEntry(size_t key, const EntryDesc &entryDesc) = 0;
+    virtual bool extractEntry(Entry entry, EntryDesc &entryDesc) = 0;
+
+protected:
     enum Version : quint8
     {
         Unknown,
         One = 0x10
-        // NOTE: Remember QDataStream version
     };
+    bool readEndHeader(QDataStream &ds, qint64 *startPos, quint8 *version);
+    void writeEndHeader(QDataStream &ds, qint64 startPos, quint8 version, quint64 magic);
+    bool readEndHeader(QIODevice *device, EntryMap *entries, quint8 *version);
+    void writeEndHeader(QIODevice *device, const EntryMap &entries);
+};
 
+Q_DECLARE_TYPEINFO(QQsbCollection::Entry, Q_PRIMITIVE_TYPE);
+
+Q_QUICK3DUTILS_EXPORT QDataStream &operator<<(QDataStream &stream, const QQsbCollection::Entry &entry);
+Q_QUICK3DUTILS_EXPORT QDataStream &operator>>(QDataStream &stream, QQsbCollection::Entry &entry);
+Q_QUICK3DUTILS_EXPORT QDataStream &operator<<(QDataStream &stream, const QQsbCollection::EntryDesc &entryDesc);
+Q_QUICK3DUTILS_EXPORT QDataStream &operator>>(QDataStream &stream, QQsbCollection::EntryDesc &entryDesc);
+
+Q_QUICK3DUTILS_EXPORT size_t qHash(const QQsbCollection::Entry &entry, size_t);
+Q_QUICK3DUTILS_EXPORT bool operator==(const QQsbCollection::Entry &l, const QQsbCollection::Entry &r);
+
+// Simple implementation backed by a hash table. Save and load are explicit and
+// all data is read and written. The file format is compatible with other
+// implementations.
+class Q_QUICK3DUTILS_EXPORT QQsbInMemoryCollection : public QQsbCollection
+{
+public:
+    QQsbInMemoryCollection() = default;
+
+    EntryMap availableEntries() const override;
+    Entry addEntry(size_t key, const EntryDesc &entryDesc) override;
+    bool extractEntry(Entry entry, EntryDesc &entryDesc) override;
+
+    void clear();
+
+    bool load(const QString &filename);
+    bool save(const QString &filename);
+
+private:
+    Q_DISABLE_COPY(QQsbInMemoryCollection);
+
+    QHash<Entry, EntryDesc> entries;
+};
+
+// Serial, direct-to/from-QIODevice implementation.
+class Q_QUICK3DUTILS_EXPORT QQsbIODeviceCollection : public QQsbCollection
+{
+public:
     enum MapMode
     {
         Read = QIODevice::ReadOnly,
         Write = (QIODevice::WriteOnly | QIODevice::Truncate)
     };
 
-    struct Entry
-    {
-        Entry() = default;
-        explicit Entry(size_t key) : hkey(key) {}
-        Entry(size_t key, qint64 offset_) : hkey(key), offset(offset_) {}
-        inline bool isValid() const { return (hkey && offset >= 0); }
-        size_t hkey = 0;
-        qint64 offset = -1;
-    };
-
-    using EntryMap = QSet<Entry>;
-
-    explicit QQsbCollection(const QString &filePath);
-    explicit QQsbCollection(QIODevice &dev);
-    ~QQsbCollection();
+    explicit QQsbIODeviceCollection(const QString &filePath);
+    explicit QQsbIODeviceCollection(QIODevice &dev);
+    ~QQsbIODeviceCollection();
 
     bool map(MapMode mode);
     void unmap();
 
-    EntryMap getEntries() const { return entries; }
-    bool extractQsbEntry(Entry entry, QByteArray *outDesc, QQsbShaderFeatureSet *featureSet, QShader *outVertShader, QShader *outFragShader);
+    EntryMap availableEntries() const override;
+    Entry addEntry(size_t key, const EntryDesc &entryDesc) override;
+    bool extractEntry(Entry entry, EntryDesc &entryDesc) override;
 
-    Entry addQsbEntry(const QByteArray &description, const QQsbShaderFeatureSet &featureSet, const QShader &vert, const QShader &frag, size_t hkey);
-    bool removeQsbEntry();
-
-    QString fileName() const;
-    void setFileName(const QString &fileName);
-
-    static void dumpQsbcInfo(const QString &device);
-    static void dumpQsbcInfo(QIODevice &device);
+    void dumpInfo();
+    static void dumpInfo(const QString &device);
+    static void dumpInfo(QIODevice &device);
 
 private:
-    Q_DISABLE_COPY(QQsbCollection);
-    static void dumpQsbcInfoImp(QQsbCollection &qsbc);
+    Q_DISABLE_COPY(QQsbIODeviceCollection);
 
     enum class DeviceOwner : quint8
     {
@@ -86,18 +149,10 @@ private:
     };
     QFile file;
     QIODevice &device;
-    EntryMap entries;
     DeviceOwner devOwner = DeviceOwner::Self;
     quint8 version = Version::Unknown;
+    EntryMap entries;
 };
-
-Q_DECLARE_TYPEINFO(QQsbCollection::Entry, Q_PRIMITIVE_TYPE);
-
-Q_QUICK3DUTILS_EXPORT QDataStream &operator<<(QDataStream &stream, const QQsbCollection::Entry &entry);
-Q_QUICK3DUTILS_EXPORT QDataStream &operator>>(QDataStream &stream, QQsbCollection::Entry &entry);
-
-Q_QUICK3DUTILS_EXPORT size_t qHash(const QQsbCollection::Entry &entry, size_t);
-Q_QUICK3DUTILS_EXPORT bool operator==(const QQsbCollection::Entry &l, const QQsbCollection::Entry &r);
 
 QT_END_NAMESPACE
 

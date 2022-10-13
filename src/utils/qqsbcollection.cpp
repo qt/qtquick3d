@@ -7,11 +7,209 @@
 
 QT_BEGIN_NAMESPACE
 
-static const char *borderText() { return "--------------------------------------------------------------------------------"; }
-static constexpr quint64 MagicaDS = 0x3933333335346337;
-static constexpr qint64 HeaderSize = sizeof(quint64 /*startOffs*/) + sizeof(MagicaDS) + sizeof(decltype(QQsbCollection::Version::One));
+QQsbCollection::~QQsbCollection()
+{
+}
 
-bool QQsbCollection::map(MapMode mode)
+QDataStream &operator<<(QDataStream &stream, const QQsbCollection::Entry &entry)
+{
+    return (stream << quint64(entry.key) << entry.value);
+}
+
+QDataStream &operator>>(QDataStream &stream, QQsbCollection::Entry &entry)
+{
+    quint64 key;
+    qint64 value;
+    stream >> key >> value;
+    entry = { size_t(key), value };
+    return stream;
+}
+
+size_t qHash(const QQsbCollection::Entry &entry, size_t)
+{
+    return entry.key;
+}
+
+bool operator==(const QQsbCollection::Entry &l, const QQsbCollection::Entry &r)
+{
+    return (l.key == r.key);
+}
+
+QDataStream &operator<<(QDataStream &stream, const QQsbCollection::EntryDesc &entryDesc)
+{
+    return (stream << entryDesc.materialKey
+            << entryDesc.featureSet
+            << entryDesc.vertShader.serialized()
+            << entryDesc.fragShader.serialized());
+}
+
+QDataStream &operator>>(QDataStream &stream, QQsbCollection::EntryDesc &entryDesc)
+{
+    QByteArray desc;
+    QQsbCollection::FeatureSet fs;
+    QByteArray vertData;
+    QByteArray fragData;
+    stream >> desc >> fs >> vertData >> fragData;
+    entryDesc.materialKey = desc;
+    entryDesc.featureSet = fs;
+    entryDesc.vertShader = QShader::fromSerialized(vertData);
+    entryDesc.fragShader = QShader::fromSerialized(fragData);
+    return stream;
+}
+
+static constexpr quint64 MagicaDS = 0x3933333335346337;
+static constexpr qint64 HeaderSize = sizeof(qint64 /*startOffs*/) + sizeof(quint8) + sizeof(MagicaDS);
+
+bool QQsbCollection::readEndHeader(QDataStream &ds, qint64 *startPos, quint8 *version)
+{
+    quint64 fileId = 0;
+    ds >> *startPos >> *version >> fileId;
+    return fileId == MagicaDS && *version == Version::One;
+}
+
+bool QQsbCollection::readEndHeader(QIODevice *device, EntryMap *entries, quint8 *version)
+{
+    bool result = false;
+    const qint64 size = device->size();
+    if (device->seek(size - HeaderSize)) {
+        QDataStream ds(device);
+        ds.setVersion(QDataStream::Qt_6_0);
+        qint64 startPos = 0;
+        if (readEndHeader(ds, &startPos, version)) {
+            if (startPos >= 0 && startPos < size && device->seek(startPos)) {
+                ds >> *entries;
+                result = true;
+            }
+        }
+    }
+    return result;
+}
+
+void QQsbCollection::writeEndHeader(QDataStream &ds, qint64 startPos, quint8 version, quint64 magic)
+{
+    ds << startPos << version << magic;
+}
+
+void QQsbCollection::writeEndHeader(QIODevice *device, const EntryMap &entries)
+{
+    if (!device->atEnd()) {
+        device->seek(device->size() - 1);
+        Q_ASSERT(device->atEnd());
+    }
+    QDataStream ds(device);
+    ds.setVersion(QDataStream::Qt_6_0);
+    const qint64 startPos = device->pos();
+    ds << entries;
+    writeEndHeader(ds, startPos, quint8(Version::One), MagicaDS);
+}
+
+QQsbCollection::EntryMap QQsbInMemoryCollection::availableEntries() const
+{
+    return EntryMap(entries.keyBegin(), entries.keyEnd());
+}
+
+QQsbCollection::Entry QQsbInMemoryCollection::addEntry(size_t key, const EntryDesc &entryDesc)
+{
+    Entry e(key);
+    if (!entries.contains(e)) {
+        entries.insert(e, entryDesc);
+        return e;
+    }
+    return {}; // can only add with a given key once
+}
+
+bool QQsbInMemoryCollection::extractEntry(Entry entry, EntryDesc &entryDesc)
+{
+    auto it = entries.constFind(entry);
+    if (it != entries.constEnd()) {
+        entryDesc = *it;
+        return true;
+    }
+    return false;
+}
+
+void QQsbInMemoryCollection::clear()
+{
+    entries.clear();
+}
+
+bool QQsbInMemoryCollection::load(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning("Failed to open qsbc file %s", qPrintable(filename));
+        return false;
+    }
+
+    EntryMap entryMap;
+    quint8 version = 0;
+    if (!readEndHeader(&f, &entryMap, &version)) {
+        qWarning("Invalid qsbc file %s", qPrintable(filename));
+        return false;
+    }
+
+    f.seek(0);
+    const qint64 size = f.size();
+
+    clear();
+
+    for (const Entry &e : entryMap) {
+        const qint64 offset = e.value;
+        if (e.key && offset >= 0 && size > offset && f.seek(offset)) {
+            QDataStream ds(&f);
+            ds.setVersion(QDataStream::Qt_6_0);
+            EntryDesc entryDesc;
+            ds >> entryDesc;
+            entries.insert(Entry(e.key), entryDesc);
+        }
+    }
+
+    return true;
+}
+
+bool QQsbInMemoryCollection::save(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning("Failed to write qsbc file %s", qPrintable(filename));
+        return false;
+    }
+
+    QDataStream ds(&f);
+    ds.setVersion(QDataStream::Qt_6_0);
+
+    EntryMap entryMap;
+    for (auto it = entries.cbegin(), end = entries.cend(); it != end; ++it) {
+        const qint64 offset = f.pos();
+        ds << it.value();
+        entryMap.insert(Entry(it.key().key, offset));
+    }
+
+    writeEndHeader(&f, entryMap);
+
+    return true;
+}
+
+QQsbIODeviceCollection::QQsbIODeviceCollection(const QString &filePath)
+    : file(filePath)
+    , device(file)
+{
+}
+
+QQsbIODeviceCollection::QQsbIODeviceCollection(QIODevice &dev)
+    : device(dev)
+    , devOwner(DeviceOwner::Extern)
+{
+
+}
+
+QQsbIODeviceCollection::~QQsbIODeviceCollection()
+{
+    if (!entries.isEmpty() || device.isOpen())
+        unmap();
+}
+
+bool QQsbIODeviceCollection::map(MapMode mode)
 {
     if (device.isOpen()) {
         // Make sure Truncate is set if we're writing.
@@ -35,21 +233,7 @@ bool QQsbCollection::map(MapMode mode)
 
     Q_ASSERT(mode == Read);
 
-    bool ret = false;
-    const qint64 size = device.size();
-    if (device.seek(size - HeaderSize)) {
-        QDataStream ds(&device);
-        ds.setVersion(QDataStream::Qt_6_0);
-        quint64 fileId = 0;
-        qint64 start = 0;
-        ds >> start >> version >> fileId;
-        if (fileId == MagicaDS && version == Version::One) {
-            if (start >= 0 && start < size && device.seek(start)) {
-                ds >> entries;
-                ret = true;
-            }
-        }
-    }
+    const bool ret = readEndHeader(&device, &entries, &version);
 
     if (!ret)
         unmap();
@@ -57,17 +241,11 @@ bool QQsbCollection::map(MapMode mode)
     return ret;
 }
 
-void QQsbCollection::unmap()
+void QQsbIODeviceCollection::unmap()
 {
     if (device.isOpen() && ((device.openMode() & Write) == Write)) {
         if (!entries.isEmpty()) {
-            if (!device.atEnd()) {
-                device.seek(device.size() - 1);
-                Q_ASSERT(device.atEnd());
-            }
-            QDataStream ds(&device);
-            const auto start = device.pos();
-            ds << entries << start << decltype(version)(Version::One) << MagicaDS;
+            writeEndHeader(&device, entries);
         } else {
             if (devOwner == DeviceOwner::Self)
                 file.remove();
@@ -77,32 +255,39 @@ void QQsbCollection::unmap()
     entries.clear();
 }
 
-bool QQsbCollection::extractQsbEntry(QQsbCollection::Entry entry, QByteArray *outDesc, QQsbShaderFeatureSet *featureSet, QShader *outVertShader, QShader *outFragShader)
+QQsbCollection::EntryMap QQsbIODeviceCollection::availableEntries() const
+{
+    return entries;
+}
+
+QQsbCollection::Entry QQsbIODeviceCollection::addEntry(size_t key, const EntryDesc &entryDesc)
+{
+    if (entries.contains(Entry(key)) || !map(MapMode::Write))
+        return {};
+
+    QDataStream ds(&device);
+    ds.setVersion(QDataStream::Qt_6_0);
+    const auto offset = device.pos();
+    ds << entryDesc;
+    Entry e(key, offset);
+    entries.insert(e);
+    return e;
+}
+
+bool QQsbIODeviceCollection::extractEntry(Entry entry, EntryDesc &entryDesc)
 {
     if (device.isOpen() && device.isReadable()) {
-        if (entry.isValid()) {
-            const int size = device.size();
-            const int offset = entry.offset;
+        if (entry.key && entry.value >= 0) {
+            const qint64 size = device.size();
+            const qint64 offset = entry.value;
             if (size > offset && device.seek(offset)) {
                 QDataStream ds(&device);
                 ds.setVersion(QDataStream::Qt_6_0);
-                QByteArray desc;
-                QQsbShaderFeatureSet fs;
-                QByteArray vertData;
-                QByteArray fragData;
-                ds >> desc >> fs >> vertData >> fragData;
-                if (outDesc)
-                    *outDesc = desc;
-                if (outVertShader)
-                    *outVertShader = QShader::fromSerialized(vertData);
-                if (outFragShader)
-                    *outFragShader = QShader::fromSerialized(fragData);
-                if (featureSet)
-                    *featureSet = fs;
+                ds >> entryDesc;
                 return true;
             }
         } else {
-            qWarning("Entry not found id(%zu), offset(%lld)", entry.hkey, entry.offset);
+            qWarning("Entry not found id(%zu), offset(%lld)", entry.key, entry.value);
         }
     } else {
         qWarning("Unable to open file for reading");
@@ -111,118 +296,44 @@ bool QQsbCollection::extractQsbEntry(QQsbCollection::Entry entry, QByteArray *ou
     return false;
 }
 
-QQsbCollection::QQsbCollection(const QString &filePath)
-    : file(filePath)
-    , device(file)
-{
-}
+static const char *borderText() { return "--------------------------------------------------------------------------------"; }
 
-QQsbCollection::QQsbCollection(QIODevice &dev)
-    : device(dev)
-    , devOwner(DeviceOwner::Extern)
+void QQsbIODeviceCollection::dumpInfo()
 {
-
-}
-
-QQsbCollection::~QQsbCollection()
-{
-    if (!entries.isEmpty() || device.isOpen())
-        unmap();
-}
-
-void QQsbCollection::dumpQsbcInfoImp(QQsbCollection &qsbc)
-{
-    if (qsbc.map(QQsbCollection::Read)) {
-        const auto entries = qsbc.getEntries();
+    if (map(QQsbIODeviceCollection::Read)) {
         qDebug("Number of entries in collection: %zu\n", size_t(entries.size()));
         int i = 0;
-        qDebug("Qsbc version: %uc", qsbc.version);
+        qDebug("Qsbc version: %uc", version);
         for (const auto &e : std::as_const(entries)) {
             qDebug("%s\n"
                    "Entry %d\n%s\n"
                    "Key: %zu\n"
-                   "Offset: %llu", borderText(), i++, borderText(), e.hkey, e.offset);
+                   "Offset: %llu", borderText(), i++, borderText(), e.key, e.value);
 
-            QByteArray descr;
-            QQsbShaderFeatureSet featureSet;
-            QShader vertShader;
-            QShader fragShader;
-            if (qsbc.extractQsbEntry(e, &descr, &featureSet, &vertShader, &fragShader)) {
-                qDebug() << descr << Qt::endl
-                         << featureSet << Qt::endl
-                         << vertShader << Qt::endl
-                         << fragShader;
+            QQsbCollection::EntryDesc ed;
+            if (extractEntry(e, ed)) {
+                qDebug() << ed.materialKey << Qt::endl
+                         << ed.featureSet << Qt::endl
+                         << ed.vertShader << Qt::endl
+                         << ed.fragShader;
             } else {
                 qWarning("Extracting Qsb entry failed!");
             }
         }
     }
-    qsbc.unmap();
+    unmap();
 }
 
-void QQsbCollection::dumpQsbcInfo(const QString &file)
+void QQsbIODeviceCollection::dumpInfo(const QString &file)
 {
-    QQsbCollection qsbc(file);
-    dumpQsbcInfoImp(qsbc);
+    QQsbIODeviceCollection qsbc(file);
+    qsbc.dumpInfo();
 }
 
-void QQsbCollection::dumpQsbcInfo(QIODevice &device)
+void QQsbIODeviceCollection::dumpInfo(QIODevice &device)
 {
-    QQsbCollection qsbc(device);
-    dumpQsbcInfoImp(qsbc);
+    QQsbIODeviceCollection qsbc(device);
+    qsbc.dumpInfo();
 }
-
-QQsbCollection::Entry QQsbCollection::addQsbEntry(const QByteArray &description, const QQsbShaderFeatureSet &featureSet, const QShader &vert, const QShader &frag, size_t hkey)
-{
-    if (hkey && !entries.contains(Entry{hkey})) {
-        if (map(MapMode::Write)) {
-            if (vert.isValid() && frag.isValid()) {
-                QDataStream ds(&device);
-                ds.setVersion(QDataStream::Qt_6_0);
-                const auto offset = device.pos();
-                ds << description << featureSet << vert.serialized() << frag.serialized();
-                return *entries.insert({hkey, offset });
-            }
-        }
-    }
-
-    return Entry();
-}
-
-QString QQsbCollection::fileName() const
-{
-    return (devOwner == DeviceOwner::Self) ? file.fileName() : QString();
-}
-
-void QQsbCollection::setFileName(const QString &fileName)
-{
-    if (devOwner == DeviceOwner::Extern)
-        return;
-
-    Q_ASSERT(&device == &file);
-    if (file.isOpen() && file.fileName() != fileName) {
-        qWarning("Setting filename while collection is still mapped!");
-        unmap();
-    }
-
-    file.setFileName(fileName);
-}
-
-QDataStream &operator<<(QDataStream &stream, const QQsbCollection::Entry &entry)
-{
-    return (stream << quint64(entry.hkey) << entry.offset);
-}
-
-QDataStream &operator>>(QDataStream &stream, QQsbCollection::Entry &entry)
-{
-    quint64 hkey;
-    qint64 offset;
-    stream >> hkey >> offset;
-    entry = { size_t(hkey), offset };
-    return stream;
-}
-
-size_t qHash(const QQsbCollection::Entry &entry, size_t) { return entry.hkey; }
-bool operator==(const QQsbCollection::Entry &l, const QQsbCollection::Entry &r) { return (l.hkey == r.hkey); }
 
 QT_END_NAMESPACE

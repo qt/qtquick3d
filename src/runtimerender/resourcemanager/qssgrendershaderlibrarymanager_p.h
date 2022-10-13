@@ -67,7 +67,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderLibraryManager
     QByteArray m_vertShader;
     QByteArray m_fragShader;
 
-    QQsbCollection::EntryMap m_shaderEntries;
+    QQsbCollection::EntryMap m_preGeneratedShaderEntries;
 
     QAtomicInt ref;
     QReadWriteLock m_lock;

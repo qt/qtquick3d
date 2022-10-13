@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     if (cmdLineparser.isSet(dumpQsbcFileOption)) {
         const auto &f = *filePaths.cbegin();
         if (!f.isEmpty()) {
-            QQsbCollection::dumpQsbcInfo(f);
+            QQsbIODeviceCollection::dumpInfo(f);
             a.exit(0);
             return 0;
         }
@@ -212,24 +212,21 @@ int main(int argc, char *argv[])
                         what |= ExtractWhat::Frag;
                 }
             }
-            QQsbCollection qsbc(f);
-            if (qsbc.map(QQsbCollection::Read)) {
-                const auto entries = qsbc.getEntries();
+            QQsbIODeviceCollection qsbc(f);
+            if (qsbc.map(QQsbIODeviceCollection::Read)) {
+                const auto entries = qsbc.availableEntries();
                 const auto foundIt = entries.constFind(QQsbCollection::Entry{key});
                 if (foundIt != entries.cend()) {
-                    QByteArray desc;
-                    QShader vertShader;
-                    QShader fragShader;
-                    QQsbShaderFeatureSet featureSet;
-                    qsbc.extractQsbEntry(*foundIt, &desc, &featureSet, &vertShader, &fragShader);
+                    QQsbCollection::EntryDesc ed;
+                    qsbc.extractEntry(*foundIt, ed);
                     if (what == 0)
                         qDebug("Entry with key %zu found.", key);
                     if (what & ExtractWhat::Desc)
-                        printBytes(desc);
+                        printBytes(ed.materialKey);
                     if (what & ExtractWhat::Vert)
-                        printBytes(qUncompress(vertShader.serialized()));
+                        printBytes(qUncompress(ed.vertShader.serialized()));
                     if (what & ExtractWhat::Frag)
-                        printBytes(qUncompress(fragShader.serialized()));
+                        printBytes(qUncompress(ed.fragShader.serialized()));
                 } else {
                     qWarning("Entry with key %zu could not be found.", key);
                 }

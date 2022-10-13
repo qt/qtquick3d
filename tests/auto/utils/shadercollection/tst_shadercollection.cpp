@@ -49,11 +49,12 @@ private Q_SLOTS:
     void test_readWriteToBuffer();
     void test_readWriteOpenDevice();
     void test_mapModes();
+    void test_inMemoryCollection();
 
 private:
     QShader vert;
     QShader frag;
-    QQsbShaderFeatureSet featureSet;
+    QQsbCollection::FeatureSet featureSet;
 };
 
 void ShaderCollection::initTestCase()
@@ -79,32 +80,29 @@ void ShaderCollection::test_readWriteToFile()
     const auto tempFile = QDir::tempPath() + QDir::separator() + tempOutFileName();
     QQsbCollection::Entry entry;
     {
-        QQsbCollection qsbc(tempFile);
-        QVERIFY(qsbc.map(QQsbCollection::Write));
-        entry = qsbc.addQsbEntry(QByteArray(shaderDescription()), featureSet, vert, frag, hkey);
-        QVERIFY(entry.offset != -1);
-        QCOMPARE(entry.hkey, hkey);
-        const auto entries = qsbc.getEntries();
+        QQsbIODeviceCollection qsbc(tempFile);
+        QVERIFY(qsbc.map(QQsbIODeviceCollection::Write));
+        entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(entry.value != -1);
+        QCOMPARE(entry.key, hkey);
+        const auto entries = qsbc.availableEntries();
         QCOMPARE(entries.size(), 1);
         QCOMPARE(*entries.begin(), entry);
         qsbc.unmap();
     }
 
     {
-        QQsbCollection qsbc(tempFile);
-        QVERIFY(qsbc.map(QQsbCollection::Read));
-        const auto entries = qsbc.getEntries();
+        QQsbIODeviceCollection qsbc(tempFile);
+        QVERIFY(qsbc.map(QQsbIODeviceCollection::Read));
+        const auto entries = qsbc.availableEntries();
         QCOMPARE(entries.size(), 1);
         QCOMPARE(*entries.begin(), entry);
-        QByteArray desc;
-        QShader vertShader;
-        QShader fragShader;
-        QQsbShaderFeatureSet features;
-        QVERIFY(qsbc.extractQsbEntry(entry, &desc, &features, &vertShader, &fragShader));
-        QCOMPARE(desc, QByteArray(shaderDescription()));
-        QCOMPARE(vertShader, vert);
-        QCOMPARE(fragShader, frag);
-        QCOMPARE(features, featureSet);
+        QQsbCollection::EntryDesc entryDesc;
+        QVERIFY(qsbc.extractEntry(entry, entryDesc));
+        QCOMPARE(entryDesc.materialKey, QByteArray(shaderDescription()));
+        QCOMPARE(entryDesc.vertShader, vert);
+        QCOMPARE(entryDesc.fragShader, frag);
+        QCOMPARE(entryDesc.featureSet, featureSet);
         qsbc.unmap();
     }
 }
@@ -116,27 +114,24 @@ void ShaderCollection::test_readWriteToBuffer()
     QQsbCollection::Entry entry;
     {
         QVERIFY(buffer.buffer().isEmpty());
-        QQsbCollection qsbc(buffer);
-        QVERIFY(qsbc.map(QQsbCollection::Write));
-        entry = qsbc.addQsbEntry(QByteArray(shaderDescription()), featureSet, vert, frag, hkey);
-        QVERIFY(entry.offset != -1);
-        QCOMPARE(entry.hkey, hkey);
+        QQsbIODeviceCollection qsbc(buffer);
+        QVERIFY(qsbc.map(QQsbIODeviceCollection::Write));
+        entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(entry.value != -1);
+        QCOMPARE(entry.key, hkey);
         qsbc.unmap();
         QVERIFY(!buffer.buffer().isEmpty());
     }
 
     {
-        QQsbCollection qsbc(buffer);
-        QVERIFY(qsbc.map(QQsbCollection::Read));
-        QByteArray desc;
-        QShader vertShader;
-        QShader fragShader;
-        QQsbShaderFeatureSet features;
-        QVERIFY(qsbc.extractQsbEntry(entry, &desc, &features, &vertShader, &fragShader));
-        QCOMPARE(desc, QByteArray(shaderDescription()));
-        QCOMPARE(vertShader, vert);
-        QCOMPARE(fragShader, frag);
-        QCOMPARE(features, featureSet);
+        QQsbIODeviceCollection qsbc(buffer);
+        QVERIFY(qsbc.map(QQsbIODeviceCollection::Read));
+        QQsbCollection::EntryDesc entryDesc;
+        QVERIFY(qsbc.extractEntry(entry, entryDesc));
+        QCOMPARE(entryDesc.materialKey, QByteArray(shaderDescription()));
+        QCOMPARE(entryDesc.vertShader, vert);
+        QCOMPARE(entryDesc.fragShader, frag);
+        QCOMPARE(entryDesc.featureSet, featureSet);
         qsbc.unmap();
     }
 }
@@ -150,11 +145,11 @@ void ShaderCollection::test_readWriteOpenDevice()
         buffer.open(QIODevice::WriteOnly | QIODevice::Truncate);
         QCOMPARE(buffer.isOpen(), true);
         QVERIFY(buffer.buffer().isEmpty());
-        QQsbCollection qsbc(buffer);
-        QVERIFY(qsbc.map(QQsbCollection::Write));
-        entry = qsbc.addQsbEntry(QByteArray(shaderDescription()), featureSet, vert, frag, hkey);
-        QVERIFY(entry.offset != -1);
-        QCOMPARE(entry.hkey, hkey);
+        QQsbIODeviceCollection qsbc(buffer);
+        QVERIFY(qsbc.map(QQsbIODeviceCollection::Write));
+        entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(entry.value != -1);
+        QCOMPARE(entry.key, hkey);
         qsbc.unmap();
         QVERIFY(!buffer.buffer().isEmpty());
     }
@@ -164,17 +159,14 @@ void ShaderCollection::test_readWriteOpenDevice()
     {
         buffer.open(QIODevice::ReadOnly);
         QCOMPARE(buffer.isOpen(), true);
-        QQsbCollection qsbc(buffer);
-        QVERIFY(qsbc.map(QQsbCollection::Read));
-        QByteArray desc;
-        QShader vertShader;
-        QShader fragShader;
-        QQsbShaderFeatureSet features;
-        QVERIFY(qsbc.extractQsbEntry(entry, &desc, &features, &vertShader, &fragShader));
-        QCOMPARE(desc, QByteArray(shaderDescription()));
-        QCOMPARE(vertShader, vert);
-        QCOMPARE(fragShader, frag);
-        QCOMPARE(features, featureSet);
+        QQsbIODeviceCollection qsbc(buffer);
+        QVERIFY(qsbc.map(QQsbIODeviceCollection::Read));
+        QQsbCollection::EntryDesc entryDesc;
+        QVERIFY(qsbc.extractEntry(entry, entryDesc));
+        QCOMPARE(entryDesc.materialKey, QByteArray(shaderDescription()));
+        QCOMPARE(entryDesc.vertShader, vert);
+        QCOMPARE(entryDesc.fragShader, frag);
+        QCOMPARE(entryDesc.featureSet, featureSet);
         qsbc.unmap();
     }
 }
@@ -189,11 +181,11 @@ void ShaderCollection::test_mapModes()
             buffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
             QCOMPARE(buffer.isOpen(), true);
             QVERIFY(buffer.buffer().isEmpty());
-            QQsbCollection qsbc(buffer);
-            QVERIFY(qsbc.map(QQsbCollection::Write));
-            entry = qsbc.addQsbEntry(QByteArray(shaderDescription()), featureSet, vert, frag, hkey);
-            QVERIFY(entry.offset != -1);
-            QCOMPARE(entry.hkey, hkey);
+            QQsbIODeviceCollection qsbc(buffer);
+            QVERIFY(qsbc.map(QQsbIODeviceCollection::Write));
+            entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+            QVERIFY(entry.value != -1);
+            QCOMPARE(entry.key, hkey);
             qsbc.unmap();
             QVERIFY(!buffer.buffer().isEmpty());
         }
@@ -203,17 +195,14 @@ void ShaderCollection::test_mapModes()
         {
             buffer.open(QIODevice::ReadOnly);
             QCOMPARE(buffer.isOpen(), true);
-            QQsbCollection qsbc(buffer);
-            QVERIFY(qsbc.map(QQsbCollection::Read));
-            QByteArray desc;
-            QShader vertShader;
-            QShader fragShader;
-            QQsbShaderFeatureSet features;
-            QVERIFY(qsbc.extractQsbEntry(entry, &desc, &features, &vertShader, &fragShader));
-            QCOMPARE(desc, QByteArray(shaderDescription()));
-            QCOMPARE(vertShader, vert);
-            QCOMPARE(fragShader, frag);
-            QCOMPARE(features, featureSet);
+            QQsbIODeviceCollection qsbc(buffer);
+            QVERIFY(qsbc.map(QQsbIODeviceCollection::Read));
+            QQsbCollection::EntryDesc entryDesc;
+            QVERIFY(qsbc.extractEntry(entry, entryDesc));
+            QCOMPARE(entryDesc.materialKey, QByteArray(shaderDescription()));
+            QCOMPARE(entryDesc.vertShader, vert);
+            QCOMPARE(entryDesc.fragShader, frag);
+            QCOMPARE(entryDesc.featureSet, featureSet);
             qsbc.unmap();
         }
     }
@@ -227,9 +216,9 @@ void ShaderCollection::test_mapModes()
             buffer.open(QIODevice::ReadWrite);
             QCOMPARE(buffer.isOpen(), true);
             QVERIFY(buffer.buffer().isEmpty());
-            QQsbCollection qsbc(buffer);
-            QCOMPARE(qsbc.map(QQsbCollection::Write), false);
-            entry = qsbc.addQsbEntry(QByteArray(shaderDescription()), featureSet, vert, frag, hkey);
+            QQsbIODeviceCollection qsbc(buffer);
+            QCOMPARE(qsbc.map(QQsbIODeviceCollection::Write), false);
+            entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
             QCOMPARE(entry.isValid(), false);
             qsbc.unmap();
             QVERIFY(buffer.buffer().isEmpty());
@@ -239,16 +228,49 @@ void ShaderCollection::test_mapModes()
             buffer.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text);
             QCOMPARE(buffer.isOpen(), true);
             QVERIFY(buffer.buffer().isEmpty());
-            QQsbCollection qsbc(buffer);
-            QCOMPARE(qsbc.map(QQsbCollection::Write), false);
-            entry = qsbc.addQsbEntry(QByteArray(shaderDescription()), featureSet, vert, frag, hkey);
+            QQsbIODeviceCollection qsbc(buffer);
+            QCOMPARE(qsbc.map(QQsbIODeviceCollection::Write), false);
+            entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
             QCOMPARE(entry.isValid(), false);
             qsbc.unmap();
             QVERIFY(buffer.buffer().isEmpty());
         }
     }
+}
 
+void ShaderCollection::test_inMemoryCollection()
+{
+    QQsbInMemoryCollection qsbc;
+    QVERIFY(qsbc.availableEntries().isEmpty());
 
+    const size_t hkey = 99;
+    QQsbCollection::Entry entry;
+    QVERIFY(!entry.isValid());
+
+    {
+        entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(entry.isValid());
+        QVERIFY(qsbc.availableEntries().contains(entry));
+        qsbc.clear();
+        QVERIFY(qsbc.availableEntries().isEmpty());
+    }
+
+    {
+        entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(entry.isValid());
+        entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(!entry.isValid()); // already added, this must fail
+        entry = qsbc.addEntry(hkey + 1, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        QVERIFY(entry.isValid());
+        QVERIFY(qsbc.availableEntries().count() == 2);
+
+        QQsbCollection::EntryDesc entryDesc;
+        QVERIFY(qsbc.extractEntry(entry, entryDesc));
+        QCOMPARE(entryDesc.materialKey, QByteArray(shaderDescription()));
+        QCOMPARE(entryDesc.vertShader, vert);
+        QCOMPARE(entryDesc.fragShader, frag);
+        QCOMPARE(entryDesc.featureSet, featureSet);
+    }
 
 }
 

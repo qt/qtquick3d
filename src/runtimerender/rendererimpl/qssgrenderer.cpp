@@ -244,27 +244,33 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
 
     // This is not a cheap operation. This function assumes that it will not be
     // hit for every material for every model in every frame (except of course
-    // for materials that got changed).
+    // for materials that got changed). In practice this is ensured by the
+    // cheaper-to-lookup cache in getRhiShaders().
     theKey.toString(shaderString, shaderKeyProperties);
 
-    // Check if there's a pre-built shader for available for this shader
-    const auto key = QSSGShaderCacheKey::hashString(shaderString, featureSet);
-    const auto hkey = QSSGShaderCacheKey::generateHashCode(shaderString, featureSet);
-    const auto &shaderEntries = shaderLibraryManager->m_shaderEntries;
-    const auto foundIt = shaderEntries.constFind(QQsbCollection::Entry{hkey});
-    if (foundIt != shaderEntries.cend())
-        return shaderCache->loadGeneratedShader(key, *foundIt, renderable.material);
-
+    // Check the in-memory, per-QSSGShaderCache (and so per-QQuickWindow)
+    // runtime cache. That may get cleared upon an explicit call to
+    // QQuickWindow::releaseResources(), but will otherwise store all
+    // encountered shader pipelines in any View3D in the window.
     const QSSGRef<QSSGRhiShaderPipeline> &cachedShaders = shaderCache->getRhiShaderPipeline(shaderString, featureSet);
     if (cachedShaders)
         return cachedShaders;
 
-    QSSGMaterialVertexPipeline pipeline(shaderProgramGenerator,
-                                        shaderKeyProperties,
-                                        renderable.defaultMaterial().adapter);
+    // Check if there's a pre-built (offline generated) shader for available.
+    const auto hkey = QSSGShaderCacheKey::generateHashCode(shaderString, featureSet);
+    const auto &pregenEntries = shaderLibraryManager->m_preGeneratedShaderEntries;
+    const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry{hkey});
+    if (foundIt != pregenEntries.cend())
+        return shaderCache->loadPregeneratedShader(shaderString, featureSet, *foundIt, renderable.material);
+
+    // Otherwise, build new shader code and run the resulting shaders through
+    // the shader conditioning pipeline.
+    QSSGMaterialVertexPipeline vertexPipeline(shaderProgramGenerator,
+                                              shaderKeyProperties,
+                                              renderable.defaultMaterial().adapter);
 
     return QSSGMaterialShaderGenerator::generateMaterialRhiShader(logPrefix(),
-                                                                  pipeline,
+                                                                  vertexPipeline,
                                                                   renderable.shaderDescription,
                                                                   shaderKeyProperties,
                                                                   featureSet,
