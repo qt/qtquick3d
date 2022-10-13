@@ -36,7 +36,7 @@ Section {
         SecondColumnLayout {
             UrlChooser {
                 backendValue: backendValues.vertexShader
-                filter: "*.*"
+                filter: "*.vert *.vsh *.glslv *.glsl"
             }
 
             ExpandingSpacer {}
@@ -50,7 +50,7 @@ Section {
         SecondColumnLayout {
             UrlChooser {
                 backendValue: backendValues.fragmentShader
-                filter: "*.*"
+                filter: "*.frag *.fsh *.glslf *.glsl"
             }
 
             ExpandingSpacer {}
