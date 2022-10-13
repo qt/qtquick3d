@@ -13,6 +13,21 @@
 
 QT_BEGIN_NAMESPACE
 
+static inline QMatrix4x4 correctMVPForScissor(QRectF viewportRect, QRect scissorRect, bool isYUp) {
+    const auto &scissorCenter = scissorRect.center();
+    const auto &viewCenter = viewportRect.center();
+    const float scaleX = viewportRect.width() / float(scissorRect.width());
+    const float scaleY = viewportRect.height() / float(scissorRect.height());
+    const float dx = 2 * (viewCenter.x() - scissorCenter.x()) / scissorRect.width();
+    const float dyRect = isYUp ? (scissorCenter.y() - viewCenter.y())
+                                : (viewCenter.y() - scissorCenter.y());
+    const float dy = 2 * dyRect / scissorRect.height();
+
+    return QMatrix4x4(scaleX, 0.0f, 0.0f, dx,
+                      0.0f, scaleY, 0.0f, dy,
+                      0.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f);
+}
 // SHADOW PASS
 
 void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
@@ -639,11 +654,20 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
 
         auto layerPrepResult = data.layerPrepResult;
 
-        item2D->m_renderer->setProjectionMatrix(item2D->MVP);
         const auto &renderTarget = rhiCtx->renderTarget();
         item2D->m_renderer->setDevicePixelRatio(renderTarget->devicePixelRatio());
         const QRect deviceRect(QPoint(0, 0), renderTarget->pixelSize());
-        item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
+        if (layer.scissorRect.isValid()) {
+            QRect effScissor = layer.scissorRect & layerPrepResult->viewport.toRect();
+            QMatrix4x4 correctionMat = correctMVPForScissor(layerPrepResult->viewport,
+                                                            effScissor,
+                                                            rhiCtx->rhi()->isYUpInNDC());
+            item2D->m_renderer->setProjectionMatrix(correctionMat * item2D->MVP);
+            item2D->m_renderer->setViewportRect(effScissor);
+        } else {
+            item2D->m_renderer->setProjectionMatrix(item2D->MVP);
+            item2D->m_renderer->setViewportRect(correctViewportCoordinates(layerPrepResult->viewport, deviceRect));
+        }
         item2D->m_renderer->setDeviceRect(deviceRect);
         QRhiRenderPassDescriptor *oldRp = nullptr;
         if (item2D->m_rp) {
@@ -794,6 +818,10 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
     // 5. Non-opaque objects
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D render alpha"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    // If scissorRect is set, Item2Ds will be drawn by a workaround of modifying
+    // viewport, not using actual 3D scissor test.
+    // It means non-opaque objects may be affected by this viewport setting.
+    needsSetViewport = true;
     for (const auto &handle : std::as_const(sortedTransparentObjects)) {
         QSSGRenderableObject *theObject = handle.obj;
         if (!theObject->renderableFlags.isCompletelyTransparent())

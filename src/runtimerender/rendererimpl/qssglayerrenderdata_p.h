@@ -140,11 +140,10 @@ struct QSSGLayerRenderPreparationResult
 {
     QSSGLayerRenderPreparationResultFlags flags;
     QRectF viewport;
-    QRectF scissor;
     QSSGRenderLayer *layer = nullptr;
 
     QSSGLayerRenderPreparationResult() = default;
-    QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer);
+    QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer);
 
     bool isLayerVisible() const;
     QSize textureDimensions() const;

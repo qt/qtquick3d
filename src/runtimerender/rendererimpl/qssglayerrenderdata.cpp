@@ -1466,21 +1466,23 @@ void QSSGLayerRenderData::prepareForRender()
     QSSG_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty(), renderedOpaqueDepthPrepassObjects.clear());
 
     QRect theViewport(renderer->contextInterface()->viewport());
-    QRect theScissor(renderer->contextInterface()->scissorRect());
-    if (theScissor.isNull() || (theScissor == theViewport))
-        theScissor = theViewport;
 
     // Create base pipeline state
     ps = {}; // Reset
     ps.viewport = { float(theViewport.x()), float(theViewport.y()), float(theViewport.width()), float(theViewport.height()), 0.0f, 1.0f };
-    ps.scissorEnable = true;
-    ps.scissor = { theScissor.x(), theScissor.y(), theScissor.width(), theScissor.height() };
+    if (layer.scissorRect.isValid()) {
+        ps.scissorEnable = true;
+        ps.scissor = { layer.scissorRect.x(),
+                       theViewport.height() - (layer.scissorRect.y() + layer.scissorRect.height()),
+                       layer.scissorRect.width(),
+                       layer.scissorRect.height() };
+    }
 
     bool wasDirty = false;
     bool wasDataDirty = false;
     wasDirty = layer.isDirty();
 
-    QSSGLayerRenderPreparationResult thePrepResult(theViewport, theScissor, layer);
+    QSSGLayerRenderPreparationResult thePrepResult(theViewport, layer);
 
     // SSAO
     const bool SSAOEnabled = layer.ssaoEnabled();
@@ -1863,20 +1865,15 @@ void QSSGLayerRenderData::resetForFrame()
     features = QSSGShaderFeatures();
 }
 
-QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, const QRectF &inScissor, QSSGRenderLayer &inLayer)
+QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)
     : layer(&inLayer)
 {
     viewport = inViewport;
-
-    scissor = viewport;
-    scissor &= inScissor; // ensureInBounds/intersected
-    Q_ASSERT(scissor.width() >= 0.0f);
-    Q_ASSERT(scissor.height() >= 0.0f);
 }
 
 bool QSSGLayerRenderPreparationResult::isLayerVisible() const
 {
-    return scissor.height() >= 2.0f && scissor.width() >= 2.0f;
+    return viewport.height() >= 2.0f && viewport.width() >= 2.0f;
 }
 
 QSize QSSGLayerRenderPreparationResult::textureDimensions() const

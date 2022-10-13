@@ -1555,6 +1555,8 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
 
         if (*needsSetViewport) {
             cb->setViewport(state.viewport);
+            if (state.scissorEnable)
+                cb->setScissor(state.scissor);
             *needsSetViewport = false;
         }
 

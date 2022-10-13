@@ -473,7 +473,6 @@ void QQuick3DSceneRenderer::rhiPrepare(const QRect &viewport, qreal displayPixel
     m_sgContext->setDpr(displayPixelRatio);
 
     m_sgContext->setViewport(viewport);
-    m_sgContext->setScissorRect(viewport);
 
     m_sgContext->setSceneColor(QColor(Qt::black));
 
@@ -648,6 +647,8 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                                         view3D->environment()->tonemapMode());
         m_tonemappedBackgroundColor = QColor::fromRgbF(tc.x(), tc.y(), tc.z(), m_linearBackgroundColor.alphaF());
     }
+    m_layer->scissorRect = QRect(view3D->environment()->scissorRect().topLeft() * dpr,
+                                 view3D->environment()->scissorRect().size() * dpr);
 
     // Set the root item for the scene to the layer
     auto rootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(view3D->scene())->spatialNode);

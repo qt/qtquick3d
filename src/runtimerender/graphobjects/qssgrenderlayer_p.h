@@ -192,6 +192,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // Lightmapper config
     QSSGLightmapperOptions lmOptions;
 
+    // Scissor
+    QRect scissorRect;
+
     QVector<QSSGRenderGraphObject *> resourceLoaders;
 
     MaterialDebugMode debugMode = MaterialDebugMode::None;

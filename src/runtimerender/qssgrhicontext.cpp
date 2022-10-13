@@ -979,7 +979,10 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     ps->setShaderResourceBindings(srb);
     ps->setRenderPassDescriptor(rpDesc);
 
-    QRhiGraphicsPipeline::Flags flags; // ### QRhiGraphicsPipeline::UsesScissor -> we will need setScissor once this flag is set
+    QRhiGraphicsPipeline::Flags flags;
+    if (key.state.scissorEnable)
+        flags |= QRhiGraphicsPipeline::UsesScissor;
+
     static const bool shaderDebugInfo = qEnvironmentVariableIntValue("QT_QUICK3D_SHADER_DEBUG_INFO");
     if (shaderDebugInfo)
         flags |= QRhiGraphicsPipeline::CompileShadersWithDebugInfo;

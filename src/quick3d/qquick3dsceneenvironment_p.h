@@ -69,6 +69,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(QQuick3DLightmapper *lightmapper READ lightmapper WRITE setLightmapper NOTIFY lightmapperChanged REVISION(6, 4))
 
     Q_PROPERTY(QQuick3DDebugSettings *debugSettings READ debugSettings WRITE setDebugSettings NOTIFY debugSettingsChanged REVISION(6, 5))
+    Q_PROPERTY(QRect scissorRect READ scissorRect WRITE setScissorRect NOTIFY scissorRectChanged REVISION(6, 5))
 
     QML_NAMED_ELEMENT(SceneEnvironment)
 
@@ -143,6 +144,7 @@ public:
     Q_REVISION(6, 4) QQuick3DCubeMapTexture *skyBoxCubeMap() const;
 
     Q_REVISION(6, 5) QQuick3DDebugSettings *debugSettings() const;
+    Q_REVISION(6, 5) QRect scissorRect() const;
 
     bool gridEnabled() const;
     void setGridEnabled(bool newGridEnabled);
@@ -186,6 +188,7 @@ public Q_SLOTS:
     Q_REVISION(6, 4) void setLightmapper(QQuick3DLightmapper *lightmapper);
 
     Q_REVISION(6, 5) void setDebugSettings(QQuick3DDebugSettings *newDebugSettings);
+    Q_REVISION(6, 5) void setScissorRect(QRect scissorRect);
 
 Q_SIGNALS:
     void antialiasingModeChanged();
@@ -219,6 +222,7 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void skyBoxCubeMapChanged();
 
     Q_REVISION(6, 5) void debugSettingsChanged();
+    Q_REVISION(6, 5) void scissorRectChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -264,6 +268,7 @@ private:
     QMetaObject::Connection m_lightmapperSignalConnection;
     QQuick3DCubeMapTexture *m_skyBoxCubeMap = nullptr;
     QQuick3DDebugSettings *m_debugSettings = nullptr;
+    QRect m_scissorRect;
     QMetaObject::Connection m_debugSettingsSignalConnection;
     bool m_gridEnabled = false;
     uint m_gridFlags = 0;

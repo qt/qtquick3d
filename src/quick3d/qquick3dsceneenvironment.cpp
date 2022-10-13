@@ -580,6 +580,19 @@ QQuick3DDebugSettings *QQuick3DSceneEnvironment::debugSettings() const
     return m_debugSettings;
 }
 
+/*!
+    \qmlproperty rect QQuick3D::SceneEnvironment::scissorRect
+    \since 6.5
+
+    This property defines a scissor rectangle in view coordinates, with the
+    top-left corner at [0, 0]
+*/
+
+QRect QQuick3DSceneEnvironment::scissorRect() const
+{
+    return m_scissorRect;
+}
+
 void QQuick3DSceneEnvironment::setAntialiasingMode(QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues antialiasingMode)
 {
     if (m_antialiasingMode == antialiasingMode)
@@ -949,6 +962,16 @@ void QQuick3DSceneEnvironment::setDebugSettings(QQuick3DDebugSettings *newDebugS
     });
 
     emit debugSettingsChanged();
+    update();
+}
+
+void QQuick3DSceneEnvironment::setScissorRect(QRect rect)
+{
+    if (m_scissorRect == rect)
+        return;
+
+    m_scissorRect = rect;
+    emit scissorRectChanged();
     update();
 }
 
