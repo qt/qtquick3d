@@ -326,8 +326,7 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             }
                 break;
             default:
-                Q_UNREACHABLE();
-                return m_finalBuilder;
+                Q_UNREACHABLE_RETURN(m_finalBuilder);
             }
         } else {
             break;
