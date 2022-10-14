@@ -51,31 +51,45 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
                                                                                   QSSGSubsetRenderable &renderable,
                                                                                   const QSSGShaderFeatures &featureSet)
 {
+    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
+
     // This just references inFeatureSet and inRenderable.shaderDescription -
-    // cheap to construct and is good enough for the find()
+    // cheap to construct and is good enough for the find(). This is the first
+    // level, fast lookup. (equivalent to what QSSGRenderer::getRhiShaders does
+    // for the default material)
     QSSGShaderMapKey skey = QSSGShaderMapKey(material.m_shaderPathKey,
                                              featureSet,
                                              renderable.shaderDescription);
-
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
     auto it = shaderMap.find(skey);
     if (it == shaderMap.end()) {
-        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-        QSSGMaterialVertexPipeline pipeline(context->shaderProgramGenerator(),
-                                            context->renderer()->defaultMaterialShaderKeyProperties(),
-                                            material.adapter);
+        // NB this key calculation must replicate exactly what the generator does in generateMaterialRhiShader()
+        QByteArray shaderString = material.m_shaderPathKey;
+        QSSGShaderDefaultMaterialKey matKey(renderable.shaderDescription);
+        matKey.toString(shaderString, context->renderer()->defaultMaterialShaderKeyProperties());
 
-        shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
-                                                                                pipeline,
-                                                                                renderable.shaderDescription,
-                                                                                context->renderer()->defaultMaterialShaderKeyProperties(),
-                                                                                featureSet,
-                                                                                renderable.material,
-                                                                                renderable.lights,
-                                                                                renderable.firstImage,
-                                                                                context->shaderLibraryManager(),
-                                                                                context->shaderCache());
-        Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, material.profilingId);
+        // Try the persistent (disk-based) cache.
+        const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(featureSet));
+        shaderPipeline = context->shaderCache()->tryNewPipelineFromPersistentCache(qsbcKey, material.m_shaderPathKey, featureSet);
+
+        if (!shaderPipeline) {
+            // Have to generate the shaders and send it all through the shader conditioning pipeline.
+            Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
+            QSSGMaterialVertexPipeline vertexPipeline(context->shaderProgramGenerator(),
+                                                      context->renderer()->defaultMaterialShaderKeyProperties(),
+                                                      material.adapter);
+
+            shaderPipeline = QSSGMaterialShaderGenerator::generateMaterialRhiShader(material.m_shaderPathKey,
+                                                                                    vertexPipeline,
+                                                                                    renderable.shaderDescription,
+                                                                                    context->renderer()->defaultMaterialShaderKeyProperties(),
+                                                                                    featureSet,
+                                                                                    renderable.material,
+                                                                                    renderable.lights,
+                                                                                    renderable.firstImage,
+                                                                                    context->shaderLibraryManager(),
+                                                                                    context->shaderCache());
+            Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, material.profilingId);
+        }
 
         // make skey useable as a key for the QHash (makes copies of materialKey and featureSet, instead of just referencing)
         skey.detach();

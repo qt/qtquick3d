@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qqsbcollection_p.h"
-
+#include <QtCore/QLockFile>
+#include <QtCore/QSaveFile>
+#include <QtCore/QCryptographicHash>
 #include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -13,21 +15,21 @@ QQsbCollection::~QQsbCollection()
 
 QDataStream &operator<<(QDataStream &stream, const QQsbCollection::Entry &entry)
 {
-    return (stream << quint64(entry.key) << entry.value);
+    return (stream << entry.key << entry.value);
 }
 
 QDataStream &operator>>(QDataStream &stream, QQsbCollection::Entry &entry)
 {
-    quint64 key;
+    QByteArray key;
     qint64 value;
     stream >> key >> value;
-    entry = { size_t(key), value };
+    entry = QQsbCollection::Entry(key, value);
     return stream;
 }
 
 size_t qHash(const QQsbCollection::Entry &entry, size_t)
 {
-    return entry.key;
+    return entry.hashKey;
 }
 
 bool operator==(const QQsbCollection::Entry &l, const QQsbCollection::Entry &r)
@@ -58,13 +60,27 @@ QDataStream &operator>>(QDataStream &stream, QQsbCollection::EntryDesc &entryDes
 }
 
 static constexpr quint64 MagicaDS = 0x3933333335346337;
-static constexpr qint64 HeaderSize = sizeof(qint64 /*startOffs*/) + sizeof(quint8) + sizeof(MagicaDS);
+static constexpr qint64 HeaderSize = sizeof(qint64 /*startOffs*/) + sizeof(quint8 /*version*/) + sizeof(quint32 /*qtVersion*/) + sizeof(MagicaDS);
+static constexpr quint32 QtVersion = (QT_VERSION_MAJOR << 16) | (QT_VERSION_MINOR << 8) | (QT_VERSION_PATCH);
 
 bool QQsbCollection::readEndHeader(QDataStream &ds, qint64 *startPos, quint8 *version)
 {
     quint64 fileId = 0;
-    ds >> *startPos >> *version >> fileId;
-    return fileId == MagicaDS && *version == Version::One;
+    quint32 qtver = 0;
+    ds >> *startPos >> *version >> qtver >> fileId;
+    if (fileId != MagicaDS) {
+        qWarning("Corrupt qsbc file");
+        return false;
+    }
+    if (*version != Version::Two) {
+        qWarning("qsbc file has an unsupported version");
+        return false;
+    }
+    if (qtver != QtVersion) {
+        qWarning("qsbc file is for a different Qt version");
+        return false;
+    }
+    return true;
 }
 
 bool QQsbCollection::readEndHeader(QIODevice *device, EntryMap *entries, quint8 *version)
@@ -87,7 +103,7 @@ bool QQsbCollection::readEndHeader(QIODevice *device, EntryMap *entries, quint8 
 
 void QQsbCollection::writeEndHeader(QDataStream &ds, qint64 startPos, quint8 version, quint64 magic)
 {
-    ds << startPos << version << magic;
+    ds << startPos << version << QtVersion << magic;
 }
 
 void QQsbCollection::writeEndHeader(QIODevice *device, const EntryMap &entries)
@@ -100,7 +116,23 @@ void QQsbCollection::writeEndHeader(QIODevice *device, const EntryMap &entries)
     ds.setVersion(QDataStream::Qt_6_0);
     const qint64 startPos = device->pos();
     ds << entries;
-    writeEndHeader(ds, startPos, quint8(Version::One), MagicaDS);
+    writeEndHeader(ds, startPos, quint8(Version::Two), MagicaDS);
+}
+
+QByteArray QQsbCollection::EntryDesc::generateSha(const QByteArray &materialKey, const FeatureSet &featureSet)
+{
+    QCryptographicHash h(QCryptographicHash::Algorithm::Sha1);
+    h.addData(materialKey);
+    for (auto it = featureSet.cbegin(), end = featureSet.cend(); it != end; ++it) {
+        if (it.value())
+            h.addData(it.key());
+    }
+    return h.result().toHex();
+}
+
+QByteArray QQsbCollection::EntryDesc::generateSha() const
+{
+    return generateSha(materialKey, featureSet);
 }
 
 QQsbCollection::EntryMap QQsbInMemoryCollection::availableEntries() const
@@ -108,7 +140,7 @@ QQsbCollection::EntryMap QQsbInMemoryCollection::availableEntries() const
     return EntryMap(entries.keyBegin(), entries.keyEnd());
 }
 
-QQsbCollection::Entry QQsbInMemoryCollection::addEntry(size_t key, const EntryDesc &entryDesc)
+QQsbCollection::Entry QQsbInMemoryCollection::addEntry(const QByteArray &key, const EntryDesc &entryDesc)
 {
     Entry e(key);
     if (!entries.contains(e)) {
@@ -133,8 +165,20 @@ void QQsbInMemoryCollection::clear()
     entries.clear();
 }
 
+static inline QString lockFileName(const QString &name)
+{
+    return name + QLatin1String(".lck");
+}
+
 bool QQsbInMemoryCollection::load(const QString &filename)
 {
+    QLockFile lock(lockFileName(filename));
+    if (!lock.lock()) {
+        qWarning("Could not create shader cache lock file '%s'",
+                 qPrintable(lock.fileName()));
+        return false;
+    }
+
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly)) {
         qWarning("Failed to open qsbc file %s", qPrintable(filename));
@@ -144,7 +188,7 @@ bool QQsbInMemoryCollection::load(const QString &filename)
     EntryMap entryMap;
     quint8 version = 0;
     if (!readEndHeader(&f, &entryMap, &version)) {
-        qWarning("Invalid qsbc file %s", qPrintable(filename));
+        qWarning("Ignoring qsbc file %s", qPrintable(filename));
         return false;
     }
 
@@ -155,7 +199,7 @@ bool QQsbInMemoryCollection::load(const QString &filename)
 
     for (const Entry &e : entryMap) {
         const qint64 offset = e.value;
-        if (e.key && offset >= 0 && size > offset && f.seek(offset)) {
+        if (e.isValid() && offset >= 0 && size > offset && f.seek(offset)) {
             QDataStream ds(&f);
             ds.setVersion(QDataStream::Qt_6_0);
             EntryDesc entryDesc;
@@ -169,7 +213,18 @@ bool QQsbInMemoryCollection::load(const QString &filename)
 
 bool QQsbInMemoryCollection::save(const QString &filename)
 {
+    QLockFile lock(lockFileName(filename));
+    if (!lock.lock()) {
+        qWarning("Could not create shader cache lock file '%s'",
+                 qPrintable(lock.fileName()));
+        return false;
+    }
+
+#if QT_CONFIG(temporaryfile)
+    QSaveFile f(filename);
+#else
     QFile f(filename);
+#endif
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qWarning("Failed to write qsbc file %s", qPrintable(filename));
         return false;
@@ -187,7 +242,11 @@ bool QQsbInMemoryCollection::save(const QString &filename)
 
     writeEndHeader(&f, entryMap);
 
+#if QT_CONFIG(temporaryfile)
+    return f.commit();
+#else
     return true;
+#endif
 }
 
 QQsbIODeviceCollection::QQsbIODeviceCollection(const QString &filePath)
@@ -260,7 +319,7 @@ QQsbCollection::EntryMap QQsbIODeviceCollection::availableEntries() const
     return entries;
 }
 
-QQsbCollection::Entry QQsbIODeviceCollection::addEntry(size_t key, const EntryDesc &entryDesc)
+QQsbCollection::Entry QQsbIODeviceCollection::addEntry(const QByteArray &key, const EntryDesc &entryDesc)
 {
     if (entries.contains(Entry(key)) || !map(MapMode::Write))
         return {};
@@ -277,9 +336,9 @@ QQsbCollection::Entry QQsbIODeviceCollection::addEntry(size_t key, const EntryDe
 bool QQsbIODeviceCollection::extractEntry(Entry entry, EntryDesc &entryDesc)
 {
     if (device.isOpen() && device.isReadable()) {
-        if (entry.key && entry.value >= 0) {
+        const qint64 offset = entry.value;
+        if (entry.isValid() && offset >= 0) {
             const qint64 size = device.size();
-            const qint64 offset = entry.value;
             if (size > offset && device.seek(offset)) {
                 QDataStream ds(&device);
                 ds.setVersion(QDataStream::Qt_6_0);
@@ -287,7 +346,7 @@ bool QQsbIODeviceCollection::extractEntry(Entry entry, EntryDesc &entryDesc)
                 return true;
             }
         } else {
-            qWarning("Entry not found id(%zu), offset(%lld)", entry.key, entry.value);
+            qWarning("Entry not found id(%s), offset(%lld)", entry.key.constData(), entry.value);
         }
     } else {
         qWarning("Unable to open file for reading");
@@ -303,12 +362,12 @@ void QQsbIODeviceCollection::dumpInfo()
     if (map(QQsbIODeviceCollection::Read)) {
         qDebug("Number of entries in collection: %zu\n", size_t(entries.size()));
         int i = 0;
-        qDebug("Qsbc version: %uc", version);
+        qDebug("Qsbc version: %u", version);
         for (const auto &e : std::as_const(entries)) {
             qDebug("%s\n"
                    "Entry %d\n%s\n"
-                   "Key: %zu\n"
-                   "Offset: %llu", borderText(), i++, borderText(), e.key, e.value);
+                   "Key: %s\n"
+                   "Offset: %llu", borderText(), i++, borderText(), e.key.constData(), e.value);
 
             QQsbCollection::EntryDesc ed;
             if (extractEntry(e, ed)) {

@@ -252,16 +252,23 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     // runtime cache. That may get cleared upon an explicit call to
     // QQuickWindow::releaseResources(), but will otherwise store all
     // encountered shader pipelines in any View3D in the window.
-    const QSSGRef<QSSGRhiShaderPipeline> &cachedShaders = shaderCache->getRhiShaderPipeline(shaderString, featureSet);
-    if (cachedShaders)
-        return cachedShaders;
+    QSSGRef<QSSGRhiShaderPipeline> maybePipeline = shaderCache->tryGetRhiShaderPipeline(shaderString, featureSet);
+    if (maybePipeline)
+        return maybePipeline;
 
     // Check if there's a pre-built (offline generated) shader for available.
-    const auto hkey = QSSGShaderCacheKey::generateHashCode(shaderString, featureSet);
-    const auto &pregenEntries = shaderLibraryManager->m_preGeneratedShaderEntries;
-    const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry{hkey});
-    if (foundIt != pregenEntries.cend())
-        return shaderCache->loadPregeneratedShader(shaderString, featureSet, *foundIt, renderable.material);
+    const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(featureSet));
+    const QQsbCollection::EntryMap &pregenEntries = shaderLibraryManager->m_preGeneratedShaderEntries;
+    if (!pregenEntries.isEmpty()) {
+        const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
+        if (foundIt != pregenEntries.cend())
+            return shaderCache->newPipelineFromPregenerated(shaderString, featureSet, *foundIt, renderable.material);
+    }
+
+    // Try the persistent (disk-based) cache then.
+    maybePipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey, shaderString, featureSet);
+    if (maybePipeline)
+        return maybePipeline;
 
     // Otherwise, build new shader code and run the resulting shaders through
     // the shader conditioning pipeline.

@@ -13,6 +13,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QString>
 #include <QtCore/qfile.h>
+#include <QtCore/qdir.h>
 
 #include <QtGui/qsurfaceformat.h>
 #if QT_CONFIG(opengl)
@@ -85,13 +86,8 @@ void QSSGShaderFeatures::set(QSSGShaderFeatures::Feature feature, bool val)
         flags &= ~(static_cast<FlagType>(feature) & ~IndexMask);
 }
 
-size_t qHash(const QSSGShaderCacheKey &key)
-{
-    return key.m_hashCode;
-}
-
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
-static void initBaker(QShaderBaker *baker, QRhi *rhi)
+static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
 {
     QVector<QShaderBaker::GeneratedShader> outputs;
     switch (rhi->backend()) {
@@ -152,28 +148,141 @@ static void initBaker(QShaderBaker *baker, QRhi *rhi)
     baker->setGeneratedShaders(outputs);
     baker->setGeneratedShaderVariants({ QShader::StandardShader });
 }
+
+static void initBakerForPersistentUse(QShaderBaker *baker, QRhi *)
+{
+    QVector<QShaderBaker::GeneratedShader> outputs;
+    outputs.reserve(8);
+    outputs.append({ QShader::SpirvShader, QShaderVersion(100) });
+    outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
+    outputs.append({ QShader::MslShader, QShaderVersion(12) }); // Metal 1.2
+    outputs.append({ QShader::GlslShader, QShaderVersion(330) }); // OpenGL 3.3+
+    outputs.append({ QShader::GlslShader, QShaderVersion(140) }); // OpenGL 3.1+
+    outputs.append({ QShader::GlslShader, QShaderVersion(130) }); // OpenGL 3.0+
+    outputs.append({ QShader::GlslShader, QShaderVersion(100, QShaderVersion::GlslEs) }); // GLES 2.0
+    outputs.append({ QShader::GlslShader, QShaderVersion(300, QShaderVersion::GlslEs) }); // GLES 3.0+
+
+    // If one of the above cannot be generated due to failing at the
+    // SPIRV-Cross translation stage, it will be skipped, but bake() will not
+    // fail. This is essential, because with the default fail if anything fails
+    // behavior many shaders could not be baked at all due to failing for e.g.
+    // GLSL ES 100. This is a non-issue when choosing the targets dynamically
+    // based on the current API/context, but here we need to ensure what we
+    // generate will work with a different RHI backend, graphics API, and
+    // perhaps even on a different platform (if the cache file is manually
+    // moved). So have to generate what we can, without breaking the
+    // application when the shader is not compatible with a target. (if that
+    // shader is not used at runtime, it's fine anyway, it it is, it won't work
+    // just as with the other, non-caching path)
+    baker->setBreakOnShaderTranslationError(false);
+
+    baker->setGeneratedShaders(outputs);
+    baker->setGeneratedShaderVariants({ QShader::StandardShader });
+}
+
 #else
-static void initBaker(QShaderBaker *, QRhi *)
+static void initBakerForNonPersistentUse(QShaderBaker *, QRhi *)
+{
+}
+
+static void initBakerForPersistentUse(QShaderBaker *, QRhi *)
 {
 }
 #endif // QT_QUICK3D_HAS_RUNTIME_SHADERS
 
-QSSGShaderCache::~QSSGShaderCache() {}
+static inline bool ensureWritableDir(const QString &name)
+{
+    QDir::root().mkpath(name);
+    return QFileInfo(name).isWritable();
+}
+
+static QString persistentQsbcDir()
+{
+    static bool checked = false;
+    static QString currentCacheDir;
+    static bool cacheWritable = false;
+
+    if (checked)
+        return cacheWritable ? currentCacheDir : QString();
+
+    checked = true;
+    const QString cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    const QString subPath = QLatin1String("/q3dshadercache-") + QSysInfo::buildAbi() + QLatin1Char('/');
+
+    if (!cachePath.isEmpty()) {
+        currentCacheDir = cachePath + subPath;
+        cacheWritable = ensureWritableDir(currentCacheDir);
+    }
+
+    return cacheWritable ? currentCacheDir : QString();
+}
+
+static inline QString persistentQsbcFileName()
+{
+    const QString cacheDir = persistentQsbcDir();
+    if (!cacheDir.isEmpty())
+        return cacheDir + QLatin1String("q3dshadercache.qsbc");
+
+    return QString();
+}
 
 QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
                                  const InitBakerFunc initBakeFn)
-    : m_rhiContext(ctx)
-    , m_initBaker(initBakeFn ? initBakeFn : &initBaker)
+    : m_rhiContext(ctx),
+      m_initBaker(initBakeFn)
 {
+    // Mirrors QOpenGLShaderProgram/QQuickGraphicsConfiguration/QSGRhiSupport.
+    m_autoDiskCacheEnabled = !QCoreApplication::instance()->testAttribute(Qt::AA_DisableShaderDiskCache)
+            && !qEnvironmentVariableIntValue("QT_DISABLE_SHADER_DISK_CACHE")
+            && !qEnvironmentVariableIntValue("QSG_RHI_DISABLE_DISK_CACHE");
+
+    if (m_autoDiskCacheEnabled) {
+        const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
+        m_persistentShaderStorageFileName = persistentQsbcFileName();
+        if (!m_persistentShaderStorageFileName.isEmpty()) {
+            const bool skipCacheFile = qEnvironmentVariableIntValue("QT_QUICK3D_NO_SHADER_CACHE_LOAD");
+            if (!skipCacheFile && QFileInfo(m_persistentShaderStorageFileName).exists()) {
+                if (shaderDebug)
+                    qDebug("Attempting to seed material shader cache from %s", qPrintable(m_persistentShaderStorageFileName));
+                if (m_persistentShaderBakingCache.load(m_persistentShaderStorageFileName)) {
+                    if (shaderDebug) {
+                        const int count = m_persistentShaderBakingCache.availableEntries().count();
+                        qDebug("Loaded %d shader pipelines into the material shader cache", count);
+                    }
+                }
+            }
+        }
+    }
+
+    if (!m_initBaker) {
+        // It is important to generate all possible shader variants if the qsb
+        // collection is going to be stored on disk. Otherwise switching the
+        // rhi backend could break the application. This is however an overkill
+        // if we know that what we bake will not be reused in future runs of
+        // the application, so do not do it if the disk cache was disabled or
+        // the cache directory was not available (no file system, no
+        // permissions, etc.).
+        m_initBaker = m_persistentShaderStorageFileName.isEmpty() ? initBakerForNonPersistentUse
+                                                                  : initBakerForPersistentUse;
+    }
+}
+
+QSSGShaderCache::~QSSGShaderCache()
+{
+    if (!m_persistentShaderStorageFileName.isEmpty())
+        m_persistentShaderBakingCache.save(m_persistentShaderStorageFileName);
 }
 
 void QSSGShaderCache::releaseCachedResources()
 {
     m_rhiShaders.clear();
+
+    // m_persistentShaderBakingCache is not cleared, that is intentional,
+    // otherwise we would permanently lose what got loaded at startup.
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::getRhiShaderPipeline(const QByteArray &inKey,
-                                                                     const QSSGShaderFeatures &inFeatures)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryGetRhiShaderPipeline(const QByteArray &inKey,
+                                                                        const QSSGShaderFeatures &inFeatures)
 {
     QSSGShaderCacheKey cacheKey(inKey);
     cacheKey.m_features = inFeatures;
@@ -239,7 +348,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
                                                               const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, inFeatures);
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = tryGetRhiShaderPipeline(inKey, inFeatures);
     if (rhiShaders)
         return rhiShaders;
 
@@ -346,8 +455,17 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
         s_statusCallback(inKey, fragStatus, fragErr, QShader::FragmentStage);
     }
 
-    const auto inserted = m_rhiShaders.insert(tempKey, shaders);
-    return inserted.value();
+    QSSGRef<QSSGRhiShaderPipeline> result = m_rhiShaders.insert(tempKey, shaders).value();
+    if (result && result->vertexStage() && result->fragmentStage()) {
+        QQsbCollection::EntryDesc entryDesc = {
+            inKey,
+            QQsbCollection::toFeatureSet(inFeatures),
+            result->vertexStage()->shader(),
+            result->fragmentStage()->shader()
+        };
+        m_persistentShaderBakingCache.addEntry(entryDesc.generateSha(), entryDesc);
+    }
+    return result;
 
 #else
     Q_UNUSED(inKey);
@@ -361,18 +479,20 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 #endif
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadPregeneratedShader(const QByteArray &inKey,
-                                                                       const QSSGShaderFeatures &inFeatures,
-                                                                       QQsbCollection::Entry entry,
-                                                                       const QSSGRenderGraphObject &obj)
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::newPipelineFromPregenerated(const QByteArray &inKey,
+                                                                            const QSSGShaderFeatures &inFeatures,
+                                                                            QQsbCollection::Entry entry,
+                                                                            const QSSGRenderGraphObject &obj,
+                                                                            QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
-    // Check the local cache, some callers may do this before calling this
-    // function, but others might not.
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, inFeatures);
-    if (rhiShaders)
-        return rhiShaders;
+    // No lookup in m_rhiShaders. It is up to the caller to do that, if they
+    // want to. We will insert into it at the end, but there is intentionally
+    // no lookup. The result from this function is always a new
+    // QSSGRhiShaderPipeline (it's just much faster to create than the
+    // full-blown generator). That is important for some clients (effect
+    // system) so returning an existing QSSGRhiShaderPipeline is _wrong_.
 
-    const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
+    const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading pregenerated rhi shader(s)");
 
@@ -388,11 +508,11 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadPregeneratedShader(const QBy
     if (qsbc.map(QQsbIODeviceCollection::Read))
         qsbc.extractEntry(entry, entryDesc);
     else
-        qWarning("Failed to open entry %zu", entry.key);
+        qWarning("Failed to open entry %s", entry.key.constData());
 
     if (entryDesc.vertShader.isValid() && entryDesc.fragShader.isValid()) {
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader));
-        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader), stageFlags);
         if (shaderDebug)
             qDebug("Loading of vertex and fragment stages succeeded");
     }
@@ -408,13 +528,49 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadPregeneratedShader(const QBy
     return inserted.value();
 }
 
+QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryNewPipelineFromPersistentCache(const QByteArray &qsbcKey,
+                                                                                  const QByteArray &inKey,
+                                                                                  const QSSGShaderFeatures &inFeatures,
+                                                                                  QSSGRhiShaderPipeline::StageFlags stageFlags)
+{
+    // No lookup in m_rhiShaders. it is up to the caller to do that, if they
+    // want to. We will insert into it at the end, but there is intentionally
+    // no lookup. The result from this function is always a new
+    // QSSGRhiShaderPipeline (it's just much faster to create than the
+    // full-blown generator). That is important for some clients (effect
+    // system) so returning an existing QSSGRhiShaderPipeline is _wrong_.
+
+    QQsbCollection::EntryDesc entryDesc;
+
+    // Here we are allowed to return null to indicate that there is no such
+    // entry in this particular cache.
+    if (!m_persistentShaderBakingCache.extractEntry(QQsbCollection::Entry(qsbcKey), entryDesc))
+        return {};
+
+    if (entryDesc.vertShader.isValid() && entryDesc.fragShader.isValid()) {
+        const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
+        if (shaderDebug)
+            qDebug("Loading rhi shaders from disk cache for %s (%s)", qsbcKey.constData(), inKey.constData());
+
+        QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
+        shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader), stageFlags);
+        QSSGShaderCacheKey cacheKey(inKey);
+        cacheKey.m_features = inFeatures;
+        cacheKey.updateHashCode();
+        return m_rhiShaders.insert(cacheKey, shaders).value();
+    }
+
+    return {};
+}
+
 QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
 {
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = getRhiShaderPipeline(inKey, QSSGShaderFeatures());
+    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = tryGetRhiShaderPipeline(inKey, QSSGShaderFeatures());
     if (rhiShaders)
         return rhiShaders;
 
-    const bool shaderDebug = QSSGRhiContext::shaderDebuggingEnabled();
+    const bool shaderDebug = !QSSGRhiContext::editorMode() && QSSGRhiContext::shaderDebuggingEnabled();
     if (shaderDebug)
         qDebug("Loading builtin rhi shader: %s", inKey.constData());
 

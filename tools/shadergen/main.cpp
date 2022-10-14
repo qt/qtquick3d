@@ -194,47 +194,44 @@ int main(int argc, char *argv[])
         const auto k = cmdLineparser.value(extractQsbFileOption);
         const auto kl = QStringView(k).split(u':');
 
-        bool ok = false;
         const auto &keyView = kl.at(0);
-        const size_t key = keyView.toULong(&ok);
-        if (ok) {
-            enum ExtractWhat : quint8 { Desc = 0x1, Vert = 0x2, Frag = 0x4 };
-            quint8 what = 0;
-            if (kl.size() > 1) {
-                const auto &rest = kl.at(1);
-                const auto &options = rest.split(u'|');
-                for (const auto &o : options) {
-                    if (o == QLatin1String("desc"))
-                        what |= ExtractWhat::Desc;
-                    if (o == QLatin1String("vert"))
-                        what |= ExtractWhat::Vert;
-                    if (o == QLatin1String("frag"))
-                        what |= ExtractWhat::Frag;
-                }
+        const QByteArray key = keyView.toLatin1();
+        enum ExtractWhat : quint8 { Desc = 0x1, Vert = 0x2, Frag = 0x4 };
+        quint8 what = 0;
+        if (kl.size() > 1) {
+            const auto &rest = kl.at(1);
+            const auto &options = rest.split(u'|');
+            for (const auto &o : options) {
+                if (o == QLatin1String("desc"))
+                    what |= ExtractWhat::Desc;
+                if (o == QLatin1String("vert"))
+                    what |= ExtractWhat::Vert;
+                if (o == QLatin1String("frag"))
+                    what |= ExtractWhat::Frag;
             }
-            QQsbIODeviceCollection qsbc(f);
-            if (qsbc.map(QQsbIODeviceCollection::Read)) {
-                const auto entries = qsbc.availableEntries();
-                const auto foundIt = entries.constFind(QQsbCollection::Entry{key});
-                if (foundIt != entries.cend()) {
-                    QQsbCollection::EntryDesc ed;
-                    qsbc.extractEntry(*foundIt, ed);
-                    if (what == 0)
-                        qDebug("Entry with key %zu found.", key);
-                    if (what & ExtractWhat::Desc)
-                        printBytes(ed.materialKey);
-                    if (what & ExtractWhat::Vert)
-                        printBytes(qUncompress(ed.vertShader.serialized()));
-                    if (what & ExtractWhat::Frag)
-                        printBytes(qUncompress(ed.fragShader.serialized()));
-                } else {
-                    qWarning("Entry with key %zu could not be found.", key);
-                }
-                qsbc.unmap();
-            }
-            a.exit(0);
-            return 0;
         }
+        QQsbIODeviceCollection qsbc(f);
+        if (qsbc.map(QQsbIODeviceCollection::Read)) {
+            const auto entries = qsbc.availableEntries();
+            const auto foundIt = entries.constFind(QQsbCollection::Entry(key));
+            if (foundIt != entries.cend()) {
+                QQsbCollection::EntryDesc ed;
+                qsbc.extractEntry(*foundIt, ed);
+                if (what == 0)
+                    qDebug("Entry with key %s found.", key.constData());
+                if (what & ExtractWhat::Desc)
+                    printBytes(ed.materialKey);
+                if (what & ExtractWhat::Vert)
+                    printBytes(qUncompress(ed.vertShader.serialized()));
+                if (what & ExtractWhat::Frag)
+                    printBytes(qUncompress(ed.fragShader.serialized()));
+            } else {
+                qWarning("Entry with key %s could not be found.", key.constData());
+            }
+            qsbc.unmap();
+        }
+        a.exit(0);
+        return 0;
 
         qWarning("Command %s failed with input: %s and %s.", qPrintable(extractQsbFileOption.valueName()), qPrintable(f), qPrintable(k));
         a.exit(-1);

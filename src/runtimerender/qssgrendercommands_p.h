@@ -120,12 +120,10 @@ struct QSSGBindBuffer : public QSSGCommand
 
 struct QSSGBindShader : public QSSGCommand
 {
-    QByteArray m_shaderPathKey; // something like "vertex_filename>fragment_filename"
-    size_t m_hkey = 0;
+    QByteArray m_shaderPathKey; // something like "prefix>vertex_filename>fragment_filename:source_sha:tonemapping"
     QSSGBindShader(const QByteArray &inShaderPathKey)
         : QSSGCommand(CommandType::BindShader),
-          m_shaderPathKey(inShaderPathKey),
-          m_hkey(QSSGShaderCacheKey::generateHashCode(inShaderPathKey, QSSGShaderFeatures()))
+          m_shaderPathKey(inShaderPathKey)
     {
     }
     QSSGBindShader() : QSSGCommand(CommandType::BindShader) {}

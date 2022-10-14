@@ -183,7 +183,6 @@ void QSSGRhiEffectSystem::releaseResources()
 {
     qDeleteAll(m_textures);
     m_textures.clear();
-    m_currentOutput = nullptr;
 
     m_shaderPipelines.clear();
 }
@@ -418,25 +417,60 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     const auto &shaderLib = m_renderer->contextInterface()->shaderLibraryManager();
     const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
 
-    const QByteArray &key = inCmd->m_shaderPathKey;
-    const auto &hkey = inCmd->m_hkey;
-    Q_ASSERT(hkey != 0);
-    // now we need a proper "unique" key (unique in the scene), the filenames are not sufficient
-    const auto rkey = hkey ^ quintptr(inCmd) ^ m_currentUbufIndex;
+    // Now we need a proper unique key (unique in the scene), the filenames are
+    // not sufficient. This means that using the same shader source files in
+    // multiple Effects in the same scene will work. It wouldn't if all those
+    // Effects reused the same QSSGRhiShaderPipeline (i.e. if the only cache
+    // key was the m_shaderPathKey).
+    QSSGEffectSceneCacheKey cacheKey;
+    cacheKey.m_shaderPathKey = inCmd->m_shaderPathKey;
+    cacheKey.m_cmd = quintptr(inCmd);
+    cacheKey.m_ubufIndex = m_currentUbufIndex;
+    cacheKey.updateHashCode();
 
     // look for a runtime pipeline
-    const auto it = m_shaderPipelines.constFind(rkey);
+    const auto it = m_shaderPipelines.constFind(cacheKey);
     if (it != m_shaderPipelines.cend())
         m_currentShaderPipeline = (*it).data();
 
+    QByteArray qsbcKey;
+    QSSGShaderFeatures features;
+    if (!m_currentShaderPipeline) { // don't spend time if already got the pipeline
+        features = shaderLib->getShaderMetaData(inCmd->m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment).features;
+        qsbcKey = QQsbCollection::EntryDesc::generateSha(inCmd->m_shaderPathKey, QQsbCollection::toFeatureSet(features));
+    }
+
     // Check if there's a build-time generated entry for this effect
-    if (!m_currentShaderPipeline) {
-        const auto &pregenEntries = shaderLib->m_preGeneratedShaderEntries;
-        const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry{hkey});
+    if (!m_currentShaderPipeline && !shaderLib->m_preGeneratedShaderEntries.isEmpty()) {
+        const QQsbCollection::EntryMap &pregenEntries = shaderLib->m_preGeneratedShaderEntries;
+        const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
         if (foundIt != pregenEntries.cend()) {
-            const auto &shader = shaderCache->loadPregeneratedShader(key, QSSGShaderFeatures(), *foundIt, *inEffect);
-            m_shaderPipelines.insert(rkey, shader);
+            // The result here is always a new QSSGRhiShaderPipeline, which
+            // fulfills the requirements of our local cache (cmd/ubufIndex in
+            // cacheKey, not needed here since the result is a new object).
+            const auto &shader = shaderCache->newPipelineFromPregenerated(inCmd->m_shaderPathKey,
+                                                                          features,
+                                                                          *foundIt,
+                                                                          *inEffect,
+                                                                          QSSGRhiShaderPipeline::UsedWithoutIa);
+            m_shaderPipelines.insert(cacheKey, shader);
             m_currentShaderPipeline = shader.data();
+        }
+    }
+
+    if (!m_currentShaderPipeline) {
+        // Try the persistent (disk-based) cache then. The result here is
+        // always a new QSSGRhiShaderPipeline, which fulfills the requirements
+        // of our local cache (cmd/ubufIndex in cacheKey, not needed here since
+        // the result is a new object). Alternatively, the result may be null
+        // if there was no hit.
+        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey,
+                                                                                                       inCmd->m_shaderPathKey,
+                                                                                                       features,
+                                                                                                       QSSGRhiShaderPipeline::UsedWithoutIa);
+        if (shaderPipeline) {
+            m_shaderPipelines.insert(cacheKey, shaderPipeline);
+            m_currentShaderPipeline = shaderPipeline.data();
         }
     }
 
@@ -445,7 +479,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
         if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
-            m_shaderPipelines.insert(rkey, stages);
+            m_shaderPipelines.insert(cacheKey, stages);
             m_currentShaderPipeline = stages.data();
         }
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inEffect->profilingId);

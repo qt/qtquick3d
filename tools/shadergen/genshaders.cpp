@@ -214,14 +214,15 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
             if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
                 auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
                 if (!shaderPipeline.isNull()) {
-                    const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+                    const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
+                    const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
                     const auto vertexStage = shaderPipeline->vertexStage();
                     const auto fragmentStage = shaderPipeline->fragmentStage();
                     if (vertexStage && fragmentStage) {
                         if (dryRun)
                             qDryRunPrintQsbcAdd(shaderString);
                         else
-                            qsbc.addEntry(hkey, { shaderString, QQsbCollection::toFeatureSet(features), vertexStage->shader(), fragmentStage->shader() });
+                            qsbc.addEntry(qsbcKey, { shaderString, qsbcFeatureList, vertexStage->shader(), fragmentStage->shader() });
                     }
                 }
             } else if ((renderable->type == QSSGSubsetRenderable::Type::CustomMaterialMeshSubset)) {
@@ -236,14 +237,15 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
                 if (shaderPipeline) {
                     shaderString = cmr.customMaterial().m_shaderPathKey;
-                    const size_t hkey = QSSGShaderCacheKey::generateHashCode(shaderString, features);
+                    const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
+                    const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
                     const auto vertexStage = shaderPipeline->vertexStage();
                     const auto fragmentStage = shaderPipeline->fragmentStage();
                     if (vertexStage && fragmentStage) {
                         if (dryRun)
                             qDryRunPrintQsbcAdd(shaderString);
                         else
-                            qsbc.addEntry(hkey, { shaderString, QQsbCollection::toFeatureSet(features), vertexStage->shader(), fragmentStage->shader() });
+                            qsbc.addEntry(qsbcKey, { shaderString, qsbcFeatureList, vertexStage->shader(), fragmentStage->shader() });
                     }
                 }
             }
@@ -307,15 +309,16 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                                                                                           isYUpInFramebuffer);
                     if (shaderPipeline) {
                         const auto &key = bindShaderCommand.m_shaderPathKey;
-                        const size_t hkey = bindShaderCommand.m_hkey;
-                        Q_ASSERT(hkey != 0);
+                        const QSSGShaderFeatures features = shaderLibraryManager->getShaderMetaData(key, QSSGShaderCache::ShaderType::Fragment).features;
+                        const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
+                        QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(key, qsbcFeatureList);
                         const auto vertexStage = shaderPipeline->vertexStage();
                         const auto fragmentStage = shaderPipeline->fragmentStage();
                         if (vertexStage && fragmentStage) {
                             if (dryRun)
                                 qDryRunPrintQsbcAdd(key);
                             else
-                                qsbc.addEntry(hkey, { key, QQsbCollection::toFeatureSet(QSSGShaderFeatures()), vertexStage->shader(), fragmentStage->shader() });
+                                qsbc.addEntry(qsbcKey, { key, qsbcFeatureList, vertexStage->shader(), fragmentStage->shader() });
                         }
                     }
                 }

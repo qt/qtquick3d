@@ -29,6 +29,36 @@ struct QSSGProgramGenerator;
 struct QSSGShaderLibraryManager;
 class QSSGShaderCache;
 
+struct QSSGEffectSceneCacheKey
+{
+    QByteArray m_shaderPathKey;
+    quintptr m_cmd;
+    int m_ubufIndex;
+
+    size_t m_hashCode = 0;
+
+    static size_t generateHashCode(const QByteArray &shaderPathKey, quintptr cmd, int ubufIndex)
+    {
+        return qHash(shaderPathKey) ^ qHash(cmd) ^ qHash(ubufIndex);
+    }
+
+    void updateHashCode()
+    {
+        m_hashCode = generateHashCode(m_shaderPathKey, m_cmd, m_ubufIndex);
+    }
+
+    bool operator==(const QSSGEffectSceneCacheKey &other) const
+    {
+        return m_shaderPathKey == other.m_shaderPathKey
+                && m_cmd == other.m_cmd
+                && m_ubufIndex == other.m_ubufIndex;
+    }
+};
+
+inline size_t qHash(const QSSGEffectSceneCacheKey &key)
+{
+    return key.m_hashCode;
+}
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
@@ -78,11 +108,10 @@ private:
     QVector<QSSGRhiEffectTexture *> m_textures;
     QRhiTexture *m_depthTexture = nullptr;
     QVector2D m_cameraClipRange;
-    QSSGRhiEffectTexture *m_currentOutput = nullptr;
     int m_currentUbufIndex = 0;
     QSSGRef<QSSGRhiContext> m_rhiContext;
     QSSGRenderer *m_renderer = nullptr;
-    QHash<quintptr, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
+    QHash<QSSGEffectSceneCacheKey, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;
     char *m_currentUBufData = nullptr;
     QHash<QByteArray, QSSGRhiTexture> m_currentTextures;

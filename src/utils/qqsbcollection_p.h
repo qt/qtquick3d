@@ -32,18 +32,25 @@ class Q_QUICK3DUTILS_EXPORT QQsbCollection
 public:
     virtual ~QQsbCollection();
 
-    struct Entry
+    struct Q_QUICK3DUTILS_EXPORT Entry
     {
         // 'value' is optional. hashing and comparison are based solely on 'key'.
         Entry() = default;
-        explicit Entry(size_t key) : key(key) {}
-        Entry(size_t key, qint64 value) : key(key), value(value) {}
-        bool isValid() const { return key != 0; }
-        size_t key = 0;
+        explicit Entry(const QByteArray &key) : key(key)
+        {
+            hashKey = qHash(key);
+        }
+        Entry(const QByteArray &key, qint64 value) : key(key), value(value)
+        {
+            hashKey = qHash(key);
+        }
+        bool isValid() const { return !key.isEmpty(); }
+        QByteArray key;
         qint64 value = -1;
+        size_t hashKey;
     };
 
-    using FeatureSet = QMap<QByteArray, bool>;
+    using FeatureSet = QMap<QByteArray, bool>; // QMap so it is ordered by key
 
     template<typename T>
     static FeatureSet toFeatureSet(const T &ssgFeatureSet)
@@ -57,23 +64,26 @@ public:
         return ret;
     }
 
-    struct EntryDesc {
+    struct Q_QUICK3DUTILS_EXPORT EntryDesc {
         QByteArray materialKey;
         FeatureSet featureSet;
         QShader vertShader;
         QShader fragShader;
+        QByteArray generateSha() const;
+        static QByteArray generateSha(const QByteArray &materialKey, const FeatureSet &featureSet);
     };
 
     using EntryMap = QSet<Entry>;
     virtual EntryMap availableEntries() const = 0;
-    virtual Entry addEntry(size_t key, const EntryDesc &entryDesc) = 0;
+    virtual Entry addEntry(const QByteArray &key, const EntryDesc &entryDesc) = 0;
     virtual bool extractEntry(Entry entry, EntryDesc &entryDesc) = 0;
 
 protected:
     enum Version : quint8
     {
         Unknown,
-        One = 0x10
+        One = 0x10,
+        Two = 0x20
     };
     bool readEndHeader(QDataStream &ds, qint64 *startPos, quint8 *version);
     void writeEndHeader(QDataStream &ds, qint64 startPos, quint8 version, quint64 magic);
@@ -100,7 +110,7 @@ public:
     QQsbInMemoryCollection() = default;
 
     EntryMap availableEntries() const override;
-    Entry addEntry(size_t key, const EntryDesc &entryDesc) override;
+    Entry addEntry(const QByteArray &key, const EntryDesc &entryDesc) override;
     bool extractEntry(Entry entry, EntryDesc &entryDesc) override;
 
     void clear();
@@ -132,7 +142,7 @@ public:
     void unmap();
 
     EntryMap availableEntries() const override;
-    Entry addEntry(size_t key, const EntryDesc &entryDesc) override;
+    Entry addEntry(const QByteArray &key, const EntryDesc &entryDesc) override;
     bool extractEntry(Entry entry, EntryDesc &entryDesc) override;
 
     void dumpInfo();
