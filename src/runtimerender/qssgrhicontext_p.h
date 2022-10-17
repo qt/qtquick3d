@@ -826,6 +826,8 @@ public:
     struct GlobalInfo { // global as in per QSSGRhiContext which is per-QQuickWindow
         quint64 meshDataSize = 0;
         quint64 imageDataSize = 0;
+        qint64 materialGenerationTime = 0;
+        qint64 effectGenerationTime = 0;
     };
 
     QHash<QSSGRenderLayer *, PerLayerInfo> perLayerInfo;
@@ -901,6 +903,16 @@ public:
     void imageDataSizeChanges(quint64 newSize) // can be called outside start-stop
     {
         globalInfo.imageDataSize = newSize;
+    }
+
+    void registerMaterialShaderGenerationTime(qint64 ms)
+    {
+        globalInfo.materialGenerationTime += ms;
+    }
+
+    void registerEffectShaderGenerationTime(qint64 ms)
+    {
+        globalInfo.effectGenerationTime += ms;
     }
 
     static quint64 totalDrawCallCountForPass(const QSSGRhiContextStats::RenderPassInfo &pass)

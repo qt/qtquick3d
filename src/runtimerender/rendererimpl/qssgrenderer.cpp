@@ -48,7 +48,7 @@ static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsP
                                                                 const QSSGShaderFeatures &featureSet)
 {
     const QSSGRef<QSSGRenderer> &generator(subsetRenderable.generator);
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getRhiShaders(subsetRenderable, featureSet);
+    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = generator->getShaderPipelineForDefaultMaterial(subsetRenderable, featureSet);
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.data();
     return shaderPipeline;
@@ -245,7 +245,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     // This is not a cheap operation. This function assumes that it will not be
     // hit for every material for every model in every frame (except of course
     // for materials that got changed). In practice this is ensured by the
-    // cheaper-to-lookup cache in getRhiShaders().
+    // cheaper-to-lookup cache in getShaderPipelineForDefaultMaterial().
     theKey.toString(shaderString, shaderKeyProperties);
 
     // Check the in-memory, per-QSSGShaderCache (and so per-QQuickWindow)
@@ -567,8 +567,8 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
     }
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable &inRenderable,
-                                                           const QSSGShaderFeatures &inFeatureSet)
+QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
+                                                                                 const QSSGShaderFeatures &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);
@@ -582,6 +582,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable 
     // generate/hash/compare. Even though there are other levels of caching in
     // the components that get invoked from here, those may not be suitable
     // performance wise. So bail out right here as soon as possible.
+
+    QElapsedTimer timer;
+    timer.start();
 
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
 
@@ -610,6 +613,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getRhiShaders(QSSGSubsetRenderable 
                 m_currentLayer->cameraData = { theCamera };
         }
     }
+
+    m_contextInterface->rhiContext()->stats().registerMaterialShaderGenerationTime(timer.elapsed());
+
     return shaderPipeline;
 }
 

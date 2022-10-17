@@ -54,6 +54,15 @@ Rectangle {
             color: "white"
             visible: resourceDetailsVisible
         }
+        Text {
+            text: "Mat./eff. gen.: "
+                  + (source.renderStats.materialGenerationTime + source.renderStats.effectGenerationTime)
+                  + " ms Pipl. gen.: "
+                  + source.renderStats.pipelineCreationTime + " ms"
+            font.pointSize: 9
+            color: "white"
+            visible: resourceDetailsVisible
+        }
         MenuSeparator {
             padding: 0
             topPadding: 8
@@ -154,6 +163,12 @@ Rectangle {
                     Button {
                         text: "Release cached resources"
                         onClicked: source.renderStats.releaseCachedResources(dbgView)
+                    }
+                    Text {
+                        text: source.renderStats.vmemAllocCount + " vmem allocs with " + source.renderStats.vmemUsedBytes + " bytes"
+                        font.pointSize: 9
+                        color: "white"
+                        visible: source.renderStats.vmemAllocCount > 0
                     }
                 }
             }

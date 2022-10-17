@@ -45,6 +45,11 @@ class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
     Q_PROPERTY(QString textureDetails READ textureDetails NOTIFY textureDetailsChanged)
     Q_PROPERTY(QString meshDetails READ meshDetails NOTIFY meshDetailsChanged)
     Q_PROPERTY(int pipelineCount READ pipelineCount NOTIFY pipelineCountChanged)
+    Q_PROPERTY(qint64 materialGenerationTime READ materialGenerationTime NOTIFY materialGenerationTimeChanged)
+    Q_PROPERTY(qint64 effectGenerationTime READ effectGenerationTime NOTIFY effectGenerationTimeChanged)
+    Q_PROPERTY(qint64 pipelineCreationTime READ pipelineCreationTime NOTIFY pipelineCreationTimeChanged)
+    Q_PROPERTY(quint32 vmemAllocCount READ vmemAllocCount NOTIFY vmemAllocCountChanged)
+    Q_PROPERTY(quint64 vmemUsedBytes READ vmemUsedBytes NOTIFY vmemUsedBytesChanged)
 
 public:
     QQuick3DRenderStats(QObject *parent = nullptr);
@@ -78,6 +83,11 @@ public:
     QString textureDetails() const;
     QString meshDetails() const;
     int pipelineCount() const;
+    qint64 materialGenerationTime() const;
+    qint64 effectGenerationTime() const;
+    qint64 pipelineCreationTime() const;
+    quint32 vmemAllocCount() const;
+    quint64 vmemUsedBytes() const;
 
     Q_INVOKABLE void releaseCachedResources(QQuickItem *item);
 
@@ -97,6 +107,11 @@ Q_SIGNALS:
     void textureDetailsChanged();
     void meshDetailsChanged();
     void pipelineCountChanged();
+    void materialGenerationTimeChanged();
+    void effectGenerationTimeChanged();
+    void pipelineCreationTimeChanged();
+    void vmemAllocCountChanged();
+    void vmemUsedBytesChanged();
 
 private:
     float timestamp() const;
@@ -132,6 +147,9 @@ private:
         QSet<QRhiTexture *> activeTextures;
         QSet<QSSGRenderMesh *> activeMeshes;
         int pipelineCount = 0;
+        qint64 materialGenerationTime = 0;
+        qint64 effectGenerationTime = 0;
+        QRhiStats rhiStats;
     };
 
     Results m_results;
@@ -139,6 +157,7 @@ private:
     QSSGRhiContextStats *m_contextStats = nullptr;
     bool m_extendedDataCollectionEnabled = false;
     QSSGRenderLayer *m_layer = nullptr;
+    QElapsedTimer m_slowExtendedDataTimer;
 };
 
 QT_END_NAMESPACE

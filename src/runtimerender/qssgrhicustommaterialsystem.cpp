@@ -51,12 +51,16 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
                                                                                   QSSGSubsetRenderable &renderable,
                                                                                   const QSSGShaderFeatures &featureSet)
 {
+    QElapsedTimer timer;
+    timer.start();
+
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find(). This is the first
-    // level, fast lookup. (equivalent to what QSSGRenderer::getRhiShaders does
-    // for the default material)
+    // level, fast lookup. (equivalent to what
+    // QSSGRenderer::getShaderPipelineForDefaultMaterial does for the
+    // default/principled material)
     QSSGShaderMapKey skey = QSSGShaderMapKey(material.m_shaderPathKey,
                                              featureSet,
                                              renderable.shaderDescription);
@@ -103,6 +107,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
         ps->shaderPipeline = shaderPipeline.data();
         shaderPipeline->resetExtraTextures();
     }
+
+    context->rhiContext()->stats().registerMaterialShaderGenerationTime(timer.elapsed());
 
     return shaderPipeline;
 }

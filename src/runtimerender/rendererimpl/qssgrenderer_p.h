@@ -103,8 +103,8 @@ public:
                                                                         const QSSGShaderFeatures &featureSet,
                                                                         QByteArray &shaderString);
 
-    QSSGRef<QSSGRhiShaderPipeline> getRhiShaders(QSSGSubsetRenderable &inRenderable,
-                                               const QSSGShaderFeatures &inFeatureSet);
+    QSSGRef<QSSGRhiShaderPipeline> getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
+                                                                       const QSSGShaderFeatures &inFeatureSet);
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
 

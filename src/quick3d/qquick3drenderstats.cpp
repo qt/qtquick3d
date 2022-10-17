@@ -23,6 +23,7 @@ QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
     : QObject(parent)
 {
     m_frameTimer.start();
+    m_slowExtendedDataTimer.start();
 }
 
 /*!
@@ -471,6 +472,17 @@ void QQuick3DRenderStats::processRhiContextStats()
     }
 
     m_results.pipelineCount = pipelines.count();
+
+    m_results.materialGenerationTime = m_contextStats->globalInfo.materialGenerationTime;
+    m_results.effectGenerationTime = m_contextStats->globalInfo.effectGenerationTime;
+
+    // Whatever the frequency of calling this function is (probably per frame),
+    // we do not want to query the rhi statistics too often. Mainly to avoid
+    // querying the Vulkan Memory Allocator's statistics on every frame.
+    if (m_slowExtendedDataTimer.elapsed() > 2000) {
+        m_slowExtendedDataTimer.restart();
+        m_results.rhiStats = m_contextStats->context.rhi()->statistics();
+    }
 }
 
 void QQuick3DRenderStats::notifyRhiContextStats()
@@ -521,6 +533,31 @@ void QQuick3DRenderStats::notifyRhiContextStats()
     if (m_results.pipelineCount != m_notifiedResults.pipelineCount) {
         m_notifiedResults.pipelineCount = m_results.pipelineCount;
         emit pipelineCountChanged();
+    }
+
+    if (m_results.materialGenerationTime != m_notifiedResults.materialGenerationTime) {
+        m_notifiedResults.materialGenerationTime = m_results.materialGenerationTime;
+        emit materialGenerationTimeChanged();
+    }
+
+    if (m_results.effectGenerationTime != m_notifiedResults.effectGenerationTime) {
+        m_notifiedResults.effectGenerationTime = m_results.effectGenerationTime;
+        emit effectGenerationTimeChanged();
+    }
+
+    if (m_results.rhiStats.totalPipelineCreationTime != m_notifiedResults.rhiStats.totalPipelineCreationTime) {
+        m_notifiedResults.rhiStats.totalPipelineCreationTime = m_results.rhiStats.totalPipelineCreationTime;
+        emit pipelineCreationTimeChanged();
+    }
+
+    if (m_results.rhiStats.allocCount != m_notifiedResults.rhiStats.allocCount) {
+        m_notifiedResults.rhiStats.allocCount = m_results.rhiStats.allocCount;
+        emit vmemAllocCountChanged();
+    }
+
+    if (m_results.rhiStats.usedBytes != m_notifiedResults.rhiStats.usedBytes) {
+        m_notifiedResults.rhiStats.usedBytes = m_results.rhiStats.usedBytes;
+        emit vmemUsedBytesChanged();
     }
 }
 
@@ -573,6 +610,10 @@ quint64 QQuick3DRenderStats::drawVertexCount() const
 
     The value is updated only when extendedDataCollectionEnabled is enabled.
 
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
     \since 6.5
 */
 quint64 QQuick3DRenderStats::imageDataSize() const
@@ -590,6 +631,10 @@ quint64 QQuick3DRenderStats::imageDataSize() const
     those will likely report the same value.
 
     The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
 
     \since 6.5
 */
@@ -662,11 +707,152 @@ QString QQuick3DRenderStats::meshDetails() const
 
     The value is updated only when extendedDataCollectionEnabled is enabled.
 
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
     \since 6.5
 */
 int QQuick3DRenderStats::pipelineCount() const
 {
     return m_results.pipelineCount;
+}
+
+/*!
+    \qmlproperty qint64 QtQuick3D::RenderStats::materialGenerationTime
+    \readonly
+
+    This property holds the total number of milliseconds spent on generating
+    and processing shader code for \l DefaultMaterial, \l PrincipledMaterial,
+    and \l CustomMaterial in the window the \l View3D belongs to.
+
+    The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
+    \since 6.5
+*/
+qint64 QQuick3DRenderStats::materialGenerationTime() const
+{
+    return m_results.materialGenerationTime;
+}
+
+/*!
+    \qmlproperty qint64 QtQuick3D::RenderStats::effectGenerationTime
+    \readonly
+
+    This property holds the total number of milliseconds spent on generating
+    and processing shader code for post-processing effects in the window the \l
+    View3D belongs to.
+
+    The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
+    \since 6.5
+*/
+qint64 QQuick3DRenderStats::effectGenerationTime() const
+{
+    return m_results.effectGenerationTime;
+}
+
+/*!
+    \qmlproperty qint64 QtQuick3D::RenderStats::pipelineCreationTime
+    \readonly
+
+    This property holds the total number of milliseconds spent on creating
+    graphics pipelines on the rendering hardware interface level. This can
+    include, among other things: compilation times for compiling HLSL to an
+    intermediate format, compiling MSL, compiling GLSL code with
+    glCompileShader or linking using program binaries, and generating Vulkan
+    pipelines with all that entails (e.g. SPIR-V -> ISA compilation). The value
+    reflects all Qt Quick and Qt Quick 3D rendering in the window the \l View3D
+    belongs to.
+
+    \note The value includes operations that are under Qt's control. Depending
+    on the underlying graphics API, some pipeline (shader, graphics state)
+    related operations may happen asynchronously, and may be affected by
+    caching on various levels in the graphics stack. Releasing cached resource
+    by calling QQuickWindow::releaseResources() or clicking the corresponding
+    DebugView button may also have varying results, depending on the underlying
+    details (rhi backend, graphics API); it may or may not affect this counter
+    due to a varying number of factors.
+
+    This timing is provided as a general, high level indication. Combined with
+    \l materialGenerationTime, application developers can use these values to
+    confirm that the time spent on material and graphics pipeline processing is
+    reasonably low during the normal use of the application, once all caches
+    (both persistent and in-memory) are warm. Avoid drawing conclusions from
+    the first run of the application. (since that may not benefit from
+    persistent, disk-based caches yet)
+
+    The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
+    \note This value may update at a slightly lower frequency than others.
+
+    \since 6.5
+*/
+qint64 QQuick3DRenderStats::pipelineCreationTime() const
+{
+    return m_results.rhiStats.totalPipelineCreationTime;
+}
+
+/*!
+    \qmlproperty quint32 QtQuick3D::RenderStats::vmemAllocCount
+    \readonly
+
+    When applicable, the number of allocations made by the graphics memory
+    allocator library. This includes allocations from all Qt Quick and Qt Quick
+    3D rendering in the QQuickWindow to which the \l View3D belongs. The value
+    is zero with graphics APIs such as OpenGL, Direct3D, and Metal because
+    memory allocation is not under Qt's control then.
+
+    The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
+    \note This value may update at a slightly lower frequency than others.
+
+    \since 6.5
+*/
+quint32 QQuick3DRenderStats::vmemAllocCount() const
+{
+    return m_results.rhiStats.allocCount;
+}
+
+/*!
+    \qmlproperty quint64 QtQuick3D::RenderStats::vmemUsedBytes
+    \readonly
+
+    When applicable, the number of bytes used by allocations made by the
+    graphics memory allocator library. This includes allocations from all Qt
+    Quick and Qt Quick 3D rendering in the QQuickWindow to which the \l View3D
+    belongs. The value is zero with graphics APIs such as OpenGL, Direct3D, and
+    Metal because memory allocation is not under Qt's control then.
+
+    The value is updated only when extendedDataCollectionEnabled is enabled.
+
+    \note The value is reported on a per-QQuickWindow basis. If there are
+    multiple View3D instances within the same window, the DebugView shows the
+    same value for all those View3Ds.
+
+    \note This value may update at a slightly lower frequency than others.
+
+    \since 6.5
+*/
+quint64 QQuick3DRenderStats::vmemUsedBytes() const
+{
+    return m_results.rhiStats.usedBytes;
 }
 
 /*!

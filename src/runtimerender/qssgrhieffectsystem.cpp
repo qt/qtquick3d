@@ -409,6 +409,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const Q
 
 void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGRenderEffect *inEffect)
 {
+    QElapsedTimer timer;
+    timer.start();
+
     m_currentTextures.clear();
     m_pendingClears.clear();
     m_currentShaderPipeline = nullptr;
@@ -494,6 +497,8 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     } else {
         m_currentUBufData = nullptr;
     }
+
+    m_rhiContext->stats().registerEffectShaderGenerationTime(timer.elapsed());
 }
 
 void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target)
