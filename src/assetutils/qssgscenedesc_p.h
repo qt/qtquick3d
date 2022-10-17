@@ -81,13 +81,6 @@ struct Q_QUICK3DASSETUTILS_EXPORT Scene
     QString sourceDir;
     mutable quint16 nodeId = 0;
 
-    template<typename T, typename... Args>
-    Q_REQUIRED_RESULT inline auto create(Args&&... args)
-    {
-        using Tt = rm_cvref_t<T>;
-        return new Tt(std::forward<Args>(args)...);
-    }
-
     void reset();
 };
 
@@ -562,11 +555,12 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 {
      Q_ASSERT(node.scene);
     static_assert(std::is_trivially_destructible_v<rm_cvref_t<T>>, "Value needs to be trivially destructible!");
-    auto prop = node.scene->create<Property>();
+    auto prop = new Property;
     prop->name = name;
-    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<rm_cvref_t<T>>();
-    prop->value.dptr = node.scene->create<T>(std::forward<T>(value));
+    prop->call = new PropertySetter(setter);
+    using Tt = rm_cvref_t<T>;
+    prop->value.mt = QMetaType::fromType<Tt>();
+    prop->value.dptr = new Tt(std::forward<T>(value));
     node.properties.push_back(prop);
 }
 
@@ -574,11 +568,11 @@ template<typename Setter, typename T, if_compatible_t<Setter, QFlags<T>> = false
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QFlags<T> value)
 {
     Q_ASSERT(node.scene);
-    auto prop = node.scene->create<Property>();
+    auto prop = new Property;
     prop->name = name;
-    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
+    prop->call = new PropertySetter(setter);
     prop->value.mt = flagMetaType();
-    prop->value.dptr = node.scene->create<Flag>(Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) });
+    prop->value.dptr = new Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) };
     node.properties.push_back(prop);
 }
 
@@ -597,9 +591,9 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         data = malloc(asize); // is freed in ~ListView
         memcpy(data, value.constData(), asize);
     }
-    auto prop = node.scene->create<Property>();
+    auto prop = new Property;
     prop->name = name;
-    prop->call = node.scene->create<decltype(PropertyListSetter(setter))>(setter);
+    prop->call = new PropertyListSetter(setter);
     prop->value.mt = listViewMetaType();
     prop->value.dptr = new ListView{ { QMetaType::fromType<rm_cvref_t<T>>(), data }, count };
     node.properties.push_back(prop);
@@ -611,9 +605,9 @@ template<typename Setter>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QSSGSceneDesc::Value &&value)
 {
     Q_ASSERT(node.scene);
-    Property *prop = node.scene->create<Property>();
+    Property *prop = new Property;
     prop->name = name;
-    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
+    prop->call = new PropertySetter(setter);
     prop->value = value;
     node.properties.push_back(prop);
 }
@@ -623,14 +617,15 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 {
     Q_ASSERT(node.scene);
     static_assert(std::is_trivially_destructible_v<rm_cvref_t<Value>>, "Value needs to be trivially destructible!");
-    Property *prop = node.scene->create<Property>();
+    Property *prop = new Property;
     prop->name = name;
-    prop->call = node.scene->create<decltype(PropertyProxySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<rm_cvref_t<Value>>();
-    if constexpr (std::is_pointer_v<rm_cvref_t<Value>>)
+    prop->call = new PropertyProxySetter(setter);
+    using ValueT = rm_cvref_t<Value>;
+    prop->value.mt = QMetaType::fromType<ValueT>();
+    if constexpr (std::is_pointer_v<ValueT>)
         prop->value.dptr = value;
     else
-       prop->value.dptr = node.scene->create<Value>(std::forward<Value>(value));
+        prop->value.dptr = new ValueT(std::forward<Value>(value));
     prop->type = type;
     node.properties.push_back(prop);
 }
@@ -640,11 +635,12 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 {
     Q_ASSERT(node.scene);
     static_assert(std::is_same_v<typename ViewValue::type, typename FuncType<Setter>::Arg0Base>, "Type cannot be mapped to slot argument");
-    Property *prop = node.scene->create<Property>();
+    Property *prop = new Property;
     prop->name = name;
-    prop->call = node.scene->create<decltype(PropertySetter(setter))>(setter);
-    prop->value.mt = QMetaType::fromType<rm_cvref_t<ViewValue>>();
-    prop->value.dptr = node.scene->create<ViewValue>(std::move(view));
+    prop->call = new PropertySetter(setter);
+    using ViewValueT = rm_cvref_t<ViewValue>;
+    prop->value.mt = QMetaType::fromType<ViewValueT>();
+    prop->value.dptr = new ViewValueT(std::move(view));
     node.properties.push_back(prop);
 }
 
@@ -652,10 +648,9 @@ template<typename Setter, typename Value, if_compatible_t<Setter, as_scene_type_
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, Value *value)
 {
     Q_ASSERT(node.scene);
-    auto &scene = node.scene;
-    Property *prop = scene->create<Property>();
+    Property *prop = new Property;
     prop->name = name;
-    prop->call = scene->create<decltype(PropertySetter(setter))>(setter);
+    prop->call = new PropertySetter(setter);
     prop->value.mt = QMetaType::fromType<Node *>(); // Always 'Node', the Node class itself contains more fine grain type information.
     prop->value.dptr = value;
     node.properties.push_back(prop);
@@ -667,8 +662,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 {
     Q_ASSERT(node.scene);
     if (!list.isEmpty()) {
-        auto &scene = node.scene;
-        NodeList *l = scene->create<NodeList>();
+        NodeList *l = new NodeList;
         {
             const auto size = sizeof(Node *) * list.count();
             l->head = reinterpret_cast<Node **>(malloc(size)); // is freed in ~NodeList()
@@ -676,9 +670,9 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
             l->count = list.size();
         }
 
-        Property *prop = scene->create<Property>();
+        Property *prop = new Property;
         prop->name = name;
-        prop->call = scene->create<decltype(PropertyList(setter))>(setter);
+        prop->call = new PropertyList(setter);
         prop->value.mt = QMetaType::fromType<QSSGSceneDesc::NodeList *>();
         prop->value.dptr = l;
         node.properties.push_back(prop);

@@ -345,7 +345,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                     // Use the source file name as the identifier, since that will hopefully be fairly stable for re-import.
                     // If it's embedded, "*0" will be converted to "_0_texture" when writing to QML.
                     QByteArray name = texturePath.C_Str();
-                    tex = scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D, name);
+                    tex = new QSSGSceneDesc::Texture(QSSGSceneDesc::Texture::RuntimeType::Image2D, name);
                     textureMap.insert(TextureEntry{fromAiString(texturePath), texInfo, tex});
 
                     QSSGSceneDesc::addNode(target, *tex);
@@ -372,7 +372,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                                 QByteArray imageData { reinterpret_cast<const char *>(sourceTexture->pcData), asize };
                                 const auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
                                 const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
-                                textureData = scene->create<QSSGSceneDesc::TextureData>(imageData, size, format, flags);
+                                textureData = new QSSGSceneDesc::TextureData(imageData, size, format, flags);
                                 QSSGSceneDesc::addNode(*tex, *textureData);
                                 Q_ASSERT(idx >= 0 && idx < textureCount);
                                 embeddedTextures[idx] = textureData;
@@ -1094,7 +1094,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
             if (result == aiReturn_SUCCESS)
                 currentMaterialType = QSSGSceneDesc::Material::RuntimeType::SpecularGlossyMaterial;
 
-            targetMat = targetScene->create<QSSGSceneDesc::Material>(currentMaterialType);
+            targetMat = new QSSGSceneDesc::Material(currentMaterialType);
             QSSGSceneDesc::addNode(target, *targetMat);
             setMaterialProperties(*targetMat, *sourceMat, sceneInfo, currentMaterialType);
             material.second = targetMat;
@@ -1134,7 +1134,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
         const auto idx = meshStorage.size() - 1;
         // For multimeshes we'll use the model name, but for single meshes we'll use the mesh name.
-        return targetScene->create<QSSGSceneDesc::Mesh>(fromAiString(name), idx);
+        return new QSSGSceneDesc::Mesh(fromAiString(name), idx);
     };
 
     QSSGSceneDesc::Mesh *meshNode = nullptr;
@@ -1166,7 +1166,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
 
     if (skinIdx != -1) {
         auto &skin = skinMap[skinIdx];
-        skin.node = targetScene->create<QSSGSceneDesc::Skin>();
+        skin.node = new QSSGSceneDesc::Skin;
         QSSGSceneDesc::setProperty(target, "skin", &QQuick3DModel::setSkin, skin.node);
         QSSGSceneDesc::addNode(target, *skin.node);
         // Skins' properties wil be set after all the nodes are processed
@@ -1192,7 +1192,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
     {
         const auto &srcType = *srcScene.mCameras[nodeInfo.index];
         // We set the initial rt-type to 'Custom', but we'll change it when updateing the properties.
-        auto targetType = targetScene->create<QSSGSceneDesc::Camera>(QSSGSceneDesc::Node::RuntimeType::CustomCamera);
+        auto targetType = new QSSGSceneDesc::Camera(QSSGSceneDesc::Node::RuntimeType::CustomCamera);
         QSSGSceneDesc::addNode(parent, *targetType);
         setCameraProperties(*targetType, srcType, srcNode);
         node = targetType;
@@ -1202,7 +1202,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
     {
         const auto &srcType = *srcScene.mLights[nodeInfo.index];
         // Initial type is DirectonalLight, but will be change (if needed) when setting the properties.
-        auto targetType = targetScene->create<QSSGSceneDesc::Light>(QSSGSceneDesc::Node::RuntimeType::DirectionalLight);
+        auto targetType = new QSSGSceneDesc::Light(QSSGSceneDesc::Node::RuntimeType::DirectionalLight);
         QSSGSceneDesc::addNode(parent, *targetType);
         setLightProperties(*targetType, srcType, srcNode);
         node = targetType;
@@ -1210,7 +1210,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         break;
     case QSSGSceneDesc::Node::Type::Model:
     {
-        auto target = targetScene->create<QSSGSceneDesc::Model>();
+        auto target = new QSSGSceneDesc::Model;
         QSSGSceneDesc::addNode(parent, *target);
         setModelProperties(*target, srcNode, sceneInfo);
         node = target;
@@ -1218,7 +1218,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         break;
     case QSSGSceneDesc::Node::Type::Joint:
     {
-        auto target = targetScene->create<QSSGSceneDesc::Joint>();
+        auto target = new QSSGSceneDesc::Joint;
         QSSGSceneDesc::addNode(parent, *target);
         setNodeProperties(*target, srcNode, nullptr);
         QSSGSceneDesc::setProperty(*target, "index", &QQuick3DJoint::setIndex, qint32(nodeInfo.index));
@@ -1227,7 +1227,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         break;
     case QSSGSceneDesc::Node::Type::Transform:
     {
-        node = targetScene->create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
+        node = new QSSGSceneDesc::Node(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(parent, *node);
         // TODO: arguments for correction
         setNodeProperties(*node, srcNode, nullptr);
@@ -1264,7 +1264,7 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
             for (int i = 0, end = morphProps.size(); i != end; ++i) {
                 const auto morphProp = morphProps.at(i);
 
-                auto morphNode = targetScene->create<QSSGSceneDesc::MorphTarget>();
+                auto morphNode = new QSSGSceneDesc::MorphTarget;
                 QSSGSceneDesc::addNode(*node, *morphNode);
                 QSSGSceneDesc::setProperty(*morphNode, "weight", &QQuick3DMorphTarget::setWeight, morphProp.second);
                 QSSGSceneDesc::setProperty(*morphNode, "attributes", &QQuick3DMorphTarget::setAttributes, morphProp.first);
@@ -1463,7 +1463,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     SceneInfo::TextureMap textureMap;
 
     if (!targetScene.root) {
-        auto root = targetScene.create<QSSGSceneDesc::Node>(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
+        auto root = new QSSGSceneDesc::Node(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(targetScene, *root);
     }
 
@@ -1527,12 +1527,12 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         targetChannel.target = targetNode;
                         for (It posKeyIdx = 0; posKeyIdx != posKeyEnd; ++posKeyIdx) {
                             const auto &posKey = srcChannel.mPositionKeys[posKeyIdx];
-                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(posKey, freq));
+                            const auto animationKey = new Animation::KeyPosition(toAnimationKey(posKey, freq));
                             targetChannel.keys.push_back(animationKey);
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
-                            channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
+                            channels.push_back(new Animation::Channel(targetChannel));
                             float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime);
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
@@ -1546,12 +1546,12 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         targetChannel.target = targetNode;
                         for (It rotKeyIdx = 0; rotKeyIdx != rotKeyEnd; ++rotKeyIdx) {
                             const auto &rotKey = srcChannel.mRotationKeys[rotKeyIdx];
-                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(rotKey, freq));
+                            const auto animationKey = new Animation::KeyPosition(toAnimationKey(rotKey, freq));
                             targetChannel.keys.push_back(animationKey);
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
-                            channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
+                            channels.push_back(new Animation::Channel(targetChannel));
                             float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime);
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
@@ -1565,12 +1565,12 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                         targetChannel.target = targetNode;
                         for (It scaleKeyIdx = 0; scaleKeyIdx != scaleKeyEnd; ++scaleKeyIdx) {
                             const auto &scaleKey = srcChannel.mScalingKeys[scaleKeyIdx];
-                            const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(scaleKey, freq));
+                            const auto animationKey = new Animation::KeyPosition(toAnimationKey(scaleKey, freq));
                             targetChannel.keys.push_back(animationKey);
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
-                            channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
+                            channels.push_back(new Animation::Channel(targetChannel));
                             float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime);
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
@@ -1597,11 +1597,11 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
                     targetChannel.target = targetNode;
                     for (It wId = 0; wId != weightKeyEnd; ++wId) {
                         const auto &weightKey = srcMorphChannel.mKeys[wId];
-                        const auto animationKey = targetScene.create<Animation::KeyPosition>(toAnimationKey(weightKey, freq, targetId));
+                        const auto animationKey = new Animation::KeyPosition(toAnimationKey(weightKey, freq, targetId));
                         targetChannel.keys.push_back(animationKey);
                     }
                     if (!targetChannel.keys.isEmpty()) {
-                        channels.push_back(targetScene.create<Animation::Channel>(targetChannel));
+                        channels.push_back(new Animation::Channel(targetChannel));
                         float endTime = float(srcMorphChannel.mKeys[weightKeyEnd - 1].mTime);
                         if (targetAnimation.length < endTime)
                             targetAnimation.length = endTime;
@@ -1612,7 +1612,7 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 
         // If we have data we need to make it persistent.
         if (!targetAnimation.channels.isEmpty())
-            targetScene.animations.push_back(targetScene.create<Animation>(targetAnimation));
+            targetScene.animations.push_back(new Animation(targetAnimation));
     };
 
     // All scene nodes should now be created (and ready), so let's go through the animation data.

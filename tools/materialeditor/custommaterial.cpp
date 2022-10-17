@@ -86,9 +86,9 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
                 auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
                 const auto &baseName = QString(fi.baseName() + QString::number(material.id));
                 auto name = baseName.toUtf8();
-                auto textureData = material.scene->create<QSSGSceneDesc::TextureData>(dataref, resSize, format, 0, name);
+                auto textureData = new QSSGSceneDesc::TextureData(dataref, resSize, format, 0, name);
                 QSSGSceneDesc::addNode(material, *textureData);
-                auto texture = material.scene->create<QSSGSceneDesc::Texture>(QSSGSceneDesc::Texture::RuntimeType::Image2D);
+                auto texture = new QSSGSceneDesc::Texture(QSSGSceneDesc::Texture::RuntimeType::Image2D);
                 QSSGSceneDesc::addNode(material, *texture);
                 QSSGSceneDesc::setProperty(*texture, "textureData", &QQuick3DTexture::setTextureData, textureData);
                 QSSGSceneDesc::setProperty(material, uniform.name.constData(), &setProperty<QSSGSceneDesc::Texture *>, texture, Dynamic);
@@ -109,7 +109,7 @@ QPointer<QQuick3DCustomMaterial> CustomMaterial::create(QQuick3DNode &parent, co
     if (scene.root)
         scene.reset();
 
-    QSSGSceneDesc::Material *material = scene.create<Material>(Material::RuntimeType::CustomMaterial);
+    QSSGSceneDesc::Material *material = new Material(Material::RuntimeType::CustomMaterial);
     addNode(scene, *material);
 
     // Set uniforms
