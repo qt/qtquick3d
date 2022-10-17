@@ -157,7 +157,6 @@ private:
     QSSGRhiContextStats *m_contextStats = nullptr;
     bool m_extendedDataCollectionEnabled = false;
     QSSGRenderLayer *m_layer = nullptr;
-    QElapsedTimer m_slowExtendedDataTimer;
 };
 
 QT_END_NAMESPACE

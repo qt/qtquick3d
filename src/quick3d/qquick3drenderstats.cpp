@@ -23,7 +23,6 @@ QQuick3DRenderStats::QQuick3DRenderStats(QObject *parent)
     : QObject(parent)
 {
     m_frameTimer.start();
-    m_slowExtendedDataTimer.start();
 }
 
 /*!
@@ -476,13 +475,7 @@ void QQuick3DRenderStats::processRhiContextStats()
     m_results.materialGenerationTime = m_contextStats->globalInfo.materialGenerationTime;
     m_results.effectGenerationTime = m_contextStats->globalInfo.effectGenerationTime;
 
-    // Whatever the frequency of calling this function is (probably per frame),
-    // we do not want to query the rhi statistics too often. Mainly to avoid
-    // querying the Vulkan Memory Allocator's statistics on every frame.
-    if (m_slowExtendedDataTimer.elapsed() > 2000) {
-        m_slowExtendedDataTimer.restart();
-        m_results.rhiStats = m_contextStats->context.rhi()->statistics();
-    }
+    m_results.rhiStats = m_contextStats->context.rhi()->statistics();
 }
 
 void QQuick3DRenderStats::notifyRhiContextStats()
@@ -796,8 +789,6 @@ qint64 QQuick3DRenderStats::effectGenerationTime() const
     multiple View3D instances within the same window, the DebugView shows the
     same value for all those View3Ds.
 
-    \note This value may update at a slightly lower frequency than others.
-
     \since 6.5
 */
 qint64 QQuick3DRenderStats::pipelineCreationTime() const
@@ -821,8 +812,6 @@ qint64 QQuick3DRenderStats::pipelineCreationTime() const
     multiple View3D instances within the same window, the DebugView shows the
     same value for all those View3Ds.
 
-    \note This value may update at a slightly lower frequency than others.
-
     \since 6.5
 */
 quint32 QQuick3DRenderStats::vmemAllocCount() const
@@ -845,8 +834,6 @@ quint32 QQuick3DRenderStats::vmemAllocCount() const
     \note The value is reported on a per-QQuickWindow basis. If there are
     multiple View3D instances within the same window, the DebugView shows the
     same value for all those View3Ds.
-
-    \note This value may update at a slightly lower frequency than others.
 
     \since 6.5
 */
