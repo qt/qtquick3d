@@ -50,7 +50,7 @@ ApplicationWindow {
         nameFilters: [ "Material Editor Project (*.qmp)"]
         currentFolder: projectFolder
         onAccepted: {
-            if (openMaterialDialog.selectedFile != null)
+            if (openMaterialDialog.selectedFile !== null)
                 materialAdapter.loadMaterial(openMaterialDialog.selectedFile);
         }
     }
@@ -71,7 +71,7 @@ ApplicationWindow {
         nameFilters: [ "Fragment Shader (*.frag *.fs *.glsl)" ]
         currentFolder: projectFolder
         onAccepted: {
-            if (fragmentShaderImportDialog.selectedFile != null) {
+            if (fragmentShaderImportDialog.selectedFile !== null) {
                 materialAdapter.importFragmentShader(fragmentShaderImportDialog.selectedFile)
             }
         }
@@ -83,7 +83,7 @@ ApplicationWindow {
         nameFilters: [ "Vertex Shader (*.vert *.vs *.glsl)" ]
         currentFolder: projectFolder
         onAccepted: {
-            if (vertexShaderImportDialog.selectedFile != null) {
+            if (vertexShaderImportDialog.selectedFile !== null) {
                 materialAdapter.importVertexShader(vertexShaderImportDialog.selectedFile)
             }
         }
@@ -96,7 +96,7 @@ ApplicationWindow {
         fileMode: FileDialog.SaveFile
         currentFolder: projectFolder
         onAccepted: {
-            if (selectedFile != null)
+            if (selectedFile !== null)
                 componentFilePath.text = selectedFile
         }
     }
