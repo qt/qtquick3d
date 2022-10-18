@@ -16,7 +16,7 @@ ApplicationWindow {
     height: 720
     width: 1024
     visible: true
-    title: qsTr("Material Editor")
+    title: qsTr("Custom Material Editor")
 
     // Context property (see main.cpp)
     property url projectFolder: _qtProjectDir
