@@ -28,7 +28,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Look-at Node")
-            tooltip: qsTr("Contains the look-at node for the camera.")
+            tooltip: qsTr("Sets the look-at node for the camera.")
         }
 
         SecondColumnLayout {

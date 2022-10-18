@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Target")
-            tooltip: qsTr("The name of the uniform to change value for a pass.")
+            tooltip: qsTr("Sets the name of the uniform to change value for a pass.")
         }
 
         SecondColumnLayout {
@@ -30,7 +30,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Value")
-            tooltip: qsTr("The value of the uniform.")
+            tooltip: qsTr("Sets the value of the uniform.")
         }
 
         SecondColumnLayout {

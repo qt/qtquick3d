@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Clear Color")
-                tooltip: qsTr("This property defines which color will be used to clear the viewport when using SceneEnvironment.Color for the backgroundMode property.")
+                tooltip: qsTr("Sets which color will be used to clear the viewport when using SceneEnvironment.Color for the backgroundMode property.")
             }
 
             ColorEditor {
@@ -26,13 +26,13 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Background Mode")
-                tooltip: qsTr("Controls if and how the background of the scene should be cleared.")
+                tooltip: qsTr("Sets if and how the background of the scene should be cleared.")
             }
 
             SecondColumnLayout {
                 ComboBox {
                     scope: "SceneEnvironment"
-                    model: ["Transparent", "Unspecified", "Color", "SkyBox"]
+                    model: ["Transparent", "Unspecified", "Color", "SkyBox", "SkyBoxCubeMap"]
                     backendValue: backendValues.backgroundMode
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -43,7 +43,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Skybox Blur")
-                tooltip: qsTr("This property defines how much to blur the skybox when using SceneEnvironment.SkyBox for the backgroundMode property.")
+                tooltip: qsTr("Sets how much to blur the skybox when using SceneEnvironment.SkyBox for the backgroundMode property.")
             }
 
             SecondColumnLayout {
@@ -51,7 +51,24 @@ Column {
                     minimumValue: 0
                     maximumValue: 1
                     decimals: 2
+                    stepSize: 0.01
                     backendValue: backendValues.skyboxBlurAmount
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Skybox Cube Map")
+                tooltip: qsTr("Sets a cubemap to be used as a skybox when the background mode is SkyBoxCubeMap.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.CubeMapTexture"
+                    backendValue: backendValues.skyBoxCubeMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
                 }
@@ -77,7 +94,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Enable Depth Prepass")
-                tooltip: qsTr("Draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity.")
+                tooltip: qsTr("Enables draw depth buffer as a separate pass. Disable to optimize render speed for layers with low depth complexity.")
             }
 
             SecondColumnLayout {
@@ -93,7 +110,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Effect")
-                tooltip: qsTr("A post-processing effect applied to this scene.")
+                tooltip: qsTr("Sets a post-processing effect applied to this scene.")
                 Layout.alignment: Qt.AlignTop
                 Layout.topMargin: 5
             }
@@ -115,7 +132,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Tonemap Mode")
-                tooltip: qsTr("This property defines how colors are tonemapped before rendering.")
+                tooltip: qsTr("Sets how colors are tonemapped before rendering.")
             }
 
             SecondColumnLayout {
@@ -172,6 +189,22 @@ Column {
             }
 
             PropertyLabel {
+                text: qsTr("Specular AA")
+                tooltip: qsTr("Enables specular antialiasing.")
+            }
+
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.specularAAEnabled.valueToString
+                    backendValue: backendValues.specularAAEnabled
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
                 text: qsTr("Temporal AA")
                 tooltip: qsTr("Enables temporal antialiasing using camera jittering and frame blending.")
             }
@@ -215,7 +248,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Strength")
-                tooltip: qsTr("This property defines the amount of ambient occulusion applied.")
+                tooltip: qsTr("Sets the amount of ambient occulusion applied.")
             }
 
             SecondColumnLayout {
@@ -233,7 +266,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Distance")
-                tooltip: qsTr("This property defines roughly how far ambient occlusion shadows spread away from objects.")
+                tooltip: qsTr("Sets roughly how far ambient occlusion shadows spread away from objects.")
             }
 
             SecondColumnLayout {
@@ -251,7 +284,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Softness")
-                tooltip: qsTr("This property how smooth the edges of the ambient occlusion shading are.")
+                tooltip: qsTr("Sets how smooth the edges of the ambient occlusion shading are.")
             }
 
             SecondColumnLayout {
@@ -269,7 +302,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Sample Rate")
-                tooltip: qsTr("This property defines ambient occlusion quality (more shades of gray) at the expense of performance.")
+                tooltip: qsTr("Sets ambient occlusion quality (more shades of gray) at the expense of performance.")
             }
 
             SecondColumnLayout {
@@ -287,7 +320,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Bias")
-                tooltip: qsTr("This property defines a cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
+                tooltip: qsTr("Sets a cutoff distance preventing objects from exhibiting ambient occlusion at close distances.")
             }
 
             SecondColumnLayout {
@@ -305,7 +338,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Dither")
-                tooltip: qsTr("When this property is enabled it scatters the edges of the ambient occlusion shadow bands to improve smoothness.")
+                tooltip: qsTr("Enables scattering the edges of the ambient occlusion shadow bands to improve smoothness.")
             }
 
             SecondColumnLayout {
@@ -329,7 +362,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Image")
-                tooltip: qsTr("This property defines an image, to use to light the scene, either instead of or in addition to standard lights.")
+                tooltip: qsTr("Sets an image to use to light the scene, either instead of, or in addition to standard lights.")
             }
 
             SecondColumnLayout {
@@ -345,7 +378,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Exposure")
-                tooltip: qsTr("This property modifies the amount of light emitted by the light probe.")
+                tooltip: qsTr("Sets the amount of light emitted by the light probe.")
             }
 
             SecondColumnLayout {
@@ -363,7 +396,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Horizon")
-                tooltip: qsTr("This property when defined with increasing values adds darkness (black) to the bottom half of the environment, forcing the lighting to come predominantly from the top of the image.")
+                tooltip: qsTr("Sets the light probe horizon. When set, adds darkness (black) to the bottom of the environment, forcing the lighting to come predominantly from the top of the image.")
             }
 
             SecondColumnLayout {
@@ -381,7 +414,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Orientation")
-                tooltip: qsTr("This property when defines the orientation of the light probe. Orientation is defined in terms of euler angles in degrees over the x, y, and z axes.")
+                tooltip: qsTr("Sets the orientation of the light probe.")
             }
 
             SecondColumnLayout {

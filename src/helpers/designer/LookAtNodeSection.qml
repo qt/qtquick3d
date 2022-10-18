@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Target Node")
-                tooltip: qsTr("Contains the target node to look at.")
+                tooltip: qsTr("Sets the target node to look at.")
             }
 
             SecondColumnLayout {

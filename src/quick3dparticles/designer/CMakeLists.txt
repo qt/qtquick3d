@@ -24,6 +24,8 @@ qt_copy_or_install(
         NodeSection.qml
         NodeSpecifics.qml
         IdComboBox.qml
+        ParticleCustomShape3DSection.qml
+        ParticleCustomShape3DSpecifics.qml
         ParticleModelShape3DSection.qml
         ParticleModelShape3DSpecifics.qml
         PointRotator3DSection.qml

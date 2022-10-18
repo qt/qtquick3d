@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Horizontal Lines")
-                tooltip: qsTr("Number of horizontal lines in the grid.")
+                tooltip: qsTr("Sets the number of horizontal lines in the grid.")
             }
 
             SecondColumnLayout {
@@ -34,7 +34,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Vertical Lines")
-                tooltip: qsTr("Number of vertical lines in the grid.")
+                tooltip: qsTr("Sets the number of vertical lines in the grid.")
             }
 
             SecondColumnLayout {
@@ -52,7 +52,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Horizontal Step")
-                tooltip: qsTr("The space between horizontal lines.")
+                tooltip: qsTr("Sets the space between horizontal lines.")
             }
 
             SecondColumnLayout {
@@ -71,7 +71,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Vertical Step")
-                tooltip: qsTr("The space between vertical lines.")
+                tooltip: qsTr("Sets the space between vertical lines.")
             }
 
             SecondColumnLayout {

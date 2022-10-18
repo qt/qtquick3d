@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Segments")
-            tooltip: qsTr("This property defines the segment count of the line.")
+            tooltip: qsTr("Sets the segment count of the line.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -30,13 +30,14 @@ Section {
 
         PropertyLabel {
             text: qsTr("Alpha Fade")
-            tooltip: qsTr("This property defines the line fade amount per segment.")
+            tooltip: qsTr("Sets the line fade amount per segment.")
         }
 
         SecondColumnLayout {
             SpinBox {
                 minimumValue: 0.0
                 maximumValue: 1.0
+                stepSize: 0.01
                 decimals: 2
                 backendValue: backendValues.alphaFade
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -48,7 +49,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Scale Multiplier")
-            tooltip: qsTr("This property defines the scale multiplier per segment.")
+            tooltip: qsTr("Sets the scale multiplier per segment.")
         }
 
         SecondColumnLayout {
@@ -56,6 +57,7 @@ Section {
                 minimumValue: 0.0
                 maximumValue: 2.0
                 decimals: 2
+                stepSize: 0.01
                 backendValue: backendValues.scaleMultiplier
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -66,7 +68,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Texcoord Multiplier")
-            tooltip: qsTr("This property defines the texture coordinate multiplier of the line.")
+            tooltip: qsTr("Sets the texture coordinate multiplier of the line.")
         }
 
         SecondColumnLayout {
@@ -84,7 +86,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Texcoord Mode")
-            tooltip: qsTr("This property defines the texture coordinate mode of the line.")
+            tooltip: qsTr("Sets the texture coordinate mode of the line.")
         }
 
         SecondColumnLayout {
@@ -101,7 +103,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Line Length")
-            tooltip: qsTr("This property defines the length of the line.")
+            tooltip: qsTr("Sets the length of the line.")
         }
 
         SecondColumnLayout {
@@ -119,7 +121,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Line Length Variation")
-            tooltip: qsTr("This property defines the length variation of the line.")
+            tooltip: qsTr("Sets the length variation of the line.")
         }
 
         SecondColumnLayout {
@@ -136,8 +138,8 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Minimum Segment Length")
-            tooltip: qsTr("This property defines the minimum length between line segments.")
+            text: qsTr("Min Segment Length")
+            tooltip: qsTr("Sets the minimum length between line segments.")
         }
 
         SecondColumnLayout {
@@ -154,8 +156,8 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("EOL Fade Out Duration")
-            tooltip: qsTr("This property defines the fade out duration after the end of particle lifetime.")
+            text: qsTr("EOL Fade Out")
+            tooltip: qsTr("Sets the fade out duration after the end of particle lifetime.")
         }
 
         SecondColumnLayout {

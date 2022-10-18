@@ -33,7 +33,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Opacity")
-                tooltip: qsTr("Controls the local opacity value of the node.")
+                tooltip: qsTr("Sets the local opacity value of the node.")
             }
 
             SecondColumnLayout {

@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Source")
-            tooltip: qsTr("Shader source code.")
+            tooltip: qsTr("Sets the shader source code.")
         }
 
         SecondColumnLayout {
@@ -27,7 +27,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Stage")
-            tooltip: qsTr("Shader stage.")
+            tooltip: qsTr("Sets the shader stage.")
         }
 
         SecondColumnLayout {

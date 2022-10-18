@@ -50,7 +50,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Horizontal Magnification")
-            tooltip: qsTr("This property holds the horizontal magnification of the OrthographicCamera's frustum.")
+            tooltip: qsTr("Sets the horizontal magnification of the OrthographicCamera's frustum.")
         }
 
         SecondColumnLayout {
@@ -68,7 +68,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Vertical Magnification")
-            tooltip: qsTr("This property holds the vertical magnification of the OrthographicCamera's frustum.")
+            tooltip: qsTr("Sets the vertical magnification of the OrthographicCamera's frustum.")
         }
 
         SecondColumnLayout {

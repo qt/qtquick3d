@@ -19,7 +19,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Color")
-                    tooltip: qsTr("This property specifies the color for the instance.")
+                    tooltip: qsTr("Sets the color for the instance.")
                 }
 
                 ColorEditor {
@@ -31,7 +31,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Position")
-                    tooltip: qsTr("This property specifies the position for the instance.")
+                    tooltip: qsTr("Sets the position for the instance.")
                 }
 
                 SecondColumnLayout {
@@ -102,7 +102,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Scale")
-                    tooltip: qsTr("This property specifies the scale for the instance.")
+                    tooltip: qsTr("Sets the scale for the instance.")
                 }
 
                 SecondColumnLayout {
@@ -173,7 +173,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Rotation")
-                    tooltip: qsTr("This property specifies the rotation for the instance.")
+                    tooltip: qsTr("Sets the rotation for the instance.")
                 }
 
                 SecondColumnLayout {

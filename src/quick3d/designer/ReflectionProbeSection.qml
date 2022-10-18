@@ -150,7 +150,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Parallax Correction")
-            tooltip: qsTr("Reflection maps are considered to be at infinite distance by default. This is unsuitable for indoor area as it produces parallax issues.\nSetting this property to true, corrects the cubemap by taking the camera position and the box's dimension into account")
+            tooltip: qsTr("Reflection maps are considered to be at infinite distance by default. This is unsuitable for indoor area as it produces parallax issues.\nSetting this property to true corrects the cubemap by taking the camera position and the box's dimension into account.")
         }
 
         SecondColumnLayout {
@@ -166,7 +166,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Debug View")
-            tooltip: qsTr("Render a wireframe to visualize the reflection probe box.")
+            tooltip: qsTr("Enables rendering a wireframe to visualize the reflection probe box.")
         }
 
         SecondColumnLayout {
@@ -182,7 +182,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Clear Color")
-            tooltip: qsTr("The property defines the color that will be used to clear the reflection map.")
+            tooltip: qsTr("Sets the color that will be used to clear the reflection map.")
         }
 
         ColorEditor {

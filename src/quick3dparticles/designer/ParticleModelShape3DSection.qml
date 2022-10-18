@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Fill")
-            tooltip: qsTr("This property defines if the shape should be filled or just use the shape outlines.")
+            tooltip: qsTr("Sets if the shape should be filled or just use the shape outlines.")
         }
 
         SecondColumnLayout {

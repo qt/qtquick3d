@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Commands")
-            tooltip: qsTr("Render commands of the pass.")
+            tooltip: qsTr("Sets the render commands of the pass.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }
@@ -35,7 +35,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Buffer")
-            tooltip: qsTr("Output buffer for the pass.")
+            tooltip: qsTr("Sets the output buffer for the pass.")
         }
 
         SecondColumnLayout {
@@ -51,7 +51,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Shaders")
-            tooltip: qsTr("Shaders for the pass.")
+            tooltip: qsTr("Sets the shaders for the pass.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }

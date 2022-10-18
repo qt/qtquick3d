@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Blend Mode")
-            tooltip: qsTr("This property defines the blending mode used for rendering the particles.")
+            tooltip: qsTr("Sets the blending mode used for rendering the particles.")
         }
 
         SecondColumnLayout {
@@ -47,7 +47,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Sprite")
-            tooltip: qsTr("This property defines the Texture used for the particles.")
+            tooltip: qsTr("Sets the Texture used for the particles.")
         }
 
         SecondColumnLayout {
@@ -63,7 +63,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Sprite Sequence")
-            tooltip: qsTr("This property defines the sprite sequence properties for the particle.")
+            tooltip: qsTr("Sets the sprite sequence properties for the particle.")
         }
 
         SecondColumnLayout {
@@ -79,7 +79,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Billboard")
-            tooltip: qsTr("This property defines if the particle texture should always be aligned face towards the screen.")
+            tooltip: qsTr("Sets if the particle texture should always be aligned face towards the screen.")
         }
 
         SecondColumnLayout {
@@ -96,7 +96,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Particle Scale")
-            tooltip: qsTr("This property defines the scale multiplier of the particles.")
+            tooltip: qsTr("Sets the scale multiplier of the particles.")
         }
 
         SecondColumnLayout {
@@ -114,7 +114,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Color Table")
-            tooltip: qsTr("This property defines the Texture used for coloring the particles.")
+            tooltip: qsTr("Sets the Texture used for coloring the particles.")
         }
 
         SecondColumnLayout {
@@ -130,7 +130,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Lights")
-            tooltip: qsTr("This property defines the lights used for the particles.")
+            tooltip: qsTr("Sets the lights used for the particles.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }
@@ -166,7 +166,7 @@ Section {
             Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
             ControlLabel {
-                text: "Offset X"
+                text: "X"
                 tooltip: qsTr("Offsets the X coordinate.")
             }
 
@@ -185,7 +185,7 @@ Section {
             Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
 
             ControlLabel {
-                text: "Offset Y"
+                text: "Y"
                 tooltip: qsTr("Offsets the Y coordinate.")
             }
 

@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Direction")
-            tooltip: qsTr("This property defines the direction for particles target.")
+            tooltip: qsTr("Sets the direction for particles target.")
         }
 
         SecondColumnLayout {
@@ -82,7 +82,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Direction Variation")
-            tooltip: qsTr("This property defines the direction variation for particles target.")
+            tooltip: qsTr("Sets the direction variation for particles target.")
         }
 
         SecondColumnLayout {
@@ -151,7 +151,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Normalized")
-            tooltip: qsTr("This property defines if the direction should be normalized after applying the variation.")
+            tooltip: qsTr("Sets if the direction should be normalized after applying the variation.")
         }
 
         SecondColumnLayout {

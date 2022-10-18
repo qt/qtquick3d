@@ -29,7 +29,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("End Node")
-            tooltip: qsTr("This property holds the node that specifies the transformation for the model at the end of particle effect.")
+            tooltip: qsTr("Sets the node that specifies the transformation for the model at the end of particle effect.")
         }
 
         SecondColumnLayout {
@@ -45,7 +45,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Model Blend Mode")
-            tooltip: qsTr("This property holds blending mode for the particle effect.")
+            tooltip: qsTr("Sets blending mode for the particle effect.")
         }
 
         SecondColumnLayout {
@@ -62,7 +62,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("End Time")
-            tooltip: qsTr("This property holds the end time of the particle in milliseconds.")
+            tooltip: qsTr("Sets the end time of the particle in milliseconds.")
         }
 
         SecondColumnLayout {
@@ -80,7 +80,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Activation Node")
-            tooltip: qsTr("This property holds a node that activates particles.")
+            tooltip: qsTr("Sets a node that activates particles.")
         }
 
         SecondColumnLayout {
@@ -96,7 +96,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Emit Mode")
-            tooltip: qsTr("This property holds emit mode of the particles.")
+            tooltip: qsTr("Sets emit mode of the particles.")
         }
 
         SecondColumnLayout {

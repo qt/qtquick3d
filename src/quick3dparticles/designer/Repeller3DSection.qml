@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Radius")
-            tooltip: qsTr("This property defines the radius of the effect.")
+            tooltip: qsTr("Sets the radius of the effect.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Outer Radius")
-            tooltip: qsTr("This property defines the outer radius of the effect.")
+            tooltip: qsTr("Sets the outer radius of the effect.")
         }
 
         SecondColumnLayout {
@@ -49,7 +49,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Strength")
-            tooltip: qsTr("This property defines the strength of the effect.")
+            tooltip: qsTr("Sets the strength of the effect.")
         }
 
         SecondColumnLayout {

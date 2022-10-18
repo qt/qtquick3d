@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Opacity")
-                tooltip: qsTr("Controls the local opacity value of the node.")
+                tooltip: qsTr("Sets the local opacity value of the node.")
             }
 
             SecondColumnLayout {
@@ -47,23 +47,6 @@ Column {
                     backendValue: backendValues.visible
                     implicitWidth: StudioTheme.Values.twoControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
-                text: qsTr("Static flags")
-                tooltip: qsTr("This property defines the static flags that are used to evaluate how the node is rendered.")
-            }
-
-            SecondColumnLayout {
-                LineEdit {
-                    backendValue: backendValues.staticFlags
-                    showTranslateCheckBox: false
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                    width: implicitWidth
                 }
 
                 ExpandingSpacer {}

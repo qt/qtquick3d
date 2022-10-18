@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Fill")
-            tooltip: qsTr("This property defines if the shape should be filled or just use the shape outlines.")
+            tooltip: qsTr("Sets if the shape should be filled or just use the shape outlines.")
         }
 
         SecondColumnLayout {
@@ -30,7 +30,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Type")
-            tooltip: qsTr("This property defines the type of the shape.")
+            tooltip: qsTr("Sets the type of the shape.")
         }
 
         SecondColumnLayout {
@@ -47,7 +47,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Extents")
-            tooltip: qsTr("This property defines the extents of the shape.")
+            tooltip: qsTr("Sets the extents of the shape.")
         }
 
         SecondColumnLayout {

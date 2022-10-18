@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Frame Count")
-            tooltip: qsTr("This property defines the amount of image frames in sprite.")
+            tooltip: qsTr("Sets the amount of image frames in sprite.")
         }
         SecondColumnLayout {
             SpinBox {
@@ -30,7 +30,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Frame Index")
-            tooltip: qsTr("This property defines the initial index of the frame.")
+            tooltip: qsTr("Sets the initial index of the frame.")
         }
 
         SecondColumnLayout {
@@ -48,7 +48,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Interpolate")
-            tooltip: qsTr("This property defines if the sprites are interpolated (blended) between frames to make the animation appear smoother.")
+            tooltip: qsTr("Sets if the sprites are interpolated (blended) between frames to make the animation appear smoother.")
         }
 
         SecondColumnLayout {
@@ -65,7 +65,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Duration")
-            tooltip: qsTr("This property defines the duration in milliseconds how long it takes for the sprite sequence to animate.")
+            tooltip: qsTr("Sets the duration in milliseconds how long it takes for the sprite sequence to animate.")
         }
 
         SecondColumnLayout {
@@ -83,7 +83,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Duration Variation")
-            tooltip: qsTr("This property defines the duration variation in milliseconds.")
+            tooltip: qsTr("Sets the duration variation in milliseconds.")
         }
 
         SecondColumnLayout {
@@ -101,7 +101,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Random Start")
-            tooltip: qsTr("This property defines if the animation should start from a random frame between 0 and frameCount - 1.")
+            tooltip: qsTr("Sets if the animation should start from a random frame between 0 and frameCount - 1.")
         }
 
         SecondColumnLayout {
@@ -118,7 +118,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Animation Direction")
-            tooltip: qsTr("This property defines the animation direction of the sequence.")
+            tooltip: qsTr("Sets the animation direction of the sequence.")
         }
 
         SecondColumnLayout {

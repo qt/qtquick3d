@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Source View")
-                tooltip: qsTr("Source View3D item to show render statistics for.")
+                tooltip: qsTr("Sets the source View3D item to show render statistics for.")
             }
 
             SecondColumnLayout {

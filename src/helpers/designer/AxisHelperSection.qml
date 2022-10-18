@@ -100,6 +100,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Grid Color")
+                tooltip: qsTr("Sets the color of the visible grids.")
             }
 
             ColorEditor {

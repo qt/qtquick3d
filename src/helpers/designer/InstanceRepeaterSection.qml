@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick 2.15
@@ -7,19 +7,19 @@ import HelperWidgets 2.0
 import StudioTheme 1.0 as StudioTheme
 
 Section {
-    caption: qsTr("Particle Trail Emitter")
+    caption: qsTr("Instance Repeater")
     width: parent.width
 
     SectionLayout {
         PropertyLabel {
-            text: qsTr("Follow")
-            tooltip: qsTr("Sets the logical particle which this emitter follows.")
+            text: qsTr("Instancing Table")
+            tooltip: qsTr("Sets the instance table used by the repeater.")
         }
 
         SecondColumnLayout {
             IdComboBox {
-                typeFilter: "QtQuick3D.Particles3D.Particle3D"
-                backendValue: backendValues.follow
+                typeFilter: "QtQuick3D.Instancing"
+                backendValue: backendValues.instancingTable
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
             }

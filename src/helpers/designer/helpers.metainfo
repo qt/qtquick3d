@@ -80,6 +80,66 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick3D.Helpers.HeightFieldGeometry"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+        }
+
+        ItemLibraryEntry {
+            name: "Height Field Geometry"
+            category: "Helpers"
+            libraryIcon: "images/dummy.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
+
+    Type {
+        name: "QtQuick3D.Helpers.InstanceModel"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: false
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Instance Model"
+            category: "Helpers"
+            libraryIcon: "images/dummy.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
+
+    Type {
+        name: "QtQuick3D.Helpers.InstanceRepeater"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+        }
+
+        ItemLibraryEntry {
+            name: "Instance Repeater"
+            category: "Helpers"
+            libraryIcon: "images/dummy.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
+
+    Type {
         name: "QtQuick3D.Helpers.WasdController"
         icon: "images/wasdcontroller16.png"
 

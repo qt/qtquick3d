@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Index")
-            tooltip: qsTr("Specifies the index of this joint.")
+            tooltip: qsTr("Sets the index of this joint.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Skeleton Root")
-            tooltip: qsTr("Specifies the skeleton that contains this joint.")
+            tooltip: qsTr("Sets the skeleton that contains this joint.")
         }
 
         SecondColumnLayout {

@@ -7,9 +7,16 @@ qt_copy_or_install(
         DebugViewSpecifics.qml
         GridGeometrySection.qml
         GridGeometrySpecifics.qml
+        HeightFieldGeometrySection.qml
+        HeightFieldGeometrySpecifics.qml
+        InstanceModelSection.qml
+        InstanceModelSpecifics.qml
+        InstanceRepeaterSection.qml
+        InstanceRepeaterSpecifics.qml
         LookAtNodeSection.qml
         LookAtNodeSpecifics.qml
         NodeSection.qml
+        Repeater3DSection.qml
         WasdControllerSection.qml
         WasdControllerSpecifics.qml
         IdComboBox.qml

@@ -15,4 +15,8 @@ Column {
     Affector3DSection {
         width: parent.width
     }
+
+    NodeSection {
+        width: parent.width
+    }
 }

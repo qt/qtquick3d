@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Color")
-                tooltip: qsTr("This property defines the color applied to models illuminated by this light.")
+                tooltip: qsTr("Sets the color applied to models illuminated by this light.")
             }
 
             ColorEditor {
@@ -26,7 +26,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Ambient Color")
-                tooltip: qsTr("The property defines the ambient color applied to materials before being lit by this light.")
+                tooltip: qsTr("Sets the ambient color applied to materials before being lit by this light.")
             }
 
             ColorEditor {
@@ -36,7 +36,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Brightness")
-                tooltip: qsTr("This property defines an overall multiplier for this light’s effects.")
+                tooltip: qsTr("Sets an overall multiplier for this light’s effects.")
             }
 
             SecondColumnLayout {
@@ -55,7 +55,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Scope")
-                tooltip: qsTr("The property allows the selection of a Node in the scene. Only that node and it's children are affected by this light.")
+                tooltip: qsTr("Sets a Node in the scene to be the scope of this light. Only that node and it's children are affected by this light.")
             }
 
             SecondColumnLayout {

@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Position Variation")
-            tooltip: qsTr("This property defines the variation on attract position.")
+            tooltip: qsTr("Sets the variation on attract position.")
         }
 
         SecondColumnLayout {
@@ -82,7 +82,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Shape")
-            tooltip: qsTr("This property defines a ParticleAbstractShape3D for particles attraction.")
+            tooltip: qsTr("Sets a ParticleAbstractShape3D for particles attraction.")
         }
 
         SecondColumnLayout {
@@ -98,7 +98,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Duration")
-            tooltip: qsTr("This property defines the duration in milliseconds how long it takes for particles to reach the attaction position.")
+            tooltip: qsTr("Sets the duration in milliseconds how long it takes for particles to reach the attaction position.")
         }
 
         SecondColumnLayout {
@@ -116,7 +116,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Duration Variation")
-            tooltip: qsTr("This property defines the duration variation in milliseconds.")
+            tooltip: qsTr("Sets the duration variation in milliseconds.")
         }
 
         SecondColumnLayout {
@@ -134,7 +134,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Hide At End")
-            tooltip: qsTr("This property defines if the particle should disappear when it reaches the attractor.")
+            tooltip: qsTr("Sets if the particle should disappear when it reaches the attractor.")
         }
 
         SecondColumnLayout {
@@ -150,7 +150,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Use Cached Positions")
-            tooltip: qsTr("This property defines if the attractor caches possible positions within its shape. Cached positions give less random results but are better for performance.")
+            tooltip: qsTr("Sets if the attractor caches possible positions within its shape. Cached positions give less random results but are better for performance.")
         }
 
         SecondColumnLayout {
@@ -166,7 +166,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Positions Amount")
-            tooltip: qsTr("This property defines the amount of possible positions stored within the attractor shape.")
+            tooltip: qsTr("Sets the amount of possible positions stored within the attractor shape.")
         }
 
         SecondColumnLayout {
