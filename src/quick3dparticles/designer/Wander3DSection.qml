@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Fade In Duration")
-                tooltip: qsTr("This property defines the duration in milliseconds for fading in the affector.")
+                tooltip: qsTr("Sets the duration in milliseconds for fading in the affector.")
             }
 
             SecondColumnLayout {
@@ -34,7 +34,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Fade Out Duration")
-                tooltip: qsTr("This property defines the duration in milliseconds for fading out the affector.")
+                tooltip: qsTr("Sets the duration in milliseconds for fading out the affector.")
             }
 
             SecondColumnLayout {
@@ -62,7 +62,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Amount")
-                    tooltip: qsTr("This property defines how long distance each particle moves at the ends of curves.")
+                    tooltip: qsTr("Sets how long distance each particle moves at the ends of curves.")
                 }
 
                 SecondColumnLayout {
@@ -133,7 +133,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Pace")
-                    tooltip: qsTr("This property defines the pace (frequency) each particle wanders in curves per second.")
+                    tooltip: qsTr("Sets the pace (frequency) each particle wanders in curves per second.")
                 }
 
                 SecondColumnLayout {
@@ -207,7 +207,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Pace Start")
-                    tooltip: qsTr("This property defines the starting point for the pace (frequency).")
+                    tooltip: qsTr("Sets the starting point for the pace (frequency).")
                 }
 
                 SecondColumnLayout {
@@ -289,7 +289,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Amount")
-                    tooltip: qsTr("This property defines the unique distance each particle moves at the ends of curves.")
+                    tooltip: qsTr("Sets the unique distance each particle moves at the ends of curves.")
                 }
 
                 SecondColumnLayout {
@@ -358,7 +358,7 @@ Column {
 
                 PropertyLabel {
                     text: qsTr("Amount Variation")
-                    tooltip: qsTr("This property defines variation for uniqueAmount between 0.0 and 1.0.")
+                    tooltip: qsTr("Sets the variation for uniqueAmount between 0.0 and 1.0.")
                 }
 
                 SecondColumnLayout {
@@ -379,7 +379,7 @@ Column {
             SectionLayout {
                 PropertyLabel {
                     text: qsTr("Pace")
-                    tooltip: qsTr("This property defines the unique pace (frequency) each particle wanders in curves per second.")
+                    tooltip: qsTr("Sets the unique pace (frequency) each particle wanders in curves per second.")
                 }
 
                 SecondColumnLayout {
@@ -451,7 +451,7 @@ Column {
 
                 PropertyLabel {
                     text: qsTr("Pace Variation")
-                    tooltip: qsTr("This property defines the unique pace (frequency) variation for each particle between 0.0 and 1.0.")
+                    tooltip: qsTr("Sets the unique pace (frequency) variation for each particle between 0.0 and 1.0.")
                 }
 
                 SecondColumnLayout {

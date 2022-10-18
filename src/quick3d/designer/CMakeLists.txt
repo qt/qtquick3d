@@ -10,6 +10,7 @@ qt_copy_or_install(
         BufferSection.qml
         BufferSpecifics.qml
         CameraSection.qml
+        CubeMapTextureSpecifics.qml
         CustomCameraSpecifics.qml
         CustomMaterialSection.qml
         CustomMaterialSpecifics.qml
@@ -59,6 +60,8 @@ qt_copy_or_install(
         ShaderSection.qml
         ShaderSpecifics.qml
         ShadowSection.qml
+        SpecularGlossyMaterialSection.qml
+        SpecularGlossyMaterialSpecifics.qml
         SpotLightSection.qml
         SpotLightSpecifics.qml
         TextureInputSection.qml

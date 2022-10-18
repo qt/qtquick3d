@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Source")
-                tooltip: qsTr("The URL of the 3D asset to import at runtime.")
+                tooltip: qsTr("Sets the URL of the 3D asset to import at runtime.")
             }
 
             SecondColumnLayout {

@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Trigger Mode")
-            tooltip: qsTr("This property defines the triggering mode used for emitting the particles.")
+            tooltip: qsTr("Sets the triggering mode used for emitting the particles.")
         }
 
         SecondColumnLayout {
@@ -30,7 +30,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Amount Variation")
-            tooltip: qsTr("This property defines the random variation in particle emit amount.")
+            tooltip: qsTr("Sets the random variation in particle emit amount.")
         }
 
         SecondColumnLayout {
@@ -48,7 +48,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Enabled")
-            tooltip: qsTr("If enabled is set to false, this burst will not emit any particles. Usually this is used to conditionally turn a bust on or off.")
+            tooltip: qsTr("If set to false, this burst will not emit any particles. Usually this is used to conditionally turn a burst on or off.")
         }
 
         SecondColumnLayout {

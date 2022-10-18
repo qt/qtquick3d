@@ -12,7 +12,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Source")
-            tooltip: qsTr("This property holds the location of an XML or binary file containing the instance data.")
+            tooltip: qsTr("Sets the location of an XML or binary file containing the instance data.")
         }
 
         SecondColumnLayout {

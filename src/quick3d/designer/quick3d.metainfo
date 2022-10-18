@@ -138,6 +138,26 @@ MetaInfo {
         }
     }
     Type {
+        name: "QtQuick3D.SpecularGlossyMaterial"
+        icon: "images/material16.png"
+
+        Hints {
+            visibleInNavigator: false
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+        }
+
+        ItemLibraryEntry {
+            name: "Specular Glossy"
+            category: "Materials"
+            libraryIcon: "images/material.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D"
+            Property { name: "albedoColor"; type: "color"; value: "#4aee45"; }
+            Property { name: "specularColor"; type: "color"; value: "#000000"; }
+        }
+    }
+    Type {
         name: "QtQuick3D.Texture"
         icon: "images/texture16.png"
 
@@ -153,6 +173,25 @@ MetaInfo {
             category: "Materials"
             libraryIcon: "images/texture.png"
             version: "6.0"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.CubeMapTexture"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeContainer: false
+        }
+
+        ItemLibraryEntry {
+            name: "Cube Map Texture"
+            category: "Materials"
+            libraryIcon: "images/dummy.png"
+            version: "6.4"
             requiredImport: "QtQuick3D"
         }
     }

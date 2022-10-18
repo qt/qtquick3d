@@ -67,7 +67,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("FOV Orientation")
-            tooltip: qsTr("Determines if the field of view property reflects the vertical or the horizontal field of view.")
+            tooltip: qsTr("Sets if the field of view property reflects the vertical or the horizontal field of view.")
         }
 
         SecondColumnLayout {

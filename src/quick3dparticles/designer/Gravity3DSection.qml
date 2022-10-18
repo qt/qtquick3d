@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Magnitude")
-            tooltip: qsTr("This property defines the magnitude in position change per second.")
+            tooltip: qsTr("Sets the magnitude in position change per second.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Direction")
-            tooltip: qsTr("This property defines the direction the gravity will affect toward.")
+            tooltip: qsTr("Sets the direction the gravity will affect toward.")
         }
 
         SecondColumnLayout {

@@ -16,7 +16,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Controlled Node")
-                tooltip: qsTr("The 3D node controlled by this controller.")
+                tooltip: qsTr("Sets the 3D node controlled by this controller.")
             }
 
             SecondColumnLayout {
@@ -32,7 +32,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Invert X")
-                tooltip: qsTr("Invert X-axis controls.")
+                tooltip: qsTr("Enables inverting X-axis controls.")
             }
 
             SecondColumnLayout {
@@ -48,7 +48,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Invert Y")
-                tooltip: qsTr("Invert Y-axis controls.")
+                tooltip: qsTr("Enables inverting Y-axis controls.")
             }
 
             SecondColumnLayout {
@@ -64,7 +64,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Mouse Control")
-                tooltip: qsTr("Use mouse to control the target node.")
+                tooltip: qsTr("Enables using mouse to control the target node.")
             }
 
             SecondColumnLayout {
@@ -80,7 +80,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Keyboard Control")
-                tooltip: qsTr("Use keyboard to control the target node.")
+                tooltip: qsTr("Enables using keyboard to control the target node.")
             }
 
             SecondColumnLayout {
@@ -106,7 +106,7 @@ Column {
         SectionLayout {
             PropertyLabel {
                 text: qsTr("Speed")
-                tooltip: qsTr("General navigation speed multiplier.")
+                tooltip: qsTr("Sets the general navigation speed multiplier.")
             }
 
             SecondColumnLayout {
@@ -125,7 +125,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Shift Speed")
-                tooltip: qsTr("Navigation speed multiplier when the Shift key is pressed.")
+                tooltip: qsTr("Sets the navigation speed multiplier when the Shift key is pressed.")
             }
 
             SecondColumnLayout {
@@ -144,7 +144,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Forward Speed")
-                tooltip: qsTr("Navigation speed when forward key is pressed.")
+                tooltip: qsTr("Sets the navigation speed when forward key is pressed.")
             }
 
             SecondColumnLayout {
@@ -163,7 +163,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Back Speed")
-                tooltip: qsTr("Navigation speed when back key is pressed.")
+                tooltip: qsTr("Sets the navigation speed when back key is pressed.")
             }
 
             SecondColumnLayout {
@@ -182,7 +182,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Right Speed")
-                tooltip: qsTr("Navigation speed when right key is pressed.")
+                tooltip: qsTr("Sets the navigation speed when right key is pressed.")
             }
 
             SecondColumnLayout {
@@ -201,7 +201,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Left Speed")
-                tooltip: qsTr("Navigation speed when left key is pressed.")
+                tooltip: qsTr("Sets the navigation speed when left key is pressed.")
             }
 
             SecondColumnLayout {
@@ -220,7 +220,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Up Speed")
-                tooltip: qsTr("Navigation speed when up key is pressed.")
+                tooltip: qsTr("Sets the navigation speed when up key is pressed.")
             }
 
             SecondColumnLayout {
@@ -239,7 +239,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Down Speed")
-                tooltip: qsTr("Navigation speed when down key is pressed.")
+                tooltip: qsTr("Sets the navigation speed when down key is pressed.")
             }
 
             SecondColumnLayout {
@@ -258,7 +258,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("X Speed")
-                tooltip: qsTr("Navigation speed when mouse is moved along X-axis.")
+                tooltip: qsTr("Sets the navigation speed when mouse is moved along X-axis.")
             }
 
             SecondColumnLayout {
@@ -277,7 +277,7 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Y Speed")
-                tooltip: qsTr("Navigation speed when mouse is moved along Y-axis.")
+                tooltip: qsTr("Sets the navigation speed when mouse is moved along Y-axis.")
             }
 
             SecondColumnLayout {

@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Magnitude")
-            tooltip: qsTr("This property defines the magnitude in degrees per second.")
+            tooltip: qsTr("Sets the magnitude in degrees per second.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Direction")
-            tooltip: qsTr("This property defines the direction for the rotation. Values will be automatically normalized to a unit vector.")
+            tooltip: qsTr("Sets the direction for the rotation. Values will be automatically normalized to a unit vector.")
         }
 
         SecondColumnLayout {
@@ -100,7 +100,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Pivot Point")
-            tooltip: qsTr("This property defines the pivot point for the rotation. Particles are rotated around this point.")
+            tooltip: qsTr("Sets the pivot point for the rotation. Particles are rotated around this point.")
         }
 
         SecondColumnLayout {

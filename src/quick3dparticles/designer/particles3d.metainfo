@@ -133,6 +133,25 @@ MetaInfo {
         }
     }
     Type {
+        name: "QtQuick3D.Particles3D.ParticleCustomShape3D"
+        icon: "images/dummy16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+         }
+
+        ItemLibraryEntry {
+            name: "Custom Shape"
+            category: "Qt Quick 3D Particles 3D"
+            libraryIcon: "images/dummy.png"
+            version: "6.3"
+            requiredImport: "QtQuick3D.Particles3D"
+        }
+    }
+    Type {
         name: "QtQuick3D.Particles3D.ParticleModelShape3D"
         icon: "images/model-shape-16px.png"
 

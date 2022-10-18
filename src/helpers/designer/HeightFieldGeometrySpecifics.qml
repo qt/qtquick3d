@@ -8,15 +8,7 @@ import HelperWidgets 2.0
 Column {
     width: parent.width
 
-    ScaleAffector3DSection {
-        width: parent.width
-    }
-
-    Affector3DSection {
-        width: parent.width
-    }
-
-    NodeSection {
+    HeightFieldGeometrySection {
         width: parent.width
     }
 }

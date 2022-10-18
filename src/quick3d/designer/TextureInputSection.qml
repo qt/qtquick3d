@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Texture")
-            tooltip: qsTr("Input texture.")
+            tooltip: qsTr("Sets the input texture.")
         }
 
         SecondColumnLayout {
@@ -29,7 +29,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Enabled")
-            tooltip: qsTr("Texture enable state.")
+            tooltip: qsTr("Sets the texture enabled state.")
         }
 
         SecondColumnLayout {

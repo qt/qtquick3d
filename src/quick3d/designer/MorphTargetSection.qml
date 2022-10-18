@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Weight")
-            tooltip: qsTr("Specifies the weight of the current morph target.")
+            tooltip: qsTr("Sets the weight of the current morph target.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Attributes")
-            tooltip: qsTr("Specifies the set of attributes of the current morph target.")
+            tooltip: qsTr("Sets the set of attributes of the current morph target.")
         }
 
         SecondColumnLayout {

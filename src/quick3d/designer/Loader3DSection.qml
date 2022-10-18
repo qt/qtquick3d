@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Active")
-            tooltip: qsTr("This property is true if the Loader3D is currently active.")
+            tooltip: qsTr("Sets if the Loader3D is currently active.")
         }
 
         SecondColumnLayout {
@@ -29,7 +29,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Source")
-            tooltip: qsTr("This property holds the URL of the QML component to instantiate.")
+            tooltip: qsTr("Sets the URL of the QML component to instantiate.")
         }
 
         SecondColumnLayout {
@@ -43,7 +43,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Source Component")
-            tooltip: qsTr("This property holds the component to instantiate.")
+            tooltip: qsTr("Sets the component to instantiate.")
         }
 
         SecondColumnLayout {
@@ -59,7 +59,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Asynchronous")
-            tooltip: qsTr("This property holds whether the component will be instantiated asynchronously.")
+            tooltip: qsTr("Sets whether the component will be instantiated asynchronously.")
         }
 
         SecondColumnLayout {

@@ -32,7 +32,7 @@ Section {
         // ### all the following should only be shown when shadows are enabled
         PropertyLabel {
             text: qsTr("Shadow Factor")
-            tooltip: qsTr("Determines how dark the cast shadows should be.")
+            tooltip: qsTr("Sets how dark the cast shadows should be.")
         }
 
         SecondColumnLayout {
@@ -108,7 +108,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Shadow Map Far")
-            tooltip: qsTr("Determines the maximum distance for the shadow map.")
+            tooltip: qsTr("Sets the maximum distance for the shadow map.")
         }
 
         SecondColumnLayout {

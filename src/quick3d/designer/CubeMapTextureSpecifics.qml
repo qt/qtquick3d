@@ -8,15 +8,8 @@ import HelperWidgets 2.0
 Column {
     width: parent.width
 
-    ScaleAffector3DSection {
-        width: parent.width
-    }
-
-    Affector3DSection {
-        width: parent.width
-    }
-
-    NodeSection {
+    // CubeMapTexture inherits Texture but doesn't provide any extra properties itself
+    TextureSection {
         width: parent.width
     }
 }

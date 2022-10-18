@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Time")
-            tooltip: qsTr("This property defines the time in milliseconds when emitting the burst starts.")
+            tooltip: qsTr("Sets the time in milliseconds when emitting the burst starts.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Amount")
-            tooltip: qsTr("This property defines the amount of particles emitted during the burst.")
+            tooltip: qsTr("Sets the amount of particles emitted during the burst.")
         }
 
         SecondColumnLayout {
@@ -49,7 +49,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Duration")
-            tooltip: qsTr("This property defines the duration of the burst.")
+            tooltip: qsTr("Sets the duration of the burst.")
         }
 
         SecondColumnLayout {

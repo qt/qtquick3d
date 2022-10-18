@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Passes")
-            tooltip: qsTr("Render passes of the effect.")
+            tooltip: qsTr("Sets the render passes of the effect.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }

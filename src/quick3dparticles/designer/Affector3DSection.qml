@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("System")
-            tooltip: qsTr("This property defines the ParticleSystem3D for the affector. If system is direct parent of the affector, this property does not need to be defined.")
+            tooltip: qsTr("Sets the ParticleSystem3D for the affector. If system is direct parent of the affector, this property does not need to be defined.")
         }
 
         SecondColumnLayout {
@@ -29,7 +29,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Particles")
-            tooltip: qsTr("This list controls which logical particles will be affected. When empty, all particles in the system are affected.")
+            tooltip: qsTr("Sets which logical particles will be affected. When empty, all particles in the system are affected.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }
@@ -51,7 +51,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Enabled")
-            tooltip: qsTr("If enabled is set to false, this affector will not alter any particles. Usually this is used to conditionally turn an affector on or off.")
+            tooltip: qsTr("If set to false, this affector will not alter any particles. Usually this is used to conditionally turn an affector on or off.")
         }
 
         SecondColumnLayout {

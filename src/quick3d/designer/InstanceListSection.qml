@@ -12,7 +12,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Instances")
-            tooltip: qsTr("This property contains the list of instance definitions. Modifying this list, or any of its elements, will cause the instance table to be updated.")
+            tooltip: qsTr("Sets the list of instance definitions. Modifying this list, or any of its elements, will cause the instance table to be updated.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }

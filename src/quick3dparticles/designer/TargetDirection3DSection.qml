@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Position")
-            tooltip: qsTr("This property defines the position for particles target.")
+            tooltip: qsTr("Sets the position for particles target.")
         }
 
         SecondColumnLayout {
@@ -82,7 +82,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Position Variation")
-            tooltip: qsTr("This property defines the position variation for particles target.")
+            tooltip: qsTr("Sets the position variation for particles target.")
         }
 
         SecondColumnLayout {
@@ -151,7 +151,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Normalized")
-            tooltip: qsTr("This property defines if the distance to position should be considered as normalized or not.")
+            tooltip: qsTr("Sets if the distance to position should be considered as normalized or not.")
         }
 
         SecondColumnLayout {
@@ -184,7 +184,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Magnitude Variation")
-            tooltip: qsTr("This property defines the magnitude variation in position change per second.")
+            tooltip: qsTr("Sets the magnitude variation in position change per second.")
         }
 
         SecondColumnLayout {

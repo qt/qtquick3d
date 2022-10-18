@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Name")
-            tooltip: qsTr("Buffer name.")
+            tooltip: qsTr("Sets the buffer name.")
         }
 
         SecondColumnLayout {
@@ -30,7 +30,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Format")
-            tooltip: qsTr("Format of the buffer.")
+            tooltip: qsTr("Sets the format of the buffer.")
         }
 
         SecondColumnLayout {
@@ -47,7 +47,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Filter")
-            tooltip: qsTr("Texture filter for the buffer.")
+            tooltip: qsTr("Sets the texture filter for the buffer.")
         }
 
         SecondColumnLayout {
@@ -64,7 +64,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Coordinate Operation")
-            tooltip: qsTr("Texture coordinate operation for the buffer.")
+            tooltip: qsTr("Sets the texture coordinate operation for the buffer.")
         }
 
         SecondColumnLayout {
@@ -81,7 +81,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Allocation Flags")
-            tooltip: qsTr("Allocation flags for the buffer.")
+            tooltip: qsTr("Sets the allocation flags for the buffer.")
         }
 
         SecondColumnLayout {
@@ -98,7 +98,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Size Multiplier")
-            tooltip: qsTr("Defines the size multiplier for the buffer.")
+            tooltip: qsTr("Sets the size multiplier for the buffer.")
         }
 
         SecondColumnLayout {

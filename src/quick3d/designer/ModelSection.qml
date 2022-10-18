@@ -14,7 +14,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Source")
-            tooltip: qsTr("Defines the location of the mesh file containing the geometry of this model.")
+            tooltip: qsTr("Sets the location of the mesh file containing the geometry of this model.")
         }
 
         SecondColumnLayout {
@@ -38,6 +38,22 @@ Section {
                 return false
 
             return true
+        }
+
+        PropertyLabel {
+            text: qsTr("Casts Reflections")
+            tooltip: qsTr("Enables rendering the model by reflection probes and making it visible in the reflections.")
+        }
+
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.castsReflections.valueToString
+                backendValue: backendValues.castsReflections
+                implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
         }
 
         PropertyLabel {
@@ -106,7 +122,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Pickable")
-            tooltip: qsTr("Controls whether the model is pickable or not.")
+            tooltip: qsTr("Enables model picking.")
         }
 
         SecondColumnLayout {
@@ -142,7 +158,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Geometry")
-            tooltip: qsTr("Specify a custom geometry for the model")
+            tooltip: qsTr("Sets a custom geometry for the model")
         }
 
         SecondColumnLayout {
@@ -184,7 +200,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Instance Root")
-            tooltip: qsTr("This property defines the origin of the instance’s coordinate system.")
+            tooltip: qsTr("Sets the origin of the instance’s coordinate system.")
         }
 
         SecondColumnLayout {
@@ -200,7 +216,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Skeleton")
-            tooltip: qsTr("Contains the skeleton for the model.")
+            tooltip: qsTr("Sets the skeleton for the model.")
         }
 
         SecondColumnLayout {
@@ -216,7 +232,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Morph Targets")
-            tooltip: qsTr("This property contains a list of MorphTargets used to render the provided geometry.")
+            tooltip: qsTr("Sets a list of MorphTargets used to render the provided geometry.")
             Layout.alignment: Qt.AlignTop
             Layout.topMargin: 5
         }
@@ -238,7 +254,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Depth Bias")
-            tooltip: qsTr("Holds the depth bias of the model.")
+            tooltip: qsTr("Sets the depth bias of the model.")
         }
 
         SecondColumnLayout {

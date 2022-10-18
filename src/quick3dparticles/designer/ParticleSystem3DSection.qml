@@ -13,7 +13,7 @@ Section {
     SectionLayout {
         PropertyLabel {
             text: qsTr("Start Time")
-            tooltip: qsTr("This property defines time in milliseconds where the system starts.")
+            tooltip: qsTr("Sets the time in milliseconds where the system starts.")
         }
 
         SecondColumnLayout {
@@ -31,7 +31,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Time")
-            tooltip: qsTr("This property defines time in milliseconds for the system.")
+            tooltip: qsTr("Sets the time in milliseconds for the system.")
         }
 
         SecondColumnLayout {
@@ -49,7 +49,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Running")
-            tooltip: qsTr("This property defines if system is currently running.")
+            tooltip: qsTr("Sets if system is currently running.")
         }
 
         SecondColumnLayout {
@@ -66,7 +66,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Paused")
-            tooltip: qsTr("This property defines if system is currently paused.")
+            tooltip: qsTr("Sets if system is currently paused.")
         }
 
         SecondColumnLayout {
@@ -83,7 +83,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Logging")
-            tooltip: qsTr("Set this to true to collect loggingData.")
+            tooltip: qsTr("Enables collection of loggingData.")
         }
 
         SecondColumnLayout {
@@ -100,7 +100,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Use Random Seed")
-            tooltip: qsTr("This property defines if particle system seed should be random or user defined.")
+            tooltip: qsTr("Sets if particle system seed should be random or user defined.")
         }
 
         SecondColumnLayout {
@@ -117,7 +117,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Seed")
-            tooltip: qsTr("This property defines the seed value used for particles randomization.")
+            tooltip: qsTr("Sets the seed value used for particles randomization.")
         }
 
         SecondColumnLayout {

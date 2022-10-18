@@ -12,8 +12,25 @@ Section {
 
     SectionLayout {
         PropertyLabel {
+            text: qsTr("Scaling Type")
+            tooltip: qsTr("Sets the scaling type of the affector.")
+        }
+
+        SecondColumnLayout {
+            ComboBox {
+                scope: "ScaleAffector3D"
+                model: ["Linear", "SewSaw", "SineWave", "AbsSineWave", "Step", "SmoothStep"]
+                backendValue: backendValues.type
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                               + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
+
+        PropertyLabel {
             text: qsTr("Minimum Size")
-            tooltip: qsTr("This property defines the minimum scale size.")
+            tooltip: qsTr("Sets the minimum scale size.")
         }
 
         SecondColumnLayout {
@@ -31,7 +48,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Maximum Size")
-            tooltip: qsTr("This property defines the maximum scale size.")
+            tooltip: qsTr("Sets the maximum scale size.")
         }
 
         SecondColumnLayout {
@@ -49,7 +66,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Duration")
-            tooltip: qsTr("This property defines the duration of scaling period.")
+            tooltip: qsTr("Sets the duration of scaling period.")
         }
 
         SecondColumnLayout {
@@ -57,6 +74,7 @@ Section {
                 minimumValue: 0
                 maximumValue: 999999
                 decimals: 0
+                stepSize: 10
                 backendValue: backendValues.duration
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                + StudioTheme.Values.actionIndicatorWidth
@@ -67,7 +85,7 @@ Section {
 
         PropertyLabel {
             text: qsTr("Easing curve")
-            tooltip: qsTr("Defines a custom scaling curve.")
+            tooltip: qsTr("Sets a custom scaling curve.")
         }
 
         SecondColumnLayout {
