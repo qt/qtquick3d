@@ -1,6 +1,6 @@
 find_package(Qt6 REQUIRED COMPONENTS Gui)
 
-qt_add_qml_module(backend
+qt_add_qml_module(backendmodule
     URI Backend
     VERSION 1.0
     SOURCES
@@ -10,4 +10,4 @@ qt_add_qml_module(backend
         backend.h
 )
 
-target_link_libraries(backend PRIVATE Qt6::Gui)
+target_link_libraries(backendmodule PUBLIC Qt6::Gui)
