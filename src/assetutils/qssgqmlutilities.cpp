@@ -553,7 +553,7 @@ static const char *getQmlElementName(const QSSGSceneDesc::Node &node)
 enum QMLBasicType
 {
     Bool,
-    Dobule,
+    Double,
     Int,
     List,
     Real,
@@ -807,7 +807,9 @@ QString getAnimationSourceName(const QString &id, const QString &property, qsize
 QString asString(const QSSGSceneDesc::Value &value)
 {
     QString str;
-    QMetaType::convert(value.mt, value.dptr, QMetaType::fromType<QString>(), &str);
+    const void *data = QSSGSceneDesc::can_be_stored_in_pointer(value.mt) ? &value.dptr : value.dptr;
+
+    QMetaType::convert(value.mt, data, QMetaType::fromType<QString>(), &str);
     return str;
 }
 
