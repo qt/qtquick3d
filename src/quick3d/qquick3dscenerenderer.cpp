@@ -121,6 +121,7 @@ void SGFramebufferObjectNode::render()
                 t->setOwnsTexture(false);
                 t->setHasAlphaChannel(true);
                 t->setTexture(rhiTexture);
+                t->setTextureSize(renderer->surfaceSize());
                 setTexture(t);
             }
         }
