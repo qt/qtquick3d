@@ -739,6 +739,7 @@ MultiLoadResult Mesh::loadMulti(QIODevice &inStream, quint32 inId)
     inStream.seek(static_cast<qint64>(fileOffset));
     retval = load(inStream);
 endFunction:
+    free(theHeader);
     return MultiLoadResult(retval, theId);
 }
 
