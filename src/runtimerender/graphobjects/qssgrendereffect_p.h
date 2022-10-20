@@ -109,6 +109,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderEffect : public QSSGRenderGraphOb
     Q_DECLARE_FLAGS(Flags, Flag)
 
     QVector<dynamic::QSSGCommand *> commands;
+    QSet<dynamic::QSSGCommand *> commandsToDelete;
+
 
     Flags flags;
     const char *className = nullptr;
