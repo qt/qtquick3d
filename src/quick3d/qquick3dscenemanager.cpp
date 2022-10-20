@@ -47,6 +47,7 @@ QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
 
 QQuick3DSceneManager::~QQuick3DSceneManager()
 {
+    cleanupNodes();
 }
 
 void QQuick3DSceneManager::setWindow(QQuickWindow *window)
@@ -73,6 +74,9 @@ void QQuick3DSceneManager::cleanup(QSSGRenderGraphObject *item)
 {
     Q_ASSERT(!cleanupNodeList.contains(item));
     cleanupNodeList.append(item);
+
+    if (auto front = m_nodeMap[item])
+        QQuick3DObjectPrivate::get(front)->spatialNode = nullptr;
 }
 
 void QQuick3DSceneManager::polishItems()
