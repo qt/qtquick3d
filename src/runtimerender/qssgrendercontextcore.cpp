@@ -108,7 +108,9 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
         if (rc) {
             // the signal is emitted on the render thread, if there is one
             QObject::connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, [this] {
-                m_renderer->releaseResources();
+                if (m_releaseCachedResourcesCallback)
+                    m_releaseCachedResourcesCallback();
+                m_renderer->releaseCachedResources();
                 m_shaderCache->releaseCachedResources();
                 m_customMaterialSystem->releaseCachedResources();
                 m_bufferManager->releaseCachedResources();
@@ -122,7 +124,7 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
-    m_renderer->releaseResources();
+    m_renderer->releaseCachedResources();
     g_windowReg->removeIf([this](const Binding &b) { return (b.second == this); });
 }
 

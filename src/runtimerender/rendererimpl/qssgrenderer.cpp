@@ -110,7 +110,7 @@ static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &sha
                                                           subsetRenderable.modelContext.lightmapTexture);
 }
 
-void QSSGRenderer::releaseResources()
+void QSSGRenderer::releaseCachedResources()
 {
     delete m_rhiQuadRenderer;
     m_rhiQuadRenderer = nullptr;
@@ -123,7 +123,7 @@ QSSGRenderer::QSSGRenderer() = default;
 QSSGRenderer::~QSSGRenderer()
 {
     m_contextInterface = nullptr;
-    releaseResources();
+    releaseCachedResources();
 }
 
 void QSSGRenderer::setRenderContextInterface(QSSGRenderContextInterface *ctx)

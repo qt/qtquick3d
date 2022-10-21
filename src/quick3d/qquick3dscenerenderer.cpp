@@ -155,6 +155,14 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInte
     : m_sgContext(rci)
 {
     dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
+    m_sgContext->setReleaseCachedResourcesCallback([this] {
+        if (m_layer && m_layer->renderData) {
+            if (auto mgr = m_layer->renderData->shadowMapManager)
+                mgr->releaseCachedResources();
+            if (auto mgr = m_layer->renderData->reflectionMapManager)
+                mgr->releaseCachedResources();
+        }
+    });
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()

@@ -111,6 +111,8 @@ public:
     // return value (false if nothing's been done due to pending "frames")
     bool endFrame(QSSGRenderLayer *layer, bool allowRecursion = true);
 
+    void setReleaseCachedResourcesCallback(std::function<void()> f) { m_releaseCachedResourcesCallback = f; }
+
 private:
     void init();
 
@@ -135,6 +137,8 @@ private:
 
     QMetaObject::Connection m_beforeFrameConnection;
     QMetaObject::Connection m_afterFrameConnection;
+
+    std::function<void()> m_releaseCachedResourcesCallback = nullptr;
 };
 QT_END_NAMESPACE
 

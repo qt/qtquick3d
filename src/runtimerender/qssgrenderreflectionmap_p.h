@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderreflectionprobe_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -75,7 +76,7 @@ struct QSSGReflectionMapEntry
     Q_QUICK3D_PROFILE_ID
 };
 
-class QSSGRenderReflectionMap
+class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderReflectionMap
 {
     typedef QVector<QSSGReflectionMapEntry> TReflectionMapEntryList;
 
@@ -85,6 +86,7 @@ public:
 
     QSSGRenderReflectionMap(const QSSGRenderContextInterface &inContext);
     ~QSSGRenderReflectionMap();
+    void releaseCachedResources();
 
     void addReflectionMapEntry(qint32 probeIdx, const QSSGRenderReflectionProbe &probe);
 

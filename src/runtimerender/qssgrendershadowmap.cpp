@@ -16,6 +16,11 @@ QSSGRenderShadowMap::QSSGRenderShadowMap(const QSSGRenderContextInterface &inCon
 
 QSSGRenderShadowMap::~QSSGRenderShadowMap()
 {
+    releaseCachedResources();
+}
+
+void QSSGRenderShadowMap::releaseCachedResources()
+{
     for (QSSGShadowMapEntry &entry : m_shadowMapList)
         entry.destroyRhiResources();
 

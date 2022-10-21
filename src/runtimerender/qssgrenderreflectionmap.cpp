@@ -17,6 +17,11 @@ QSSGRenderReflectionMap::QSSGRenderReflectionMap(const QSSGRenderContextInterfac
 
 QSSGRenderReflectionMap::~QSSGRenderReflectionMap()
 {
+    releaseCachedResources();
+}
+
+void QSSGRenderReflectionMap::releaseCachedResources()
+{
     for (QSSGReflectionMapEntry &entry : m_reflectionMapList)
         entry.destroyRhiResources();
 

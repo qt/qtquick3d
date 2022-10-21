@@ -154,7 +154,7 @@ protected:
 
 private:
     friend class QSSGRenderContextInterface;
-    void releaseResources();
+    void releaseCachedResources();
     QSSGRef<QSSGRhiShaderPipeline> getBuiltinRhiShader(const QByteArray &name,
                                                        QSSGRef<QSSGRhiShaderPipeline> &storage);
     QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable, const QSSGShaderFeatures &inFeatureSet);
