@@ -682,7 +682,7 @@ Column {
                 ComboBox {
                     scope: "Material"
                     model: ["R", "G", "B", "A"]
-                    backendValue: backendValues.clearcoatChannel
+                    backendValue: backendValues.clearcoatRoughnessChannel
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
                 }

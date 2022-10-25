@@ -12,8 +12,10 @@
         "Translucency":   ["translucentFalloff", "diffuseLightWrap", "translucencyMap", "translucencyChannel"]
     },
     "PrincipledMaterial": {
-        "Base":           ["alphaMode", "alphaCutoff", "blendMode", "lighting", "pointSize", "lineWidth"],
+        "Base":           ["alphaMode", "alphaCutoff", "blendMode", "lighting", "pointSize", "lineWidth", "indexOfRefraction"],
+        "Base Color":     ["baseColor", "baseColorMap"],
         "Metalness":      ["metalness", "metalnessMap", "metalnessChannel"],
+        "Attenuation":    ["attenuationColor", "attenuationDistance"],
         "Normal":         ["normalMap", "normalStrength"],
         "Occlusion":      ["occlusionAmount", "occlusionMap", "occlusionChannel"],
         "Opacity":        ["opacity", "opacityMap", "opacityChannel"],
@@ -22,7 +24,22 @@
         "Clearcoat":      ["clearcoatAmount", "clearcoatMap", "clearcoatChannel", "clearcoatRoughnessAmount", "clearcoatRoughnessMap", "clearcoatRoughnessChannel", "clearcoatNormalMap"],
         "Transmission":   ["transmissionFactor", "transmissionMap", "transmissionChannel"],
         "Specular":       ["specularAmount", "specularMap", "specularReflectionMap", "specularTint"],
-        "Base Color":     ["baseColor", "baseColorMap"],
+        "Thickness":      ["thicknessFactor", "thicknessMap", "thicknessChannel"],
+        "Emissive":       ["emissiveMap", "emissiveFactor.x", "emissiveFactor.y", "emissiveFactor.z"]
+    },
+    "SpecularGlossyMaterial": {
+        "Base":           ["alphaMode", "alphaCutoff", "blendMode", "lighting", "pointSize", "lineWidth"],
+        "Albedo":         ["albedoColor", "albedoMap"],
+        "Specular":       ["specularColor", "specularMap"],
+        "Glossiness":     ["glossiness", "glossinessMap", "glossinessChannel"],
+        "Attenuation":    ["attenuationColor", "attenuationDistance"],
+        "Normal":         ["normalMap", "normalStrength"],
+        "Occlusion":      ["occlusionAmount", "occlusionMap", "occlusionChannel"],
+        "Opacity":        ["opacity", "opacityMap", "opacityChannel"],
+        "Height":         ["heightMap", "heightChannel", "heightAmount", "minHeightMapSamples", "maxHeightMapSamples"],
+        "Clearcoat":      ["clearcoatAmount", "clearcoatMap", "clearcoatChannel", "clearcoatRoughnessAmount", "clearcoatRoughnessMap", "clearcoatRoughnessChannel", "clearcoatNormalMap"],
+        "Transmission":   ["transmissionFactor", "transmissionMap", "transmissionChannel"],
+        "Thickness":      ["thicknessFactor", "thicknessMap", "thicknessChannel"],
         "Emissive":       ["emissiveMap", "emissiveFactor.x", "emissiveFactor.y", "emissiveFactor.z"]
     },
     "CustomMaterial": {
