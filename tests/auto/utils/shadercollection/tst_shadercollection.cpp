@@ -76,7 +76,7 @@ void ShaderCollection::initTestCase()
 
 void ShaderCollection::test_readWriteToFile()
 {
-    const size_t hkey = 99;
+    const QByteArray hkey = QByteArrayLiteral("12345");
     const auto tempFile = QDir::tempPath() + QDir::separator() + tempOutFileName();
     QQsbCollection::Entry entry;
     {
@@ -110,7 +110,7 @@ void ShaderCollection::test_readWriteToFile()
 void ShaderCollection::test_readWriteToBuffer()
 {
     QBuffer buffer;
-    const size_t hkey = 99;
+    const QByteArray hkey = QByteArrayLiteral("12345");
     QQsbCollection::Entry entry;
     {
         QVERIFY(buffer.buffer().isEmpty());
@@ -139,7 +139,7 @@ void ShaderCollection::test_readWriteToBuffer()
 void ShaderCollection::test_readWriteOpenDevice()
 {
     QBuffer buffer;
-    const size_t hkey = 99;
+    const QByteArray hkey = QByteArrayLiteral("12345");
     QQsbCollection::Entry entry;
     {
         buffer.open(QIODevice::WriteOnly | QIODevice::Truncate);
@@ -175,7 +175,7 @@ void ShaderCollection::test_mapModes()
 {
     {
         QBuffer buffer;
-        const size_t hkey = 99;
+        const QByteArray hkey = QByteArrayLiteral("12345");
         QQsbCollection::Entry entry;
         {
             buffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
@@ -209,7 +209,7 @@ void ShaderCollection::test_mapModes()
 
     {
         QBuffer buffer;
-        const size_t hkey = 99;
+        const QByteArray hkey = QByteArrayLiteral("12345");
         QQsbCollection::Entry entry;
 
         { // Test invalid input (missing Truncate)
@@ -243,7 +243,8 @@ void ShaderCollection::test_inMemoryCollection()
     QQsbInMemoryCollection qsbc;
     QVERIFY(qsbc.availableEntries().isEmpty());
 
-    const size_t hkey = 99;
+    const QByteArray hkey = QByteArrayLiteral("12345");
+    const QByteArray otherKey = QByteArrayLiteral("12346");
     QQsbCollection::Entry entry;
     QVERIFY(!entry.isValid());
 
@@ -260,7 +261,7 @@ void ShaderCollection::test_inMemoryCollection()
         QVERIFY(entry.isValid());
         entry = qsbc.addEntry(hkey, { QByteArray(shaderDescription()), featureSet, vert, frag });
         QVERIFY(!entry.isValid()); // already added, this must fail
-        entry = qsbc.addEntry(hkey + 1, { QByteArray(shaderDescription()), featureSet, vert, frag });
+        entry = qsbc.addEntry(otherKey, { QByteArray(shaderDescription()), featureSet, vert, frag });
         QVERIFY(entry.isValid());
         QVERIFY(qsbc.availableEntries().count() == 2);
 
