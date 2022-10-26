@@ -10,10 +10,11 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 
-#include <QtCore/QRegularExpression>
-#include <QtCore/QString>
-#include <QtCore/qfile.h>
-#include <QtCore/qdir.h>
+#include <QCoreApplication>
+#include <QStandardPaths>
+#include <QString>
+#include <QFile>
+#include <QDir>
 
 #include <QtGui/qsurfaceformat.h>
 #if QT_CONFIG(opengl)
