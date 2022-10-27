@@ -255,20 +255,43 @@ QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGS
 {
 }
 
-
-QSSGCameraData QSSGLayerRenderData::getCameraDirectionAndPosition()
+static QSSGCameraRenderData getCameraDataImpl(const QSSGRenderCamera *camera)
 {
-    if (!cameraData.has_value()) {
-        if (camera)
-            cameraData = QSSGCameraData{ camera->getScalingCorrectDirection(), camera->getGlobalPos() };
-        else
-            cameraData = QSSGCameraData{ QVector3D(0.0f, 0.0f, -1.0f), QVector3D() };
+    QSSGCameraRenderData ret;
+    if (camera) {
+        // Calculate viewProjection and clippingFrustum for Render Camera
+        QMatrix4x4 viewProjection(Qt::Uninitialized);
+        camera->calculateViewProjectionMatrix(viewProjection);
+        std::optional<QSSGClippingFrustum> clippingFrustum;
+        if (camera->enableFrustumClipping) {
+            QSSGClipPlane nearPlane;
+            QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
+            QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
+            dir.normalize();
+            nearPlane.normal = dir;
+            QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
+            nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
+            // the near plane's bbox edges are calculated in the clipping frustum's
+            // constructor.
+            clippingFrustum = QSSGClippingFrustum{viewProjection, nearPlane};
+        }
+        ret = { viewProjection, clippingFrustum, camera->getScalingCorrectDirection(), camera->getGlobalPos() };
     }
+
+    return ret;
+}
+
+// Returns the cached data for the active render camera (if any)
+QSSGCameraRenderData QSSGLayerRenderData::getCachedCameraData()
+{
+    if (!cameraData.has_value())
+        cameraData = getCameraDataImpl(camera);
+
     return *cameraData;
 }
 
 [[nodiscard]] static inline float getCameraDistanceSq(const QSSGRenderableObject &obj,
-                                                      const QSSGCameraData &camera) noexcept
+                                                      const QSSGCameraRenderData &camera) noexcept
 {
     const QVector3D difference = obj.worldCenterPoint - camera.position;
     return QVector3D::dotProduct(difference, camera.direction) + obj.depthBiasSq;
@@ -341,7 +364,7 @@ const QSSGLayerRenderData::RenderableItem2DEntries &QSSGLayerRenderData::getRend
     renderedItem2Ds = renderableItem2Ds;
 
     if (!renderedItem2Ds.isEmpty()) {
-        const auto cameraDirectionAndPosition = getCameraDirectionAndPosition();
+        const auto cameraDirectionAndPosition = getCachedCameraData();
         const QVector3D &cameraDirection = cameraDirectionAndPosition.direction;
         const QVector3D &cameraPosition = cameraDirectionAndPosition.position;
 
@@ -929,9 +952,15 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     return retval;
 }
 
-void QSSGLayerRenderData::prepareModelMeshesForRender(const QSSGRenderContextInterface &contextInterface,
-                                                      RenderableNodeEntries &renderableModels,
-                                                      bool globalPickingEnabled)
+void QSSGLayerRenderData::prepareModelMeshes(const QSSGRenderContextInterface &contextInterface,
+                                             RenderableNodeEntries &renderableModels)
+{
+    prepareModelMeshesForRenderInternal(contextInterface, renderableModels, false);
+}
+
+void QSSGLayerRenderData::prepareModelMeshesForRenderInternal(const QSSGRenderContextInterface &contextInterface,
+                                                              RenderableNodeEntries &renderableModels,
+                                                              bool globalPickingEnabled)
 {
     const auto &bufferManager = contextInterface.bufferManager();
 
@@ -951,6 +980,7 @@ void QSSGLayerRenderData::prepareModelMeshesForRender(const QSSGRenderContextInt
         // Ensure we have a mesh and at least 1 material
         if (auto theMesh = bufferManager->loadMesh(&model); theMesh && model.materials.size() > 0) {
             renderable.mesh = theMesh;
+            renderable.materials = QSSGMaterialListView(model.materials);
             // Completely transparent models cannot be pickable.  But models with completely
             // transparent materials still are.  This allows the artist to control pickability
             // in a somewhat fine-grained style.
@@ -994,11 +1024,11 @@ void QSSGLayerRenderData::prepareModelMeshesForRender(const QSSGRenderContextInt
 // here: in case there is a scene shared between multiple View3Ds in different
 // QQuickWindows, each window may run this in their own render thread, while
 // inModel is the same.
-bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &renderableModels,
-                                                const QMatrix4x4 &inViewProjection,
-                                                QSSGLayerRenderPreparationResultFlags &ioFlags,
-                                                const QSSGCameraData &cameraData,
-                                                float lodThreshold)
+bool QSSGLayerRenderData::prepareModelsForRender(const RenderableNodeEntries &renderableModels,
+                                                 QSSGLayerRenderPreparationResultFlags &ioFlags,
+                                                 const QSSGCameraRenderData &cameraData,
+                                                 RenderableFilter filter,
+                                                 float lodThreshold)
 {
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
@@ -1013,7 +1043,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 
         QSSG_ASSERT_X(theMesh != nullptr, "Only renderables with a mesh will be processed!", continue);
 
-        QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, model, inViewProjection);
+        QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, model, cameraData.viewProjection);
         modelContexts.push_back(&theModelContext);
         // We might over-allocate here, as the material list technically can contain an invalid (nullptr) material.
         // We'll fix that by adjusting the size at the end for now...
@@ -1095,13 +1125,13 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 
         // Subset(s)
         auto &renderableSubsets = theModelContext.subsets;
-        const auto &materials = model.materials;
+        const auto &materials = renderable.materials;
         const auto materialCount = materials.size();
         QSSGRenderGraphObject *lastMaterial = !materials.isEmpty() ? materials.last() : nullptr;
         int idx = 0, subsetIdx = 0;
         for (; idx < meshSubsetCount; ++idx) {
             // If the materials list < size of subsets, then use the last material for the rest
-            QSSGRenderGraphObject *theMaterialObject = (idx >= materialCount) ? lastMaterial : materials.at(idx);
+            QSSGRenderGraphObject *theMaterialObject = (idx >= materialCount) ? lastMaterial : materials[idx];
             QSSG_ASSERT_X(theMaterialObject != nullptr, "No material found for model!", continue);
 
             const QSSGRenderSubset &theSubset = meshSubsets.at(idx);
@@ -1294,8 +1324,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
-                QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
-                        prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights, ioFlags));
+                QSSGDefaultMaterialPreparationResult theMaterialPrepResult(prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights, ioFlags));
                 QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
                 subsetOpacity = theMaterialPrepResult.opacity;
                 QSSGRenderableImage *firstImage(theMaterialPrepResult.firstImage);
@@ -1408,22 +1437,31 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                                                                theGeneratedKey,
                                                                lights);
             }
-            if (theRenderableObject) {
-                if (theRenderableObject->renderableFlags.requiresScreenTexture())
-                    screenTextureObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
-                else if (theRenderableObject->renderableFlags.hasTransparency())
-                    transparentObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
-                else
-                    opaqueObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
-
-                if (theRenderableObject->renderableFlags.usedInBakedLighting())
-                    bakedLightingObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
-            }
+            if (theRenderableObject) // NOTE: Should just go in with the ctor args
+                theRenderableObject->camdistSq = getCameraDistanceSq(*theRenderableObject, cameraData);
         }
 
         // If the indices don't match then something's off and we need to adjust the subset renderable list size.
         if (Q_UNLIKELY(idx != subsetIdx))
             renderableSubsets.mSize = subsetIdx + 1;
+
+        bool handled = false;
+        if (filter)
+            handled = filter(&theModelContext);
+
+        if (!handled) {
+            for (auto &ro : renderableSubsets) {
+                if (ro.renderableFlags.requiresScreenTexture())
+                    screenTextureObjects.push_back({&ro, ro.camdistSq});
+                else if (ro.renderableFlags.hasTransparency())
+                    transparentObjects.push_back({&ro, ro.camdistSq});
+                else
+                    opaqueObjects.push_back({&ro, ro.camdistSq});
+
+                if (ro.renderableFlags.usedInBakedLighting())
+                    bakedLightingObjects.push_back({&ro, ro.camdistSq});
+            }
+        }
 
         if (!bakedLightingObjects.isEmpty())
             bakedLightingModels.push_back(QSSGBakedLightingModel(&model, bakedLightingObjects));
@@ -1432,8 +1470,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
     return wasDirty;
 }
 
-bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries &renderableParticles,
-                                                    const QSSGCameraData &cameraData)
+bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries &renderableParticles, const QSSGCameraRenderData &cameraData)
 {
     QSSG_ASSERT(particlesEnabled, return false);
 
@@ -1509,14 +1546,14 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 }
 
 bool QSSGLayerRenderData::prepareItem2DsForRender(const QSSGRenderContextInterface &ctxIfc,
-                                                  const RenderableItem2DEntries &renderableItem2Ds,
-                                                  const QMatrix4x4 &inViewProjection)
+                                                  const RenderableItem2DEntries &renderableItem2Ds)
 {
     const bool hasItems = (renderableItem2Ds.size() != 0);
     if (hasItems) {
         const auto &clipSpaceCorrMatrix = ctxIfc.rhiContext()->rhi()->clipSpaceCorrMatrix();
+        auto cameraData = getCachedCameraData();
         for (const auto &theItem2D : renderableItem2Ds) {
-            theItem2D->MVP = inViewProjection * theItem2D->globalTransform;
+            theItem2D->MVP = cameraData.viewProjection * theItem2D->globalTransform;
             static const QMatrix4x4 flipMatrix(1.0f, 0.0f, 0.0f, 0.0f,
                                                0.0f, -1.0f, 0.0f, 0.0f,
                                                0.0f, 0.0f, 1.0f, 0.0f,
@@ -1671,6 +1708,16 @@ void QSSGLayerRenderData::prepareForRender()
     QSSG_ASSERT(renderedOpaqueDepthPrepassObjects.isEmpty(), renderedOpaqueDepthPrepassObjects.clear());
 
     QRect theViewport(renderer->contextInterface()->viewport());
+
+
+    bool hasRenderExtensions = false;
+    for (int i = 0; i != QSSGRenderLayer::RenderExtensionMode::Count; ++i)
+        hasRenderExtensions = hasRenderExtensions || bool(layer.renderExtensions[i].size());
+
+    if (hasRenderExtensions && !frameData.has_value())
+        frameData = QSSGFrameData(renderer);
+
+    frameData->clear();
 
     // Create base pipeline state
     ps = {}; // Reset
@@ -1831,6 +1878,13 @@ void QSSGLayerRenderData::prepareForRender()
                 camera = theCamera;
         }
     }
+
+    float meshLodThreshold = 1.0f;
+    if (camera) {
+        camera->dpr = renderer->contextInterface()->dpr();
+        meshLodThreshold = camera->levelOfDetailPixelThreshold / theViewport.width();
+    }
+
     layer.renderedCamera = camera;
 
     // ResourceLoaders
@@ -1949,38 +2003,30 @@ void QSSGLayerRenderData::prepareForRender()
         prepareLights(renderableParticles);
     }
 
-    // Calculate viewProjection and clippingFrustum for Render Camera
-    QMatrix4x4 viewProjection(Qt::Uninitialized);
-    float meshLodThreshold = 1.0f;
-    if (camera) {
-        camera->dpr = renderer->contextInterface()->dpr();
-        camera->calculateViewProjectionMatrix(viewProjection);
-        if (camera->enableFrustumClipping) {
-            QSSGClipPlane nearPlane;
-            QMatrix3x3 theUpper33(camera->globalTransform.normalMatrix());
-            QVector3D dir(mat33::transform(theUpper33, QVector3D(0, 0, -1)));
-            dir.normalize();
-            nearPlane.normal = dir;
-            QVector3D theGlobalPos = camera->getGlobalPos() + camera->clipNear * dir;
-            nearPlane.d = -(QVector3D::dotProduct(dir, theGlobalPos));
-            // the near plane's bbox edges are calculated in the clipping frustum's
-            // constructor.
-            clippingFrustum = QSSGClippingFrustum{viewProjection, nearPlane};
+    {
+        // Give user provided passes a chance to modify the renderable data before starting
+        // Note: All non-active extensions should be filtered out by now
+        Q_STATIC_ASSERT(USERPASSES == QSSGRenderLayer::RenderExtensionMode::Count);
+        for (int i = 0; i != QSSGRenderLayer::RenderExtensionMode::Count; ++i) {
+            const auto &renderExtensions = layer.renderExtensions[i];
+            auto &userPass = userPasses[i];
+            for (auto rit = renderExtensions.crbegin(), rend = renderExtensions.crend(); rit != rend; ++rit) {
+                wasDirty |= (*rit)->prepareData(*frameData);
+                userPass.extensions.push_back(*rit);
+            }
         }
-        meshLodThreshold = camera->levelOfDetailPixelThreshold / theViewport.width();
-    } else {
-        viewProjection = QMatrix4x4(/*identity*/);
     }
 
-    const QSSGCameraData &cameraData = getCameraDirectionAndPosition();
-
     // Ensure meshes for models
-    prepareModelMeshesForRender(*renderer->contextInterface(), renderableModels, renderer->isGlobalPickingEnabled());
+    prepareModelMeshesForRenderInternal(*renderer->contextInterface(), renderableModels, renderer->isGlobalPickingEnabled());
 
-    wasDirty |= prepareModelForRender(renderableModels, viewProjection, thePrepResult.flags, cameraData, meshLodThreshold);
-    if (particlesEnabled)
-        wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
-    wasDirty |= prepareItem2DsForRender(*renderer->contextInterface(), renderableItem2Ds, viewProjection);
+    if (camera) { // NOTE: We shouldn't really get this far without a camera...
+        const auto &cameraData = getCachedCameraData();
+        wasDirty |= prepareModelsForRender(renderableModels, thePrepResult.flags, cameraData, {}, meshLodThreshold);
+        if (particlesEnabled)
+            wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
+        wasDirty |= prepareItem2DsForRender(*renderer->contextInterface(), renderableItem2Ds);
+    }
 
     prepareReflectionProbesForRender();
 
@@ -2053,7 +2099,15 @@ void QSSGLayerRenderData::prepareForRender()
     if (thePrepResult.flags.requiresScreenTexture())
         activePasses.push_back(&screenMapPass);
 
+    auto &underlayPass = userPasses[QSSGRenderLayer::RenderExtensionMode::Underlay];
+    if (underlayPass.hasData())
+        activePasses.push_back(&underlayPass);
+
     activePasses.push_back(&mainPass);
+
+    auto &overlayPass = userPasses[QSSGRenderLayer::RenderExtensionMode::Overlay];
+    if (overlayPass.hasData())
+        activePasses.push_back(&overlayPass);
 }
 
 void QSSGLayerRenderData::resetForFrame()
@@ -2129,13 +2183,8 @@ QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer 
 QSSGLayerRenderData::~QSSGLayerRenderData()
 {
     delete m_lightmapper;
-    shadowMapPass.release();
-    reflectionMapPass.release();
-    zPrePassPass.release();
-    ssaoMapPass.release();
-    depthMapPass.release();
-    screenMapPass.release();
-    mainPass.release();
+    for (auto &pass : activePasses)
+        pass->release();
 }
 
 static void sortInstances(QByteArray &sortedData, QList<QSSGRhiSortData> &sortData, const void *instances,
@@ -2308,6 +2357,86 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     }
 
     interactiveLightmapBakingRequested = false;
+}
+
+QSSGFrameData &QSSGLayerRenderData::getFrameData()
+{
+    if (!frameData.has_value())
+        frameData = QSSGFrameData(renderer);
+
+    return *frameData;
+}
+
+QSSGRenderableNodeEntry QSSGLayerRenderData::getNode(QSSGNodeId id) const
+{
+    QSSGRenderableNodeEntry ret;
+    if (auto node = reinterpret_cast<QSSGRenderNode *>(id)) {
+        // NOTE: We only look-up models for now.
+        if (node->type == QSSGRenderNode::Type::Model) {
+            const auto cbegin = renderableModels.cbegin();
+            const auto cend = renderableModels.cend();
+            const auto foundIt = std::find_if(cbegin, cend, [node](const QSSGRenderableNodeEntry &e){ return (e.node == node); });
+            if (foundIt != cend)
+                ret = *foundIt;
+        }
+    }
+
+    return ret;
+}
+
+QSSGRenderableNodeEntry QSSGLayerRenderData::takeNode(QSSGNodeId id)
+{
+    QSSGRenderableNodeEntry ret;
+    if (auto node = reinterpret_cast<QSSGRenderNode *>(id)) {
+        // NOTE: We only look-up models for now.
+        if (node->type == QSSGRenderNode::Type::Model) {
+            const auto cbegin = renderableModels.cbegin();
+            const auto cend = renderableModels.cend();
+            const auto foundIt = std::find_if(cbegin, cend, [node](const QSSGRenderableNodeEntry &e){ return (e.node == node); });
+            if (foundIt != cend) {
+                ret = *foundIt;
+                renderableModels.erase(foundIt);
+            }
+        }
+    }
+
+    return ret;
+}
+
+QSSGRenderGraphObject *QSSGLayerRenderData::getResource(QSSGResourceId id) const
+{
+    QSSGRenderGraphObject *ret = nullptr;
+    if (auto res = reinterpret_cast<QSSGRenderGraphObject *>(id))
+        ret = res;
+
+    return ret;
+}
+
+QSSGCameraRenderData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_)
+{
+    QSSGCameraRenderData data;
+    if (!camera_ || camera_ == camera)
+        data = getCachedCameraData();
+    else if (camera_)
+        data = getCameraDataImpl(camera_);
+
+    return data;
+}
+
+QSSGCameraRenderData QSSGLayerRenderData::getCameraRenderData(const QSSGRenderCamera *camera_)  const
+{
+    QSSGCameraRenderData data;
+    if ((!camera_ || camera_ == camera) && cameraData.has_value())
+        data = cameraData.value();
+    else if (camera_)
+        data = getCameraDataImpl(camera_);
+
+    return data;
+}
+
+QSSGRenderContextInterface *QSSGLayerRenderData::contextInterface() const
+{
+    return renderer ? renderer->contextInterface() : nullptr;
 }
 
 const QSSGRenderShadowMapPtr &QSSGLayerRenderData::requestShadowMapManager()

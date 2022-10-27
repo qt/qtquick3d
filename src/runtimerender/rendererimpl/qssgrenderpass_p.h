@@ -36,8 +36,9 @@ class QSSGRenderPass
 public:
     enum class Type
     {
-        PreMain,
-        Main
+        Standalone,
+        Main,
+        Extension
     };
     // Input:
 
@@ -58,7 +59,7 @@ class ShadowMapPass : public QSSGRenderPass
 public:
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::PreMain; }
+    Type passType() const final { return Type::Standalone; }
     void release() final;
 
     std::shared_ptr<QSSGRenderShadowMap> shadowMapManager;
@@ -76,7 +77,7 @@ class ReflectionMapPass : public QSSGRenderPass
 public:
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::PreMain; }
+    Type passType() const final { return Type::Standalone; }
     void release() final;
 
     std::shared_ptr<QSSGRenderReflectionMap> reflectionMapManager;
@@ -122,7 +123,7 @@ public:
 
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::PreMain; }
+    Type passType() const final { return Type::Standalone; }
     void release() final;
 
     const QSSGRhiRenderableTexture *rhiDepthTexture = nullptr;
@@ -138,7 +139,7 @@ class Q_QUICK3DRUNTIMERENDER_PRIVATE_EXPORT DepthMapPass : public QSSGRenderPass
 public:
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::PreMain; }
+    Type passType() const final { return Type::Standalone; }
     void release() final;
 
     QSSGRenderableObjectList sortedOpaqueObjects;
@@ -152,7 +153,7 @@ class ScreenMapPass : public QSSGRenderPass
 public:
     void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
     void renderPass(QSSGRenderer &renderer) final;
-    Type passType() const final { return Type::PreMain; }
+    Type passType() const final { return Type::Standalone; }
     void release() final;
 
     QSSGRhiRenderableTexture rhiScreenTexture;
@@ -177,6 +178,21 @@ public:
     QVector<QSSGRenderItem2D *> item2Ds;
     QSSGShaderFeatures shaderFeatures;
     QSSGRhiGraphicsPipelineState ps;
+};
+
+class QSSGRenderExtension;
+
+class UserPass : public QSSGRenderPass
+{
+public:
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
+    Type passType() const final { return Type::Extension; }
+    void release() final;
+
+    bool hasData() const { return extensions.size() != 0; }
+
+    QList<QSSGRenderExtension *> extensions;
 };
 
 QT_END_NAMESPACE

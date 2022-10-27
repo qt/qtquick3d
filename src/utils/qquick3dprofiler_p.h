@@ -62,7 +62,8 @@ struct QQuick3DProfiler {
 #define Q_QUICK3D_PROFILE_GET_ID(Object) \
     QQuick3DObjectPrivate::get(Object)->profilingId
 #define Q_QUICK3D_PROFILE_ASSIGN_ID_SG(obj, bgnode) \
-    (bgnode)->profilingId = Q_QUICK3D_PROFILE_GET_ID(obj);
+    if (bgnode) \
+        (bgnode)->profilingId = Q_QUICK3D_PROFILE_GET_ID(obj);
 #define Q_QUICK3D_PROFILE_ASSIGN_ID(bgnode, obj) \
     (obj)->profilingId = (bgnode)->profilingId;
 

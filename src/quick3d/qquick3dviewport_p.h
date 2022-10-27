@@ -52,6 +52,7 @@ class Q_QUICK3D_EXPORT QQuick3DViewport : public QQuickItem
     Q_PROPERTY(RenderMode renderMode READ renderMode WRITE setRenderMode NOTIFY renderModeChanged FINAL)
     Q_PROPERTY(QQuickShaderEffectSource::Format renderFormat READ renderFormat WRITE setRenderFormat NOTIFY renderFormatChanged FINAL REVISION(6, 4))
     Q_PROPERTY(QQuick3DRenderStats *renderStats READ renderStats CONSTANT)
+    Q_PROPERTY(QQmlListProperty<QQuick3DObject> extensions READ extensions FINAL REVISION(6, 6))
     Q_CLASSINFO("DefaultProperty", "data")
 
     QML_NAMED_ELEMENT(View3D)
@@ -99,6 +100,13 @@ public:
 
     Q_INVOKABLE void bakeLightmap();
 
+    QQmlListProperty<QQuick3DObject> extensions();
+
+    // Private helpers
+    [[nodiscard]] bool extensionListDirty() const { return m_extensionListDirty; }
+    [[nodiscard]] const QList<QQuick3DObject *> &extensionList() const { return m_extensions; }
+    void clearExtensionListDirty() { m_extensionListDirty = false; }
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
@@ -133,6 +141,8 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void renderFormatChanged();
 
 private:
+    friend class QQuick3DExtensionListHelper;
+
     Q_DISABLE_COPY(QQuick3DViewport)
     QQuick3DSceneRenderer *getRenderer() const;
     void updateDynamicTextures();
@@ -156,6 +166,8 @@ private:
     QQuick3DRenderStats *m_renderStats = nullptr;
     bool m_enableInputProcessing = false;
     QQuick3DLightmapBaker *m_lightmapBaker = nullptr;
+    QList<QQuick3DObject *> m_extensions;
+    bool m_extensionListDirty = false;
     Q_QUICK3D_PROFILE_ID
 };
 

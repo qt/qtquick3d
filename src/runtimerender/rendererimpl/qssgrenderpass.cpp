@@ -6,11 +6,14 @@
 #include "qssglayerrenderdata_p.h"
 #include "qssgrendercontextcore_p.h"
 #include "qssgdebugdrawsystem_p.h"
+#include "extensionapi/qssgrenderextensions_p.h"
 
 #include "../utils/qssgassert_p.h"
 
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <qtquick3d_tracepoints_p.h>
+
+#include <QtQuick3D/QQuick3DObject>
 
 QT_BEGIN_NAMESPACE
 
@@ -899,6 +902,33 @@ void MainPass::release()
     sortedTransparentObjects.clear();
     sortedScreenTextureObjects.clear();
     item2Ds.clear();
+}
+
+void UserPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
+{
+    auto &frameData = data.getFrameData();
+    for (const auto &p : std::as_const(extensions)) {
+        p->prepareRender(renderer, frameData);
+        if (p->type() == QSSGRenderExtension::Type::Standalone)
+            p->render(renderer);
+    }
+}
+
+void UserPass::renderPass(QSSGRenderer &renderer)
+{
+    for (const auto &p : std::as_const(extensions)) {
+        if (p->type() == QSSGRenderExtension::Type::Main)
+            p->render(renderer);
+    }
+}
+
+void UserPass::release()
+{
+    for (const auto &p : std::as_const(extensions))
+        p->release();
+
+    // TODO: We should track if we need to update this list.
+    extensions.clear();
 }
 
 QT_END_NAMESPACE

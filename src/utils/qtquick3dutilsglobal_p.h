@@ -20,8 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSSGRenderPass;
-using QSSGPassKey = const QSSGRenderPass *;
+using QSSGPassKey = const void *;
 
 QT_END_NAMESPACE
 

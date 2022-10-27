@@ -402,8 +402,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 
     bool depthTestEnable = false;
     bool depthWriteEnable = false;
+    bool usesStencilRef = false;
     QRhiGraphicsPipeline::CompareOp depthFunc = QRhiGraphicsPipeline::LessOrEqual;
     QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
+    QRhiGraphicsPipeline::StencilOpState stencilOpFrontState {};
+    quint32 stencilWriteMask = 0xFF;
+    quint32 stencilRef = 0;
     int depthBias = 0;
     float slopeScaledDepthBias = 0.0f;
     bool blendEnable = false;
@@ -428,6 +432,10 @@ inline bool operator==(const QSSGRhiGraphicsPipelineState &a, const QSSGRhiGraph
             && a.samples == b.samples
             && a.depthTestEnable == b.depthTestEnable
             && a.depthWriteEnable == b.depthWriteEnable
+            && a.usesStencilRef == b.usesStencilRef
+            && a.stencilRef == b.stencilRef
+            && (std::memcmp(&a.stencilOpFrontState, &b.stencilOpFrontState, sizeof(QRhiGraphicsPipeline::StencilOpState)) == 0)
+            && a.stencilWriteMask == b.stencilWriteMask
             && a.depthFunc == b.depthFunc
             && a.cullMode == b.cullMode
             && a.depthBias == b.depthBias
@@ -466,10 +474,14 @@ inline size_t qHash(const QSSGRhiGraphicsPipelineState &s, size_t seed) Q_DECL_N
             ^ qHash(s.colorAttachmentCount)
             ^ qHash(s.lineWidth)
             ^ qHash(s.polygonMode)
+            ^ qHashBits(&s.stencilOpFrontState, sizeof(QRhiGraphicsPipeline::StencilOpState))
             ^ (s.depthTestEnable << 1)
             ^ (s.depthWriteEnable << 2)
             ^ (s.blendEnable << 3)
-            ^ (s.scissorEnable << 4);
+            ^ (s.scissorEnable << 4)
+            ^ (s.usesStencilRef << 5)
+            ^ (s.stencilRef << 6)
+            ^ (s.stencilWriteMask << 7);
 }
 
 struct QSSGGraphicsPipelineStateKey

@@ -29,6 +29,9 @@ struct QSSGRenderImage;
 class QSSGLayerRenderData;
 struct QSSGRenderResourceLoader;
 
+class QQuick3DObject;
+class QSSGRenderExtension;
+
 class QRhiShaderResourceBindings;
 
 // A layer is a special node.  It *always* presents its global transform
@@ -118,6 +121,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // First effect in a list of effects.
     QSSGRenderEffect *firstEffect;
     QSSGLayerRenderData *renderData = nullptr;
+    enum RenderExtensionMode { Underlay, Overlay, Count };
+    QList<QSSGRenderExtension *> renderExtensions[RenderExtensionMode::Count];
 
     // If a layer has a valid texture path (one that resolves to either a
     // an on-disk image or a offscreen renderer), then it does not render its

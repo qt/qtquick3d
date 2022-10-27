@@ -153,6 +153,8 @@ protected:
 
 private:
     friend class QSSGRenderContextInterface;
+    friend class QSSGLayerRenderData;
+
     void releaseCachedResources();
     QSSGRhiShaderPipelinePtr getBuiltinRhiShader(const QByteArray &name,
                                                  QSSGRhiShaderPipelinePtr &storage);
@@ -279,23 +281,23 @@ void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKe
                                       QSSGReflectionMapEntry *entry,
                                       int cubeFace);
 
-void rhiPrepareRenderable(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
-                          const QSSGLayerRenderData &inData,
-                          QSSGRenderableObject &inObject,
-                          QRhiRenderPassDescriptor *renderPassDescriptor,
-                          QSSGRhiGraphicsPipelineState *ps,
-                          QSSGShaderFeatures featureSet,
-                          int samples,
-                          QSSGRenderCamera *inCamera = nullptr,
-                          QMatrix4x4 *alteredModelViewProjection = nullptr,
-                          int cubeFace = -1,
-                          QSSGReflectionMapEntry *entry = nullptr);
+Q_QUICK3DRUNTIMERENDER_EXPORT void rhiPrepareRenderable(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
+                                                       const QSSGLayerRenderData &inData,
+                                                       QSSGRenderableObject &inObject,
+                                                       QRhiRenderPassDescriptor *renderPassDescriptor,
+                                                       QSSGRhiGraphicsPipelineState *ps,
+                                                       QSSGShaderFeatures featureSet,
+                                                       int samples,
+                                                       QSSGRenderCamera *inCamera = nullptr,
+                                                       QMatrix4x4 *alteredModelViewProjection = nullptr,
+                                                       int cubeFace = -1,
+                                                       QSSGReflectionMapEntry *entry = nullptr);
 
-void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
-                         const QSSGRhiGraphicsPipelineState &state,
-                         QSSGRenderableObject &object,
-                         bool *needsSetViewport,
-                         int cubeFace = -1);
+Q_QUICK3DRUNTIMERENDER_EXPORT void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
+                                                       const QSSGRhiGraphicsPipelineState &state,
+                                                       QSSGRenderableObject &object,
+                                                       bool *needsSetViewport,
+                                                       int cubeFace = -1);
 
 bool rhiPrepareDepthTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
 

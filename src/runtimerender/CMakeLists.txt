@@ -77,6 +77,8 @@ qt_internal_add_module(Quick3DRuntimeRender
         resourcemanager/qssgrenderloadedtexture.cpp resourcemanager/qssgrenderloadedtexture_p.h
         resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h
         rendererimpl/qssgcputonemapper_p.h
+        extensionapi/qssgrenderextensions_p.h extensionapi/qssgrenderextensions.cpp
+        extensionapi/qssgrenderhelpers_p.h extensionapi/qssgrenderhelpers.cpp
         qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
     NO_UNITY_BUILD_SOURCES
         rendererimpl/qssglightmapper.cpp              # avoiding possible clash with tinyexr' macros

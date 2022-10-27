@@ -177,11 +177,27 @@ struct QSSGShaderReflectionProbe
 typedef QVarLengthArray<QSSGShaderLight, 16> QSSGShaderLightList;
 using QSSGShaderLightListView = QSSGDataView<QSSGShaderLight>;
 
+using QSSGMaterialListView = QSSGDataView<QSSGRenderGraphObject *>;
+
 struct QSSGRenderableObject;
 
 typedef void (*TRenderFunction)(QSSGRenderableObject &inObject, const QVector2D &inCameraProperties);
 
 struct QSSGRenderableObject;
+
+struct QSSGRenderableNodeEntry
+{
+    QSSGRenderNode *node = nullptr;
+    // TODO: We should have an index here for look-up and store the data in a table,
+    // er already have the index from when we collect the nodes. We might cull some items at a later
+    // stage but that should be fine. The sort data can be just a float and the index to this...
+    mutable QSSGRenderMesh *mesh = nullptr;
+    mutable QSSGMaterialListView materials;
+    mutable QSSGShaderLightListView lights;
+    bool isNull() const { return (node == nullptr); }
+    QSSGRenderableNodeEntry() = default;
+    QSSGRenderableNodeEntry(QSSGRenderNode &inNode) : node(&inNode) {}
+};
 
 // Used for sorting
 struct QSSGRenderableObjectHandle
@@ -216,6 +232,7 @@ struct QSSGRenderableObject
     // For rough sorting for transparency and for depth
     QVector3D worldCenterPoint;
     float depthBiasSq; // Squared as our sorting is based on the square distance!
+    float camdistSq = 0.0f;
     QSSGDepthDrawMode depthWriteMode = QSSGDepthDrawMode::OpaqueOnly;
     const Type type;
     float instancingLodMin = -1;

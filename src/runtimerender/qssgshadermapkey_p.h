@@ -25,7 +25,7 @@ struct QSSGShaderMapKey
     QByteArray m_name;
     const QSSGShaderFeatures *m_featuresOrig;
     QSSGShaderFeatures m_featuresCopy;
-    QSSGShaderDefaultMaterialKey *m_materialKeyOrig;
+    const QSSGShaderDefaultMaterialKey *m_materialKeyOrig;
     QSSGShaderDefaultMaterialKey m_materialKeyCopy;
     size_t m_hashCode;
 
@@ -43,7 +43,7 @@ struct QSSGShaderMapKey
 
     QSSGShaderMapKey(const QByteArray &inName,
                      const QSSGShaderFeatures &inFeatures,
-                     QSSGShaderDefaultMaterialKey &inMaterialKey)
+                     const QSSGShaderDefaultMaterialKey &inMaterialKey)
         : m_name(inName), m_featuresOrig(&inFeatures), m_materialKeyOrig(&inMaterialKey)
     {
         m_hashCode = qHash(m_name) ^ qHash(m_featuresOrig) ^ qHash(m_materialKeyOrig->hash());

@@ -103,6 +103,76 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
 
 QList<QPointer<QQuickDeliveryAgent>> ViewportTransformHelper::owners;
 
+class QQuick3DExtensionListHelper
+{
+    Q_DISABLE_COPY_MOVE(QQuick3DExtensionListHelper);
+public:
+    static void extensionAppend(QQmlListProperty<QQuick3DObject> *list, QQuick3DObject *extension)
+    {
+        QSSG_ASSERT(list && extension, return);
+
+        if (QQuick3DViewport *that = qobject_cast<QQuick3DViewport *>(list->object)) {
+            if (const auto idx = that->m_extensions.indexOf(extension); idx == -1) {
+                if (!extension->parentItem())
+                    extension->setParentItem(that->m_sceneRoot);
+                that->m_extensions.push_back(extension);
+                that->m_extensionListDirty = true;
+            }
+        }
+    }
+    static QQuick3DObject *extensionAt(QQmlListProperty<QQuick3DObject> *list, qsizetype index)
+    {
+        QQuick3DObject *ret = nullptr;
+        QSSG_ASSERT(list, return ret);
+
+        if (QQuick3DViewport *that = qobject_cast<QQuick3DViewport *>(list->object)) {
+            if (that->m_extensions.size() > index)
+                ret = that->m_extensions.at(index);
+        }
+
+        return ret;
+    }
+    static qsizetype extensionCount(QQmlListProperty<QQuick3DObject> *list)
+    {
+        qsizetype ret = -1;
+        QSSG_ASSERT(list, return ret);
+
+        if (QQuick3DViewport *that = qobject_cast<QQuick3DViewport *>(list->object))
+            ret = that->m_extensions.size();
+
+        return ret;
+    }
+    static void extensionClear(QQmlListProperty<QQuick3DObject> *list)
+    {
+        QSSG_ASSERT(list, return);
+
+        if (QQuick3DViewport *that = qobject_cast<QQuick3DViewport *>(list->object)) {
+            that->m_extensions.clear();
+            that->m_extensionListDirty = true;
+        }
+    }
+    static void extensionReplace(QQmlListProperty<QQuick3DObject> *list, qsizetype idx, QQuick3DObject *o)
+    {
+        QSSG_ASSERT(list, return);
+
+        if (QQuick3DViewport *that = qobject_cast<QQuick3DViewport *>(list->object)) {
+            if (that->m_extensions.size() > idx && idx > -1) {
+                that->m_extensions.replace(idx, o);
+                that->m_extensionListDirty = true;
+            }
+        }
+    }
+        static void extensionRemoveLast(QQmlListProperty<QQuick3DObject> *list)
+    {
+        QSSG_ASSERT(list, return);
+
+        if (QQuick3DViewport *that = qobject_cast<QQuick3DViewport *>(list->object)) {
+            that->m_extensions.removeLast();
+            that->m_extensionListDirty = true;
+        }
+    }
+};
+
 /*!
     \qmltype View3D
     \inherits QQuickItem
@@ -1329,6 +1399,21 @@ void QQuick3DViewport::onReleaseCachedResources()
 {
     if (auto renderer = getRenderer())
         renderer->releaseCachedResources();
+}
+
+/*!
+    \internal
+*/
+QQmlListProperty<QQuick3DObject> QQuick3DViewport::extensions()
+{
+    return QQmlListProperty<QQuick3DObject>{ this,
+                                              &m_extensionListDirty,
+                                              &QQuick3DExtensionListHelper::extensionAppend,
+                                              &QQuick3DExtensionListHelper::extensionCount,
+                                              &QQuick3DExtensionListHelper::extensionAt,
+                                              &QQuick3DExtensionListHelper::extensionClear,
+                                              &QQuick3DExtensionListHelper::extensionReplace,
+                                              &QQuick3DExtensionListHelper::extensionRemoveLast};
 }
 
 QT_END_NAMESPACE

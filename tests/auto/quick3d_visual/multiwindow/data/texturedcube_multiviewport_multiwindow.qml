@@ -57,4 +57,11 @@ Window {
             PerspectiveCamera { z: 600 }
         }
     }
+
+    Timer {
+        running: true
+        interval: 3000
+        repeat: false
+        onTriggered: changeToSourceItemBasedTexture()
+    }
 }

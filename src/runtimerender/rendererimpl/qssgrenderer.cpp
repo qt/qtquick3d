@@ -136,8 +136,10 @@ bool QSSGRenderer::prepareLayerForRender(QSSGRenderLayer &inLayer)
 {
     QSSGLayerRenderData *theRenderData = getOrCreateLayerRenderData(inLayer);
     Q_ASSERT(theRenderData);
+    beginLayerRender(*theRenderData);
     theRenderData->resetForFrame();
     theRenderData->prepareForRender();
+    endLayerRender();
     return theRenderData->layerPrepResult->flags.wasDirty();
 }
 
@@ -161,7 +163,7 @@ void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
         const auto &activePasses = theRenderData->activePasses;
         for (const auto &pass : activePasses) {
             pass->renderPrep(*this, *theRenderData);
-            if (pass->passType() == QSSGRenderPass::Type::PreMain)
+            if (pass->passType() == QSSGRenderPass::Type::Standalone)
                 pass->renderPass(*this);
         }
 
@@ -179,7 +181,7 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
         beginLayerRender(*theRenderData);
         const auto &activePasses = theRenderData->activePasses;
         for (const auto &pass : activePasses) {
-            if (pass->passType() == QSSGRenderPass::Type::Main)
+            if (pass->passType() == QSSGRenderPass::Type::Main || pass->passType() == QSSGRenderPass::Type::Extension)
                 pass->renderPass(*this);
         }
         endLayerRender();
@@ -617,9 +619,8 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
 
     if (shaderPipeline != nullptr) {
         if (m_currentLayer && m_currentLayer->camera) {
-            QSSGRenderCamera &theCamera(*m_currentLayer->camera);
             if (!m_currentLayer->cameraData.has_value())
-                m_currentLayer->cameraData = { theCamera };
+                [[maybe_unused]] const auto cd = m_currentLayer->getCachedCameraData();
         }
     }
 
@@ -632,8 +633,8 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
 {
     QSSGLayerRenderData &theData = *m_currentLayer;
     const QSSGRenderLayer &theLayer = theData.layer;
-    if (!theData.cameraData.has_value()) // NOTE: Ensure we have a valid value!
-        theData.cameraData.emplace(theData.camera ? QSSGCameraData{ *theData.camera } : QSSGCameraData{});
+    if (!theData.cameraData.has_value() && theData.camera) // NOTE: Ensure we have a valid value!
+        [[maybe_unused]] const auto cd = theData.getCachedCameraData();
 
     bool isYUpInFramebuffer = true;
     bool isYUpInNDC = true;
@@ -1598,6 +1599,8 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
             vertexBufferCount = 2;
         }
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
+        if (state.usesStencilRef)
+            cb->setStencilRef(state.stencilRef);
         if (indexBuffer) {
             cb->setVertexInput(0, vertexBufferCount, vertexBuffers, indexBuffer, 0, subsetRenderable.subset.rhi.indexBuffer->indexFormat());
             cb->drawIndexed(subsetRenderable.subset.lodCount(subsetRenderable.subsetLevelOfDetail), instances, subsetRenderable.subset.lodOffset(subsetRenderable.subsetLevelOfDetail));

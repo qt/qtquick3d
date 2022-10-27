@@ -89,6 +89,7 @@ public:
     bool cleanupNodes();
     bool updateDirtyResourceNodes();
     void updateDirtySpatialNodes();
+    void updateDiryExtensions();
 
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);
@@ -103,6 +104,7 @@ public:
     // for being instance roots...
     enum class NodePriority { Skeleton, Other, ModelWithInstanceRoot, Lights, Count };
     enum class ResourcePriority { TextureData, Texture, Other, Count };
+    enum class ExtensionPriority { RenderExtension, Count };
 
     static inline size_t resourceListIndex(QSSGRenderGraphObject::Type type)
     {
@@ -130,10 +132,18 @@ public:
         return size_t(NodePriority::Other);
     }
 
+    static constexpr size_t extensionListIndex(QSSGRenderGraphObject::Type type)
+    {
+        Q_ASSERT(QSSGRenderGraphObject::isExtension(type));
+
+        return size_t(ExtensionPriority::RenderExtension);
+    }
+
     static QQuick3DWindowAttachment *getOrSetWindowAttachment(QQuickWindow &window);
 
     QQuick3DObject *dirtyResources[size_t(ResourcePriority::Count)] {};
     QQuick3DObject *dirtyNodes[size_t(NodePriority::Count)] {};
+    QQuick3DObject *dirtyExtensions[size_t(ExtensionPriority::Count)] {};
 
     QList<QQuick3DObject *> dirtyBoundingBoxList;
     QList<QSSGRenderGraphObject *> cleanupNodeList;
@@ -156,6 +166,7 @@ Q_SIGNALS:
 private Q_SLOTS:
     bool updateResources(QQuick3DObject **listHead);
     void updateNodes(QQuick3DObject **listHead);
+    void updateExtensions(QQuick3DObject **listHead);
 };
 
 QT_END_NAMESPACE

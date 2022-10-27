@@ -69,6 +69,8 @@ qt_internal_add_qml_module(Quick3D
         qquick3dspecularglossymaterial.cpp qquick3dspecularglossymaterial_p.h
         qquick3dfog.cpp qquick3dfog_p.h
         qquick3dlightmapbaker.cpp qquick3dlightmapbaker_p.h
+        extensions/qquick3drenderextensions.cpp extensions/qquick3drenderextensions_p.h
+        extensions/qquick3dextensionhelpers.cpp extensions/qquick3dextensionhelpers_p.h
     DEFINES
         QT_BUILD_QUICK3D_LIB
     LIBRARIES

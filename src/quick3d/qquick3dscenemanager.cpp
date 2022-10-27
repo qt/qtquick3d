@@ -136,6 +136,14 @@ void QQuick3DSceneManager::updateDirtySpatialNodes()
         updateNodes(it);
 }
 
+void QQuick3DSceneManager::updateDiryExtensions()
+{
+    auto it = std::begin(dirtyExtensions);
+    const auto end = std::end(dirtyExtensions);
+    for (; it != end; ++it)
+        updateExtensions(it);
+}
+
 void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
 {
     QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(resourceObject);
@@ -306,8 +314,8 @@ bool QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
 
     QQuick3DObject *item = updateList;
     while (item) {
-        // Different processing for resource nodes vs hierarchical nodes
-        Q_ASSERT(!QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type));
+        // Different processing for resource nodes vs hierarchical nodes etc.
+        Q_ASSERT(!QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type) || !QSSGRenderGraphObject::isExtension(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
         updateDirtyResource(item);
         auto *po = QQuick3DObjectPrivate::get(item);
@@ -340,6 +348,36 @@ void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
     }
 }
 
+void QQuick3DSceneManager::updateExtensions(QQuick3DObject **listHead)
+{
+    const auto updateDirtyExtensionNode = [this](QQuick3DObject *extension) {
+        QQuick3DObjectPrivate *po = QQuick3DObjectPrivate::get(extension);
+        po->dirtyAttributes = 0; // Not used, but we should still reset it.
+        QSSGRenderGraphObject *node = po->spatialNode;
+        po->spatialNode = extension->updateSpatialNode(node);
+        if (po->spatialNode)
+            m_nodeMap.insert(po->spatialNode, extension);
+    };
+
+    // Detach the current list head first, and consume all reachable entries.
+    // New entries may be added to the new list while traversing, which will be
+    // visited on the next updateDirtyNodes() call.
+    QQuick3DObject *updateList = *listHead;
+    *listHead = nullptr;
+    if (updateList)
+        QQuick3DObjectPrivate::get(updateList)->prevDirtyItem = &updateList;
+
+    QQuick3DObject *item = updateList;
+    while (item) {
+        // Different processing for resource nodes vs hierarchical nodes (anything that's _not_ a resource)
+        Q_ASSERT(QSSGRenderGraphObject::isExtension(QQuick3DObjectPrivate::get(item)->type));
+        // handle hierarchical nodes
+        updateDirtyExtensionNode(item);
+        QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
+        item = updateList;
+    }
+}
+
 void QQuick3DSceneManager::preSync()
 {
     for (auto it = std::begin(dirtyResources), end = std::end(dirtyResources); it != end; ++it) {
@@ -351,6 +389,14 @@ void QQuick3DSceneManager::preSync()
     }
 
     for (auto it = std::begin(dirtyNodes), end = std::end(dirtyNodes); it != end; ++it) {
+        QQuick3DObject *next = *it;
+        while (next) {
+            next->preSync();
+            next = QQuick3DObjectPrivate::get(next)->nextDirtyItem;
+        }
+    }
+
+    for (auto it = std::begin(dirtyExtensions), end = std::end(dirtyExtensions); it != end; ++it) {
         QQuick3DObject *next = *it;
         while (next) {
             next->preSync();
@@ -459,6 +505,8 @@ bool QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resour
     // Spatial Nodes
     for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->updateDirtySpatialNodes();
+    for (auto &sceneManager : std::as_const(sceneManagers))
+        sceneManager->updateDiryExtensions();
     // Bounding Boxes
     for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->updateBoundingBoxes(*m_rci->bufferManager());

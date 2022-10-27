@@ -989,6 +989,13 @@ QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKe
     ps->setSlopeScaledDepthBias(key.state.slopeScaledDepthBias);
     ps->setPolygonMode(key.state.polygonMode);
 
+    if (key.state.usesStencilRef)
+        flags |= QRhiGraphicsPipeline::UsesStencilRef;
+    ps->setFlags(flags);
+    ps->setStencilFront(key.state.stencilOpFrontState);
+    ps->setStencilTest(key.state.usesStencilRef);
+    ps->setStencilWriteMask(key.state.stencilWriteMask);
+
     if (!ps->create()) {
         qWarning("Failed to build graphics pipeline state");
         delete ps;

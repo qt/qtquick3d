@@ -771,6 +771,13 @@ void QQuick3DObjectPrivate::addToDirtyList()
                 QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
             prevDirtyItem = &sceneManager->dirtyNodes[dirtyListIdx];
             sceneManager->dirtyNodes[dirtyListIdx] = q;
+        } else if (QSSGRenderGraphObject::isExtension(type)) {
+            const auto dirtyListIdx = QQuick3DSceneManager::extensionListIndex(type);
+            nextDirtyItem = sceneManager->dirtyExtensions[dirtyListIdx];
+            if (nextDirtyItem)
+                QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
+            prevDirtyItem = &sceneManager->dirtyExtensions[dirtyListIdx];
+            sceneManager->dirtyExtensions[dirtyListIdx] = q;
         } else {
             const auto dirtyListIdx = QQuick3DSceneManager::resourceListIndex(type);
             nextDirtyItem = sceneManager->dirtyResources[dirtyListIdx];

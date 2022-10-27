@@ -39,7 +39,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         Renderable = 0x80,
         Resource = 0x100,
         Material = 0x200,
-        Texture = 0x400
+        Texture = 0x400,
+        Extension = 0x800
     };
 
     enum class Type : quint16 {
@@ -82,6 +83,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
         // Textures
         Image2D = BaseType::Texture | BaseType::Resource, // Resource
         ImageCube, // Resource
+        RenderExtension = BaseType::Extension // Extension
     };
 
     Q_REQUIRED_RESULT static inline constexpr bool isNodeType(Type type) Q_DECL_NOTHROW
@@ -117,6 +119,11 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
     Q_REQUIRED_RESULT static inline constexpr bool isResource(Type type) Q_DECL_NOTHROW
     {
         return (quint16(type) & BaseType::Resource);
+    }
+
+    [[nodiscard]] static inline constexpr bool isExtension(Type type) noexcept
+    {
+        return (quint16(type) & BaseType::Extension);
     }
 
     // These require special handling, see cleanupNodes() in the scene manager.

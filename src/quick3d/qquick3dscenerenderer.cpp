@@ -13,6 +13,7 @@
 #include "qquick3dmodel_p.h"
 #include "qquick3drenderstats_p.h"
 #include "qquick3ddebugsettings_p.h"
+#include "extensions/qquick3drenderextensions_p.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
@@ -31,10 +32,13 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhicontext_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
+
 
 #include <qtquick3d_tracepoints_p.h>
 
 #include <QtCore/QObject>
+#include <QtCore/qqueue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,6 +73,24 @@ static inline quint64 statDrawCallCount(const QSSGRhiContextStats &stats)
     (statDrawCallCount(stats) | (quint64(stats.perLayerInfo[stats.layerKey].renderPasses.size()) << 32))
 
 #endif
+
+template <typename In, typename Out>
+static void bfs(In *inExtension, QList<Out *> &outList)
+{
+    outList.clear();
+
+    QSSG_ASSERT(inExtension, return);
+
+    QQueue<In *> queue { { inExtension } };
+    while (queue.size() > 0) {
+        if (auto cur = queue.dequeue()) {
+            if (auto *ext = static_cast<Out *>(QQuick3DObjectPrivate::get(cur)->spatialNode))
+                outList.push_back(ext);
+            for (auto &chld : cur->childItems())
+                queue.enqueue(qobject_cast<In *>(chld));
+        }
+    }
+}
 
 SGFramebufferObjectNode::SGFramebufferObjectNode()
     : window(nullptr)
@@ -620,6 +642,27 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     if (newRenderStats)
         m_renderStats->setRhiContext(rhiCtx, m_layer);
+
+    // if the list is dirty we rebuild (assumption is that this won't happen frequently).
+    if (view3D->extensionListDirty()) {
+        // All items in the extension list are root items,
+        const auto &extensions = view3D->extensionList();
+        for (const auto &ext : extensions) {
+            const auto type = QQuick3DObjectPrivate::get(ext)->type;
+            if (QSSGRenderGraphObject::isExtension(type)) {
+                if (type == QSSGRenderGraphObject::Type::RenderExtension) {
+                    if (auto *renderExt = qobject_cast<QQuick3DRenderExtension *>(ext)) {
+                        const auto mode = static_cast<QSSGRenderExtension *>(QQuick3DObjectPrivate::get(renderExt)->spatialNode)->mode();
+                        QSSG_ASSERT(size_t(mode) < std::size(m_layer->renderExtensions), continue);
+                        auto &list = m_layer->renderExtensions[size_t(mode)];
+                        bfs(qobject_cast<QQuick3DRenderExtension *>(ext), list);
+                    }
+                }
+            }
+        }
+
+        view3D->clearExtensionListDirty();
+    }
 
     // Update the layer node properties
     updateLayerNode(view3D, resourceLoaders.values());
