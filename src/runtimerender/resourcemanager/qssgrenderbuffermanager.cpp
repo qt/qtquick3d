@@ -1915,7 +1915,9 @@ void QSSGBufferManager::increaseMemoryStat(QSSGRenderMesh *mesh)
 
 void QSSGBufferManager::decreaseMemoryStat(QSSGRenderMesh *mesh)
 {
-    quint64 s = bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer)
+    quint64 s = 0;
+    if (mesh)
+    s = bufferMemorySize(mesh->subsets.at(0).rhi.vertexBuffer)
             + bufferMemorySize(mesh->subsets.at(0).rhi.indexBuffer);
     stats.meshDataSize = qMax(0u, stats.meshDataSize - s);
     m_contextInterface->rhiContext()->stats().meshDataSizeChanges(stats.meshDataSize);
