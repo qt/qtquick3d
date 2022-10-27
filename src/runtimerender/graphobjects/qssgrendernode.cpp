@@ -115,7 +115,7 @@ bool QSSGRenderNode::calculateGlobalVariables()
 
             const bool globallyActive = getLocalState(LocalState::Active) && parent->getGlobalState(GlobalState::Active);
             flags = globallyActive ? (flags | FlagT(GlobalState::Active)) : (flags & ~FlagT(GlobalState::Active));
-            const bool globallyPickable = getLocalState(LocalState::Pickable) && parent->getGlobalState(GlobalState::Pickable);
+            const bool globallyPickable = getLocalState(LocalState::Pickable) || parent->getGlobalState(GlobalState::Pickable);
             flags = globallyPickable ? (flags | FlagT(GlobalState::Pickable)) : (flags & ~FlagT(GlobalState::Pickable));
         } else {
             globalTransform = localTransform;

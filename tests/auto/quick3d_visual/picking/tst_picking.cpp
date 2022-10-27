@@ -17,6 +17,7 @@ class tst_Picking : public QQuick3DDataTest
 private Q_SLOTS:
     void initTestCase() override;
     void test_object_picking();
+    void test_object_picking2();
 
 private:
     QQuickItem *find2DChildIn3DNode(QQuickView *view, const QString &objectName, const QString &itemName);
@@ -167,6 +168,36 @@ void tst_Picking::test_object_picking()
     direction = QVector3D(0.0f, 0.0f, -1.0f);
     resultList = view3d->rayPickAll(origin, direction);
     QVERIFY(resultList.isEmpty());
+}
+
+void tst_Picking::test_object_picking2()
+{
+    QScopedPointer<QQuickView> view(createView(QLatin1String("picking2.qml"), QSize(100, 100)));
+    QVERIFY(view);
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const auto viewSize = view->size();
+    const float halfWidth = viewSize.width() * 0.5f;
+    const float halfHeight = viewSize.height() * 0.5f;
+    const float horizontalPickLine = halfHeight - 35;
+
+    QQuick3DViewport *view3d = view->findChild<QQuick3DViewport *>(QStringLiteral("view"));
+    QVERIFY(view3d);
+    QQuick3DModel *coneModel = view3d->findChild<QQuick3DModel *>(QStringLiteral("model3"));
+    QVERIFY(coneModel);
+
+    // just left of the cone (model3)
+    auto result = view3d->pick(halfWidth - 11, horizontalPickLine);
+    QCOMPARE(result.objectHit(), nullptr);
+
+    // center top of the cone (model3)
+    result = view3d->pick(halfWidth, horizontalPickLine);
+    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.objectHit(), coneModel);
+
+    // just right of the cone (model3)
+    result = view3d->pick(halfWidth + 11, horizontalPickLine);
+    QCOMPARE(result.objectHit(), nullptr);
 }
 
 QTEST_MAIN(tst_Picking)
