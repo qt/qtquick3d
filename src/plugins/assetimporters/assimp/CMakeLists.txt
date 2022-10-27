@@ -52,6 +52,20 @@ qt_internal_add_plugin(AssimpImporterPlugin
         Qt::Quick3DRuntimeRenderPrivate
 )
 
+# Work around "command line is too long" issue due to a long list of include directories,
+# when using the MinGW windres.exe resource (.rc) compiler.
+# https://gitlab.kitware.com/cmake/cmake/-/issues/16171
+# https://gitlab.kitware.com/cmake/cmake/-/issues/16223
+# Disable the compilation of the rc file entirely, by ensuring that the
+# QT_TARGET_VERSION and QT_TARGET_WINDOWS_RC_FILE
+# properties read by _qt_internal_generate_win32_rc_file are unset.
+if(GCC AND MINGW AND WIN32 AND NOT QT_FEATURE_system_assimp)
+    set_target_properties(AssimpImporterPlugin
+        PROPERTIES
+            QT_TARGET_VERSION ""
+            QT_TARGET_WINDOWS_RC_FILE "")
+endif()
+
 set_target_properties(AssimpImporterPlugin PROPERTIES
     QT_SKIP_WARNINGS_ARE_ERRORS TRUE
 )
