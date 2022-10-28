@@ -19,42 +19,47 @@ Window {
         id: standAloneScene
         //! [rootnode]
 
-        DirectionalLight {
-            ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
-            brightness: 1.0
-            eulerRotation.x: -25
-        }
+        Node {
+            scale: Qt.vector3d(window.width / 1280, window.width / 1280, window.width / 1280)
 
-        Model {
-            source: "#Cube"
-            y: -104
-            scale: Qt.vector3d(3, 3, 0.1)
-            eulerRotation.x: -90
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
+            DirectionalLight {
+                ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
+                brightness: 1.0
+                eulerRotation.x: -25
+            }
+
+            Model {
+                source: "#Cube"
+                y: -104
+                scale: Qt.vector3d(3, 3, 0.1)
+                eulerRotation.x: -90
+                materials: [
+                    DefaultMaterial {
+                        diffuseColor: Qt.rgba(0.8, 0.8, 0.8, 1.0)
+                    }
+                ]
+            }
+
+            Model {
+                id: teapot
+                source: "teapot.mesh"
+                y: -100
+                scale: Qt.vector3d(50, 50, 50)
+                materials: [
+                    PrincipledMaterial {
+                        baseColor: "#41cd52"
+                        metalness: 0.0
+                        roughness: 0.1
+                        opacity: 1.0
+                    }
+                ]
+
+                PropertyAnimation on eulerRotation.y {
+                    loops: Animation.Infinite
+                    duration: 5000
+                    to: 0
+                    from: -360
                 }
-            ]
-        }
-
-        Model {
-            source: "teapot.mesh"
-            y: -100
-            scale: Qt.vector3d(50, 50, 50)
-            materials: [
-                PrincipledMaterial {
-                    baseColor: "#41cd52"
-                    metalness: 0.0
-                    roughness: 0.1
-                    opacity: 1.0
-                }
-            ]
-
-            PropertyAnimation on eulerRotation.y {
-                loops: Animation.Infinite
-                duration: 5000
-                to: 0
-                from: -360
             }
         }
 
@@ -190,10 +195,13 @@ Window {
             spacing: 10
             padding: 10
 
+            property real buttonWidth: (window.width / 2 - 40) / 3
+
             //! [buttons]
             RoundButton {
                 text: "Camera 1"
                 highlighted: topRightView.camera == cameraPerspectiveOne
+                implicitWidth: controlsContainer.buttonWidth
                 onClicked: {
                     topRightView.camera = cameraPerspectiveOne
                 }
@@ -202,6 +210,7 @@ Window {
             RoundButton {
                 text: "Camera 2"
                 highlighted: topRightView.camera == cameraPerspectiveTwo
+                implicitWidth: controlsContainer.buttonWidth
                 onClicked: {
                     topRightView.camera = cameraPerspectiveTwo
                 }
@@ -209,6 +218,7 @@ Window {
             RoundButton {
                 text: "Camera 3"
                 highlighted: topRightView.camera == cameraPerspectiveThree
+                implicitWidth: controlsContainer.buttonWidth
                 onClicked: {
                     topRightView.camera = cameraPerspectiveThree
                 }
