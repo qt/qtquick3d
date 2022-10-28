@@ -362,7 +362,8 @@ public:
     void resetExtraTextures() { m_extraTextures.clear(); }
     void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
     int extraTextureCount() const { return m_extraTextures.size(); }
-    const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
+    const QSSGRhiTexture &extraTextureAt(int index) const { return m_extraTextures[index]; }
+    QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
     InstanceLocations instanceBufferLocations() const { return instanceLocations; }
@@ -982,6 +983,7 @@ public:
     }
 
     QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
+    void checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription);
 
     void registerTexture(QRhiTexture *texture);
     void releaseTexture(QRhiTexture *texture);
