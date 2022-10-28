@@ -1034,6 +1034,41 @@ QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDes
     return newSampler;
 }
 
+void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription)
+{
+    if (samplerDescription->mipmap != QRhiSampler::None
+            || samplerDescription->hTiling != QRhiSampler::ClampToEdge
+            || samplerDescription->vTiling != QRhiSampler::ClampToEdge
+            || samplerDescription->zTiling != QRhiSampler::ClampToEdge)
+    {
+        if (m_rhi->isFeatureSupported(QRhi::NPOTTextureRepeat))
+            return;
+
+        const QSize pixelSize = texture->pixelSize();
+        const int w = qNextPowerOfTwo(pixelSize.width() - 1);
+        const int h = qNextPowerOfTwo(pixelSize.height() - 1);
+        if (w != pixelSize.width() || h != pixelSize.height()) {
+            static bool warnShown = false;
+            if (!warnShown) {
+                warnShown = true;
+                qWarning("Attempted to use an unsupported filtering or wrap mode, "
+                         "this is likely due to lacking proper support for non-power-of-two textures on this platform.\n"
+                         "If this is with WebGL, try updating the application to use QQuick3D::idealSurfaceFormat() in main() "
+                         "in order to ensure WebGL 2 is used.");
+            }
+            samplerDescription->mipmap = QRhiSampler::None;
+            samplerDescription->hTiling = QRhiSampler::ClampToEdge;
+            samplerDescription->vTiling = QRhiSampler::ClampToEdge;
+            samplerDescription->zTiling = QRhiSampler::ClampToEdge;
+        }
+    }
+}
+
+void QSSGRhiContext::registerTexture(QRhiTexture *texture)
+{
+    m_textures.insert(texture);
+}
+
 void QSSGRhiContext::releaseTexture(QRhiTexture *texture)
 {
     m_textures.remove(texture);

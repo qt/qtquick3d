@@ -360,7 +360,8 @@ public:
     void resetExtraTextures() { m_extraTextures.clear(); }
     void addExtraTexture(const QSSGRhiTexture &t) { m_extraTextures.append(t); }
     int extraTextureCount() const { return m_extraTextures.count(); }
-    const QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
+    const QSSGRhiTexture &extraTextureAt(int index) const { return m_extraTextures[index]; }
+    QSSGRhiTexture &extraTextureAt(int index) { return m_extraTextures[index]; }
 
     QSSGShaderLightsUniformData &lightsUniformData() { return m_lightsUniformData; }
     InstanceLocations instanceBufferLocations() const { return instanceLocations; }
@@ -919,10 +920,9 @@ public:
     }
 
     QRhiSampler *sampler(const QSSGRhiSamplerDescription &samplerDescription);
+    void checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription);
 
-    // ### this will become something more sophisticated later on, for now just hold on
-    // to whatever texture we get, and make sure they get destroyed in the dtor
-    void registerTexture(QRhiTexture *texture) { m_textures.insert(texture); }
+    void registerTexture(QRhiTexture *texture);
     void releaseTexture(QRhiTexture *texture);
 
     void cleanupDrawCallData(const QSSGRenderModel *model);

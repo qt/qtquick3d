@@ -406,13 +406,16 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                 QRhiTexture *texture = renderableImage->m_texture.m_texture;
                 if (samplerBinding >= 0 && texture) {
                     const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                    QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
-                                                             toRhi(renderableImage->m_imageNode.m_magFilterType),
-                                                             mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
-                                                             toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
-                                                             toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
-                                                             QRhiSampler::Repeat
-                                                           });
+                    QSSGRhiSamplerDescription samplerDesc = {
+                        toRhi(renderableImage->m_imageNode.m_minFilterType),
+                        toRhi(renderableImage->m_imageNode.m_magFilterType),
+                        mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                        toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                        toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
+                        QRhiSampler::Repeat
+                    };
+                    rhiCtx->checkAndAdjustForNPoT(texture, &samplerDesc);
+                    QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);
                     samplerBindingsSpecified.setBit(samplerBinding);
                     bindings.addTexture(samplerBinding,
                                         VISIBILITY_ALL,
@@ -426,10 +429,11 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             // custom property textures
             int customTexCount = shaderPipeline->extraTextureCount();
             for (int i = 0; i < customTexCount; ++i) {
-                const QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
+                QSSGRhiTexture &t(shaderPipeline->extraTextureAt(i));
                 const int samplerBinding = shaderPipeline->bindingForTexture(t.name);
                 if (samplerBinding >= 0) {
                     samplerBindingsSpecified.setBit(samplerBinding);
+                    rhiCtx->checkAndAdjustForNPoT(t.texture, &t.samplerDesc);
                     QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
                     bindings.addTexture(samplerBinding,
                                         VISIBILITY_ALL,

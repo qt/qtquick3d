@@ -2090,13 +2090,16 @@ static void rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     QRhiTexture *texture = renderableImage->m_texture.m_texture;
                     if (samplerBinding >= 0 && texture) {
                         const bool mipmapped = texture->flags().testFlag(QRhiTexture::MipMapped);
-                        QRhiSampler *sampler = rhiCtx->sampler({ toRhi(renderableImage->m_imageNode.m_minFilterType),
-                                                                 toRhi(renderableImage->m_imageNode.m_magFilterType),
-                                                                 mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
-                                                                 toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
-                                                                 toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
-                                                                 QRhiSampler::Repeat
-                                                               });
+                        QSSGRhiSamplerDescription samplerDesc = {
+                            toRhi(renderableImage->m_imageNode.m_minFilterType),
+                            toRhi(renderableImage->m_imageNode.m_magFilterType),
+                            mipmapped ? toRhi(renderableImage->m_imageNode.m_mipFilterType) : QRhiSampler::None,
+                            toRhi(renderableImage->m_imageNode.m_horizontalTilingMode),
+                            toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
+                            QRhiSampler::Repeat
+                        };
+                        rhiCtx->checkAndAdjustForNPoT(texture, &samplerDesc);
+                        QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);
                         bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
                     }
                 } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
