@@ -1710,6 +1710,22 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             } else {
                 prop.texImage = nullptr;
             }
+
+            if (tex != prop.lastConnectedTexture) {
+                prop.lastConnectedTexture = tex;
+                disconnect(prop.minFilterChangedConn);
+                disconnect(prop.magFilterChangedConn);
+                disconnect(prop.mipFilterChangedConn);
+                disconnect(prop.horizontalTilingChangedConn);
+                disconnect(prop.verticalTilingChangedConn);
+                if (tex) {
+                    prop.minFilterChangedConn = connect(tex, &QQuick3DTexture::minFilterChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                    prop.magFilterChangedConn = connect(tex, &QQuick3DTexture::magFilterChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                    prop.mipFilterChangedConn = connect(tex, &QQuick3DTexture::mipFilterChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                    prop.horizontalTilingChangedConn = connect(tex, &QQuick3DTexture::horizontalTilingChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                    prop.verticalTilingChangedConn = connect(tex, &QQuick3DTexture::verticalTilingChanged, this, &QQuick3DCustomMaterial::onTextureDirty);
+                }
+            }
         }
     }
 
