@@ -128,10 +128,19 @@ bool operator==(const TextureEntry &a, const TextureEntry &b)
 
 struct SceneInfo
 {
-    enum Options
+    struct Options
     {
-        None,
-        generateMipMaps = 0x1
+        bool gltfMode = false;
+        bool binaryKeyframes = false;
+        bool forceMipMapGeneration = false;
+        bool useFloatJointIndices = false;
+        bool generateLightmapUV = false;
+        int lightmapBaseResolution = 1024;
+        float globalScaleValue = 1.0;
+
+        bool generateMeshLODs = false;
+        float lodNormalMergeAngle = 60.0;
+        float lodNormalSplitAngle = 25.0;
     };
 
     using MaterialMap = QVarLengthArray<QPair<const aiMaterial *, QSSGSceneDesc::Material *>>;
@@ -201,7 +210,7 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
 
 static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureInfo &texInfo, const SceneInfo &sceneInfo)
 {
-    const bool forceMipMapGeneration = (sceneInfo.opt & SceneInfo::Options::generateMipMaps);
+    const bool forceMipMapGeneration = sceneInfo.opt.forceMipMapGeneration;
 
     if (texInfo.uvIndex > 0) {
         // Quick3D supports 2 tex coords.
@@ -1129,7 +1138,13 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     };
 
     const auto createMeshNode = [&](const aiString &name) {
-        auto meshData = AssimpUtils::generateMeshData(srcScene, meshes, false, false, 0.0, 0.0, errorString);
+        auto meshData = AssimpUtils::generateMeshData(srcScene,
+                                                      meshes,
+                                                      sceneInfo.opt.useFloatJointIndices,
+                                                      sceneInfo.opt.generateMeshLODs,
+                                                      sceneInfo.opt.lodNormalMergeAngle,
+                                                      sceneInfo.opt.lodNormalSplitAngle,
+                                                      errorString);
         meshStorage.push_back(std::move(meshData));
 
         const auto idx = meshStorage.size() - 1;
@@ -1322,10 +1337,180 @@ static QSSGSceneDesc::Animation::KeyPosition toAnimationKey(const aiMeshMorphKey
     return QSSGSceneDesc::Animation::KeyPosition { QVector4D{ float(key.mWeights[morphId]), 0.0f, 0.0f, 0.0f }, float(key.mTime * freq), flag };
 }
 
-static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneDesc::Scene &targetScene)
+static bool checkBooleanOption(const QString &optionName, const QJsonObject &options)
 {
-    Q_UNUSED(options);
+    const auto it = options.constFind(optionName);
+    const auto end = options.constEnd();
+    return (it != end) ? it->toObject().value("value").toBool() : false;
+}
 
+static qreal getRealOption(const QString &optionName, const QJsonObject &options)
+{
+    const auto it = options.constFind(optionName);
+    const auto end = options.constEnd();
+    return (it != end) ? it->toObject().value("value").toDouble() : 0.0;
+}
+
+#define demonPostProcessPresets ( \
+    aiProcess_CalcTangentSpace              |  \
+    aiProcess_GenSmoothNormals              |  \
+    aiProcess_JoinIdenticalVertices         |  \
+    aiProcess_ImproveCacheLocality          |  \
+    aiProcess_RemoveRedundantMaterials      |  \
+    aiProcess_SplitLargeMeshes              |  \
+    aiProcess_Triangulate                   |  \
+    aiProcess_GenUVCoords                   |  \
+    aiProcess_SortByPType                   |  \
+    aiProcess_FindDegenerates               |  \
+    aiProcess_FindInvalidData               |  \
+    0 )
+
+static aiPostProcessSteps processOptions(const QJsonObject &optionsObject, std::unique_ptr<Assimp::Importer> &importer) {
+    aiPostProcessSteps postProcessSteps = aiPostProcessSteps(aiProcess_Triangulate | aiProcess_SortByPType);;
+
+    // Setup import settings based given options
+    // You can either pass the whole options object, or just the "options" object
+    // so get the right scope.
+    QJsonObject options = optionsObject;
+
+    if (auto it = options.constFind("options"), end = options.constEnd(); it != end)
+        options = it->toObject();
+
+    if (options.isEmpty())
+        return postProcessSteps;
+
+    // parse the options list for values
+
+    if (checkBooleanOption(QStringLiteral("calculateTangentSpace"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_CalcTangentSpace);
+
+    if (checkBooleanOption(QStringLiteral("joinIdenticalVertices"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_JoinIdenticalVertices);
+
+    if (checkBooleanOption(QStringLiteral("generateNormals"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_GenNormals);
+
+    if (checkBooleanOption(QStringLiteral("generateSmoothNormals"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_GenSmoothNormals);
+
+    if (checkBooleanOption(QStringLiteral("splitLargeMeshes"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_SplitLargeMeshes);
+
+    if (checkBooleanOption(QStringLiteral("preTransformVertices"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_PreTransformVertices);
+
+    if (checkBooleanOption(QStringLiteral("improveCacheLocality"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_ImproveCacheLocality);
+
+    if (checkBooleanOption(QStringLiteral("removeRedundantMaterials"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_RemoveRedundantMaterials);
+
+    if (checkBooleanOption(QStringLiteral("fixInfacingNormals"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_FixInfacingNormals);
+
+    if (checkBooleanOption(QStringLiteral("findDegenerates"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_FindDegenerates);
+
+    if (checkBooleanOption(QStringLiteral("findInvalidData"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_FindInvalidData);
+
+    if (checkBooleanOption(QStringLiteral("transformUVCoordinates"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_TransformUVCoords);
+
+    if (checkBooleanOption(QStringLiteral("findInstances"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_FindInstances);
+
+    if (checkBooleanOption(QStringLiteral("optimizeMeshes"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_OptimizeMeshes);
+
+    if (checkBooleanOption(QStringLiteral("optimizeGraph"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_OptimizeGraph);
+
+    if (checkBooleanOption(QStringLiteral("dropNormals"), options))
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_DropNormals);
+
+    aiComponent removeComponents = aiComponent(0);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentNormals"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_NORMALS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentTangentsAndBitangents"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_TANGENTS_AND_BITANGENTS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentColors"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_COLORS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentUVs"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_TEXCOORDS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentBoneWeights"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_BONEWEIGHTS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentAnimations"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_ANIMATIONS);
+
+    if (checkBooleanOption(QStringLiteral("removeComponentTextures"), options))
+        removeComponents = aiComponent(removeComponents | aiComponent_TEXTURES);
+
+    if (removeComponents != aiComponent(0)) {
+        postProcessSteps = aiPostProcessSteps(postProcessSteps | aiProcess_RemoveComponent);
+        importer->SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, removeComponents);
+    }
+
+    bool preservePivots = checkBooleanOption(QStringLiteral("fbxPreservePivots"), options);
+    importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, preservePivots);
+
+    return postProcessSteps;
+}
+
+static SceneInfo::Options processSceneOptions(const QJsonObject &optionsObject) {
+    SceneInfo::Options sceneOptions;
+
+    // Setup import settings based given options
+    // You can either pass the whole options object, or just the "options" object
+    // so get the right scope.
+    QJsonObject options = optionsObject;
+
+    if (auto it = options.constFind("options"), end = options.constEnd(); it != end)
+        options = it->toObject();
+
+    if (options.isEmpty())
+        return sceneOptions;
+
+    if (checkBooleanOption(QStringLiteral("globalScale"), options)) {
+        sceneOptions.globalScaleValue = getRealOption(QStringLiteral("globalScaleValue"), options);
+        if (sceneOptions.globalScaleValue == 0.0)
+            sceneOptions.globalScaleValue = 1.0;
+    }
+
+    sceneOptions.useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), options);
+    sceneOptions.forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), options);
+    sceneOptions.binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), options);
+
+    sceneOptions.generateLightmapUV = checkBooleanOption(QStringLiteral("generateLightmapUV"), options);
+    if (sceneOptions.generateLightmapUV) {
+        qreal v = getRealOption(QStringLiteral("lightmapBaseResolution"), options);
+        sceneOptions.lightmapBaseResolution = v == 0.0 ? 1024 : int(v);
+    }
+
+    sceneOptions.generateMeshLODs = checkBooleanOption(QStringLiteral("generateMeshLevelsOfDetail"), options);
+    if (sceneOptions.generateMeshLODs) {
+        bool recalculateLODNormals = checkBooleanOption(QStringLiteral("recalculateLodNormals"), options);
+        if (recalculateLODNormals) {
+            qreal mergeAngle = getRealOption(QStringLiteral("recalculateLodNormalsMergeAngle"), options);
+            sceneOptions.lodNormalMergeAngle = qBound(0.0, mergeAngle, 270.0);
+            qreal splitAngle = getRealOption(QStringLiteral("recalculateLodNormalsSplitAngle"), options);
+            sceneOptions.lodNormalSplitAngle = qBound(0.0, splitAngle, 270.0);
+        } else {
+            sceneOptions.lodNormalMergeAngle = 0.0;
+            sceneOptions.lodNormalSplitAngle = 0.0;
+        }
+    }
+    return sceneOptions;
+}
+
+static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneDesc::Scene &targetScene)
+{
     auto filePath = url.path();
 
     const bool maybeLocalFile = (url.scheme().isEmpty() || url.isLocalFile());
@@ -1336,12 +1521,22 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
     if (!sourceFile.exists())
         return QLatin1String("File not found");
 
+
+
     std::unique_ptr<Assimp::Importer> importer(new Assimp::Importer());
+
+    // Setup import from Options
+    aiPostProcessSteps postProcessSteps;
+    if (options.isEmpty())
+        postProcessSteps = aiPostProcessSteps(demonPostProcessPresets);
+    else
+        postProcessSteps = processOptions(options, importer);
+
+
+
     // Remove primitives that are not Triangles
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-
-    // Always triangulate, to avoid triggering assert in AssimpUtils::generateMeshData
-    uint postProcessSteps = aiProcess_Triangulate;
+    importer->SetPropertyInteger(AI_CONFIG_IMPORT_COLLADA_USE_COLLADA_NAMES, 1);
 
     auto sourceScene = importer->ReadFile(filePath.toStdString(), postProcessSteps);
     if (!sourceScene) {
@@ -1467,7 +1662,8 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
         QSSGSceneDesc::addNode(targetScene, *root);
     }
 
-    const auto opt = SceneInfo::Options::None;
+    // Get Options
+    const auto opt = processSceneOptions(options);
     SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skins, mesh2skin, sourceFile.dir(), opt };
 
     // Now lets go through the scene
@@ -1630,11 +1826,43 @@ static QString importImp(const QUrl &url, const QVariantMap &options, QSSGSceneD
 
 ////////////////////////
 
-QString AssimpImporter::import(const QUrl &url, const QJsonObject &, QSSGSceneDesc::Scene &scene)
+QString AssimpImporter::import(const QUrl &url, const QJsonObject &options, QSSGSceneDesc::Scene &scene)
 {
     // We'll simply use assimp to load the scene and then translate the Aassimp scene
     // into our own format.
-    return importImp(url, {}, scene);
+    return importImp(url, options, scene);
+}
+
+QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, const QJsonObject &options, QStringList *generatedFiles)
+{
+    QString errorString;
+
+    QSSGSceneDesc::Scene scene;
+
+    // Load scene data
+    auto sourceUrl = QUrl::fromLocalFile(sourceFile);
+    errorString = importImp(sourceUrl, options, scene);
+
+    if (!errorString.isEmpty())
+        return errorString;
+
+    // Write out QML + Resources
+    QFileInfo sourceFileInfo(sourceFile);
+
+    QString targetFileName = savePath.absolutePath() + QDir::separator() +
+            QSSGQmlUtilities::qmlComponentName(sourceFileInfo.completeBaseName()) +
+            QStringLiteral(".qml");
+    QFile targetFile(targetFileName);
+    if (!targetFile.open(QIODevice::WriteOnly)) {
+        errorString += QString("Could not write to file: ") + targetFileName;
+    } else {
+        QTextStream output(&targetFile);
+        QSSGQmlUtilities::writeQml(scene, output, savePath);
+        if (generatedFiles)
+            generatedFiles->append(targetFileName);
+    }
+
+    return errorString;
 }
 
 QT_END_NAMESPACE

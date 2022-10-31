@@ -68,6 +68,10 @@ public:
     ImportState importFile(const QUrl &url,
                            QSSGSceneDesc::Scene &scene,
                            QString *error = nullptr);
+    ImportState importFile(const QUrl &url,
+                           QSSGSceneDesc::Scene &scene,
+                           const QJsonObject &options = QJsonObject(),
+                           QString *error = nullptr);
     QJsonObject getOptionsForFile(const QString &filename);
     PluginOptionMaps getAllOptions() const;
     QHash<QString, QStringList> getSupportedExtensions() const;
