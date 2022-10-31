@@ -6,6 +6,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
+#include <qtquick3d_tracepoints_p.h>
 
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 
@@ -479,6 +480,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
 
     if (!m_currentShaderPipeline) {
         // Final option, generate the shader pipeline
+        Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         const auto &generator = m_sgContext->shaderProgramGenerator();
         if (auto stages = buildShaderForEffect(*inCmd, *generator, *shaderLib, *shaderCache, rhi->isYUpInFramebuffer())) {

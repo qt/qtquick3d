@@ -9,8 +9,14 @@
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtCore/QVariant>
+#include <qtquick3d_tracepoints_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_TRACE_POINT(qtquick3d, QSSG_renderPass_entry, const QString &renderPass);
+Q_TRACE_POINT(qtquick3d, QSSG_renderPass_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_drawIndexed, int indexCount, int instanceCount);
+Q_TRACE_POINT(qtquick3d, QSSG_draw, int vertexCount, int instanceCount);
 
 QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,
                              QRhiBuffer::Type type,
@@ -1182,14 +1188,52 @@ void QSSGRhiContextStats::cleanupLayerInfo(QSSGRenderLayer *layer)
 void QSSGRhiContextStats::beginRenderPass(QRhiTextureRenderTarget *rt)
 {
     PerLayerInfo &info(perLayerInfo[layerKey]);
+    Q_TRACE(QSSG_renderPass_entry, QString::fromUtf8(rt->name()));
     info.renderPasses.append({ rt->name(), rt->pixelSize(), {}, {}, {}, {} });
     info.currentRenderPassIndex = info.renderPasses.size() - 1;
 }
 
 void QSSGRhiContextStats::endRenderPass()
 {
+    Q_TRACE(QSSG_renderPass_exit);
     PerLayerInfo &info(perLayerInfo[layerKey]);
     info.currentRenderPassIndex = -1;
+}
+
+bool QSSGRhiContextStats::isEnabled() const
+{
+    return !dynamicDataSources.isEmpty() || profilingEnabled() || rendererDebugEnabled()
+            || Q_TRACE_ENABLED(QSSG_draw);
+}
+
+void QSSGRhiContextStats::drawIndexed(quint32 indexCount, quint32 instanceCount)
+{
+    Q_TRACE(QSSG_drawIndexed, indexCount, instanceCount);
+    PerLayerInfo &info(perLayerInfo[layerKey]);
+    RenderPassInfo &rp(info.currentRenderPassIndex >= 0 ? info.renderPasses[info.currentRenderPassIndex] : info.externalRenderPass);
+    if (instanceCount > 1) {
+        rp.instancedIndexedDraws.callCount += 1;
+        rp.instancedIndexedDraws.vertexOrIndexCount += indexCount;
+        rp.instancedIndexedDraws.instanceCount += instanceCount;
+    } else {
+        rp.indexedDraws.callCount += 1;
+        rp.indexedDraws.vertexOrIndexCount += indexCount;
+    }
+}
+
+void QSSGRhiContextStats::draw(quint32 vertexCount, quint32 instanceCount)
+{
+    Q_TRACE(QSSG_draw, vertexCount, instanceCount);
+    PerLayerInfo &info(perLayerInfo[layerKey]);
+    RenderPassInfo &rp(info.currentRenderPassIndex >= 0 ? info.renderPasses[info.currentRenderPassIndex] : info.externalRenderPass);
+    if (instanceCount > 1) {
+        rp.instancedDraws.callCount += 1;
+        rp.instancedDraws.vertexOrIndexCount += vertexCount;
+        rp.instancedDraws.instanceCount += instanceCount;
+    } else {
+        rp.draws.callCount += 1;
+        rp.draws.vertexOrIndexCount += vertexCount;
+    }
 }
 
 void QSSGRhiContextStats::printRenderPass(const QSSGRhiContextStats::RenderPassInfo &rp)

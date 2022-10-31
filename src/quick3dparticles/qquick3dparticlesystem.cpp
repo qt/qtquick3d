@@ -13,6 +13,7 @@
 #include "qquick3dparticlelineparticle_p.h"
 #include "qquick3dparticlemodelblendparticle_p.h"
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
+#include <qtquick3d_tracepoints_p.h>
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
@@ -56,6 +57,9 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 */
+
+Q_TRACE_POINT(qtquick3d, QSSG_particleUpdate_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_particleUpdate_exit, int particleCount);
 
 QQuick3DParticleSystem::QQuick3DParticleSystem(QQuick3DNode *parent)
     : QQuick3DNode(parent)
@@ -503,6 +507,8 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DParticleUpdate);
 
+    Q_TRACE(QSSG_particleUpdate_entry);
+
     m_currentTime = currentTime;
     const float timeS = float(m_currentTime / 1000.0f);
 
@@ -565,6 +571,9 @@ void QQuick3DParticleSystem::updateCurrentTime(int currentTime)
     m_timeAnimation += m_perfTimer.nsecsElapsed();
     m_updateAnimation->setDirty(false);
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DParticleUpdate, m_particlesUsed, Q_QUICK3D_PROFILE_GET_ID(this));
+
+    Q_TRACE(QSSG_particleUpdate_exit, m_particlesUsed);
+
 }
 
 void QQuick3DParticleSystem::processModelParticle(QQuick3DParticleModelParticle *modelParticle, const QVector<TrailEmits> &trailEmits, float timeS)
