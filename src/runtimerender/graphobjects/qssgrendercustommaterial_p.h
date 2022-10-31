@@ -27,6 +27,7 @@ QT_BEGIN_NAMESPACE
 
 struct QSSGShaderMaterialAdapter;
 class QQuick3DShaderUtilsTextureInput;
+class QQuick3DTexture;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRenderGraphObject
 {
@@ -44,6 +45,12 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderCustomMaterial : public QSSGRende
         QSSGRenderTextureFilterOp mipFilterType = QSSGRenderTextureFilterOp::Linear;
         QSSGRenderTextureCoordOp horizontalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
         QSSGRenderTextureCoordOp verticalClampType = QSSGRenderTextureCoordOp::ClampToEdge;
+        QQuick3DTexture *lastConnectedTexture = nullptr;
+        QMetaObject::Connection minFilterChangedConn;
+        QMetaObject::Connection magFilterChangedConn;
+        QMetaObject::Connection mipFilterChangedConn;
+        QMetaObject::Connection horizontalTilingChangedConn;
+        QMetaObject::Connection verticalTilingChangedConn;
     };
     using TexturePropertyList = QList<TextureProperty>;
 
