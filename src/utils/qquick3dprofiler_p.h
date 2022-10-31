@@ -270,6 +270,11 @@ protected:
     Q_QUICK3D_PROFILE_IF_ENABLED(QQuick3DProfiler::ProfileQuick3D, \
                                (QQuick3DProfiler::reportQuick3DFrame<Type>(QQuick3DProfiler::Quick3DStageEnd, \
                                                                                   Payload, POID, Str)))
+
+#define QSSG_RENDERPASS_NAME(passName, level, face) \
+    QByteArrayLiteral(passName)+ QByteArrayLiteral("_level_") + QByteArray::number(level) \
+    + QByteArrayLiteral("_face_") + QByteArrayView(QSSGBaseTypeHelpers::toString(QSSGRenderTextureCubeFace(face)))
+
 QT_END_NAMESPACE
 
 #endif

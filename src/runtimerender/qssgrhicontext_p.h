@@ -839,13 +839,14 @@ public:
     {
     }
 
-    // The data collected have three consumers:
+    // The data collected have four consumers:
     //
     // - Printed on debug output when QSG_RENDERER_DEBUG has the relevant key.
     //   (this way the debug output from the 2D scenegraph renderer and these 3D
     //   statistics appear nicely intermixed)
     // - Passed on to the QML profiler when profiling is enabled.
     // - DebugView via QQuick3DRenderStats.
+    // - When tracing is enabled
     //
     // The first two are enabled globally, but DebugView needs a dynamic
     // enable/disable since we want to collect data when a DebugView item
@@ -863,38 +864,9 @@ public:
         return enabled;
     }
 
-    bool isEnabled() const
-    {
-        return !dynamicDataSources.isEmpty() || profilingEnabled() || rendererDebugEnabled();
-    }
-
-    void drawIndexed(quint32 indexCount, quint32 instanceCount)
-    {
-        PerLayerInfo &info(perLayerInfo[layerKey]);
-        RenderPassInfo &rp(info.currentRenderPassIndex >= 0 ? info.renderPasses[info.currentRenderPassIndex] : info.externalRenderPass);
-        if (instanceCount > 1) {
-            rp.instancedIndexedDraws.callCount += 1;
-            rp.instancedIndexedDraws.vertexOrIndexCount += indexCount;
-            rp.instancedIndexedDraws.instanceCount += instanceCount;
-        } else {
-            rp.indexedDraws.callCount += 1;
-            rp.indexedDraws.vertexOrIndexCount += indexCount;
-        }
-    }
-
-    void draw(quint32 vertexCount, quint32 instanceCount)
-    {
-        PerLayerInfo &info(perLayerInfo[layerKey]);
-        RenderPassInfo &rp(info.currentRenderPassIndex >= 0 ? info.renderPasses[info.currentRenderPassIndex] : info.externalRenderPass);
-        if (instanceCount > 1) {
-            rp.instancedDraws.callCount += 1;
-            rp.instancedDraws.vertexOrIndexCount += vertexCount;
-            rp.instancedDraws.instanceCount += instanceCount;
-        } else {
-            rp.draws.callCount += 1;
-            rp.draws.vertexOrIndexCount += vertexCount;
-        }
-    }
+    bool isEnabled() const;
+    void drawIndexed(quint32 indexCount, quint32 instanceCount);
+    void draw(quint32 vertexCount, quint32 instanceCount);
 
     void meshDataSizeChanges(quint64 newSize) // can be called outside start-stop
     {

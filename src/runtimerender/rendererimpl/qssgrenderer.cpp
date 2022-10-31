@@ -24,6 +24,7 @@
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qssgassert_p.h>
+#include <qtquick3d_tracepoints_p.h>
 
 #include <QtCore/QMutexLocker>
 #include <QtCore/QBitArray>
@@ -605,6 +606,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
                                              inRenderable.shaderDescription);
     auto it = m_shaderMap.find(skey);
     if (it == m_shaderMap.end()) {
+        Q_TRACE_SCOPE(QSSG_generateShader);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         shaderPipeline = generateRhiShaderPipeline(inRenderable, inFeatureSet);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inRenderable.material.profilingId);
@@ -1883,8 +1885,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, quint8(face));
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
-                Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_")
-                                               + QByteArrayView(QSSGBaseTypeHelpers::toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
+                Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("shadow_cube", 0, outFace));
             }
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
@@ -1983,8 +1984,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
 
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
-            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("reflection_cube_")
-                                           + QByteArrayView(QSSGBaseTypeHelpers::toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("reflection_cube", 0, outFace));
 
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;

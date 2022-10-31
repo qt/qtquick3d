@@ -25,11 +25,29 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglightmapper_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderresourceloader_p.h>
+#include <qtquick3d_tracepoints_p.h>
 
 QT_BEGIN_NAMESPACE
 
 //#define QSSG_RENDERBUFFER_DEBUGGING
 //#define QSSG_RENDERBUFFER_DEBUGGING_USAGES
+
+Q_TRACE_POINT(qtquick3d, QSSG_textureLoad_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_textureLoad_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_meshLoad_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_meshLoad_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_meshLoadPath_entry, const QString &path);
+Q_TRACE_POINT(qtquick3d, QSSG_meshLoadPath_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_textureUnload_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_textureUnload_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_meshUnload_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_meshUnload_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_customMeshLoad_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_customMeshLoad_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_customMeshUnload_entry);
+Q_TRACE_POINT(qtquick3d, QSSG_customMeshUnload_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_textureLoadPath_entry, const QString &path);
+Q_TRACE_POINT(qtquick3d, QSSG_textureLoadPath_exit);
 
 struct MeshStorageRef
 {
@@ -157,6 +175,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
         }
 
     } else if (image->m_rawTextureData) {
+        Q_TRACE_SCOPE(QSSG_textureLoad);
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
         result = loadTextureData(image->m_rawTextureData, inMipMode);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize, image->profilingId);
@@ -171,6 +190,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
             QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
             const auto &path = image->m_imagePath.path();
             const bool flipY = flags.testFlag(LoadWithFlippedY);
+            Q_TRACE_SCOPE(QSSG_textureLoadPath, path);
             theLoadedTexture.reset(QSSGLoadedTexture::load(path, image->m_format, flipY));
             if (theLoadedTexture) {
                 foundIt = imageMap.insert(imageKey, ImageData());
@@ -249,6 +269,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
         result = foundIt.value().renderImageTexture;
     } else {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
+        Q_TRACE_SCOPE(QSSG_textureLoadPath, imagePath);
         QScopedPointer<QSSGLoadedTexture> theLoadedTexture;
         theLoadedTexture.reset(QSSGLoadedTexture::load(imagePath, format));
         if (!theLoadedTexture)
@@ -623,6 +644,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     auto *cb = context->commandBuffer();
     cb->debugMarkBegin("Environment Cubemap Generation");
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Environment Cubemap Generation"));
     const QRhiCommandBuffer::VertexInput vbufBinding(vertexBuffer, 0);
 
     // Set the Uniform Data
@@ -674,11 +696,11 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
 
         cb->endPass();
         QSSGRHICTX_STAT(context, endRenderPass());
-        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_map_")  \
-                                          + QByteArrayLiteral("face_") + QByteArrayView(QSSGBaseTypeHelpers::toString(static_cast<QSSGRenderTextureCubeFace>(face))));
+        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("environment_map", 0, face));
     }
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_cube_generation"));
+    Q_TRACE(QSSG_renderPass_exit);
 
     if (!isRGBE) {
         // Generate mipmaps for envMap
@@ -690,6 +712,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     // Phase 2: Generate the pre-filtered environment cubemap
     cb->debugMarkBegin("Pre-filtered Environment Cubemap Generation");
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+    Q_TRACE(QSSG_renderPass_entry, QStringLiteral("Pre-filtered Environment Cubemap Generation"));
     QRhiTexture *preFilteredEnvCubeMap = rhi->newTexture(cubeTextureFormat, environmentMapSize, 1, QRhiTexture::RenderTarget | QRhiTexture::CubeMap| QRhiTexture::MipMapped);
     if (!preFilteredEnvCubeMap->create())
         qWarning("Failed to create Pre-filtered Environment Cube Map");
@@ -837,12 +860,12 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
             Q_QUICK3D_PROFILE_END_WITH_PAYLOAD(QQuick3DProfiler::Quick3DRenderCall, 36llu | (1llu << 32));
             cb->endPass();
             QSSGRHICTX_STAT(context, endRenderPass());
-            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_map_level_") + QByteArray::number(mipLevel) \
-                                              + QByteArrayLiteral("_face_") + QByteArrayView(QSSGBaseTypeHelpers::toString(QSSGRenderTextureCubeFace(face))));
+            Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QSSG_RENDERPASS_NAME("environment_map", mipLevel, face));
         }
     }
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_cube_prefilter"));
+    Q_TRACE(QSSG_renderPass_exit);
 
     outTexture->m_texture = preFilteredEnvCubeMap;
     outTexture->m_mipmapCount = mipmapCount;
@@ -1288,6 +1311,7 @@ void QSSGBufferManager::releaseGeometry(QSSGRenderGeometry *geometry)
         qDebug() << "- releaseGeometry: " << geometry << currentLayer;
 #endif
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
+        Q_TRACE_SCOPE(QSSG_customMeshUnload);
         decreaseMemoryStat(meshItr.value().mesh);
         m_contextInterface->rhiContext()->releaseMesh(meshItr.value().mesh);
         customMeshMap.erase(meshItr);
@@ -1317,6 +1341,7 @@ void QSSGBufferManager::releaseTextureData(const CustomImageCacheKey &key)
             qDebug() << "- releaseTextureData: " << textureData << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
+            Q_TRACE_SCOPE(QSSG_textureUnload);
             decreaseMemoryStat(rhiTexture);
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DTextureLoad,
@@ -1336,6 +1361,7 @@ void QSSGBufferManager::releaseMesh(const QSSGRenderPath &inSourcePath)
         qDebug() << "- releaseMesh: " << inSourcePath.path() << currentLayer;
 #endif
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
+        Q_TRACE_SCOPE(QSSG_meshUnload);
         decreaseMemoryStat(meshItr.value().mesh);
         m_contextInterface->rhiContext()->releaseMesh(meshItr.value().mesh);
         meshMap.erase(meshItr);
@@ -1354,6 +1380,7 @@ void QSSGBufferManager::releaseImage(const ImageCacheKey &key)
             qDebug() << "- releaseTexture: " << key.path.path() << currentLayer;
 #endif
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
+            Q_TRACE_SCOPE(QSSG_textureUnload);
             decreaseMemoryStat(rhiTexture);
             m_contextInterface->rhiContext()->releaseTexture(rhiTexture);
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DTextureLoad,
@@ -1535,6 +1562,7 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(const QSSGRenderPath &inMeshPa
     }
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DMeshLoad);
+    Q_TRACE_SCOPE(QSSG_meshLoadPath, inMeshPath.path());
 
     QSSGMesh::Mesh result;
     QString resultSourcePath;
@@ -1596,6 +1624,7 @@ QSSGRenderMesh *QSSGBufferManager::loadRenderMesh(QSSGRenderGeometry *geometry, 
     }
 
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DCustomMeshLoad);
+    Q_TRACE_SCOPE(QSSG_customMeshLoad);
 
     if (!geometry->meshData().m_vertexBuffer.isEmpty()) {
         // Mesh data needs to be loaded

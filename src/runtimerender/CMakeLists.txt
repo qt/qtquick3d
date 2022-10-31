@@ -192,6 +192,16 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION NOT QT_FEATURE_system_z
         Qt6::ZlibPrivate
 )
 
+qt_internal_generate_tracepoints(Quick3DRuntimeRender quick3d
+    SOURCES
+        ../quick3d/qquick3dscenerenderer.cpp
+        ../quick3dparticles/qquick3dparticlesystem.cpp
+        qssgrhicontext.cpp
+        resourcemanager/qssgrenderbuffermanager.cpp
+        qssgrendershadercache.cpp
+        qssgrhicustommaterialsystem.cpp
+)
+
 # default settings are GLSL "100es,120,150" HLSL "50" MSL "12"
 qt_internal_add_shaders(Quick3DRuntimeRender "res_shaders"
     SILENT

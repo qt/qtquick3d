@@ -18,10 +18,14 @@
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrhiparticles_p.h>
+#include <qtquick3d_tracepoints_p.h>
 
 #include <QtCore/qbitarray.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_TRACE_POINT(qtquick3d, QSSG_generateShader_entry)
+Q_TRACE_POINT(qtquick3d, QSSG_generateShader_exit)
 
 QSSGCustomMaterialSystem::QSSGCustomMaterialSystem() = default;
 
@@ -77,6 +81,7 @@ QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSG
 
         if (!shaderPipeline) {
             // Have to generate the shaders and send it all through the shader conditioning pipeline.
+            Q_TRACE_SCOPE(QSSG_generateShader);
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
             QSSGMaterialVertexPipeline vertexPipeline(*context->shaderProgramGenerator(),
                                                       context->renderer()->defaultMaterialShaderKeyProperties(),

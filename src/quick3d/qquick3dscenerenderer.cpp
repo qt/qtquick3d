@@ -32,9 +32,24 @@
 #include <QtQuick3DRuntimeRender/private/qssgcputonemapper_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 
+#include <qtquick3d_tracepoints_p.h>
+
 #include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
+
+Q_TRACE_PREFIX(qtquick3d,
+    "QT_BEGIN_NAMESPACE" \
+    "class QQuick3DViewport;" \
+    "QT_END_NAMESPACE"
+)
+
+Q_TRACE_POINT(qtquick3d, QSSG_prepareFrame_entry, int width, int height);
+Q_TRACE_POINT(qtquick3d, QSSG_prepareFrame_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_renderFrame_entry, int width, int height);
+Q_TRACE_POINT(qtquick3d, QSSG_renderFrame_exit);
+Q_TRACE_POINT(qtquick3d, QSSG_synchronize_entry, QQuick3DViewport *view3D, const QSize &size, float dpr);
+Q_TRACE_POINT(qtquick3d, QSSG_synchronize_exit);
 
 static bool dumpRenderTimes = false;
 
@@ -268,6 +283,8 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             ssaaAdjustedHeight *= m_ssaaMultiplier;
         }
 
+        Q_TRACE(QSSG_prepareFrame_entry, ssaaAdjustedWidth, ssaaAdjustedHeight);
+
         float dpr = m_sgContext->dpr();
         const QRect vp = QRect(0, 0, ssaaAdjustedWidth, ssaaAdjustedHeight);
         beginFrame();
@@ -278,7 +295,10 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(ssaaAdjustedWidth) | quint64(ssaaAdjustedHeight) << 32, profilingId);
 
+        Q_TRACE(QSSG_prepareFrame_exit);
+
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+        Q_TRACE(QSSG_renderFrame_entry, ssaaAdjustedWidth, ssaaAdjustedHeight);
 
         QColor clearColor = Qt::transparent;
         if (m_backgroundMode == QSSGRenderLayer::Background::Color
@@ -328,6 +348,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         if ((progressiveAA || temporalAA) && m_prevTempAATexture) {
             cb->debugMarkBegin(QByteArrayLiteral("Temporal AA"));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+            Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("Temporal AA"));
             QRhiTexture *blendResult;
             uint *aaIndex = progressiveAA ? &m_layer->progAAPassIndex : &m_layer->tempAAPassIndex; // TODO: can we use only one index?
 
@@ -393,6 +414,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             (*aaIndex)++;
             cb->debugMarkEnd();
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("temporal_aa"));
+
             currentTexture = blendResult;
         }
 
@@ -411,6 +433,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             cb->debugMarkBegin(QByteArrayLiteral("SSAA downsample"));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
+
+            Q_TRACE_SCOPE(QSSG_renderPass, QStringLiteral("SSAA downsample"));
+
             renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 
             // Instead of passing in a flip flag we choose to rely on qsb's
@@ -433,6 +458,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, QSSGRhiQuadRenderer::UvCoords);
             cb->debugMarkEnd();
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("ssaa_downsample"));
+
             currentTexture = m_texture;
         }
         endFrame();
@@ -440,6 +466,9 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DRenderFrame,
                                            STAT_PAYLOAD(m_sgContext->rhiContext()->stats()),
                                            profilingId);
+
+        Q_TRACE(QSSG_renderFrame_exit);
+
     }
 
     return currentTexture;
@@ -522,6 +551,8 @@ static QVector3D tonemapRgb(const QVector3D &c, QQuick3DSceneEnvironment::QQuick
 
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr)
 {
+    Q_TRACE_SCOPE(QSSG_synchronize, view3D, size, dpr);
+
     Q_ASSERT(view3D != nullptr); // This is not an option!
     QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
     Q_ASSERT(rhiCtx != nullptr);
@@ -1286,6 +1317,9 @@ void QQuick3DSGRenderNode::prepare()
     QRectF viewport = matrix()->mapRect(QRectF(QPoint(0, 0), itemSize));
     viewport = QRectF(viewport.topLeft() * dpr, viewport.size() * dpr);
     const QRect vp = convertQtRectToGLViewport(viewport, window->size() * dpr);
+
+    Q_TRACE_SCOPE(QSSG_prepareFrame, vp.width(), vp.height());
+
     renderer->beginFrame();
     renderer->rhiPrepare(vp, dpr);
     Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(vp.width()) | quint64(vp.height()) << 32, renderer->profilingId);
@@ -1297,6 +1331,7 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
 
     if (renderer->m_sgContext->rhiContext()->isValid()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+        Q_TRACE_SCOPE(QSSG_renderFrame, 0, 0);
 
         queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().get());
 
@@ -1388,6 +1423,8 @@ void QQuick3DSGDirectRenderer::prepare()
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
             const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
+
+            Q_TRACE_SCOPE(QSSG_prepareFrame, vp.width(), vp.height());
             m_renderer->beginFrame();
             m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DPrepareFrame, quint64(vp.width()) | quint64(vp.height()) << 32, m_renderer->profilingId);
@@ -1444,6 +1481,7 @@ void QQuick3DSGDirectRenderer::render()
         else
         {
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
+            Q_TRACE_SCOPE(QSSG_renderFrame, 0, 0);
 
             queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
 

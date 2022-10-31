@@ -10,6 +10,7 @@
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
 
 #include <QtQuick3DRuntimeRender/private/qssgruntimerenderlogging_p.h>
+#include <qtquick3d_tracepoints_p.h>
 
 #include <QCoreApplication>
 #include <QStandardPaths>
@@ -30,6 +31,9 @@
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_TRACE_POINT(qtquick3d, QSSG_loadShader_entry)
+Q_TRACE_POINT(qtquick3d, QSSG_loadShader_exit)
 
 static QtQuick3DEditorHelpers::ShaderBaker::StatusCallback s_statusCallback = nullptr;
 Q_GLOBAL_STATIC(QMutex, s_statusMutex);
@@ -498,6 +502,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByt
     if (shaderDebug)
         qDebug("Loading pregenerated rhi shader(s)");
 
+    Q_TRACE_SCOPE(QSSG_loadShader);
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
@@ -576,6 +581,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &in
     if (shaderDebug)
         qDebug("Loading builtin rhi shader: %s", inKey.constData());
 
+    Q_TRACE_SCOPE(QSSG_loadShader);
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
