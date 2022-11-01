@@ -170,8 +170,6 @@ QQuick3DViewport::~QQuick3DViewport()
     if (auto qw = window())
         disconnect(qw, nullptr, this, nullptr);
 
-    for (const auto &connection : std::as_const(m_connections))
-        disconnect(connection);
     auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     if (sceneManager) {
         sceneManager->setParent(nullptr);
