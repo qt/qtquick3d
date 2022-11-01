@@ -145,7 +145,6 @@ private:
     RenderMode m_renderMode = Offscreen;
     QQuickShaderEffectSource::Format m_renderFormat = QQuickShaderEffectSource::RGBA8;
     QQuick3DRenderStats *m_renderStats = nullptr;
-    QHash<QObject*, QMetaObject::Connection> m_connections;
     bool m_enableInputProcessing = true;
     Q_QUICK3D_PROFILE_ID
 };
