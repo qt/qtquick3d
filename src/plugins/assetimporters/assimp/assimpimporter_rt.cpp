@@ -407,13 +407,24 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         {
             aiColor4D baseColorFactor;
             result = source.Get(AI_MATKEY_BASE_COLOR, baseColorFactor);
-            if (result == aiReturn_SUCCESS)
+            if (result == aiReturn_SUCCESS) {
                 QSSGSceneDesc::setProperty(target, "baseColor", &QQuick3DPrincipledMaterial::setBaseColor, aiColorToQColor(baseColorFactor));
+
+            } else {
+                // Also try diffuse color as a fallback
+                aiColor3D diffuseColor;
+                result = source.Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+                if (result == aiReturn_SUCCESS)
+                    QSSGSceneDesc::setProperty(target, "baseColor", &QQuick3DPrincipledMaterial::setBaseColor, aiColorToQColor(diffuseColor));
+            }
         }
 
         if (auto baseColorTexture = createTextureNode(source, AI_MATKEY_BASE_COLOR_TEXTURE)) {
             QSSGSceneDesc::setProperty(target, "baseColorMap", &QQuick3DPrincipledMaterial::setBaseColorMap, baseColorTexture);
             QSSGSceneDesc::setProperty(target, "opacityChannel", &QQuick3DPrincipledMaterial::setOpacityChannel, QQuick3DPrincipledMaterial::TextureChannelMapping::A);
+        } else if (auto diffuseMapTexture = createTextureNode(source, aiTextureType_DIFFUSE, 0)) {
+            // Also try to legacy diffuse texture as an alternative
+            QSSGSceneDesc::setProperty(target, "baseColorMap", &QQuick3DPrincipledMaterial::setBaseColorMap, diffuseMapTexture);
         }
 
         if (auto metalicRoughnessTexture = createTextureNode(source, AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE)) {
