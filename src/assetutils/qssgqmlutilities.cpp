@@ -30,6 +30,24 @@ QT_BEGIN_NAMESPACE
 
 namespace QSSGQmlUtilities {
 
+class PropertyMap
+{
+public:
+    typedef QHash<QByteArray, QVariant> PropertiesMap;
+
+    static PropertyMap *instance();
+
+    PropertiesMap propertiesForType(QSSGSceneDesc::Node::RuntimeType type);
+    QVariant getDefaultValue(QSSGSceneDesc::Node::RuntimeType type, const char *property);
+    bool isDefaultValue(QSSGSceneDesc::Node::RuntimeType type, const char *property, const QVariant &value);
+
+private:
+    PropertyMap();
+
+    QHash<QSSGSceneDesc::Node::RuntimeType, PropertiesMap> m_properties;
+
+};
+
 QString insertTabs(int n)
 {
     QString tabs;
@@ -255,220 +273,112 @@ PropertyMap *PropertyMap::instance()
     return &p;
 }
 
-PropertyMap::PropertiesMap *PropertyMap::propertiesForType(PropertyMap::Type type)
+PropertyMap::PropertiesMap PropertyMap::propertiesForType(QSSGSceneDesc::Node::RuntimeType type)
 {
-    if (m_properties.contains(type))
-        return m_properties[type];
-
-    return nullptr;
+    return m_properties[type];
 }
 
-QVariant PropertyMap::getDefaultValue(PropertyMap::Type type, const QString &property)
+QVariant PropertyMap::getDefaultValue(QSSGSceneDesc::Node::RuntimeType type, const char *property)
 {
     QVariant value;
 
     if (m_properties.contains(type)) {
         auto properties = m_properties[type];
-        if (properties->contains(property))
-            value = properties->value(property);
+        value = properties.value(property);
     }
 
     return value;
 }
 
-bool PropertyMap::isDefaultValue(PropertyMap::Type type, const QString &property, const QVariant &value)
+bool PropertyMap::isDefaultValue(QSSGSceneDesc::Node::RuntimeType type, const char *property, const QVariant &value)
 {
     bool isTheSame = value == getDefaultValue(type, property);
     return isTheSame;
 }
 
-PropertyMap::PropertyMap()
-{
-    // Node
-    PropertiesMap *node = new PropertiesMap;
-    node->insert(QStringLiteral("x"), 0);
-    node->insert(QStringLiteral("y"), 0);
-    node->insert(QStringLiteral("z"), 0);
-    node->insert(QStringLiteral("position"), QVector3D(0, 0, 0));
-    node->insert(QStringLiteral("position.x"), 0);
-    node->insert(QStringLiteral("position.y"), 0);
-    node->insert(QStringLiteral("position.z"), 0);
-    node->insert(QStringLiteral("rotation"), QQuaternion(1, 0, 0, 0));
-    node->insert(QStringLiteral("eulerRotation.x"), 0);
-    node->insert(QStringLiteral("eulerRotation.y"), 0);
-    node->insert(QStringLiteral("eulerRotation.z"), 0);
-    node->insert(QStringLiteral("eulerRotation"), QVector3D(0, 0, 0));
-    node->insert(QStringLiteral("scale"), QVector3D(1, 1, 1));
-    node->insert(QStringLiteral("scale.x"), 1);
-    node->insert(QStringLiteral("scale.y"), 1);
-    node->insert(QStringLiteral("scale.z"), 1);
-    node->insert(QStringLiteral("pivot"), QVector3D(0, 0, 0));
-    node->insert(QStringLiteral("pivot.x"), 0);
-    node->insert(QStringLiteral("pivot.y"), 0);
-    node->insert(QStringLiteral("pivot.z"), 0);
-    node->insert(QStringLiteral("opacity"), 1.0);
-    node->insert(QStringLiteral("visible"), true);
-    m_properties.insert(Type::Node, node);
-
-    // Model
-    PropertiesMap *model = new PropertiesMap;
-    m_properties.insert(Type::Model, model);
-
-    // PerspectiveCamera
-    PropertiesMap *perspectiveCamera = new PropertiesMap;
-    perspectiveCamera->insert(QStringLiteral("clipNear"), 10.0f);
-    perspectiveCamera->insert(QStringLiteral("clipFar"), 10000.0f);
-    perspectiveCamera->insert(QStringLiteral("fieldOfView"), 60.0f);
-    perspectiveCamera->insert(QStringLiteral("fieldOfViewOrientation"), QStringLiteral("PerspectiveCamera.Vertical"));
-    m_properties.insert(Type::PerspectiveCamera, perspectiveCamera);
-
-    // OrthographicCamera
-    PropertiesMap *orthographicCamera = new PropertiesMap;
-    orthographicCamera->insert(QStringLiteral("clipNear"), 10.0f);
-    orthographicCamera->insert(QStringLiteral("clipFar"), 10000.0f);
-    orthographicCamera->insert(QStringLiteral("horizontalMagnification"), 1.0f);
-    orthographicCamera->insert(QStringLiteral("verticalMagnification"), 1.0f);
-    m_properties.insert(Type::OrthographicCamera, orthographicCamera);
-
-    // Directional Light
-    PropertiesMap *directionalLight = new PropertiesMap;
-    directionalLight->insert(QStringLiteral("color"), QColor(Qt::white));
-    directionalLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    directionalLight->insert(QStringLiteral("brightness"), 1.0f);
-    directionalLight->insert(QStringLiteral("castShadow"), false);
-    directionalLight->insert(QStringLiteral("shadowBias"), 0.0f);
-    directionalLight->insert(QStringLiteral("shadowFactor"), 5.0f);
-    directionalLight->insert(QStringLiteral("shadowMapResolution"), 9);
-    directionalLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    directionalLight->insert(QStringLiteral("shadowFilter"), 5.0f);
-    m_properties.insert(Type::DirectionalLight, directionalLight);
-
-    // Point Light
-    PropertiesMap *pointLight = new PropertiesMap;
-    pointLight->insert(QStringLiteral("color"), QColor(Qt::white));
-    pointLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    pointLight->insert(QStringLiteral("brightness"), 1.0f);
-    pointLight->insert(QStringLiteral("castShadow"), false);
-    pointLight->insert(QStringLiteral("shadowBias"), 0.0f);
-    pointLight->insert(QStringLiteral("shadowFactor"), 5.0f);
-    pointLight->insert(QStringLiteral("shadowMapResolution"), 9);
-    pointLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    pointLight->insert(QStringLiteral("shadowFilter"), 5.0f);
-    pointLight->insert(QStringLiteral("constantFade"), 1.0f);
-    pointLight->insert(QStringLiteral("linearFade"), 0.0f);
-    pointLight->insert(QStringLiteral("quadraticFade"), 1.0f);
-    m_properties.insert(Type::PointLight, pointLight);
-
-    // Spot Light
-    PropertiesMap *spotLight = new PropertiesMap;
-    spotLight->insert(QStringLiteral("color"), QColor(Qt::white));
-    spotLight->insert(QStringLiteral("ambientColor"), QColor(Qt::black));
-    spotLight->insert(QStringLiteral("brightness"), 1.0f);
-    spotLight->insert(QStringLiteral("castShadow"), false);
-    spotLight->insert(QStringLiteral("shadowBias"), 0.0f);
-    spotLight->insert(QStringLiteral("shadowFactor"), 5.0f);
-    spotLight->insert(QStringLiteral("shadowMapResolution"), 9);
-    spotLight->insert(QStringLiteral("shadowMapFar"), 5000.0f);
-    spotLight->insert(QStringLiteral("shadowFilter"), 5.0f);
-    spotLight->insert(QStringLiteral("constantFade"), 1.0f);
-    spotLight->insert(QStringLiteral("linearFade"), 0.0f);
-    spotLight->insert(QStringLiteral("quadraticFade"), 1.0f);
-    spotLight->insert(QStringLiteral("coneAngle"), 40.0f);
-    spotLight->insert(QStringLiteral("innerConeAngle"), 30.0f);
-    m_properties.insert(Type::SpotLight, spotLight);
-
-    // DefaultMaterial -- used by the balsam code path
-    PropertiesMap *defaultMaterial = new PropertiesMap;
-    defaultMaterial->insert(QStringLiteral("lighting"), QStringLiteral("DefaultMaterial.FragmentLighting"));
-    defaultMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("DefaultMaterial.SourceOver"));
-    defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
-    defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
-    defaultMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("diffuseColor"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
-    defaultMaterial->insert(QStringLiteral("specularModel"), QStringLiteral("DefaultMaterial.Default"));
-    defaultMaterial->insert(QStringLiteral("specularTint"), QColor(Qt::white));
-    defaultMaterial->insert(QStringLiteral("indexOfRefraction"), 1.45f);
-    defaultMaterial->insert(QStringLiteral("fresnelPower"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("specularAmount"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("specularRoughness"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("opacity"), 1.0f);
-    defaultMaterial->insert(QStringLiteral("bumpAmount"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("translucentFalloff"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("diffuseLightWrap"), 0.0f);
-    defaultMaterial->insert(QStringLiteral("vertexColorsEnabled"), false);
-    m_properties.insert(Type::DefaultMaterial, defaultMaterial);
-
-    PropertiesMap *principledMaterial = new PropertiesMap;
-    principledMaterial->insert(QStringLiteral("lighting"), QStringLiteral("PrincipledMaterial.FragmentLighting"));
-    principledMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("PrincipledMaterial.SourceOver"));
-    principledMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("PrincipledMaterial.Default"));
-    principledMaterial->insert(QStringLiteral("baseColor"), QColor(Qt::white));
-    principledMaterial->insert(QStringLiteral("metalness"), 0.0f);
-    principledMaterial->insert(QStringLiteral("specularAmount"), 1.0f);
-    principledMaterial->insert(QStringLiteral("specularTint"), 0.0f);
-    principledMaterial->insert(QStringLiteral("roughness"), 0.0f);
-    principledMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
-    principledMaterial->insert(QStringLiteral("opacity"), 1.0f);
-    principledMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
-    principledMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
-    principledMaterial->insert(QStringLiteral("occlusionAmount"), 1.0f);
-    principledMaterial->insert(QStringLiteral("clearcoatAmount"), 0.0f);
-    principledMaterial->insert(QStringLiteral("clearcoatRoughnessAmount"), 0.0f);
-    principledMaterial->insert(QStringLiteral("transmissionFactor"), 0.0f);
-    principledMaterial->insert(QStringLiteral("thicknessFactor"), 0.0f);
-    principledMaterial->insert(QStringLiteral("attenuationDistance"), std::numeric_limits<float>::infinity());
-    principledMaterial->insert(QStringLiteral("attenuationColor"), QColor(Qt::white));
-    principledMaterial->insert(QStringLiteral("indexOfRefraction"), 1.5f);
-
-    m_properties.insert(Type::PrincipledMaterial, principledMaterial);
-
-    PropertiesMap *specularGlossyMaterial = new PropertiesMap;
-    specularGlossyMaterial->insert(QStringLiteral("lighting"), QStringLiteral("SpecularGlossyMaterial.FragmentLighting"));
-    specularGlossyMaterial->insert(QStringLiteral("blendMode"), QStringLiteral("SpecularGlossyMaterial.SourceOver"));
-    specularGlossyMaterial->insert(QStringLiteral("alphaMode"), QStringLiteral("SpecularGlossyMaterial.Default"));
-    specularGlossyMaterial->insert(QStringLiteral("albedoColor"), QColor(Qt::white));
-    specularGlossyMaterial->insert(QStringLiteral("specularColor"), QColor(Qt::white));
-    specularGlossyMaterial->insert(QStringLiteral("glossiness"), 1.0f);
-    specularGlossyMaterial->insert(QStringLiteral("emissiveFactor"), QVector3D(0.0, 0.0, 0.0));
-    specularGlossyMaterial->insert(QStringLiteral("opacity"), 1.0f);
-    specularGlossyMaterial->insert(QStringLiteral("normalStrength"), 1.0f);
-    specularGlossyMaterial->insert(QStringLiteral("alphaCutoff"), 0.5f);
-    specularGlossyMaterial->insert(QStringLiteral("occlusionAmount"), 1.0f);
-    specularGlossyMaterial->insert(QStringLiteral("clearcoatAmount"), 0.0f);
-    specularGlossyMaterial->insert(QStringLiteral("clearcoatRoughnessAmount"), 0.0f);
-    specularGlossyMaterial->insert(QStringLiteral("transmissionFactor"), 0.0f);
-    specularGlossyMaterial->insert(QStringLiteral("thicknessFactor"), 0.0f);
-    specularGlossyMaterial->insert(QStringLiteral("attenuationDistance"), std::numeric_limits<float>::infinity());
-    specularGlossyMaterial->insert(QStringLiteral("attenuationColor"), QColor(Qt::white));
-
-    m_properties.insert(Type::SpecularGlossyMaterial, specularGlossyMaterial);
-
-    // Image
-    PropertiesMap *texture = new PropertiesMap;
-    texture->insert(QStringLiteral("scaleU"), 1.0f);
-    texture->insert(QStringLiteral("scaleV"), 1.0f);
-    texture->insert(QStringLiteral("mappingMode"), QStringLiteral("Texture.UV"));
-    texture->insert(QStringLiteral("tilingModeHorizontal"), QStringLiteral("Texture.Repeat"));
-    texture->insert(QStringLiteral("tilingModeVertical"), QStringLiteral("Texture.Repeat"));
-    texture->insert(QStringLiteral("rotationUV"), 0.0f);
-    texture->insert(QStringLiteral("positionU"), 0.0f);
-    texture->insert(QStringLiteral("positionV"), 0.0f);
-    texture->insert(QStringLiteral("pivotU"), 0.0f);
-    texture->insert(QStringLiteral("pivotV"), 0.0f);
-    texture->insert(QStringLiteral("indexUV"), 0);
-    texture->insert(QStringLiteral("magFilter"), QStringLiteral("Texture.Linear"));
-    texture->insert(QStringLiteral("minFilter"), QStringLiteral("Texture.Linear"));
-    texture->insert(QStringLiteral("mipFilter"), QStringLiteral("Texture.None"));
-    texture->insert(QStringLiteral("generateMipmaps"), false);
-    m_properties.insert(Type::Texture, texture);
+static PropertyMap::PropertiesMap getObjectPropertiesMap(QObject *object) {
+    PropertyMap::PropertiesMap propertiesMap;
+    auto metaObject = object->metaObject();
+    for (auto i = 0; i < metaObject->propertyCount(); ++i) {
+        auto property = metaObject->property(i);
+        const auto name = property.name();
+        const auto value = property.read(object);
+        propertiesMap.insert(name, value);
+    }
+    return propertiesMap;
 }
 
-PropertyMap::~PropertyMap()
+PropertyMap::PropertyMap()
 {
-    for (const auto &proprtyMap : std::as_const(m_properties))
-        delete proprtyMap;
+    // Create a table containing the default values for each property for each supported type
+    {
+        QQuick3DNode node;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::Node, getObjectPropertiesMap(&node));
+    }
+    {
+        QQuick3DPrincipledMaterial principledMaterial;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::PrincipledMaterial, getObjectPropertiesMap(&principledMaterial));
+    }
+    {
+        QQuick3DSpecularGlossyMaterial specularGlossyMaterial;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::SpecularGlossyMaterial, getObjectPropertiesMap(&specularGlossyMaterial));
+    }
+    {
+        QQuick3DCustomMaterial customMaterial;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::CustomMaterial, getObjectPropertiesMap(&customMaterial));
+    }
+    {
+        QQuick3DTexture texture;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::Image2D, getObjectPropertiesMap(&texture));
+    }
+    {
+        QQuick3DCubeMapTexture cubeMapTexture;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::ImageCube, getObjectPropertiesMap(&cubeMapTexture));
+    }
+    {
+        QQuick3DTextureData textureData;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::TextureData, getObjectPropertiesMap(&textureData));
+    }
+    {
+        QQuick3DModel model;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::Model, getObjectPropertiesMap(&model));
+    }
+    {
+        QQuick3DOrthographicCamera orthographicCamera;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::OrthographicCamera, getObjectPropertiesMap(&orthographicCamera));
+    }
+    {
+        QQuick3DPerspectiveCamera perspectiveCamera;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::PerspectiveCamera, getObjectPropertiesMap(&perspectiveCamera));
+    }
+    {
+        QQuick3DDirectionalLight directionalLight;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::DirectionalLight, getObjectPropertiesMap(&directionalLight));
+    }
+    {
+        QQuick3DPointLight pointLight;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::PointLight, getObjectPropertiesMap(&pointLight));
+    }
+    {
+        QQuick3DSpotLight spotLight;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::SpotLight, getObjectPropertiesMap(&spotLight));
+    }
+    {
+        QQuick3DSkeleton skeleton;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::Skeleton, getObjectPropertiesMap(&skeleton));
+    }
+    {
+        QQuick3DJoint joint;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::Joint, getObjectPropertiesMap(&joint));
+    }
+    {
+        QQuick3DSkin skin;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::Skin, getObjectPropertiesMap(&skin));
+    }
+    {
+        QQuick3DMorphTarget morphTarget;
+        m_properties.insert(QSSGSceneDesc::Node::RuntimeType::MorphTarget, getObjectPropertiesMap(&morphTarget));
+    }
 }
 
 struct OutputContext
@@ -704,22 +614,6 @@ static QString getIdForNode(const QSSGSceneDesc::Node &node)
     } while (--attempts);
 
     return sanitizedName;
-}
-
-void writeQmlPropertyHelper(QTextStream &output, int tabLevel, PropertyMap::Type type, const QString &propertyName, const QVariant &value)
-{
-    if (!PropertyMap::instance()->propertiesForType(type)->contains(propertyName)) {
-        qWarning() << "property: " << propertyName << " not found";
-        return;
-    }
-
-    auto defaultValue = PropertyMap::instance()->propertiesForType(type)->value(propertyName);
-
-    if ((defaultValue != value)) {
-        QString valueString = QSSGQmlUtilities::variantToQml(value);
-        output << QSSGQmlUtilities::insertTabs(tabLevel) << propertyName << ": " << valueString << Qt::endl;
-    }
-
 }
 
 QString stripParentDirectory(const QString &filePath) {
@@ -1101,6 +995,12 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
     return PropertyPair();
 }
 
+static QVariant toVariant(const QSSGSceneDesc::Value &value)
+{
+    const void *dptr = QSSGSceneDesc::can_be_stored_in_pointer(value.mt) ? &value.dptr : value.dptr;
+    return QVariant(value.mt, dptr);
+}
+
 static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
@@ -1114,13 +1014,16 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto end = properties.end();
     bool ok = false;
     for (; it != end; ++it) {
-        const auto &[name, value] = valueToQml(node, *(*it), output, &ok);
-        if ((*it)->type != Property::Type::Dynamic) {
+        const auto &property = *it;
+        const auto &[name, value] = valueToQml(node, *property, output, &ok);
+        if (property->type != Property::Type::Dynamic) {
             if (!ok)
                 indent(output) << comment();
-            indent(output) << name << ": " << value << "\n";
-        } else if (ok && (*it)->type == Property::Type::Dynamic) {
-            indent(output) << "property " << typeName((*it)->value.mt).toByteArray() << ' ' << name << ": " << value << "\n";
+            // Only write the property if the value is differnt than the default value
+            if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, toVariant(property->value)))
+                indent(output) << name << ": " << value << "\n";
+        } else if (ok && property->type == Property::Type::Dynamic) {
+            indent(output) << "property " << typeName(property->value.mt).toByteArray() << ' ' << name << ": " << value << "\n";
         }
     }
 }
