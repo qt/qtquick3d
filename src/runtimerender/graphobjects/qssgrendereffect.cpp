@@ -67,6 +67,8 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
     if (!shaderPrepData.valid)
         return;
 
+    QRhi *rhi = renderContext->rhiContext()->rhi();
+
     for (int i = 0, ie = shaderPrepData.passes.size(); i != ie; ++i) {
         const ShaderPrepPassData &pass(shaderPrepData.passes[i]);
 
@@ -102,6 +104,11 @@ void QSSGRenderEffect::finalizeShaders(const QSSGRenderLayer &layer, QSSGRenderC
 
         QByteArray shaderPathKey = pass.shaderPathKeyPrefix;
         shaderPathKey.append(':' + QCryptographicHash::hash(sourceCodeForHash, QCryptographicHash::Algorithm::Sha1).toHex());
+
+        // QSSGRhiEffectSystem will vary the vertex shader code based on this
+        // flag from the QRhi. It is therefore important to capture this in the
+        // cache key as well.
+        shaderPathKey.append(':' + QByteArray::number(rhi->isYUpInFramebuffer() ? 1 : 0));
 
         if (shouldTonemapIfEnabled) {
             // This does not always mean there will be tonemapping: if the mode

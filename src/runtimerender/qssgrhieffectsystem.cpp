@@ -391,6 +391,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const Q
     {
         const QByteArray src = shaderLib->getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Vertex);
         QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
+        // The variation based on isYUpInFramebuffer is captured in 'key' as
+        // well, so it is safe to vary the source code here.
         vStage->append(isYUpInFramebuffer ? effect_builtin_textureMapUV : effect_builtin_textureMapUVFlipped);
         vStage->append(src);
     }
