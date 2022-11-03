@@ -392,7 +392,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                             QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
                     } else {
                         const auto path = sceneInfo.workingDir.absoluteFilePath(QString::fromUtf8(texturePath.C_Str())).toUtf8();
-                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QSSGSceneDesc::UrlView{ path });
+                        QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QUrl{ path });
                     }
                 }
             }
@@ -1188,7 +1188,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     }
 
     if (meshNode)
-        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh>(), meshNode });
+        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh *>(), meshNode });
 
     if (skinIdx != -1) {
         auto &skin = skinMap[skinIdx];

@@ -48,7 +48,7 @@ void QSSGSceneDesc::Scene::reset()
 
 QMetaType QSSGSceneDesc::listViewMetaType()
 {
-    return QMetaType::fromType<QSSGSceneDesc::ListView>();
+    return QMetaType::fromType<QSSGSceneDesc::ListView *>();
 }
 
 QMetaType QSSGSceneDesc::flagMetaType()
@@ -89,7 +89,7 @@ void QSSGSceneDesc::destructValue(Value &value)
             return;
         }
         case QMetaType::QUrl:
-            qWarning("Don't know how to destruct QUrl");
+            delete reinterpret_cast<QUrl *>(value.dptr);
             return;
         case QMetaType::Float:
             delete reinterpret_cast<float *>(value.dptr);
@@ -127,7 +127,7 @@ void QSSGSceneDesc::destructValue(Value &value)
         return;
     }
 
-    if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::ListView>()) {
+    if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::ListView *>()) {
         auto listView = reinterpret_cast<QSSGSceneDesc::ListView *>(value.dptr);
         delete listView;
         return;
@@ -139,13 +139,8 @@ void QSSGSceneDesc::destructValue(Value &value)
         return;
     }
 
-    if (value.mt == QMetaType::fromType<QSSGSceneDesc::Mesh>()) {
+    if (value.mt == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
         qDebug() << "Mesh node property: not deleted.";
-    }
-
-    if (value.mt == QMetaType::fromType<QSSGSceneDesc::UrlView>()) {
-        delete reinterpret_cast<QSSGSceneDesc::UrlView *>(value.dptr);
-        return;
     }
 
     qWarning() << "Unknown type in destructValue:" << value.mt;

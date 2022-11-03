@@ -29,25 +29,18 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node, 
         if (v->value.mt.id() == qMetaTypeId<Node *>()) {
             const auto *node = reinterpret_cast<Node *>(v->value.dptr);
             v->call->set(obj, v->name, node ? node->obj : nullptr);
-        } else if (v->value.mt == QMetaType::fromType<Mesh>()) { // Special handling for mesh nodes.
+        } else if (v->value.mt == QMetaType::fromType<Mesh *>()) { // Special handling for mesh nodes.
             // Mesh nodes does not have an equivalent in the QtQuick3D scene, but is registered
             // as a source property in the intermediate scene we therefore need to convert it to
             // be a usable source url now.
             const auto meshNode = reinterpret_cast<const Mesh *>(v->value.dptr);
             const auto url = meshNode ? QUrl(QSSGBufferManager::runtimeMeshSourceName(node.scene->id, meshNode->idx)) : QUrl{};
             v->call->set(obj, v->name, &url);
-        } else if (v->value.mt == QMetaType::fromType<BufferView>()) {
-            const auto buffer = reinterpret_cast<const BufferView *>(v->value.dptr);
-            const QByteArray qbuffer = buffer ? buffer->view : QByteArray{};
-            v->call->set(obj, v->name, &qbuffer);
-        } else if (v->value.mt == QMetaType::fromType<UrlView>()) {
-            const auto url = reinterpret_cast<const UrlView *>(v->value.dptr);
-            const QUrl qurl = url ? QUrl::fromUserInput(QString::fromUtf8(url->view), workingDir) : QUrl{};
+        } else if (v->value.mt == QMetaType::fromType<QUrl>()) {
+            const auto url = reinterpret_cast<const QUrl *>(v->value.dptr);
+            // TODO: Use QUrl::resolved() instead
+            const QUrl qurl = url ? QUrl::fromUserInput(url->path(), workingDir) : QUrl{};
             v->call->set(obj, v->name, &qurl);
-        } else if (v->value.mt == QMetaType::fromType<StringView>()) {
-            const auto string = reinterpret_cast<const StringView *>(v->value.dptr);
-            const QString qstring = string ? QString::fromUtf8(string->view) : QString{};
-            v->call->set(obj, v->name, &qstring);
         } else if (v->value.mt.id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
             const auto flag = reinterpret_cast<const QSSGSceneDesc::Flag *>(v->value.dptr);
             const int qflag(flag ? flag->value : 0);

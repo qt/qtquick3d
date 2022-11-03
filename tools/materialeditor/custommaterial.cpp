@@ -130,9 +130,9 @@ QPointer<QQuick3DCustomMaterial> CustomMaterial::create(QQuick3DNode &parent, co
         setProperty(*material, "destinationBlend", &QQuick3DCustomMaterial::setDstBlend, properties.destinationBlend);
 
     if (!shaders.vert.isEmpty())
-        setProperty(*material, "vertexShader", &QQuick3DCustomMaterial::setVertexShader, QSSGSceneDesc::UrlView{ {shaders.vert.toString().toUtf8()} });
+        setProperty(*material, "vertexShader", &QQuick3DCustomMaterial::setVertexShader, QUrl{ shaders.vert.toString() });
     if (!shaders.frag.isEmpty())
-        setProperty(*material, "fragmentShader", &QQuick3DCustomMaterial::setFragmentShader, QSSGSceneDesc::UrlView{ {shaders.frag.toString().toUtf8()} });
+        setProperty(*material, "fragmentShader", &QQuick3DCustomMaterial::setFragmentShader, QUrl{ shaders.frag.toString() });
 
     auto resourceParent = std::make_unique<QQuick3DNode>();
     QSSGRuntimeUtils::createScene(parent, scene);

@@ -104,13 +104,6 @@ struct Flag
     quintptr value;
 };
 
-struct BufferView {
-    using type = QByteArray;
-    QByteArray view;
-};
-struct UrlView : BufferView { using type = QUrl; };
-struct StringView : BufferView { using type = QString; };
-
 struct Property
 {
     ~Property();
@@ -554,7 +547,6 @@ template<typename Setter, typename T, if_compatible_t<Setter, T> = false>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, T &&value)
 {
      Q_ASSERT(node.scene);
-    static_assert(std::is_trivially_destructible_v<rm_cvref_t<T>>, "Value needs to be trivially destructible!");
     auto prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
@@ -697,9 +689,6 @@ Q_DECLARE_METATYPE(QSSGSceneDesc::MorphTarget)
 Q_DECLARE_METATYPE(QSSGSceneDesc::NodeList)
 Q_DECLARE_METATYPE(QSSGSceneDesc::Animation)
 
-Q_DECLARE_METATYPE(QSSGSceneDesc::BufferView)
-Q_DECLARE_METATYPE(QSSGSceneDesc::UrlView)
-Q_DECLARE_METATYPE(QSSGSceneDesc::StringView)
 Q_DECLARE_METATYPE(QSSGSceneDesc::ListView)
 
 Q_DECLARE_METATYPE(QSSGSceneDesc::Flag)

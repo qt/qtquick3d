@@ -854,7 +854,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
             }
         }
 
-        if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::ListView>()) {
+        if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::ListView *>()) {
             const auto &list = *reinterpret_cast<QSSGSceneDesc::ListView *>(value.dptr);
             if (list.count > 0) {
                 const bool useBrackets = (list.count > 1);
@@ -906,7 +906,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
             }
         }
 
-        if (value.mt == QMetaType::fromType<QSSGSceneDesc::Mesh>()) {
+        if (value.mt == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
             //
             static const auto outputMeshAsset = [](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
                 const auto meshFolder = getMeshFolder();
@@ -938,10 +938,10 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
             }
         }
 
-        if (value.mt == QMetaType::fromType<QSSGSceneDesc::UrlView>()) {
+        if (value.mt == QMetaType::fromType<QUrl>()) {
             //
-            static const auto copyTextureAsset = [&output](const QByteArrayView &texturePath, const QDir &outdir) {
-                const auto assetPath = QString::fromUtf8(texturePath);
+            static const auto copyTextureAsset = [&output](const QUrl &texturePath, const QDir &outdir) {
+                const auto assetPath = texturePath.path(); // TODO: Use QUrl::resolved() instead of manual string manipulation
                 QFileInfo fi(assetPath);
                 if (fi.isRelative() && !output.sourceDir.isEmpty()) {
                     fi = QFileInfo(output.sourceDir + QChar(u'/') + assetPath);
@@ -963,15 +963,15 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 return relpath;
             };
 
-            if (const auto urlView = reinterpret_cast<const UrlView *>(value.dptr)) {
+            if (const auto url = reinterpret_cast<const QUrl *>(value.dptr)) {
                 // We need to adjust source url(s) as those should contain the canonical path
-                const auto &path = urlView->view;
+
                 if (QSSGRenderGraphObject::isTexture(target.runtimeType)) {
-                    const auto sourcePath = copyTextureAsset(path, output.outdir);
+                    const auto sourcePath = copyTextureAsset(*url, output.outdir);
                     return { property.name, toQuotedString(sourcePath) };
                 }
 
-                return { property.name, toQuotedString(QString::fromUtf8(path)) };
+                return { property.name, toQuotedString(url->path()) };
             }
         }
 
