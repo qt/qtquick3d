@@ -29,4 +29,5 @@ SUBDIRS += \
     particles3d \
     runtimeloader \
     reflectionprobes \
-    bakedlightmap
+    bakedlightmap \
+    lodhelper

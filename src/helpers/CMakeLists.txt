@@ -28,6 +28,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         DebugView.qml
         WasdController.qml
         OrbitCameraController.qml
+        LodManager.qml
     RESOURCES
         meshes/axisGrid.mesh
     DEFINES
