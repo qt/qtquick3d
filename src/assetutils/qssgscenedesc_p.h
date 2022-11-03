@@ -87,16 +87,11 @@ struct Q_QUICK3DASSETUTILS_EXPORT Scene
 struct Q_QUICK3DASSETUTILS_EXPORT PropertyCall
 {
     virtual bool set(QQuick3DObject &, const char *, const void *) = 0;
+    virtual bool set(QQuick3DObject &, const char *, const QVariant &) = 0;
     virtual bool get(const QQuick3DObject &, const void *[]) const = 0;
 };
 
-struct Value
-{
-    QMetaType mt;
-    void *dptr;
-};
-
-Q_QUICK3DASSETUTILS_EXPORT void destructValue(QSSGSceneDesc::Value &value);
+Q_QUICK3DASSETUTILS_EXPORT void destructValue(QVariant &value);
 
 struct Flag
 {
@@ -108,7 +103,7 @@ struct Property
 {
     ~Property();
     enum class Type { Static, Dynamic };
-    Value value;
+    QVariant value;
     const char *name = nullptr;
     QSSGSceneDesc::PropertyCall *call = nullptr;
     Type type = Type::Static;
@@ -293,15 +288,17 @@ struct MorphTarget : Node
 };
 QSSG_DECLARE_NODE(MorphTarget)
 
+// We keep our own list data structure, since Qt does not have a variant list where all the
+// elements have the same type, and using a list of QVariant is very inefficient
 struct ListView
 {
-    ~ListView() { if (head.dptr) free(head.dptr); }
-    Value head;
+    ~ListView() { if (data) free(data); }
+    QMetaType mt;
+    void *data = nullptr;
     qsizetype count = -1;
 };
 
 Q_QUICK3DASSETUTILS_EXPORT QMetaType listViewMetaType();
-Q_QUICK3DASSETUTILS_EXPORT QMetaType flagMetaType();
 
 struct Animation
 {
@@ -460,6 +457,11 @@ struct PropertyProxySetter : PropertyCall
             call(that, name, *reinterpret_cast<typename FuncType<Setter>::Arg2Base *>(const_cast<void *>(value)));
         return true;
     }
+    bool set(QQuick3DObject &that, const char *name, const QVariant &var) override
+    {
+        call(that, name, qvariant_cast<typename FuncType<Setter>::Arg2Base>(var));
+        return true;
+    }
 };
 
 template <typename Ret, typename Class, typename Arg>
@@ -473,8 +475,14 @@ struct PropertySetter : PropertyCall
     {
         if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg0>)
             (qobject_cast<Class *>(&that)->*call)(reinterpret_cast<typename FuncType<Setter>::Arg0>(const_cast<void *>(value)));
-        else
+        else {
             (qobject_cast<Class *>(&that)->*call)(*reinterpret_cast<typename FuncType<Setter>::Arg0Base *>(const_cast<void *>(value)));
+        }
+        return true;
+    }
+    bool set(QQuick3DObject &that, const char *, const QVariant &var) override
+    {
+        (qobject_cast<Class *>(&that)->*call)(qvariant_cast<typename FuncType<Setter>::Arg0Base>(var));
         return true;
     }
 };
@@ -492,8 +500,8 @@ struct PropertyListSetter : PropertyCall
     {
         if (const auto listView = reinterpret_cast<const ListView *>(value)) {
             if (listView->count > 0) {
-                const auto begin = reinterpret_cast<It *>(listView->head.dptr);
-                const auto end = reinterpret_cast<It *>(listView->head.dptr) + listView->count;
+                const auto begin = reinterpret_cast<It *>(listView->data);
+                const auto end = reinterpret_cast<It *>(listView->data) + listView->count;
                 (qobject_cast<Class *>(&that)->*call)(ListT{begin, end});
             } else {
                 (qobject_cast<Class *>(&that)->*call)(ListT{});
@@ -501,6 +509,19 @@ struct PropertyListSetter : PropertyCall
             return true;
         }
 
+        return false;
+    }
+    bool set(QQuick3DObject &that, const char *, const QVariant &var) override
+    {
+        if (const auto listView = qvariant_cast<const ListView *>(var)) {
+            if (listView->count > 0) {
+                const auto begin = reinterpret_cast<It *>(listView->data);
+                const auto end = reinterpret_cast<It *>(listView->data) + listView->count;
+                (qobject_cast<Class *>(&that)->*call)(ListT{begin, end});
+            } else {
+                (qobject_cast<Class *>(&that)->*call)(ListT{});
+            }
+        }
         return false;
     }
 };
@@ -516,17 +537,33 @@ struct PropertyList : PropertyCall
     static_assert(std::is_same_v<ListType, QQmlListProperty<T>>, "Expected QQmlListProperty!");
 
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
+
+
+    void doSet(QQuick3DObject &that, const QSSGSceneDesc::NodeList &nodeList)
+    {
+        ListType list = (qobject_cast<Class *>(&that)->*listfn)();
+        auto head = reinterpret_cast<as_node_type_t<T> **>(nodeList.head);
+        for (int i = 0, end = nodeList.count; i != end; ++i)
+            list.append(&list, qobject_cast<T *>((*(head + i))->obj));
+    }
+
     bool set(QQuick3DObject &that, const char *, const void *value) override
     {
         if (value) {
-            ListType list = (qobject_cast<Class *>(&that)->*listfn)();
             const auto &nodeList = *reinterpret_cast<const QSSGSceneDesc::NodeList *>(value);
-            auto head = reinterpret_cast<as_node_type_t<T> **>(nodeList.head);
-            for (int i = 0, end = nodeList.count; i != end; ++i)
-                list.append(&list, qobject_cast<T *>((*(head + i))->obj));
+            doSet(that, nodeList);
             return true;
         }
+        return false;
+    }
 
+    bool set(QQuick3DObject &that, const char *, const QVariant &var) override
+    {
+        const auto *nodeList = qvariant_cast<const QSSGSceneDesc::NodeList *>(var);
+        if (nodeList) {
+            doSet(that, *nodeList);
+            return true;
+        }
         return false;
     }
 };
@@ -550,9 +587,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     auto prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
-    using Tt = rm_cvref_t<T>;
-    prop->value.mt = QMetaType::fromType<Tt>();
-    prop->value.dptr = new Tt(std::forward<T>(value));
+    prop->value = QVariant::fromValue(std::forward<T>(value));
     node.properties.push_back(prop);
 }
 
@@ -563,10 +598,10 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     auto prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
-    prop->value.mt = flagMetaType();
-    prop->value.dptr = new Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) };
+    prop->value = QVariant::fromValue(Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) });
     node.properties.push_back(prop);
 }
+
 
 template<typename Setter, typename T, if_compatible_t<Setter, QList<T>> = false>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QList<T> value)
@@ -586,15 +621,14 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     auto prop = new Property;
     prop->name = name;
     prop->call = new PropertyListSetter(setter);
-    prop->value.mt = listViewMetaType();
-    prop->value.dptr = new ListView{ { QMetaType::fromType<rm_cvref_t<T>>(), data }, count };
+    prop->value = QVariant::fromValue(new ListView{ QMetaType::fromType<rm_cvref_t<T>>(), data, count });
     node.properties.push_back(prop);
 }
 
 // Calling this will omit any type checking, so make sure the type is handled correctly
 // when it gets used later!
 template<typename Setter>
-static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QSSGSceneDesc::Value &&value)
+static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, QVariant &&value)
 {
     Q_ASSERT(node.scene);
     Property *prop = new Property;
@@ -612,12 +646,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     Property *prop = new Property;
     prop->name = name;
     prop->call = new PropertyProxySetter(setter);
-    using ValueT = rm_cvref_t<Value>;
-    prop->value.mt = QMetaType::fromType<ValueT>();
-    if constexpr (std::is_pointer_v<ValueT>)
-        prop->value.dptr = value;
-    else
-        prop->value.dptr = new ValueT(std::forward<Value>(value));
+    prop->value = QVariant::fromValue(value);
     prop->type = type;
     node.properties.push_back(prop);
 }
@@ -630,9 +659,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     Property *prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
-    using ViewValueT = rm_cvref_t<ViewValue>;
-    prop->value.mt = QMetaType::fromType<ViewValueT>();
-    prop->value.dptr = new ViewValueT(std::move(view));
+    prop->value = QVariant::fromValue(view);
     node.properties.push_back(prop);
 }
 
@@ -643,8 +670,8 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     Property *prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
-    prop->value.mt = QMetaType::fromType<Node *>(); // Always 'Node', the Node class itself contains more fine grain type information.
-    prop->value.dptr = value;
+    // Always 'Node', the Node class itself contains more fine grain type information.
+    prop->value = QVariant::fromValue(static_cast<Node *>(value));
     node.properties.push_back(prop);
 }
 
@@ -665,8 +692,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
         Property *prop = new Property;
         prop->name = name;
         prop->call = new PropertyList(setter);
-        prop->value.mt = QMetaType::fromType<QSSGSceneDesc::NodeList *>();
-        prop->value.dptr = l;
+        prop->value = QVariant::fromValue(l);
         node.properties.push_back(prop);
     }
 }

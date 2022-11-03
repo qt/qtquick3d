@@ -51,99 +51,27 @@ QMetaType QSSGSceneDesc::listViewMetaType()
     return QMetaType::fromType<QSSGSceneDesc::ListView *>();
 }
 
-QMetaType QSSGSceneDesc::flagMetaType()
+void QSSGSceneDesc::destructValue(QVariant &value)
 {
-    return QMetaType::fromType<QSSGSceneDesc::Flag>();
-}
-
-void QSSGSceneDesc::destructValue(Value &value)
-{
-    if (!value.dptr)
+    if (!value.isValid())
         return;
 
-    {
-        // Built-in types
-        switch (value.mt.id()) {
-        case QMetaType::QVector2D: {
-            delete reinterpret_cast<QVector2D *>(value.dptr);
-            return;
-        }
-        case QMetaType::QVector3D: {
-            delete reinterpret_cast<QVector3D *>(value.dptr);
-            return;
-        }
-        case QMetaType::QVector4D: {
-            delete reinterpret_cast<QVector4D *>(value.dptr);
-            return;
-        }
-        case QMetaType::QColor: {
-            delete reinterpret_cast<QColor *>(value.dptr);
-            return;
-        }
-        case QMetaType::QQuaternion: {
-            delete reinterpret_cast<QQuaternion *>(value.dptr);
-            return;
-        }
-        case QMetaType::QMatrix4x4: {
-            delete reinterpret_cast<QMatrix4x4 *>(value.dptr);
-            return;
-        }
-        case QMetaType::QUrl:
-            delete reinterpret_cast<QUrl *>(value.dptr);
-            return;
-        case QMetaType::Float:
-            delete reinterpret_cast<float *>(value.dptr);
-            return;
-        case QMetaType::Double:
-            delete reinterpret_cast<double *>(value.dptr);
-            return;
-        case QMetaType::Int:
-            delete reinterpret_cast<int *>(value.dptr);
-            return;
-        case QMetaType::Char:
-            delete reinterpret_cast<char *>(value.dptr);
-            return;
-        case QMetaType::Bool:
-            delete reinterpret_cast<bool *>(value.dptr);
-            return;
-        case QMetaType::Long:
-        case QMetaType::LongLong:
-        case QMetaType::ULong:
-        case QMetaType::ULongLong:
-            qWarning() << "Not implemented yet: destruct simple type" << value.mt;
-            return;
-        default:
-            break;
-        }
+    if (!(value.metaType().flags() & QMetaType::TypeFlag::IsPointer))
+        return; // Non-pointer types are destructed by ~QVariant
+
+    if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
+        qDebug() << "Mesh node property: not deleted.";
     }
 
-    if (value.mt.flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
-        delete reinterpret_cast<QSSGSceneDesc::Flag *>(value.dptr);
-        return;
-    }
-
-    if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
-        delete reinterpret_cast<QSSGSceneDesc::NodeList *>(value.dptr);
-        return;
-    }
-
-    if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::ListView *>()) {
-        auto listView = reinterpret_cast<QSSGSceneDesc::ListView *>(value.dptr);
-        delete listView;
-        return;
-    }
-
-    if (value.mt.id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
+    if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
         // Node properties are pointers, and may be used multiple times.
         // We need some sort of refcounting/garbage collection for these.
         return;
     }
 
-    if (value.mt == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
-        qDebug() << "Mesh node property: not deleted.";
-    }
+    // All other pointer types are supposed to be deleted
 
-    qWarning() << "Unknown type in destructValue:" << value.mt;
+    value.metaType().destroy(value.data());
 }
 
 void QSSGSceneDesc::destructNode(Node &node)

@@ -26,27 +26,28 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node, 
     const auto end = properties.end();
     for (; it != end; ++it) {
         const auto &v = *it;
-        if (v->value.mt.id() == qMetaTypeId<Node *>()) {
-            const auto *node = reinterpret_cast<Node *>(v->value.dptr);
+        const auto &var = v->value;
+        if (var.metaType().id() == qMetaTypeId<Node *>()) {
+            const auto *node = qvariant_cast<Node *>(var);
             v->call->set(obj, v->name, node ? node->obj : nullptr);
-        } else if (v->value.mt == QMetaType::fromType<Mesh *>()) { // Special handling for mesh nodes.
+        } else if (var.metaType() == QMetaType::fromType<Mesh *>()) { // Special handling for mesh nodes.
             // Mesh nodes does not have an equivalent in the QtQuick3D scene, but is registered
             // as a source property in the intermediate scene we therefore need to convert it to
             // be a usable source url now.
-            const auto meshNode = reinterpret_cast<const Mesh *>(v->value.dptr);
+            const auto meshNode = qvariant_cast<const Mesh *>(var);
             const auto url = meshNode ? QUrl(QSSGBufferManager::runtimeMeshSourceName(node.scene->id, meshNode->idx)) : QUrl{};
             v->call->set(obj, v->name, &url);
-        } else if (v->value.mt == QMetaType::fromType<QUrl>()) {
-            const auto url = reinterpret_cast<const QUrl *>(v->value.dptr);
+        } else if (var.metaType() == QMetaType::fromType<QUrl>()) {
+            const auto url = qvariant_cast<QUrl>(var);
             // TODO: Use QUrl::resolved() instead
-            const QUrl qurl = url ? QUrl::fromUserInput(url->path(), workingDir) : QUrl{};
+            const QUrl qurl = url.isValid() ? QUrl::fromUserInput(url.path(), workingDir) : QUrl{};
             v->call->set(obj, v->name, &qurl);
-        } else if (v->value.mt.id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
-            const auto flag = reinterpret_cast<const QSSGSceneDesc::Flag *>(v->value.dptr);
+        } else if (var.metaType().id() == qMetaTypeId<QSSGSceneDesc::Flag *>()) {
+            const auto *flag = qvariant_cast<const QSSGSceneDesc::Flag *>(var);
             const int qflag(flag ? flag->value : 0);
             v->call->set(obj, v->name, &qflag);
         } else {
-            v->call->set(obj, v->name, v->value.dptr);
+            v->call->set(obj, v->name, var);
         }
     }
 }

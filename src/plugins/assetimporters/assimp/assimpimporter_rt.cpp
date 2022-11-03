@@ -1188,7 +1188,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     }
 
     if (meshNode)
-        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QSSGSceneDesc::Value{ QMetaType::fromType<QSSGSceneDesc::Mesh *>(), meshNode });
+        QSSGSceneDesc::setProperty(target, "source", &QQuick3DModel::setSource, QVariant::fromValue(meshNode));
 
     if (skinIdx != -1) {
         auto &skin = skinMap[skinIdx];
