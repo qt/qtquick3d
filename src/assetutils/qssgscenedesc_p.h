@@ -452,21 +452,6 @@ struct FuncType<QQmlListProperty<T> (C::*)()>
     using Arg0Base = Arg0;
 };
 
-template <typename T>
-constexpr bool can_be_stored_in_pointer()
-{
-    return sizeof(T) <= sizeof(void *) && std::is_trivially_copyable_v<T>;
-}
-
-bool can_be_stored_in_pointer(const QMetaType &mt);
-
-template <typename T>
-constexpr T type_pun_cast_value(const void **ptr)
-{
-    void *p = ptr;
-    return *static_cast<T *>(p);
-}
-
 template <typename Ret, typename Arg>
 struct PropertyProxySetter : PropertyCall
 {
@@ -476,13 +461,10 @@ struct PropertyProxySetter : PropertyCall
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
     bool set(QQuick3DObject &that, const char *name, const void *value) override
     {
-        using ArgT = typename FuncType<Setter>::Arg2Base;
         if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg2>)
             call(that, name, reinterpret_cast<typename FuncType<Setter>::Arg2>(const_cast<void *>(value)));
-        else if constexpr (can_be_stored_in_pointer<ArgT>())
-            call(that, name, type_pun_cast_value<ArgT>(&value));
         else
-            call(that, name, *reinterpret_cast<ArgT *>(const_cast<void *>(value)));
+            call(that, name, *reinterpret_cast<typename FuncType<Setter>::Arg2Base *>(const_cast<void *>(value)));
         return true;
     }
 };
@@ -496,14 +478,10 @@ struct PropertySetter : PropertyCall
     bool get(const QQuick3DObject &, const void *[]) const override { return false; }
     bool set(QQuick3DObject &that, const char *, const void *value) override
     {
-        using ArgT = typename FuncType<Setter>::Arg0Base;
-        if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg0>) {
+        if constexpr (std::is_pointer_v<typename FuncType<Setter>::Arg0>)
             (qobject_cast<Class *>(&that)->*call)(reinterpret_cast<typename FuncType<Setter>::Arg0>(const_cast<void *>(value)));
-        } else if constexpr (can_be_stored_in_pointer<ArgT>()) {
-            (qobject_cast<Class *>(&that)->*call)(type_pun_cast_value<ArgT>(&value));
-        } else {
+        else
             (qobject_cast<Class *>(&that)->*call)(*reinterpret_cast<typename FuncType<Setter>::Arg0Base *>(const_cast<void *>(value)));
-        }
         return true;
     }
 };
@@ -575,19 +553,14 @@ using if_compatible_proxy_t = typename std::enable_if_t<std::is_same_v<typename 
 template<typename Setter, typename T, if_compatible_t<Setter, T> = false>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, T &&value)
 {
-    Q_ASSERT(node.scene);
-    using Tt = rm_cvref_t<T>;
-    static_assert(std::is_trivially_destructible_v<Tt>, "Value needs to be trivially destructible!");
+     Q_ASSERT(node.scene);
+    static_assert(std::is_trivially_destructible_v<rm_cvref_t<T>>, "Value needs to be trivially destructible!");
     auto prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
+    using Tt = rm_cvref_t<T>;
     prop->value.mt = QMetaType::fromType<Tt>();
-    if constexpr (can_be_stored_in_pointer<Tt>()) {
-        Tt *dest = reinterpret_cast<Tt *>(&prop->value.dptr);
-        *dest = value;
-    } else {
-        prop->value.dptr = new Tt(std::forward<T>(value));
-    }
+    prop->value.dptr = new Tt(std::forward<T>(value));
     node.properties.push_back(prop);
 }
 
@@ -639,7 +612,6 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     node.properties.push_back(prop);
 }
 
-// Only used from the material editor so far
 template<typename Setter, typename Value, if_compatible_proxy_t<Setter, Value> = true>
 static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter setter, Value &&value, QSSGSceneDesc::Property::Type type = QSSGSceneDesc::Property::Type::Static)
 {
@@ -650,14 +622,10 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     prop->call = new PropertyProxySetter(setter);
     using ValueT = rm_cvref_t<Value>;
     prop->value.mt = QMetaType::fromType<ValueT>();
-    if constexpr (std::is_pointer_v<ValueT>) {
+    if constexpr (std::is_pointer_v<ValueT>)
         prop->value.dptr = value;
-    } else if constexpr (can_be_stored_in_pointer<ValueT>()) {
-        ValueT *dest = reinterpret_cast<ValueT *>(&prop->value.dptr);
-        *dest = value;
-    } else {
+    else
         prop->value.dptr = new ValueT(std::forward<Value>(value));
-    }
     prop->type = type;
     node.properties.push_back(prop);
 }

@@ -701,9 +701,7 @@ QString getAnimationSourceName(const QString &id, const QString &property, qsize
 QString asString(const QSSGSceneDesc::Value &value)
 {
     QString str;
-    const void *data = QSSGSceneDesc::can_be_stored_in_pointer(value.mt) ? &value.dptr : value.dptr;
-
-    QMetaType::convert(value.mt, data, QMetaType::fromType<QString>(), &str);
+    QMetaType::convert(value.mt, value.dptr, QMetaType::fromType<QString>(), &str);
     return str;
 }
 
@@ -997,8 +995,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
 static QVariant toVariant(const QSSGSceneDesc::Value &value)
 {
-    const void *dptr = QSSGSceneDesc::can_be_stored_in_pointer(value.mt) ? &value.dptr : value.dptr;
-    return QVariant(value.mt, dptr);
+    return QVariant(value.mt, value.dptr);
 }
 
 static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
