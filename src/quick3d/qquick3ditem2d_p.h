@@ -43,6 +43,7 @@ private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
     void invalidated();
     void updatePicking();
+    void derefWindow(QObject *win);
 
 Q_SIGNALS:
     void allChildrenRemoved();

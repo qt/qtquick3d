@@ -211,12 +211,32 @@ void QQuick3DItem2D::preSync()
     auto *window = manager->window();
     if (m_window != window) {
         if (m_window) {
+            disconnect(m_window, SIGNAL(destroyed(QObject*)), this, SLOT(derefWindow(QObject*)));
             sourcePrivate->derefWindow();
         }
         m_window = window;
         sourcePrivate->refWindow(window);
+        connect(window, SIGNAL(destroyed(QObject*)), this, SLOT(derefWindow(QObject*)));
         sourcePrivate->refFromEffectItem(true);
     }
+}
+
+static void detachWindow(QQuickItem *item, QObject *win)
+{
+    auto *itemPriv = QQuickItemPrivate::get(item);
+
+    if (win == itemPriv->window) {
+        itemPriv->window = nullptr;
+        itemPriv->windowRefCount = 0;
+    }
+
+    for (auto *child: itemPriv->childItems)
+        detachWindow(child, win);
+}
+
+void QQuick3DItem2D::derefWindow(QObject *win)
+{
+    detachWindow(m_contentItem, win);
 }
 
 QT_END_NAMESPACE
