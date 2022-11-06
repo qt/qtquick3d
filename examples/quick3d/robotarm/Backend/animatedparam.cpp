@@ -11,7 +11,7 @@ AnimatedParam::AnimatedParam(QObject *parent) : QVariantAnimation(parent)
     setEasingCurve(QEasingCurve::InOutCubic);
 
     connect(this, &QVariantAnimation::valueChanged, this, &AnimatedParam::valueChanged);
-    connect(this, &QAbstractAnimation::stateChanged, this, [this](QAbstractAnimation::State newState, QAbstractAnimation::State oldState) {
+    connect(this, &QAbstractAnimation::stateChanged, this, [this](QAbstractAnimation::State newState, QAbstractAnimation::State) {
         m_isRunning = (newState == QAbstractAnimation::Running);
     });
 }

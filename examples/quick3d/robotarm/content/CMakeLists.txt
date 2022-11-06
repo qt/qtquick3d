@@ -27,4 +27,5 @@ qt6_add_qml_module(content
         meshes/hand_grab_t_hinge_2.mesh
         meshes/hand_hinge.mesh
         meshes/root.mesh
+    RESOURCE_PREFIX "/"
 )

@@ -12,4 +12,5 @@ qt6_add_qml_module(RobotArm
         VERSION 1.0
         QML_FILES
             Constants.qml
+        RESOURCE_PREFIX "/"
 )
