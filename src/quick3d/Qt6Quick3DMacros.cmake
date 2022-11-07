@@ -1,9 +1,10 @@
 
 #quick3d version of qrc to resource
-function(_qt_internal_quick3d_generate_resource_from_qrc target qrcfile)
-    set(generatedResourceFile "${CMAKE_CURRENT_BINARY_DIR}/.rcc/generated_${qrcfile}.qrc")
-    set(generatedSourceCode "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qrc_${qrcfile}.cpp")
-    set(rccArgs --name "${qrcfile}" --output "${generatedSourceCode}"  "${generatedResourceFile}")
+function(_qt_internal_quick3d_generate_resource_from_qrc target resource_name)
+    set(generatedResourceFile "${CMAKE_CURRENT_BINARY_DIR}/.rcc/generated_${resource_name}.qrc")
+    set(generatedSourceCode "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qrc_${resource_name}.cpp")
+    set(rccArgs --name "${resource_name}"
+                --output "${generatedSourceCode}" "${generatedResourceFile}")
 
     if(NOT QT_FEATURE_zstd)
         list(APPEND rccArgs "--no-zstd")
@@ -17,11 +18,12 @@ function(_qt_internal_quick3d_generate_resource_from_qrc target qrcfile)
         ARGS
             ${rccArgs}
         DEPENDS
-            "${qrcfile}"
+            "${generatedResourceFile}"
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::rcc>
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::shadergen>
         COMMENT
-            RCC ${qrcfile} VERBATIM
+            RCC ${resource_name}
+        VERBATIM
     )
 
     get_target_property(type ${target} TYPE)
@@ -51,7 +53,7 @@ function(qt6_add_materials target resource_name)
     )
 
     add_custom_command(
-        OUTPUT "${resource_name}"
+        OUTPUT "${output_dir}/${output_qrc}"
         ${shadergen_command}
         DEPENDS
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::shadergen>
