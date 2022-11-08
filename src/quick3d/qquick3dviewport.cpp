@@ -587,6 +587,8 @@ void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickIte
             if (m_importScene)
                 QQuick3DObjectPrivate::get(m_importScene)->sceneManager->setWindow(value.window);
         }
+    } else if (change == ItemVisibleHasChanged && isVisible()) {
+        update();
     }
 }
 
