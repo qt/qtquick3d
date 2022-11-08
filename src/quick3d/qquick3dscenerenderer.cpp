@@ -499,37 +499,28 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     bool layerSizeIsDirty = m_surfaceSize != size;
     m_surfaceSize = size;
 
-    QList<QSSGRenderGraphObject *> resourceLoaders;
+    // Synchronize scene managers under this window
+    QSet<QSSGRenderGraphObject *> resourceLoaders;
+    if (auto window = view3D->window()) {
+        if (!winAttacment || winAttacment->window() != window)
+            winAttacment = QQuick3DSceneManager::getOrSetWindowAttachment(*window);
 
-    QQuick3DSceneManager *importSceneManager = nullptr;
-    QQuick3DNode *importScene = view3D->importScene();
-    if (importScene) {
-        importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
-        importSceneManager->rci = m_sgContext.data();
+        if (winAttacment)
+            winAttacment->synchronize(m_sgContext.data(), resourceLoaders);
     }
 
-    if (auto sceneManager = QQuick3DObjectPrivate::get(view3D->scene())->sceneManager) {
-        // Cleanup
-        sceneManager->rci = m_sgContext.data();
-        sceneManager->cleanupNodes();
-        if (importSceneManager)
-            importSceneManager->cleanupNodes();
-        // Resources
-        if (importSceneManager)
-            importSceneManager->updateDirtyResourceNodes();
-        sceneManager->updateDirtyResourceNodes();
-        // Spatial Nodes
-        if (importSceneManager)
-            importSceneManager->updateDirtySpatialNodes();
-        sceneManager->updateDirtySpatialNodes();
-        // Bounding Boxes
-        if (importSceneManager)
-            importSceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
-        sceneManager->updateBoundingBoxes(m_sgContext->bufferManager());
-        // Resource Loaders
-        resourceLoaders.append(sceneManager->resourceLoaders.values());
-        if (importSceneManager)
-            resourceLoaders.append(importSceneManager->resourceLoaders.values());
+    // Import scenes used in a multi-window application...
+    QQuick3DNode *importScene = view3D->importScene();
+    if (importScene) {
+        QQuick3DSceneManager *importSceneManager = QQuick3DObjectPrivate::get(importScene)->sceneManager;
+        // If the import scene is used with 3D views under a different window, then we'll
+        // need to trigger updates for those as well.
+        // NOTE: This is not the definitive solution to the multi-window case, as there still
+        // can be problems with e.g., resources (see preSync).
+        if (auto window = importSceneManager->window(); window != view3D->window()) {
+            if (auto winAttacment = QQuick3DSceneManager::getOrSetWindowAttachment(*window))
+                winAttacment->synchronize(m_sgContext.data(), resourceLoaders);
+        }
     }
 
     // Generate layer node
@@ -539,7 +530,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     }
 
     // Update the layer node properties
-    updateLayerNode(view3D, resourceLoaders);
+    updateLayerNode(view3D, resourceLoaders.values());
 
     bool postProcessingNeeded = m_layer->firstEffect;
     bool postProcessingWasActive = m_effectSystem;
@@ -596,11 +587,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
     }
 
     // Add the referenced scene root node to the layer as well if available
-    QSSGRenderNode* importRootNode = nullptr;
-    if (importScene) {
-        importRootNode = static_cast<QSSGRenderNode*>(
-                                QQuick3DObjectPrivate::get(importScene)->spatialNode);
-    }
+    QSSGRenderNode *importRootNode = nullptr;
+    if (importScene)
+        importRootNode = static_cast<QSSGRenderNode*>(QQuick3DObjectPrivate::get(importScene)->spatialNode);
+
     if (importRootNode != m_importRootNode) {
         if (m_importRootNode)
             m_layer->removeImportScene(*m_importRootNode);
