@@ -68,6 +68,7 @@ private:
     void removeNodeFromLayer(QSSGRenderNode *node);
     QSSGRef<QSSGRenderContextInterface> m_sgContext;
     QSSGRenderLayer *m_layer = nullptr;
+    QPointer<QQuick3DWindowAttachment> winAttacment;
     QSize m_surfaceSize;
     SGFramebufferObjectNode *fboNode = nullptr;
     bool m_aaIsDirty = true;
