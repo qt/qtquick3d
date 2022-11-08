@@ -69,9 +69,11 @@ void QSSGSceneDesc::destructValue(QVariant &value)
         return;
     }
 
-    // All other pointer types are supposed to be deleted
+    // All other pointer types are supposed to be deleted. QVariant::data()
+    // gives us a pointer to the pointer.
 
-    value.metaType().destroy(value.data());
+    void *pointer = *static_cast<void**>(value.data());
+    value.metaType().destroy(pointer);
 }
 
 void QSSGSceneDesc::destructNode(Node &node)
