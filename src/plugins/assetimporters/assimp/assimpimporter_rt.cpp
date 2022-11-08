@@ -391,7 +391,11 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                         if (textureData)
                             QSSGSceneDesc::setProperty(*tex, "textureData", &QQuick3DTexture::setTextureData, textureData);
                     } else {
-                        const auto path = sceneInfo.workingDir.absoluteFilePath(QString::fromUtf8(texturePath.C_Str())).toUtf8();
+                        auto relativePath = QString::fromUtf8(texturePath.C_Str());
+                        // Replace Windows separator to Unix separator
+                        // so that assets including Windows relative path can be converted on Unix.
+                        relativePath.replace("\\","/");
+                        const auto path = sceneInfo.workingDir.absoluteFilePath(relativePath);
                         QSSGSceneDesc::setProperty(*tex, "source", &QQuick3DTexture::setSource, QUrl{ path });
                     }
                 }

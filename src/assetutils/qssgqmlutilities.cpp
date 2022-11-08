@@ -742,8 +742,6 @@ QString builtinQmlType(const QVariant &var)
                 + QString::number(mat44(2, 0)) + u", " + QString::number(mat44(2, 1)) + u", " + QString::number(mat44(2, 2)) + u", " + QString::number(mat44(2, 3)) + u", "
                 + QString::number(mat44(3, 0)) + u", " + QString::number(mat44(3, 1)) + u", " + QString::number(mat44(3, 2)) + u", " + QString::number(mat44(3, 3)) + u')';
     }
-    case QMetaType::QUrl:
-        return QString(QLatin1String("\"%1\"")).arg(var.toString());
     case QMetaType::Float:
     case QMetaType::Double:
     case QMetaType::Int:
@@ -752,9 +750,9 @@ QString builtinQmlType(const QVariant &var)
     case QMetaType::LongLong:
     case QMetaType::ULong:
     case QMetaType::ULongLong:
-        Q_FALLTHROUGH();
     case QMetaType::Bool:
         return var.toString();
+    case QMetaType::QUrl: // QUrl needs special handling. Return empty string to trigger that.
     default:
         break;
     }
