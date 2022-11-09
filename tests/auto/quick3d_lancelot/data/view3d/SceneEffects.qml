@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick3D
 import QtQuick3D.Effects
 
-Window {
+Rectangle {
     id: window
     width: 640
     height: 480
