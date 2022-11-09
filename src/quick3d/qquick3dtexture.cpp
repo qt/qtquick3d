@@ -122,8 +122,9 @@ QQuick3DTexture::QQuick3DTexture(QQuick3DObject *parent)
 
 QQuick3DTexture::~QQuick3DTexture()
 {
-    if (m_layer && m_sceneManagerForLayer) {
-        m_sceneManagerForLayer->qsgDynamicTextures.removeAll(m_layer);
+    if (m_layer) {
+        if (m_sceneManagerForLayer)
+            m_sceneManagerForLayer->qsgDynamicTextures.removeAll(m_layer);
         m_layer->deleteLater(); // uhh...
     }
 
