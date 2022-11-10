@@ -80,7 +80,7 @@ QQuickItem *QQuick3DItem2D::contentItem() const
 void QQuick3DItem2D::sourceItemDestroyed(QObject *item)
 {
     disconnect(item, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
-    auto quickItem = qmlobject_cast<QQuickItem*>(item);
+    auto quickItem = static_cast<QQuickItem*>(item);
     removeChildItem(quickItem);
 }
 
