@@ -254,6 +254,9 @@ static void detachWindow(QQuickItem *item, QObject *win)
     if (win == itemPriv->window) {
         itemPriv->window = nullptr;
         itemPriv->windowRefCount = 0;
+
+        itemPriv->prevDirtyItem = nullptr;
+        itemPriv->nextDirtyItem = nullptr;
     }
 
     for (auto *child: itemPriv->childItems)
