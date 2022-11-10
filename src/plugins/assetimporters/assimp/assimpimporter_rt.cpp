@@ -1744,7 +1744,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
 
                         if (!targetChannel.keys.isEmpty()) {
                             channels.push_back(new Animation::Channel(targetChannel));
-                            float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime);
+                            float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime) * freq;
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
                         }
@@ -1763,7 +1763,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
 
                         if (!targetChannel.keys.isEmpty()) {
                             channels.push_back(new Animation::Channel(targetChannel));
-                            float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime);
+                            float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime) * freq;
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
                         }
@@ -1782,7 +1782,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
 
                         if (!targetChannel.keys.isEmpty()) {
                             channels.push_back(new Animation::Channel(targetChannel));
-                            float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime);
+                            float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime) * freq;
                             if (targetAnimation.length < endTime)
                                 targetAnimation.length = endTime;
                         }
