@@ -539,6 +539,7 @@ void QQuick3DSceneRenderer::addNodeToLayer(QSSGRenderNode *node)
 
 void QQuick3DSceneRenderer::deleteResources()
 {
+    m_sceneManager->updateDirtyNodes();
     delete m_layer;
     delete m_fbo;
     delete m_antialiasingFbo;
