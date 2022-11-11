@@ -672,7 +672,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         };
 
         // Textures
-        for (const auto &property : qAsConst(textureProperties))
+        for (const auto &property : std::as_const(textureProperties))
             processTextureProperty(*property.first, property.second);
 
         if (effectNode->incompleteBuildTimeObject) { // This object came from the shadergen tool
@@ -706,7 +706,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
                 }
             }
 
-            for (const auto &property : qAsConst(textureProperties))
+            for (const auto &property : std::as_const(textureProperties))
                 processTextureProperty(*property.first, property.second);
         }
 
@@ -734,7 +734,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
         bool needsDepthTexture = false;
         if (!m_passes.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
-            for (QQuick3DShaderUtilsRenderPass *pass : qAsConst(m_passes)) {
+            for (QQuick3DShaderUtilsRenderPass *pass : std::as_const(m_passes)) {
                 // Have a key composed more or less of the vertex and fragment filenames.
                 // The shaderLibraryManager uses stage+shaderPathKey as the key.
                 // Thus shaderPathKey is then sufficient to look up both the vertex and fragment shaders later on.
@@ -875,7 +875,7 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
     }
 
     if (m_dirtyAttributes & Dirty::PropertyDirty) {
-        for (const auto &prop : qAsConst(effectNode->properties)) {
+        for (const auto &prop : std::as_const(effectNode->properties)) {
             auto p = metaObject()->property(prop.pid);
             if (Q_LIKELY(p.isValid()))
                 prop.value = p.read(this);
@@ -908,12 +908,12 @@ void QQuick3DEffect::markDirty(QQuick3DEffect::Dirty type)
 void QQuick3DEffect::updateSceneManager(QQuick3DSceneManager *sceneManager)
 {
     if (sceneManager) {
-        for (const auto &it : qAsConst(m_dynamicTextureMaps)) {
+        for (const auto &it : std::as_const(m_dynamicTextureMaps)) {
             if (auto tex = it->texture())
                 QQuick3DObjectPrivate::refSceneManager(tex, *sceneManager);
         }
     } else {
-        for (const auto &it : qAsConst(m_dynamicTextureMaps)) {
+        for (const auto &it : std::as_const(m_dynamicTextureMaps)) {
             if (auto tex = it->texture())
                 QQuick3DObjectPrivate::derefSceneManager(tex);
         }

@@ -137,7 +137,7 @@ void QQsbCollection::dumpQsbcInfoImp(QQsbCollection &qsbc)
         qDebug("Number of entries in collection: %zu\n", size_t(entries.size()));
         int i = 0;
         qDebug("Qsbc version: %uc", qsbc.version);
-        for (const auto &e : qAsConst(entries)) {
+        for (const auto &e : std::as_const(entries)) {
             qDebug("%s\n"
                    "Entry %d\n%s\n"
                    "Key: %zu\n"

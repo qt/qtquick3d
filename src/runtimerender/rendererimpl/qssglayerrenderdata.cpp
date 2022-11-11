@@ -914,7 +914,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const QSSGRenderModel &inModel,
         bool hasJoint = false;
         bool hasWeight = false;
         bool hasMorphTarget = false;
-        for (const QSSGRhiInputAssemblerState::InputSemantic &sem : qAsConst(theSubset.rhi.ia.inputs)) {
+        for (const QSSGRhiInputAssemblerState::InputSemantic &sem : std::as_const(theSubset.rhi.ia.inputs)) {
             if (sem == QSSGRhiInputAssemblerState::PositionSemantic) {
                 renderableFlagsForModel.setHasAttributePosition(true);
             } else if (sem == QSSGRhiInputAssemblerState::NormalSemantic) {
@@ -1287,7 +1287,7 @@ void QSSGLayerRenderData::prepareResourceLoaders()
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
     const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
 
-    for (const auto resourceLoader : qAsConst(layer.resourceLoaders))
+    for (const auto resourceLoader : std::as_const(layer.resourceLoaders))
         bufferManager->processResourceLoader(static_cast<QSSGRenderResourceLoader *>(resourceLoader));
 }
 
@@ -1601,7 +1601,7 @@ void QSSGLayerRenderData::prepareForRender()
                 }
             }
 
-            for (const QSSGShaderLight &shaderLight : qAsConst(renderableLights)) {
+            for (const QSSGShaderLight &shaderLight : std::as_const(renderableLights)) {
                 if (!shaderLight.light->m_scope)
                     globalLights.append(shaderLight);
             }

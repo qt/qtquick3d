@@ -171,7 +171,7 @@ QQuick3DViewport::~QQuick3DViewport()
     if (auto qw = window())
         disconnect(qw, nullptr, this, nullptr);
 
-    for (const auto &connection : qAsConst(m_connections))
+    for (const auto &connection : std::as_const(m_connections))
         disconnect(connection);
     auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
     if (sceneManager)
@@ -953,14 +953,14 @@ void QQuick3DViewport::updateDynamicTextures()
     // Must be called on the render thread.
 
     const auto &sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-    for (auto *texture : qAsConst(sceneManager->qsgDynamicTextures))
+    for (auto *texture : std::as_const(sceneManager->qsgDynamicTextures))
         texture->updateTexture();
 
     QQuick3DNode *scene = m_importScene;
     while (scene) {
         const auto &importSm = QQuick3DObjectPrivate::get(scene)->sceneManager;
         if (importSm != sceneManager) {
-            for (auto *texture : qAsConst(importSm->qsgDynamicTextures))
+            for (auto *texture : std::as_const(importSm->qsgDynamicTextures))
                 texture->updateTexture();
         }
 

@@ -903,13 +903,13 @@ QSSGRhiContext::~QSSGRhiContext()
     qDeleteAll(m_computePipelines);
     qDeleteAll(m_srbCache);
     qDeleteAll(m_textures);
-    for (const auto &samplerInfo : qAsConst(m_samplers))
+    for (const auto &samplerInfo : std::as_const(m_samplers))
         delete samplerInfo.second;
-    for (const auto &instanceData : qAsConst(m_instanceBuffers)) {
+    for (const auto &instanceData : std::as_const(m_instanceBuffers)) {
         if (instanceData.owned)
             delete instanceData.buffer;
     }
-    for (const auto &particleData : qAsConst(m_particleData))
+    for (const auto &particleData : std::as_const(m_particleData))
         delete particleData.texture;
     qDeleteAll(m_dummyTextures);
 }

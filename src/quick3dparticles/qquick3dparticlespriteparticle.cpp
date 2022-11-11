@@ -39,7 +39,7 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 {
     if (m_spriteSequence)
         m_spriteSequence->m_parentParticle = nullptr;
-    for (const auto &connection : qAsConst(m_connections))
+    for (const auto &connection : std::as_const(m_connections))
         QObject::disconnect(connection);
     deleteNodes();
 
@@ -49,7 +49,7 @@ QQuick3DParticleSpriteParticle::~QQuick3DParticleSpriteParticle()
 
 void QQuick3DParticleSpriteParticle::deleteNodes()
 {
-    for (const PerEmitterData &value : qAsConst(m_perEmitterData)) {
+    for (const PerEmitterData &value : std::as_const(m_perEmitterData)) {
         value.particleUpdateNode->m_particle = nullptr;
         delete value.particleUpdateNode;
     }
@@ -436,7 +436,7 @@ QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::updateParticleNode(const 
     if (!m_lights.isEmpty()) {
         // Matches to QSSGRenderParticles lights
         QVarLengthArray<QSSGRenderLight *, 4> lightNodes;
-        for (auto light : qAsConst(m_lights)) {
+        for (auto light : std::as_const(m_lights)) {
             auto lightPrivate = QQuick3DObjectPrivate::get(light);
             auto lightNode  = static_cast<QSSGRenderLight *>(lightPrivate->spatialNode);
             lightNodes.append(lightNode);
@@ -475,13 +475,13 @@ void QQuick3DParticleSpriteParticle::handleSystemChanged(QQuick3DParticleSystem 
 
 void QQuick3DParticleSpriteParticle::updateNodes()
 {
-    for (const PerEmitterData &value : qAsConst(m_perEmitterData))
+    for (const PerEmitterData &value : std::as_const(m_perEmitterData))
         value.particleUpdateNode->update();
 }
 
 void QQuick3DParticleSpriteParticle::markNodesDirty()
 {
-    for (const PerEmitterData &value : qAsConst(m_perEmitterData))
+    for (const PerEmitterData &value : std::as_const(m_perEmitterData))
         value.particleUpdateNode->m_nodeDirty = true;
 }
 
@@ -775,7 +775,7 @@ qsizetype QQuick3DParticleSpriteParticle::qmlLightsCount(QQmlListProperty<QQuick
 void QQuick3DParticleSpriteParticle::qmlClearLights(QQmlListProperty<QQuick3DAbstractLight> *list)
 {
     QQuick3DParticleSpriteParticle *self = static_cast<QQuick3DParticleSpriteParticle *>(list->object);
-    for (const auto &light : qAsConst(self->m_lights)) {
+    for (const auto &light : std::as_const(self->m_lights)) {
         if (light->parentItem() == nullptr)
             QQuick3DObjectPrivate::get(light)->derefSceneManager();
         light->disconnect(self, SLOT(onLightDestroyed(QObject*)));

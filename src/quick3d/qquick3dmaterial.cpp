@@ -83,7 +83,7 @@ QQuick3DMaterial::QQuick3DMaterial(QQuick3DObjectPrivate &dd, QQuick3DObject *pa
 
 QQuick3DMaterial::~QQuick3DMaterial()
 {
-    for (const auto &connection : qAsConst(m_connections))
+    for (const auto &connection : std::as_const(m_connections))
         disconnect(connection);
 }
 

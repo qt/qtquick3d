@@ -1566,7 +1566,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
             customMaterial->m_textureProperties.push_back(textureData);
         };
 
-        for (const auto &textureProperty : qAsConst(textureProperties))
+        for (const auto &textureProperty : std::as_const(textureProperties))
             processTextureProperty(*textureProperty.first, textureProperty.second);
 
         if (customMaterial->incompleteBuildTimeObject || (m_dirtyAttributes & DynamicPropertiesDirty)) { // This object came from the shadergen tool
@@ -1600,7 +1600,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
                 }
             }
 
-            for (const auto &property : qAsConst(textureProperties))
+            for (const auto &property : std::as_const(textureProperties))
                 processTextureProperty(*property.first, property.second);
         }
 
@@ -1739,12 +1739,12 @@ void QQuick3DCustomMaterial::itemChange(QQuick3DObject::ItemChange change, const
     QQuick3DMaterial::itemChange(change, value);
     if (change == QQuick3DObject::ItemSceneChange) {
         if (auto sceneManager = value.sceneManager) {
-            for (const auto &it : qAsConst(m_dynamicTextureMaps)) {
+            for (const auto &it : std::as_const(m_dynamicTextureMaps)) {
                 if (auto tex = it->texture())
                     QQuick3DObjectPrivate::refSceneManager(tex, *sceneManager);
             }
         } else {
-            for (const auto &it : qAsConst(m_dynamicTextureMaps)) {
+            for (const auto &it : std::as_const(m_dynamicTextureMaps)) {
                 if (auto tex = it->texture())
                     QQuick3DObjectPrivate::derefSceneManager(tex);
             }

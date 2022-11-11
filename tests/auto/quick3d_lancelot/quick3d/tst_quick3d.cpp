@@ -126,7 +126,7 @@ void tst_Quick3D::setupTestSuite(const QByteArray& filter)
     }
 
     std::sort(itemFiles.begin(), itemFiles.end());
-    for (const QString &filePath : qAsConst(itemFiles)) {
+    for (const QString &filePath : std::as_const(itemFiles)) {
         QByteArray itemName = filePath.mid(testSuitePath.length() + 1).toLatin1();
         QBaselineTest::newRow(itemName, checksumFileOrDir(filePath)) << filePath;
         numItems++;

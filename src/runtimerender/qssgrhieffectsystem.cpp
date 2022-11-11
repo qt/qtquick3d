@@ -135,7 +135,7 @@ void QSSGRhiEffectSystem::releaseTexture(QSSGRhiEffectTexture *texture)
 
 void QSSGRhiEffectSystem::releaseTextures()
 {
-    for (auto *t : qAsConst(m_textures))
+    for (auto *t : std::as_const(m_textures))
         releaseTexture(t);
 }
 
@@ -300,13 +300,13 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
         return;
 
     const bool setAll = inCmd->m_propertyName.isEmpty();
-    for (const QSSGRenderEffect::Property &property : qAsConst(inEffect->properties)) {
+    for (const QSSGRenderEffect::Property &property : std::as_const(inEffect->properties)) {
         if (setAll || property.name == inCmd->m_propertyName) {
             m_currentShaderPipeline->setUniformValue(m_currentUBufData, property.name, property.value, property.shaderDataType);
             //qCDebug(lcEffectSystem) << "setUniformValue" << property.name << toString(property.shaderDataType) << "to" << property.value;
         }
     }
-    for (const QSSGRenderEffect::TextureProperty &textureProperty : qAsConst(inEffect->textureProperties)) {
+    for (const QSSGRenderEffect::TextureProperty &textureProperty : std::as_const(inEffect->textureProperties)) {
         if (setAll || textureProperty.name == inCmd->m_propertyName) {
             bool texAdded = false;
             QSSGRenderImage *image = textureProperty.texImage;

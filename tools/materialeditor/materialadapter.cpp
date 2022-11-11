@@ -329,7 +329,7 @@ bool MaterialAdapter::saveMaterial(const QUrl &materialFile)
         out << int(m_material->shadingMode());
         // Uniforms
         out << uniformTable.size();
-        for (const auto &uniform : qAsConst(uniformTable))
+        for (const auto &uniform : std::as_const(uniformTable))
             out << uniform;
     } else {
         emit errorOccurred();
@@ -636,7 +636,7 @@ QString MaterialAdapter::getSupportedImageFormatsFilter() const
 {
     auto formats = QImageReader::supportedImageFormats();
     QString imageFilter = QStringLiteral("Image files (");
-    for (const auto &format : qAsConst(formats))
+    for (const auto &format : std::as_const(formats))
         imageFilter += QStringLiteral("*.") + format + QStringLiteral(" ");
     imageFilter += QStringLiteral(")");
     return imageFilter;

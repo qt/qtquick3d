@@ -249,7 +249,7 @@ void QQuick3DRepeater::clear()
                 m_model->release(item);
             }
         }
-        for (QQuick3DObject *item : qAsConst(m_deletables)) {
+        for (QQuick3DObject *item : std::as_const(m_deletables)) {
             if (item)
                 item->setParentItem(nullptr);
         }

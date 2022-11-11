@@ -260,7 +260,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
         }
 
         subMeshInfos[lmIdx].reserve(lm.renderables.size());
-        for (const QSSGRenderableObjectHandle &handle : qAsConst(lm.renderables)) {
+        for (const QSSGRenderableObjectHandle &handle : std::as_const(lm.renderables)) {
             Q_ASSERT(handle.obj->renderableFlags.isDefaultMaterialMeshSubset()
                      || handle.obj->renderableFlags.isCustomMaterialMeshSubset());
             QSSGSubsetRenderable *renderableObj = static_cast<QSSGSubsetRenderable *>(handle.obj);
@@ -895,7 +895,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
 
         lightmaps.append(lightmap);
 
-        for (const SubMeshInfo &subMeshInfo : qAsConst(subMeshInfos[lmIdx]))
+        for (const SubMeshInfo &subMeshInfo : std::as_const(subMeshInfos[lmIdx]))
             geomLightmapMap[subMeshInfo.geomId] = lightmaps.size() - 1;
     }
 
@@ -1333,7 +1333,7 @@ bool QSSGLightmapperPrivate::postProcess()
         // Assemble the RGBA32F image from the baker data structures
         QByteArray lightmapFP32(lightmap.entries.size() * 4 * sizeof(float), Qt::Uninitialized);
         float *lightmapFloatPtr = reinterpret_cast<float *>(lightmapFP32.data());
-        for (const LightmapEntry &lmPix : qAsConst(lightmap.entries)) {
+        for (const LightmapEntry &lmPix : std::as_const(lightmap.entries)) {
             *lightmapFloatPtr++ = lmPix.allLight.x();
             *lightmapFloatPtr++ = lmPix.allLight.y();
             *lightmapFloatPtr++ = lmPix.allLight.z();

@@ -88,7 +88,7 @@ void invasivelist::test_push_backSll()
 
     int lastValue = -1;
     int count = 0;
-    for (const auto &item : qAsConst(list)) {
+    for (const auto &item : std::as_const(list)) {
         QVERIFY(item.value > lastValue);
         lastValue = item.value;
         ++count;
@@ -111,7 +111,7 @@ void invasivelist::test_push_frontSll()
 
     int lastValue = 100;
     int count = 0;
-    for (const auto &item : qAsConst(list)) {
+    for (const auto &item : std::as_const(list)) {
         QVERIFY(item.value < lastValue);
         lastValue = item.value;
         ++count;
@@ -134,7 +134,7 @@ void invasivelist::test_push_backLl()
 
     int lastValue = -1;
     int count = 0;
-    for (const auto &item : qAsConst(list)) {
+    for (const auto &item : std::as_const(list)) {
         QVERIFY(item.value > lastValue);
         lastValue = item.value;
         ++count;
@@ -157,7 +157,7 @@ void invasivelist::test_push_frontLl()
 
     int lastValue = 100;
     int count = 0;
-    for (const auto &item : qAsConst(list)) {
+    for (const auto &item : std::as_const(list)) {
         QVERIFY(item.value < lastValue);
         lastValue = item.value;
         ++count;
@@ -526,7 +526,7 @@ void invasivelist::test_sublistSll()
 
     int lastValue = -1;
     int count = 0;
-    for (const auto &item : qAsConst(l1)) {
+    for (const auto &item : std::as_const(l1)) {
         QVERIFY(item.value > lastValue);
         lastValue = item.value;
         ++count;
@@ -546,7 +546,7 @@ void invasivelist::test_sublistSll()
 
             lastValue = -1;
             count = 0;
-            for (const auto &item : qAsConst(l1)) {
+            for (const auto &item : std::as_const(l1)) {
                 lastValue = item.value;
                 ++count;
             }
@@ -570,7 +570,7 @@ void invasivelist::test_insertBadNodeLl()
 
     int lastValue = -1;
     int count = 0;
-    for (const auto &item : qAsConst(l1)) {
+    for (const auto &item : std::as_const(l1)) {
         QVERIFY(item.value > lastValue);
         lastValue = item.value;
         ++count;
@@ -591,7 +591,7 @@ void invasivelist::test_insertBadNodeLl()
             // Forwarnd
             lastValue = -1;
             count = 0;
-            for (const auto &item : qAsConst(l1)) {
+            for (const auto &item : std::as_const(l1)) {
                 lastValue = item.value;
                 ++count;
             }
@@ -625,7 +625,7 @@ void invasivelist::test_insertBadNodeLl()
             // Forwarnd
             lastValue = -1;
             count = 0;
-            for (const auto &item : qAsConst(l1)) {
+            for (const auto &item : std::as_const(l1)) {
                 lastValue = item.value;
                 ++count;
             }

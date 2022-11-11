@@ -629,7 +629,7 @@ void QQuick3DObjectPrivate::resources_clear(QQmlListProperty<QObject> *prop)
     QQuick3DObject *quickItem = static_cast<QQuick3DObject *>(prop->object);
     QQuick3DObjectPrivate *quickItemPrivate = QQuick3DObjectPrivate::get(quickItem);
     if (quickItemPrivate->extra.isAllocated()) { // If extra is not allocated resources is empty.
-        for (QObject *object : qAsConst(quickItemPrivate->extra->resourcesList)) {
+        for (QObject *object : std::as_const(quickItemPrivate->extra->resourcesList)) {
             // clang-format off
             qmlobject_disconnect(object, QObject, SIGNAL(destroyed(QObject*)),
                                  quickItem, QQuick3DObject, SLOT(_q_resourceObjectDeleted(QObject*)));
@@ -1126,7 +1126,7 @@ void QV4::Heap::QSSGItemWrapper::markObjects(QV4::Heap::Base *that, QV4::MarkSta
 {
     QObjectWrapper *This = static_cast<QObjectWrapper *>(that);
     if (QQuick3DObject *item = static_cast<QQuick3DObject *>(This->object())) {
-        for (QQuick3DObject *child : qAsConst(QQuick3DObjectPrivate::get(item)->childItems))
+        for (QQuick3DObject *child : std::as_const(QQuick3DObjectPrivate::get(item)->childItems))
             QV4::QObjectWrapper::markWrapper(child, markStack);
     }
     QObjectWrapper::markObjects(that, markStack);

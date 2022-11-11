@@ -1330,7 +1330,7 @@ void QSSGBufferManager::cleanupUnreferencedBuffers(quint32 frameId, QSSGRenderLa
         return;
 
     auto isUnused = [] (const QHash<QSSGRenderLayer*, uint32_t> &usages) -> bool {
-        for (const auto &value : qAsConst(usages))
+        for (const auto &value : std::as_const(usages))
             if (value != 0)
                 return false;
         return true;
@@ -1754,13 +1754,13 @@ void QSSGBufferManager::commitBufferResourceUpdates()
 
 void QSSGBufferManager::processResourceLoader(const QSSGRenderResourceLoader *loader)
 {
-    for (auto &mesh : qAsConst(loader->meshes))
+    for (auto &mesh : std::as_const(loader->meshes))
         loadRenderMesh(mesh, {});
 
-    for (auto customMesh : qAsConst(loader->geometries))
+    for (auto customMesh : std::as_const(loader->geometries))
         loadRenderMesh(static_cast<QSSGRenderGeometry*>(customMesh), {});
 
-    for (auto texture : qAsConst(loader->textures)) {
+    for (auto texture : std::as_const(loader->textures)) {
         const auto image = static_cast<QSSGRenderImage *>(texture);
         loadRenderImage(image, image->m_generateMipmaps ? QSSGBufferManager::MipModeGenerated : QSSGBufferManager::MipModeNone);
     }

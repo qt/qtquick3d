@@ -291,7 +291,7 @@ QByteArray QSSGStageGeneratorBase::buildShaderSourcePass2(QSSGShaderResourceMerg
             {
                 QByteArray block;
 
-                for (const auto &sampler : qAsConst(mergeContext->m_samplers)) {
+                for (const auto &sampler : std::as_const(mergeContext->m_samplers)) {
                     addStartCond(block, sampler);
                     block += QString::asprintf("layout(binding = %d) uniform %s %s;\n",
                                                sampler.binding,
@@ -404,19 +404,19 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
 {
     QSSGRenderShaderMetadata::ShaderMetaData meta = QSSGRenderShaderMetadata::getShaderMetaData(contents);
 
-    for (const QSSGRenderShaderMetadata::Uniform &u : qAsConst(meta.uniforms)) {
+    for (const QSSGRenderShaderMetadata::Uniform &u : std::as_const(meta.uniforms)) {
         if (u.type.startsWith(QByteArrayLiteral("sampler")))
             mergeContext->registerSampler(u.type, u.name, u.condition, u.conditionName);
         else
             mergeContext->registerUniformMember(u.type, u.name, u.condition, u.conditionName);
     }
 
-    for (const QSSGRenderShaderMetadata::InputOutput &inputVar : qAsConst(meta.inputs)) {
+    for (const QSSGRenderShaderMetadata::InputOutput &inputVar : std::as_const(meta.inputs)) {
         if (inputVar.stage == stage)
             mergeContext->registerInput(stage, inputVar.type, inputVar.name);
     }
 
-    for (const QSSGRenderShaderMetadata::InputOutput &outputVar : qAsConst(meta.outputs)) {
+    for (const QSSGRenderShaderMetadata::InputOutput &outputVar : std::as_const(meta.outputs)) {
         if (outputVar.stage == stage)
             mergeContext->registerOutput(stage, outputVar.type, outputVar.name);
     }

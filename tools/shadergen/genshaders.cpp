@@ -346,7 +346,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     }
 
     // Free Effects
-    for (const auto &effect : qAsConst(sceneData.effects))
+    for (const auto &effect : std::as_const(sceneData.effects))
         generateEffectShader(*effect);
 
     if (!qsbc.getEntries().isEmpty())

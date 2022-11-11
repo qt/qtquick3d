@@ -213,7 +213,7 @@ QQuick3DObject *QQuick3DSceneManager::lookUpNode(const QSSGRenderGraphObject *no
 
 void QQuick3DSceneManager::cleanupNodes()
 {
-    for (auto node : qAsConst(cleanupNodeList)) {
+    for (auto node : std::as_const(cleanupNodeList)) {
         // Remove "spatial" nodes from scenegraph
         if (QSSGRenderGraphObject::isNodeType(node->type)) {
             QSSGRenderNode *spatialNode = static_cast<QSSGRenderNode *>(node);

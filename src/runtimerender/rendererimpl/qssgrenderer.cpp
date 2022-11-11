@@ -184,7 +184,7 @@ void QSSGRenderer::beginFrame()
 void QSSGRenderer::endFrame()
 {
     // We need to do this endFrame(), as the material nodes might not exist after this!
-    for (auto *matObj : qAsConst(m_materialClearDirty)) {
+    for (auto *matObj : std::as_const(m_materialClearDirty)) {
         if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             static_cast<QSSGRenderCustomMaterial *>(matObj)->clearDirty();
         } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
@@ -387,7 +387,7 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
                 results.clear();
                 inRay.intersectWithBVH(rayData, subMesh.bvhRoot, mesh, results);
                 float subMeshMinRayLength = std::numeric_limits<float>::max();
-                for (const auto &subMeshResult : qAsConst(results)) {
+                for (const auto &subMeshResult : std::as_const(results)) {
                     if (subMeshResult.rayLengthSquared < subMeshMinRayLength) {
                         result = subMeshResult;
                         subMeshMinRayLength = result.rayLengthSquared;
