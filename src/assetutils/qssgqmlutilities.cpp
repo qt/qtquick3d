@@ -1371,7 +1371,7 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
             QSSGQmlScopedIndent scopedIndent(output);
             indent(output) << "target: " << id << "\n";
             indent(output) << "property: " << toQuotedString(propertyName) << "\n";
-            if (useBinaryKeyframes) {
+            if (useBinaryKeyframes && channel->keys.size() != 1) {
                 const auto animFolder = getAnimationFolder();
                 const auto animSourceName = getAnimationSourceName(id, propertyName, index);
                 if (!output.outdir.exists(animFolder) && !output.outdir.mkdir(animFolder)) {

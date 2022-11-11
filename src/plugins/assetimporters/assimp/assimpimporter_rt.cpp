@@ -1713,6 +1713,24 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
         QSSGSceneDesc::setProperty(*skin.node, "inverseBindPoses", &QQuick3DSkin::setInverseBindPoses, inverseBindPoses);
     }
 
+
+    static const auto fuzzyComparePos = [](const aiVectorKey &pos, const QSSGSceneDesc::Animation::KeyPosition *prev){
+        if (!prev)
+            return false;
+        return qFuzzyCompare(pos.mValue.x, prev->value.x())
+                && qFuzzyCompare(pos.mValue.y, prev->value.y())
+                && qFuzzyCompare(pos.mValue.z, prev->value.z());
+    };
+
+    static const auto fuzzyCompareRot = [](const aiQuatKey &rot, const QSSGSceneDesc::Animation::KeyPosition *prev){
+        if (!prev)
+            return false;
+        return qFuzzyCompare(rot.mValue.x, prev->value.x())
+                && qFuzzyCompare(rot.mValue.y, prev->value.y())
+                && qFuzzyCompare(rot.mValue.z, prev->value.z())
+                && qFuzzyCompare(rot.mValue.w, prev->value.w());
+    };
+
     static const auto createAnimation = [](QSSGSceneDesc::Scene &targetScene, const aiAnimation &srcAnim, const AnimationNodeMap &animatingNodes) {
         using namespace QSSGSceneDesc;
         Animation targetAnimation;
@@ -1729,17 +1747,21 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                 const auto aNodeIt = animatingNodes.constFind(QByteArray{ nodeName.C_Str(), qsizetype(nodeName.length) });
                 if (aNodeIt != aNodeEnd && aNodeIt.value() != nullptr) {
                     auto targetNode = aNodeIt.value();
-                    // Target property(s)
+                    // Target propert[y|ies]
 
                     { // Position
                         const auto posKeyEnd = srcChannel.mNumPositionKeys;
                         Animation::Channel targetChannel;
                         targetChannel.targetProperty = Animation::Channel::TargetProperty::Position;
                         targetChannel.target = targetNode;
+                        const Animation::KeyPosition *prevPos = nullptr;
                         for (It posKeyIdx = 0; posKeyIdx != posKeyEnd; ++posKeyIdx) {
                             const auto &posKey = srcChannel.mPositionKeys[posKeyIdx];
+                            if (fuzzyComparePos(posKey, prevPos))
+                                continue;
                             const auto animationKey = new Animation::KeyPosition(toAnimationKey(posKey, freq));
                             targetChannel.keys.push_back(animationKey);
+                            prevPos = animationKey;
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
@@ -1755,10 +1777,14 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                         Animation::Channel targetChannel;
                         targetChannel.targetProperty = Animation::Channel::TargetProperty::Rotation;
                         targetChannel.target = targetNode;
+                        const Animation::KeyPosition *prevRot = nullptr;
                         for (It rotKeyIdx = 0; rotKeyIdx != rotKeyEnd; ++rotKeyIdx) {
                             const auto &rotKey = srcChannel.mRotationKeys[rotKeyIdx];
+                            if (fuzzyCompareRot(rotKey, prevRot))
+                                continue;
                             const auto animationKey = new Animation::KeyPosition(toAnimationKey(rotKey, freq));
                             targetChannel.keys.push_back(animationKey);
+                            prevRot = animationKey;
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
@@ -1774,10 +1800,14 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                         Animation::Channel targetChannel;
                         targetChannel.targetProperty = Animation::Channel::TargetProperty::Scale;
                         targetChannel.target = targetNode;
+                        const Animation::KeyPosition *prevScale = nullptr;
                         for (It scaleKeyIdx = 0; scaleKeyIdx != scaleKeyEnd; ++scaleKeyIdx) {
                             const auto &scaleKey = srcChannel.mScalingKeys[scaleKeyIdx];
+                            if (fuzzyComparePos(scaleKey, prevScale))
+                                continue;
                             const auto animationKey = new Animation::KeyPosition(toAnimationKey(scaleKey, freq));
                             targetChannel.keys.push_back(animationKey);
+                            prevScale = animationKey;
                         }
 
                         if (!targetChannel.keys.isEmpty()) {
