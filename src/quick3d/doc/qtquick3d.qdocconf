@@ -63,7 +63,8 @@ excludefiles += "*_p.h"
 manifestmeta.highlighted.names = "QtQuick3D/Qt Quick 3D - Principled Material Example" \
                                  "QtQuick3D/Qt Quick 3D - Reflection Probes Example" \
                                  "QtQuick3D/Qt Quick 3D - Particles 3D Testbed Example" \
-                                 "QtQuick3D/Qt Quick 3D - Morphing Example"
+                                 "QtQuick3D/Qt Quick 3D - Morphing Example" \
+                                 "QtQuick3D/Qt Quick 3D - Robot Arm Example"
 
 
 Cpp.ignoretokens += Q_QUICK3D_EXPORT
