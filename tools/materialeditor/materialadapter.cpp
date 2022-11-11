@@ -63,7 +63,7 @@ Q_GLOBAL_STATIC(BuilderPtr, builderInstance);
     QString identifier;
     auto msg = errorMsg;
     if (errorMsg.startsWith(head)) {
-        auto pos = head.length();
+        auto pos = head.size();
         auto idx = errorMsg.indexOf(u':', pos);
         if (idx > pos && idx < pos + 16 /* sanity check */) {
             pos = idx;
@@ -328,7 +328,7 @@ bool MaterialAdapter::saveMaterial(const QUrl &materialFile)
         out << int(m_material->depthDrawMode());
         out << int(m_material->shadingMode());
         // Uniforms
-        out << uniformTable.count();
+        out << uniformTable.size();
         for (const auto &uniform : qAsConst(uniformTable))
             out << uniform;
     } else {

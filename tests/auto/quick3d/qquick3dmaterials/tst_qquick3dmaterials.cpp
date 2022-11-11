@@ -892,7 +892,7 @@ void tst_QQuick3DMaterials::testCustomMaterials()
     QQuick3DTexture qTexture;
     QSignalSpy spy(&mTexture, SIGNAL(textureChanged()));
     mTexture.setTexture(&qTexture);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     QVERIFY(&qTexture == mTexture.texture());
 
     QQuick3DShaderUtilsBuffer mBuffer;

@@ -944,7 +944,7 @@ QQuick3DShaderUtilsRenderPass *QQuick3DEffect::qmlPassAt(QQmlListProperty<QQuick
 qsizetype QQuick3DEffect::qmlPassCount(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)
 {
     QQuick3DEffect *that = qobject_cast<QQuick3DEffect *>(list->object);
-    return that->m_passes.count();
+    return that->m_passes.size();
 }
 
 void QQuick3DEffect::qmlPassClear(QQmlListProperty<QQuick3DShaderUtilsRenderPass> *list)

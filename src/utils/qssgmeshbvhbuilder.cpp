@@ -95,8 +95,8 @@ QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
     } else {
         // Custom Geometry only has one subset
         QSSGMeshBVHNode *root = new QSSGMeshBVHNode();
-        root->boundingData = getBounds(0, m_triangleBounds.count());
-        root = splitNode(root, 0, m_triangleBounds.count());
+        root->boundingData = getBounds(0, m_triangleBounds.size());
+        root = splitNode(root, 0, m_triangleBounds.size());
         m_roots.append(root);
     }
     return new QSSGMeshBVH(m_roots, m_triangleBounds);

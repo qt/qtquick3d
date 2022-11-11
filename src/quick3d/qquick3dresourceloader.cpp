@@ -107,7 +107,7 @@ QQmlListProperty<QQuick3DTexture> QQuick3DResourceLoader::textures()
 void QQuick3DResourceLoader::onGeometryDestroyed(QObject *object)
 {
     bool found = false;
-    for (int i = 0; i < m_geometries.count(); ++i) {
+    for (int i = 0; i < m_geometries.size(); ++i) {
         if (m_geometries[i] == object) {
             m_geometries.removeAt(i--);
             found = true;
@@ -120,7 +120,7 @@ void QQuick3DResourceLoader::onGeometryDestroyed(QObject *object)
 void QQuick3DResourceLoader::onTextureDestroyed(QObject *object)
 {
     bool found = false;
-    for (int i = 0; i < m_textures.count(); ++i) {
+    for (int i = 0; i < m_textures.size(); ++i) {
         if (m_textures[i] == object) {
             m_textures.removeAt(i--);
             found = true;
@@ -227,7 +227,7 @@ QQuick3DGeometry *QQuick3DResourceLoader::qmlGeometryAt(QQmlListProperty<QQuick3
 qsizetype QQuick3DResourceLoader::qmlGeometriesCount(QQmlListProperty<QQuick3DGeometry> *list)
 {
     QQuick3DResourceLoader *self = static_cast<QQuick3DResourceLoader *>(list->object);
-    return self->m_geometries.count();
+    return self->m_geometries.size();
 }
 
 void QQuick3DResourceLoader::qmlClearGeometries(QQmlListProperty<QQuick3DGeometry> *list)
@@ -283,7 +283,7 @@ QQuick3DTexture *QQuick3DResourceLoader::qmlTextureAt(QQmlListProperty<QQuick3DT
 qsizetype QQuick3DResourceLoader::qmlTexturesCount(QQmlListProperty<QQuick3DTexture> *list)
 {
     QQuick3DResourceLoader *self = static_cast<QQuick3DResourceLoader *>(list->object);
-    return self->m_textures.count();
+    return self->m_textures.size();
 }
 
 void QQuick3DResourceLoader::qmlClearTextures(QQmlListProperty<QQuick3DTexture> *list)

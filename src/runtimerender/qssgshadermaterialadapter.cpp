@@ -906,7 +906,7 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"uniforms\": [\n";
     static const char *metaEnd = "  ]\n}*/\n#endif\n";
     dst.append(metaStart);
-    for (int i = 0, count = allUniforms.count(); i < count; ++i) {
+    for (int i = 0, count = allUniforms.size(); i < count; ++i) {
         const auto &typeAndName(allUniforms[i]);
         dst.append("    { \"type\": \"" + typeAndName.first + "\", \"name\": \"" + typeAndName.second + "\" }");
         if (i < count - 1)
@@ -919,14 +919,14 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     StringPairList allInputs = baseInputs;
     for (const QByteArray &inputTypeAndName : inputs) {
         const QByteArrayList typeAndName = inputTypeAndName.split(' ');
-        if (typeAndName.count() == 2)
+        if (typeAndName.size() == 2)
             allInputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
     }
     if (!allInputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"inputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
         dst.append(metaStart);
-        for (int i = 0, count = allInputs.count(); i < count; ++i) {
+        for (int i = 0, count = allInputs.size(); i < count; ++i) {
             dst.append("    { \"type\": \"" + allInputs[i].first
                     + "\", \"name\": \"" + allInputs[i].second
                     + "\", \"stage\": \"" + stageStr + "\" }");
@@ -940,14 +940,14 @@ QSSGShaderCustomMaterialAdapter::prepareCustomShader(QByteArray &dst,
     StringPairList allOutputs = baseOutputs;
     for (const QByteArray &outputTypeAndName : outputs) {
         const QByteArrayList typeAndName = outputTypeAndName.split(' ');
-        if (typeAndName.count() == 2)
+        if (typeAndName.size() == 2)
             allOutputs.append({ typeAndName[0].trimmed(), typeAndName[1].trimmed() });
     }
     if (!allOutputs.isEmpty()) {
         static const char *metaStart = "#ifdef QQ3D_SHADER_META\n/*{\n  \"outputs\": [\n";
         static const char *metaEnd = "  ]\n}*/\n#endif\n";
         dst.append(metaStart);
-        for (int i = 0, count = allOutputs.count(); i < count; ++i) {
+        for (int i = 0, count = allOutputs.size(); i < count; ++i) {
             dst.append("    { \"type\": \"" + allOutputs[i].first
                     + "\", \"name\": \"" + allOutputs[i].second
                     + "\", \"stage\": \"" + stageStr + "\" }");

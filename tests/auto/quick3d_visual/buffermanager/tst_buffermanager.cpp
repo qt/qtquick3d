@@ -129,11 +129,11 @@ void tst_BufferManager::staticScene()
 
     auto bufferManager = context->bufferManager();
 
-    QCOMPARE(bufferManager->getImageMap().count(), pathTextureCount);
-    QCOMPARE(bufferManager->getSGImageMap().count(), sgTextureCount);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), customTextureCount);
-    QCOMPARE(bufferManager->getMeshMap().count(), meshCount);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), customMeshCount);
+    QCOMPARE(bufferManager->getImageMap().size(), pathTextureCount);
+    QCOMPARE(bufferManager->getSGImageMap().size(), sgTextureCount);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), customTextureCount);
+    QCOMPARE(bufferManager->getMeshMap().size(), meshCount);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), customMeshCount);
 }
 
 void tst_BufferManager::dynamicScene()
@@ -159,11 +159,11 @@ void tst_BufferManager::dynamicScene()
     auto bufferManager = context->bufferManager();
 
     // Check for the initial state (1 static path model)
-    QCOMPARE(bufferManager->getImageMap().count(), 0);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 0);
-    QCOMPARE(bufferManager->getMeshMap().count(), 1);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 0);
+    QCOMPARE(bufferManager->getImageMap().size(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 0);
+    QCOMPARE(bufferManager->getMeshMap().size(), 1);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 0);
 
     // Get the test controller object
     const auto controller = renderer.rootItem->property("controller").value<QQuick3DNode*>();
@@ -215,116 +215,116 @@ void tst_BufferManager::dynamicScene()
     // add another sphere (count should stay 1)
     auto sphereModel = addModel("#Sphere");
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getMeshMap().count(), 1);
+    QCOMPARE(bufferManager->getMeshMap().size(), 1);
     // add a cube (count == 2)
     QQuick3DModel *model = addModel("#Cube");
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getMeshMap().count(), 2);
+    QCOMPARE(bufferManager->getMeshMap().size(), 2);
     // remove the cube model (count == 1)
     QMetaObject::invokeMethod(controller, "removeModel", Qt::DirectConnection);
     delete model;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getMeshMap().count(), 1);
+    QCOMPARE(bufferManager->getMeshMap().size(), 1);
     QMetaObject::invokeMethod(controller, "removeModel");
     delete sphereModel;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getMeshMap().count(), 1);
+    QCOMPARE(bufferManager->getMeshMap().size(), 1);
 
     // models (customGeometry)
     auto dynamicModel = addDynamicModel();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 1);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 1);
     auto dynamicModel2 = addDynamicModel();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 2);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 2);
 
     QMetaObject::invokeMethod(controller, "removeDynamicModel");
     delete dynamicModel2;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 1);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 1);
 
     QMetaObject::invokeMethod(controller, "removeDynamicModel");
     delete dynamicModel;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 0);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 0);
 
 
     // textures (path)
-    QCOMPARE(bufferManager->getImageMap().count(), 0);
+    QCOMPARE(bufferManager->getImageMap().size(), 0);
     auto texture = addTexture("noise1.jpg");
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getImageMap().count(), 1);
+    QCOMPARE(bufferManager->getImageMap().size(), 1);
     QMetaObject::invokeMethod(controller, "removeTexture");
     delete texture;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getImageMap().count(), 0);
+    QCOMPARE(bufferManager->getImageMap().size(), 0);
 
     // textures (custom)
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 0);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 0);
     auto dynamicTexture = addDynamicTexture();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 1);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 1);
     QMetaObject::invokeMethod(controller, "removeDynamicTexture");
     delete dynamicTexture;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 0);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 0);
 
     // textures (sg)
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
     auto qmlTexture = addQmlTexture();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 1);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 1);
     auto qmlTexture2 = addQmlTexture();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 2);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 2);
     QMetaObject::invokeMethod(controller, "removeQmlTexture");
     delete qmlTexture2;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 1);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 1);
     QMetaObject::invokeMethod(controller, "removeQmlTexture");
     delete qmlTexture;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
 
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
     auto qmlSharedTexture = addQmlSharedTexture();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 1);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 1);
     auto qmlSharedTexture2 = addQmlSharedTexture();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 1);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 1);
     QMetaObject::invokeMethod(controller, "removeQmlSharedTexture");
     delete qmlSharedTexture2;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 1);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 1);
     QMetaObject::invokeMethod(controller, "removeQmlSharedTexture");
     delete qmlSharedTexture;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
 
     // Make sure scene is in its initial state
-    QCOMPARE(bufferManager->getImageMap().count(), 0);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 0);
-    QCOMPARE(bufferManager->getMeshMap().count(), 1);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 0);
+    QCOMPARE(bufferManager->getImageMap().size(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 0);
+    QCOMPARE(bufferManager->getMeshMap().size(), 1);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 0);
 
     // Add a ResourceLoader
     auto resourceLoader = addResourceLoader();
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getImageMap().count(), 3);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 1);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 1);
-    QCOMPARE(bufferManager->getMeshMap().count(), 5);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 1);
+    QCOMPARE(bufferManager->getImageMap().size(), 3);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 1);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 1);
+    QCOMPARE(bufferManager->getMeshMap().size(), 5);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 1);
     // Remove the ResourceLoader
     delete resourceLoader;
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
-    QCOMPARE(bufferManager->getImageMap().count(), 0);
-    QCOMPARE(bufferManager->getSGImageMap().count(), 0);
-    QCOMPARE(bufferManager->getCustomTextureMap().count(), 0);
-    QCOMPARE(bufferManager->getMeshMap().count(), 1);
-    QCOMPARE(bufferManager->getCustomMeshMap().count(), 0);
+    QCOMPARE(bufferManager->getImageMap().size(), 0);
+    QCOMPARE(bufferManager->getSGImageMap().size(), 0);
+    QCOMPARE(bufferManager->getCustomTextureMap().size(), 0);
+    QCOMPARE(bufferManager->getMeshMap().size(), 1);
+    QCOMPARE(bufferManager->getCustomMeshMap().size(), 0);
 }
 
 bool tst_BufferManager::initRenderer(QQuick3DTestOffscreenRenderer *renderer, const QString &filename)

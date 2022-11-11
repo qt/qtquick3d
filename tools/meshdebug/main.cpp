@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
             qDebug() << " -- Multiheader --";
             qDebug() << "fileId:" << multiHeader.fileId;
             qDebug() << "version:" << multiHeader.fileVersion;
-            qDebug() << "mesh entries:" << multiHeader.meshEntries.count();
+            qDebug() << "mesh entries:" << multiHeader.meshEntries.size();
 
             for (auto it = multiHeader.meshEntries.cbegin(), end = multiHeader.meshEntries.cend(); it != end; ++it) {
                 const quint32 meshId = it.key();
@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
                 // Vertex Buffer
                 const Mesh::VertexBuffer vb = mesh.vertexBuffer();
                 qDebug() << "\t\t -- Vertex Buffer --";
-                qDebug() << "\t\tentry count:" << vb.entries.count();
-                for (quint32 idx = 0, end = vb.entries.count(); idx < end; ++idx) {
+                qDebug() << "\t\tentry count:" << vb.entries.size();
+                for (quint32 idx = 0, end = vb.entries.size(); idx < end; ++idx) {
                     qDebug() << "\t\t\t -- Vertex Buffer Entry" << idx << "--";
                     const Mesh::VertexBufferEntry &entry(vb.entries[idx]);
                     qDebug() << "\t\t\tname:" << entry.name;
@@ -95,8 +95,8 @@ int main(int argc, char *argv[])
                 // Subsets
                 const QVector<Mesh::Subset> subsets = mesh.subsets();
                 qDebug() << "\t\t -- Subsets --";
-                qDebug() << "\t\tsubset count:" << subsets.count();
-                for (quint32 idx = 0, end = subsets.count(); idx < end; ++idx) {
+                qDebug() << "\t\tsubset count:" << subsets.size();
+                for (quint32 idx = 0, end = subsets.size(); idx < end; ++idx) {
                     qDebug() << "\t\t -- Subset" << idx << "--";
                     const Mesh::Subset &subset(subsets[idx]);
                     qDebug() << "\t\tindex count:" << subset.count;

@@ -236,7 +236,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                       ps->ia.inputLayout.cendBindings(),
                       std::back_inserter(bindings));
             bindings.append({ stride, QRhiVertexInputBinding::PerInstance });
-            instanceBufferBinding = bindings.count() - 1;
+            instanceBufferBinding = bindings.size() - 1;
             ps->ia.inputLayout.setBindings(bindings.cbegin(), bindings.cend());
         }
 

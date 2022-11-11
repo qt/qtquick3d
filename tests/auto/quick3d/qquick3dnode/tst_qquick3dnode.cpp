@@ -102,7 +102,7 @@ void tst_QQuick3DNode::testProperties()
     nodeItem.setVisible(true);
     node = static_cast<QSSGRenderNode *>(nodeItem.updateSpatialNode(node));
     QVERIFY(node->getLocalState(QSSGRenderNode::LocalState::Active));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     QCOMPARE(originalNode, node);
 }

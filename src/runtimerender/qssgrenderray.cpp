@@ -204,7 +204,7 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
                                                                                     int triangleOffset,
                                                                                     int triangleCount)
 {
-    Q_ASSERT(bvhTriangles.count() >= triangleOffset + triangleCount);
+    Q_ASSERT(bvhTriangles.size() >= triangleOffset + triangleCount);
 
     QVector<QSSGRenderRay::IntersectionResult> results;
 

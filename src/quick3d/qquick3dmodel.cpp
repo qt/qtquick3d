@@ -929,7 +929,7 @@ void QQuick3DModel::updateSceneManager(QQuick3DSceneManager *sceneManager)
 void QQuick3DModel::onMaterialDestroyed(QObject *object)
 {
     bool found = false;
-    for (int i = 0; i < m_materials.count(); ++i) {
+    for (int i = 0; i < m_materials.size(); ++i) {
         if (m_materials[i].material == object) {
             m_materials.removeAt(i--);
             found = true;
@@ -981,7 +981,7 @@ QQuick3DMaterial *QQuick3DModel::qmlMaterialAt(QQmlListProperty<QQuick3DMaterial
 qsizetype QQuick3DModel::qmlMaterialsCount(QQmlListProperty<QQuick3DMaterial> *list)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    return self->m_materials.count();
+    return self->m_materials.size();
 }
 
 void QQuick3DModel::qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list)
@@ -1055,7 +1055,7 @@ QQuick3DMorphTarget *QQuick3DModel::qmlMorphTargetAt(QQmlListProperty<QQuick3DMo
 qsizetype QQuick3DModel::qmlMorphTargetsCount(QQmlListProperty<QQuick3DMorphTarget> *list)
 {
     QQuick3DModel *self = static_cast<QQuick3DModel *>(list->object);
-    return self->m_morphTargets.count();
+    return self->m_morphTargets.size();
 }
 
 void QQuick3DModel::qmlClearMorphTargets(QQmlListProperty<QQuick3DMorphTarget> *list)

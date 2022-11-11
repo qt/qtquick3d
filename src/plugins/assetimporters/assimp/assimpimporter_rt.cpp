@@ -358,7 +358,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
                     if (isEmbedded) {
                         QSSGSceneDesc::TextureData *textureData = nullptr;
                         auto &embeddedTextures = sceneInfo.embeddedTextureMap;
-                        const auto textureCount = embeddedTextures.count();
+                        const auto textureCount = embeddedTextures.size();
                         const auto &filename = texturePath.data;
                         const auto idx = qsizetype(std::atoi(filename + 1));
                         if (idx >= 0 && idx < textureCount)
@@ -1273,8 +1273,8 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
             auto &targetScene = parent.scene;
             const QString nodeName(source.mName.C_Str());
             QVarLengthArray<QSSGSceneDesc::MorphTarget *> morphTargets;
-            morphTargets.reserve(morphProps.count());
-            for (int i = 0, end = morphProps.count(); i != end; ++i) {
+            morphTargets.reserve(morphProps.size());
+            for (int i = 0, end = morphProps.size(); i != end; ++i) {
                 const auto morphProp = morphProps.at(i);
 
                 auto morphNode = targetScene->create<QSSGSceneDesc::MorphTarget>();

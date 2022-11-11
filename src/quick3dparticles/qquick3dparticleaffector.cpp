@@ -126,7 +126,7 @@ void QQuick3DParticleAffector::appendParticle(QQuick3DParticle *n) {
 
 qsizetype QQuick3DParticleAffector::particleCount() const
 {
-    return m_particles.count();
+    return m_particles.size();
 }
 
 QQuick3DParticle *QQuick3DParticleAffector::particle(qsizetype index) const

@@ -235,7 +235,7 @@ static QVarLengthArray<QSSGMaterialShaderGenerator::ShadowVariableNames, 16> q3d
 
 static QSSGMaterialShaderGenerator::ShadowVariableNames setupShadowMapVariableNames(qsizetype lightIdx)
 {
-    if (lightIdx >= q3ds_shadowMapVariableNames.count())
+    if (lightIdx >= q3ds_shadowMapVariableNames.size())
         q3ds_shadowMapVariableNames.resize(lightIdx + 1);
 
     QSSGMaterialShaderGenerator::ShadowVariableNames &names(q3ds_shadowMapVariableNames[lightIdx]);

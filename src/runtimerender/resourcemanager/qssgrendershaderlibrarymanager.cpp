@@ -68,14 +68,14 @@ void QSSGShaderLibraryManager::resolveIncludeFiles(QByteArray &theReadBuffer, co
     // Now do search and replace for the headers
     for (int thePos = theReadBuffer.indexOf(includeSearch()); thePos != -1;
          thePos = theReadBuffer.indexOf(includeSearch(), thePos + 1)) {
-        int theEndQuote = theReadBuffer.indexOf('\"', thePos + includeSearch().length() + 1);
+        int theEndQuote = theReadBuffer.indexOf('\"', thePos + includeSearch().size() + 1);
         // Indicates an unterminated include file.
         if (theEndQuote == -1) {
             qCCritical(INVALID_OPERATION, "Unterminated include in file: %s", inMaterialInfoString.constData());
             theReadBuffer.clear();
             break;
         }
-        const int theActualBegin = thePos + includeSearch().length();
+        const int theActualBegin = thePos + includeSearch().size();
         const auto &theInclude = theReadBuffer.mid(theActualBegin, theEndQuote - theActualBegin);
         // If we haven't included the file yet this round
         auto contents = getIncludeContents(theInclude);

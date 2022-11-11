@@ -79,7 +79,7 @@ void MeshInternal::writeFileHeader(QIODevice *device, const MeshInternal::MultiM
         outputStream << offset << id << padding;
     }
 
-    const quint32 meshCount = meshFileInfo.meshEntries.count();
+    const quint32 meshCount = meshFileInfo.meshEntries.size();
     outputStream << meshFileInfo.fileId << meshFileInfo.fileVersion << multiEntriesOffset << meshCount;
 }
 
@@ -257,7 +257,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     MeshInternal::MeshOffsetTracker offsetTracker(startPos);
     Q_ASSERT(offsetTracker.offset() == device->pos());
 
-    const quint32 vertexBufferEntriesCount = mesh.m_vertexBuffer.entries.count();
+    const quint32 vertexBufferEntriesCount = mesh.m_vertexBuffer.entries.size();
     const quint32 vertexBufferDataSize = mesh.m_vertexBuffer.data.size();
     const quint32 vertexBufferStride = mesh.m_vertexBuffer.stride;
     outputStream << quint32(0) // legacy offset
@@ -272,7 +272,7 @@ quint64 MeshInternal::writeMeshData(QIODevice *device, const Mesh &mesh)
     outputStream << quint32(0) // legacy offset
                  << indexBufferDataSize;
 
-    const quint32 subsetsCount = mesh.m_subsets.count();
+    const quint32 subsetsCount = mesh.m_subsets.size();
     outputStream << quint32(0) // legacy offset
                  << subsetsCount;
 
@@ -628,7 +628,7 @@ quint32 Mesh::save(QIODevice *device, quint32 id) const
                 newId = qMax(newId, it.key() + 1);
             }
         }
-        newMeshStartPosFromEnd = MULTI_HEADER_STRUCT_SIZE + header.meshEntries.count() * MULTI_ENTRY_STRUCT_SIZE;
+        newMeshStartPosFromEnd = MULTI_HEADER_STRUCT_SIZE + header.meshEntries.size() * MULTI_ENTRY_STRUCT_SIZE;
     } else {
         header = MeshInternal::MultiMeshInfo::withDefaults();
     }
@@ -815,7 +815,7 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
         return false;
 
     // the result can have more (but never less) vertices than the input
-    const int newVertexCount = r.vertexMap.count();
+    const int newVertexCount = r.vertexMap.size();
 
     // r.indexData contains the new index data that has the same number of elements as before
     const quint32 *newIndex = reinterpret_cast<const quint32 *>(r.indexData.constData());
@@ -837,7 +837,7 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     }
 
     QVarLengthArray<QByteArray, 8> newData;
-    newData.reserve(m_vertexBuffer.entries.count());
+    newData.reserve(m_vertexBuffer.entries.size());
 
     for (const VertexBufferEntry &vbe : qAsConst(m_vertexBuffer.entries)) {
         const qsizetype byteSize = vbe.componentCount * MeshInternal::byteSizeForComponentType(vbe.componentType);
@@ -896,7 +896,7 @@ bool Mesh::createLightmapUVChannel(uint lightmapBaseResolution)
     quint32 bufferAlignment = 0;
     for (int vertexIdx = 0; vertexIdx < newVertexCount; ++vertexIdx) {
         quint32 dataOffset = 0;
-        for (int vbIdx = 0, end = m_vertexBuffer.entries.count(); vbIdx != end; ++vbIdx) {
+        for (int vbIdx = 0, end = m_vertexBuffer.entries.size(); vbIdx != end; ++vbIdx) {
             VertexBufferEntry &vbe(m_vertexBuffer.entries[vbIdx]);
 
             const quint32 alignment = MeshInternal::byteSizeForComponentType(vbe.componentType);

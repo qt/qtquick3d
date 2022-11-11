@@ -728,7 +728,7 @@ void QQuick3DParticleSpriteParticle::updateSceneManager(QQuick3DSceneManager *sc
 void QQuick3DParticleSpriteParticle::onLightDestroyed(QObject *object)
 {
     bool found = false;
-    for (int i = 0; i < m_lights.count(); ++i) {
+    for (int i = 0; i < m_lights.size(); ++i) {
         if (m_lights[i] == object) {
             m_lights.removeAt(i--);
             found = true;
@@ -769,7 +769,7 @@ QQuick3DAbstractLight *QQuick3DParticleSpriteParticle::qmlLightAt(QQmlListProper
 qsizetype QQuick3DParticleSpriteParticle::qmlLightsCount(QQmlListProperty<QQuick3DAbstractLight> *list)
 {
     QQuick3DParticleSpriteParticle *self = static_cast<QQuick3DParticleSpriteParticle *>(list->object);
-    return self->m_lights.count();
+    return self->m_lights.size();
 }
 
 void QQuick3DParticleSpriteParticle::qmlClearLights(QQmlListProperty<QQuick3DAbstractLight> *list)

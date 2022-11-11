@@ -76,10 +76,10 @@ QQmlListProperty<QQuick3DNode> QQuick3DSkin::joints()
 
 void QQuick3DSkin::onJointChanged(QQuick3DNode *node)
 {
-    for (int i = 0; i < m_joints.count(); ++i) {
+    for (int i = 0; i < m_joints.size(); ++i) {
         if (m_joints.at(i) == node) {
             QMatrix4x4 jointGlobal = m_joints.at(i)->sceneTransform();
-            if (m_inverseBindPoses.count() > i)
+            if (m_inverseBindPoses.size() > i)
                 jointGlobal *= m_inverseBindPoses.at(i);
             memcpy(m_boneData.data() + POS4BONETRANS(i),
                    reinterpret_cast<const void *>(jointGlobal.constData()),
@@ -94,7 +94,7 @@ void QQuick3DSkin::onJointChanged(QQuick3DNode *node)
 
 void QQuick3DSkin::onJointDestroyed(QObject *object)
 {
-    for (int i = 0; i < m_joints.count(); ++i) {
+    for (int i = 0; i < m_joints.size(); ++i) {
         if (m_joints.at(i) == object) {
             m_joints.removeAt(i);
             // remove both transform and normal together
@@ -111,10 +111,10 @@ void QQuick3DSkin::qmlAppendJoint(QQmlListProperty<QQuick3DNode> *list, QQuick3D
     if (joint == nullptr)
         return;
     QQuick3DSkin *self = static_cast<QQuick3DSkin *>(list->object);
-    int index = self->m_joints.count();
+    int index = self->m_joints.size();
     self->m_joints.push_back(joint);
     QMatrix4x4 jointGlobal = joint->sceneTransform();
-    if (index < self->m_inverseBindPoses.count())
+    if (index < self->m_inverseBindPoses.size())
         jointGlobal *= self->m_inverseBindPoses.at(index);
     self->m_boneData.append(reinterpret_cast<const char *>(jointGlobal.constData()),
                             sizeof(float) * 16);
@@ -136,7 +136,7 @@ QQuick3DNode *QQuick3DSkin::qmlJointAt(QQmlListProperty<QQuick3DNode> *list, qsi
 qsizetype QQuick3DSkin::qmlJointsCount(QQmlListProperty<QQuick3DNode> *list)
 {
     QQuick3DSkin *self = static_cast<QQuick3DSkin *>(list->object);
-    return self->m_joints.count();
+    return self->m_joints.size();
 }
 
 void QQuick3DSkin::qmlClearJoints(QQmlListProperty<QQuick3DNode> *list)
@@ -173,9 +173,9 @@ void QQuick3DSkin::setInverseBindPoses(const QList<QMatrix4x4> &poses)
 
     m_inverseBindPoses = poses;
 
-    for (int i = 0; i < m_joints.count(); ++i) {
+    for (int i = 0; i < m_joints.size(); ++i) {
         QMatrix4x4 jointGlobal = m_joints.at(i)->sceneTransform();
-        if (m_inverseBindPoses.count() > i)
+        if (m_inverseBindPoses.size() > i)
             jointGlobal *= m_inverseBindPoses.at(i);
         memcpy(m_boneData.data() + POS4BONETRANS(i),
                reinterpret_cast<const void *>(jointGlobal.constData()),

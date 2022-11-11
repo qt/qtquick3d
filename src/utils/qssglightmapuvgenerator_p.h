@@ -81,7 +81,7 @@ public:
         const int byteStride = sizeof(T) * componentCount;
         QByteArray result(vertexMap.size() * byteStride, Qt::Uninitialized);
         T *dst = reinterpret_cast<T *>(result.data());
-        for (int i = 0, count = vertexMap.count(); i != count; ++i) {
+        for (int i = 0, count = vertexMap.size(); i != count; ++i) {
             const quint32 originalVertexIndex = vertexMap[i];
             for (int j = 0; j < componentCount; ++j)
                 *dst++ = src[originalVertexIndex * componentCount + j];

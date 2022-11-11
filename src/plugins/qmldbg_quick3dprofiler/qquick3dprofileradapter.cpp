@@ -95,7 +95,7 @@ static void QQuick3DProfilerDataToByteArrays(const QQuick3DProfilerData &data,
 qint64 QQuick3DProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     while (next < m_data.size()) {
-        if (m_data[next].time <= until && messages.length() <= s_numMessagesPerBatch)
+        if (m_data[next].time <= until && messages.size() <= s_numMessagesPerBatch)
             QQuick3DProfilerDataToByteArrays(m_data[next++], messages);
         else
             return m_data[next].time;

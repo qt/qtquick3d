@@ -537,7 +537,7 @@ QQmlListProperty<QQuick3DInstanceListEntry> QQuick3DInstanceList::instances()
 
 int QQuick3DInstanceList::instanceCount() const
 {
-    return m_instances.count();
+    return m_instances.size();
 }
 
 void QQuick3DInstanceList::onInstanceDestroyed(QObject *object)
@@ -569,7 +569,7 @@ QQuick3DInstanceListEntry *QQuick3DInstanceList::qmlInstanceListEntryAt(QQmlList
 qsizetype QQuick3DInstanceList::qmlInstanceListEntriesCount(QQmlListProperty<QQuick3DInstanceListEntry> *list)
 {
     auto *self = static_cast<QQuick3DInstanceList *>(list->object);
-    return self->m_instances.count();
+    return self->m_instances.size();
 }
 
 void QQuick3DInstanceList::qmlClearInstanceListEntries(QQmlListProperty<QQuick3DInstanceListEntry> *list)

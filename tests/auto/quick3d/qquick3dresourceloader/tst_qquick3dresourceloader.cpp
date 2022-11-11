@@ -38,10 +38,10 @@ void tst_QQuick3DResourceLoader::testProperties()
     // Mesh Sources
     QSignalSpy spy(&resourceLoader, SIGNAL(meshSourcesChanged()));
     resourceLoader.setMeshSources( {QUrl("#Cube"), QUrl("#Sphere")} );
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     node = static_cast<QSSGRenderResourceLoader *>(resourceLoader.updateSpatialNode(nullptr));
-    QCOMPARE(resourceLoader.meshSources().count(), 2);
-    QCOMPARE(node->meshes.count(), 2);
+    QCOMPARE(resourceLoader.meshSources().size(), 2);
+    QCOMPARE(node->meshes.size(), 2);
 
 }
 

@@ -132,7 +132,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                 pEntry->m_rhiRenderTargets.resize(1);
                 pEntry->m_rhiRenderTargets[0] = nullptr;
             }
-            Q_ASSERT(pEntry->m_rhiRenderTargets.count() == 1);
+            Q_ASSERT(pEntry->m_rhiRenderTargets.size() == 1);
 
             QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[0]);
             if (!rt) {
@@ -170,7 +170,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                 for (int i = 0; i < 6; ++i)
                     pEntry->m_rhiRenderTargets[i] = nullptr;
             }
-            Q_ASSERT(pEntry->m_rhiRenderTargets.count() == 6);
+            Q_ASSERT(pEntry->m_rhiRenderTargets.size() == 6);
 
             for (int face = 0; face < 6; ++face) {
                 QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[face]);

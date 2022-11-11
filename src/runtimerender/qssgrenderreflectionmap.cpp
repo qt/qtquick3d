@@ -90,7 +90,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
             for (int i = 0; i < 6; ++i)
                 pEntry->m_rhiRenderTargets[i] = nullptr;
         }
-        Q_ASSERT(pEntry->m_rhiRenderTargets.count() == 6);
+        Q_ASSERT(pEntry->m_rhiRenderTargets.size() == 6);
 
         if (pEntry->m_skyBoxSrbs.isEmpty()) {
             pEntry->m_skyBoxSrbs.resize(6);

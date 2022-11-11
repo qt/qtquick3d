@@ -40,18 +40,18 @@ void tst_QQuick3DTexture::testSetSource()
     QCOMPARE(node.get(), texture.updateSpatialNode(node.get()));
 
     QSignalSpy spy(&texture, SIGNAL(sourceChanged()));
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     const QUrl fileWithScheme {QString::fromLatin1("file:path/to/resource")};
     const QString expectedPath {QString::fromLatin1("path/to/resource")};
     texture.setSource(fileWithScheme);
     node.reset(static_cast<QSSGRenderImage *>(texture.updateSpatialNode(nullptr)));
     QCOMPARE(expectedPath, node->m_imagePath.path());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // Same url again
     texture.setSource(fileWithScheme);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_QQuick3DTexture::testSetSourceItem()
@@ -64,16 +64,16 @@ void tst_QQuick3DTexture::testSetSourceItem()
 
     qRegisterMetaType<QQuickItem *>();
     QSignalSpy spy(&texture, SIGNAL(sourceItemChanged()));
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     QVERIFY(!texture.sourceItem());
     texture.setSourceItem(&item);
     QVERIFY(texture.sourceItem());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // Same item again
     texture.setSourceItem(&item);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_QQuick3DTexture::testMappingAndTilingModes()
@@ -187,17 +187,17 @@ void tst_QQuick3DTexture::testTextureData()
 
     // No textureData by default
     QSignalSpy spy(&texture, SIGNAL(textureDataChanged()));
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     // Set textureData
     QVERIFY(!texture.textureData());
     texture.setTextureData(&textureData);
     QVERIFY(texture.textureData());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // Same textureData again
     texture.setTextureData(&textureData);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 QTEST_APPLESS_MAIN(tst_QQuick3DTexture)

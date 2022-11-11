@@ -230,7 +230,7 @@ int QQuick3DRepeater::count() const
 
 QQuick3DObject *QQuick3DRepeater::objectAt(int index) const
 {
-    if (index >= 0 && index < m_deletables.count())
+    if (index >= 0 && index < m_deletables.size())
         return m_deletables[index];
     return nullptr;
 }
@@ -242,7 +242,7 @@ void QQuick3DRepeater::clear()
     if (m_model) {
         // We remove in reverse order deliberately; so that signals are emitted
         // with sensible indices.
-        for (int i = m_deletables.count() - 1; i >= 0; --i) {
+        for (int i = m_deletables.size() - 1; i >= 0; --i) {
             if (QQuick3DObject *item = m_deletables.at(i)) {
                 if (complete)
                     emit objectRemoved(i, item);
@@ -336,8 +336,8 @@ void QQuick3DRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     int difference = 0;
     QHash<int, QVector<QPointer<QQuick3DNode> > > moved;
     for (const QQmlChangeSet::Change &remove : changeSet.removes()) {
-        int index = qMin(remove.index, m_deletables.count());
-        int count = qMin(remove.index + remove.count, m_deletables.count()) - index;
+        int index = qMin(remove.index, m_deletables.size());
+        int count = qMin(remove.index + remove.count, m_deletables.size()) - index;
         if (remove.isMove()) {
             moved.insert(remove.moveId, m_deletables.mid(index, count));
             m_deletables.erase(
@@ -358,7 +358,7 @@ void QQuick3DRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     }
 
     for (const QQmlChangeSet::Change &insert : changeSet.inserts()) {
-        int index = qMin(insert.index, m_deletables.count());
+        int index = qMin(insert.index, m_deletables.size());
         if (insert.isMove()) {
             QVector<QPointer<QQuick3DNode> > items = moved.value(insert.moveId);
             m_deletables = m_deletables.mid(0, index) + items + m_deletables.mid(index);

@@ -194,7 +194,7 @@ void QSSGLightmapper::setOptions(const QSSGLightmapperOptions &options)
 qsizetype QSSGLightmapper::add(const QSSGBakedLightingModel &model)
 {
     d->bakedLightingModels.append(model);
-    return d->bakedLightingModels.count() - 1;
+    return d->bakedLightingModels.size() - 1;
 }
 
 static void embreeErrFunc(void *, RTCError error, const char *str)
@@ -244,7 +244,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
 
     const QSSGRef<QSSGBufferManager> &bufferManager(renderer->contextInterface()->bufferManager());
 
-    const int bakedLightingModelCount = bakedLightingModels.count();
+    const int bakedLightingModelCount = bakedLightingModels.size();
     subMeshInfos.resize(bakedLightingModelCount);
     drawInfos.resize(bakedLightingModelCount);
 
@@ -259,7 +259,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
             return false;
         }
 
-        subMeshInfos[lmIdx].reserve(lm.renderables.count());
+        subMeshInfos[lmIdx].reserve(lm.renderables.size());
         for (const QSSGRenderableObjectHandle &handle : qAsConst(lm.renderables)) {
             Q_ASSERT(handle.obj->renderableFlags.isDefaultMaterialMeshSubset()
                      || handle.obj->renderableFlags.isCustomMaterialMeshSubset());
@@ -477,7 +477,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
         lights.append(light);
     }
 
-    qDebug() << "lm: Found" << lights.count() << "lights enabled for baking";
+    qDebug() << "lm: Found" << lights.size() << "lights enabled for baking";
 
     rdev = rtcNewDevice(nullptr);
     if (!rdev) {
@@ -586,9 +586,9 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
     }
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    const int bakedLightingModelCount = bakedLightingModels.count();
-    Q_ASSERT(drawInfos.count() == bakedLightingModelCount);
-    Q_ASSERT(subMeshInfos.count() == bakedLightingModelCount);
+    const int bakedLightingModelCount = bakedLightingModels.size();
+    Q_ASSERT(drawInfos.size() == bakedLightingModelCount);
+    Q_ASSERT(subMeshInfos.size() == bakedLightingModelCount);
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         QElapsedTimer rasterizeTimer;
@@ -666,7 +666,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         }
 
         static const int UBUF_SIZE = 32;
-        const int subMeshCount = subMeshInfos[lmIdx].count();
+        const int subMeshCount = subMeshInfos[lmIdx].size();
         const int alignedUbufSize = rhi->ubufAligned(UBUF_SIZE);
         const int totalUbufSize = alignedUbufSize * subMeshCount;
         std::unique_ptr<QRhiBuffer> ubuf(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalUbufSize));
@@ -834,19 +834,19 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
 
         // The readback results are tightly packed (which is supposed to be ensured
         // by each rhi backend), so one line is 16 * width bytes.
-        if (posReadResult.data.size() < lightmap.entries.count() * 16) {
+        if (posReadResult.data.size() < lightmap.entries.size() * 16) {
             qWarning("lm: Position data is smaller than expected");
             return false;
         }
-        if (normalReadResult.data.size() < lightmap.entries.count() * 16) {
+        if (normalReadResult.data.size() < lightmap.entries.size() * 16) {
             qWarning("lm: Normal data is smaller than expected");
             return false;
         }
-        if (baseColorReadResult.data.size() < lightmap.entries.count() * 16) {
+        if (baseColorReadResult.data.size() < lightmap.entries.size() * 16) {
             qWarning("lm: Base color data is smaller than expected");
             return false;
         }
-        if (emissionReadResult.data.size() < lightmap.entries.count() * 16) {
+        if (emissionReadResult.data.size() < lightmap.entries.size() * 16) {
             qWarning("lm: Emission data is smaller than expected");
             return false;
         }
@@ -855,7 +855,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
         const float *lmBaseColorPtr = reinterpret_cast<const float *>(baseColorReadResult.data.constData());
         const float *lmEmissionPtr = reinterpret_cast<const float *>(emissionReadResult.data.constData());
         int unusedEntries = 0;
-        for (qsizetype i = 0, ie = lightmap.entries.count(); i != ie; ++i) {
+        for (qsizetype i = 0, ie = lightmap.entries.size(); i != ie; ++i) {
             LightmapEntry &lmPix(lightmap.entries[i]);
 
             float x = *lmPosPtr++;
@@ -888,15 +888,15 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                 ++unusedEntries;
         }
 
-        qDebug() << "lm: Rasterized" << (lightmap.entries.count() - unusedEntries) << "lightmap texels (total"
-                 << lightmap.entries.count() << "unused" << unusedEntries << "semi-trans.basecolor" << lightmap.hasBaseColorTransparency
+        qDebug() << "lm: Rasterized" << (lightmap.entries.size() - unusedEntries) << "lightmap texels (total"
+                 << lightmap.entries.size() << "unused" << unusedEntries << "semi-trans.basecolor" << lightmap.hasBaseColorTransparency
                  << ") for model" << lm.model
                  << "with lightmap size" << outputSize << "in" << rasterizeTimer.elapsed() << "ms";
 
         lightmaps.append(lightmap);
 
         for (const SubMeshInfo &subMeshInfo : qAsConst(subMeshInfos[lmIdx]))
-            geomLightmapMap[subMeshInfo.geomId] = lightmaps.count() - 1;
+            geomLightmapMap[subMeshInfo.geomId] = lightmaps.size() - 1;
     }
 
     return true;
@@ -948,8 +948,8 @@ void QSSGLightmapperPrivate::computeDirectLight()
     QElapsedTimer fullDirectLightTimer;
     fullDirectLightTimer.start();
 
-    const int bakedLightingModelCount = bakedLightingModels.count();
-    Q_ASSERT(lightmaps.count() == bakedLightingModelCount);
+    const int bakedLightingModelCount = bakedLightingModels.size();
+    Q_ASSERT(lightmaps.size() == bakedLightingModelCount);
 
     QVector<QFuture<void>> futures;
 
@@ -962,7 +962,7 @@ void QSSGLightmapperPrivate::computeDirectLight()
             QElapsedTimer directLightTimer;
             directLightTimer.start();
 
-            const int lightCount = lights.count();
+            const int lightCount = lights.size();
             for (LightmapEntry &lmPix : lightmap.entries) {
                 if (!lmPix.isValid())
                     continue;
@@ -1056,7 +1056,7 @@ void QSSGLightmapperPrivate::computeIndirectLight()
     QElapsedTimer fullIndirectLightTimer;
     fullIndirectLightTimer.start();
 
-    const int bakedLightingModelCount = bakedLightingModels.count();
+    const int bakedLightingModelCount = bakedLightingModels.size();
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         // here we only care about the models that will store the lightmap image persistently
@@ -1178,7 +1178,7 @@ void QSSGLightmapperPrivate::computeIndirectLight()
 
             ++texelsDone;
             if (texelsDone % 10000 == 0)
-                qDebug() << "lm:" << (lightmap.entries.count() - texelsDone) << "texels left";
+                qDebug() << "lm:" << (lightmap.entries.size() - texelsDone) << "texels left";
         }
 
         qDebug() << "lm: Indirect light computed for model" << lm.model
@@ -1317,7 +1317,7 @@ bool QSSGLightmapperPrivate::postProcess()
 {
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    const int bakedLightingModelCount = bakedLightingModels.count();
+    const int bakedLightingModelCount = bakedLightingModels.size();
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         QElapsedTimer postProcessTimer;
@@ -1331,7 +1331,7 @@ bool QSSGLightmapperPrivate::postProcess()
         Lightmap &lightmap(lightmaps[lmIdx]);
 
         // Assemble the RGBA32F image from the baker data structures
-        QByteArray lightmapFP32(lightmap.entries.count() * 4 * sizeof(float), Qt::Uninitialized);
+        QByteArray lightmapFP32(lightmap.entries.size() * 4 * sizeof(float), Qt::Uninitialized);
         float *lightmapFloatPtr = reinterpret_cast<float *>(lightmapFP32.data());
         for (const LightmapEntry &lmPix : qAsConst(lightmap.entries)) {
             *lightmapFloatPtr++ = lmPix.allLight.x();
@@ -1455,12 +1455,12 @@ bool QSSGLightmapperPrivate::postProcess()
                 }
             }
         }
-        qDebug() << "lm:" << seams.count() << "UV seams in" << lm.model;
+        qDebug() << "lm:" << seams.size() << "UV seams in" << lm.model;
 
         QByteArray workBuf(lightmap.imageFP32.size(), Qt::Uninitialized);
         for (int blendIter = 0; blendIter < LM_SEAM_BLEND_ITER_COUNT; ++blendIter) {
             memcpy(workBuf.data(), lightmap.imageFP32.constData(), lightmap.imageFP32.size());
-            for (int seamIdx = 0, end = seams.count(); seamIdx != end; ++seamIdx) {
+            for (int seamIdx = 0, end = seams.size(); seamIdx != end; ++seamIdx) {
                 const SeamUV &seam(seams[seamIdx]);
                 blendLine(seam.uv[0][0], seam.uv[0][1],
                           seam.uv[1][0], seam.uv[1][1],
@@ -1480,7 +1480,7 @@ bool QSSGLightmapperPrivate::postProcess()
 
 bool QSSGLightmapperPrivate::storeLightmaps()
 {
-    const int bakedLightingModelCount = bakedLightingModels.count();
+    const int bakedLightingModelCount = bakedLightingModels.size();
     QByteArray listContents;
 
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
@@ -1541,7 +1541,7 @@ bool QSSGLightmapper::bake()
     QElapsedTimer totalTimer;
     totalTimer.start();
 
-    qDebug() << "lm: Starting bake with" << d->bakedLightingModels.count() << "registered models";
+    qDebug() << "lm: Starting bake with" << d->bakedLightingModels.size() << "registered models";
 
     if (!d->commitGeometry())
         return false;
