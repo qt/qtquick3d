@@ -2150,7 +2150,7 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
     auto *table = modelContext.model.instanceTable;
     bool usesLod = minThreshold >= 0 || maxThreshold >= 0;
     QSSGRhiInstanceBufferData &instanceData(usesLod ? rhiCtx->instanceBufferData(&modelContext.model) : rhiCtx->instanceBufferData(table));
-    qsizetype instanceBufferSize = table->dataSize();
+    quint32 instanceBufferSize = table->dataSize();
     // Create or resize the instance buffer ### if (instanceData.owned)
     bool sortingChanged = table->isDepthSortingEnabled() != instanceData.sorting;
     bool cameraDirectionChanged = !qFuzzyCompare(instanceData.sortedCameraDirection, cameraDirection);
