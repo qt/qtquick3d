@@ -49,7 +49,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderInstanceTable : public QSSGRender
 private:
     int instanceCount = 0;
     int instanceSerial = 0;
-    uint instanceStride = 0;
+    int instanceStride = 0;
     bool transparency = false;
     bool depthSorting = false;
     QByteArray table;
