@@ -65,7 +65,7 @@ struct QSSGRenderSubset
         return *this;
     }
 
-    quint32 lodCount(quint32 lodLevel) const {
+    quint32 lodCount(int lodLevel) const {
         if (lodLevel == 0 || lods.isEmpty())
             return count;
         if (lodLevel > lods.count())
@@ -76,7 +76,7 @@ struct QSSGRenderSubset
         return lods[lodLevel].count;
     }
 
-    quint32 lodOffset(quint32 lodLevel) const {
+    quint32 lodOffset(int lodLevel) const {
         if (lodLevel == 0 || lods.isEmpty())
             return offset;
         if (lodLevel > lods.count())

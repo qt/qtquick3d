@@ -1151,7 +1151,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 
                 int currentLod = -1;
                 const float threshold = distanceThreshold * lodDistanceMultiplier;
-                for (quint32 i = 0; i < theSubset.lods.count(); ++i) {
+                for (qsizetype i = 0; i < theSubset.lods.count(); ++i) {
                     float subsetDistance = theSubset.lods[i].distance * modelScale * model.levelOfDetailBias;
                     float screenSize = subsetDistance / threshold;
                     if (screenSize > lodThreshold)
