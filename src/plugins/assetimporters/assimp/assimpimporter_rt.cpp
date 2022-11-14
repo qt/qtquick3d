@@ -6,6 +6,7 @@
 #include <assimputils.h>
 
 #include <QtCore/qurl.h>
+#include <QtCore/qbytearrayalgorithms.h>
 #include <QtGui/QQuaternion>
 
 #include <QtQuick3DAssetImport/private/qssgassetimporterfactory_p.h>
@@ -1749,6 +1750,14 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                     auto targetNode = aNodeIt.value();
                     // Target propert[y|ies]
 
+                    const auto currentPropertyValue = [targetNode](const char *propertyName) -> QVariant {
+                        for (auto *p : targetNode->properties) {
+                            if (!qstrcmp(propertyName, p->name))
+                                return p->value;
+                        }
+                        return {};
+                    };
+
                     { // Position
                         const auto posKeyEnd = srcChannel.mNumPositionKeys;
                         Animation::Channel targetChannel;
@@ -1764,7 +1773,13 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                             prevPos = animationKey;
                         }
 
-                        if (!targetChannel.keys.isEmpty()) {
+                        const auto isUnchanged = [&targetChannel, currentPropertyValue]() {
+                            if (targetChannel.keys.count() != 1)
+                                return false;
+                            auto currentPos = currentPropertyValue("position").value<QVector3D>();
+                            return qFuzzyCompare(targetChannel.keys[0]->value.toVector3D(), currentPos);
+                        };
+                        if (!targetChannel.keys.isEmpty() && !isUnchanged()) {
                             channels.push_back(new Animation::Channel(targetChannel));
                             float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime) * freq;
                             if (targetAnimation.length < endTime)
@@ -1787,7 +1802,14 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                             prevRot = animationKey;
                         }
 
-                        if (!targetChannel.keys.isEmpty()) {
+                        const auto isUnchanged = [&targetChannel, currentPropertyValue]() {
+                            if (targetChannel.keys.count() != 1)
+                                return false;
+                            auto currentVal = currentPropertyValue("rotation");
+                            QQuaternion rot = currentVal.isValid() ? currentVal.value<QQuaternion>() : QQuaternion{};
+                            return qFuzzyCompare(QQuaternion(targetChannel.keys[0]->value), rot);
+                        };
+                        if (!targetChannel.keys.isEmpty() && !isUnchanged()) {
                             channels.push_back(new Animation::Channel(targetChannel));
                             float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime) * freq;
                             if (targetAnimation.length < endTime)
@@ -1810,7 +1832,15 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                             prevScale = animationKey;
                         }
 
-                        if (!targetChannel.keys.isEmpty()) {
+                        const auto isUnchanged = [&targetChannel, currentPropertyValue]() {
+                            if (targetChannel.keys.count() != 1)
+                                return false;
+                            auto currentVal = currentPropertyValue("scale");
+                            QVector3D scale = currentVal.isValid() ? currentVal.value<QVector3D>() : QVector3D{ 1, 1, 1 };
+                            return qFuzzyCompare(targetChannel.keys[0]->value.toVector3D(), scale);
+                        };
+
+                        if (!targetChannel.keys.isEmpty() && !isUnchanged()) {
                             channels.push_back(new Animation::Channel(targetChannel));
                             float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime) * freq;
                             if (targetAnimation.length < endTime)
