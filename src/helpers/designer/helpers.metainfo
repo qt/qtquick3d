@@ -81,7 +81,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.HeightFieldGeometry"
-        icon: "images/dummy16.png"
+        icon: "images/heightfieldgeometry16.png"
 
         Hints {
             visibleInNavigator: true
@@ -93,7 +93,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Height Field Geometry"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/heightfieldgeometry.png"
             version: "6.4"
             requiredImport: "QtQuick3D.Helpers"
         }
@@ -101,7 +101,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.InstanceModel"
-        icon: "images/dummy16.png"
+        icon: "images/instancemodel16.png"
 
         Hints {
             visibleInNavigator: false
@@ -113,7 +113,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Instance Model"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/instancemodel.png"
             version: "6.4"
             requiredImport: "QtQuick3D.Helpers"
         }
@@ -121,7 +121,7 @@ MetaInfo {
 
     Type {
         name: "QtQuick3D.Helpers.InstanceRepeater"
-        icon: "images/dummy16.png"
+        icon: "images/instancerepeater16.png"
 
         Hints {
             visibleInNavigator: true
@@ -133,7 +133,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Instance Repeater"
             category: "Helpers"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/instancerepeater.png"
             version: "6.4"
             requiredImport: "QtQuick3D.Helpers"
         }
