@@ -66,7 +66,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     bool castsReflections = true;
     bool usedInBakedLighting = false;
     QString lightmapKey;
-    QString lightmapLoadPrefix;
+    QString lightmapLoadPath;
     uint lightmapBaseResolution = 0;
     bool hasLightmap() const { return !lightmapKey.isEmpty(); }
 

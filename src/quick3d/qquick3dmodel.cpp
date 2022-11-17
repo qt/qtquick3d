@@ -867,10 +867,14 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         modelNode->lightmapBaseResolution = uint(m_lightmapBaseResolution);
         if (m_bakedLightmap && m_bakedLightmap->isEnabled()) {
             modelNode->lightmapKey = m_bakedLightmap->key();
-            modelNode->lightmapLoadPrefix = m_bakedLightmap->loadPrefix();
+            const QString srcPrefix = m_bakedLightmap->loadPrefix();
+            const QString srcPath = srcPrefix.isEmpty() ? QStringLiteral(".") : srcPrefix;
+            const QQmlContext *context = qmlContext(m_bakedLightmap);
+            const QUrl resolvedUrl = context ? context->resolvedUrl(srcPath) : srcPath;
+            modelNode->lightmapLoadPath = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
         } else {
             modelNode->lightmapKey.clear();
-            modelNode->lightmapLoadPrefix.clear();
+            modelNode->lightmapLoadPath.clear();
         }
     }
 

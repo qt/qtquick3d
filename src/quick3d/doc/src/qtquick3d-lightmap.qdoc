@@ -406,8 +406,8 @@ baking process generates five \c{.exr} files (\c{qlm_sphere1.exr},
 which is useful as input for denoising utilities that support processing
 multiple files in one go but is not used at runtime otherwise. The application
 needs to ship the \c{.exr} files, so that they can be found by the engine,
-either in the current working directory, or in the location specified by the
-\l{BakedLightmap::loadPrefix}{loadPrefix}.
+either in the same directory as the containing component, or in the location
+specified by the \l{BakedLightmap::loadPrefix}{loadPrefix}.
 
 The loading rules also apply to the optional \c{.mesh} files, such as
 \c{qlm_sphere1.mesh} or \c {qlm_rect1.mesh}. If the application wishes to

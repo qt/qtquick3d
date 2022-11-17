@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
         y: 10
         bakedLightmap: BakedLightmap {
             key: "model34156"
-            loadPrefix: ":/lightmaps"
+            loadPrefix: "qrc:/lightmaps"
             // will attempt to load from :/lightmaps/qlm_model34156.exr at run time
         }
     }
