@@ -1667,9 +1667,10 @@ bool QSSGLightmapper::bake()
 QString QSSGLightmapper::lightmapAssetPathForLoad(const QSSGRenderModel &model, LightmapAsset asset)
 {
     QString result;
-    if (!model.lightmapLoadPrefix.isEmpty()) {
-        result += model.lightmapLoadPrefix;
-        result += QLatin1Char('/');
+    if (!model.lightmapLoadPath.isEmpty()) {
+        result += model.lightmapLoadPath;
+        if (!result.endsWith(QLatin1Char('/')))
+            result += QLatin1Char('/');
     }
     switch (asset) {
     case LightmapAsset::LightmapImage:
