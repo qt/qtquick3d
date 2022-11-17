@@ -134,7 +134,7 @@ MetaInfo {
     }
     Type {
         name: "QtQuick3D.Particles3D.ParticleCustomShape3D"
-        icon: "images/dummy16.png"
+        icon: "images/particle-custom-shape-16px.png"
 
         Hints {
             visibleInNavigator: true
@@ -146,7 +146,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Custom Shape"
             category: "Qt Quick 3D Particles 3D"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/particle-custom-shape-24px.png"
             version: "6.3"
             requiredImport: "QtQuick3D.Particles3D"
         }

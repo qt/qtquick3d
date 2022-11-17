@@ -10,6 +10,9 @@ qt_copy_or_install(
         cube.png
         cube16.png
         cube@2x.png
+        cubemaptexture.png
+        cubemaptexture16.png
+        cubemaptexture@2x.png
         custommaterial.png
         custommaterial16.png
         custommaterial@2x.png

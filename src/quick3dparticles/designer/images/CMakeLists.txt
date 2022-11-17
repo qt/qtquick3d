@@ -31,6 +31,9 @@ qt_copy_or_install(
         particle-shape-16px.png
         particle-shape-24px.png
         particle-shape-24px@2x.png
+        particle-custom-shape-16px.png
+        particle-custom-shape-24px.png
+        particle-custom-shape-24px@2x.png
         particle-system-16px.png
         particle-system-24px.png
         particle-system-24px@2x.png

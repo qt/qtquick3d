@@ -178,7 +178,7 @@ MetaInfo {
     }
     Type {
         name: "QtQuick3D.CubeMapTexture"
-        icon: "images/dummy16.png"
+        icon: "images/cubemaptexture16.png"
 
         Hints {
             visibleInNavigator: true
@@ -190,7 +190,7 @@ MetaInfo {
         ItemLibraryEntry {
             name: "Cube Map Texture"
             category: "Materials"
-            libraryIcon: "images/dummy.png"
+            libraryIcon: "images/cubemaptexture.png"
             version: "6.4"
             requiredImport: "QtQuick3D"
         }
