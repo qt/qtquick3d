@@ -19,3 +19,6 @@ custommaterial/NoUniformsUnshadedMaterial.qml
 custommaterial/DepthDrawTestMaterial.qml
 layers/TonemappingTestScene.qml
 lighting/Box.qml
+
+# Misc
+view3d/SharedResources2.qml
