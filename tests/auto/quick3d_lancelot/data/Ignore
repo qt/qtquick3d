@@ -18,3 +18,6 @@ effects/PlainView.qml
 custommaterial/NoUniformsUnshadedMaterial.qml
 custommaterial/DepthDrawTestMaterial.qml
 lighting/Box.qml
+
+# Misc
+view3d/SharedResources2.qml
