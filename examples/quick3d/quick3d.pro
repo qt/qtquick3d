@@ -30,4 +30,5 @@ SUBDIRS += \
     runtimeloader \
     reflectionprobes \
     bakedlightmap \
-    lodhelper
+    lodhelper \
+    simplefog

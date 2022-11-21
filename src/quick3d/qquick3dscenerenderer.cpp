@@ -1039,6 +1039,25 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     } else {
         layerNode.lmOptions = {};
     }
+
+    if (environment->fog() && environment->fog()->isEnabled()) {
+        layerNode.fog.enabled = true;
+        const QQuick3DFog *fog = environment->fog();
+        layerNode.fog.color = color::sRGBToLinear(fog->color()).toVector3D();
+        layerNode.fog.density = fog->density();
+        layerNode.fog.depthEnabled = fog->isDepthEnabled();
+        layerNode.fog.depthBegin = fog->depthNear();
+        layerNode.fog.depthEnd = fog->depthFar();
+        layerNode.fog.depthCurve = fog->depthCurve();
+        layerNode.fog.heightEnabled = fog->isHeightEnabled();
+        layerNode.fog.heightMin = fog->leastIntenseY();
+        layerNode.fog.heightMax = fog->mostIntenseY();
+        layerNode.fog.heightCurve = fog->heightCurve();
+        layerNode.fog.transmitEnabled = fog->isTransmitEnabled();
+        layerNode.fog.transmitCurve = fog->transmitCurve();
+    } else {
+        layerNode.fog.enabled = false;
+    }
 }
 
 void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders)

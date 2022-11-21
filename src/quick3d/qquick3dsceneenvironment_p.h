@@ -27,6 +27,7 @@
 #include <QtQuick3D/private/qquick3deffect_p.h>
 #include <QtQuick3D/private/qquick3dlightmapper_p.h>
 #include <QtQuick3D/private/qquick3ddebugsettings_p.h>
+#include <QtQuick3D/private/qquick3dfog_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +72,8 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
 
     Q_PROPERTY(QQuick3DDebugSettings *debugSettings READ debugSettings WRITE setDebugSettings NOTIFY debugSettingsChanged REVISION(6, 5))
     Q_PROPERTY(QRect scissorRect READ scissorRect WRITE setScissorRect NOTIFY scissorRectChanged REVISION(6, 5))
+
+    Q_PROPERTY(QQuick3DFog *fog READ fog WRITE setFog NOTIFY fogChanged REVISION(6, 5))
 
     QML_NAMED_ELEMENT(SceneEnvironment)
 
@@ -149,6 +152,8 @@ public:
     Q_REVISION(6, 5) QQuick3DDebugSettings *debugSettings() const;
     Q_REVISION(6, 5) QRect scissorRect() const;
 
+    Q_REVISION(6, 5) QQuick3DFog *fog() const;
+
     bool gridEnabled() const;
     void setGridEnabled(bool newGridEnabled);
 
@@ -193,6 +198,8 @@ public Q_SLOTS:
     Q_REVISION(6, 5) void setDebugSettings(QQuick3DDebugSettings *newDebugSettings);
     Q_REVISION(6, 5) void setScissorRect(QRect scissorRect);
 
+    Q_REVISION(6, 5) void setFog(QQuick3DFog *fog);
+
 Q_SIGNALS:
     void antialiasingModeChanged();
     void antialiasingQualityChanged();
@@ -227,6 +234,8 @@ Q_SIGNALS:
 
     Q_REVISION(6, 5) void debugSettingsChanged();
     Q_REVISION(6, 5) void scissorRectChanged();
+
+    Q_REVISION(6, 5) void fogChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
@@ -280,6 +289,8 @@ private:
     bool m_gridEnabled = false;
     uint m_gridFlags = 0;
     float m_gridScale = 1.0f;
+    QQuick3DFog *m_fog = nullptr;
+    QMetaObject::Connection m_fogSignalConnection;
 };
 
 QT_END_NAMESPACE

@@ -1,0 +1,16 @@
+[
+    {
+        "Id": "fog",
+        "Name": "Godot Engine: Fog",
+        "QDocModule": "qtquick3d",
+        "QtUsage": "Used in the Qt Quick 3D module.",
+
+        "Description": "Simple fog support.",
+        "Homepage": "https://godotengine.org/",
+        "License": "MIT License",
+        "LicenseId": "MIT",
+        "LicenseFile": "GODOT_LICENSE.txt",
+        "Copyright": "Copyright (c) 2007-2022 Juan Linietsky, Ariel Manzur.
+Copyright (c) 2014-2022 Godot Engine contributors"
+    }
+]

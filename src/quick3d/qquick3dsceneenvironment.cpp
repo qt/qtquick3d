@@ -1059,4 +1059,47 @@ void QQuick3DSceneEnvironment::setAoEnabled(bool newAoEnabled)
     update();
 }
 
+/*
+    \qmlproperty Fog SceneEnvironment::fog
+    \since 6.5
+
+    When this property is set to a valid \l Fog object, it is used to configure
+    the renderer's built-in fog support.
+
+    The default value is null, which means no fog. This is equivalent to
+    setting a Fog object with \l{Fog::enabled}{enabled} set to false.
+
+    \sa Fog
+ */
+
+QQuick3DFog *QQuick3DSceneEnvironment::fog() const
+{
+    return m_fog;
+}
+
+void QQuick3DSceneEnvironment::setFog(QQuick3DFog *fog)
+{
+    if (m_fog == fog)
+        return;
+
+    if (m_fog)
+        m_fog->disconnect(m_fogSignalConnection);
+
+    m_fog = fog;
+
+    m_fogSignalConnection = QObject::connect(m_fog, &QQuick3DFog::changed, this, [this] { update(); });
+
+    QObject::connect(m_fog, &QObject::destroyed, this,
+                     [this](QObject *obj)
+    {
+        if (m_fog == obj) {
+            m_fog = nullptr;
+            update();
+        }
+    });
+
+    emit fogChanged();
+    update();
+}
+
 QT_END_NAMESPACE

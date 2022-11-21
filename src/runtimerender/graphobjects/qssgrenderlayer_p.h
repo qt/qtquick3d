@@ -196,6 +196,23 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     // Scissor
     QRect scissorRect;
 
+    // Fog
+    struct FogOptions {
+        bool enabled = false;
+        QVector3D color = QVector3D(0.5f, 0.6f, 0.7f);
+        float density = 1.0f;
+        bool depthEnabled = false;
+        float depthBegin = 10.0f;
+        float depthEnd = 1000.0f;
+        float depthCurve = 1.0f;
+        bool heightEnabled = false;
+        float heightMin = 10.0f;
+        float heightMax = 0.0f;
+        float heightCurve = 1.0f;
+        bool transmitEnabled = false;
+        float transmitCurve = 1.0f;
+    } fog;
+
     QVector<QSSGRenderGraphObject *> resourceLoaders;
 
     MaterialDebugMode debugMode = MaterialDebugMode::None;

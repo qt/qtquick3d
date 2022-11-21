@@ -944,11 +944,13 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     bool enableParallaxMapping = heightImage != nullptr;
     const bool enableClearcoat = materialAdapter->isClearcoatEnabled();
     const bool enableTransmission = materialAdapter->isTransmissionEnabled();
-    specularLightingEnabled |= specularAmountImage != nullptr;
 
+    specularLightingEnabled |= specularAmountImage != nullptr;
     specularLightingEnabled |= hasReflectionProbe;
+
     const bool hasCustomVert = materialAdapter->hasCustomShaderSnippet(QSSGShaderCache::ShaderType::Vertex);
     auto debugMode = QSSGRenderLayer::MaterialDebugMode(keyProps.m_debugMode.getValue(inKey));
+    const bool enableFog = keyProps.m_fogEnabled.getValue(inKey);
 
     // Morphing
     if (numMorphTargets > 0 || hasCustomVert) {
@@ -1679,6 +1681,11 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             fragmentShader << "    global_diffuse_light.rgb *= 1.0 - qt_metalnessAmount;\n";
         }
 
+        if (enableFog) {
+            fragmentShader.addInclude("fog.glsllib");
+            fragmentShader << "    calculateFog(qt_global_emission, global_specular_light, global_diffuse_light.rgb);\n";
+        }
+
         fragmentShader << "    vec4 qt_color_sum = vec4(global_diffuse_light.rgb + global_specular_light + qt_global_emission, global_diffuse_light.a);\n";
 
         if (enableClearcoat) {
@@ -2177,6 +2184,41 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     if (usesPointsTopology) {
         const float pointSize = materialAdapter->pointSize();
         shaders->setUniform(ubufData, "qt_materialPointSize", &pointSize, sizeof(float), &cui.pointSizeIdx);
+    }
+
+    // qt_fogColor = (fogColor.x, fogColor.y, fogColor.z, fogDensity)
+    // qt_fogDepthProperties = (fogDepthBegin, fogDepthEnd, fogDepthCurve, fogDepthEnabled ? 1.0 : 0.0)
+    // qt_fogHeightProperties = (fogHeightMin, fogHeightMax, fogHeightCurve, fogHeightEnabled ? 1.0 : 0.0)
+    // qt_fogTransmitProperties = (fogTransmitCurve, 0.0, 0.0, fogTransmitEnabled ? 1.0 : 0.0)
+    if (inRenderProperties.layer.fog.enabled) {
+        const float fogColor[4] = {
+            inRenderProperties.layer.fog.color.x(),
+            inRenderProperties.layer.fog.color.y(),
+            inRenderProperties.layer.fog.color.z(),
+            inRenderProperties.layer.fog.density
+        };
+        shaders->setUniform(ubufData, "qt_fogColor", fogColor, 4 * sizeof(float), &cui.fogColorIdx);
+        const float fogDepthProperties[4] = {
+            inRenderProperties.layer.fog.depthBegin,
+            inRenderProperties.layer.fog.depthEnd,
+            inRenderProperties.layer.fog.depthCurve,
+            inRenderProperties.layer.fog.depthEnabled ? 1.0f : 0.0f
+        };
+        shaders->setUniform(ubufData, "qt_fogDepthProperties", fogDepthProperties, 4 * sizeof(float), &cui.fogDepthPropertiesIdx);
+        const float fogHeightProperties[4] = {
+            inRenderProperties.layer.fog.heightMin,
+            inRenderProperties.layer.fog.heightMax,
+            inRenderProperties.layer.fog.heightCurve,
+            inRenderProperties.layer.fog.heightEnabled ? 1.0f : 0.0f
+        };
+        shaders->setUniform(ubufData, "qt_fogHeightProperties", fogHeightProperties, 4 * sizeof(float), &cui.fogHeightPropertiesIdx);
+        const float fogTransmitProperties[4] = {
+            inRenderProperties.layer.fog.transmitCurve,
+            0.0f,
+            0.0f,
+            inRenderProperties.layer.fog.transmitEnabled ? 1.0f : 0.0f
+        };
+        shaders->setUniform(ubufData, "qt_fogTransmitProperties", fogTransmitProperties, 4 * sizeof(float), &cui.fogTransmitPropertiesIdx);
     }
 
     inPipelineState->lineWidth = materialAdapter->lineWidth();

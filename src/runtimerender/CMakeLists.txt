@@ -144,6 +144,7 @@ set(res_resource_files
     "res/effectlib/morphanim.glsllib"
     "res/effectlib/parallaxMapping.glsllib"
     "res/effectlib/particles.glsllib"
+    "res/effectlib/fog.glsllib"
     "res/primitives/Cone.mesh"
     "res/primitives/Cube.mesh"
     "res/primitives/Cylinder.mesh"

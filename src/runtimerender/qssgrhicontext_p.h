@@ -296,6 +296,11 @@ public:
         int reflectionProbeBoxMin = -1;
         int reflectionProbeCorrection = -1;
         int specularAAIdx = -1;
+        int fogColorIdx = -1;
+        int fogSunColorIdx = -1;
+        int fogDepthPropertiesIdx = -1;
+        int fogHeightPropertiesIdx = -1;
+        int fogTransmitPropertiesIdx = -1;
 
         struct ImageIndices
         {
