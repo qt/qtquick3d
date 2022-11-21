@@ -924,8 +924,15 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
     Q_ASSERT((sceneManager != nullptr) == (sceneRefCount > 0));
     if (++sceneRefCount > 1) {
         // Sanity check. Even if there's a different scene manager the window should be the same.
-        if (c.window() != sceneManager->window())
+        if (c.window() != sceneManager->window()) {
             qWarning("QSSGObject: Cannot use same item on different windows at the same time.");
+            return;
+        }
+
+        // NOTE: Simple tracking for resources that are shared between scenes.
+        if (&c != sceneManager && QSSGRenderGraphObject::isResource(type))
+            sharedResource = true;
+
         return; // Scene manager already set.
     }
 

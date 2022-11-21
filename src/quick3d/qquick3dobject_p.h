@@ -224,6 +224,7 @@ public:
     bool componentComplete = true;
     bool preSyncNeeded = false;
     bool culled;
+    bool sharedResource = false;
     QQuick3DItem2D *contentItem2d = nullptr;
 };
 
