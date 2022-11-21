@@ -275,6 +275,7 @@ public:
     bool componentComplete = true;
     bool preSyncNeeded = false;
     bool culled;
+    bool sharedResource = false;
     QQuick3DItem2D *contentItem2d = nullptr;
     ConnectionMap connectionMap;
     Q_QUICK3D_PROFILE_ID

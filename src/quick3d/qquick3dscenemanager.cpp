@@ -106,12 +106,15 @@ void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> 
     }
 }
 
-void QQuick3DSceneManager::updateDirtyResourceNodes()
+bool QQuick3DSceneManager::updateDirtyResourceNodes()
 {
     auto it = std::begin(dirtyResources);
     const auto end = std::end(dirtyResources);
+    bool ret = false;
     for (; it != end; ++it)
-        updateResources(it);
+        ret |= updateResources(it);
+
+    return ret;
 }
 
 void QQuick3DSceneManager::updateDirtySpatialNodes()
@@ -251,11 +254,12 @@ void QQuick3DSceneManager::cleanupNodes()
     cleanupNodeList.clear();
 }
 
-void QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
+bool QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
 {
     // Detach the current list head first, and consume all reachable entries.
     // New entries may be added to the new list while traversing, which will be
     // visited on the next updateDirtyNodes() call.
+    bool ret = false;
     QQuick3DObject *updateList = *listHead;
     *listHead = nullptr;
     if (updateList)
@@ -267,9 +271,13 @@ void QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
         Q_ASSERT(!QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
         updateDirtyResource(item);
-        QQuick3DObjectPrivate::get(item)->removeFromDirtyList();
+        auto po = QQuick3DObjectPrivate::get(item);
+        ret |= po->sharedResource;
+        po->removeFromDirtyList();
         item = updateList;
     }
+
+    return ret;
 }
 
 void QQuick3DSceneManager::updateNodes(QQuick3DObject **listHead)
@@ -341,8 +349,9 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
     }
 
     // Resources
+    bool sharedUpdateNeeded = false;
     for (auto &sceneManager : std::as_const(sceneManagers))
-        sceneManager->updateDirtyResourceNodes();
+        sharedUpdateNeeded |= sceneManager->updateDirtyResourceNodes();
     // Spatial Nodes
     for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->updateDirtySpatialNodes();
@@ -352,6 +361,13 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
     // Resource Loaders
     for (auto &sceneManager : std::as_const(sceneManagers))
         resourceLoaders.unite(sceneManager->resourceLoaders);
+
+    if (sharedUpdateNeeded) {
+        // We know there are shared resources in the scene, so notify the "world".
+        // Ideally we should be more targeted, but for now this will do the job.
+        for (auto &sceneManager : std::as_const(sceneManagers))
+            emit sceneManager->needsUpdate();
+    }
 }
 
 QQuickWindow *QQuick3DWindowAttachment::window() const { return qobject_cast<QQuickWindow *>(parent()); }
