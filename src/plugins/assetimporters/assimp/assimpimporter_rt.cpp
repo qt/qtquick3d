@@ -294,17 +294,21 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
     QSSGSceneDesc::setProperty(target, "magFilter", &QQuick3DTexture::setMagFilter, filter);
 
     // minFilter
-    if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST) {
+    if (texInfo.minFilter == AI_GLTF_FILTER_NEAREST) {
         filter = QQuick3DTexture::Filter::Nearest;
-    } else if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_NEAREST) {
+    } else if (texInfo.minFilter == AI_GLTF_FILTER_LINEAR) {
+        filter = QQuick3DTexture::Filter::Linear;
+    } else if (texInfo.minFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_NEAREST) {
         filter = QQuick3DTexture::Filter::Nearest;
         mipFilter = QQuick3DTexture::Filter::Nearest;
-    } else if (texInfo.magFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_NEAREST) {
+    } else if (texInfo.minFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_NEAREST) {
+        filter = QQuick3DTexture::Filter::Linear;
         mipFilter = QQuick3DTexture::Filter::Nearest;
-    } else if (texInfo.magFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR) {
+    } else if (texInfo.minFilter == AI_GLTF_FILTER_NEAREST_MIPMAP_LINEAR) {
         filter = QQuick3DTexture::Filter::Nearest;
         mipFilter = QQuick3DTexture::Filter::Linear;
-    } else if (texInfo.magFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_LINEAR) {
+    } else if (texInfo.minFilter == AI_GLTF_FILTER_LINEAR_MIPMAP_LINEAR) {
+        filter = QQuick3DTexture::Filter::Linear;
         mipFilter = QQuick3DTexture::Filter::Linear;
     }
     QSSGSceneDesc::setProperty(target, "minFilter", &QQuick3DTexture::setMinFilter, filter);
