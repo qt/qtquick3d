@@ -1016,7 +1016,7 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest, environment->depthTestEnabled());
     layerNode.layerFlags.setFlag(QSSGRenderLayer::LayerFlag::EnableDepthPrePass, environment->depthPrePassEnabled());
 
-    layerNode.tonemapMode = QSSGRenderLayer::TonemapMode(environment->tonemapMode());
+    layerNode.tonemapMode = QQuick3DSceneRenderer::getTonemapMode(*environment);
     layerNode.skyboxBlurAmount = environment->skyboxBlurAmount();
     if (auto debugSettings = view3D.environment()->debugSettings()) {
         layerNode.debugMode = QSSGRenderLayer::MaterialDebugMode(debugSettings->materialOverride());
@@ -1088,7 +1088,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
     requestedFramesCount = extraFramesToRender;
     // Effects need to be rendered in reverse order as described in the file.
     layerNode->firstEffect = nullptr; // We reset the linked list
-    const auto &effects = view3D->environment()->m_effects;
+    const auto &effects = view3D->environment()->effectList();
     auto rit = effects.crbegin();
     const auto rend = effects.crend();
     for (; rit != rend; ++rit) {

@@ -13,5 +13,5 @@
     instanced spheres, with controls that can be used to tune the various
     properties of the \l{Fog}{Fog object}.
 
-    \snippet simplefog/main.qml env
+    \snippet simplefog/main.qml fogitem
 */

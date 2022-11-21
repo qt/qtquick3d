@@ -42,6 +42,12 @@ public:
     QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInterface> &rci);
     ~QQuick3DSceneRenderer();
 
+    static QSSGRenderLayer::TonemapMode getTonemapMode(const QQuick3DSceneEnvironment &environment)
+    {
+        return environment.useBuiltinTonemapper() ? QSSGRenderLayer::TonemapMode(environment.tonemapMode())
+                                                  : QSSGRenderLayer::TonemapMode::None;
+    }
+
 protected:
     QRhiTexture *renderToRhiTexture(QQuickWindow *qw);
     void beginFrame();

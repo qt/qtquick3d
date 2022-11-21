@@ -776,6 +776,11 @@ void QQuick3DSceneEnvironment::setTonemapMode(QQuick3DSceneEnvironment::QQuick3D
     update();
 }
 
+bool QQuick3DSceneEnvironment::useBuiltinTonemapper() const
+{
+    return true;
+}
+
 QSSGRenderGraphObject *QQuick3DSceneEnvironment::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     // Don't do anything, these properties get set by the scene renderer
@@ -786,6 +791,11 @@ void QQuick3DSceneEnvironment::itemChange(QQuick3DObject::ItemChange change, con
 {
     if (change == QQuick3DObject::ItemSceneChange)
         updateSceneManager(value.sceneManager);
+}
+
+const QVector<QQuick3DEffect *> &QQuick3DSceneEnvironment::effectList() const
+{
+    return m_effects;
 }
 
 void QQuick3DSceneEnvironment::updateSceneManager(QQuick3DSceneManager *manager)

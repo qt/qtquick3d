@@ -19,29 +19,40 @@ Window {
         id: root
         anchors.fill: parent
 
-        //! [env]
-        environment: SceneEnvironment {
+        //! [fogitem]
+        Fog {
+            id: theFog
+
+            enabled: cbFogEnabled.checked
+            depthEnabled: cbDepthEnabled.checked
+            heightEnabled: cbHeightEnabled.checked
+            transmitEnabled: cbTransmitEnabled.checked
+
+            density: valDensity.value
+            depthNear: valDepth.first.value
+            depthFar: valDepth.second.value
+            depthCurve: valDepthCurve.value
+            leastIntenseY: valHeightMin.value
+            mostIntenseY: valHeightMax.value
+            heightCurve: valHeightCurve.value
+            transmitCurve: valTransmitCurve.value
+        }
+        //! [fogitem]
+
+
+        environment: ExtendedSceneEnvironment {
             backgroundMode: SceneEnvironment.Color
             clearColor: theFog.color
-            fog: Fog {
-                id: theFog
 
-                enabled: cbFogEnabled.checked
-                depthEnabled: cbDepthEnabled.checked
-                heightEnabled: cbHeightEnabled.checked
-                transmitEnabled: cbTransmitEnabled.checked
+            lensFlareBloomBias: 2.75
+            lensFlareApplyDirtTexture: true
+            lensFlareApplyStarburstTexture: true
+            lensFlareCameraDirection: camera.forward
 
-                density: valDensity.value
-                depthNear: valDepth.first.value
-                depthFar: valDepth.second.value
-                depthCurve: valDepthCurve.value
-                leastIntenseY: valHeightMin.value
-                mostIntenseY: valHeightMax.value
-                heightCurve: valHeightCurve.value
-                transmitCurve: valTransmitCurve.value
-            }
+            vignetteEnabled: true
+
+            fog: theFog
         }
-        //! [env]
 
         PerspectiveCamera {
             id: camera

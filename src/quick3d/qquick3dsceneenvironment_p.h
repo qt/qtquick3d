@@ -240,6 +240,8 @@ Q_SIGNALS:
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void itemChange(ItemChange, const ItemChangeData &) override;
+    virtual const QVector<QQuick3DEffect *> &effectList() const;
+    virtual bool useBuiltinTonemapper() const;
 
 private:
     friend class QQuick3DSceneRenderer;

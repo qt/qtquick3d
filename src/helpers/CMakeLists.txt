@@ -29,6 +29,7 @@ qt_internal_add_qml_module(Quick3DHelpers
         WasdController.qml
         OrbitCameraController.qml
         LodManager.qml
+        ExtendedSceneEnvironment.qml
     RESOURCES
         meshes/axisGrid.mesh
     DEFINES
@@ -46,3 +47,7 @@ qt_internal_add_qml_module(Quick3DHelpers
 if(QT_FEATURE_quick_designer AND QT_BUILD_SHARED_LIBS) # special case handle unconverted static
     add_subdirectory(designer)
 endif()
+
+add_subdirectory(impl)
+
+_qt_internal_add_qml_static_plugin_dependency(Quick3DHelpers Quick3DHelpersImpl)
