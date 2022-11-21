@@ -76,7 +76,7 @@ public:
     void preSync();
 
     void cleanupNodes();
-    void updateDirtyResourceNodes();
+    bool updateDirtyResourceNodes();
     void updateDirtySpatialNodes();
 
     void updateDirtyNode(QQuick3DObject *object);
@@ -111,7 +111,7 @@ Q_SIGNALS:
     void windowChanged();
 
 private Q_SLOTS:
-    void updateNodes(QQuick3DObject **listHead);
+    bool updateNodes(QQuick3DObject **listHead);
 };
 
 QT_END_NAMESPACE

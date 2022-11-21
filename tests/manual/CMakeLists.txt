@@ -30,4 +30,4 @@ add_subdirectory(stereoscopic)
 add_subdirectory(unlit_lit_test)
 add_subdirectory(vertexAttributes)
 add_subdirectory(view3DDeleteTest)
-
+add_subdirectory(sharedresourceupdate)
