@@ -123,7 +123,7 @@ void BenchFrustumCulling::bench_outputlist()
     }
 
     // Insert items at random positions in the list that should not be culled
-    for (auto v : qAsConst(replaceIndexes))
+    for (auto v : std::as_const(replaceIndexes))
         objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, QQuaternion::fromEulerAngles({}), bounds));
 
     QCOMPARE(objects.size(), objectCount);
@@ -132,7 +132,7 @@ void BenchFrustumCulling::bench_outputlist()
     renderableObjects.reserve(objects.size());
 
     // List of renderables
-    for (const auto &od : qAsConst(objects))
+    for (const auto &od : std::as_const(objects))
         renderableObjects.push_back({ QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset, QSSGRenderableObjectFlags(), od.worldCenterPt, od.globalTransform, od.bounds, 0.0f });
 
 
@@ -185,7 +185,7 @@ void BenchFrustumCulling::bench_inline()
     }
 
     // Insert items at random positions in the list that should not be culled
-    for (auto v : qAsConst(replaceIndexes))
+    for (auto v : std::as_const(replaceIndexes))
         objects.replace(v, createRenderableData({0.0f, 0.0f, 0.0f}, QQuaternion::fromEulerAngles({}), bounds));
 
     QCOMPARE(objects.size(), objectCount);
@@ -194,7 +194,7 @@ void BenchFrustumCulling::bench_inline()
     renderableObjects.reserve(objects.size());
 
     // List of renderables
-    for (const auto &od : qAsConst(objects))
+    for (const auto &od : std::as_const(objects))
         renderableObjects.push_back({ QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset, QSSGRenderableObjectFlags(), od.worldCenterPt, od.globalTransform, od.bounds, 0.0f });
 
 
