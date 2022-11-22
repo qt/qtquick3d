@@ -99,6 +99,7 @@ Window {
         LodManager {
             camera: camera
             distances: [100, 140, 180]
+            fadeDistance: 10
 
             Model {
                 scale: Qt.vector3d(100, 100, 100);

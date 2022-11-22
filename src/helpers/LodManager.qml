@@ -7,6 +7,7 @@ import QtQuick3D
 Node {
     required property Camera camera
     required property var distances
+    property real fadeDistance: 0.0
 
     onChildrenChanged: {
         // Add distance threshold values to instanced children
@@ -45,15 +46,24 @@ Node {
                 var maxThreshold = -1;
 
                 if (distIndex - 1 >= 0)
-                    minThreshold = distances[distIndex - 1];
+                    minThreshold = distances[distIndex - 1] - fadeDistance;
 
                 if (distances.length > distIndex)
-                    maxThreshold = distances[distIndex];
+                    maxThreshold = distances[distIndex] + fadeDistance;
 
                 // Show nodes that are inside the minimum and maximum distance thresholds
                 var distance = node.scenePosition.minus(camera.scenePosition).length();
                 if (distance >= minThreshold && (maxThreshold < 0 || distance < maxThreshold))
                     node.visible = true;
+
+                // Fade models by adjusting opacity if fadeDistance is set
+                if (children[i] instanceof Model && fadeDistance > 0) {
+                    var fadeAlpha = -(minThreshold - distance) / fadeDistance;
+                    if (fadeAlpha > 1.0 && maxThreshold > 0)
+                        fadeAlpha = (maxThreshold - distance) / fadeDistance;
+
+                    children[i].opacity = fadeAlpha;
+                }
 
                 distIndex++;
             }
