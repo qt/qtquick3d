@@ -292,3 +292,47 @@
 /*! \qmlproperty bool OrbitCameraController::panEnabled
     Enables panning controls. The default value is true.
 */
+
+/*!
+    \qmltype LodManager
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits Node
+    \brief Manager that handles level of detail visibility changes
+
+    This helper provides a way to handle level of detail changes. It works
+    by changing the visibility of its child nodes based on the distance
+    to the camera. The thresholds are determined by the user using the
+    distances list. The first distance is the threshold when the manager
+    changes from showing the first child and the second child etc. The first
+    child should be the most detailed one as it is shown when the camera is
+    close. If fadeDistance is set, the manager cross-fades between models by
+    changing their opacity. Fading only works with model nodes.
+
+    \badcode
+        View3D {
+            LodManager {
+                camera: camera
+                distances: [50, 100]
+                fadeDistance: 10
+
+                Model { ... }
+                Model { ... }
+                Model { ... }
+            }
+        }
+    \endcode
+*/
+
+/*! \qmlproperty QtQuick3D::Camera LodManager::camera
+    Specifies the camera from which the distance to the child nodes is calculated.
+*/
+
+/*! \qmlproperty list LodManager::distances
+    Specifies the thresholds when the detail level changes. The first number
+    is the distance when the first node changes to the second one, etc.
+*/
+
+/*! \qmlproperty real LodManager::fadeDistance
+    Specifies the distance at which the cross-fade between the detail levels
+    starts.
+*/
