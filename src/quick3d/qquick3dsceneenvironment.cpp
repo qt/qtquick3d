@@ -639,6 +639,10 @@ void QQuick3DSceneEnvironment::setAoStrength(float aoStrength)
         return;
 
     m_aoStrength = aoStrength;
+
+    const bool aoEnabled = !(qFuzzyIsNull(m_aoStrength) || qFuzzyIsNull(m_aoDistance));
+    setAoEnabled(aoEnabled);
+
     emit aoStrengthChanged();
     update();
 }
@@ -649,6 +653,10 @@ void QQuick3DSceneEnvironment::setAoDistance(float aoDistance)
         return;
 
     m_aoDistance = aoDistance;
+
+    const bool aoEnabled = !(qFuzzyIsNull(m_aoStrength) || qFuzzyIsNull(m_aoDistance));
+    setAoEnabled(aoEnabled);
+
     emit aoDistanceChanged();
     update();
 }
@@ -1011,6 +1019,43 @@ void QQuick3DSceneEnvironment::setGridFlags(uint newGridFlags)
     if (m_gridFlags == newGridFlags)
         return;
     m_gridFlags = newGridFlags;
+    update();
+}
+
+/*!
+    \qmlproperty float SceneEnvironment::aoEnabled
+    \since 6.5
+
+    Enable or disable ambient occlusion.
+
+    The default value is \c false, which means ambient occlusion is disabled.
+
+    \note If \l aoStrenght or \ aoDistance is 0, then setting this property to \c true will also
+    set those values appropriately to make the ambient occlusion effective.
+
+    \sa aoStrength, aoDistance
+*/
+
+bool QQuick3DSceneEnvironment::aoEnabled() const
+{
+    return m_aoEnabled;
+}
+
+void QQuick3DSceneEnvironment::setAoEnabled(bool newAoEnabled)
+{
+    if (m_aoEnabled == newAoEnabled)
+        return;
+
+    m_aoEnabled = newAoEnabled;
+
+    if (m_aoEnabled) {
+        if (qFuzzyIsNull(m_aoStrength))
+            setAoStrength(100.0f);
+        if (qFuzzyIsNull(m_aoDistance))
+            setAoDistance(defaultAoDistance());
+    }
+
+    emit aoEnabledChanged();
     update();
 }
 

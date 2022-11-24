@@ -139,8 +139,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLayer : public QSSGRenderNode
     float aoBias = 0.0f;
     qint32 aoSamplerate = 2;
     bool aoDither = false;
+    bool aoEnabled = false;
 
-    constexpr bool ssaoEnabled() const { return (aoStrength > 0.0f && aoDistance > 0.0f); }
+    constexpr bool ssaoEnabled() const { return aoEnabled && (aoStrength > 0.0f && aoDistance > 0.0f); }
 
     // IBL
     QSSGRenderImage *lightProbe;

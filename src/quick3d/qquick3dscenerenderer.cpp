@@ -990,6 +990,7 @@ void QQuick3DRenderLayerHelpers::updateLayerNodeHelper(const QQuick3DViewport &v
     layerNode.aoStrength = environment->aoStrength();
     layerNode.aoDistance = environment->aoDistance();
     layerNode.aoSoftness = environment->aoSoftness();
+    layerNode.aoEnabled = environment->aoEnabled();
     layerNode.aoBias = environment->aoBias();
     layerNode.aoSamplerate = environment->aoSampleRate();
     layerNode.aoDither = environment->aoDither();

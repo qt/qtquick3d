@@ -51,6 +51,7 @@ class Q_QUICK3D_EXPORT QQuick3DSceneEnvironment : public QQuick3DObject
     Q_PROPERTY(bool aoDither READ aoDither WRITE setAoDither NOTIFY aoDitherChanged)
     Q_PROPERTY(int aoSampleRate READ aoSampleRate WRITE setAoSampleRate NOTIFY aoSampleRateChanged)
     Q_PROPERTY(float aoBias READ aoBias WRITE setAoBias NOTIFY aoBiasChanged)
+    Q_PROPERTY(bool aoEnabled READ aoEnabled WRITE setAoEnabled NOTIFY aoEnabledChanged REVISION(6, 5))
 
     Q_PROPERTY(QQuick3DTexture *lightProbe READ lightProbe WRITE setLightProbe NOTIFY lightProbeChanged)
     Q_PROPERTY(float probeExposure READ probeExposure WRITE setProbeExposure NOTIFY probeExposureChanged)
@@ -125,6 +126,8 @@ public:
     bool aoDither() const;
     int aoSampleRate() const;
     float aoBias() const;
+    Q_REVISION(6, 5) bool aoEnabled() const;
+    Q_REVISION(6, 5) void setAoEnabled(bool newAoEnabled);
 
     QQuick3DTexture *lightProbe() const;
     float probeExposure() const;
@@ -205,6 +208,7 @@ Q_SIGNALS:
     void aoDitherChanged();
     void aoSampleRateChanged();
     void aoBiasChanged();
+    Q_REVISION(6, 5) void aoEnabledChanged();
 
     void lightProbeChanged();
     void probeExposureChanged();
@@ -231,6 +235,8 @@ protected:
 private:
     friend class QQuick3DSceneRenderer;
 
+    static constexpr float defaultAoDistance() { return 5.0f; }
+
     QVector<QQuick3DEffect *> m_effects;
 
     static void qmlAppendEffect(QQmlListProperty<QQuick3DEffect> *list, QQuick3DEffect *effect);
@@ -250,11 +256,12 @@ private:
     QColor m_clearColor = Qt::black;
 
     float m_aoStrength = 0.0f;
-    float m_aoDistance = 5.0f;
+    float m_aoDistance = defaultAoDistance();
     float m_aoSoftness = 50.0f;
-    bool m_aoDither = false;
-    int m_aoSampleRate = 2;
     float m_aoBias = 0.0f;
+    int m_aoSampleRate = 2;
+    bool m_aoDither = false;
+    bool m_aoEnabled;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeExposure = 1.0f;
     float m_probeHorizon = 0.0f;

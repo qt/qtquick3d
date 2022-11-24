@@ -10,36 +10,10 @@ Rectangle {
     height: 480
     color: Qt.rgba(1, 1, 1, 1)
 
-    View3D {
-        id: layer
-        anchors.left: parent.left
-        anchors.leftMargin: parent.width * 0
-        width: parent.width * 1
-        anchors.top: parent.top
-        anchors.topMargin: parent.height * 0
-        height: parent.height * 1
-        environment: SceneEnvironment {
-            clearColor: Qt.rgba(0, 0, 0, 1)
-            aoStrength: 25 * workaround
-            aoDither: true
-            aoBias: 0.5
-            depthPrePassEnabled: true
-
-            // The directGL code does not enable SSAO on the first couple of frames
-            // This animation makes sure we get past that point. Lancelot will wait
-            // for the output to stabilize.
-            property int workaround: 0
-            NumberAnimation on workaround {
-                from: 0
-                to: 3
-                loops: 1
-                duration: 300
-            }
-        }
-
+    Node {
+        id: scene
         PerspectiveCamera {
-            id: camera
-            position: Qt.vector3d(0, 0, 600)
+            position: Qt.vector3d(0, 0, 1100)
             clipFar: 5000
         }
 
@@ -145,6 +119,48 @@ Rectangle {
                 translucentFalloff: 1
             }
             materials: [default_001]
+        }
+    }
+
+    View3D {
+        id: leftView
+        anchors.left: parent.left
+        width: parent.width * 0.5
+        anchors.top: parent.top
+        height: parent.height
+        importScene: scene
+        environment: SceneEnvironment {
+            clearColor: Qt.rgba(0, 0, 0, 1)
+            aoStrength: 25 * workaround
+            aoDither: true
+            aoBias: 0.5
+            aoEnabled: true
+            depthPrePassEnabled: true
+
+            // The directGL code does not enable SSAO on the first couple of frames
+            // This animation makes sure we get past that point. Lancelot will wait
+            // for the output to stabilize.
+            property int workaround: 0
+            NumberAnimation on workaround {
+                from: 0
+                to: 3
+                loops: 1
+                duration: 300
+            }
+        }
+    }
+
+    View3D {
+        id: rightView
+        anchors.left: leftView.right
+        width: parent.width * 0.5
+        anchors.top: parent.top
+        height: parent.height
+        importScene: scene
+        environment: SceneEnvironment {
+            clearColor: Qt.rgba(0, 0, 0, 1)
+            aoEnabled: false
+            depthPrePassEnabled: true
         }
     }
 }
