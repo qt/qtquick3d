@@ -975,4 +975,10 @@ QVector3D QQuick3DNode::eulerRotation() const
     return d->m_rotation;
 }
 
+void QQuick3DNode::itemChange(ItemChange change, const ItemChangeData &)
+{
+    if (change == QQuick3DObject::ItemParentHasChanged)
+        QQuick3DNodePrivate::get(this)->markSceneTransformDirty();
+}
+
 QT_END_NAMESPACE

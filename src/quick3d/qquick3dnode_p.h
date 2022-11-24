@@ -143,6 +143,7 @@ Q_SIGNALS:
 protected:
     QQuick3DNode(QQuick3DNodePrivate &dd, QQuick3DNode *parent = nullptr);
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
+    virtual void itemChange(ItemChange, const ItemChangeData &) override;
 
 private:
     friend QQuick3DSceneManager;
