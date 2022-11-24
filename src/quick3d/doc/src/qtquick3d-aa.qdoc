@@ -12,10 +12,10 @@ additional performance cost.
 
 \section1 Causes of Aliasing
 
-Although aliasing is a useful tool in rendering graphics, it could affect performance of your
-application if not used wisely. The following sections summarize the different aliasing techniques
-to choose from. Understanding which technology best targets your problems will help balance
-visual quality with sufficient rendering speed.
+Although anti-aliasing is a useful tool in rendering graphics, it could affect performance of your
+application if not used wisely. The following sections summarize the different anti-aliasing
+techniques to choose from. Understanding which technique best targets your problems will help
+balance visual quality with sufficient rendering speed.
 
 \section2 Geometry Aliasing
 
@@ -84,7 +84,7 @@ in the pixels on screen. Anti-aliasing techniques fall into three categories:
   Techniques employed by artists that attempt to workaround the limitations.
 \endlist
 
-\section2 Techniques that find additional information
+\section2 Techniques That Find Additional Information
 
 \target multisample-aa
 \section3 Multisample Anti-Aliasing
@@ -142,7 +142,7 @@ as needed.
 \list
 \li
   \b{Pros}: Very low performance impact. Greatly improves image quality for textures. Encourages
-    you to use compressed textures, which load and render faster than uncompressed imnages.
+    you to use compressed textures, which load and render faster than uncompressed images.
 \li
   \b{Cons}: Requires using external tools to optimize your images. Uses 33% more graphics memory
     than the same image without mipmaps.
