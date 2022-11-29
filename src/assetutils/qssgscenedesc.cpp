@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qssgscenedesc_p.h"
@@ -81,6 +81,17 @@ void QSSGSceneDesc::destructNode(Node &node)
     for (auto *prop : node.properties)
         delete prop;
     // Not necessary to clear the list as long as we only call this from the destructor
+}
+
+QSSGSceneDesc::Property *QSSGSceneDesc::setProperty(Node &node, const char *name, QVariant &&value)
+{
+    Q_ASSERT(node.scene);
+    QSSGSceneDesc::Property *prop = new QSSGSceneDesc::Property;
+    prop->name = name;
+    prop->call = nullptr;
+    prop->value = value;
+    node.properties.push_back(prop);
+    return prop;
 }
 
 QT_END_NAMESPACE

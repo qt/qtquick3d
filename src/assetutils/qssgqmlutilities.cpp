@@ -978,6 +978,10 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                 }
             }
         }
+
+        // Plain strings in the scenedesc should map to QML string values
+        if (value.metaType() == QMetaType::fromType<QString>())
+            return { property.name, toQuotedString(value.toString()) };
     }
 
     if (ok)

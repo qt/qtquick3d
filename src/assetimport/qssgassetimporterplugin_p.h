@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QSSGAssetImporter;
 
-#define QSSGAssetImporterFactoryInterface_iid "org.qt-project.QtDemon.AssetImporter.5.12"
+#define QSSGAssetImporterFactoryInterface_iid "org.qt-project.QtQuick3D.AssetImporter.6.5"
 
 class Q_QUICK3DASSETIMPORT_EXPORT QSSGAssetImporterPlugin : public QObject
 {

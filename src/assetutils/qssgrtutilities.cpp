@@ -18,6 +18,130 @@
 
 QT_BEGIN_NAMESPACE
 
+
+// Actually set the property on node->obj, using QMetaProperty::write()
+void QSSGRuntimeUtils::applyPropertyValue(const QSSGSceneDesc::Node *node, QObject *o, QSSGSceneDesc::Property *property)
+{
+    auto *obj = qobject_cast<QQuick3DObject *>(o ? o : node->obj);
+    if (!obj)
+        return;
+
+    auto *metaObj = obj->metaObject();
+    int propertyIndex = metaObj->indexOfProperty(property->name);
+    if (propertyIndex < 0) {
+        qWarning() << "QSSGSceneDesc: could not find property" << property->name << "in" << obj;
+        return;
+    }
+    auto metaProp = metaObj->property(propertyIndex);
+    QVariant value;
+
+    auto metaId = property->value.metaType().id();
+    auto *scene = node->scene;
+
+    if (metaId == qMetaTypeId<QSSGSceneDesc::Node *>()) {
+        const auto *valueNode = qvariant_cast<QSSGSceneDesc::Node *>(property->value);
+        QObject *obj = valueNode ? valueNode->obj : nullptr;
+        value = QVariant::fromValue(obj);
+    } else if (metaId == qMetaTypeId<QSSGSceneDesc::Mesh *>()) { // Special handling for mesh nodes.
+        // Mesh nodes does not have an equivalent in the QtQuick3D scene, but is registered
+        // as a source property in the intermediate scene we therefore need to convert it to
+        // be a usable source url now.
+        const auto meshNode = qvariant_cast<const QSSGSceneDesc::Mesh *>(property->value);
+        const auto url = meshNode ? QUrl(QSSGBufferManager::runtimeMeshSourceName(node->scene->id, meshNode->idx)) : QUrl{};
+        value = QVariant::fromValue(url);
+    } else if (metaId == qMetaTypeId<QUrl>()) {
+        const auto url = qvariant_cast<QUrl>(property->value);
+        // TODO: Use QUrl::resolved() instead??
+        QString workingDir = scene->sourceDir;
+        const QUrl qurl = url.isValid() ? QUrl::fromUserInput(url.path(), workingDir) : QUrl{};
+        value = QVariant::fromValue(qurl);
+    } else if (metaId == qMetaTypeId<QSSGSceneDesc::Flag *>() && property->call) {
+        // If we have a QSSGSceneDesc::Flag variant, then it came from setProperty(), and the setter function is defined.
+        const auto *flag = qvariant_cast<const QSSGSceneDesc::Flag *>(property->value);
+        const int qflag(flag ? flag->value : 0);
+        property->call->set(*obj, property->name, &qflag);
+        qDebug() << "Flag special case, probably shouldn't happen" << node->name << property->name << property->value << qflag;
+        return;
+    } else {
+        value = property->value;
+    }
+
+    if (value.metaType().id() == qMetaTypeId<QString>()) {
+        auto str = value.toString();
+        auto propType = metaProp.metaType();
+        if (propType.id() == qMetaTypeId<QVector3D>()) {
+            QStringList l = str.split(u',');
+            if (l.length() != 3) {
+                qWarning() << "Wrong format for QVector3D:" << str;
+            } else {
+                QVector3D vec3(l.at(0).toFloat(), l.at(1).toFloat(), l.at(2).toFloat());
+                value = QVariant::fromValue(vec3);
+            }
+        } else if (propType.id() == qMetaTypeId<QVector2D>()) {
+            QStringList l = str.split(u',');
+            if (l.length() != 2) {
+                qWarning() << "Wrong format for QVector2D:" << str;
+            } else {
+                QVector2D vec(l.at(0).toFloat(), l.at(1).toFloat());
+                value = QVariant::fromValue(vec);
+            }
+        } else if (propType.id() == qMetaTypeId<QVector4D>()) {
+            QStringList l = str.split(u',');
+            if (l.length() != 2) {
+                qWarning() << "Wrong format for QVector4D:" << str;
+            } else {
+                QVector4D vec(l.at(0).toFloat(), l.at(1).toFloat(), l.at(2).toFloat(), l.at(3).toFloat());
+                value = QVariant::fromValue(vec);
+            }
+        } else if (propType.id() == qMetaTypeId<QQuaternion>()) {
+            QStringList l = str.split(u',');
+            if (l.length() != 4) {
+                qWarning() << "Wrong format for QQuaternion:" << str;
+            } else {
+                QQuaternion quat(l.at(0).toFloat(), l.at(1).toFloat(), l.at(2).toFloat(), l.at(3).toFloat());
+                value = QVariant::fromValue(quat);
+            }
+        } else {
+            // All other strings are supposed to be in QML-compatible format, so they can be written out directly
+        }
+    } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::NodeList*>()) {
+        auto qmlListVar = metaProp.read(obj);
+        // We have to write explicit code for each list property type, since metatype can't
+        // tell us if we have a QQmlListProperty (if we had known, we could have made a naughty
+        // hack and just static_cast to QQmlListProperty<QObject>
+        if (qmlListVar.metaType().id() == qMetaTypeId<QQmlListProperty<QQuick3DMaterial>>()) {
+            auto qmlList = qvariant_cast<QQmlListProperty<QQuick3DMaterial>>(qmlListVar);
+            auto nodeList = qvariant_cast<QSSGSceneDesc::NodeList*>(value);
+            auto head = reinterpret_cast<QSSGSceneDesc::Node **>(nodeList->head);
+
+            for (int i = 0, end = nodeList->count; i != end; ++i)
+                qmlList.append(&qmlList, qobject_cast<QQuick3DMaterial *>((*(head + i))->obj));
+
+        } else {
+            qWarning() << "Can't handle list property type" << qmlListVar.metaType();
+        }
+        return; //In any case, we can't send NodeList to QMetaProperty::write()
+    }
+
+    // qobject_cast doesn't work on nullptr, so we must convert the pointer manually
+    if ((metaProp.metaType().flags() & QMetaType::PointerToQObject) && value.isNull())
+        value.convert(metaProp.metaType()); //This will return false, but convert to the type anyway
+
+    // Q_ENUMS with '|' is explicitly handled, otherwise uses QVariant::convert. This means
+    // we get implicit qobject_cast and string to:
+    //    QMetaType::Bool, QMetaType::QByteArray, QMetaType::QChar, QMetaType::QColor, QMetaType::QDate, QMetaType::QDateTime,
+    //    QMetaType::Double, QMetaType::QFont, QMetaType::Int, QMetaType::QKeySequence, QMetaType::LongLong,
+    //    QMetaType::QStringList, QMetaType::QTime, QMetaType::UInt, QMetaType::ULongLong, QMetaType::QUuid
+
+    bool success = metaProp.write(obj, value);
+
+    if (!success) {
+        qWarning() << "Failure when setting property" << property->name << "to" << property->value << "maps to" << value
+                   << "property metatype:" << metaProp.typeName();
+    }
+}
+
+
 static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node, const QString &workingDir = {})
 {
     using namespace QSSGSceneDesc;
@@ -26,6 +150,10 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node, 
     const auto end = properties.end();
     for (; it != end; ++it) {
         const auto &v = *it;
+        if (!v->call) {
+            QSSGRuntimeUtils::applyPropertyValue(&node, &obj, v);
+            continue;
+        }
         const auto &var = v->value;
         if (var.metaType().id() == qMetaTypeId<Node *>()) {
             const auto *node = qvariant_cast<Node *>(var);

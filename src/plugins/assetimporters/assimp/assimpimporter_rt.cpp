@@ -12,6 +12,7 @@
 #include <QtQuick3DAssetImport/private/qssgassetimporterfactory_p.h>
 #include <QtQuick3DAssetImport/private/qssgassetimporter_p.h>
 #include <QtQuick3DAssetUtils/private/qssgscenedesc_p.h>
+#include <QtQuick3DAssetUtils/private/qssgsceneedit_p.h>
 
 // ASSIMP INC
 #include <assimp/Importer.hpp>
@@ -1540,8 +1541,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
     auto sourceFile = QFileInfo(filePath);
     if (!sourceFile.exists())
         return QLatin1String("File not found");
-
-
+    targetScene.sourceDir = sourceFile.path();
 
     std::unique_ptr<Assimp::Importer> importer(new Assimp::Importer());
 
@@ -1551,8 +1551,6 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
         postProcessSteps = aiPostProcessSteps(demonPostProcessPresets);
     else
         postProcessSteps = processOptions(options, importer);
-
-
 
     // Remove primitives that are not Triangles
     importer->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_POINT | aiPrimitiveType_LINE);
@@ -1899,6 +1897,13 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
             createAnimation(targetScene, srcAnim, animatingNodes);
         }
     }
+
+    // TODO, FIX: Editing the scene after the import ought to be done by QSSGAssetImportManager
+    // and not by the asset import plugin. However, the asset import module cannot use
+    // the asset utils module because that would cause a circular dependency. This
+    // needs a deeper architectural fix.
+
+    QSSGQmlUtilities::applyEdit(&targetScene, options);
 
     return QString();
 }

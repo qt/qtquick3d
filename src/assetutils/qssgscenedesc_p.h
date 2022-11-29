@@ -1,4 +1,4 @@
-// Copyright (C) 2021 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef QSSGSCENEDESCRIPTION_P_H
@@ -104,7 +104,7 @@ struct Property
     ~Property();
     enum class Type { Static, Dynamic };
     QVariant value;
-    const char *name = nullptr;
+    QByteArray name;
     QSSGSceneDesc::PropertyCall *call = nullptr;
     Type type = Type::Static;
 };
@@ -118,6 +118,13 @@ Q_QUICK3DASSETUTILS_EXPORT void destructNode(QSSGSceneDesc::Node &node);
 
 struct NodeList
 {
+    NodeList(void * const *data, qsizetype n)
+    {
+        const auto size = sizeof(Node *) * n;
+        head = reinterpret_cast<Node **>(malloc(size));
+        memcpy(head, data, size);
+        count = n;
+    }
     ~NodeList() { if (head) free(head); }
     Node **head = nullptr;
     qsizetype count = -1;
@@ -625,6 +632,9 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     node.properties.push_back(prop);
 }
 
+
+Q_QUICK3DASSETUTILS_EXPORT QSSGSceneDesc::Property *setProperty(QSSGSceneDesc::Node &node, const char *name, QVariant &&value);
+
 // Calling this will omit any type checking, so make sure the type is handled correctly
 // when it gets used later!
 template<typename Setter>
@@ -681,13 +691,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
 {
     Q_ASSERT(node.scene);
     if (!list.isEmpty()) {
-        NodeList *l = new NodeList;
-        {
-            const auto size = sizeof(Node *) * list.count();
-            l->head = reinterpret_cast<Node **>(malloc(size)); // is freed in ~NodeList()
-            memcpy(l->head, list.data(), size);
-            l->count = list.size();
-        }
+        NodeList *l = new NodeList(reinterpret_cast<void * const*>(list.constData()), list.count());
 
         Property *prop = new Property;
         prop->name = name;

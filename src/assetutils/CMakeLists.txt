@@ -13,6 +13,7 @@ qt_internal_add_qml_module(Quick3DAssetUtils
         qtquick3dassetutilsglobal_p.h
         qssgscenedesc.cpp qssgscenedesc_p.h
         qssgqmlutilities.cpp qssgqmlutilities_p.h
+        qssgsceneedit.cpp qssgsceneedit_p.h
         qssgrtutilities.cpp qssgrtutilities_p.h
         qquick3druntimeloader.cpp qquick3druntimeloader_p.h
     DEFINES

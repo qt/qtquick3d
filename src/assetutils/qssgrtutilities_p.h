@@ -21,18 +21,20 @@ QT_BEGIN_NAMESPACE
 
 class QQuick3DNode;
 class QQuick3DObject;
+class QObject;
+
 namespace QSSGSceneDesc
 {
 struct Scene;
 struct Node;
+struct Property;
 }
 
 namespace QSSGRuntimeUtils
 {
-
 Q_QUICK3DASSETUTILS_EXPORT QQuick3DNode *createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene);
 Q_QUICK3DASSETUTILS_EXPORT void createGraphObject(QSSGSceneDesc::Node &node, QQuick3DObject &parent, bool traverseChildrenAndSetProperties = true);
-
+Q_QUICK3DASSETUTILS_EXPORT void applyPropertyValue(const QSSGSceneDesc::Node *node, QObject *obj, QSSGSceneDesc::Property *property);
 }
 
 QT_END_NAMESPACE

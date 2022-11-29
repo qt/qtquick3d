@@ -15,6 +15,7 @@
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 #include <QtQuick3DIblBaker/private/qssgiblbaker_p.h>
 
+#include <QJsonDocument>
 #include <iostream>
 
 class OptionsManager {
@@ -52,12 +53,14 @@ public:
         }
     }
 
-    QJsonObject processCommandLineOptions(const QCommandLineParser &cmdLineParser, const QJsonObject &options) const
+    QJsonObject processCommandLineOptions(const QCommandLineParser &cmdLineParser, const QJsonObject &options, const QJsonObject &loadedOptions) const
     {
+        QJsonObject result = loadedOptions;
         if (options.isEmpty() || !options.contains(QStringLiteral("options")))
-            return options;
+            return result;
 
         QJsonObject optionsObject = options.value(QStringLiteral("options")).toObject();
+        QJsonObject loadedOptionsObject = loadedOptions.value(QStringLiteral("options")).toObject();
         for (const QString &optionsKey : optionsObject.keys()) {
             QJsonObject option = optionsObject.value(optionsKey).toObject();
             QString optionType = option.value(QStringLiteral("type")).toString();
@@ -67,18 +70,23 @@ public:
                     option["value"] = true;
                 else if (m_optionsMap[disableKey] && cmdLineParser.isSet(*m_optionsMap[disableKey]))
                     option["value"] = false;
+                else if (auto loadedValue = loadedOptionsObject.value(optionsKey); !loadedValue.isUndefined())
+                    option.insert("value", loadedValue);
             } else if (optionType == QStringLiteral("Real")) {
                 if (cmdLineParser.isSet(optionsKey))
                     option["value"] = cmdLineParser.value(optionsKey).toDouble();
+                else if (auto loadedValue = loadedOptionsObject.value(optionsKey); !loadedValue.isUndefined())
+                    option.insert("value", loadedValue);
             }
             // update values
             optionsObject[optionsKey] = option;
         }
 
         removeFlagConflicts(cmdLineParser, optionsObject);
-        options["options"] = optionsObject;
-        return optionsObject;
+        result["options"] = optionsObject;
+        return result;
     }
+
     void registerOptions(QCommandLineParser &parser) {
         for (const auto &cmdLineOption : std::as_const(m_optionsMap))
             parser.addOption(*cmdLineOption);
@@ -196,6 +204,9 @@ int main(int argc, char *argv[])
     QCommandLineOption noPluginsOption(QStringLiteral("no-plugins"), QStringLiteral("Disable assetimporter plugin loading, only considers built-ins"));
     cmdLineParser.addOption(noPluginsOption);
 
+    QCommandLineOption loadOptionsFromFileOption({"f","options-file"}, QStringLiteral("Load options from <file>"), QStringLiteral("file"));
+    cmdLineParser.addOption(loadOptionsFromFileOption);
+
     // Get Plugin options
     if (canUsePlugins) {
         assetImporter.reset(new QSSGAssetImportManager);
@@ -229,7 +240,26 @@ int main(int argc, char *argv[])
         QSSGAssetImportManager::ImportState result = QSSGAssetImportManager::ImportState::Unsupported;
         if (canUsePlugins) {
             QJsonObject options = assetImporter->getOptionsForFile(assetFileName);
-            options = optionsManager.processCommandLineOptions(cmdLineParser, options);
+            QJsonObject loadedOptions;
+
+            if (cmdLineParser.isSet(loadOptionsFromFileOption)) {
+                QFile optionsFile(cmdLineParser.value(loadOptionsFromFileOption));
+                if (!optionsFile.open(QIODevice::ReadOnly)) {
+                    qCritical() << "Could not open options file" << optionsFile.fileName() << "for reading.";
+                    return -1;
+                }
+                QByteArray optionData = optionsFile.readAll();
+                QJsonParseError error;
+                auto optionsDoc = QJsonDocument::fromJson(optionData, &error);
+                if (optionsDoc.isEmpty()) {
+                    qCritical() << "Could not read options file:" << error.errorString();
+                    return -1;
+                }
+                loadedOptions = optionsDoc.object();
+            }
+
+            options = optionsManager.processCommandLineOptions(cmdLineParser, options, loadedOptions);
+
             // first try the plugin-based asset importer system
             result = assetImporter->importFile(assetFileName, outputDirectory, options, &errorString);
         }
