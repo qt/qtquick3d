@@ -1,0 +1,52 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
+cmake_minimum_required(VERSION 3.16)
+project(sceneeffects LANGUAGES CXX)
+
+set(CMAKE_AUTOMOC ON)
+
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+    set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick3d/sceneeffects")
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Quick3D)
+
+set(CMAKE_AUTORCC ON)
+
+qt_add_executable(sceneeffects
+    assets.qrc
+    luts.qrc
+    main.cpp
+)
+
+set_target_properties(sceneeffects PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
+
+target_link_libraries(sceneeffects PUBLIC
+    Qt::Core
+    Qt::Gui
+    Qt::Quick
+    Qt::Quick3D
+)
+
+qt_add_qml_module(sceneeffects
+    URI SceneEffectExample
+    VERSION 1.0
+    QML_FILES
+        ColorPicker.qml
+        SectionLayout.qml
+        SettingsPage.qml
+        main.qml
+    NO_RESOURCE_TARGET_PATH
+)
+
+install(TARGETS sceneeffects
+    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
+    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+)
