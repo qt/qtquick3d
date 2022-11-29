@@ -10,6 +10,8 @@
 
 #include <QtCore/QJsonObject>
 
+#include <QtGui/QImageReader>
+
 #include <QtQuick3DAssetImport/private/qssgassetimportmanager_p.h>
 #include <QtQuick3DIblBaker/private/qssgiblbaker_p.h>
 
@@ -172,6 +174,8 @@ QSSGAssetImportManager::ImportState BuiltinConditioners::run(const QString &file
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    QImageReader::setAllocationLimit(0);
 
     const bool canUsePlugins = !QCoreApplication::arguments().contains(QStringLiteral("--no-plugins"));
     if (!canUsePlugins)
