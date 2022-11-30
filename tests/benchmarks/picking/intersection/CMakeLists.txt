@@ -10,6 +10,6 @@ endif()
 qt_internal_add_test(benchmark_intersection
     SOURCES
         tst_intersection.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick3DRuntimeRenderPrivate
 )
