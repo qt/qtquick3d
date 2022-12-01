@@ -146,6 +146,7 @@ void QQuick3DSkin::qmlClearJoints(QQmlListProperty<QQuick3DNode> *list)
         joint->disconnect(self, SLOT(onJointDestroyed(QObject*)));
     }
     self->m_joints.clear();
+    self->m_boneData.clear();
     self->markDirty();
 }
 
