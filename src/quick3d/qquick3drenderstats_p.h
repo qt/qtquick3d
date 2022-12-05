@@ -89,7 +89,9 @@ public:
     quint32 vmemAllocCount() const;
     quint64 vmemUsedBytes() const;
 
-    Q_INVOKABLE void releaseCachedResources(QQuickItem *item);
+    Q_INVOKABLE void releaseCachedResources();
+
+    void setWindow(QQuickWindow *window);
 
 Q_SIGNALS:
     void fpsChanged();
@@ -112,6 +114,9 @@ Q_SIGNALS:
     void pipelineCreationTimeChanged();
     void vmemAllocCountChanged();
     void vmemUsedBytesChanged();
+
+private Q_SLOTS:
+    void onFrameSwapped();
 
 private:
     float timestamp() const;
@@ -157,6 +162,9 @@ private:
     QSSGRhiContextStats *m_contextStats = nullptr;
     bool m_extendedDataCollectionEnabled = false;
     QSSGRenderLayer *m_layer = nullptr;
+    QMetaObject::Connection m_frameSwappedConnection;
+    QQuickWindow *m_window = nullptr;
+    bool m_renderingThisFrame = false;
 };
 
 QT_END_NAMESPACE

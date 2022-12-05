@@ -99,6 +99,11 @@ float QQuick3DRenderStats::maxFrameTime() const
     return m_maxFrameTime;
 }
 
+float QQuick3DRenderStats::timestamp() const
+{
+    return m_frameTimer.nsecsElapsed() / 1000000.0f;
+}
+
 void QQuick3DRenderStats::startSync()
 {
     m_syncStartTime = timestamp();
@@ -129,69 +134,79 @@ void QQuick3DRenderStats::endRenderPrepare()
 
 void QQuick3DRenderStats::endRender(bool dump)
 {
-    // Threading-wise this is a bit not great. This is called on the render
-    // thread (if there is one) outside of the sync step, so writing the data
-    // in m_results, which then may be read by the properties on the main
-    // thread concurrently, is not ideal. But at least the data the results are
-    // generated from (the m_* timings and all the stuff from
+    // Threading-wise this and onFrameSwapped are not perfect. These are called
+    // on the render thread (if there is one) outside of the sync step, so
+    // writing the data in m_results, which then may be read by the properties
+    // on the main thread concurrently, is not ideal. But at least the data the
+    // results are generated from (the m_* timings and all the stuff from
     // QSSGRhiContextStats) belong to the render thread, so that's good.
 
-    ++m_frameCount;
-    m_results.frameTime = timestamp();
-    m_internalMaxFrameTime = qMax(m_results.frameTime, m_internalMaxFrameTime);
-
-    m_secTimer += m_results.frameTime;
-    m_notifyTimer += m_results.frameTime;
-
-    m_results.renderTime = m_results.frameTime - m_renderStartTime;
-
-    processRhiContextStats();
-
-    const float notifyInterval = 200.0f;
-    if (m_notifyTimer >= notifyInterval) {
-        m_notifyTimer -= notifyInterval;
-
-        if (m_results.frameTime != m_notifiedResults.frameTime) {
-            m_notifiedResults.frameTime = m_results.frameTime;
-            emit frameTimeChanged();
-        }
-
-        if (m_results.syncTime != m_notifiedResults.syncTime) {
-            m_notifiedResults.syncTime = m_results.syncTime;
-            emit syncTimeChanged();
-        }
-
-        if (m_results.renderTime != m_notifiedResults.renderTime) {
-            m_notifiedResults.renderTime = m_results.renderTime;
-            m_notifiedResults.renderPrepareTime = m_results.renderPrepareTime;
-            emit renderTimeChanged();
-        }
-
-        notifyRhiContextStats();
-    }
-
-    const float fpsInterval = 1000.0f;
-    if (m_secTimer >= fpsInterval) {
-        m_secTimer -= fpsInterval;
-
-        m_fps = m_frameCount;
-        m_frameCount = 0;
-        emit fpsChanged();
-
-        m_maxFrameTime = m_internalMaxFrameTime;
-        m_internalMaxFrameTime = 0;
-        emit maxFrameTimeChanged();
-    }
-
-    m_frameTimer.restart();
+    m_renderingThisFrame = true;
+    const float endTime = timestamp();
+    m_results.renderTime = endTime - m_renderStartTime;
 
     if (dump)
         qDebug("Render took: %f ms (of which prep: %f ms)", m_results.renderTime, m_results.renderPrepareTime);
 }
 
-float QQuick3DRenderStats::timestamp() const
+void QQuick3DRenderStats::onFrameSwapped()
 {
-    return m_frameTimer.nsecsElapsed() / 1000000.0f;
+    // NOTE: This is called on the render thread
+    // This is the real start and end of a frame
+
+    if (m_renderingThisFrame) {
+        ++m_frameCount;
+        m_results.frameTime = timestamp();
+        m_internalMaxFrameTime = qMax(m_results.frameTime, m_internalMaxFrameTime);
+
+        m_secTimer += m_results.frameTime;
+        m_notifyTimer += m_results.frameTime;
+
+        m_results.renderTime = m_results.frameTime - m_renderStartTime;
+
+        processRhiContextStats();
+
+        const float notifyInterval = 200.0f;
+        if (m_notifyTimer >= notifyInterval) {
+            m_notifyTimer -= notifyInterval;
+
+            if (m_results.frameTime != m_notifiedResults.frameTime) {
+                m_notifiedResults.frameTime = m_results.frameTime;
+                emit frameTimeChanged();
+            }
+
+            if (m_results.syncTime != m_notifiedResults.syncTime) {
+                m_notifiedResults.syncTime = m_results.syncTime;
+                emit syncTimeChanged();
+            }
+
+            if (m_results.renderTime != m_notifiedResults.renderTime) {
+                m_notifiedResults.renderTime = m_results.renderTime;
+                m_notifiedResults.renderPrepareTime = m_results.renderPrepareTime;
+                emit renderTimeChanged();
+            }
+
+            notifyRhiContextStats();
+        }
+
+        const float fpsInterval = 1000.0f;
+        if (m_secTimer >= fpsInterval) {
+            m_secTimer -= fpsInterval;
+
+            m_fps = m_frameCount;
+            m_frameCount = 0;
+            emit fpsChanged();
+
+            m_maxFrameTime = m_internalMaxFrameTime;
+            m_internalMaxFrameTime = 0;
+            emit maxFrameTimeChanged();
+        }
+
+        m_renderingThisFrame = false; // reset for next frame
+    }
+
+    // Always reset the frame timer
+    m_frameTimer.restart();
 }
 
 void QQuick3DRenderStats::setRhiContext(QSSGRhiContext *ctx, QSSGRenderLayer *layer)
@@ -206,6 +221,23 @@ void QQuick3DRenderStats::setRhiContext(QSSGRhiContext *ctx, QSSGRenderLayer *la
     // all we need to know.
     if (m_extendedDataCollectionEnabled)
         m_contextStats->dynamicDataSources.insert(layer);
+}
+
+void QQuick3DRenderStats::setWindow(QQuickWindow *window)
+{
+    if (m_window == window)
+        return;
+
+    if (m_window)
+        disconnect(m_frameSwappedConnection);
+
+    m_window = window;
+
+    if (m_window) {
+        m_frameSwappedConnection = connect(m_window, &QQuickWindow::frameSwapped,
+                                           this, &QQuick3DRenderStats::onFrameSwapped,
+                                           Qt::DirectConnection);
+    }
 }
 
 /*!
@@ -845,10 +877,12 @@ quint64 QQuick3DRenderStats::vmemUsedBytes() const
 /*!
     \internal
  */
-void QQuick3DRenderStats::releaseCachedResources(QQuickItem *item)
+void QQuick3DRenderStats::releaseCachedResources()
 {
-    if (item && item->window())
-        item->window()->releaseResources();
+    if (m_window)
+        m_window->releaseResources();
+    else
+        qWarning("QQuick3DRenderStats: No window, cannot request releasing cached resources");
 }
 
 QT_END_NAMESPACE

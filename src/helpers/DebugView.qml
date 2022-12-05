@@ -7,7 +7,6 @@ import QtQuick.Layouts
 import QtQuick3D
 
 Rectangle {
-    id: dbgView
     property var source: null
     property bool resourceDetailsVisible: false
     property int maxResourceDetailsHeight: 480
@@ -162,7 +161,7 @@ Rectangle {
                     }
                     Button {
                         text: "Release cached resources"
-                        onClicked: source.renderStats.releaseCachedResources(dbgView)
+                        onClicked: source.renderStats.releaseCachedResources()
                     }
                     Text {
                         text: source.renderStats.vmemAllocCount + " vmem allocs with " + source.renderStats.vmemUsedBytes + " bytes"
