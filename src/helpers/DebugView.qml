@@ -5,169 +5,359 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
+import QtQuick3D.Helpers.impl
 
-Rectangle {
+Pane {
     property var source: null
     property bool resourceDetailsVisible: false
-    property int maxResourceDetailsHeight: 480
-    property alias layout: layout
-    width: layout.width + 10
-    height: layout.height + 10
-    color: "#80778BA5"
-    radius: 5
+    // yes it needs a fixed size when in detailed mode, the tables and stuff
+    // will size themselves to this
+    width: resourceDetailsVisible ? 600 : layout.contentWidth
+    height: layout.contentHeight
+    opacity: 0.9
 
-    Column {
+    ColumnLayout {
         id: layout
-        anchors.centerIn: parent
+        anchors.fill: parent
+        RowLayout {
+            Label {
+                Layout.fillWidth: true
+                text: source.renderStats.fps + " FPS"
+                font.pointSize: 14
+            }
 
-        Text {
-            text: source.renderStats.fps + " FPS (" + (source.renderStats.frameTime).toFixed(3) + "ms)"
-            font.pointSize: 13
-            color: "white"
-        }
-        Text {
-            text: "Sync: " + (source.renderStats.syncTime).toFixed(3) + "ms"
-            font.pointSize: 9
-            color: "white"
-        }
-        Text {
-            id: renderTimeInfo
-            text: "Render: " + (source.renderStats.renderTime).toFixed(3) + "ms (prep: " + (source.renderStats.renderPrepareTime).toFixed(3) + "ms)"
-            font.pointSize: 9
-            color: "white"
-        }
-        Text {
-            text: "Max: " + (source.renderStats.maxFrameTime).toFixed(3) + "ms"
-            font.pointSize: 9
-            color: "white"
-        }
-        Text {
-            text: source.renderStats.drawCallCount + " draw calls with " + source.renderStats.drawVertexCount + " vertices in " + source.renderStats.renderPassCount + " render passes"
-            font.pointSize: 9
-            color: "white"
-            visible: resourceDetailsVisible
-        }
-        Text {
-            text: "Window assets: " + (source.renderStats.imageDataSize / 1024).toFixed(2) + " KB tex., " + (source.renderStats.meshDataSize / 1024).toFixed(2) + " KB mesh, " + source.renderStats.pipelineCount + " pipl."
-            font.pointSize: 9
-            color: "white"
-            visible: resourceDetailsVisible
-        }
-        Text {
-            text: "Mat./eff. gen.: "
-                  + (source.renderStats.materialGenerationTime + source.renderStats.effectGenerationTime)
-                  + " ms Pipl. gen.: "
-                  + source.renderStats.pipelineCreationTime + " ms"
-            font.pointSize: 9
-            color: "white"
-            visible: resourceDetailsVisible
-        }
-        MenuSeparator {
-            padding: 0
-            topPadding: 8
-            bottomPadding: 8
-            width: Math.max(renderTimeInfo.implicitWidth, resDetailsText.implicitWidth)
-            visible: resourceDetailsVisible
-        }
-        TabBar {
-            id: bar
-            opacity: 0.75
-            width: Math.max(renderTimeInfo.implicitWidth, resDetailsText.implicitWidth)
-            visible: resourceDetailsVisible
-            TabButton {
-                text: "Render passes"
-                font.pointSize: 9
+            Label {
+                text: "Details"
             }
-            TabButton {
-                text: "Textures"
-                font.pointSize: 9
-            }
-            TabButton {
-                text: "Meshes"
-                font.pointSize: 9
-            }
-            TabButton {
-                text: "Debug"
-                font.pointSize: 9
-            }
-        }
-        ScrollView {
-            id: resDetails
-            visible: resourceDetailsVisible && bar.currentIndex < 3
-            width: resDetailsText.implicitWidth + 20
-            height: Math.min(maxResourceDetailsHeight, resDetailsText.implicitHeight)
-            // the default scrollbar behavior is bad for dynamic content, do something sensible instead
-            ScrollBar.vertical.policy: height >= maxResourceDetailsHeight ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
-            Text {
-                id: resDetailsText
-                text: bar.currentIndex === 0 ? source.renderStats.renderPassDetails
-                                             : (bar.currentIndex === 1 ? source.renderStats.textureDetails : source.renderStats.meshDetails)
-                font.pointSize: 9
-                color: "white"
-                textFormat: Text.PlainText //Text.MarkdownText // markdown is too slow to display tables so default to plain text
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton
-                    onClicked: contextMenu.popup()
-                }
-                Menu {
-                    id: contextMenu
-                    MenuItem {
-                        text: "Print to console"
-                        onTriggered: console.log(resDetailsText.text)
-                    }
+
+            CheckBox {
+                checked: resourceDetailsVisible
+                onCheckedChanged: {
+                    resourceDetailsVisible = checked;
                 }
             }
         }
-        Item {
-            visible: resourceDetailsVisible && bar.currentIndex === 3
-            width: bar.width
-            height: visCtrCol.height
-            Column {
-                id: visCtrCol
-                width: parent.width
-                ColumnLayout {
-                    CheckBox {
-                        text: "Wireframe mode"
-                        onCheckedChanged: source.environment.debugSettings.wireframeEnabled = checked
-                    }
-                    RowLayout {
+
+        component TimeLabel : RowLayout {
+            id: timeLabel
+            property alias text: label.text
+            property real value: 0.0
+            Label {
+                id: label
+                Layout.fillWidth: true
+                text: "Frame: "
+
+            }
+            Label {
+                text: timeLabel.value.toFixed(3) + "ms"
+            }
+        }
+
+        TimeLabel {
+            text: "Frame: "
+            value: source.renderStats.frameTime
+        }
+
+        TimeLabel {
+            text: "    Sync: "
+            value: source.renderStats.syncTime
+        }
+
+        TimeLabel {
+            text: "    Prep: "
+            value: source.renderStats.renderPrepareTime
+        }
+
+        TimeLabel {
+            text: "    Render: "
+            value: source.renderStats.renderTime
+        }
+
+        TimeLabel {
+            text: "Max: "
+            value: source.renderStats.maxFrameTime
+        }
+
+        Page {
+            Layout.fillWidth: true
+            visible: resourceDetailsVisible
+            header: TabBar {
+                id: tabBar
+                TabButton {
+                    text: "Summary"
+                }
+                TabButton {
+                    text: "Passes"
+                }
+                TabButton {
+                    text: "Textures"
+                }
+                TabButton {
+                    text: "Meshes"
+                }
+                TabButton {
+                    text: "Visualize"
+                }
+            }
+
+            StackLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                currentIndex: tabBar.currentIndex
+
+                Pane {
+                    id: summaryPane
+                    ColumnLayout {
                         Label {
-                            text: "Material override"
+                            text: source.renderStats.renderPassCount + " render passes"
+                            visible: resourceDetailsVisible
                         }
-                        ComboBox {
-                            id: materialOverrideComboBox
-                            textRole: "text"
-                            valueRole: "value"
-                            implicitContentWidthPolicy: ComboBox.WidestText
-                            onActivated: source.environment.debugSettings.materialOverride = currentValue
-                            Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(source.environment.debugSettings.materialOverride)
-                            model: [
-                                { value: DebugSettings.None, text: "None"},
-                                { value: DebugSettings.BaseColor, text: "Base Color"},
-                                { value: DebugSettings.Roughness, text: "Roughness"},
-                                { value: DebugSettings.Metalness, text: "Metalness"},
-                                { value: DebugSettings.Diffuse, text: "Diffuse"},
-                                { value: DebugSettings.Specular, text: "Specular"},
-                                { value: DebugSettings.ShadowOcclusion, text: "Shadow Occlusion"},
-                                { value: DebugSettings.Emission, text: "Emission"},
-                                { value: DebugSettings.AmbientOcclusion, text: "Ambient Occlusion"},
-                                { value: DebugSettings.Normals, text: "Normals"},
-                                { value: DebugSettings.Tangents, text: "Tangents"},
-                                { value: DebugSettings.Binormals, text: "Binormals"},
-                                { value: DebugSettings.F0, text: "F0"}
-                            ]
+                        Label {
+                            text: source.renderStats.drawCallCount + " draw calls"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: source.renderStats.drawVertexCount + " vertices"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: "Image assets: " + (source.renderStats.imageDataSize / 1024).toFixed(2) + " KB"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: "Mesh assets: " + (source.renderStats.meshDataSize / 1024).toFixed(2) + " KB"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: "Pipelines: " + source.renderStats.pipelineCount
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: "Material build time: " + source.renderStats.materialGenerationTime + " ms"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: "Effect build time: " + source.renderStats.effectGenerationTime + " ms"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: "Pipeline build time: " + source.renderStats.pipelineCreationTime + " ms"
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
+                            text: source.renderStats.vmemAllocCount + " vmem allocs with " + source.renderStats.vmemUsedBytes + " bytes"
+                            visible: resourceDetailsVisible && source.renderStats.vmemAllocCount > 0
                         }
                     }
-                    Button {
-                        text: "Release cached resources"
-                        onClicked: source.renderStats.releaseCachedResources()
+                }
+
+                Pane {
+                    id: passesPane
+                    RenderStatsPassesModel {
+                        id: passesModel
+                        passData: source.renderStats.renderPassDetails
                     }
-                    Text {
-                        text: source.renderStats.vmemAllocCount + " vmem allocs with " + source.renderStats.vmemUsedBytes + " bytes"
-                        font.pointSize: 9
-                        color: "white"
-                        visible: source.renderStats.vmemAllocCount > 0
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
+                        HorizontalHeaderView {
+                            syncView: passesTableView
+                            boundsBehavior: Flickable.StopAtBounds
+                            flickableDirection: Flickable.VerticalFlick
+                        }
+                        ListModel {
+                            id: passesHeaderModel
+                            ListElement {
+                                columnWidth: 300 // name
+                            }
+                            ListElement {
+                                columnWidth: 80 // size
+                            }
+                            ListElement {
+                                columnWidth: 60 // vertices
+                            }
+                            ListElement {
+                                columnWidth: 60 // draw calls
+                            }
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            TableView {
+                                id: passesTableView
+                                anchors.fill: parent
+                                // name, size, vertices, draw calls
+                                property var columnFactors: [58, 14, 12, 12]; // == 96, leave space for the scrollbar
+                                columnWidthProvider: function (column) {
+                                    return passesPane.width * (columnFactors[column] / 100.0);
+                                }
+                                boundsBehavior: Flickable.StopAtBounds
+                                flickableDirection: Flickable.VerticalFlick
+                                ScrollBar.vertical: ScrollBar {
+                                    parent: passesTableView.parent
+                                    anchors.top: passesTableView.top
+                                    anchors.bottom: passesTableView.bottom
+                                    anchors.left: passesTableView.right
+                                }
+                                clip: true
+                                model: passesModel
+                                delegate: Rectangle {
+                                    implicitWidth: 100
+                                    implicitHeight: passesDelegateText.implicitHeight + 4
+                                    color: row % 2 !== 0 ? palette.alternateBase : palette.base
+                                    Text {
+                                        id: passesDelegateText
+                                        text: display
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Pane {
+                    id: texturesPane
+                    RenderStatsTexturesModel {
+                        id: texturesModel
+                        textureData: source.renderStats.textureDetails
+                    }
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
+                        HorizontalHeaderView {
+                            syncView: texturesTableView
+                            boundsBehavior: Flickable.StopAtBounds
+                            flickableDirection: Flickable.VerticalFlick
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            TableView {
+                                id: texturesTableView
+                                anchors.fill: parent
+                                // name, size, format, miplevels, flags
+                                property var columnFactors: [48, 12, 12, 12, 12]; // == 96, leave space for the scrollbar
+                                columnWidthProvider: function (column) {
+                                    return texturesPane.width * (columnFactors[column] / 100.0);
+                                }
+                                boundsBehavior: Flickable.StopAtBounds
+                                flickableDirection: Flickable.VerticalFlick
+                                ScrollBar.vertical: ScrollBar {
+                                    parent: texturesTableView.parent
+                                    anchors.top: texturesTableView.top
+                                    anchors.bottom: texturesTableView.bottom
+                                    anchors.left: texturesTableView.right
+                                }
+                                ScrollBar.horizontal: ScrollBar { }
+                                clip: true
+                                model: texturesModel
+                                delegate: Rectangle {
+                                    implicitWidth: 100
+                                    implicitHeight: meshesDelegateText.implicitHeight + 4
+                                    color: row % 2 !== 0 ? palette.alternateBase : palette.base
+                                    Text {
+                                        id: meshesDelegateText
+                                        text: display
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Pane {
+                    id: meshesPane
+                    RenderStatsMeshesModel {
+                        id: meshesModel
+                        meshData: source.renderStats.meshDetails
+                    }
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 0
+                        HorizontalHeaderView {
+                            syncView: meshesTableView
+                            boundsBehavior: Flickable.StopAtBounds
+                            flickableDirection: Flickable.VerticalFlick
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                            TableView {
+                                id: meshesTableView
+                                anchors.fill: parent
+                                // name, submeshes, vertices, vbufsize, ibufsize
+                                property var columnFactors: [48, 12, 12, 12, 12]; // == 96, leave space for the scrollbar
+                                columnWidthProvider: function (column) {
+                                    return meshesPane.width * (columnFactors[column] / 100.0);
+                                }
+                                boundsBehavior: Flickable.StopAtBounds
+                                flickableDirection: Flickable.VerticalFlick
+                                ScrollBar.vertical: ScrollBar {
+                                    parent: meshesTableView.parent
+                                    anchors.top: meshesTableView.top
+                                    anchors.bottom: meshesTableView.bottom
+                                    anchors.left: meshesTableView.right
+                                }
+                                clip: true
+                                model: meshesModel
+                                delegate: Rectangle {
+                                    implicitWidth: 100
+                                    implicitHeight: meshesDelegateText.implicitHeight + 4
+                                    color: row % 2 !== 0 ? palette.alternateBase : palette.base
+                                    Text {
+                                        id: meshesDelegateText
+                                        text: display
+                                        anchors.centerIn: parent
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Pane {
+                    id: visualizePane
+                    ColumnLayout {
+                        id: visCtrCol
+                        width: parent.width
+                        CheckBox {
+                            text: "Wireframe mode"
+                            onCheckedChanged: source.environment.debugSettings.wireframeEnabled = checked
+                        }
+                        RowLayout {
+                            Label {
+                                text: "Material override"
+                            }
+                            ComboBox {
+                                id: materialOverrideComboBox
+                                textRole: "text"
+                                valueRole: "value"
+                                implicitContentWidthPolicy: ComboBox.WidestText
+                                onActivated: source.environment.debugSettings.materialOverride = currentValue
+                                Component.onCompleted: materialOverrideComboBox.currentIndex = materialOverrideComboBox.indexOfValue(source.environment.debugSettings.materialOverride)
+                                model: [
+                                    { value: DebugSettings.None, text: "None"},
+                                    { value: DebugSettings.BaseColor, text: "Base Color"},
+                                    { value: DebugSettings.Roughness, text: "Roughness"},
+                                    { value: DebugSettings.Metalness, text: "Metalness"},
+                                    { value: DebugSettings.Diffuse, text: "Diffuse"},
+                                    { value: DebugSettings.Specular, text: "Specular"},
+                                    { value: DebugSettings.ShadowOcclusion, text: "Shadow Occlusion"},
+                                    { value: DebugSettings.Emission, text: "Emission"},
+                                    { value: DebugSettings.AmbientOcclusion, text: "Ambient Occlusion"},
+                                    { value: DebugSettings.Normals, text: "Normals"},
+                                    { value: DebugSettings.Tangents, text: "Tangents"},
+                                    { value: DebugSettings.Binormals, text: "Binormals"},
+                                    { value: DebugSettings.F0, text: "F0"}
+                                ]
+                            }
+                        }
+                        Button {
+                            text: "Release cached resources"
+                            onClicked: source.renderStats.releaseCachedResources()
+                        }
                     }
                 }
             }

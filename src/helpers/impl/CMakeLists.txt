@@ -12,6 +12,9 @@ qt_internal_add_qml_module(Quick3DHelpersImpl
         Quick3DHelpers/auto
     SOURCES
         sceneeffects.cpp sceneeffects_p.h
+        qquick3drenderstatsmeshesmodel_p.h qquick3drenderstatsmeshesmodel.cpp
+        qquick3drenderstatstexturesmodel_p.h qquick3drenderstatstexturesmodel.cpp
+        qquick3drenderstatspassesmodel_p.h qquick3drenderstatspassesmodel.cpp
     QML_FILES
         DepthOfFieldBlur.qml
         SceneEffect.qml

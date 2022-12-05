@@ -450,7 +450,7 @@ void QQuick3DRenderStats::processRhiContextStats()
                 mipCount = m_contextStats->context.rhi()->mipLevelsForSize(tex->pixelSize());
             QByteArray flagMsg;
             if (flags.testFlag(QRhiTexture::CubeMap))
-                flagMsg += QByteArrayLiteral("[cubemap]");
+                flagMsg += QByteArrayLiteral("[cube]");
             texDetails += QString::asprintf("| %s | %dx%d | %s | %d | %s |\n",
                                             tex->name().constData(),
                                             tex->pixelSize().width(),
