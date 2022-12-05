@@ -336,3 +336,295 @@
     Specifies the distance at which the cross-fade between the detail levels
     starts.
 */
+
+/*!
+    \qmltype ExtendedSceneEnvironment
+    \inqmlmodule QtQuick3D.Helpers
+    \inherits SceneEnvironment
+    \brief SceneEnvironment containing commonly used rendering effects
+
+    The \c ExtendedSceneEnvironment is an extension of QtQuick3D's \l SceneEnvironment type that comes
+    with a collection of commonly used effects built-in. The effects are exposed through a set of properties
+    that are prefixed with the name of the effect they control.
+
+    \note If additional effects are added to the \l SceneEnvironment, then those effects will be applied \e before
+    the effects provided by the \l ExtendedSceneEnvironment type.
+*/
+
+// Depth of Field Effect
+/*! \qmlproperty bool ExtendedSceneEnvironment::depthOfFieldEnabled
+    Enables the depth of field blur effect.
+
+    \default false
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldFocusDistance
+    The distance from the camera where the content is in perfect focus.
+
+    \default 600
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldFocusRange
+    The distance around the \l {ExtendedSceneEnvironment::depthOfFieldFocusDistance}{depthOfFieldFocusDistance}
+    where items are fully in focus. The focus then fades away to fully blurred by the same distance on both the near and far sides.
+
+    \default 100
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::depthOfFieldBlurAmount
+    The strength of blur when out of focus. Sensible values are in the range \b 1 to \b 10.
+
+    \default 4.0
+*/
+// Tonemapper
+/*! \qmlproperty real ExtendedSceneEnvironment::exposure
+    Exposure level used by the tonemapper.
+
+    \default 1.0
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::whitePoint
+
+    Reference value for \e white when tonemapping is enabled.
+    \note This value is ignored when using \l {SceneEnvironment::TonemapModeLinear}{TonemapModeLinear}
+
+    \default 1
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::ditheringEnabled
+    Enables dithering.
+
+    \default false
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::sharpnessAmount
+    Set the sharpening amount. Valid values are from \c 0.0 (off) to \c 1.0 (full).
+
+    \default 0.0
+*/
+// FXAA
+/*! \qmlproperty bool ExtendedSceneEnvironment::fxaaEnabled
+    Enables fast approximate anti-aliasing (FXAA).
+
+    \default false
+*/
+// Adjustments
+/*! \qmlproperty bool ExtendedSceneEnvironment::colorAdjustmentsEnabled
+
+    \default false
+    \sa {ExtendedSceneEnvironment::colorAdjustmentsEnabled}{colorAdjustmentsEnabled}
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::adjustmentBrightness
+    The global brightness adjustment of the output color.
+
+    \default 1
+    \note Requires that \l {ExtendedSceneEnvironment::colorAdjustmentsEnabled}{colorAdjustmentsEnabled} is set to \c true.
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::adjustmentContrast
+    The global contrast adjustment.
+
+    \default 1
+    \note Requires that \l {ExtendedSceneEnvironment::colorAdjustmentsEnabled}{colorAdjustmentsEnabled} is set to \c true.
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::adjustmentSaturation
+    The global adjustment of the saturation of the output.
+
+    \default 1
+    \note Requires that \l {ExtendedSceneEnvironment::colorAdjustmentsEnabled}{colorAdjustmentsEnabled} is set to \c true.
+*/
+// Color Grading Effect
+/*! \qmlproperty bool ExtendedSceneEnvironment::lutEnabled
+    Enables color grading with look-up-tables (LUTs).
+
+    \default false
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lutSize
+    Size of the look-up texture. The look-up textures are 3D textures, so:
+
+    \c {width = lutSize * lutSize}
+    and
+    \c {height = lutSize}
+
+    \default 16
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lutFilterAlpha
+    Alpha filter value. Values from \b 0 to \b 1 are expected.
+
+    \default 1
+*/
+/*! \qmlproperty Texture ExtendedSceneEnvironment::lutTextureSource
+    Source of look-up texture. If no texture is set a built-in identity
+    table is used.
+*/
+// Glow Effect
+/*! \qmlproperty bool ExtendedSceneEnvironment::glowEnabled
+    Enables the glow effect.
+
+    \default false
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::glowQualityHigh
+    Increases the samples used for the glow when down-sampling
+    to improve the quality of the glow effect.
+
+    \default false
+    \note Enabling this is a trade off between rendering quality and performance. Consider if
+    \l {ExtendedSceneEnvironment::ditheringEnabled}{dithering} can be used instead.
+    \sa {ExtendedSceneEnvironment::ditheringEnabled}{ditheringEnabled}
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::glowUseBicubicUpscale
+
+    \default false
+    \note Using bi-cubic up-scaling will come at the cost of performance.  Consider if
+    \l {ExtendedSceneEnvironment::ditheringEnabled}{dithering} can be used instead.
+    \sa {ExtendedSceneEnvironment::ditheringEnabled}{ditheringEnabled}
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::glowStrength
+    Glow strength. Acceptable values are from \b 0 to \b 2.
+
+    \default 1
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::glowIntensity
+    Glow intensity. Expected values are in the range \b 0 to \b 8.
+
+    \default 0.8
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::glowBloom
+    The intensity of the bloom. Values from \b 0 to \b 1 are expected.
+
+    \default 0
+*/
+/*! \qmlproperty int ExtendedSceneEnvironment::glowBlendMode
+    Blending mode for the glow effect.
+
+    Available modes are:
+     \list
+      \li Additive
+      \li Screen
+      \li SoftLight
+      \li Replace
+    \endlist
+
+    Usage:
+    \badcode
+        glowBlendMode = ExtendedSceneEnvironment.GlowBlendMode.SoftLight
+    \endcode
+
+    \sa ExtendedSceneEnvironment::GlowBlendMode
+    \default ExtendedSceneEnvironment::GlowBlendMode::SoftLight
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::glowHDRMaximumValue
+    The maximum value for the HDR glow. Value range is from \b 0 to \b 256.
+
+    \default 12.0
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::glowHDRMinimumValue
+    The minimum value for the HDR glow. Expected values are in the range \b 0 to \b 4.
+
+    \default 1.0
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::glowHDRScale
+    The bleed scale of the HDR glow. Expected values are in the range \b 0 to \b 8.
+
+    \default 2.0
+*/
+/*! \qmlproperty int ExtendedSceneEnvironment::glowLevel
+    The glow level. There are a total of 7 levels available.
+
+    For exanmple, to enable Glow Level \e One and \e Six we just OR the two enums together:
+    \badcode
+        glowLevel = (ExtendedSceneEnvironment.GlowLevel.One | ExtendedSceneEnvironment.GlowLevel.Six)
+    \endcode
+
+    \default 1
+    \sa {ExtendedSceneEnvironment::glowEnabled}{glowEnabled}
+*/
+
+*/
+// Vignette
+/*! \qmlproperty bool ExtendedSceneEnvironment::vignetteEnabled
+    Enable the vignette effect.
+
+    \default false
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::vignetteStrength
+    Specifies the strength of the vignetting. Ranges from \b 0 to \b 15.
+
+    \default 15
+*/
+/*! \qmlproperty color ExtendedSceneEnvironment::vignetteColor
+    Sets the color to use for the vignetting.
+
+    \default "gray"
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::vignetteRadius
+    Specifies the size of the vignetting. Ranges from \b 0 to \b 5.
+
+    \default 0.35
+*/
+// Lens Flare
+/*! \qmlproperty bool ExtendedSceneEnvironment::lensFlareEnabled
+    Enables the lens flare effect.
+
+    \default false
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareBloomScale
+    The scale of the bloom. Expected scale value ranges from \b 0 to \b 20.
+
+    \default 10
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareBloomBias
+    Bloom bias.
+
+    \default 0.95
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareGhostDispersal
+    Ghost dispersal. Expected values are between \b 0 and \b 5.
+
+    \default 0.5
+*/
+/*! \qmlproperty int ExtendedSceneEnvironment::lensFlareGhostCount
+    Rendered ghost count. Expected values are from \b 0 to \b 20.
+
+    \default 4
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareHaloWidth
+    Width of the flare halo, ranges from \b 0 to \b 1.
+
+    \default 0.25
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareStretchToAspect
+
+    \default 0.5 [0, 1]
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareDistortion
+    Distortion of the lens flare. Expected values ranges from \b 0 to \b 20
+
+    \default 5
+*/
+/*! \qmlproperty real ExtendedSceneEnvironment::lensFlareBlurAmount
+    Flare blur amount. Ranges from \b 0 to \b 5
+
+    \default 3
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::lensFlareApplyDirtTexture
+    Enables the lens dirt effect.
+
+    \default false
+    \sa {ExtendedSceneEnvironment::lensFlareLensDirtTexture}{lensFlareLensDirtTexture}
+*/
+/*! \qmlproperty bool ExtendedSceneEnvironment::lensFlareApplyStarburstTexture
+    Enables the star burst effect.
+
+    \default false
+    \sa {ExtendedSceneEnvironment::lensFlareLensStarburstTexture}{lensFlareLensStarburstTexture}
+*/
+/*! \qmlproperty vector3d ExtendedSceneEnvironment::lensFlareCameraDirection
+    \default Qt.vector3d(0, 0, -1)
+*/
+/*! \qmlproperty Texture ExtendedSceneEnvironment::lensFlareLensColorTexture
+    The texture used to color the lens flare.
+ */
+/*! \qmlproperty Texture ExtendedSceneEnvironment::lensFlareLensDirtTexture
+    The texture used for simulating lens dirt.
+
+    \sa {ExtendedSceneEnvironment::lensFlareApplyDirtTexture}
+ */
+/*! \qmlproperty Texture ExtendedSceneEnvironment::lensFlareLensStarburstTexture
+    The texture used for simulating the starburst effect.
+
+    \sa {ExtendedSceneEnvironment::lensFlareApplyStarburstTexture}{lensFlareApplyStarburstTexture}
+*/
