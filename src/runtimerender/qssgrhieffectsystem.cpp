@@ -322,22 +322,19 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
             bool texAdded = false;
             QSSGRenderImage *image = textureProperty.texImage;
             if (image) {
-                const auto &imageSource = image->m_imagePath;
                 const QSSGRef<QSSGBufferManager> &theBufferManager(m_renderer->contextInterface()->bufferManager());
-                if (!imageSource.isEmpty()) {
-                    const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image);
-                    if (texture.m_texture) {
-                        const QSSGRhiSamplerDescription desc{
-                            toRhi(textureProperty.minFilterType),
-                            toRhi(textureProperty.magFilterType),
-                            textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
-                            toRhi(textureProperty.horizontalClampType),
-                            toRhi(textureProperty.verticalClampType),
-                            QRhiSampler::Repeat
-                        };
-                        addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
-                        texAdded = true;
-                    }
+                const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image);
+                if (texture.m_texture) {
+                    const QSSGRhiSamplerDescription desc{
+                        toRhi(textureProperty.minFilterType),
+                        toRhi(textureProperty.magFilterType),
+                        textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
+                        toRhi(textureProperty.horizontalClampType),
+                        toRhi(textureProperty.verticalClampType),
+                        QRhiSampler::Repeat
+                    };
+                    addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
+                    texAdded = true;
                 }
             }
             if (!texAdded) {
