@@ -311,28 +311,23 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
             bool texAdded = false;
             QSSGRenderImage *image = textureProperty.texImage;
             if (image) {
-                const auto &imageSource = image->m_imagePath;
                 const QSSGRef<QSSGBufferManager> &theBufferManager(m_renderer->contextInterface()->bufferManager());
-                if (!imageSource.isEmpty()) {
-                    QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone;
-                    // the mipFilterType here is only non-None when generateMipmaps was true on the Texture
-                    if (textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None)
-                        mipMode = QSSGBufferManager::MipModeGenerated;
-                    // ### would we want MipModeBsdf in some cases?
-
-                    const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image, mipMode);
-                    if (texture.m_texture) {
-                        const QSSGRhiSamplerDescription desc{
-                            toRhi(textureProperty.minFilterType),
-                            toRhi(textureProperty.magFilterType),
-                            textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
-                            toRhi(textureProperty.horizontalClampType),
-                            toRhi(textureProperty.verticalClampType),
-                            QRhiSampler::Repeat
-                        };
-                        addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
-                        texAdded = true;
-                    }
+                QSSGBufferManager::MipMode mipMode = QSSGBufferManager::MipModeNone;
+                // the mipFilterType here is only non-None when generateMipmaps was true on the Texture
+                if (textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None)
+                    mipMode = QSSGBufferManager::MipModeGenerated;
+                const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image, mipMode);
+                if (texture.m_texture) {
+                    const QSSGRhiSamplerDescription desc{
+                        toRhi(textureProperty.minFilterType),
+                        toRhi(textureProperty.magFilterType),
+                        textureProperty.mipFilterType != QSSGRenderTextureFilterOp::None ? toRhi(textureProperty.mipFilterType) : QRhiSampler::None,
+                        toRhi(textureProperty.horizontalClampType),
+                        toRhi(textureProperty.verticalClampType),
+                        QRhiSampler::Repeat
+                    };
+                    addTextureToShaderPipeline(textureProperty.name, texture.m_texture, desc);
+                    texAdded = true;
                 }
             }
             if (!texAdded) {
