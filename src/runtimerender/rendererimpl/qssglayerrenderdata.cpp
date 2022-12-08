@@ -1560,7 +1560,9 @@ void QSSGLayerRenderData::prepareReflectionProbesForRender()
         for (const auto &handle : std::as_const(opaqueObjects))
             injectProbe(handle);
 
-        if (reflectionObjectCount > 0)
+        if (probe->texture)
+            reflectionMapManager->addTexturedReflectionMapEntry(i, *probe);
+        else if (reflectionObjectCount > 0)
             reflectionMapManager->addReflectionMapEntry(i, *probe);
     }
 }

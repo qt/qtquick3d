@@ -20,6 +20,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QRhi;
+class QRhiCommandBuffer;
 class QSSGRhiContext;
 class QSSGRenderContextInterface;
 
@@ -35,6 +37,8 @@ struct QSSGReflectionMapEntry
 {
     QSSGReflectionMapEntry();
 
+    static QSSGReflectionMapEntry withRhiTexturedCubeMap(quint32 probeIdx,
+                                                         QRhiTexture *preFiltered);
     static QSSGReflectionMapEntry withRhiCubeMap(quint32 probeIdx,
                                                  QRhiTexture *cube,
                                                  QRhiTexture *prefiltered,
@@ -89,6 +93,7 @@ public:
     void releaseCachedResources();
 
     void addReflectionMapEntry(qint32 probeIdx, const QSSGRenderReflectionProbe &probe);
+    void addTexturedReflectionMapEntry(qint32 probeIdx, const QSSGRenderReflectionProbe &probe);
 
     QSSGReflectionMapEntry *reflectionMapEntry(int probeIdx);
 

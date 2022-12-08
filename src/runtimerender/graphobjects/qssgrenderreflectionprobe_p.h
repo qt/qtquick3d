@@ -16,9 +16,12 @@
 //
 
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendererutil_p.h>
 #include <QColor>
 
 QT_BEGIN_NAMESPACE
+
+struct QSSGRenderImage;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderReflectionProbe : public QSSGRenderNode
 {
@@ -43,6 +46,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderReflectionProbe : public QSSGRend
     QVector3D boxSize { 0.0, 0.0, 0.0 };
     QVector3D boxOffset { 0.0, 0.0, 0.0 };
     bool hasScheduledUpdate = false;
+    QSSGRenderImage *texture = nullptr;
 
     explicit QSSGRenderReflectionProbe();
 };

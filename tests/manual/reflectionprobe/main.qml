@@ -95,7 +95,23 @@ Window {
                 }
                 parallaxCorrection: checkParallax.checked
                 boxSize: Qt.vector3d(sliderBoxX.value, sliderBoxY.value, sliderBoxZ.value)
+                texture: {
+                    if (comboTexture.currentIndex === 0) null
+                    else if (comboTexture.currentIndex === 1) ktxCubeTexture
+                    else if (comboTexture.currentIndex === 2) pngCubeTexture
+                    else pngTexture
+                }
             }
+        }
+
+        CubeMapTexture {
+            id: ktxCubeTexture
+            source: "cubemap_bc1.ktx"
+        }
+
+        CubeMapTexture {
+            id: pngCubeTexture
+            source: "qt_logo.png;qt_logo.png;qt_logo.png;qt_logo.png;qt_logo.png;qt_logo.png"
         }
 
         ParticleSystem3D {
@@ -210,6 +226,11 @@ Window {
             Button {
                 text: "Schedule Update"
                 onClicked: probe.scheduleUpdate()
+            }
+            ComboBox {
+                id: comboTexture
+                width: 200
+                model: [ "No texture", "KtxCubeMapTexture", "PngCubeMapTexture" ]
             }
         }
     }

@@ -14,6 +14,7 @@ qt_internal_add_manual_test(manual_test_reflectionprobe
 set(qml_resource_files
     "main.qml"
     "qt_logo.png"
+    "cubemap_bc1.ktx"
     "OpenfootageNET_garage-1024.hdr"
     "material_simple.frag"
     "snowflake.png"

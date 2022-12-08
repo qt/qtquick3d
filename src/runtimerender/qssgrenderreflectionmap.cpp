@@ -82,7 +82,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
         if (probe.hasScheduledUpdate)
             pEntry->m_rendered = false;
 
-        if (mapRes != pEntry->m_rhiCube->pixelSize().width()) {
+        if (!pEntry->m_rhiDepthStencil || mapRes != pEntry->m_rhiCube->pixelSize().width()) {
             pEntry->destroyRhiResources();
             pEntry->m_rhiDepthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
             pEntry->m_rhiCube = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
@@ -253,6 +253,23 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
         pEntry->m_timeSlicing = probe.timeSlicing;
         pEntry->m_probeIndex = probeIdx;
         Q_QUICK3D_PROFILE_ASSIGN_ID(&probe, pEntry);
+    }
+}
+
+void QSSGRenderReflectionMap::addTexturedReflectionMapEntry(qint32 probeIdx, const QSSGRenderReflectionProbe &probe)
+{
+    QSSGReflectionMapEntry *pEntry = reflectionMapEntry(probeIdx);
+    const QSSGRenderImageTexture probeTexture = m_context.bufferManager()->loadRenderImage(probe.texture, QSSGBufferManager::MipModeFollowRenderImage);
+    if (!pEntry) {
+        if (probeTexture.m_texture)
+            m_reflectionMapList.push_back(QSSGReflectionMapEntry::withRhiTexturedCubeMap(probeIdx, probeTexture.m_texture));
+        else
+            addReflectionMapEntry(probeIdx, probe);
+    } else {
+        if (pEntry->m_rhiDepthStencil)
+            pEntry->destroyRhiResources();
+        if (probeTexture.m_texture)
+            pEntry->m_rhiPrefilteredCube = probeTexture.m_texture;
     }
 }
 
@@ -568,6 +585,13 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
     cb->debugMarkEnd();
 }
 
+QSSGReflectionMapEntry QSSGReflectionMapEntry::withRhiTexturedCubeMap(quint32 probeIdx, QRhiTexture *prefiltered)
+{
+    QSSGReflectionMapEntry e;
+    e.m_probeIndex = probeIdx;
+    e.m_rhiPrefilteredCube = prefiltered;
+    return e;
+}
 
 QSSGReflectionMapEntry QSSGReflectionMapEntry::withRhiCubeMap(quint32 probeIdx,
                                                            QRhiTexture *cube,
@@ -586,7 +610,9 @@ void QSSGReflectionMapEntry::destroyRhiResources()
 {
     delete m_rhiCube;
     m_rhiCube = nullptr;
-    delete m_rhiPrefilteredCube;
+    // Without depth stencil the prefiltered cubemap is assumed to be not owned here and shouldn't be deleted
+    if (m_rhiDepthStencil)
+        delete m_rhiPrefilteredCube;
     m_rhiPrefilteredCube = nullptr;
     delete m_rhiDepthStencil;
     m_rhiDepthStencil = nullptr;

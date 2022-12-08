@@ -20,6 +20,7 @@
 #include <QtQuick3D/private/qquick3dmodel_p.h>
 #include <QtQuick3D/private/qquick3ddefaultmaterial_p.h>
 #include <QtQuick3D/private/qquick3dviewport_p.h>
+#include <QtQuick3D/private/qquick3dcubemaptexture_p.h>
 #include <QColor>
 
 QT_BEGIN_NAMESPACE
@@ -35,6 +36,7 @@ class Q_QUICK3D_EXPORT QQuick3DReflectionProbe : public QQuick3DNode
     Q_PROPERTY(QVector3D boxSize READ boxSize WRITE setBoxSize NOTIFY boxSizeChanged)
     Q_PROPERTY(QVector3D boxOffset READ boxOffset WRITE setBoxOffset NOTIFY boxOffsetChanged REVISION(6, 4))
     Q_PROPERTY(bool debugView READ debugView WRITE setDebugView NOTIFY debugViewChanged REVISION(6, 4))
+    Q_PROPERTY(QQuick3DCubeMapTexture *texture READ texture WRITE setTexture NOTIFY textureChanged REVISION(6, 5))
     QML_NAMED_ELEMENT(ReflectionProbe)
     QML_ADDED_IN_VERSION(6, 3)
 
@@ -74,6 +76,7 @@ public:
     Q_REVISION(6, 4) QVector3D boxOffset() const;
 
     Q_REVISION(6, 4) Q_INVOKABLE void scheduleUpdate();
+    Q_REVISION(6, 5) QQuick3DCubeMapTexture *texture() const;
 
 public Q_SLOTS:
     void setQuality(ReflectionQuality reflectionQuality);
@@ -84,6 +87,7 @@ public Q_SLOTS:
     void setBoxSize(const QVector3D &newBoxSize);
     Q_REVISION(6, 4) void setDebugView(bool debugView);
     Q_REVISION(6, 4) void setBoxOffset(const QVector3D &boxOffset);
+    Q_REVISION(6, 5) void setTexture(QQuick3DCubeMapTexture *newTexture);
 
 Q_SIGNALS:
     void qualityChanged();
@@ -95,10 +99,12 @@ Q_SIGNALS:
     void boxSizeChanged();
     Q_REVISION(6, 4) void debugViewChanged();
     Q_REVISION(6, 4) void boxOffsetChanged();
+    Q_REVISION(6, 5) void textureChanged();
 
 protected:
     QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node) override;
     void markAllDirty() override;
+    void itemChange(ItemChange, const ItemChangeData &) override;
 
     enum class DirtyFlag {
         QualityDirty = (1 << 0),
@@ -106,7 +112,8 @@ protected:
         RefreshModeDirty = (1 << 2),
         ParallaxCorrectionDirty = (1 << 3),
         BoxDirty = (1 << 4),
-        TimeSlicingDirty = (1 << 5)
+        TimeSlicingDirty = (1 << 5),
+        TextureDirty = (1 << 6)
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
@@ -115,13 +122,15 @@ protected:
                               | DirtyFlags(DirtyFlag::RefreshModeDirty)
                               | DirtyFlags(DirtyFlag::ParallaxCorrectionDirty)
                               | DirtyFlags(DirtyFlag::BoxDirty)
-                              | DirtyFlags(DirtyFlag::TimeSlicingDirty);
+                              | DirtyFlags(DirtyFlag::TimeSlicingDirty)
+                              | DirtyFlags(DirtyFlag::TextureDirty);
 
 private:
     quint32 mapToReflectionResolution(ReflectionQuality quality);
     void findSceneView();
     void createDebugView();
     void updateDebugView();
+    void updateSceneManager(QQuick3DSceneManager *window);
     ReflectionQuality m_quality = ReflectionQuality::Low;
     QColor m_clearColor = Qt::transparent;
     ReflectionRefreshMode m_refreshMode = ReflectionRefreshMode::EveryFrame;
@@ -135,6 +144,7 @@ private:
     QQuick3DDefaultMaterial *m_debugViewMaterial = nullptr;
     QVector3D m_boxOffset;
     QQuick3DViewport* m_sceneView = nullptr;
+    QQuick3DCubeMapTexture *m_texture = nullptr;
 };
 
 QT_END_NAMESPACE

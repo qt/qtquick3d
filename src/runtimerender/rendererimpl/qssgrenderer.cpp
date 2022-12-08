@@ -1913,6 +1913,9 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
         if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame && pEntry->m_rendered)
             continue;
 
+        if (reflectionProbes[i]->texture)
+            continue;
+
         Q_ASSERT(pEntry->m_rhiDepthStencil);
         Q_ASSERT(pEntry->m_rhiCube);
 

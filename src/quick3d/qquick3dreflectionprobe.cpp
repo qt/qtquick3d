@@ -28,6 +28,13 @@ QQuick3DReflectionProbe::QQuick3DReflectionProbe(QQuick3DNode *parent)
     QObject::connect(this, &QQuick3DReflectionProbe::scenePositionChanged, this, &QQuick3DReflectionProbe::updateDebugView);
 }
 
+void QQuick3DReflectionProbe::itemChange(QQuick3DObject::ItemChange change,
+                                         const QQuick3DObject::ItemChangeData &value)
+{
+    if (change == QQuick3DObject::ItemSceneChange)
+        updateSceneManager(value.sceneManager);
+}
+
 /*!
     \qmlproperty ReflectionQuality ReflectionProbe::quality
 
@@ -156,6 +163,20 @@ QVector3D QQuick3DReflectionProbe::boxOffset() const
 }
 
 /*!
+    \qmlproperty CubeMapTexture ReflectionProbe::texture
+    \since 6.5
+
+    Instead of rendering the scene, this cube map texture is used to show reflections
+    in objects affected by this reflection probe.
+
+    \sa CubeMapTexture
+*/
+QQuick3DCubeMapTexture *QQuick3DReflectionProbe::texture() const
+{
+    return m_texture;
+}
+
+/*!
     \qmlmethod ReflectionProbe::scheduleUpdate()
 
     Updates the reflection probe render when called while \l ReflectionProbe::refreshMode
@@ -252,6 +273,17 @@ void QQuick3DReflectionProbe::setBoxOffset(const QVector3D &boxOffset)
     update();
 }
 
+void QQuick3DReflectionProbe::setTexture(QQuick3DCubeMapTexture *newTexture)
+{
+    if (m_texture == newTexture)
+        return;
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DReflectionProbe::setTexture, newTexture, m_texture);
+    m_texture = newTexture;
+    m_dirtyFlags.setFlag(DirtyFlag::TextureDirty);
+    emit textureChanged();
+    update();
+}
+
 QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
@@ -310,6 +342,14 @@ QSSGRenderGraphObject *QQuick3DReflectionProbe::updateSpatialNode(QSSGRenderGrap
         m_dirtyFlags.setFlag(DirtyFlag::BoxDirty, false);
         probe->boxSize = m_boxSize;
         probe->boxOffset = m_boxOffset;
+    }
+
+    if (m_dirtyFlags.testFlag(DirtyFlag::TextureDirty)) {
+        m_dirtyFlags.setFlag(DirtyFlag::TextureDirty, false);
+        if (m_texture)
+            probe->texture = m_texture->getRenderImage();
+        else
+            probe->texture = nullptr;
     }
 
     return node;
@@ -477,5 +517,15 @@ quint32 QQuick3DReflectionProbe::mapToReflectionResolution(ReflectionQuality qua
     }
     return 7;
 }
+
+void QQuick3DReflectionProbe::updateSceneManager(QQuick3DSceneManager *sceneManager)
+{
+    // Check all the resource value's scene manager, and update as necessary.
+    if (sceneManager)
+        QQuick3DObjectPrivate::refSceneManager(m_texture, *sceneManager);
+    else
+        QQuick3DObjectPrivate::derefSceneManager(m_texture);
+}
+
 
 QT_END_NAMESPACE
