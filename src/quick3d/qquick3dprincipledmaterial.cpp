@@ -337,9 +337,10 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Texture PrincipledMaterial::occlusionMap
 
-    This property defines a texture used to determine how much indirect light the different areas of the
-    material should receive. Values are expected to be linear from 0.0 to 1.0, where 0.0 means no indirect lighting
-    and 1.0 means the effect of the indirect lighting is left unchanged.
+    This property defines a texture used to determine how much light the
+    different areas of the material should receive. Values are expected to be
+    linear from 0.0 to 1.0, where 0.0 means no lighting and 1.0 means the
+    effect of the lighting is left unchanged.
 
     \sa occlusionAmount
 */
