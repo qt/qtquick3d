@@ -272,7 +272,7 @@ private:
     float m_aoBias = 0.0f;
     int m_aoSampleRate = 2;
     bool m_aoDither = false;
-    bool m_aoEnabled;
+    bool m_aoEnabled = false;
     QQuick3DTexture *m_lightProbe = nullptr;
     float m_probeExposure = 1.0f;
     float m_probeHorizon = 0.0f;
