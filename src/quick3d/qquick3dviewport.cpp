@@ -174,13 +174,14 @@ QQuick3DViewport::~QQuick3DViewport()
     for (const auto &connection : std::as_const(m_connections))
         disconnect(connection);
     auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-    if (sceneManager)
+    if (sceneManager) {
         sceneManager->setParent(nullptr);
+        if (auto wa = sceneManager->wattached)
+            wa->queueForCleanup(sceneManager);
+    }
 
     delete m_sceneRoot;
     m_sceneRoot = nullptr;
-
-    delete sceneManager;
 
     // m_renderStats is tightly coupled with the render thread, so can't delete while we
     // might still be rendering.
@@ -415,8 +416,6 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 rci = new QSSGRenderContextInterface(qw, rhiContext);
                 renderer = new QQuick3DSceneRenderer(rci);
             }
-
-            QObject::connect(qw, &QQuickWindow::afterFrameEnd, this, &QQuick3DViewport::cleanupResources, Qt::DirectConnection);
         }
     }
 
@@ -913,25 +912,6 @@ void QQuick3DViewport::setGlobalPickingEnabled(bool isEnabled)
 void QQuick3DViewport::invalidateSceneGraph()
 {
     m_node = nullptr;
-}
-
-void QQuick3DViewport::cleanupResources()
-{
-    // Pass the scene managers list of resouces marked for
-    // removal to the render context for deleation
-    // The render contect will take ownership of the nodes
-    // and clear the list
-    if (auto renderer = getRenderer()) {
-        const auto &rci = renderer->m_sgContext;
-        if (m_sceneRoot) {
-            const auto sceneManager = QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager;
-            rci->cleanupResources(sceneManager->resourceCleanupQueue);
-        }
-        if (m_importScene) {
-            const auto importSceneManager = QQuick3DObjectPrivate::get(m_importScene)->sceneManager;
-            rci->cleanupResources(importSceneManager->resourceCleanupQueue);
-        }
-    }
 }
 
 QQuick3DSceneRenderer *QQuick3DViewport::getRenderer() const

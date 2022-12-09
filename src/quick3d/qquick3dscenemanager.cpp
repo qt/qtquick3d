@@ -11,6 +11,7 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermodel_p.h>
+
 QT_BEGIN_NAMESPACE
 
 static constexpr char qtQQ3DWAPropName[] { "_qtquick3dWindowAttachment" };
@@ -24,11 +25,11 @@ QQuick3DSceneManager::QQuick3DSceneManager(QObject *parent)
 {
 }
 
+// Should be deleted by QQuick3DWindowAttachment to ensure it's done
+// on the render thread.
 QQuick3DSceneManager::~QQuick3DSceneManager()
 {
     cleanupNodes();
-    // If there's resources queued for deletion it's too late for them, so clean them out now
-    qDeleteAll(resourceCleanupQueue);
     if (wattached)
         wattached->unregisterSceneManager(*this);
 }
@@ -234,6 +235,7 @@ QQuick3DWindowAttachment *QQuick3DSceneManager::getOrSetWindowAttachment(QQuickW
         wa = new QQuick3DWindowAttachment(&window);
         window.setProperty(qtQQ3DWAPropName, QVariant::fromValue(wa));
         QObject::connect(&window, &QQuickWindow::afterAnimating, wa, &QQuick3DWindowAttachment::preSync);
+        QObject::connect(&window, &QQuickWindow::afterFrameEnd, wa, &QQuick3DWindowAttachment::cleanupResources, Qt::DirectConnection);
     }
 
     return wa;
@@ -256,7 +258,7 @@ void QQuick3DSceneManager::cleanupNodes()
         // happen at a specified time (when graphics backend is active)
         // So build another queue for graphics assets marked for removal
         if (QSSGRenderGraphObject::hasGraphicsResources(node->type)) {
-            resourceCleanupQueue.append(node);
+            wattached->queueForCleanup(node);
             if (node->type == QSSGRenderGraphObject::Type::ResourceLoader)
                 resourceLoaders.remove(node);
         } else {
@@ -321,9 +323,29 @@ void QQuick3DWindowAttachment::preSync()
         sceneManager->preSync();
 }
 
+// Called from the render thread
+void QQuick3DWindowAttachment::cleanupResources()
+{
+    // Pass the scene managers list of resources marked for
+    // removal to the render context for deletion
+    // The render context will take ownership of the nodes
+    // and clear the list
+    Q_ASSERT(rci);
+
+    // Check if there's orphaned resources that needs to be
+    // cleaned out first.
+    if (resourceCleanupQueue.size() != 0)
+        rci->cleanupResources(resourceCleanupQueue);
+}
+
 void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet<QSSGRenderGraphObject *> &resourceLoaders)
 {
+    // Terminate old scene managers
+    qDeleteAll(sceneManagerCleanupQueue);
+    sceneManagerCleanupQueue = {};
+
     // Cleanup (+ rci update)
+    QQuick3DWindowAttachment::rci = rci;
     for (auto &sceneManager : std::as_const(sceneManagers)) {
         sceneManager->rci = rci;
         sceneManager->cleanupNodes();
@@ -349,8 +371,40 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
         for (auto &sceneManager : std::as_const(sceneManagers))
             emit sceneManager->needsUpdate();
     }
+
+    // Prepare pending (adopted) resources for clean-up (will happen as a result of afterFrameEnd()).
+    for (const auto &pr : std::as_const(pendingResourceCleanupQueue))
+        resourceCleanupQueue.insert(pr);
+    pendingResourceCleanupQueue.clear();
 }
 
 QQuickWindow *QQuick3DWindowAttachment::window() const { return qobject_cast<QQuickWindow *>(parent()); }
+
+void QQuick3DWindowAttachment::registerSceneManager(QQuick3DSceneManager &manager)
+{
+    if (!sceneManagers.contains(&manager)) {
+        // Sanity check: This should not happen.
+        if ((manager.rci && rci) && (manager.rci != rci))
+            qWarning() << "render context differs, this shouldn't happen!";
+        sceneManagers.push_back(&manager);
+    }
+}
+
+void QQuick3DWindowAttachment::unregisterSceneManager(QQuick3DSceneManager &manager)
+{
+    sceneManagers.removeAll(&manager);
+}
+
+void QQuick3DWindowAttachment::queueForCleanup(QSSGRenderGraphObject *obj)
+{
+    Q_ASSERT(QSSGRenderGraphObject::hasGraphicsResources(obj->type));
+    pendingResourceCleanupQueue.push_back(obj);
+}
+
+void QQuick3DWindowAttachment::queueForCleanup(QQuick3DSceneManager *manager)
+{
+    if (!sceneManagerCleanupQueue.contains(manager))
+        sceneManagerCleanupQueue.push_back(manager);
+}
 
 QT_END_NAMESPACE

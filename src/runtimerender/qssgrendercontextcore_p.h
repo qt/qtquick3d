@@ -84,6 +84,7 @@ public:
     QRect scissorRect() const { return m_scissorRect; }
 
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
+    void cleanupResources(QSet<QSSGRenderGraphObject *> &resources);
     void cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer);
     void resetResourceCounters(QSSGRenderLayer *inLayer);
 

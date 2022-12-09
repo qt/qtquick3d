@@ -77,15 +77,16 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
         theRenderData->rhiRender();
 }
 
-void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
+template<typename Container>
+static void cleanupResourcesImpl(const QSSGRenderContextInterface &rci, const Container &resources)
 {
-    const auto &rhi = contextInterface()->rhiContext();
+    const auto &rhi = rci.rhiContext();
     if (!rhi->isValid())
         return;
 
-    const auto &bufferManager = contextInterface()->bufferManager();
+    const auto &bufferManager = rci.bufferManager();
 
-    for (auto resource : resources) {
+    for (const auto &resource : resources) {
         if (resource->type == QSSGRenderGraphObject::Type::Geometry) {
             auto geometry = static_cast<QSSGRenderGeometry*>(resource);
             bufferManager->releaseGeometry(geometry);
@@ -104,6 +105,17 @@ void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
 
         delete resource;
     }
+}
+
+void QSSGRenderer::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
+{
+    cleanupResourcesImpl(*m_contextInterface, resources);
+    resources.clear();
+}
+
+void QSSGRenderer::cleanupResources(QSet<QSSGRenderGraphObject *> &resources)
+{
+    cleanupResourcesImpl(*m_contextInterface, resources);
     resources.clear();
 }
 

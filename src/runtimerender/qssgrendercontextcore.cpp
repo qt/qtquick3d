@@ -144,6 +144,11 @@ void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *>
     m_renderer->cleanupResources(resources);
 }
 
+void QSSGRenderContextInterface::cleanupResources(QSet<QSSGRenderGraphObject *> &resources)
+{
+    m_renderer->cleanupResources(resources);
+}
+
 void QSSGRenderContextInterface::cleanupUnreferencedBuffers(QSSGRenderLayer *inLayer)
 {
     // Now check for unreferenced buffers and release them if necessary

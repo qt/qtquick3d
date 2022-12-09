@@ -66,6 +66,7 @@ public:
     void rhiRender(QSSGRenderLayer &inLayer);
 
     void cleanupResources(QList<QSSGRenderGraphObject*> &resources);
+    void cleanupResources(QSet<QSSGRenderGraphObject*> &resources);
 
     QSSGLayerRenderData *getOrCreateLayerRenderData(QSSGRenderLayer &layer);
 
