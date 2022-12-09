@@ -38,23 +38,23 @@ public:
     ~QQuick3DWindowAttachment() override;
 
     Q_INVOKABLE void preSync();
+    Q_INVOKABLE void cleanupResources();
     Q_INVOKABLE void synchronize(QSSGRenderContextInterface *rci, QSet<QSSGRenderGraphObject *> &resourceLoaders);
 
     QQuickWindow *window() const;
 
-    void registerSceneManager(QQuick3DSceneManager &manager)
-    {
-        if (!sceneManagers.contains(&manager))
-            sceneManagers.push_back(&manager);
-    }
+    void registerSceneManager(QQuick3DSceneManager &manager);
+    void unregisterSceneManager(QQuick3DSceneManager &manager);
 
-    void unregisterSceneManager(QQuick3DSceneManager &manager)
-    {
-        sceneManagers.removeAll(&manager);
-    }
+    void queueForCleanup(QSSGRenderGraphObject *obj);
+    void queueForCleanup(QQuick3DSceneManager *manager);
 
 private:
+    QSSGRenderContextInterface *rci = nullptr;
     QList<QQuick3DSceneManager *> sceneManagers;
+    QList<QQuick3DSceneManager *> sceneManagerCleanupQueue;
+    QList<QSSGRenderGraphObject *> pendingResourceCleanupQueue;
+    QSet<QSSGRenderGraphObject *> resourceCleanupQueue;
 };
 
 class Q_QUICK3D_PRIVATE_EXPORT QQuick3DSceneManager : public QObject

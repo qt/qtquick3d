@@ -115,7 +115,6 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void invalidateSceneGraph();
-    void cleanupResources();
 
 Q_SIGNALS:
     void cameraChanged();
