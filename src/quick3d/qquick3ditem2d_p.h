@@ -64,9 +64,9 @@ public:
     void addChildItem(QQuickItem *item);
     void removeChildItem(QQuickItem *item);
     QQuickItem *contentItem() const;
+    void itemDestroyed(QQuickItem *item) override;
 
 private Q_SLOTS:
-    void sourceItemDestroyed(QObject *item);
     void invalidated();
     void updatePicking();
     void derefWindow(QObject *win);
