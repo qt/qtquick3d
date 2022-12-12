@@ -274,10 +274,10 @@
     Specifies the camera node to control. This is a required property and should
     be a child of the \l origin node.
 */
-/*! \qmlproperty QtQuick3D::Node OrbitCameraController::xSpeed
+/*! \qmlproperty real OrbitCameraController::xSpeed
     Specifies the speed of navigation when the mouse is moved along the X axis.
 */
-/*! \qmlproperty QtQuick3D::Node OrbitCameraController::ySpeed
+/*! \qmlproperty real OrbitCameraController::ySpeed
     Specifies the speed of navigation when the mouse is moved along the Y axis.
 */
 /*! \qmlproperty bool OrbitCameraController::xInvert
