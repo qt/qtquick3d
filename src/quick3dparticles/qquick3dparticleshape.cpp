@@ -122,10 +122,8 @@ QVector3D QQuick3DParticleShape::getPosition(int particleIndex)
         return randomPositionSphere(particleIndex);
     case QQuick3DParticleShape::ShapeType::Cylinder:
         return randomPositionCylinder(particleIndex);
-    default:
-        Q_ASSERT(false);
     }
-    return QVector3D();
+    Q_UNREACHABLE_RETURN(QVector3D());
 }
 
 QVector3D QQuick3DParticleShape::randomPositionCube(int particleIndex) const

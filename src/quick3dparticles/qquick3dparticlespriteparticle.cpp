@@ -323,10 +323,9 @@ static QSSGRenderParticles::BlendMode mapBlendMode(QQuick3DParticleSpriteParticl
         return QSSGRenderParticles::BlendMode::Screen;
     case QQuick3DParticleSpriteParticle::Multiply:
         return QSSGRenderParticles::BlendMode::Multiply;
-    default:
-        Q_ASSERT(false);
-        return QSSGRenderParticles::BlendMode::SourceOver;
     }
+
+    Q_UNREACHABLE_RETURN(QSSGRenderParticles::BlendMode::SourceOver);
 }
 
 QSSGRenderParticles::FeatureLevel QQuick3DParticleSpriteParticle::mapFeatureLevel(QQuick3DParticleSpriteParticle::FeatureLevel level)
@@ -344,10 +343,9 @@ QSSGRenderParticles::FeatureLevel QQuick3DParticleSpriteParticle::mapFeatureLeve
         return QSSGRenderParticles::FeatureLevel::MappedVLight;
     case QQuick3DParticleSpriteParticle::AnimatedVLight:
         return QSSGRenderParticles::FeatureLevel::AnimatedVLight;
-    default:
-        Q_ASSERT(false);
-        return QSSGRenderParticles::FeatureLevel::Simple;
     }
+
+    Q_UNREACHABLE_RETURN(QSSGRenderParticles::FeatureLevel::Simple);
 }
 
 QSSGRenderGraphObject *QQuick3DParticleSpriteParticle::ParticleUpdateNode::updateSpatialNode(QSSGRenderGraphObject *node)

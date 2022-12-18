@@ -3,6 +3,7 @@
 
 #include "qssgrhicontext_p.h"
 #include <QtQuick3DUtils/private/qssgmesh_p.h>
+#include <QtQuick3DUtils/private/qssgassert_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderableimage_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 #include <QtQuick3DUtils/private/qssgutils_p.h>
@@ -91,11 +92,11 @@ QRhiGraphicsPipeline::Topology QSSGRhiInputAssemblerState::toTopology(QSSGRender
         return QRhiGraphicsPipeline::TriangleFan;
     case QSSGRenderDrawMode::Triangles:
         return QRhiGraphicsPipeline::Triangles;
-    default:
-        break;
+    case QSSGRenderDrawMode::LineLoop:
+        QSSG_ASSERT_X(false, "LineLoop draw mode is not supported", return QRhiGraphicsPipeline::Triangles);
     }
-    Q_ASSERT(false);
-    return QRhiGraphicsPipeline::Triangles;
+
+    Q_UNREACHABLE_RETURN(QRhiGraphicsPipeline::Triangles);
 }
 
 void QSSGRhiInputAssemblerState::bakeVertexInputLocations(const QSSGRhiShaderPipeline &shaders, int instanceBufferBinding)
@@ -163,11 +164,11 @@ QRhiGraphicsPipeline::CullMode QSSGRhiGraphicsPipelineState::toCullMode(QSSGCull
     case QSSGCullFaceMode::FrontAndBack:
         qWarning("FrontAndBack cull mode not supported");
         return QRhiGraphicsPipeline::None;
-    default:
-        break;
+    case QSSGCullFaceMode::Unknown:
+        return QRhiGraphicsPipeline::None;
     }
-    Q_ASSERT(false);
-    return QRhiGraphicsPipeline::None;
+
+    Q_UNREACHABLE_RETURN(QRhiGraphicsPipeline::None);
 }
 
 void QSSGRhiShaderPipeline::addStage(const QRhiShaderStage &stage, StageFlags flags)

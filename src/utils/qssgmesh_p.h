@@ -210,10 +210,8 @@ struct Q_QUICK3DUTILS_EXPORT RuntimeMeshData // for custom geometry (QQuick3DGeo
             case TargetNormalSemantic:      return 3;
             case TargetTangentSemantic:     return 3;
             case TargetBinormalSemantic:    return 3;
-            default:
-                Q_ASSERT(false);
-                return 0;
             }
+            Q_UNREACHABLE_RETURN(0);
         }
     };
 
@@ -357,10 +355,8 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
         case Mesh::ComponentType::Float16: return 2;
         case Mesh::ComponentType::Float32: return 4;
         case Mesh::ComponentType::Float64: return 8;
-        default:
-            Q_ASSERT(false);
-            return 0;
         }
+        Q_UNREACHABLE_RETURN(0);
     }
 
     static const char *getPositionAttrName() { return "attr_pos"; }

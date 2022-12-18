@@ -489,9 +489,6 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
 
         theKeyProp.setEnabled(inShaderKey, true);
         switch (inImage.m_mappingMode) {
-        default:
-            Q_ASSERT(false);
-            // fallthrough intentional
         case QSSGRenderImage::MappingModes::Normal:
             break;
         case QSSGRenderImage::MappingModes::Environment:
