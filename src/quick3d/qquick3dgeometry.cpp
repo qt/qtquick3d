@@ -673,10 +673,9 @@ static inline QSSGMesh::Mesh::DrawMode mapPrimitiveType(QQuick3DGeometry::Primit
         return QSSGMesh::Mesh::DrawMode::TriangleFan;
     case QQuick3DGeometry::PrimitiveType::Triangles:
         return QSSGMesh::Mesh::DrawMode::Triangles;
-    default:
-        Q_ASSERT(false);
-        return QSSGMesh::Mesh::DrawMode::Triangles;
     }
+
+    Q_UNREACHABLE_RETURN(QSSGMesh::Mesh::DrawMode::Triangles);
 }
 
 static inline QSSGMesh::RuntimeMeshData::Attribute::Semantic mapSemantic(QQuick3DGeometry::Attribute::Semantic s)
@@ -710,10 +709,9 @@ static inline QSSGMesh::RuntimeMeshData::Attribute::Semantic mapSemantic(QQuick3
         return QSSGMesh::RuntimeMeshData::Attribute::TargetTangentSemantic;
     case QQuick3DGeometry::Attribute::TargetBinormalSemantic:
         return QSSGMesh::RuntimeMeshData::Attribute::TargetBinormalSemantic;
-    default:
-        Q_ASSERT(false);
-        return QSSGMesh::RuntimeMeshData::Attribute::PositionSemantic;
     }
+
+    Q_UNREACHABLE_RETURN(QSSGMesh::RuntimeMeshData::Attribute::PositionSemantic);
 }
 
 static inline QSSGMesh::Mesh::ComponentType mapComponentType(QQuick3DGeometry::Attribute::ComponentType t)
@@ -727,10 +725,9 @@ static inline QSSGMesh::Mesh::ComponentType mapComponentType(QQuick3DGeometry::A
         return QSSGMesh::Mesh::ComponentType::Int32;
     case QQuick3DGeometry::Attribute::F32Type:
         return QSSGMesh::Mesh::ComponentType::Float32;
-    default:
-        Q_ASSERT(false);
-        return QSSGMesh::Mesh::ComponentType::Float32;
     }
+
+    Q_UNREACHABLE_RETURN(QSSGMesh::Mesh::ComponentType::Float32);
 }
 
 /*!

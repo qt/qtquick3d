@@ -71,10 +71,9 @@ inline const char *toString(QSSGRenderComponentType value)
         return "Float32";
     case QSSGRenderComponentType::Float64:
         return "Float64";
-    default:
-        break;
     }
-    return "Unknown";
+
+    Q_UNREACHABLE_RETURN("Unknown");
 }
 
 inline quint32 getSizeOfType(QSSGRenderComponentType value)
@@ -102,11 +101,9 @@ inline quint32 getSizeOfType(QSSGRenderComponentType value)
         return sizeof(float);
     case QSSGRenderComponentType::Float64:
         return sizeof(double);
-    default:
-        break;
     }
-    Q_ASSERT(false);
-    return 0;
+
+    Q_UNREACHABLE_RETURN(0);
 }
 
 struct QSSGRenderTextureFormat
@@ -966,7 +963,7 @@ enum class QSSGRenderDrawMode // stored in mesh files, the values must not chang
 {
     Points = 1,
     LineStrip,
-    LineLoop,
+    LineLoop, // Not supported
     Lines,
     TriangleStrip,
     TriangleFan,
