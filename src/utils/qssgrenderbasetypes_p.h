@@ -904,15 +904,6 @@ inline const char *toString(QSSGRenderTextureFormat::Format value)
     return QSSGRenderTextureFormat(value).toString();
 }
 
-enum class QSSGRenderTextureSwizzleMode
-{
-    NoSwizzle = 0,
-    L8toR8,
-    A8toR8,
-    L8A8toRG8,
-    L16toR16
-};
-
 enum class QSSGRenderTextureFilterOp
 {
     None = 0,
