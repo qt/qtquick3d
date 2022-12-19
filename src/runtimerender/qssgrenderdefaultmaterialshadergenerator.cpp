@@ -1203,9 +1203,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 
     if (baseImage) {
-        QByteArray texSwizzle;
-        QByteArray lookupSwizzle;
-
         const bool hasIdentityMap = identityImages.contains(baseImage);
         if (hasIdentityMap)
             generateImageUVSampler(vertexShader, fragmentShader, inKey, *baseImage, imageFragCoords, baseImage->m_imageNode.m_indexUV);
@@ -1216,7 +1213,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
         const auto &names = imageStringTable[int(baseImage->m_mapType)];
         // Diffuse and BaseColor maps need to converted to linear color space
         fragmentShader.addInclude("tonemapping.glsllib");
-        fragmentShader << "    vec4 qt_base_texture_color" << texSwizzle << " = qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << "))" << lookupSwizzle << ";\n";
+        fragmentShader << "    vec4 qt_base_texture_color = qt_sRGBToLinear(texture2D(" << names.imageSampler << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << "));\n";
         fragmentShader << "    qt_diffuseColor *= qt_base_texture_color;\n";
     }
 
@@ -1644,9 +1641,6 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     texColorDeclared = true;
                 }
 
-                QByteArray texSwizzle;
-                QByteArray lookupSwizzle;
-
                 const bool hasIdentityMap = identityImages.contains(image);
                 if (hasIdentityMap)
                     generateImageUVSampler(vertexShader, fragmentShader, inKey, *image, imageFragCoords, image->m_imageNode.m_indexUV);
@@ -1654,8 +1648,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                     generateImageUVCoordinates(vertexShader, fragmentShader, inKey, *image, enableParallaxMapping, image->m_imageNode.m_indexUV);
 
                 const auto &names = imageStringTable[int(image->m_mapType)];
-                fragmentShader << "    qt_texture_color" << texSwizzle << " = texture2D(" << names.imageSampler
-                               << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ")" << lookupSwizzle << ";\n";
+                fragmentShader << "    qt_texture_color = texture2D(" << names.imageSampler
+                               << ", " << (hasIdentityMap ? imageFragCoords : names.imageFragCoords) << ");\n";
 
                 switch (image->m_mapType) {
                 case QSSGRenderableImage::Type::Specular:
