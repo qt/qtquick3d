@@ -109,34 +109,6 @@ inline quint32 getSizeOfType(QSSGRenderComponentType value)
     return 0;
 }
 
-enum class QSSGRenderInputAttribute : quint32
-{
-    Position                = 0x00000001,
-    Normal                  = 0x00000002,
-    Tangent                 = 0x00000004,
-    Binormal                = 0x00000008,
-    TexCoords0              = 0x00000010,
-    TexCoords1              = 0x00000020,
-    Color                   = 0x00000040,
-    TargetPosition0         = 0x00000080,
-    TargetPosition1         = 0x00000100,
-    TargetPosition2         = 0x00000200,
-    TargetPosition3         = 0x00000400,
-    TargetPosition4         = 0x00000800,
-    TargetPosition5         = 0x00001000,
-    TargetPosition6         = 0x00002000,
-    TargetPosition7         = 0x00004000,
-    TargetNormal0           = 0x00008000,
-    TargetNormal1           = 0x00010000,
-    TargetNormal2           = 0x00020000,
-    TargetNormal3           = 0x00040000,
-    TargetTangent0          = 0x00080000,
-    TargetTangent1          = 0x00100000,
-    TargetBinormal0         = 0x00800000,
-    TargetBinormal1         = 0x01000000
-};
-Q_DECLARE_FLAGS(QSSGRenderInputAttributes, QSSGRenderInputAttribute);
-
 struct QSSGRenderTextureFormat
 {
     enum Format : quint8 {
