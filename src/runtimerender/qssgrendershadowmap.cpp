@@ -184,11 +184,11 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
             }
             Q_ASSERT(pEntry->m_rhiRenderTargets.size() == 6);
 
-            for (int face = 0; face < 6; ++face) {
-                QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[face]);
+            for (const auto face : QSSGRenderTextureCubeFaces) {
+                QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[quint8(face)]);
                 if (!rt) {
                     QRhiColorAttachment att(pEntry->m_rhiDepthCube);
-                    att.setLayer(face); // 6 render targets, each referencing one face of the cubemap
+                    att.setLayer(quint8(face)); // 6 render targets, each referencing one face of the cubemap
                     QRhiTextureRenderTargetDescription rtDesc;
                     rtDesc.setColorAttachments({ att });
                     rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
@@ -200,7 +200,7 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                     if (!rt->create())
                         qWarning("Failed to build shadow map render target");
                 }
-                rt->setName(rtName + QByteArrayLiteral(" shadow cube face ") + QByteArray::number(face));
+                rt->setName(rtName + QByteArrayLiteral(" shadow cube face: ") + QSSGBaseTypeHelpers::displayName(face));
             }
 
             // blurring cubemap happens via multiple render targets (all faces attached to COLOR0..5)
@@ -208,9 +208,9 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                 if (!pEntry->m_rhiBlurRenderTarget0) {
                     // blur X: depthCube -> cubeCopy
                     QRhiColorAttachment att[6];
-                    for (int face = 0; face < 6; ++face) {
-                        att[face].setTexture(pEntry->m_rhiCubeCopy);
-                        att[face].setLayer(face);
+                    for (const auto face : QSSGRenderTextureCubeFaces) {
+                        att[quint8(face)].setTexture(pEntry->m_rhiCubeCopy);
+                        att[quint8(face)].setLayer(quint8(face));
                     }
                     QRhiTextureRenderTargetDescription rtDesc;
                     rtDesc.setColorAttachments(att, att + 6);
@@ -224,9 +224,9 @@ void QSSGRenderShadowMap::addShadowMapEntry(qint32 lightIdx,
                 if (!pEntry->m_rhiBlurRenderTarget1) {
                     // blur Y: cubeCopy -> depthCube
                     QRhiColorAttachment att[6];
-                    for (int face = 0; face < 6; ++face) {
-                        att[face].setTexture(pEntry->m_rhiDepthCube);
-                        att[face].setLayer(face);
+                    for (const auto face : QSSGRenderTextureCubeFaces) {
+                        att[quint8(face)].setTexture(pEntry->m_rhiDepthCube);
+                        att[quint8(face)].setLayer(quint8(face));
                     }
                     QRhiTextureRenderTargetDescription rtDesc;
                     rtDesc.setColorAttachments(att, att + 6);

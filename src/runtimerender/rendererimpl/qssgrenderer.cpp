@@ -1855,19 +1855,19 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
             pEntry->m_lightView = QMatrix4x4();
 
             const bool swapYFaces = !rhi->isYUpInFramebuffer();
-            for (int face = 0; face < 6; ++face) {
-                theCameras[face].calculateViewProjectionMatrix(pEntry->m_lightVP);
-                pEntry->m_lightCubeView[face] = theCameras[face].globalTransform.inverted(); // pre-calculate this for the material
+            for (const auto face : QSSGRenderTextureCubeFaces) {
+                theCameras[quint8(face)].calculateViewProjectionMatrix(pEntry->m_lightVP);
+                pEntry->m_lightCubeView[quint8(face)] = theCameras[quint8(face)].globalTransform.inverted(); // pre-calculate this for the material
 
                 rhiPrepareResourcesForShadowMap(rhiCtx, passKey, globalRenderProperties, pEntry, &ps, &depthAdjust,
-                                                sortedOpaqueObjects, theCameras[face], false, face);
+                                                sortedOpaqueObjects, theCameras[quint8(face)], false, quint8(face));
             }
 
-            for (int face = 0; face < 6; ++face) {
+            for (const auto face : QSSGRenderTextureCubeFaces) {
                 // Render into one face of the cubemap texture pEntry->m_rhiDephCube, using
                 // pEntry->m_rhiDepthStencil as the (throwaway) depth/stencil buffer.
 
-                int outFace = face;
+                QSSGRenderTextureCubeFace outFace = face;
                 // FACE  S  T               GL
                 // +x   -z, -y   right
                 // -x   +z, -y   left
@@ -1885,16 +1885,16 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 if (swapYFaces) {
                     // +Y and -Y faces get swapped (D3D, Vulkan, Metal).
                     // See shadowMapping.glsllib. This is complemented there by reversing T as well.
-                    if (outFace == 2)
-                        outFace = 3;
-                    else if (outFace == 3)
-                        outFace = 2;
+                    if (outFace == QSSGRenderTextureCubeFace::PosY)
+                        outFace = QSSGRenderTextureCubeFace::NegY;
+                    else if (outFace == QSSGRenderTextureCubeFace::NegY)
+                        outFace = QSSGRenderTextureCubeFace::PosY;
                 }
-                QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
+                QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[quint8(outFace)];
                 cb->beginPass(rt, Qt::white, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
                 QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
                 Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, face);
+                rhiRenderOneShadowMap(rhiCtx, &ps, sortedOpaqueObjects, quint8(face));
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_")
@@ -1951,36 +1951,36 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                                          QSSGRenderCamera{QSSGRenderCamera::Type::PerspectiveCamera} };
         setupCubeReflectionCameras(reflectionProbes[i], theCameras);
         const bool swapYFaces = !rhi->isYUpInFramebuffer();
-        for (int face = 0; face < 6; ++face) {
-            theCameras[face].calculateViewProjectionMatrix(pEntry->m_viewProjection);
+        for (const auto face : QSSGRenderTextureCubeFaces) {
+            theCameras[quint8(face)].calculateViewProjectionMatrix(pEntry->m_viewProjection);
 
             rhiPrepareResourcesForReflectionMap(rhiCtx, passKey, inData, pEntry, ps,
-                                                reflectionPassObjects, theCameras[face], renderer, face);
+                                                reflectionPassObjects, theCameras[quint8(face)], renderer, quint8(face));
         }
         QRhiRenderPassDescriptor *renderPassDesc = nullptr;
-        for (int face = 0; face < 6; ++face) {
+        for (auto face : QSSGRenderTextureCubeFaces) {
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 face = pEntry->m_timeSliceFace;
 
-            int outFace = face;
+            QSSGRenderTextureCubeFace outFace = face;
             // Faces are swapped similarly to shadow maps due to differences in backends
             // Prefilter step handles correcting orientation differences in the final render
             if (swapYFaces) {
-                if (outFace == 2)
-                    outFace = 3;
-                else if (outFace == 3)
-                    outFace = 2;
+                if (outFace == QSSGRenderTextureCubeFace::PosY)
+                    outFace = QSSGRenderTextureCubeFace::NegY;
+                else if (outFace == QSSGRenderTextureCubeFace::NegY)
+                    outFace = QSSGRenderTextureCubeFace::PosY;
             }
-            QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[outFace];
+            QRhiTextureRenderTarget *rt = pEntry->m_rhiRenderTargets[quint8(outFace)];
             cb->beginPass(rt, reflectionProbes[i]->clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
             QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rt));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
-            if (renderSkybox && pEntry->m_skyBoxSrbs[face]) {
+            if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
                 auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
                 Q_ASSERT(shaderPipeline);
                 ps->shaderPipeline = shaderPipeline.data();
-                QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[face];
+                QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
                 if (!renderPassDesc)
                     renderPassDesc = rt->newCompatibleRenderPassDescriptor();
                 rt->setRenderPassDescriptor(renderPassDesc);
@@ -1989,7 +1989,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
 
             bool needsSetViewport = true;
             for (const auto &handle : reflectionPassObjects)
-                rhiRenderRenderable(rhiCtx, *ps, *handle.obj, &needsSetViewport, face);
+                rhiRenderRenderable(rhiCtx, *ps, *handle.obj, &needsSetViewport, quint8(face));
 
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
@@ -2004,11 +2004,8 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
 
         pEntry->renderMips(rhiCtx);
 
-        if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces) {
-            pEntry->m_timeSliceFace++;
-            if (pEntry->m_timeSliceFace >= 6)
-                pEntry->m_timeSliceFace = 0;
-        }
+        if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
+            pEntry->m_timeSliceFace = QSSGBaseTypeHelpers::next(pEntry->m_timeSliceFace); // Wraps
 
         if (reflectionProbes[i]->refreshMode == QSSGRenderReflectionProbe::ReflectionRefreshMode::FirstFrame)
             pEntry->m_rendered = true;

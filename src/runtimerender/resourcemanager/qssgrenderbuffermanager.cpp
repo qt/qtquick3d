@@ -515,13 +515,13 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     // Setup the 6 render targets for each cube face
     QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
     QRhiRenderPassDescriptor *renderPassDesc = nullptr;
-    for (int face = 0; face < 6; ++face) {
+    for (const auto face : QSSGRenderTextureCubeFaces) {
         QRhiColorAttachment att(envCubeMap);
-        att.setLayer(face);
+        att.setLayer(quint8(face));
         QRhiTextureRenderTargetDescription rtDesc;
         rtDesc.setColorAttachments({att});
         auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
-        renderTarget->setName(rtName + QByteArrayLiteral(" env cube face ") + QByteArray::number(face));
+        renderTarget->setName(rtName + QByteArrayLiteral(" env cube face: ") + QSSGBaseTypeHelpers::displayName(face));
         renderTarget->setDescription(rtDesc);
         if (!renderPassDesc)
             renderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();
@@ -647,25 +647,25 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     }
     views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, 1.0), QVector3D(0.0f, -1.0f, 0.0f)));
     views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, -1.0), QVector3D(0.0f, -1.0f, 0.0f)));
-    for (int face = 0; face < 6; ++face) {
-        rub->updateDynamicBuffer(uBuf, face * ubufElementSize, 64, mvp.constData());
-        rub->updateDynamicBuffer(uBuf, face * ubufElementSize + 64, 64, views[face].constData());
-        rub->updateDynamicBuffer(uBufEnvMap, face * ubufEnvMapElementSize, 4, &colorSpace);
+    for (const auto face : QSSGRenderTextureCubeFaces) {
+        rub->updateDynamicBuffer(uBuf, quint8(face) * ubufElementSize, 64, mvp.constData());
+        rub->updateDynamicBuffer(uBuf, quint8(face) * ubufElementSize + 64, 64, views[quint8(face)].constData());
+        rub->updateDynamicBuffer(uBufEnvMap, quint8(face) * ubufEnvMapElementSize, 4, &colorSpace);
     }
     cb->resourceUpdate(rub);
 
-    for (int face = 0; face < 6; ++face) {
-        cb->beginPass(renderTargets[face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+    for (const auto face : QSSGRenderTextureCubeFaces) {
+        cb->beginPass(renderTargets[quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        QSSGRHICTX_STAT(context, beginRenderPass(renderTargets[face]));
+        QSSGRHICTX_STAT(context, beginRenderPass(renderTargets[quint8(face)]));
 
         // Execute render pass
         cb->setGraphicsPipeline(envMapPipeline);
         cb->setVertexInput(0, 1, &vbufBinding);
         cb->setViewport(QRhiViewport(0, 0, environmentMapSize.width(), environmentMapSize.height()));
         QVector<QPair<int, quint32>> dynamicOffset = {
-            { 0, quint32(ubufElementSize * face) },
-            { 2, quint32(ubufEnvMapElementSize * face )}
+            { 0, quint32(ubufElementSize * quint8(face)) },
+            { 2, quint32(ubufEnvMapElementSize * quint8(face) )}
         };
         cb->setShaderResources(envMapSrb, 2, dynamicOffset.constData());
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);
@@ -708,15 +708,15 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         mipLevelSizes.insert(mipLevel, levelSize);
         // Setup Render targets (6 * mipmapCount)
         QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
-        for (int face = 0; face < 6; ++face) {
+        for (const auto face : QSSGRenderTextureCubeFaces) {
             QRhiColorAttachment att(preFilteredEnvCubeMap);
-            att.setLayer(face);
+            att.setLayer(quint8(face));
             att.setLevel(mipLevel);
             QRhiTextureRenderTargetDescription rtDesc;
             rtDesc.setColorAttachments({att});
             auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
-            renderTarget->setName(rtName + QByteArrayLiteral(" env prefilter mip/face ")
-                                  + QByteArray::number(mipLevel) + QByteArrayLiteral("/") + QByteArray::number(face));
+            renderTarget->setName(rtName + QByteArrayLiteral(" env prefilter mip/face: ")
+                                  + QByteArray::number(mipLevel) + QByteArrayLiteral("/") + QSSGBaseTypeHelpers::displayName(face));
             renderTarget->setDescription(rtDesc);
             if (!renderPassDescriptorPhase2)
                 renderPassDescriptorPhase2 = renderTarget->newCompatibleRenderPassDescriptor();
@@ -819,15 +819,15 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
 
     // Render
     for (int mipLevel = 0; mipLevel < mipmapCount; ++mipLevel) {
-        for (int face = 0; face < 6; ++face) {
-            cb->beginPass(renderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-            QSSGRHICTX_STAT(context, beginRenderPass(renderTargetsMap[mipLevel][face]));
+        for (const auto face : QSSGRenderTextureCubeFaces) {
+            cb->beginPass(renderTargetsMap[mipLevel][quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            QSSGRHICTX_STAT(context, beginRenderPass(renderTargetsMap[mipLevel][quint8(face)]));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             cb->setGraphicsPipeline(prefilterPipeline);
             cb->setVertexInput(0, 1, &vbufBinding);
             cb->setViewport(QRhiViewport(0, 0, mipLevelSizes[mipLevel].width(), mipLevelSizes[mipLevel].height()));
             QVector<QPair<int, quint32>> dynamicOffsets = {
-                { 0, quint32(ubufElementSize * face) },
+                { 0, quint32(ubufElementSize * quint8(face)) },
                 { 2, quint32(ubufPrefilterElementSize * mipLevel) }
             };
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderCall);

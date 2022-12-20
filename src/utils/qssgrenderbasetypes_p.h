@@ -550,14 +550,21 @@ enum class QSSGRenderTextureTypeValue
     Translucent
 };
 
-enum class QSSGRenderTextureCubeFace
+enum class QSSGRenderTextureCubeFace : quint8
 {
-    NegX,
     PosX,
-    NegY,
+    NegX,
     PosY,
-    NegZ,
-    PosZ
+    NegY,
+    PosZ,
+    NegZ
+};
+
+// Same order as expected by QRHI!
+static constexpr QSSGRenderTextureCubeFace QSSGRenderTextureCubeFaces[] {
+    QSSGRenderTextureCubeFace::PosX, QSSGRenderTextureCubeFace::NegX,
+    QSSGRenderTextureCubeFace::PosY, QSSGRenderTextureCubeFace::NegY,
+    QSSGRenderTextureCubeFace::PosZ, QSSGRenderTextureCubeFace::NegZ
 };
 
 class Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGBaseTypeHelpers
@@ -575,7 +582,15 @@ public:
     static const char *toString(QSSGRenderTextureCoordOp value);
     static const char *toString(QSSGRenderTextureFilterOp value);
 
+    static const char *displayName(QSSGRenderTextureCubeFace face);
+
     static size_t getSizeOfType(QSSGRenderComponentType type);
+
+    // Note: These will wrap around
+    static constexpr QSSGRenderTextureCubeFace next(QSSGRenderTextureCubeFace face)
+    { return (face == QSSGRenderTextureCubeFaces[5]) ? QSSGRenderTextureCubeFaces[0] : QSSGRenderTextureCubeFace(quint8(face) + 1); }
+    static constexpr QSSGRenderTextureCubeFace prev(QSSGRenderTextureCubeFace face)
+    { return (face == QSSGRenderTextureCubeFaces[0]) ? QSSGRenderTextureCubeFaces[5] : QSSGRenderTextureCubeFace(quint8(face) - 1); }
 };
 
 QT_END_NAMESPACE
