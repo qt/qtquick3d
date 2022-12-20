@@ -105,11 +105,12 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                 pEntry->m_skyBoxSrbs[i] = nullptr;
         }
 
-        for (int face = 0; face < 6; ++face) {
-            QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[face]);
+
+        for (const auto face : QSSGRenderTextureCubeFaces) {
+            QRhiTextureRenderTarget *&rt(pEntry->m_rhiRenderTargets[quint8(face)]);
             if (!rt) {
                 QRhiColorAttachment att(pEntry->m_rhiCube);
-                att.setLayer(face); // 6 render targets, each referencing one face of the cubemap
+                att.setLayer(quint8(face)); // 6 render targets, each referencing one face of the cubemap
                 QRhiTextureRenderTargetDescription rtDesc;
                 rtDesc.setColorAttachments({ att });
                 rtDesc.setDepthStencilBuffer(pEntry->m_rhiDepthStencil);
@@ -121,7 +122,7 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                 if (!rt->create())
                     qWarning("Failed to build reflection map render target");
             }
-            rt->setName(rtName + QByteArrayLiteral(" reflection cube face ") + QByteArray::number(face));
+            rt->setName(rtName + QByteArrayLiteral(" reflection cube face: ") + QSSGBaseTypeHelpers::displayName(face));
         }
 
         if (!pEntry->m_prefilterPipeline) {
@@ -137,15 +138,15 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
                 pEntry->m_prefilterMipLevelSizes.insert(mipLevel, levelSize);
                 // Setup Render targets (6 * mipmapCount)
                 QVarLengthArray<QRhiTextureRenderTarget *, 6> renderTargets;
-                for (int face = 0; face < 6; ++face) {
+                for (const auto face : QSSGRenderTextureCubeFaces) {
                     QRhiColorAttachment att(pEntry->m_rhiPrefilteredCube);
-                    att.setLayer(face);
+                    att.setLayer(quint8(face));
                     att.setLevel(mipLevel);
                     QRhiTextureRenderTargetDescription rtDesc;
                     rtDesc.setColorAttachments({att});
                     auto renderTarget = rhi->newTextureRenderTarget(rtDesc);
                     renderTarget->setName(rtName + QByteArrayLiteral(" reflection prefilter mip/face ")
-                                          + QByteArray::number(mipLevel) + QByteArrayLiteral("/") + QByteArray::number(face));
+                                          + QByteArray::number(mipLevel) + QByteArrayLiteral("/") + QSSGBaseTypeHelpers::displayName(face));
                     renderTarget->setDescription(rtDesc);
                     if (!pEntry->m_rhiPrefilterRenderPassDesc)
                         pEntry->m_rhiPrefilterRenderPassDesc = renderTarget->newCompatibleRenderPassDescriptor();
@@ -487,9 +488,9 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
     views.append(lookAt(QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0, 0.0, -1.0), QVector3D(0.0f, -1.0f, 0.0f)));
 
     rub = rhi->nextResourceUpdateBatch();
-    for (int face = 0; face < 6; ++face) {
-        rub->updateDynamicBuffer(m_prefilterVertBuffer, face * ubufElementSize, 64, mvp.constData());
-        rub->updateDynamicBuffer(m_prefilterVertBuffer, face * ubufElementSize + 64, 64, views[face].constData());
+    for (const auto face : QSSGRenderTextureCubeFaces) {
+        rub->updateDynamicBuffer(m_prefilterVertBuffer, quint8(face) * ubufElementSize, 64, mvp.constData());
+        rub->updateDynamicBuffer(m_prefilterVertBuffer, quint8(face) * ubufElementSize + 64, 64, views[quint8(face)].constData());
     }
 
     const QSize mapSize = m_rhiCube->pixelSize();
@@ -534,12 +535,12 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
         if (mipLevel > 0 && m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::AllFacesAtOnce)
             mipLevel = m_timeSliceFrame;
 
-        for (int face = 0; face < 6; ++face) {
+        for (auto face : QSSGRenderTextureCubeFaces) {
             if (m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 face = m_timeSliceFace;
 
-            cb->beginPass(m_rhiPrefilterRenderTargetsMap[mipLevel][face], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-            QSSGRHICTX_STAT(context, beginRenderPass(m_rhiPrefilterRenderTargetsMap[mipLevel][face]));
+            cb->beginPass(m_rhiPrefilterRenderTargetsMap[mipLevel][quint8(face)], QColor(0, 0, 0, 1), { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
+            QSSGRHICTX_STAT(context, beginRenderPass(m_rhiPrefilterRenderTargetsMap[mipLevel][quint8(face)]));
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
             if (mipLevel < mipmapCount - 1) {
                 // Specular pre-filtered Cube Map levels
@@ -547,7 +548,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
                 cb->setVertexInput(0, 1, &vbufBinding);
                 cb->setViewport(QRhiViewport(0, 0, m_prefilterMipLevelSizes[mipLevel].width(), m_prefilterMipLevelSizes[mipLevel].height()));
                 QVector<QPair<int, quint32>> dynamicOffsets = {
-                    { 0, quint32(ubufElementSize * face) },
+                    { 0, quint32(ubufElementSize * quint8(face)) },
                     { 2, quint32(uBufSamplesElementSize * mipLevel) }
                 };
                 cb->setShaderResources(m_prefilterSrb, 2, dynamicOffsets.constData());
@@ -557,7 +558,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
                 cb->setVertexInput(0, 1, &vbufBinding);
                 cb->setViewport(QRhiViewport(0, 0, m_prefilterMipLevelSizes[mipLevel].width(), m_prefilterMipLevelSizes[mipLevel].height()));
                 QVector<QPair<int, quint32>> dynamicOffsets = {
-                    { 0, quint32(ubufElementSize * face) },
+                    { 0, quint32(ubufElementSize * quint8(face)) },
                     { 2, quint32(uBufIrradianceElementSize) }
                 };
                 cb->setShaderResources(m_irradianceSrb, 1, dynamicOffsets.constData());

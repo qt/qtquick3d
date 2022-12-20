@@ -539,6 +539,26 @@ const char *QSSGBaseTypeHelpers::toString(QSSGRenderTextureFilterOp value)
     Q_UNREACHABLE_RETURN(nullptr);
 }
 
+const char *QSSGBaseTypeHelpers::displayName(QSSGRenderTextureCubeFace face)
+{
+    switch (face) {
+    case QSSGRenderTextureCubeFace::NegX:
+        return "-X";
+    case QSSGRenderTextureCubeFace::NegZ:
+        return "-Z";
+    case QSSGRenderTextureCubeFace::NegY:
+        return "-Y";
+    case QSSGRenderTextureCubeFace::PosY:
+        return "+Y";
+    case QSSGRenderTextureCubeFace::PosX:
+        return "+X";
+    case QSSGRenderTextureCubeFace::PosZ:
+        return "+Z";
+    }
+
+    Q_UNREACHABLE_RETURN(nullptr);
+}
+
 size_t QSSGBaseTypeHelpers::getSizeOfType(QSSGRenderComponentType type)
 {
     switch (type) {

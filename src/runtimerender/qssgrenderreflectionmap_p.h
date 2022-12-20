@@ -76,7 +76,7 @@ struct QSSGReflectionMapEntry
 
     QSSGRenderReflectionProbe::ReflectionTimeSlicing m_timeSlicing = QSSGRenderReflectionProbe::ReflectionTimeSlicing::None;
     int m_timeSliceFrame = 1;
-    int m_timeSliceFace = 0;
+    QSSGRenderTextureCubeFace m_timeSliceFace = { QSSGRenderTextureCubeFaces[0] };
     Q_QUICK3D_PROFILE_ID
 };
 
