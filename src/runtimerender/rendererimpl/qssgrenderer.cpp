@@ -1898,7 +1898,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                 cb->endPass();
                 QSSGRHICTX_STAT(rhiCtx, endRenderPass());
                 Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("shadow_cube_")
-                                               + QByteArrayView(toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
+                                               + QByteArrayView(QSSGBaseTypeHelpers::toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
             }
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
@@ -1994,7 +1994,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             cb->endPass();
             QSSGRHICTX_STAT(rhiCtx, endRenderPass());
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("reflection_cube_")
-                                           + QByteArrayView(toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
+                                           + QByteArrayView(QSSGBaseTypeHelpers::toString(static_cast<QSSGRenderTextureCubeFace>(outFace))));
 
             if (pEntry->m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;

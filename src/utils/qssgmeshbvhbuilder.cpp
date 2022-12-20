@@ -72,7 +72,7 @@ QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
     // Calculate the bounds for each triangle in whole mesh once
     quint32 indexCount = 0;
     if (m_hasIndexBuffer)
-        indexCount = m_indexBufferData.size() / getSizeOfType(m_indexBufferComponentType);
+        indexCount = m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType);
     else
         indexCount = m_vertexBufferData.size() / m_vertexStride;
     m_triangleBounds = calculateTriangleBounds(0, indexCount);
@@ -141,7 +141,7 @@ QVector<QSSGMeshBVHTriangle *> QSSGMeshBVHBuilder::calculateTriangleBounds(quint
 quint32 QSSGMeshBVHBuilder::getIndexBufferValue(quint32 index) const
 {
     quint32 result = 0;
-    const quint32 indexCount = m_indexBufferData.size() / getSizeOfType(m_indexBufferComponentType);
+    const quint32 indexCount = m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType);
     Q_ASSERT(index < indexCount);
 
     if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInteger16) {
