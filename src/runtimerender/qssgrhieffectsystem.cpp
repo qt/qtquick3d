@@ -266,7 +266,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::doRenderEffect(const QSSGRenderEffect
             // f is now either Unknown (common case), or if the effect overrides the output format, then that
             QRhiTexture::Format rhiFormat = f == QSSGRenderTextureFormat::Unknown ?
                         currentInput->texture->format() : QSSGBufferManager::toRhiFormat(f);
-            qCDebug(lcEffectSystem) << "      Target format override" << toString(f) << "Effective RHI format" << rhiFormat;
+            qCDebug(lcEffectSystem) << "      Target format override" << QSSGBaseTypeHelpers::toString(f) << "Effective RHI format" << rhiFormat;
             // Make sure we use different names for each effect inside one frame
             QByteArray tmpName = QByteArrayLiteral("__output_").append(QByteArray::number(m_currentUbufIndex));
             currentOutput = getTexture(tmpName, m_outSize, rhiFormat, true, inEffect);

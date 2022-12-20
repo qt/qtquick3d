@@ -46,67 +46,24 @@ enum class QSSGRenderComponentType // stored in mesh files, the values must not 
     Float64
 };
 
-inline const char *toString(QSSGRenderComponentType value)
+enum class QSSGRenderDrawMode // stored in mesh files, the values must not change, must match Mesh::DrawMode
 {
-    switch (value) {
-    case QSSGRenderComponentType::UnsignedInteger8:
-        return "UnsignedInteger8";
-    case QSSGRenderComponentType::Integer8:
-        return "Integer8";
-    case QSSGRenderComponentType::UnsignedInteger16:
-        return "UnsignedInteger16";
-    case QSSGRenderComponentType::Integer16:
-        return "Integer16";
-    case QSSGRenderComponentType::UnsignedInteger32:
-        return "UnsignedInteger32";
-    case QSSGRenderComponentType::Integer32:
-        return "Integer32";
-    case QSSGRenderComponentType::UnsignedInteger64:
-        return "UnsignedInteger64";
-    case QSSGRenderComponentType::Integer64:
-        return "Integer64";
-    case QSSGRenderComponentType::Float16:
-        return "Float16";
-    case QSSGRenderComponentType::Float32:
-        return "Float32";
-    case QSSGRenderComponentType::Float64:
-        return "Float64";
-    }
+    Points = 1,
+    LineStrip,
+    LineLoop, // Not supported
+    Lines,
+    TriangleStrip,
+    TriangleFan,
+    Triangles
+};
 
-    Q_UNREACHABLE_RETURN("Unknown");
-}
-
-inline quint32 getSizeOfType(QSSGRenderComponentType value)
+enum class QSSGRenderWinding // stored in mesh files, the values must not change, must match Mesh::Winding
 {
-    switch (value) {
-    case QSSGRenderComponentType::UnsignedInteger8:
-        return sizeof(quint8);
-    case QSSGRenderComponentType::Integer8:
-        return sizeof(qint8);
-    case QSSGRenderComponentType::UnsignedInteger16:
-        return sizeof(quint16);
-    case QSSGRenderComponentType::Integer16:
-        return sizeof(qint16);
-    case QSSGRenderComponentType::UnsignedInteger32:
-        return sizeof(quint32);
-    case QSSGRenderComponentType::Integer32:
-        return sizeof(qint32);
-    case QSSGRenderComponentType::UnsignedInteger64:
-        return sizeof(quint64);
-    case QSSGRenderComponentType::Integer64:
-        return sizeof(qint64);
-    case QSSGRenderComponentType::Float16:
-        return sizeof(qfloat16);
-    case QSSGRenderComponentType::Float32:
-        return sizeof(float);
-    case QSSGRenderComponentType::Float64:
-        return sizeof(double);
-    }
+    Clockwise = 1,
+    CounterClockwise
+};
 
-    Q_UNREACHABLE_RETURN(0);
-}
-
-struct QSSGRenderTextureFormat
+struct Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGRenderTextureFormat
 {
     enum Format : quint8 {
         Unknown = 0,
@@ -370,170 +327,7 @@ struct QSSGRenderTextureFormat
         return false;
     }
 
-    const char *toString() const
-    {
-        switch (format) {
-        case R8:
-            return "R8";
-        case R16:
-            return "R16";
-        case R16F:
-            return "R16F";
-        case R32I:
-            return "R32I";
-        case R32UI:
-            return "R32UI";
-        case R32F:
-            return "R32F";
-        case RG8:
-            return "RG8";
-        case RGBA8:
-            return "RGBA8";
-        case RGB8:
-            return "RGB8";
-        case SRGB8:
-            return "SRGB8";
-        case SRGB8A8:
-            return "SRGB8A8";
-        case RGB565:
-            return "RGB565";
-        case RGBA5551:
-            return "RGBA5551";
-        case Alpha8:
-            return "Alpha8";
-        case Luminance8:
-            return "Luminance8";
-        case Luminance16:
-            return "Luminance16";
-        case LuminanceAlpha8:
-            return "LuminanceAlpha8";
-        case RGBA16F:
-            return "RGBA16F";
-        case RG16F:
-            return "RG16F";
-        case RG32F:
-            return "RG32F";
-        case RGB32F:
-            return "RGB32F";
-        case RGBA32F:
-            return "RGBA32F";
-        case R11G11B10:
-            return "R11G11B10";
-        case RGB9E5:
-            return "RGB9E5";
-        case RGBE8:
-            return "RGBE8";
-        case RGBA_DXT1:
-            return "RGBA_DXT1";
-        case RGB_DXT1:
-            return "RGB_DXT1";
-        case RGBA_DXT3:
-            return "RGBA_DXT3";
-        case RGBA_DXT5:
-            return "RGBA_DXT5";
-        case R11_EAC_UNorm:
-            return "R11_EAC_UNorm";
-        case R11_EAC_SNorm:
-            return "R11_EAC_SNorm";
-        case RG11_EAC_UNorm:
-            return "RG11_EAC_UNorm";
-        case RG11_EAC_SNorm:
-            return "RG11_EAC_SNorm";
-        case RGB8_ETC2:
-            return "RGB8_ETC2";
-        case SRGB8_ETC2:
-            return "SRGB8_ETC2";
-        case RGB8_PunchThrough_Alpha1_ETC2:
-            return "RGB8_PunchThrough_Alpha1_ETC2";
-        case SRGB8_PunchThrough_Alpha1_ETC2:
-            return "SRGB8_PunchThrough_Alpha1_ETC2";
-        case RGBA8_ETC2_EAC:
-            return "RGBA8_ETC2_EAC";
-        case SRGB8_Alpha8_ETC2_EAC:
-            return "SRGB8_Alpha8_ETC2_EAC";
-        case RGBA_ASTC_4x4:
-            return "RGBA_ASTC_4x4";
-        case RGBA_ASTC_5x4:
-            return "RGBA_ASTC_5x4";
-        case RGBA_ASTC_5x5:
-            return "RGBA_ASTC_5x5";
-        case RGBA_ASTC_6x5:
-            return "RGBA_ASTC_6x5";
-        case RGBA_ASTC_6x6:
-            return "RGBA_ASTC_6x6";
-        case RGBA_ASTC_8x5:
-            return "RGBA_ASTC_8x5";
-        case RGBA_ASTC_8x6:
-            return "RGBA_ASTC_8x6";
-        case RGBA_ASTC_8x8:
-            return "RGBA_ASTC_8x8";
-        case RGBA_ASTC_10x5:
-            return "RGBA_ASTC_10x5";
-        case RGBA_ASTC_10x6:
-            return "RGBA_ASTC_10x6";
-        case RGBA_ASTC_10x8:
-            return "RGBA_ASTC_10x8";
-        case RGBA_ASTC_10x10:
-            return "RGBA_ASTC_10x10";
-        case RGBA_ASTC_12x10:
-            return "RGBA_ASTC_12x10";
-        case RGBA_ASTC_12x12:
-            return "RGBA_ASTC_12x12";
-        case SRGB8_Alpha8_ASTC_4x4:
-            return "SRGB8_Alpha8_ASTC_4x4";
-        case SRGB8_Alpha8_ASTC_5x4:
-            return "SRGB8_Alpha8_ASTC_5x4";
-        case SRGB8_Alpha8_ASTC_5x5:
-            return "SRGB8_Alpha8_ASTC_5x5";
-        case SRGB8_Alpha8_ASTC_6x5:
-            return "SRGB8_Alpha8_ASTC_6x5";
-        case SRGB8_Alpha8_ASTC_6x6:
-            return "SRGB8_Alpha8_ASTC_6x6";
-        case SRGB8_Alpha8_ASTC_8x5:
-            return "SRGB8_Alpha8_ASTC_8x5";
-        case SRGB8_Alpha8_ASTC_8x6:
-            return "SRGB8_Alpha8_ASTC_8x6";
-        case SRGB8_Alpha8_ASTC_8x8:
-            return "SRGB8_Alpha8_ASTC_8x8";
-        case SRGB8_Alpha8_ASTC_10x5:
-            return "SRGB8_Alpha8_ASTC_10x5";
-        case SRGB8_Alpha8_ASTC_10x6:
-            return "SRGB8_Alpha8_ASTC_10x6";
-        case SRGB8_Alpha8_ASTC_10x8:
-            return "SRGB8_Alpha8_ASTC_10x8";
-        case SRGB8_Alpha8_ASTC_10x10:
-            return "SRGB8_Alpha8_ASTC_10x10";
-        case SRGB8_Alpha8_ASTC_12x10:
-            return "SRGB8_Alpha8_ASTC_12x10";
-        case SRGB8_Alpha8_ASTC_12x12:
-            return "SRGB8_Alpha8_ASTC_12x12";
-        case BC1:
-            return "BC1";
-        case BC2:
-            return "BC2";
-        case BC3:
-            return "BC3";
-        case BC4:
-            return "BC4";
-        case BC5:
-            return "BC5";
-        case BC6H:
-            return "BC6H";
-        case BC7:
-            return "BC7";
-        case Depth16:
-            return "Depth16";
-        case Depth24:
-            return "Depth24";
-        case Depth32:
-            return "Depth32";
-        case Depth24Stencil8:
-            return "Depth24Stencil8";
-        default:
-            break;
-        }
-        return "Unknown";
-    }
+    const char *toString() const;
 
     qint32 getSizeofFormat() const
     {
@@ -868,30 +662,12 @@ struct QSSGRenderTextureFormat
     bool operator!=(const QSSGRenderTextureFormat &other) const { return format != other.format; }
 };
 
-inline const char *toString(QSSGRenderTextureFormat::Format value)
-{
-    return QSSGRenderTextureFormat(value).toString();
-}
-
 enum class QSSGRenderTextureFilterOp
 {
     None = 0,
     Nearest,
     Linear
 };
-
-inline const char *toString(QSSGRenderTextureFilterOp value)
-{
-    switch (value) {
-    case QSSGRenderTextureFilterOp::Nearest:
-        return "Nearest";
-    case QSSGRenderTextureFilterOp::Linear:
-        return "Linear";
-    default:
-        break;
-    }
-    return "Unknown";
-}
 
 enum class QSSGRenderTextureCoordOp : quint8
 {
@@ -900,21 +676,6 @@ enum class QSSGRenderTextureCoordOp : quint8
     MirroredRepeat,
     Repeat
 };
-
-inline const char *toString(QSSGRenderTextureCoordOp value)
-{
-    switch (value) {
-    case QSSGRenderTextureCoordOp::ClampToEdge:
-        return "ClampToEdge";
-    case QSSGRenderTextureCoordOp::MirroredRepeat:
-        return "MirroredRepeat";
-    case QSSGRenderTextureCoordOp::Repeat:
-        return "Repeat";
-    default:
-        break;
-    }
-    return "Unknown";
-}
 
 struct QSSGRenderVertexBufferEntry
 {
@@ -959,36 +720,6 @@ struct QSSGRenderVertexBufferEntry
     }
 };
 
-enum class QSSGRenderDrawMode // stored in mesh files, the values must not change, must match Mesh::DrawMode
-{
-    Points = 1,
-    LineStrip,
-    LineLoop, // Not supported
-    Lines,
-    TriangleStrip,
-    TriangleFan,
-    Triangles
-};
-
-enum class QSSGRenderWinding // stored in mesh files, the values must not change, must match Mesh::Winding
-{
-    Clockwise = 1,
-    CounterClockwise
-};
-
-inline const char *toString(QSSGRenderWinding value)
-{
-    switch (value) {
-    case QSSGRenderWinding::Clockwise:
-        return "Clockwise";
-    case QSSGRenderWinding::CounterClockwise:
-        return "CounterClockwise";
-    default:
-        break;
-    }
-    return "Unknown";
-}
-
 enum class QSSGCullFaceMode
 {
     Unknown = 0,
@@ -998,21 +729,6 @@ enum class QSSGCullFaceMode
     FrontAndBack, // Not exposed in the front-end
 };
 
-inline const char *toString(QSSGCullFaceMode value)
-{
-    switch (value) {
-    case QSSGCullFaceMode::Front:
-        return "Front";
-    case QSSGCullFaceMode::Back:
-        return "Back";
-    case QSSGCullFaceMode::FrontAndBack:
-        return "FrontAndBack";
-    default:
-        break;
-    }
-    return "Unknown";
-}
-
 enum class QSSGDepthDrawMode
 {
     OpaqueOnly,
@@ -1020,21 +736,6 @@ enum class QSSGDepthDrawMode
     Never,
     OpaquePrePass
 };
-
-inline const char *toString(QSSGDepthDrawMode value)
-{
-    switch (value) {
-    case QSSGDepthDrawMode::OpaqueOnly:
-        return "OpaqueOnly";
-    case QSSGDepthDrawMode::Always:
-        return "Always";
-    case QSSGDepthDrawMode::Never:
-        return "Never";
-    case QSSGDepthDrawMode::OpaquePrePass:
-        return "OpaquePrePass";
-    }
-    return "Unknown";
-}
 
 // Return coordinates in pixels but relative to this rect.
 inline QVector2D toRectRelative(const QRectF &r, const QVector2D &absoluteCoordinates)
@@ -1156,70 +857,6 @@ enum class QSSGRenderShaderDataType : quint32
     Texture,
 };
 
-inline const char *toString(QSSGRenderShaderDataType type)
-{
-    switch (type) {
-    case QSSGRenderShaderDataType::Integer: // qint32:
-        return "Integer";
-    case QSSGRenderShaderDataType::IntegerVec2: // qint32_2:
-        return "IntegerVec2";
-    case QSSGRenderShaderDataType::IntegerVec3: // qint32_3:
-                return "IntegerVec3";
-    case QSSGRenderShaderDataType::IntegerVec4: // qint32_4:
-        return "IntegerVec4";
-    case QSSGRenderShaderDataType::Boolean: // bool
-        return "Boolean";
-    case QSSGRenderShaderDataType::BooleanVec2: // bool_2:
-        return "BooleanVec2";
-    case QSSGRenderShaderDataType::BooleanVec3: // bool_3:
-        return "BooleanVec3";
-    case QSSGRenderShaderDataType::BooleanVec4: // bool_4:
-        return "BooleanVec4";
-    case QSSGRenderShaderDataType::Float: // float:
-        return "Float";
-    case QSSGRenderShaderDataType::Vec2: // QVector2D:
-        return "Vec2";
-    case QSSGRenderShaderDataType::Vec3: // QVector3D:
-        return "Vec3";
-    case QSSGRenderShaderDataType::Vec4: // QVector4D:
-        return "Vec4";
-    case QSSGRenderShaderDataType::UnsignedInteger: // quint32:
-        return "UnsignedInteger";
-    case QSSGRenderShaderDataType::UnsignedIntegerVec2: // quint32_2:
-        return "UnsignedIntegerVec2";
-    case QSSGRenderShaderDataType::UnsignedIntegerVec3: // quint32_3:
-        return "UnsignedIntegerVec3";
-    case QSSGRenderShaderDataType::UnsignedIntegerVec4: // quint32_4:
-        return "UnsignedIntegerVec4";
-    case QSSGRenderShaderDataType::Matrix3x3: // QMatrix3x3:
-        return "Matrix3x3";
-    case QSSGRenderShaderDataType::Matrix4x4: // QMatrix4x4:
-        return "Matrix4x4";
-    case QSSGRenderShaderDataType::Rgba: // QColor
-        return "Rgba";
-    case QSSGRenderShaderDataType::Size:
-        return "Size";
-    case QSSGRenderShaderDataType::SizeF:
-        return "SizeF";
-    case QSSGRenderShaderDataType::Point:
-        return "Point";
-    case QSSGRenderShaderDataType::PointF:
-        return "PointF";
-    case QSSGRenderShaderDataType::Rect:
-        return "Rect";
-    case QSSGRenderShaderDataType::RectF:
-        return "RectF";
-    case QSSGRenderShaderDataType::Quaternion:
-        return "Quaternion";
-    case QSSGRenderShaderDataType::Texture:
-        return "Texture";
-
-    case QSSGRenderShaderDataType::Unknown:
-    default:
-        return "Unknown";
-    }
-}
-
 enum class QSSGRenderTextureTypeValue
 {
     Unknown = 0,
@@ -1233,31 +870,6 @@ enum class QSSGRenderTextureTypeValue
     Translucent
 };
 
-inline const char *toString(QSSGRenderTextureTypeValue value)
-{
-    switch (value) {
-    case QSSGRenderTextureTypeValue::Unknown:
-        return "Unknown";
-    case QSSGRenderTextureTypeValue::Diffuse:
-        return "Diffuse";
-    case QSSGRenderTextureTypeValue::Specular:
-        return "Specular";
-    case QSSGRenderTextureTypeValue::Environment:
-        return "Environment";
-    case QSSGRenderTextureTypeValue::Bump:
-        return "Bump";
-    case QSSGRenderTextureTypeValue::Normal:
-        return "Normal";
-    case QSSGRenderTextureTypeValue::Emissive:
-        return "Emissive";
-    case QSSGRenderTextureTypeValue::Anisotropy:
-        return "Anisotropy";
-    case QSSGRenderTextureTypeValue::Translucent:
-        return "Translucent";
-    }
-    return nullptr;
-}
-
 enum class QSSGRenderTextureCubeFace
 {
     NegX,
@@ -1268,24 +880,23 @@ enum class QSSGRenderTextureCubeFace
     PosZ
 };
 
-inline const char *toString(QSSGRenderTextureCubeFace value)
+class Q_QUICK3DUTILS_PRIVATE_EXPORT QSSGBaseTypeHelpers
 {
-    switch (value) {
-    case QSSGRenderTextureCubeFace::NegX:
-        return "NegX";
-    case QSSGRenderTextureCubeFace::NegZ:
-        return "NegZ";
-    case QSSGRenderTextureCubeFace::NegY:
-        return "NegY";
-    case QSSGRenderTextureCubeFace::PosY:
-        return "PosY";
-    case QSSGRenderTextureCubeFace::PosX:
-        return "PosX";
-    case QSSGRenderTextureCubeFace::PosZ:
-        return "PosZ";
-    }
-    return nullptr;
-}
+    QSSGBaseTypeHelpers() = default;
+public:
+    // Enum as string
+    static const char *toString(QSSGRenderTextureCubeFace value);
+    static const char *toString(QSSGRenderTextureTypeValue value);
+    static const char *toString(QSSGDepthDrawMode value);
+    static const char *toString(QSSGRenderWinding value);
+    static const char *toString(QSSGCullFaceMode value);
+    static const char *toString(QSSGRenderComponentType value);
+    static const char *toString(QSSGRenderTextureFormat::Format value);
+    static const char *toString(QSSGRenderTextureCoordOp value);
+    static const char *toString(QSSGRenderTextureFilterOp value);
+
+    static size_t getSizeOfType(QSSGRenderComponentType type);
+};
 
 QT_END_NAMESPACE
 

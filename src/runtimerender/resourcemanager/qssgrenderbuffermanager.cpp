@@ -676,7 +676,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
         cb->endPass();
         QSSGRHICTX_STAT(context, endRenderPass());
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_map_")  \
-                                          + QByteArrayLiteral("face_") + QByteArrayView(toString(QSSGRenderTextureCubeFace(face))));
+                                          + QByteArrayLiteral("face_") + QByteArrayView(QSSGBaseTypeHelpers::toString(static_cast<QSSGRenderTextureCubeFace>(face))));
     }
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_cube_generation"));
@@ -839,7 +839,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
             cb->endPass();
             QSSGRHICTX_STAT(context, endRenderPass());
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("environment_map_level_") + QByteArray::number(mipLevel) \
-                                              + QByteArrayLiteral("_face_") + QByteArrayView(toString(QSSGRenderTextureCubeFace(face))));
+                                              + QByteArrayLiteral("_face_") + QByteArrayView(QSSGBaseTypeHelpers::toString(QSSGRenderTextureCubeFace(face))));
         }
     }
     cb->debugMarkEnd();
@@ -1102,7 +1102,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     QRhiCommandBuffer::IndexFormat rhiIndexFormat = QRhiCommandBuffer::IndexUInt16;
     if (!indexBuffer.data.isEmpty()) {
         indexBufComponentType = QSSGRenderComponentType(indexBuffer.componentType);
-        const quint32 sizeofType = getSizeOfType(indexBufComponentType);
+        const quint32 sizeofType = QSSGBaseTypeHelpers::getSizeOfType(indexBufComponentType);
         if (sizeofType == 2 || sizeofType == 4) {
             // Ensure type is unsigned; else things will fail in rendering pipeline.
             if (indexBufComponentType == QSSGRenderComponentType::Integer16)

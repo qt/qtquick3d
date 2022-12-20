@@ -89,7 +89,7 @@ struct QSSGAllocateBuffer : public QSSGCommand
     {
     }
     void addDebug(QDebug &stream) const {
-        stream << "name:" <<  m_name << "format:" << m_format.toString() << "size multiplier:" << m_sizeMultiplier << "filter:" << toString(m_filterOp) << "tiling:" << toString(m_texCoordOp) << "sceneLifetime:" << m_bufferFlags.isSceneLifetime();
+        stream << "name:" <<  m_name << "format:" << m_format.toString() << "size multiplier:" << m_sizeMultiplier << "filter:" << QSSGBaseTypeHelpers::toString(m_filterOp) << "tiling:" << QSSGBaseTypeHelpers::toString(m_texCoordOp) << "sceneLifetime:" << m_bufferFlags.isSceneLifetime();
     }
 };
 

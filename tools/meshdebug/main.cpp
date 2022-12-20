@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
                 qDebug() << "\t\tdraw mode:" << static_cast<int>(mesh.drawMode());
 
                 // Winding
-                qDebug() << "\t\twinding:" << toString(QSSGRenderWinding(mesh.winding()));
+                qDebug() << "\t\twinding:" << QSSGBaseTypeHelpers::toString(QSSGRenderWinding(mesh.winding()));
 
                 // Vertex Buffer
                 const Mesh::VertexBuffer vb = mesh.vertexBuffer();
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
                     qDebug() << "\t\t\t -- Vertex Buffer Entry" << idx << "--";
                     const Mesh::VertexBufferEntry &entry(vb.entries[idx]);
                     qDebug() << "\t\t\tname:" << entry.name;
-                    qDebug() << "\t\t\ttype:" << toString(QSSGRenderComponentType(entry.componentType));
+                    qDebug() << "\t\t\ttype:" << QSSGBaseTypeHelpers::toString(QSSGRenderComponentType(entry.componentType));
                     qDebug() << "\t\t\tcomponentCount:" << entry.componentCount;
                     qDebug() << "\t\t\tstart offset:" << entry.offset;
                 }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
                 // Index Buffer
                 const Mesh::IndexBuffer ib = mesh.indexBuffer();
                 qDebug() << "\t\t -- Index Buffer --";
-                qDebug() << "\t\tcomponentType:" << toString(QSSGRenderComponentType(ib.componentType));
+                qDebug() << "\t\tcomponentType:" << QSSGBaseTypeHelpers::toString(QSSGRenderComponentType(ib.componentType));
                 qDebug() << "\t\tdata size in bytes:" << ib.data.size();
 
                 // Subsets

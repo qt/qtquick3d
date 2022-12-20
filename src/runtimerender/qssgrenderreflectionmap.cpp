@@ -569,7 +569,7 @@ void QSSGReflectionMapEntry::renderMips(QSSGRhiContext *context)
             cb->endPass();
             QSSGRHICTX_STAT(context, endRenderPass());
             Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("reflection_map_level_") + QByteArray::number(mipLevel) \
-                                              + QByteArrayLiteral("_face_") + QByteArrayView(toString(QSSGRenderTextureCubeFace(face))));
+                                              + QByteArrayLiteral("_face_") + QByteArrayView(QSSGBaseTypeHelpers::toString(QSSGRenderTextureCubeFace(face))));
 
             if (m_timeSlicing == QSSGRenderReflectionProbe::ReflectionTimeSlicing::IndividualFaces)
                 break;
