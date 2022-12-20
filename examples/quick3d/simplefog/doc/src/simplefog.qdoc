@@ -9,7 +9,7 @@
     \image simplefog.jpg
 
     This example demonstrates the usage of the SceneEnvironment's
-    \l{SceneEnvironment::fog}{fog} property. The scene contains a number of
+    \l{QQuick3DSceneEnvironment::fog}{fog} property. The scene contains a number of
     instanced spheres, with controls that can be used to tune the various
     properties of the \l{Fog}{Fog object}.
 

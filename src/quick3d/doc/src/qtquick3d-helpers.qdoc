@@ -297,7 +297,7 @@
     \qmltype LodManager
     \inqmlmodule QtQuick3D.Helpers
     \inherits Node
-    \brief Manager that handles level of detail visibility changes
+    \brief Manager that handles level of detail visibility changes.
 
     This helper provides a way to handle level of detail changes. It works
     by changing the visibility of its child nodes based on the distance
