@@ -179,7 +179,7 @@ explored and tested before deciding on the final approach and the related
 settings.
 
 \note Lightmaps do not support two-sided surfaces. With real time lighting a
-material with a \l{QQuick3DMaterial::cullMode}{cull mode} of \l
+material with a \l{QQuick3DMaterial::cullMode}{cull mode} of \c
 Material.NoCulling automatically inverts the normal as appropriate based on the
 facing of the fragment. This is not an option for lightmaps since lightmap
 baking does not operate in view space. Therefore, avoid baked lighting for

@@ -512,7 +512,7 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
 }
 
 /*!
-    \qmlproperty enumeration QQuick3D::SceneEnvironment::tonemapMode
+    \qmlproperty enumeration QtQuick3D::SceneEnvironment::tonemapMode
     \since 6.0
 
     This property defines how colors are tonemapped before rendering. All
@@ -547,7 +547,7 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironme
 }
 
 /*!
-    \qmlproperty float QQuick3D::SceneEnvironment::skyboxBlurAmount
+    \qmlproperty float QtQuick3D::SceneEnvironment::skyboxBlurAmount
     \since 6.4
 
     This property determines how much much the skybox should be blurred when
@@ -565,7 +565,7 @@ float QQuick3DSceneEnvironment::skyboxBlurAmount() const
 }
 
 /*!
-    \qmlproperty QQuick3D::DebugSettings QQuick3D::SceneEnvironment::debugSettings
+    \qmlproperty QtQuick3D::DebugSettings QtQuick3D::SceneEnvironment::debugSettings
     \since 6.5
 
     This property specifies a \c DebugSettings object which is used to
@@ -581,7 +581,7 @@ QQuick3DDebugSettings *QQuick3DSceneEnvironment::debugSettings() const
 }
 
 /*!
-    \qmlproperty rect QQuick3D::SceneEnvironment::scissorRect
+    \qmlproperty rect QtQuick3D::SceneEnvironment::scissorRect
     \since 6.5
 
     This property defines a scissor rectangle in view coordinates, with the
@@ -887,7 +887,7 @@ void QQuick3DSceneEnvironment::setSkyboxBlurAmount(float newSkyboxBlurAmount)
 }
 
 /*!
-    \qmlproperty Lightmapper SceneEnvironment::lightmapper
+    \qmlproperty Lightmapper QtQuick3D::SceneEnvironment::lightmapper
 
     When this property is set to a valid Lightmapper object, the settings
     specified by the object will be taken into account when baking lightmaps.
@@ -1040,7 +1040,7 @@ void QQuick3DSceneEnvironment::setGridFlags(uint newGridFlags)
 
     The default value is \c false, which means ambient occlusion is disabled.
 
-    \note If \l aoStrenght or \ aoDistance is 0, then setting this property to \c true will also
+    \note If \l aoStrength or \ aoDistance is 0, then setting this property to \c true will also
     set those values appropriately to make the ambient occlusion effective.
 
     \sa aoStrength, aoDistance
@@ -1069,17 +1069,17 @@ void QQuick3DSceneEnvironment::setAoEnabled(bool newAoEnabled)
     update();
 }
 
-/*
-    \qmlproperty Fog SceneEnvironment::fog
+/*!
+    \qmlproperty QtQuick3D::Fog QtQuick3D::SceneEnvironment::fog
     \since 6.5
 
-    When this property is set to a valid \l Fog object, it is used to configure
-    the renderer's built-in fog support.
+    When this property is set to a valid \l {QtQuick3D::Fog}{Fog} object, it is
+    used to configure the renderer's built-in fog support.
 
     The default value is null, which means no fog. This is equivalent to
     setting a Fog object with \l{Fog::enabled}{enabled} set to false.
 
-    \sa Fog
+    \sa {QtQuick3D::Fog}{Fog}
  */
 
 QQuick3DFog *QQuick3DSceneEnvironment::fog() const
