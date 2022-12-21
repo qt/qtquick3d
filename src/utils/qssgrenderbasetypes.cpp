@@ -477,21 +477,21 @@ const char *QSSGBaseTypeHelpers::toString(QSSGDepthDrawMode value)
 const char *QSSGBaseTypeHelpers::toString(QSSGRenderComponentType value)
 {
     switch (value) {
-    case QSSGRenderComponentType::UnsignedInteger8:
+    case QSSGRenderComponentType::UnsignedInt8:
         return "UnsignedInt8";
-    case QSSGRenderComponentType::Integer8:
+    case QSSGRenderComponentType::Int8:
         return "Int8";
-    case QSSGRenderComponentType::UnsignedInteger16:
+    case QSSGRenderComponentType::UnsignedInt16:
         return "UnsignedInt16";
-    case QSSGRenderComponentType::Integer16:
+    case QSSGRenderComponentType::Int16:
         return "Int16";
-    case QSSGRenderComponentType::UnsignedInteger32:
+    case QSSGRenderComponentType::UnsignedInt32:
         return "UnsignedInt32";
-    case QSSGRenderComponentType::Integer32:
+    case QSSGRenderComponentType::Int32:
         return "Int32";
-    case QSSGRenderComponentType::UnsignedInteger64:
+    case QSSGRenderComponentType::UnsignedInt64:
         return "UnsignedInt64";
-    case QSSGRenderComponentType::Integer64:
+    case QSSGRenderComponentType::Int64:
         return "Int64";
     case QSSGRenderComponentType::Float16:
         return "Float16";
@@ -542,21 +542,21 @@ const char *QSSGBaseTypeHelpers::toString(QSSGRenderTextureFilterOp value)
 size_t QSSGBaseTypeHelpers::getSizeOfType(QSSGRenderComponentType type)
 {
     switch (type) {
-    case QSSGRenderComponentType::UnsignedInteger8:
+    case QSSGRenderComponentType::UnsignedInt8:
         return sizeof(quint8);
-    case QSSGRenderComponentType::Integer8:
+    case QSSGRenderComponentType::Int8:
         return sizeof(qint8);
-    case QSSGRenderComponentType::UnsignedInteger16:
+    case QSSGRenderComponentType::UnsignedInt16:
         return sizeof(quint16);
-    case QSSGRenderComponentType::Integer16:
+    case QSSGRenderComponentType::Int16:
         return sizeof(qint16);
-    case QSSGRenderComponentType::UnsignedInteger32:
+    case QSSGRenderComponentType::UnsignedInt32:
         return sizeof(quint32);
-    case QSSGRenderComponentType::Integer32:
+    case QSSGRenderComponentType::Int32:
         return sizeof(qint32);
-    case QSSGRenderComponentType::UnsignedInteger64:
+    case QSSGRenderComponentType::UnsignedInt64:
         return sizeof(quint64);
-    case QSSGRenderComponentType::Integer64:
+    case QSSGRenderComponentType::Int64:
         return sizeof(qint64);
     case QSSGRenderComponentType::Float16:
         return sizeof(qfloat16);
