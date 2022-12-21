@@ -1269,7 +1269,10 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     QSSGRenderCamera *camera = inData.camera;
     if (inCamera)
         camera = inCamera;
-    if (inObject.type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset) {
+
+    switch (inObject.type) {
+    case QSSGRenderableObject::Type::DefaultMaterialMeshSubset:
+    {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
 
         if (cubeFace < 0 && subsetRenderable.reflectionProbeIndex >= 0 && subsetRenderable.renderableFlags.testFlag(QSSGRenderableObjectFlag::ReceivesReflections))
@@ -1505,7 +1508,10 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                 dcd.ps = *ps;
             }
         }
-    } else if (inObject.type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
+        break;
+    }
+    case QSSGRenderableObject::Type::CustomMaterialMeshSubset:
+    {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
         const QSSGRenderCustomMaterial &material(subsetRenderable.customMaterial());
         QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.generator->contextInterface()->customMaterialSystem().data());
@@ -1526,15 +1532,18 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         customMaterialSystem.rhiPrepareRenderable(ps, passKey, subsetRenderable, featureSet,
                                                   material, inData, renderPassDescriptor, samples,
                                                   inCamera, cubeFace, alteredModelViewProjection, entry);
-    } else if (inObject.type == QSSGRenderableObject::Type::Particles) {
+        break;
+    }
+    case QSSGRenderableObject::Type::Particles:
+    {
         QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
         QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
         if (shaderPipeline) {
             QSSGParticleRenderer::rhiPrepareRenderable(shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples,
                                                        inCamera, cubeFace, entry);
         }
-    } else {
-        Q_ASSERT(false);
+        break;
+    }
     }
 }
 
