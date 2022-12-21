@@ -1098,18 +1098,18 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     const QSSGMesh::Mesh::VertexBuffer vertexBuffer = mesh.vertexBuffer();
     const QSSGMesh::Mesh::IndexBuffer indexBuffer = mesh.indexBuffer();
 
-    QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::UnsignedInteger16;
+    QSSGRenderComponentType indexBufComponentType = QSSGRenderComponentType::UnsignedInt16;
     QRhiCommandBuffer::IndexFormat rhiIndexFormat = QRhiCommandBuffer::IndexUInt16;
     if (!indexBuffer.data.isEmpty()) {
         indexBufComponentType = QSSGRenderComponentType(indexBuffer.componentType);
-        const quint32 sizeofType = QSSGBaseTypeHelpers::getSizeOfType(indexBufComponentType);
+        const quint32 sizeofType = quint32(QSSGBaseTypeHelpers::getSizeOfType(indexBufComponentType));
         if (sizeofType == 2 || sizeofType == 4) {
             // Ensure type is unsigned; else things will fail in rendering pipeline.
-            if (indexBufComponentType == QSSGRenderComponentType::Integer16)
-                indexBufComponentType = QSSGRenderComponentType::UnsignedInteger16;
-            if (indexBufComponentType == QSSGRenderComponentType::Integer32)
-                indexBufComponentType = QSSGRenderComponentType::UnsignedInteger32;
-            rhiIndexFormat = indexBufComponentType == QSSGRenderComponentType::UnsignedInteger32
+            if (indexBufComponentType == QSSGRenderComponentType::Int16)
+                indexBufComponentType = QSSGRenderComponentType::UnsignedInt16;
+            if (indexBufComponentType == QSSGRenderComponentType::Int32)
+                indexBufComponentType = QSSGRenderComponentType::UnsignedInt32;
+            rhiIndexFormat = indexBufComponentType == QSSGRenderComponentType::UnsignedInt32
                     ? QRhiCommandBuffer::IndexUInt32 : QRhiCommandBuffer::IndexUInt16;
         } else {
             Q_ASSERT(false);
@@ -1651,7 +1651,7 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
 
     // Build BVH
     bool hasIndexBuffer = false;
-    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::Integer32;
+    QSSGRenderComponentType indexBufferFormat = QSSGRenderComponentType::Int32;
     bool hasUV = false;
     int uvOffset = -1;
     int posOffset = -1;
@@ -1669,9 +1669,9 @@ QSSGMeshBVH *QSSGBufferManager::loadMeshBVH(QSSGRenderGeometry *geometry)
         } else if (attribute.semantic == QSSGMesh::RuntimeMeshData::Attribute::IndexSemantic) {
             hasIndexBuffer = true;
             if (attribute.componentType == QSSGMesh::Mesh::ComponentType::Int16)
-                indexBufferFormat = QSSGRenderComponentType::Integer16;
+                indexBufferFormat = QSSGRenderComponentType::Int16;
             else if (attribute.componentType == QSSGMesh::Mesh::ComponentType::Int32)
-                indexBufferFormat = QSSGRenderComponentType::Integer32;
+                indexBufferFormat = QSSGRenderComponentType::Int32;
         }
     }
 

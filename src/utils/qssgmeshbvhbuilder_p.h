@@ -31,7 +31,7 @@ public:
                        int uvOffset = -1,
                        bool hasIndexBuffer = false,
                        const QByteArray &indexBuffer = QByteArray(),
-                       QSSGRenderComponentType indexBufferType = QSSGRenderComponentType::Integer32);
+                       QSSGRenderComponentType indexBufferType = QSSGRenderComponentType::Int32);
 
     QSSGMeshBVH* buildTree();
 

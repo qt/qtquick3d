@@ -13,10 +13,10 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QSSGMesh::Mesh &mesh)
     m_vertexBufferData = vb.data;
     m_indexBufferData = ib.data;
     m_indexBufferComponentType = QSSGRenderComponentType(ib.componentType);
-    if (m_indexBufferComponentType == QSSGRenderComponentType::Integer16)
-        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger16;
-    else if (m_indexBufferComponentType == QSSGRenderComponentType::Integer32)
-        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger32;
+    if (m_indexBufferComponentType == QSSGRenderComponentType::Int16)
+        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInt16;
+    else if (m_indexBufferComponentType == QSSGRenderComponentType::Int32)
+        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInt32;
 
     // Get VertexBuffer Information
     // When using the texture coordinates, UV0 has priority but if the mesh has
@@ -55,10 +55,10 @@ QSSGMeshBVHBuilder::QSSGMeshBVHBuilder(const QByteArray &vertexBuffer,
     m_hasIndexBuffer = hasIndexBuffer;
     m_indexBufferData = indexBuffer;
     m_indexBufferComponentType = indexBufferType;
-    if (m_indexBufferComponentType == QSSGRenderComponentType::Integer16)
-        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger16;
-    else if (m_indexBufferComponentType == QSSGRenderComponentType::Integer32)
-        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInteger32;
+    if (m_indexBufferComponentType == QSSGRenderComponentType::Int16)
+        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInt16;
+    else if (m_indexBufferComponentType == QSSGRenderComponentType::Int32)
+        m_indexBufferComponentType = QSSGRenderComponentType::UnsignedInt32;
 }
 
 QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
@@ -72,7 +72,7 @@ QSSGMeshBVH* QSSGMeshBVHBuilder::buildTree()
     // Calculate the bounds for each triangle in whole mesh once
     quint32 indexCount = 0;
     if (m_hasIndexBuffer)
-        indexCount = m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType);
+        indexCount = quint32(m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType));
     else
         indexCount = m_vertexBufferData.size() / m_vertexStride;
     m_triangleBounds = calculateTriangleBounds(0, indexCount);
@@ -141,13 +141,13 @@ QVector<QSSGMeshBVHTriangle *> QSSGMeshBVHBuilder::calculateTriangleBounds(quint
 quint32 QSSGMeshBVHBuilder::getIndexBufferValue(quint32 index) const
 {
     quint32 result = 0;
-    const quint32 indexCount = m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType);
+    const quint32 indexCount = quint32(m_indexBufferData.size() / QSSGBaseTypeHelpers::getSizeOfType(m_indexBufferComponentType));
     Q_ASSERT(index < indexCount);
 
-    if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInteger16) {
+    if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInt16) {
         QSSGDataView<quint16> shortIndex(reinterpret_cast<const quint16 *>(m_indexBufferData.begin()), indexCount);
         result = shortIndex[index];
-    } else if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInteger32) {
+    } else if (m_indexBufferComponentType == QSSGRenderComponentType::UnsignedInt32) {
         QSSGDataView<quint32> longIndex(reinterpret_cast<const quint32 *>(m_indexBufferData.begin()), indexCount);
         result = longIndex[index];
     } else {

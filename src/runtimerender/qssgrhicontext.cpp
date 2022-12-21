@@ -46,7 +46,7 @@ QRhiVertexInputAttribute::Format QSSGRhiInputAssemblerState::toVertexInputFormat
         default:
             break;
         }
-    } else if (compType == QSSGRenderComponentType::UnsignedInteger32) {
+    } else if (compType == QSSGRenderComponentType::UnsignedInt32) {
         switch (numComps) {
         case 1:
             return QRhiVertexInputAttribute::UInt;
@@ -59,7 +59,7 @@ QRhiVertexInputAttribute::Format QSSGRhiInputAssemblerState::toVertexInputFormat
         default:
             break;
         }
-    } else if (compType == QSSGRenderComponentType::Integer32) {
+    } else if (compType == QSSGRenderComponentType::Int32) {
         switch (numComps) {
         case 1:
             return QRhiVertexInputAttribute::SInt;

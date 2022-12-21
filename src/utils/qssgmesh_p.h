@@ -38,34 +38,9 @@ struct AssetLodEntry;
 class Q_QUICK3DUTILS_EXPORT Mesh
 {
 public:
-    enum class DrawMode {
-        Points = 1,
-        LineStrip,
-        LineLoop,
-        Lines,
-        TriangleStrip,
-        TriangleFan,
-        Triangles
-    };
-
-    enum class Winding {
-        Clockwise = 1,
-        CounterClockwise
-    };
-
-    enum class ComponentType {
-        UnsignedInt8 = 1,
-        Int8,
-        UnsignedInt16,
-        Int16,
-        UnsignedInt32,
-        Int32,
-        UnsignedInt64,
-        Int64,
-        Float16,
-        Float32,
-        Float64
-    };
+    using DrawMode = QSSGRenderDrawMode;
+    using Winding = QSSGRenderWinding;
+    using ComponentType = QSSGRenderComponentType;
 
     struct VertexBufferEntry {
         ComponentType componentType = ComponentType::Float32;
@@ -342,22 +317,7 @@ struct Q_QUICK3DUTILS_EXPORT MeshInternal
     static void writeMeshHeader(QIODevice *device, const MeshDataHeader &header);
     static quint64 writeMeshData(QIODevice *device, const Mesh &mesh);
 
-    static int byteSizeForComponentType(Mesh::ComponentType componentType) {
-        switch (componentType) {
-        case Mesh::ComponentType::UnsignedInt8:  return 1;
-        case Mesh::ComponentType::Int8:  return 1;
-        case Mesh::ComponentType::UnsignedInt16: return 2;
-        case Mesh::ComponentType::Int16: return 2;
-        case Mesh::ComponentType::UnsignedInt32: return 4;
-        case Mesh::ComponentType::Int32: return 4;
-        case Mesh::ComponentType::UnsignedInt64: return 8;
-        case Mesh::ComponentType::Int64: return 8;
-        case Mesh::ComponentType::Float16: return 2;
-        case Mesh::ComponentType::Float32: return 4;
-        case Mesh::ComponentType::Float64: return 8;
-        }
-        Q_UNREACHABLE_RETURN(0);
-    }
+    static quint32 byteSizeForComponentType(Mesh::ComponentType componentType) { return quint32(QSSGBaseTypeHelpers::getSizeOfType(componentType)); }
 
     static const char *getPositionAttrName() { return "attr_pos"; }
     static const char *getNormalAttrName() { return "attr_norm"; }

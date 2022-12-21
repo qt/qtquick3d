@@ -33,14 +33,14 @@ QT_BEGIN_NAMESPACE
 
 enum class QSSGRenderComponentType // stored in mesh files, the values must not change, must match Mesh::ComponentType
 {
-    UnsignedInteger8 = 1,
-    Integer8,
-    UnsignedInteger16,
-    Integer16,
-    UnsignedInteger32,
-    Integer32,
-    UnsignedInteger64,
-    Integer64,
+    UnsignedInt8 = 1,
+    Int8,
+    UnsignedInt16,
+    Int16,
+    UnsignedInt32,
+    Int32,
+    UnsignedInt64,
+    Int64,
     Float16,
     Float32,
     Float64
