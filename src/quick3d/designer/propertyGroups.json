@@ -44,5 +44,10 @@
     },
     "CustomMaterial": {
         "Base":           ["shadingMode", "vertexShader", "fragmentShader", "sourceBlend", "destinationBlend", "alwaysDirty", "lineWidth"]
+    },
+    "Model": {
+        "Base":           ["source", "geometry", "materials", "castsShadows", "receivesShadows", "castsReflections", "receivesReflections", "pickable", "depthBias", "levelOfDetailBias"],
+        "Instancing":     ["instancing", "instanceRoot"],
+        "Animation":      ["skeleton", "morphTargets"]
     }
 }
