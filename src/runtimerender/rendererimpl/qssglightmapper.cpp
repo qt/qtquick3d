@@ -1552,6 +1552,10 @@ bool QSSGLightmapperPrivate::storeLightmaps()
     const int bakedLightingModelCount = bakedLightingModels.size();
     QByteArray listContents;
 
+    // will be set to the first outputFolder that's not empty/working dir
+    // else will use working dir
+    QString outputFolderForListFile;
+
     for (int lmIdx = 0; lmIdx < bakedLightingModelCount; ++lmIdx) {
         const QSSGBakedLightingModel &lm(bakedLightingModels[lmIdx]);
         // only care about the ones that want to store the lightmap image persistently
@@ -1561,7 +1565,15 @@ bool QSSGLightmapperPrivate::storeLightmaps()
         QElapsedTimer writeTimer;
         writeTimer.start();
 
-        const QString fn = QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::LightmapImage);
+        // An empty outputFolder equates to working directory
+        QString outputFolder;
+        if (!lm.model->lightmapLoadPath.startsWith(QStringLiteral(":/")))
+            outputFolder = lm.model->lightmapLoadPath;
+
+        if (outputFolderForListFile.isEmpty() && !outputFolder.isEmpty())
+            outputFolderForListFile = outputFolder;
+
+        const QString fn = QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::LightmapImage, outputFolder);
         const QByteArray fns = fn.toUtf8();
         listContents += fns;
         listContents += '\n';
@@ -1581,7 +1593,7 @@ bool QSSGLightmapperPrivate::storeLightmaps()
         const DrawInfo &bakeModelDrawInfo(drawInfos[lmIdx]);
         if (bakeModelDrawInfo.meshWithLightmapUV.isValid()) {
             writeTimer.start();
-            QFile f(QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::MeshWithLightmapUV));
+            QFile f(QSSGLightmapper::lightmapAssetPathForSave(*lm.model, QSSGLightmapper::LightmapAsset::MeshWithLightmapUV, outputFolder));
             if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                 bakeModelDrawInfo.meshWithLightmapUV.save(&f);
             } else {
@@ -1594,7 +1606,7 @@ bool QSSGLightmapperPrivate::storeLightmaps()
         } // else the mesh had a lightmap uv channel to begin with, no need to save another version of it
     }
 
-    QFile listFile(QSSGLightmapper::lightmapAssetPathForSave(QSSGLightmapper::LightmapAsset::LightmapImageList));
+    QFile listFile(QSSGLightmapper::lightmapAssetPathForSave(QSSGLightmapper::LightmapAsset::LightmapImageList, outputFolderForListFile));
     if (!listFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         qWarning("lm: Failed to create lightmap list file %s",
                  qPrintable(listFile.fileName()));
@@ -1685,28 +1697,39 @@ QString QSSGLightmapper::lightmapAssetPathForLoad(const QSSGRenderModel &model, 
     return result;
 }
 
-QString QSSGLightmapper::lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset)
+QString QSSGLightmapper::lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset, const QString& outputFolder)
 {
+    QString result = outputFolder;
+    if (!result.isEmpty() && !result.endsWith(QLatin1Char('/')))
+        result += QLatin1Char('/');
+
     switch (asset) {
     case LightmapAsset::LightmapImage:
-        return QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
+        result += QStringLiteral("qlm_%1.exr").arg(model.lightmapKey);
+        break;
     case LightmapAsset::MeshWithLightmapUV:
-        return QStringLiteral("qlm_%1.mesh").arg(model.lightmapKey);
+        result += QStringLiteral("qlm_%1.mesh").arg(model.lightmapKey);
+        break;
     default:
+        result += lightmapAssetPathForSave(asset, outputFolder);
         break;
     }
-    return lightmapAssetPathForSave(asset);
+    return result;
 }
 
-QString QSSGLightmapper::lightmapAssetPathForSave(LightmapAsset asset)
+QString QSSGLightmapper::lightmapAssetPathForSave(LightmapAsset asset, const QString& outputFolder)
 {
+    QString result = outputFolder;
+    if (!result.isEmpty() && !result.endsWith(QLatin1Char('/')))
+        result += QLatin1Char('/');
+
     switch (asset) {
     case LightmapAsset::LightmapImageList:
-        return QStringLiteral("qlm_list.txt");
+        result += QStringLiteral("qlm_list.txt");
     default:
         break;
     }
-    return QString();
+    return result;
 }
 
 QT_END_NAMESPACE

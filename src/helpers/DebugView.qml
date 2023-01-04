@@ -358,6 +358,10 @@ Pane {
                             text: "Release cached resources"
                             onClicked: source.renderStats.releaseCachedResources()
                         }
+                        Button {
+                            text: "Bake lightmap"
+                            onClicked: source.bakeLightmap()
+                        }
                     }
                 }
             }

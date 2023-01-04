@@ -17,6 +17,8 @@
 
 #include <QtQuick3DRuntimeRender/private/qtquick3druntimerenderglobal_p.h>
 
+#include <QString>
+
 QT_BEGIN_NAMESPACE
 
 struct QSSGLightmapperPrivate;
@@ -53,8 +55,8 @@ public:
         LightmapImageList
     };
     static QString lightmapAssetPathForLoad(const QSSGRenderModel &model, LightmapAsset asset);
-    static QString lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset);
-    static QString lightmapAssetPathForSave(LightmapAsset asset);
+    static QString lightmapAssetPathForSave(const QSSGRenderModel &model, LightmapAsset asset, const QString& outputFolder = {});
+    static QString lightmapAssetPathForSave(LightmapAsset asset, const QString& outputFolder = {});
 
 private:
 #ifdef QT_QUICK3D_HAS_LIGHTMAPPER

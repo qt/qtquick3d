@@ -323,6 +323,9 @@ public:
     QSSGShaderFeatures getShaderFeatures() const { return features; }
     QSSGRhiGraphicsPipelineState getPipelineState() const { return ps; }
 
+    bool interactiveLightmapBakingRequested = false;
+    std::function<void()> lightmapBakingCompleteCallback;
+
 private:
     void updateSortedDepthObjectsListImp();
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
