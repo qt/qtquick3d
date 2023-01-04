@@ -333,8 +333,8 @@ void MAIN()
         color = apply_fxaa(color, fullExposure, vec2(1.0 / OUTPUT_SIZE.x, 1.0 / OUTPUT_SIZE.y));
 
     // Sharpening
-    if (sharpenIntensity >= 0.001)
-        color = apply_cas(color, fullExposure, sharpenIntensity);
+    if (sharpnessAmount >= 0.001)
+        color = apply_cas(color, fullExposure, sharpnessAmount);
 
     // Debanding
     if (ditheringEnabled)
@@ -376,20 +376,28 @@ void MAIN()
     // Glow
     if (isGlowEnabled) {
         // Read glow from the glowBuffers
+        const int GLOW_LEVEL_1 = 0x1;
+        const int GLOW_LEVEL_2 = 0x2;
+        const int GLOW_LEVEL_3 = 0x4;
+        const int GLOW_LEVEL_4 = 0x8;
+        const int GLOW_LEVEL_5 = 0x10;
+        const int GLOW_LEVEL_6 = 0x20;
+        const int GLOW_LEVEL_7 = 0x40;
+
         vec3 glow = vec3(0.0);
-        if (glowLevel1)
+        if ((glowLevel & GLOW_LEVEL_1) != 0)
             glow += sampleGlowBuffer(glowBuffer1, 0);
-        if (glowLevel2)
+        if ((glowLevel & GLOW_LEVEL_2) != 0)
             glow += sampleGlowBuffer(glowBuffer2, 1);
-        if (glowLevel3)
+        if ((glowLevel & GLOW_LEVEL_3) != 0)
             glow += sampleGlowBuffer(glowBuffer3, 2);
-        if (glowLevel4)
+        if ((glowLevel & GLOW_LEVEL_4) != 0)
             glow += sampleGlowBuffer(glowBuffer4, 3);
-        if (glowLevel5)
+        if ((glowLevel & GLOW_LEVEL_5) != 0)
             glow += sampleGlowBuffer(glowBuffer5, 4);
-        if (glowLevel6)
+        if ((glowLevel & GLOW_LEVEL_6) != 0)
             glow += sampleGlowBuffer(glowBuffer6, 5);
-        if (glowLevel7)
+        if ((glowLevel & GLOW_LEVEL_7) != 0)
             glow += sampleGlowBuffer(glowBuffer7, 6);
         glow *= glowIntensity;
 

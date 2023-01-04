@@ -18,7 +18,7 @@ SceneEffectEnvironment {
     property alias exposure: sceneEffect.exposure
     property alias whitePoint: sceneEffect.white
     property alias ditheringEnabled: sceneEffect.ditheringEnabled
-    property alias sharpenIntensity: sceneEffect.sharpenIntensity
+    property alias sharpnessAmount: sceneEffect.sharpnessAmount
 
     // FXAA
     property alias fxaaEnabled: sceneEffect.applyFXAA
@@ -36,6 +36,23 @@ SceneEffectEnvironment {
     property alias lutTextureSource: sceneEffect.lutTextureSource
 
     // Glow Effect
+    enum GlowBlendMode {
+        Additive,
+        Screen,
+        SoftLight, // Default
+        Replace
+    }
+
+    enum GlowLevel {
+        One = 0x1,
+        Two = 0x2,
+        Three = 0x4,
+        Four = 0x8,
+        Five = 0x10,
+        Six = 0x20,
+        Seven = 0x40
+    }
+
     property alias glowEnabled: sceneEffect.isGlowEnabled
     property alias glowQualityHigh: sceneEffect.glowQualityHigh
     property alias glowUseBicubicUpscale: sceneEffect.glowUseBicubicUpscale
@@ -43,16 +60,10 @@ SceneEffectEnvironment {
     property alias glowIntensity: sceneEffect.glowIntensity
     property alias glowBloom: sceneEffect.glowBloom
     property alias glowBlendMode: sceneEffect.glowBlendMode
-    property alias glowHDRLuminanceCap: sceneEffect.glowHDRLuminanceCap
+    property alias glowHDRMaximumValue: sceneEffect.glowHDRMaximumValue
     property alias glowHDRScale: sceneEffect.glowHDRScale
-    property alias glowHDRThreshold: sceneEffect.glowHDRThreshold
-    property alias glowLevel1: sceneEffect.glowLevel1
-    property alias glowLevel2: sceneEffect.glowLevel2
-    property alias glowLevel3: sceneEffect.glowLevel3
-    property alias glowLevel4: sceneEffect.glowLevel4
-    property alias glowLevel5: sceneEffect.glowLevel5
-    property alias glowLevel6: sceneEffect.glowLevel6
-    property alias glowLevel7: sceneEffect.glowLevel7
+    property alias glowHDRMinimumValue: sceneEffect.glowHDRMinimumValue
+    property alias glowLevel: sceneEffect.glowLevel
 
     // Vignette
     property alias vignetteEnabled: sceneEffect.vignetteEnabled
