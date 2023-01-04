@@ -41,9 +41,9 @@ void MAIN() {
         color *= exposure;
 
         float luminance = max(color.r, max(color.g, color.b));
-        float feedback = max(smoothstep(glowHDRThreshold, glowHDRThreshold + glowHDRScale, luminance), glowBloom);
+        float feedback = max(smoothstep(glowHDRMinimumValue, glowHDRMinimumValue + glowHDRScale, luminance), glowBloom);
 
-        color = min(color * feedback, vec4(glowHDRLuminanceCap));
+        color = min(color * feedback, vec4(glowHDRMaximumValue));
     }
     FRAGCOLOR = color;
 }

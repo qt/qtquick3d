@@ -12,7 +12,7 @@ MainSceneEffect {
     property real white: 1.0
     property bool applyFXAA: false
     property bool ditheringEnabled: false
-    property real sharpenIntensity: 0.0 // 0.0 - 1.0
+    property real sharpnessAmount: 0.0 // 0.0 - 1.0
     property bool colorAdjustmentsEnabled: false
     property vector3d bcsAdjustments: Qt.vector3d(1.0, 1.0, 1.0)
 
@@ -52,22 +52,16 @@ MainSceneEffect {
     // Glow data
     readonly property bool isFirstPass: true
     property bool isGlowEnabled: false
-    property bool glowQualityHigh: true
-    property bool glowUseBicubicUpscale: true
+    property bool glowQualityHigh: false
+    property bool glowUseBicubicUpscale: false
     property real glowStrength : 1.0        // 0.0 - 2.0
     property real glowIntensity : 0.8       // 0.0 - 8.0
     property real glowBloom : 0.0           // 0.0 - 1.0
     property int glowBlendMode : 2          // Additive,Screen,Softlight,Replace
-    property real glowHDRLuminanceCap: 12.0 // 0.0 - 256.0
+    property real glowHDRMaximumValue: 12.0 // 0.0 - 256.0
     property real glowHDRScale: 2.0         // 0.0 - 4.0
-    property real glowHDRThreshold: 1.0     // 0.0 - 4.0
-    property bool glowLevel1: true
-    property bool glowLevel2: true
-    property bool glowLevel3: true
-    property bool glowLevel4: true
-    property bool glowLevel5: true
-    property bool glowLevel6: true
-    property bool glowLevel7: true
+    property real glowHDRMinimumValue: 1.0     // 0.0 - 4.0
+    property int glowLevel: 1               // 1 - 7
 
     // Color Grading (LUT)
     property bool enableLut: false
