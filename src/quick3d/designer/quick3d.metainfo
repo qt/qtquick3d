@@ -12,7 +12,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Perspective"
-            category: "Camera"
+            category: "Cameras"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -32,7 +32,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Orthographic"
-            category: "Camera"
+            category: "Cameras"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -52,7 +52,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Frustum"
-            category: "Camera"
+            category: "Cameras"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -72,7 +72,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Camera Custom"
-            category: "Camera"
+            category: "Cameras"
             libraryIcon: "images/camera.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -170,7 +170,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Texture"
-            category: "Materials"
+            category: "Textures"
             libraryIcon: "images/texture.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -189,7 +189,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Cube Map Texture"
-            category: "Materials"
+            category: "Textures"
             libraryIcon: "images/cubemaptexture.png"
             version: "6.4"
             requiredImport: "QtQuick3D"
@@ -265,8 +265,8 @@ MetaInfo {
         }
 
         ItemLibraryEntry {
-            name: "Empty"
-            category: "Models"
+            name: "Model"
+            category: "Components"
             libraryIcon: "images/group.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -286,7 +286,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Cube"
-            category: "Models"
+            category: "Primitives"
             libraryIcon: "images/cube.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -307,7 +307,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Sphere"
-            category: "Models"
+            category: "Primitives"
             libraryIcon: "images/sphere.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -328,7 +328,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Cylinder"
-            category: "Models"
+            category: "Primitives"
             libraryIcon: "images/cylinder.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -349,7 +349,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Plane"
-            category: "Models"
+            category: "Primitives"
             libraryIcon: "images/plane.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -370,7 +370,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Cone"
-            category: "Models"
+            category: "Primitives"
             libraryIcon: "images/cone.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -420,7 +420,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "View3D"
-            category: "Components"
+            category: "Items"
             libraryIcon: "images/view3D.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -439,7 +439,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Shader"
-            category: "Qt Quick 3D Custom Shader Utils"
+            category: "Custom Shader Utils"
             libraryIcon: "images/shaderutil.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -457,7 +457,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Texture Input"
-            category: "Qt Quick 3D Custom Shader Utils"
+            category: "Custom Shader Utils"
             libraryIcon: "images/shaderutil.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -475,7 +475,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Pass"
-            category: "Qt Quick 3D Custom Shader Utils"
+            category: "Custom Shader Utils"
             libraryIcon: "images/shaderutil.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -493,7 +493,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Buffer Input"
-            category: "Qt Quick 3D Custom Shader Utils"
+            category: "Custom Shader Utils"
             libraryIcon: "images/shadercommand.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -511,7 +511,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Buffer"
-            category: "Qt Quick 3D Custom Shader Utils"
+            category: "Custom Shader Utils"
             libraryIcon: "images/shaderutil.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -529,7 +529,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Set Uniform Value"
-            category: "Qt Quick 3D Custom Shader Utils"
+            category: "Custom Shader Utils"
             libraryIcon: "images/shadercommand.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -547,7 +547,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Effect"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/effect.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -605,7 +605,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Skeleton"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/skeleton.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -623,7 +623,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Morph Target"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/morphtarget.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -641,7 +641,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Instance List Entry"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/instancelistentry.png"
             version: "6.2"
             requiredImport: "QtQuick3D"
@@ -659,7 +659,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Instance List"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/instancelist.png"
             version: "6.2"
             requiredImport: "QtQuick3D"
@@ -677,7 +677,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "File Instancing"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/fileinstancing.png"
             version: "6.2"
             requiredImport: "QtQuick3D"
@@ -695,7 +695,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Joint"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/joint.png"
             version: "6.0"
             requiredImport: "QtQuick3D"
@@ -714,7 +714,7 @@ MetaInfo {
 
         ItemLibraryEntry {
             name: "Reflection Probe"
-            category: "Qt Quick 3D"
+            category: "Components"
             libraryIcon: "images/reflectionProbe.png"
             version: "6.3"
             requiredImport: "QtQuick3D"
