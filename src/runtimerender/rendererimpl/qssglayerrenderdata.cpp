@@ -2229,16 +2229,18 @@ bool QSSGSubsetRenderable::prepareInstancing(QSSGRhiContext *rhiCtx, const QVect
 
 void QSSGLayerRenderData::maybeBakeLightmap()
 {
-    static bool bakeRequested = false;
-    static bool bakeFlagChecked = false;
-    if (!bakeFlagChecked) {
-        bakeFlagChecked = true;
-        const bool cmdLineReq = QCoreApplication::arguments().contains(QStringLiteral("--bake-lightmaps"));
-        const bool envReq = qEnvironmentVariableIntValue("QT_QUICK3D_BAKE_LIGHTMAPS");
-        bakeRequested = cmdLineReq || envReq;
+    if (!interactiveLightmapBakingRequested) {
+        static bool bakeRequested = false;
+        static bool bakeFlagChecked = false;
+        if (!bakeFlagChecked) {
+            bakeFlagChecked = true;
+            const bool cmdLineReq = QCoreApplication::arguments().contains(QStringLiteral("--bake-lightmaps"));
+            const bool envReq = qEnvironmentVariableIntValue("QT_QUICK3D_BAKE_LIGHTMAPS");
+            bakeRequested = cmdLineReq || envReq;
+        }
+        if (!bakeRequested)
+            return;
     }
-    if (!bakeRequested)
-        return;
 
     const auto &sortedBakedLightingModels = getSortedBakedLightingModels(); // front to back
     if (sortedBakedLightingModels.isEmpty())
@@ -2265,8 +2267,14 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     m_lightmapper->bake();
     cb->debugMarkEnd();
 
-    qDebug("Lightmap baking done, exiting application");
-    QMetaObject::invokeMethod(qApp, "quit");
+    if (!interactiveLightmapBakingRequested) {
+        qDebug("Lightmap baking done, exiting application");
+        QMetaObject::invokeMethod(qApp, "quit");
+    }
+
+    interactiveLightmapBakingRequested = false;
+    if (lightmapBakingCompleteCallback)
+        lightmapBakingCompleteCallback();
 }
 
 QT_END_NAMESPACE

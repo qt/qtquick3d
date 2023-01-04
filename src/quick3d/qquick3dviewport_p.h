@@ -93,6 +93,9 @@ public:
 
     void processPointerEventFromRay(const QVector3D &origin, const QVector3D &direction, QPointerEvent *event);
 
+    void bakeLightmap(std::function<void()> onCompleted);
+    Q_INVOKABLE void bakeLightmap();
+
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
