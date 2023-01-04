@@ -40,17 +40,9 @@ Window {
         //! [fogitem]
 
 
-        environment: ExtendedSceneEnvironment {
+        environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Color
             clearColor: theFog.color
-
-            lensFlareBloomBias: 2.75
-            lensFlareApplyDirtTexture: true
-            lensFlareApplyStarburstTexture: true
-            lensFlareCameraDirection: camera.forward
-
-            vignetteEnabled: true
-
             fog: theFog
         }
 
