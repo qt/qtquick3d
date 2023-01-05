@@ -25,15 +25,15 @@ QT_BEGIN_NAMESPACE
 class HeightFieldGeometry : public QQuick3DGeometry
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl heightMap READ heightMap WRITE setHeightMap NOTIFY heightMapChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged REVISION(6, 5))
     Q_PROPERTY(bool smoothShading READ smoothShading WRITE setSmoothShading NOTIFY smoothShadingChanged)
     Q_PROPERTY(QVector3D extents READ extents WRITE setExtents NOTIFY extentsChanged)
     QML_NAMED_ELEMENT(HeightFieldGeometry)
 public:
     HeightFieldGeometry();
 
-    const QUrl &heightMap() const;
-    void setHeightMap(const QUrl &newHeightMap);
+    const QUrl &source() const;
+    void setSource(const QUrl &newSource);
 
     bool smoothShading() const;
     void setSmoothShading(bool smooth);
@@ -41,7 +41,7 @@ public:
     void setExtents(const QVector3D &newExtents);
 
 signals:
-    void heightMapChanged();
+    void sourceChanged();
     void smoothShadingChanged();
     void extentsChanged();
 
@@ -51,6 +51,10 @@ private:
     QUrl m_heightMapSource;
     bool m_smoothShading = true;
     bool m_extentsSetExplicitly = false;
+
+#if QT_DEPRECATED_SINCE(6, 5)
+    Q_PROPERTY(QUrl heightMap READ source WRITE setSource NOTIFY sourceChanged)
+#endif
 };
 
 QT_END_NAMESPACE
