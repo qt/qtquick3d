@@ -1020,7 +1020,14 @@ void QQuick3DModel::qmlClearMaterials(QQmlListProperty<QQuick3DMaterial> *list)
 
 void QQuick3DModel::onMorphTargetDestroyed(QObject *object)
 {
-    if (m_morphTargets.removeAll(static_cast<QQuick3DMorphTarget *>(object)) > 0) {
+    bool found = false;
+    for (int i = 0; i < m_morphTargets.size(); ++i) {
+        if (m_morphTargets.at(i) == object) {
+            m_morphTargets.removeAt(i--);
+            found = true;
+        }
+    }
+    if (found) {
         markDirty(QQuick3DModel::MorphTargetsDirty);
         m_numMorphAttribs = 0;
     }
