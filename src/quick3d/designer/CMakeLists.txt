@@ -14,6 +14,8 @@ qt_copy_or_install(
         CustomCameraSpecifics.qml
         CustomMaterialSection.qml
         CustomMaterialSpecifics.qml
+        DebugSettingsSection.qml
+        DebugSettingsSpecifics.qml
         DefaultMaterialSection.qml
         DefaultMaterialSpecifics.qml
         DirectionalLightSection.qml
@@ -22,6 +24,8 @@ qt_copy_or_install(
         EffectSpecifics.qml
         FileInstancingSection.qml
         FileInstancingSpecifics.qml
+        FogSection.qml
+        FogSpecifics.qml
         FrustumCameraSection.qml
         FrustumCameraSpecifics.qml
         IdComboBox.qml

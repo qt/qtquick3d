@@ -22,6 +22,9 @@ qt_copy_or_install(
         cylinder.png
         cylinder16.png
         cylinder@2x.png
+        debugsettings.png
+        debugsettings16.png
+        debugsettings@2x.png
         dummy.png
         dummy16.png
         dummy@2x.png
@@ -31,6 +34,9 @@ qt_copy_or_install(
         fileinstancing.png
         fileinstancing16.png
         fileinstancing@2x.png
+        fog.png
+        fog16.png
+        fog@2x.png
         group.png
         group16.png
         group@2x.png
