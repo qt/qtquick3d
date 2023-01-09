@@ -3,6 +3,5 @@
         <file>main.qml</file>
         <file>Box.qml</file>
         <file>box.mesh</file>
-        <file>qlm_box.exr</file>
     </qresource>
 </RCC>

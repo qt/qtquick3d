@@ -35,7 +35,7 @@ Window {
         PointLight {
             bakeMode: root.lightBakeMode
             y: 190
-            brightness: 5
+            brightness: brightnessSlider.value
             castsShadow: true
             shadowFactor: 75
         }
@@ -48,7 +48,7 @@ Window {
             bakedLightmap: BakedLightmap {
                 enabled: root.lmEnabled
                 key: "box"
-                loadPrefix: "qrc:/"
+                loadPrefix: "file:"
             }
             scale: Qt.vector3d(100, 100, 100)
         }
@@ -56,18 +56,27 @@ Window {
 
         Rectangle {
             color: "lightGray"
-            width: 300
-            height: 80
+            width: 320
+            height: 160
             ColumnLayout {
                 anchors.centerIn: parent
                 CheckBox {
                     id: lmToggle
-                    text: "Use lightmaps\n(fully baked direct+indirect)"
+                    text: "Use lightmaps (fully baked direct+indirect)\nif available"
                     checked: true
                     focusPolicy: Qt.NoFocus
                 }
                 Text {
-                    text: "Run with --bake-lightmaps to rebake"
+                    text: "How to bake lightmaps: \nOpen DebugView -> Tools -> Bake lightmap"
+                }
+                Text {
+                    text: "Slider controls light brightness"
+                }
+                Slider {
+                    id: brightnessSlider
+                    value: 5.0
+                    from: 0
+                    to: 10
                 }
             }
         }

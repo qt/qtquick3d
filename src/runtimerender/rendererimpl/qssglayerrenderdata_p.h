@@ -40,7 +40,6 @@
 QT_BEGIN_NAMESPACE
 
 struct QSSGRenderableObject;
-class QSSGLightmapper;
 
 enum class QSSGLayerRenderPreparationResultFlag
 {
@@ -326,7 +325,7 @@ public:
     QSSGRhiGraphicsPipelineState getPipelineState() const { return ps; }
 
     bool interactiveLightmapBakingRequested = false;
-    std::function<void()> lightmapBakingCompleteCallback;
+    QSSGLightmapper::Callback lightmapBakingOutputCallback;
 
 private:
     void updateSortedDepthObjectsListImp();

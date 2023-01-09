@@ -2254,6 +2254,7 @@ void QSSGLayerRenderData::maybeBakeLightmap()
         return;
 
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
+
     if (!m_lightmapper)
         m_lightmapper = new QSSGLightmapper(rhiCtx, renderer.data());
 
@@ -2265,6 +2266,7 @@ void QSSGLayerRenderData::maybeBakeLightmap()
 
     m_lightmapper->reset();
     m_lightmapper->setOptions(layer.lmOptions);
+    m_lightmapper->setOutputCallback(lightmapBakingOutputCallback);
 
     for (int i = 0, ie = sortedBakedLightingModels.size(); i != ie; ++i)
         m_lightmapper->add(sortedBakedLightingModels[i]);
@@ -2280,8 +2282,6 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     }
 
     interactiveLightmapBakingRequested = false;
-    if (lightmapBakingCompleteCallback)
-        lightmapBakingCompleteCallback();
 }
 
 QT_END_NAMESPACE

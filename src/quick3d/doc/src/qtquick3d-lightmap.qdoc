@@ -302,6 +302,14 @@ lightmaps loaded. The tuning can then begin:
 
 \endlist
 
+As of Qt 6.5, a runtime solution is provided interactively through the DebugView.
+Under Tools there is now a button that when pressed will trigger the baking process.
+A window will pop up showing the current process. Canceling can be done by
+either hitting the cancel button or closing this window. When complete, it will
+try to overwrite the existing .exr files if possible using the loadPrefix, else
+they will be written to the current directory.
+For now, Denoising is still a manual process even when using the runtime solution.
+
 \section2 Denoising
 
 Below is an example of a \l{https://en.wikipedia.org/wiki/Cornell_box}{Cornell
