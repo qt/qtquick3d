@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
     \brief Specifies fog settings for a scene.
     \since 6.5
 
-    When th e \l{QQuick3DSceneEnvironment::fog}{fog} property of a \l SceneEnvironment is
+    When the \l{QQuick3DSceneEnvironment::fog}{fog} property of a \l SceneEnvironment is
     set to a valid Fog object, the properties are used to configure the
     rendering of fog.
 
