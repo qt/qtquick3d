@@ -720,4 +720,42 @@ MetaInfo {
             requiredImport: "QtQuick3D"
         }
     }
+    Type {
+        name: "QtQuick3D.Fog"
+        icon: "images/fog16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Fog"
+            category: "Components"
+            libraryIcon: "images/fog.png"
+            version: "6.5"
+            requiredImport: "QtQuick3D"
+        }
+    }
+    Type {
+        name: "QtQuick3D.DebugSettings"
+        icon: "images/debugsettings16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Debug Settings"
+            category: "Components"
+            libraryIcon: "images/debugsettings.png"
+            version: "6.5"
+            requiredImport: "QtQuick3D"
+        }
+    }
 }
