@@ -682,6 +682,51 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         m_importRootNode = importRootNode;
     }
 
+    if (auto lightmapBaker = view3D->maybeLightmapBaker()) {
+        if (lightmapBaker->m_bakingRequested) {
+            m_layer->renderData->interactiveLightmapBakingRequested = true;
+
+            QQuick3DLightmapBaker::Callback qq3dCallback = lightmapBaker->m_callback;
+            QQuick3DLightmapBaker::BakingControl *qq3dBakingControl = lightmapBaker->m_bakingControl;
+            QSSGLightmapper::Callback callback =
+                    [qq3dCallback, qq3dBakingControl](
+                    QSSGLightmapper::BakingStatus qssgBakingStatus,
+                    std::optional<QString> msg,
+                    QSSGLightmapper::BakingControl *qssgBakingControl)
+            {
+                QQuick3DLightmapBaker::BakingStatus qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::None;
+                switch (qssgBakingStatus)
+                {
+                case QSSGLightmapper::BakingStatus::None:
+                    break;
+                case QSSGLightmapper::BakingStatus::Progress:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Progress;
+                    break;
+                case QSSGLightmapper::BakingStatus::Warning:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Warning;
+                    break;
+                case QSSGLightmapper::BakingStatus::Error:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Error;
+                    break;
+                case QSSGLightmapper::BakingStatus::Cancelled:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Cancelled;
+                    break;
+                case QSSGLightmapper::BakingStatus::Complete:
+                    qq3dBakingStatus = QQuick3DLightmapBaker::BakingStatus::Complete;
+                    break;
+                }
+
+                qq3dCallback(qq3dBakingStatus, msg, qq3dBakingControl);
+
+                if (qq3dBakingControl->isCancelled() && !qssgBakingControl->cancelled)
+                    qssgBakingControl->cancelled = true;
+            };
+
+            m_layer->renderData->lightmapBakingOutputCallback = callback;
+            lightmapBaker->m_bakingRequested = false;
+        }
+    }
+
     const bool progressiveAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::ProgressiveAA;
     const bool multiSamplingAA = m_layer->antialiasingMode == QSSGRenderLayer::AAMode::MSAA;
     const bool temporalAA = m_layer->temporalAAEnabled && !multiSamplingAA;

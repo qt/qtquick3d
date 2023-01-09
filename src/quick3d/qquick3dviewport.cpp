@@ -15,6 +15,7 @@
 #include "qquick3dprincipledmaterial_p.h"
 #include "qquick3dcustommaterial_p.h"
 #include "qquick3dspecularglossymaterial_p.h"
+
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
@@ -909,22 +910,17 @@ void QQuick3DViewport::processPointerEventFromRay(const QVector3D &origin, const
     internalPick(event, origin, direction);
 }
 
-/*!
-    Triggers a new frame where lightmap baking will take place.
-    Will call \a onCompleted when baking is complete.
-
-    \note Lightmap baking is a slow blocking operation running on the
-    render thread. The application will be frozen until completed.
-*/
-void QQuick3DViewport::bakeLightmap(std::function<void()> onCompleted)
+QQuick3DLightmapBaker *QQuick3DViewport::maybeLightmapBaker()
 {
-    QQuick3DSceneRenderer *renderer = getRenderer();
-    if (!renderer || !renderer->m_layer || !renderer->m_layer->renderData)
-        return;
+    return m_lightmapBaker;
+}
 
-    renderer->m_layer->renderData->interactiveLightmapBakingRequested = true;
-    renderer->m_layer->renderData->lightmapBakingCompleteCallback = onCompleted;
-    update();
+QQuick3DLightmapBaker *QQuick3DViewport::lightmapBaker()
+{
+    if (!m_lightmapBaker)
+        m_lightmapBaker= new QQuick3DLightmapBaker(this);
+
+    return m_lightmapBaker;
 }
 
 /*!
@@ -932,12 +928,7 @@ void QQuick3DViewport::bakeLightmap(std::function<void()> onCompleted)
 */
 void QQuick3DViewport::bakeLightmap()
 {
-    std::function<void()> onCompleted = [this](){
-        QMetaObject::invokeMethod(window(), "releaseResources");
-        QMetaObject::invokeMethod(this, "update");
-    };
-
-    bakeLightmap(onCompleted);
+    lightmapBaker()->bake();
 }
 
 void QQuick3DViewport::setGlobalPickingEnabled(bool isEnabled)

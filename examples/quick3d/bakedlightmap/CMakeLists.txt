@@ -34,7 +34,7 @@ qt_add_qml_module(bakedlightmap
     URI Example
     VERSION 1.0
     QML_FILES main.qml Box.qml
-    RESOURCES box.mesh qlm_box.exr
+    RESOURCES box.mesh
     NO_RESOURCE_TARGET_PATH
 )
 

@@ -42,10 +42,26 @@ struct QSSGLightmapperOptions
 class QSSGLightmapper
 {
 public:
+    enum class BakingStatus {
+        None,
+        Progress,
+        Warning,
+        Error,
+        Cancelled,
+        Complete
+    };
+
+    struct BakingControl {
+        bool cancelled = false;
+    };
+
+    typedef std::function<void(BakingStatus, std::optional<QString>, BakingControl*)> Callback;
+
     QSSGLightmapper(QSSGRhiContext *rhiCtx, QSSGRenderer *renderer);
     ~QSSGLightmapper();
     void reset();
     void setOptions(const QSSGLightmapperOptions &options);
+    void setOutputCallback(Callback callback);
     qsizetype add(const QSSGBakedLightingModel &model);
     bool bake();
 
