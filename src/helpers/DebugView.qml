@@ -96,7 +96,7 @@ Pane {
                     text: "Meshes"
                 }
                 TabButton {
-                    text: "Visualize"
+                    text: "Tools"
                 }
             }
 
