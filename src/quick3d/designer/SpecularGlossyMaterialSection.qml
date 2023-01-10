@@ -14,6 +14,8 @@ Column {
         width: parent.width
 
         SectionLayout {
+            id: baseSectionLayout
+            property bool isAlphaMaskMode: alphaModeComboBox.currentIndex === 1
             PropertyLabel {
                 text: qsTr("Alpha Mode")
                 tooltip: qsTr("Sets the mode for how the alpha channel of material color is used.")
@@ -21,6 +23,7 @@ Column {
 
             SecondColumnLayout {
                 ComboBox {
+                    id: alphaModeComboBox
                     scope: "SpecularGlossyMaterial"
                     model: ["Default", "Mask", "Blend", "Opaque"]
                     backendValue: backendValues.alphaMode
@@ -32,16 +35,19 @@ Column {
             }
 
             PropertyLabel {
+                visible: baseSectionLayout.isAlphaMaskMode
                 text: qsTr("Alpha Cutoff")
                 tooltip: qsTr("Sets the cutoff value when using the Mask alphaMode.")
             }
 
             SecondColumnLayout {
+                visible: baseSectionLayout.isAlphaMaskMode
                 SpinBox {
                     minimumValue: 0
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.alphaCutoff
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -77,41 +83,6 @@ Column {
                     scope: "SpecularGlossyMaterial"
                     model: ["NoLighting", "FragmentLighting"]
                     backendValue: backendValues.lighting
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
-                text: qsTr("Point Size")
-                tooltip: qsTr("Sets the size of the points rendered, when the geometry is using a primitive type of points.")
-            }
-
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: -9999999
-                    maximumValue: 9999999
-                    decimals: 2
-                    backendValue: backendValues.pointSize
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-
-            PropertyLabel {
-                text: qsTr("Line Width")
-                tooltip: qsTr("Sets the width of the lines rendered, when the geometry is using a primitive type of lines or line strips.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: -9999999
-                    maximumValue: 9999999
-                    decimals: 2
-                    backendValue: backendValues.lineWidth
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
                 }
@@ -203,6 +174,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.glossiness
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -247,41 +219,6 @@ Column {
     }
 
     Section {
-        caption: qsTr("Attenuation")
-        width: parent.width
-
-        SectionLayout {
-            PropertyLabel {
-                text: qsTr("Color")
-                tooltip: qsTr("Sets the color that white lights turn into due to absorption when reaching the attenuation distance.")
-            }
-
-            ColorEditor {
-                backendValue: backendValues.attenuationColor
-                supportGradient: false
-            }
-
-            PropertyLabel {
-                text: qsTr("Distance")
-                tooltip: qsTr("Sets the average distance in world space that light travels in the medium before interacting with a particle.")
-            }
-
-            SecondColumnLayout {
-                SpinBox {
-                    minimumValue: 0
-                    maximumValue: Infinity
-                    decimals: 2
-                    backendValue: backendValues.attenuationDistance
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                   + StudioTheme.Values.actionIndicatorWidth
-                }
-
-                ExpandingSpacer {}
-            }
-        }
-    }
-
-    Section {
         caption: qsTr("Normal")
         width: parent.width
 
@@ -313,6 +250,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.normalStrength
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -339,6 +277,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.occlusionAmount
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -398,6 +337,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.opacity
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -442,6 +382,104 @@ Column {
     }
 
     Section {
+        caption: qsTr("Emissive Color")
+        width: parent.width
+
+        SectionLayout {
+            PropertyLabel {
+                text: qsTr("Map")
+                tooltip: qsTr("Sets a texture to be used to set the emissive factor for different parts of the material.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.emissiveMap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                    + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Factor")
+                tooltip: qsTr("Sets the color of self-illumination for this material.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                    + StudioTheme.Values.actionIndicatorWidth
+                    minimumValue: 0
+                    maximumValue: 16
+                    decimals: 2
+                    stepSize: 0.01
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.emissiveFactor_x
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "R"
+                    color: StudioTheme.Values.theme3DAxisXColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                    + StudioTheme.Values.actionIndicatorWidth
+                    minimumValue: 0
+                    maximumValue: 16
+                    decimals: 2
+                    stepSize: 0.01
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.emissiveFactor_y
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "G"
+                    color: StudioTheme.Values.theme3DAxisYColor
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {}
+
+            SecondColumnLayout {
+                SpinBox {
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                    + StudioTheme.Values.actionIndicatorWidth
+                    minimumValue: 0
+                    maximumValue: 16
+                    decimals: 2
+                    stepSize: 0.01
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.emissiveFactor_z
+                }
+
+                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
+
+                ControlLabel {
+                    text: "B"
+                    color: StudioTheme.Values.theme3DAxisZColor
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
         caption: qsTr("Height")
         width: parent.width
 
@@ -457,6 +495,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.heightAmount
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -505,9 +544,10 @@ Column {
 
             SecondColumnLayout {
                 SpinBox {
-                    minimumValue: 0
-                    maximumValue: 9999999
+                    minimumValue: 1
+                    maximumValue: 128
                     decimals: 0
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.minHeightMapSamples
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -523,9 +563,10 @@ Column {
 
             SecondColumnLayout {
                 SpinBox {
-                    minimumValue: 0
-                    maximumValue: 9999999
+                    minimumValue: 1
+                    maximumValue: 256
                     decimals: 0
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.maxHeightMapSamples
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -553,6 +594,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.clearcoatAmount
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -605,6 +647,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.clearcoatRoughnessAmount
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -665,13 +708,13 @@ Column {
     }
 
     Section {
-        caption: qsTr("Transmission")
+        caption: qsTr("Refraction")
         width: parent.width
 
         SectionLayout {
 
             PropertyLabel {
-                text: qsTr("Factor")
+                text: qsTr("Transmission Factor")
                 tooltip: qsTr("Sets the base percentage of light that is transmitted through the surface.")
             }
 
@@ -681,6 +724,7 @@ Column {
                     maximumValue: 1
                     decimals: 2
                     stepSize: 0.1
+                    sliderIndicatorVisible: true
                     backendValue: backendValues.transmissionFactor
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
@@ -690,7 +734,7 @@ Column {
             }
 
             PropertyLabel {
-                text: qsTr("Map")
+                text: qsTr("Transmission Map")
                 tooltip: qsTr("Sets a texture that contains the transmission percentage of a the surface.")
             }
 
@@ -706,7 +750,7 @@ Column {
             }
 
             PropertyLabel {
-                text: qsTr("Channel")
+                text: qsTr("Transmission Channel")
                 tooltip: qsTr("Sets the texture channel used to read the transmission percentage from transmissionMap.")
             }
 
@@ -721,17 +765,9 @@ Column {
 
                 ExpandingSpacer {}
             }
-        }
-    }
-
-    Section {
-        caption: qsTr("Thickness")
-        width: parent.width
-
-        SectionLayout {
 
             PropertyLabel {
-                text: qsTr("Factor")
+                text: qsTr("Thickness Factor")
                 tooltip: qsTr("Sets the thickness of the volume beneath the surface in model coordinate space.")
             }
 
@@ -749,7 +785,7 @@ Column {
             }
 
             PropertyLabel {
-                text: qsTr("Map")
+                text: qsTr("Thickness Map")
                 tooltip: qsTr("Sets a texture that contains the thickness of a the material volume.")
             }
 
@@ -765,7 +801,7 @@ Column {
             }
 
             PropertyLabel {
-                text: qsTr("Channel")
+                text: qsTr("Thickness Channel")
                 tooltip: qsTr("Sets the texture channel used to read the thickness amount from thicknessMap.")
             }
 
@@ -780,97 +816,88 @@ Column {
 
                 ExpandingSpacer {}
             }
+
+            PropertyLabel {
+                text: qsTr("Attenuation Color")
+                tooltip: qsTr("Sets the color that white lights turn into due to absorption when reaching the attenuation distance.")
+            }
+
+            ColorEditor {
+                backendValue: backendValues.attenuationColor
+                supportGradient: false
+            }
+
+            PropertyLabel {
+                text: qsTr("Attenuation Distance")
+                tooltip: qsTr("Sets the average distance in world space that light travels in the medium before interacting with a particle.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: Infinity
+                    decimals: 2
+                    backendValue: backendValues.attenuationDistance
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
         }
     }
 
     Section {
-        caption: qsTr("Emissive Color")
+        caption: qsTr("Advanced")
         width: parent.width
 
         SectionLayout {
             PropertyLabel {
-                text: qsTr("Map")
-                tooltip: qsTr("Sets a texture to be used to set the emissive factor for different parts of the material.")
+                text: qsTr("Vertex Colors")
+                tooltip: qsTr("Sets whether vertex colors are used to modulate the base color.")
             }
 
             SecondColumnLayout {
-                IdComboBox {
-                    typeFilter: "QtQuick3D.Texture"
-                    backendValue: backendValues.emissiveMap
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                    + StudioTheme.Values.actionIndicatorWidth
+                CheckBox {
+                    text: backendValues.vertexColorsEnabled ? qsTr("Enabled") : qsTr("Disabled")
+                    backendValue: backendValues.vertexColorsEnabled
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
                 ExpandingSpacer {}
             }
 
             PropertyLabel {
-                text: qsTr("Factor")
-                tooltip: qsTr("Sets the color of self-illumination for this material.")
+                text: qsTr("Point Size")
+                tooltip: qsTr("Sets the size of the points rendered, when the geometry is using a primitive type of points.")
             }
 
             SecondColumnLayout {
                 SpinBox {
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                    + StudioTheme.Values.actionIndicatorWidth
                     minimumValue: 0
-                    maximumValue: 1
-                    decimals: 2
-                    stepSize: 0.01
-                    backendValue: backendValues.emissiveFactor_x
-                }
-
-                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
-
-                ControlLabel {
-                    text: "X"
-                    color: StudioTheme.Values.theme3DAxisXColor
+                    maximumValue: 1024
+                    decimals: 0
+                    backendValue: backendValues.pointSize
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
                 ExpandingSpacer {}
             }
 
-            PropertyLabel {}
-
-            SecondColumnLayout {
-                SpinBox {
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                    + StudioTheme.Values.actionIndicatorWidth
-                    minimumValue: 0
-                    maximumValue: 1
-                    decimals: 2
-                    stepSize: 0.01
-                    backendValue: backendValues.emissiveFactor_y
-                }
-
-                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
-
-                ControlLabel {
-                    text: "Y"
-                    color: StudioTheme.Values.theme3DAxisYColor
-                }
-
-                ExpandingSpacer {}
+            PropertyLabel {
+                text: qsTr("Line Width")
+                tooltip: qsTr("Sets the width of the lines rendered, when the geometry is using a primitive type of lines or line strips.")
             }
-
-            PropertyLabel {}
-
             SecondColumnLayout {
                 SpinBox {
-                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
-                                    + StudioTheme.Values.actionIndicatorWidth
                     minimumValue: 0
-                    maximumValue: 1
-                    decimals: 2
-                    stepSize: 0.01
-                    backendValue: backendValues.emissiveFactor_z
-                }
-
-                Spacer { implicitWidth: StudioTheme.Values.controlLabelGap }
-
-                ControlLabel {
-                    text: "Z"
-                    color: StudioTheme.Values.theme3DAxisZColor
+                    maximumValue: 1024
+                    decimals: 0
+                    backendValue: backendValues.lineWidth
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
                 ExpandingSpacer {}
