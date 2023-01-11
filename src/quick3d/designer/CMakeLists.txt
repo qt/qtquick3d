@@ -60,6 +60,8 @@ qt_copy_or_install(
         PrincipledMaterialSpecifics.qml
         Repeater3DSection.qml
         Repeater3DSpecifics.qml
+        ResourceLoaderSection.qml
+        ResourceLoaderSpecifics.qml
         SceneEnvironmentSection.qml
         SceneEnvironmentSpecifics.qml
         SetUniformValueSection.qml

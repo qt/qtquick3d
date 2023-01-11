@@ -77,6 +77,9 @@ qt_copy_or_install(
         repeater3d.png
         repeater3d16.png
         repeater3d@2x.png
+        resourceloader.png
+        resourceloader16.png
+        resourceloader@2x.png
         scene.png
         scene16.png
         scene@2x.png
