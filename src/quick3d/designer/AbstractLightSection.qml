@@ -71,11 +71,11 @@ Column {
         }
     }
 
-    NodeSection {
+    ShadowSection {
         width: parent.width
     }
 
-    ShadowSection {
+    NodeSection {
         width: parent.width
     }
 }

@@ -31,15 +31,18 @@ Section {
 
         // ### all the following should only be shown when shadows are enabled
         PropertyLabel {
-            text: qsTr("Shadow Factor")
+            visible: shadowCheckBox.checked
+            text: qsTr("Amount")
             tooltip: qsTr("Sets how dark the cast shadows should be.")
         }
 
         SecondColumnLayout {
+            visible: shadowCheckBox.checked
             SpinBox {
                 minimumValue: 0.0
                 maximumValue: 100.0
                 decimals: 0
+                sliderIndicatorVisible: true
                 backendValue: backendValues.shadowFactor
                 enabled: shadowCheckBox.backendValue.value === true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -50,15 +53,18 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Shadow Filter")
+            visible: shadowCheckBox.checked
+            text: qsTr("Filter")
             tooltip: qsTr("Sets how much blur is applied to the shadows.")
         }
 
         SecondColumnLayout {
+            visible: shadowCheckBox.checked
             SpinBox {
                 minimumValue: 1.0
                 maximumValue: 100.0
                 decimals: 0
+                sliderIndicatorVisible: true
                 backendValue: backendValues.shadowFilter
                 enabled: shadowCheckBox.backendValue.value === true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -69,11 +75,13 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Shadow Map Quality")
+            visible: shadowCheckBox.checked
+            text: qsTr("Quality")
             tooltip: qsTr("Sets the quality of the shadow map created for shadow rendering.")
         }
 
         SecondColumnLayout {
+            visible: shadowCheckBox.checked
             ComboBox {
                 scope: "Light"
                 model: ["ShadowMapQualityLow", "ShadowMapQualityMedium", "ShadowMapQualityHigh", "ShadowMapQualityVeryHigh"]
@@ -87,16 +95,19 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Shadow Bias")
+            visible: shadowCheckBox.checked
+            text: qsTr("Bias")
             tooltip: qsTr("Sets a slight offset to avoid self-shadowing artifacts.")
         }
 
         SecondColumnLayout {
+            visible: shadowCheckBox.checked
             SpinBox {
                 minimumValue: -1.0
                 maximumValue: 1.0
-                decimals: 2
-                stepSize: 0.1
+                decimals: 3
+                stepSize: 0.001
+                sliderIndicatorVisible: true
                 backendValue: backendValues.shadowBias
                 enabled: shadowCheckBox.backendValue.value === true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -107,16 +118,18 @@ Section {
         }
 
         PropertyLabel {
-            text: qsTr("Shadow Map Far")
+            visible: shadowCheckBox.checked
+            text: qsTr("Far Distance")
             tooltip: qsTr("Sets the maximum distance for the shadow map.")
         }
 
         SecondColumnLayout {
+            visible: shadowCheckBox.checked
             SpinBox {
-                minimumValue: -9999999
-                maximumValue: 9999999
+                minimumValue: 0
+                maximumValue: Infinity
                 decimals: 0
-                stepSize: 100
+                stepSize: 10
                 backendValue: backendValues.shadowMapFar
                 enabled: shadowCheckBox.backendValue.value === true
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
