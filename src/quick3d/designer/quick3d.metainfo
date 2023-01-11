@@ -799,4 +799,24 @@ MetaInfo {
             requiredImport: "QtQuick3D"
         }
     }
+
+    Type {
+        name: "QtQuick3D.ResourceLoader"
+        icon: "images/resourceLoader16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Resource Loader"
+            category: "Components"
+            libraryIcon: "images/resourceLoader.png"
+            version: "6.2"
+            requiredImport: "QtQuick3D"
+        }
+    }
 }
