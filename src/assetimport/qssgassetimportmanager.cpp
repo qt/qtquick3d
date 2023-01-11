@@ -101,6 +101,7 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QUr
                                                                        const QJsonObject &options,
                                                                        QString *error)
 {
+    auto importState = ImportState::Unsupported;
     auto it = m_assetImporters.cbegin();
     const auto end = m_assetImporters.cend();
     for (; it != end; ++it) {
@@ -114,11 +115,13 @@ QSSGAssetImportManager::ImportState QSSGAssetImportManager::importFile(const QUr
         if (!ret.isEmpty()) {
             if (error)
                 *error = ret;
-            return ImportState::IoError;
+            importState = ImportState::IoError;
+        } else {
+            importState = ImportState::Success;
         }
     }
 
-    return ImportState::Success;
+    return importState;
 }
 
 QJsonObject QSSGAssetImportManager::getOptionsForFile(const QString &filename)

@@ -353,7 +353,11 @@ void QSSGRuntimeUtils::createGraphObject(QSSGSceneDesc::Node &node,
 
 QQuick3DNode *QSSGRuntimeUtils::createScene(QQuick3DNode &parent, const QSSGSceneDesc::Scene &scene)
 {
-    Q_ASSERT(scene.root);
+    if (!scene.root) {
+        qWarning("Incomplete scene description (missing plugin?)");
+        return nullptr;
+    }
+
     Q_ASSERT(QQuick3DObjectPrivate::get(&parent)->sceneManager);
 
     QSSGBufferManager::registerMeshData(scene.id, scene.meshStorage);
