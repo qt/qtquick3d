@@ -171,7 +171,7 @@ private:
     QQuick3DInstanceRange *m_rotation = nullptr;
     QQuick3DInstanceRange *m_color = nullptr;
     QQuick3DInstanceRange *m_customData = nullptr;
-    ColorModel m_colorModel;
+    ColorModel m_colorModel = ColorModel::RGB;
 };
 QT_END_NAMESPACE
 #endif // RANDOMINSTANCING_P_H
