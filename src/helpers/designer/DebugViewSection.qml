@@ -29,6 +29,22 @@ Column {
 
                 ExpandingSpacer {}
             }
+
+            PropertyLabel {
+                text: qsTr("Detailed Mode")
+                tooltip: qsTr("Enables detailed mode, which shows more detailed resource usage statistics.")
+            }
+
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.resourceDetailsVisible.valueToString
+                    backendValue: backendValues.resourceDetailsVisible
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
         }
     }
 }
