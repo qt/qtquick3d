@@ -1087,6 +1087,8 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
         }
 
         QSSGRenderableObjectList bakedLightingObjects;
+        bool usesBlendParticles = blendParticlesEnabled && theModelContext.model.particleBuffer != nullptr
+                && model.particleBuffer->particleCount();
 
         // Subset(s)
         for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
@@ -1109,7 +1111,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
             renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
             QSSGRenderableObject *theRenderableObject = nullptr;
 
-            blendParticlesEnabled = blendParticlesEnabled && theModelContext.model.particleBuffer != nullptr && model.particleBuffer->particleCount();
             bool usesInstancing = theModelContext.model.instancing()
                     && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
             if (usesInstancing && theModelContext.model.instanceTable->hasTransparency())
@@ -1292,7 +1293,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
                 // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
                 // if the mesh has it.
-                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing || blendParticlesEnabled;
+                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing || usesBlendParticles;
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights, ioFlags));
                 QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);
@@ -1302,7 +1303,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 renderableFlags = theMaterialPrepResult.renderableFlags;
 
                 // Blend particles
-                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, blendParticlesEnabled);
+                renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
 
                 // Skin
                 renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, model.boneCount);
