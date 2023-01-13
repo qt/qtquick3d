@@ -12,6 +12,8 @@ qt_copy_or_install(
         GridGeometrySpecifics.qml
         HeightFieldGeometrySection.qml
         HeightFieldGeometrySpecifics.qml
+        InfiniteGridSection.qml
+        InfiniteGridSpecifics.qml
         InstanceModelSection.qml
         InstanceModelSpecifics.qml
         InstanceRepeaterSection.qml
