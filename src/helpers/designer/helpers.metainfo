@@ -158,4 +158,24 @@ MetaInfo {
             requiredImport: "QtQuick3D.Helpers"
         }
     }
+
+    Type {
+        name: "QtQuick3D.Helpers.InfiniteGrid"
+        icon: "images/infinitegrid16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Infinite Grid"
+            category: "Helpers"
+            libraryIcon: "images/infinitegrid.png"
+            version: "6.5"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
 }

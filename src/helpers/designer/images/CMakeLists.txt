@@ -19,6 +19,9 @@ qt_copy_or_install(
         heightfieldgeometry.png
         heightfieldgeometry16.png
         heightfieldgeometry@2x.png
+        infinitegrid.png
+        infinitegrid16.png
+        infinitegrid@2x.png
         instancemodel.png
         instancemodel16.png
         instancemodel@2x.png
