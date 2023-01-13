@@ -89,13 +89,13 @@ Column {
 
             SectionLayout {
                 PropertyLabel {
-                    text: qsTr("Height Map")
-                    tooltip: qsTr("Sets the URL of the heightMap grayscale image.")
+                    text: qsTr("Source")
+                    tooltip: qsTr("Sets the location of an image file containing the heightmap data.")
                 }
 
                 SecondColumnLayout {
                     UrlChooser {
-                        backendValue: backendValues.heightMap
+                        backendValue: backendValues.source
                     }
 
                     ExpandingSpacer {}
