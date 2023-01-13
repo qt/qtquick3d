@@ -220,7 +220,12 @@ QQuick3DWindowAttachment *QQuick3DSceneManager::getOrSetWindowAttachment(QQuickW
         wa = aProperty.value<QQuick3DWindowAttachment *>();
 
     if (!wa) {
-        wa = new QQuick3DWindowAttachment(&window);
+        // WindowAttachment will not be created under 'window'.
+        // It should be deleted after all the cleanups related with 'window',
+        // otherwise some resourses deleted after it, will not be cleaned correctly.
+        wa = new QQuick3DWindowAttachment(nullptr);
+        QObject::connect(&window, &QObject::destroyed, wa, [wa](QObject *){ delete wa; }, Qt::QueuedConnection);
+
         window.setProperty(qtQQ3DWAPropName, QVariant::fromValue(wa));
         QObject::connect(&window, &QQuickWindow::afterAnimating, wa, &QQuick3DWindowAttachment::preSync);
         QObject::connect(&window, &QQuickWindow::afterFrameEnd, wa, &QQuick3DWindowAttachment::cleanupResources, Qt::DirectConnection);
@@ -335,7 +340,9 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
 
 QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
 {
-
+    qDeleteAll(sceneManagerCleanupQueue);
+    qDeleteAll(resourceCleanupQueue);
+    qDeleteAll(pendingResourceCleanupQueue);
 }
 
 void QQuick3DWindowAttachment::preSync()
