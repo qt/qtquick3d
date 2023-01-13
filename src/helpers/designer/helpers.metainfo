@@ -178,4 +178,24 @@ MetaInfo {
             requiredImport: "QtQuick3D.Helpers"
         }
     }
+
+    Type {
+        name: "QtQuick3D.Helpers.OrbitCameraController"
+        icon: "images/orbitcameracontroller16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: true
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Orbit Camera Controller"
+            category: "Helpers"
+            libraryIcon: "images/orbitcameracontroller.png"
+            version: "6.4"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
 }
