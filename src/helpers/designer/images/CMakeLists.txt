@@ -34,5 +34,8 @@ qt_copy_or_install(
         wasdcontroller.png
         wasdcontroller16.png
         wasdcontroller@2x.png
+        orbitcameracontroller.png
+        orbitcameracontroller16.png
+        orbitcameracontroller@2x.png
     DESTINATION "${destination}"
 )

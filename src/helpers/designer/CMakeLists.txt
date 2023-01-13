@@ -21,6 +21,8 @@ qt_copy_or_install(
         LookAtNodeSection.qml
         LookAtNodeSpecifics.qml
         NodeSection.qml
+        OrbitCameraControllerSection.qml
+        OrbitCameraControllerSpecifics.qml
         Repeater3DSection.qml
         WasdControllerSection.qml
         WasdControllerSpecifics.qml
