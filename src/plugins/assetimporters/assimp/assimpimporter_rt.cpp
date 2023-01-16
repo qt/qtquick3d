@@ -47,19 +47,6 @@ Q_REQUIRED_RESULT static inline QColor aiColorToQColor(const aiColor4D &color)
     return QColor::fromRgbF(color.r, color.g, color.b, color.a);
 }
 
-static QByteArrayView fromAiString(QSSGSceneDesc::Scene::Allocator &allocator, const aiString &string)
-{
-    const qsizetype length = string.length;
-    if (length > 0) {
-        const qsizetype asize = length + 1;
-        char *data = reinterpret_cast<char *>(allocator.allocate(asize));
-        qstrncpy(data, string.data, length + 1);
-        return QByteArrayView{data, length};
-    }
-
-    return QByteArrayView();
-}
-
 static QByteArray fromAiString(const aiString &string)
 {
     const qsizetype length = string.length;

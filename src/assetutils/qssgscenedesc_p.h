@@ -69,7 +69,6 @@ struct Q_QUICK3DASSETUTILS_EXPORT Scene
 {
     using ResourceNodes = QVarLengthArray<Node *>;
     using MeshStorage = QVector<QSSGMesh::Mesh>;
-    using Allocator = QSSGPerFrameAllocator;
     using Animations = QVector<Animation *>;
 
     // Root node, usually an empty 'transform' node.
