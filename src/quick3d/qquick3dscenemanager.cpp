@@ -330,7 +330,12 @@ void QQuick3DWindowAttachment::cleanupResources()
     // removal to the render context for deletion
     // The render context will take ownership of the nodes
     // and clear the list
-    Q_ASSERT(rci);
+
+    // In special cases there is no rci because synchronize() is never called.
+    // This can happen when running with the software backend of Qt Quick.
+    // Handle this gracefully.
+    if (!rci)
+        return;
 
     // Check if there's orphaned resources that needs to be
     // cleaned out first.
