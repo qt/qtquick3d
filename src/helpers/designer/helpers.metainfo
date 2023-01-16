@@ -238,4 +238,24 @@ MetaInfo {
             requiredImport: "QtQuick3D.Helpers"
         }
     }
+
+    Type {
+        name: "QtQuick3D.Helpers.LodManager"
+        icon: "images/lodmanager16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: true
+        }
+
+        ItemLibraryEntry {
+            name: "Lod Manager"
+            category: "Helpers"
+            libraryIcon: "images/lodmanager.png"
+            version: "6.5"
+            requiredImport: "QtQuick3D.Helpers"
+        }
+    }
 }

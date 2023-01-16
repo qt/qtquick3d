@@ -43,5 +43,8 @@ qt_copy_or_install(
         proceduralskytexturedata.png
         proceduralskytexturedata16.png
         proceduralskytexturedata@2x.png
+        lodmanager.png
+        lodmanager16.png
+        lodmanager@2x.png
     DESTINATION "${destination}"
 )
