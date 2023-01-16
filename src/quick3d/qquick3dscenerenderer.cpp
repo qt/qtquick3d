@@ -1291,7 +1291,7 @@ void QQuick3DSGDirectRenderer::requestRender()
 
 void QQuick3DSGDirectRenderer::prepare()
 {
-    if (!m_isVisible)
+    if (!m_isVisible || !m_renderer)
         return;
 
     if (m_renderer->m_sgContext->rhiContext()->isValid()) {
@@ -1334,7 +1334,7 @@ void QQuick3DSGDirectRenderer::prepare()
 
 void QQuick3DSGDirectRenderer::render()
 {
-    if (!m_isVisible)
+    if (!m_isVisible || !m_renderer)
         return;
 
     if (m_renderer->m_sgContext->rhiContext()->isValid()) {

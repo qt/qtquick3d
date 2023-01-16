@@ -415,6 +415,9 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 renderer = new QQuick3DSceneRenderer(rci);
             }
             Q_QUICK3D_PROFILE_ASSIGN_ID(this, renderer);
+        } else {
+            qWarning("The Qt Quick scene is using a rendering method that is not based on QRhi and a 3D graphics API. "
+                     "Qt Quick 3D is not functional in such an environment. The View3D item is not going to display anything.");
         }
     }
 
@@ -516,6 +519,8 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         if (!n->renderer) {
             n->window = window();
             n->renderer = createRenderer();
+            if (!n->renderer)
+                return nullptr;
             n->renderer->fboNode = n;
             n->quickFbo = this;
             connect(window(), SIGNAL(screenChanged(QScreen*)), n, SLOT(handleScreenChange()));
@@ -556,6 +561,8 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         if (!n->renderer) {
             n->window = window();
             n->renderer = createRenderer();
+            if (!n->renderer)
+                return nullptr;
         }
 
         const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
@@ -983,7 +990,10 @@ void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
     auto renderMode = (mode == Underlay) ? QQuick3DSGDirectRenderer::Underlay
                                          : QQuick3DSGDirectRenderer::Overlay;
     if (!m_directRenderer) {
-        m_directRenderer = new QQuick3DSGDirectRenderer(createRenderer(), window(), renderMode);
+        QQuick3DSceneRenderer *sceneRenderer = createRenderer();
+        if (!sceneRenderer)
+            return;
+        m_directRenderer = new QQuick3DSGDirectRenderer(sceneRenderer, window(), renderMode);
         connect(window(), &QQuickWindow::sceneGraphInvalidated, this, &QQuick3DViewport::cleanupDirectRenderer, Qt::DirectConnection);
     }
 
