@@ -81,10 +81,12 @@ struct Q_QUICK3DASSETUTILS_EXPORT Scene
     mutable quint16 nodeId = 0;
 
     void reset();
+    void cleanup();
 };
 
 struct Q_QUICK3DASSETUTILS_EXPORT PropertyCall
 {
+    virtual ~PropertyCall() = default;
     virtual bool set(QQuick3DObject &, const char *, const void *) = 0;
     virtual bool set(QQuick3DObject &, const char *, const QVariant &) = 0;
     virtual bool get(const QQuick3DObject &, const void *[]) const = 0;
@@ -110,6 +112,7 @@ struct Property
 
 inline Property::~Property()
 {
+    delete call;
     destructValue(value);
 }
 
@@ -158,7 +161,8 @@ struct Node
     explicit Node(Node::Type type, Node::RuntimeType rt)
         : Node(nullptr, type, rt) {}
 
-    ~Node() { destructNode(*this); }
+    virtual ~Node() { destructNode(*this); }
+    void cleanupChildren();
 
     QByteArray name;
     Scene *scene = nullptr;

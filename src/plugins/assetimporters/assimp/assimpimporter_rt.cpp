@@ -1703,22 +1703,21 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
         QSSGSceneDesc::setProperty(*skin.node, "inverseBindPoses", &QQuick3DSkin::setInverseBindPoses, inverseBindPoses);
     }
 
-
-    static const auto fuzzyComparePos = [](const aiVectorKey &pos, const QSSGSceneDesc::Animation::KeyPosition *prev){
+    static const auto fuzzyComparePos = [](const aiVectorKey *pos, const aiVectorKey *prev){
         if (!prev)
             return false;
-        return qFuzzyCompare(pos.mValue.x, prev->value.x())
-                && qFuzzyCompare(pos.mValue.y, prev->value.y())
-                && qFuzzyCompare(pos.mValue.z, prev->value.z());
+        return qFuzzyCompare(pos->mValue.x, prev->mValue.x)
+                && qFuzzyCompare(pos->mValue.y, prev->mValue.y)
+                && qFuzzyCompare(pos->mValue.z, prev->mValue.z);
     };
 
-    static const auto fuzzyCompareRot = [](const aiQuatKey &rot, const QSSGSceneDesc::Animation::KeyPosition *prev){
+    static const auto fuzzyCompareRot = [](const aiQuatKey *rot, const aiQuatKey *prev){
         if (!prev)
             return false;
-        return qFuzzyCompare(rot.mValue.x, prev->value.x())
-                && qFuzzyCompare(rot.mValue.y, prev->value.y())
-                && qFuzzyCompare(rot.mValue.z, prev->value.z())
-                && qFuzzyCompare(rot.mValue.w, prev->value.w());
+        return qFuzzyCompare(rot->mValue.x, prev->mValue.x)
+                && qFuzzyCompare(rot->mValue.y, prev->mValue.y)
+                && qFuzzyCompare(rot->mValue.z, prev->mValue.z)
+                && qFuzzyCompare(rot->mValue.w, prev->mValue.w);
     };
 
     static const auto createAnimation = [](QSSGSceneDesc::Scene &targetScene, const aiAnimation &srcAnim, const AnimationNodeMap &animatingNodes) {
@@ -1752,14 +1751,13 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                         Animation::Channel targetChannel;
                         targetChannel.targetProperty = Animation::Channel::TargetProperty::Position;
                         targetChannel.target = targetNode;
-                        const Animation::KeyPosition *prevPos = nullptr;
+                        const aiVectorKey *prevPos = nullptr;
                         for (It posKeyIdx = 0; posKeyIdx != posKeyEnd; ++posKeyIdx) {
                             const auto &posKey = srcChannel.mPositionKeys[posKeyIdx];
-                            if (fuzzyComparePos(posKey, prevPos))
+                            if (fuzzyComparePos(&posKey, prevPos))
                                 continue;
-                            const auto animationKey = new Animation::KeyPosition(toAnimationKey(posKey, freq));
-                            targetChannel.keys.push_back(animationKey);
-                            prevPos = animationKey;
+                            targetChannel.keys.push_back(new Animation::KeyPosition(toAnimationKey(posKey, freq)));
+                            prevPos = &posKey;
                         }
 
                         const auto isUnchanged = [&targetChannel, currentPropertyValue]() {
@@ -1768,11 +1766,16 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                             auto currentPos = currentPropertyValue("position").value<QVector3D>();
                             return qFuzzyCompare(targetChannel.keys[0]->value.toVector3D(), currentPos);
                         };
-                        if (!targetChannel.keys.isEmpty() && !isUnchanged()) {
-                            channels.push_back(new Animation::Channel(targetChannel));
-                            float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime) * freq;
-                            if (targetAnimation.length < endTime)
-                                targetAnimation.length = endTime;
+                        if (!targetChannel.keys.isEmpty()) {
+                            if (!isUnchanged()) {
+                                channels.push_back(new Animation::Channel(targetChannel));
+                                float endTime = float(srcChannel.mPositionKeys[posKeyEnd - 1].mTime) * freq;
+                                if (targetAnimation.length < endTime)
+                                    targetAnimation.length = endTime;
+                            } else {
+                                // the keys will not be used.
+                                qDeleteAll(targetChannel.keys);
+                            }
                         }
                     }
 
@@ -1781,14 +1784,13 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                         Animation::Channel targetChannel;
                         targetChannel.targetProperty = Animation::Channel::TargetProperty::Rotation;
                         targetChannel.target = targetNode;
-                        const Animation::KeyPosition *prevRot = nullptr;
+                        const aiQuatKey *prevRot = nullptr;
                         for (It rotKeyIdx = 0; rotKeyIdx != rotKeyEnd; ++rotKeyIdx) {
                             const auto &rotKey = srcChannel.mRotationKeys[rotKeyIdx];
-                            if (fuzzyCompareRot(rotKey, prevRot))
+                            if (fuzzyCompareRot(&rotKey, prevRot))
                                 continue;
-                            const auto animationKey = new Animation::KeyPosition(toAnimationKey(rotKey, freq));
-                            targetChannel.keys.push_back(animationKey);
-                            prevRot = animationKey;
+                            targetChannel.keys.push_back(new Animation::KeyPosition(toAnimationKey(rotKey, freq)));
+                            prevRot = &rotKey;
                         }
 
                         const auto isUnchanged = [&targetChannel, currentPropertyValue]() {
@@ -1798,11 +1800,16 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                             QQuaternion rot = currentVal.isValid() ? currentVal.value<QQuaternion>() : QQuaternion{};
                             return qFuzzyCompare(QQuaternion(targetChannel.keys[0]->value), rot);
                         };
-                        if (!targetChannel.keys.isEmpty() && !isUnchanged()) {
-                            channels.push_back(new Animation::Channel(targetChannel));
-                            float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime) * freq;
-                            if (targetAnimation.length < endTime)
-                                targetAnimation.length = endTime;
+                        if (!targetChannel.keys.isEmpty()) {
+                            if (!isUnchanged()) {
+                                channels.push_back(new Animation::Channel(targetChannel));
+                                float endTime = float(srcChannel.mRotationKeys[rotKeyEnd - 1].mTime) * freq;
+                                if (targetAnimation.length < endTime)
+                                    targetAnimation.length = endTime;
+                            } else {
+                                // the keys will not be used.
+                                qDeleteAll(targetChannel.keys);
+                            }
                         }
                     }
 
@@ -1811,14 +1818,13 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                         Animation::Channel targetChannel;
                         targetChannel.targetProperty = Animation::Channel::TargetProperty::Scale;
                         targetChannel.target = targetNode;
-                        const Animation::KeyPosition *prevScale = nullptr;
+                        const aiVectorKey *prevScale = nullptr;
                         for (It scaleKeyIdx = 0; scaleKeyIdx != scaleKeyEnd; ++scaleKeyIdx) {
                             const auto &scaleKey = srcChannel.mScalingKeys[scaleKeyIdx];
-                            if (fuzzyComparePos(scaleKey, prevScale))
+                            if (fuzzyComparePos(&scaleKey, prevScale))
                                 continue;
-                            const auto animationKey = new Animation::KeyPosition(toAnimationKey(scaleKey, freq));
-                            targetChannel.keys.push_back(animationKey);
-                            prevScale = animationKey;
+                            targetChannel.keys.push_back(new Animation::KeyPosition(toAnimationKey(scaleKey, freq)));
+                            prevScale = &scaleKey;
                         }
 
                         const auto isUnchanged = [&targetChannel, currentPropertyValue]() {
@@ -1829,11 +1835,16 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                             return qFuzzyCompare(targetChannel.keys[0]->value.toVector3D(), scale);
                         };
 
-                        if (!targetChannel.keys.isEmpty() && !isUnchanged()) {
-                            channels.push_back(new Animation::Channel(targetChannel));
-                            float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime) * freq;
-                            if (targetAnimation.length < endTime)
-                                targetAnimation.length = endTime;
+                        if (!targetChannel.keys.isEmpty()) {
+                            if (!isUnchanged()) {
+                                channels.push_back(new Animation::Channel(targetChannel));
+                                float endTime = float(srcChannel.mScalingKeys[scaleKeyEnd - 1].mTime) * freq;
+                                if (targetAnimation.length < endTime)
+                                    targetAnimation.length = endTime;
+                            } else {
+                                // the keys will not be used.
+                                qDeleteAll(targetChannel.keys);
+                            }
                         }
                     }
                 }
@@ -1932,6 +1943,7 @@ QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, 
         if (generatedFiles)
             generatedFiles->append(targetFileName);
     }
+    scene.cleanup();
 
     return errorString;
 }
