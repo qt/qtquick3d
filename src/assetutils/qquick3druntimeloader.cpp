@@ -196,6 +196,8 @@ void QQuick3DRuntimeLoader::loadSource()
     m_boundsDirty = true;
     m_instancingChanged = m_instancing != nullptr;
     updateModels();
+    // Cleanup scene before deleting.
+    scene.cleanup();
 }
 
 void QQuick3DRuntimeLoader::updateModels()

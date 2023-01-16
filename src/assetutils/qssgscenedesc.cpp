@@ -46,6 +46,29 @@ void QSSGSceneDesc::Scene::reset()
     meshStorage.clear();
 }
 
+void QSSGSceneDesc::Scene::cleanup()
+{
+    id.clear();
+    nodeId = 0;
+
+    root->cleanupChildren();
+    delete root;
+    root = nullptr;
+
+    qDeleteAll(resources);
+    resources.clear();
+
+    for (auto *anim: animations) {
+        for (auto *ch: anim->channels) {
+            qDeleteAll(ch->keys);
+            ch->keys.clear();
+            delete ch;
+        }
+        delete anim;
+    }
+    animations.clear();
+}
+
 QMetaType QSSGSceneDesc::listViewMetaType()
 {
     return QMetaType::fromType<QSSGSceneDesc::ListView *>();
@@ -56,24 +79,19 @@ void QSSGSceneDesc::destructValue(QVariant &value)
     if (!value.isValid())
         return;
 
-    if (!(value.metaType().flags() & QMetaType::TypeFlag::IsPointer))
-        return; // Non-pointer types are destructed by ~QVariant
-
-    if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
-        qDebug() << "Mesh node property: not deleted.";
+    if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::NodeList *>())
+        delete value.value<NodeList *>();
+    else if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::ListView *>())
+        delete value.value<ListView *>();
+    // Non-pointer types are destructed by ~QVariant
+    else if ((value.metaType().flags() & QMetaType::TypeFlag::IsPointer)
+            // Mesh node will be deleted when cleaning up resources.
+            && (value.metaType() != QMetaType::fromType<QSSGSceneDesc::Mesh *>())
+            // Referencing nodes will not be deleted here.
+            // They should be deleted in the node hierarchy or resources.
+            && (value.metaType().id() != qMetaTypeId<QSSGSceneDesc::Node *>())) {
+        qWarning() << value.metaType().name() << " was not destroyed correctly.";
     }
-
-    if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
-        // Node properties are pointers, and may be used multiple times.
-        // We need some sort of refcounting/garbage collection for these.
-        return;
-    }
-
-    // All other pointer types are supposed to be deleted. QVariant::data()
-    // gives us a pointer to the pointer.
-
-    void *pointer = *static_cast<void**>(value.data());
-    value.metaType().destroy(pointer);
 }
 
 void QSSGSceneDesc::destructNode(Node &node)
@@ -81,6 +99,17 @@ void QSSGSceneDesc::destructNode(Node &node)
     for (auto *prop : node.properties)
         delete prop;
     // Not necessary to clear the list as long as we only call this from the destructor
+}
+
+void QSSGSceneDesc::Node::cleanupChildren()
+{
+    auto firstIt = children.begin();
+    auto lastIt = children.end();
+    for (auto it = firstIt; it != lastIt; ++it) {
+        Node *node = *it;
+        node->cleanupChildren();
+        delete node;
+    }
 }
 
 QSSGSceneDesc::Property *QSSGSceneDesc::setProperty(Node &node, const char *name, QVariant &&value)
