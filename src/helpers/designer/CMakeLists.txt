@@ -20,6 +20,8 @@ qt_copy_or_install(
         InstanceModelSpecifics.qml
         InstanceRepeaterSection.qml
         InstanceRepeaterSpecifics.qml
+        LodManagerSection.qml
+        LodManagerSpecifics.qml
         LookAtNodeSection.qml
         LookAtNodeSpecifics.qml
         NodeSection.qml
