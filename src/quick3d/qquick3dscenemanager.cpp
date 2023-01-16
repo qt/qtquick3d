@@ -340,7 +340,12 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
 
 QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
 {
-    qDeleteAll(sceneManagerCleanupQueue);
+    for (auto manager: sceneManagerCleanupQueue) {
+        sceneManagers.removeOne(manager);
+        delete manager;
+    }
+    // remaining sceneManagers should also be removed
+    qDeleteAll(sceneManagers);
     qDeleteAll(resourceCleanupQueue);
     qDeleteAll(pendingResourceCleanupQueue);
 }
@@ -374,7 +379,11 @@ void QQuick3DWindowAttachment::cleanupResources()
 void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet<QSSGRenderGraphObject *> &resourceLoaders)
 {
     // Terminate old scene managers
-    qDeleteAll(sceneManagerCleanupQueue);
+    for (auto manager: sceneManagerCleanupQueue) {
+        sceneManagers.removeOne(manager);
+        delete manager;
+    }
+    // Terminate old scene managers
     sceneManagerCleanupQueue = {};
 
     // Cleanup (+ rci update)
@@ -425,7 +434,7 @@ void QQuick3DWindowAttachment::registerSceneManager(QQuick3DSceneManager &manage
 
 void QQuick3DWindowAttachment::unregisterSceneManager(QQuick3DSceneManager &manager)
 {
-    sceneManagers.removeAll(&manager);
+    sceneManagers.removeOne(&manager);
 }
 
 void QQuick3DWindowAttachment::queueForCleanup(QSSGRenderGraphObject *obj)
