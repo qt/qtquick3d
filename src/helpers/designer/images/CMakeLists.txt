@@ -13,6 +13,9 @@ qt_copy_or_install(
         dummy.png
         dummy16.png
         dummy@2x.png
+        extendedsceneenvironment.png
+        extendedsceneenvironment16.png
+        extendedsceneenvironment@2x.png
         gridgeometry.png
         gridgeometry16.png
         gridgeometry@2x.png
