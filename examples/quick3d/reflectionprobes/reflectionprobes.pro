@@ -8,6 +8,6 @@ SOURCES += \
 
 RESOURCES += \
     qml.qrc \
-    materials.qrc
+    resources.qrc
 
 
