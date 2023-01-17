@@ -14,10 +14,6 @@ Window {
     visible: true
     title: qsTr("Reflection Probes")
 
-    WasdController {
-        controlledObject: camera
-    }
-
     View3D {
         id: view
         anchors.fill: parent
@@ -32,8 +28,8 @@ Window {
 
         PerspectiveCamera {
             id: camera
-            position: Qt.vector3d(-100, 500, 600)
-            eulerRotation.x: -30
+            position: Qt.vector3d(-50, 700, 475)
+            eulerRotation.x: -50
         }
 
         DirectionalLight { }
@@ -210,8 +206,6 @@ Window {
 
     SettingsPanel {
         id: settingsPanel
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
+        iconSize: 16 + Math.max(window.width, window.height) * 0.05
     }
 }
