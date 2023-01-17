@@ -8,6 +8,8 @@ qt_copy_or_install(
         AxisHelperSpecifics.qml
         DebugViewSection.qml
         DebugViewSpecifics.qml
+        ExtendedSceneEnvironmentSection.qml
+        ExtendedSceneEnvironmentSpecifics.qml
         GridGeometrySection.qml
         GridGeometrySpecifics.qml
         HeightFieldGeometrySection.qml
