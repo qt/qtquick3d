@@ -23,6 +23,8 @@ qt_copy_or_install(
         NodeSection.qml
         OrbitCameraControllerSection.qml
         OrbitCameraControllerSpecifics.qml
+        ProceduralSkyTextureDataSection.qml
+        ProceduralSkyTextureDataSpecifics.qml
         Repeater3DSection.qml
         WasdControllerSection.qml
         WasdControllerSpecifics.qml
