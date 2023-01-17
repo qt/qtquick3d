@@ -37,5 +37,8 @@ qt_copy_or_install(
         orbitcameracontroller.png
         orbitcameracontroller16.png
         orbitcameracontroller@2x.png
+        proceduralskytexturedata.png
+        proceduralskytexturedata16.png
+        proceduralskytexturedata@2x.png
     DESTINATION "${destination}"
 )
