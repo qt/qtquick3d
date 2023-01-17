@@ -39,6 +39,7 @@ qt_add_qml_module(reflectionprobes
     RESOURCES
         res/OpenfootageNET_lowerAustria01-1024.hdr
         res/snowflake.png
+        res/icon_settings.png
     NO_RESOURCE_TARGET_PATH
 )
 
