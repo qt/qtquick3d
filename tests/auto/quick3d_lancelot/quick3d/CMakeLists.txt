@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquick3d
         ../shared/qbaselinetest.cpp ../shared/qbaselinetest.h
         tst_quick3d.cpp
     DEFINES
-        QMAKESPEC=\\\"\\\"
+        QMAKESPEC=""
     INCLUDE_DIRECTORIES
         ../shared
     LIBRARIES
