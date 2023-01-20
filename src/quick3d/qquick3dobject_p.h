@@ -177,8 +177,6 @@ public:
 
         QQuick3DObjectChangeListener *listener;
         ChangeTypes types;
-
-        QVector<QQuick3DObjectPrivate::ChangeListener> changeListeners;
     };
 
     struct ExtraData
