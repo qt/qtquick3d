@@ -781,7 +781,7 @@ QSSGRenderGraphObject *QQuick3DGeometry::updateSpatialNode(QSSGRenderGraphObject
             quint32 count = 0;
             if (!d->m_indexBuffer.isEmpty() && indexBufferComponentSize)
                 count = d->m_indexBuffer.size() / indexBufferComponentSize;
-            else
+            else if (d->m_stride)
                 count = d->m_vertexBuffer.size() / d->m_stride;
             geometry->addSubset(offset, count, d->m_min, d->m_max);
         } else {
