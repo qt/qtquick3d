@@ -93,10 +93,6 @@ QQuick3DObject::~QQuick3DObject()
     if (d->sceneRefCount > 1)
         d->sceneRefCount = 1; // Make sure the scene is set to null in next call to derefSceneManager().
 
-    // Right about now would be a good time for any objects whatching the lifetime of this object
-    // to release its referense to this.
-    emit detachWatchers(QPrivateSignal());
-
     if (!d->parentItem && d->sceneManager)
         QQuick3DObjectPrivate::derefSceneManager(this);
 }
