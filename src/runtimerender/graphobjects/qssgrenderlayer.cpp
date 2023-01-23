@@ -97,7 +97,7 @@ void QSSGRenderLayer::setImportScene(QSSGRenderNode &rootNode)
     auto &importChildren = importSceneNode->children;
     Q_ASSERT(importChildren.isEmpty());
     // We don't want the list to modify our node, so we set the tail and head manually.
-    importChildren.m_head = children.m_tail = &rootNode;
+    importChildren.m_head = importChildren.m_tail = &rootNode;
 }
 
 void QSSGRenderLayer::removeImportScene(QSSGRenderNode &rootNode)
