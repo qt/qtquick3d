@@ -86,7 +86,6 @@ Q_SIGNALS:
     void parentChanged();
     void childrenChanged();
     void stateChanged();
-    void detachWatchers(QPrivateSignal);
 
 protected:
     virtual QSSGRenderGraphObject *updateSpatialNode(QSSGRenderGraphObject *node);

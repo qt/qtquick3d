@@ -50,7 +50,7 @@ public:
     using ConnectionMap = QHash<ConnectionKey, QMetaObject::Connection>;
 
     template<typename SceneContext, typename CallContext, typename Setter>
-    static void attachWatcherPriv(SceneContext *sceneContext, CallContext *callContext, Setter setter, QQuick3DObject *newO, QQuick3DObject *oldO)
+    static void attachWatcherPriv(SceneContext *sceneContext, CallContext *callContext, Setter setter, QQuick3DObject *newO, QObject *oldO)
     {
         static_assert(std::is_base_of_v<QQuick3DObject, SceneContext>, "The scene context must be a QQuick3DObject");
         static_assert(std::is_member_function_pointer_v<Setter>, "The assumption is that the setter is a member function!");
@@ -65,7 +65,10 @@ public:
         ConnectionKey key{static_cast<QObject *>(callContext), h};
         // disconnect previous destruction listener
         if (oldO) {
-            QQuick3DObjectPrivate::derefSceneManager(oldO);
+            // NOTE: If the old object is inside the QObject's dtor (e.g., QObject::destroyed) we can't
+            // call deref (and there's no point anymore either).
+            if (auto old3dO = qobject_cast<QQuick3DObject *>(oldO))
+                QQuick3DObjectPrivate::derefSceneManager(old3dO);
 
             auto it = connectionMap.constFind(key);
             if (it != connectionMap.cend()) {
@@ -78,7 +81,7 @@ public:
         if (newO) {
             if (sceneManager)
                 QQuick3DObjectPrivate::refSceneManager(newO, *sceneManager);
-            auto connection = QObject::connect(newO, &QQuick3DObject::detachWatchers, callContext, [callContext, setter](){ (callContext->*setter)(nullptr); });
+            auto connection = QObject::connect(newO, &QObject::destroyed, callContext, [callContext, setter](){ (callContext->*setter)(nullptr); });
             connectionMap.insert(key, connection);
         }
     }
