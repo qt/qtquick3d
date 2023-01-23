@@ -796,8 +796,7 @@ QSSGRenderGraphObject *QQuick3DNode::updateSpatialNode(QSSGRenderGraphObject *no
     spacialNode->staticFlags = d->m_staticFlags;
 
     // The Hidden in Editor flag overrides the visible value
-    const bool nodeActive = spacialNode->getLocalState(QSSGRenderNode::LocalState::Active);
-    if (nodeActive && d->m_isHiddenInEditor)
+    if (d->m_isHiddenInEditor)
         spacialNode->setState(QSSGRenderNode::LocalState::Active, false);
     else
         spacialNode->setState(QSSGRenderNode::LocalState::Active, d->m_visible);
