@@ -316,7 +316,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         currentTexture = superSamplingAA ? m_ssaaTexture : m_texture;
 
         // Do effects before antialiasing
-        if (m_effectSystem && m_layer->firstEffect) {
+        if (m_effectSystem && m_layer->firstEffect && m_layer->renderedCamera) {
             const auto &renderer = m_sgContext->renderer();
             QSSGLayerRenderData *theRenderData = renderer->getOrCreateLayerRenderData(*m_layer);
             Q_ASSERT(theRenderData);
