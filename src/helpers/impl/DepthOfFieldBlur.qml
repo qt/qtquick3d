@@ -38,7 +38,7 @@ DepthOfFieldEffect {
     Buffer {
         id: downsampleBuffer
         name: "downsampleBuffer"
-        format: Buffer.RGBA8
+        format: Buffer.RGBA16F
         textureFilterOperation: Buffer.Linear
         textureCoordOperation: Buffer.ClampToEdge
         sizeMultiplier: 0.5
