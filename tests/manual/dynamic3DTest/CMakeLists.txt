@@ -35,4 +35,5 @@ qt_internal_add_resource(manual_test_dynamic3DTest "qml"
 qt_add_qml_module(manual_test_dynamic3DTest
     VERSION 1.0
     URI io.qt.tests.manual.dynamic3DTest
+    RESOURCE_PREFIX /
 )
