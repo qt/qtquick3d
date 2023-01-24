@@ -28,6 +28,7 @@ Window {
         anchors.bottom: parent.bottom
         implicitWidth: 420
         color: "lightGray"
+        lutTexture: lutSourceTexture
     }
 
     View3D {
@@ -52,6 +53,12 @@ Window {
             lensFlareApplyDirtTexture: true
             lensFlareApplyStarburstTexture: true
             lensFlareCameraDirection: view3D.camera.forward
+            lutTexture: lutSourceTexture
+
+            Texture {
+                id: lutSourceTexture
+                source: "qrc:/luts/identity.png"
+            }
         }
 
         camera: helper.orbitControllerEnabled ? orbitCamera : wasdCamera

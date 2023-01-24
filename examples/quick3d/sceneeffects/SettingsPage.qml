@@ -12,6 +12,7 @@ Rectangle {
 
     required property Camera camera
     required property var sceneEnvironment
+    required property Texture lutTexture
 
     ScrollView {
         anchors.fill: parent
@@ -672,8 +673,8 @@ Rectangle {
                         textRole: "text"
                         valueRole: "value"
                         implicitContentWidthPolicy: ComboBox.WidestText
-                        onActivated: sceneEnvironment.lutTextureSource = currentValue
-                        Component.onCompleted: lutSourceTextureComboBox.currentIndex = lutSourceTextureComboBox.indexOfValue(sceneEnvironment.lutTextureSource)
+                        onActivated: lutTexture.source = currentValue
+                        Component.onCompleted: lutSourceTextureComboBox.currentIndex = lutSourceTextureComboBox.indexOfValue(lutTexture.source)
                         model: [
                             { value: Qt.url("qrc:/luts/grayscale.png"), text: "Greyscale"},
                             { value: Qt.url("qrc:/luts/identity.png"), text: "Identity"},
@@ -685,7 +686,7 @@ Rectangle {
                     text: "Reset to Defaults"
                     onClicked: {
                         sceneEnvironment.lutFilterAlpha = 1.0;
-                        sceneEnvironment.lutTextureSource = Qt.url("qrc:/luts/identity.png");
+                        lutTexture.source = Qt.url("qrc:/luts/identity.png");
                     }
                 }
             }

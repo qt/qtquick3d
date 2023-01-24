@@ -450,7 +450,7 @@
 
     \default 1
 */
-/*! \qmlproperty Texture ExtendedSceneEnvironment::lutTextureSource
+/*! \qmlproperty Texture ExtendedSceneEnvironment::lutTexture
     Source of look-up texture. If no texture is set a built-in identity
     table is used.
 */

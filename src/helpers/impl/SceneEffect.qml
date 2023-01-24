@@ -32,21 +32,35 @@ MainSceneEffect {
     property bool lensFlareDebug: false
 
     property TextureInput lensColorTexture: TextureInput {
-        texture: Texture {
-            source: "qrc:/qtquick3d_helpers/images/gradientTexture.png"
-            tilingModeHorizontal: Texture.ClampToEdge
-            tilingModeVertical: Texture.ClampToEdge
-        }
+        id: lensColorTextureInput
+        texture: defaultLensColorTexture
     }
+    property alias lensColorTextureAlias: lensColorTextureInput.texture
+    Texture {
+        id: defaultLensColorTexture
+        source: "qrc:/qtquick3d_helpers/images/gradientTexture.png"
+        tilingModeHorizontal: Texture.ClampToEdge
+        tilingModeVertical: Texture.ClampToEdge
+    }
+
     property TextureInput lensDirtTexture: TextureInput {
-        texture: Texture {
-            source: "qrc:/qtquick3d_helpers/images/lens_dirt_default.jpeg"
-        }
+        id: lensDirtTextureInput
+        texture: defaultLensColorTexture
     }
+    property alias lensDirtTextureAlias: lensDirtTextureInput.texture
+    Texture {
+        id: defaultLensDirtTexture
+        source: "qrc:/qtquick3d_helpers/images/lens_dirt_default.jpeg"
+    }
+
     property TextureInput starburstTexture: TextureInput {
-        texture: Texture {
-            source: "qrc:/qtquick3d_helpers/images/noiseTexture.png"
-        }
+        id: lensStarburstTextureInput
+        texture: defaultLensStarburstTexture
+    }
+    property alias starburstTextureAlias: lensStarburstTextureInput.texture
+    Texture {
+        id: defaultLensStarburstTexture
+        source: "qrc:/qtquick3d_helpers/images/noiseTexture.png"
     }
 
     // Glow data
@@ -65,15 +79,17 @@ MainSceneEffect {
 
     // Color Grading (LUT)
     property bool enableLut: false
-    property alias lutTextureSource: lutTexture.source
+    property alias lutTextureAlias: lutTextureInput.texture
     property TextureInput lut: TextureInput {
-        texture: Texture {
-            id: lutTexture
-            source: "qrc:/qtquick3d_helpers/luts/identity.png"
-        }
+        id: lutTextureInput
+        texture: defaultLutTexture
     }
     property real lutSize: 16.0 // size of texture, textures are 3d in 2d, so width = lutSize * lutSize, height = lutSize
     property real lutFilterAlpha: 1.0 // 0.0 - 1.0
+    Texture {
+        id: defaultLutTexture
+        source: "qrc:/qtquick3d_helpers/luts/identity.png"
+    }
 
     // Vignette
     property bool vignetteEnabled: false

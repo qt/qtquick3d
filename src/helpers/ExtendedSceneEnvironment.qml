@@ -33,7 +33,7 @@ SceneEffectEnvironment {
     property alias lutEnabled: sceneEffect.enableLut
     property alias lutSize: sceneEffect.lutSize
     property alias lutFilterAlpha: sceneEffect.lutFilterAlpha
-    property alias lutTextureSource: sceneEffect.lutTextureSource
+    property alias lutTexture: sceneEffect.lutTextureAlias
 
     // Glow Effect
     enum GlowBlendMode {
@@ -84,9 +84,9 @@ SceneEffectEnvironment {
     property alias lensFlareApplyDirtTexture: sceneEffect.lensFlareApplyDirtTexture
     property alias lensFlareApplyStarburstTexture: sceneEffect.lensFlareApplyStarburstTexture
     property alias lensFlareCameraDirection: sceneEffect.lensFlareCameraDirection
-    property alias lensFlareLensColorTexture: sceneEffect.lensColorTexture
-    property alias lensFlareLensDirtTexture: sceneEffect.lensDirtTexture
-    property alias lensFlareLensStarburstTexture: sceneEffect.starburstTexture
+    property alias lensFlareLensColorTexture: sceneEffect.lensColorTextureAlias
+    property alias lensFlareLensDirtTexture: sceneEffect.lensDirtTextureAlias
+    property alias lensFlareLensStarburstTexture: sceneEffect.starburstTextureAlias
 
     DepthOfFieldBlur {
         id: dofBlurEffect
