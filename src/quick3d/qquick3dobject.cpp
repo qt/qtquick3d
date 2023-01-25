@@ -532,8 +532,9 @@ void QQuick3DObjectPrivate::data_append(QQmlListProperty<QObject> *prop, QObject
         } else {
             o->setParent(that);
         }
+
+        resources_append(prop, o);
     }
-    resources_append(prop, o);
 }
 
 qsizetype QQuick3DObjectPrivate::data_count(QQmlListProperty<QObject> *property)
