@@ -206,7 +206,6 @@ qt_internal_extend_target(AssimpImporterPlugin CONDITION NOT QT_FEATURE_system_a
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Asset.inl
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.h ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2AssetWriter.inl
         ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Importer.cpp ../../../3rdparty/assimp/src/code/AssetLib/glTF2/glTF2Importer.h
-        ../../../3rdparty/assimp/src/contrib/pugixml/contrib/foreach.hpp
         ../../../3rdparty/assimp/src/contrib/pugixml/src/pugixml.hpp
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.cc ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/shapes.h
         ../../../3rdparty/assimp/src/contrib/poly2tri/poly2tri/common/utils.h

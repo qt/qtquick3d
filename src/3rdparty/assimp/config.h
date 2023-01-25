@@ -689,7 +689,7 @@ enum aiComponent
 
 // ---------------------------------------------------------------------------
 /** @brief  Set wether the importer shall not remove empty bones.
- *  
+ *
  *  Empty bone are often used to define connections for other models.
  */
 #define AI_CONFIG_IMPORT_REMOVE_EMPTY_BONES \
@@ -701,6 +701,15 @@ enum aiComponent
  */
 #define AI_CONFIG_FBX_CONVERT_TO_M \
     "AI_CONFIG_FBX_CONVERT_TO_M"
+
+// ---------------------------------------------------------------------------
+/** @brief  Will enable the skeleton structo to store bone data.
+ *
+ *  This will decouple the bone coupling to the mesh. This feature is
+ *  experimental.
+ */
+#define AI_CONFIG_FBX_USE_SKELETON_BONE_CONTAINER \
+    "AI_CONFIG_FBX_USE_SKELETON_BONE_CONTAINER"
 
 // ---------------------------------------------------------------------------
 /** @brief  Set the vertex animation keyframe to be imported
@@ -1087,7 +1096,7 @@ enum aiComponent
 #define AI_CONFIG_EXPORT_XFILE_64BIT "EXPORT_XFILE_64BIT"
 
 /** @brief Specifies whether the assimp export shall be able to export point clouds
- * 
+ *
  *  When this flag is not defined the render data has to contain valid faces.
  *  Point clouds are only a collection of vertices which have nor spatial organization
  *  by a face and the validation process will remove them. Enabling this feature will
@@ -1097,16 +1106,16 @@ enum aiComponent
 
 /**
  * @brief Specifies the blob name, assimp uses for exporting.
- * 
- * Some formats require auxiliary files to be written, that need to be linked back into 
+ *
+ * Some formats require auxiliary files to be written, that need to be linked back into
  * the original file. For example, OBJ files export materials to a separate MTL file and
  * use the `mtllib` keyword to reference this file.
- * 
+ *
  * When exporting blobs using #ExportToBlob, assimp does not know the name of the blob
- * file and thus outputs `mtllib $blobfile.mtl`, which might not be desired, since the 
- * MTL file might be called differently. 
- * 
- * This property can be used to give the exporter a hint on how to use the magic 
+ * file and thus outputs `mtllib $blobfile.mtl`, which might not be desired, since the
+ * MTL file might be called differently.
+ *
+ * This property can be used to give the exporter a hint on how to use the magic
  * `$blobfile` keyword. If the exporter detects the keyword and is provided with a name
  * for the blob, it instead uses this name.
  */
