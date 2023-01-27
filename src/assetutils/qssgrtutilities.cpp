@@ -55,12 +55,11 @@ void QSSGRuntimeUtils::applyPropertyValue(const QSSGSceneDesc::Node *node, QObje
         QString workingDir = scene->sourceDir;
         const QUrl qurl = url.isValid() ? QUrl::fromUserInput(url.path(), workingDir) : QUrl{};
         value = QVariant::fromValue(qurl);
-    } else if (metaId == qMetaTypeId<QSSGSceneDesc::Flag *>() && property->call) {
+    } else if (metaId == qMetaTypeId<QSSGSceneDesc::Flag>() && property->call) {
         // If we have a QSSGSceneDesc::Flag variant, then it came from setProperty(), and the setter function is defined.
-        const auto *flag = qvariant_cast<const QSSGSceneDesc::Flag *>(property->value);
-        const int qflag(flag ? flag->value : 0);
-        property->call->set(*obj, property->name, &qflag);
-        qDebug() << "Flag special case, probably shouldn't happen" << node->name << property->name << property->value << qflag;
+        const auto flag = qvariant_cast<QSSGSceneDesc::Flag>(property->value);
+        property->call->set(*obj, property->name, flag.value);
+        qDebug() << "Flag special case, probably shouldn't happen" << node->name << property->name << property->value << flag.value;
         return;
     } else {
         value = property->value;
@@ -170,10 +169,9 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node, 
             // TODO: Use QUrl::resolved() instead
             const QUrl qurl = url.isValid() ? QUrl::fromUserInput(url.path(), workingDir) : QUrl{};
             v->call->set(obj, v->name, &qurl);
-        } else if (var.metaType().id() == qMetaTypeId<QSSGSceneDesc::Flag *>()) {
-            const auto *flag = qvariant_cast<const QSSGSceneDesc::Flag *>(var);
-            const int qflag(flag ? flag->value : 0);
-            v->call->set(obj, v->name, &qflag);
+        } else if (var.metaType().id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
+            const auto flag = qvariant_cast<QSSGSceneDesc::Flag>(var);
+            v->call->set(obj, v->name, flag.value);
         } else {
             v->call->set(obj, v->name, var);
         }

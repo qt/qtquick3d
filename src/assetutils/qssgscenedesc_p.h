@@ -96,7 +96,7 @@ Q_QUICK3DASSETUTILS_EXPORT void destructValue(QVariant &value);
 struct Flag
 {
     QMetaEnum me;
-    quintptr value;
+    int value;
 };
 
 struct Property
@@ -605,7 +605,7 @@ static void setProperty(QSSGSceneDesc::Node &node, const char *name, Setter sett
     auto prop = new Property;
     prop->name = name;
     prop->call = new PropertySetter(setter);
-    prop->value = QVariant::fromValue(Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), quintptr(value) });
+    prop->value = QVariant::fromValue(Flag{ QMetaEnum::fromType<rm_cvref_t<T>>(), value.toInt() });
     node.properties.push_back(prop);
 }
 
