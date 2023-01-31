@@ -31,8 +31,6 @@ class QSSGLayerRenderData;
 struct QSSGRenderCamera;
 struct QSSGRenderItem2D;
 
-using QSSGBoxPoints = std::array<QVector3D, 8>;
-
 class QSSGRenderPass
 {
 public:

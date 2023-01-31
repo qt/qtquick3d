@@ -56,7 +56,7 @@ QSSGBounds3 QSSGBounds3::transform(const QMatrix3x3 &matrix, const QSSGBounds3 &
 void QSSGBounds3::transform(const QMatrix4x4 &inMatrix)
 {
     if (!isEmpty()) {
-        QSSGBounds2BoxPoints thePoints;
+        QSSGBoxPoints thePoints;
         expandNonEmpty(thePoints);
         setEmpty();
         for (quint32 idx = 0; idx < 8; ++idx)

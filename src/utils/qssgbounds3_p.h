@@ -28,7 +28,7 @@
 
 QT_BEGIN_NAMESPACE
 
-typedef QVector3D QSSGBounds2BoxPoints[8];
+using QSSGBoxPoints = std::array<QVector3D, 8>;
 
 /**
 \brief Class representing 3D range or axis aligned bounding box.
@@ -175,11 +175,11 @@ public:
     /**
     Use when the bounds is already verified to be non-empty!!!
     */
-    Q_ALWAYS_INLINE void expandNonEmpty(QSSGBounds2BoxPoints &outPoints) const;
+    Q_ALWAYS_INLINE void expandNonEmpty(QSSGBoxPoints &outPoints) const;
     /**
     Verifies that the bounds is non-empty.
     */
-    Q_ALWAYS_INLINE void expand(QSSGBounds2BoxPoints &outPoints) const;
+    Q_ALWAYS_INLINE void expand(QSSGBoxPoints &outPoints) const;
 
 
     void transform(const QMatrix4x4 &inMatrix);
@@ -315,7 +315,7 @@ Q_ALWAYS_INLINE void QSSGBounds3::fatten(double distance)
     maximum += QVector3D(float(distance), float(distance), float(distance));
 }
 
-Q_ALWAYS_INLINE void QSSGBounds3::expandNonEmpty(QSSGBounds2BoxPoints &outPoints) const
+Q_ALWAYS_INLINE void QSSGBounds3::expandNonEmpty(QSSGBoxPoints &outPoints) const
 {
     // Min corner of box
     outPoints[0] = QVector3D(minimum[0], minimum[1], minimum[2]);
@@ -330,7 +330,7 @@ Q_ALWAYS_INLINE void QSSGBounds3::expandNonEmpty(QSSGBounds2BoxPoints &outPoints
     outPoints[7] = QVector3D(maximum[0], maximum[1], minimum[2]);
 }
 
-Q_ALWAYS_INLINE void QSSGBounds3::expand(QSSGBounds2BoxPoints &outPoints) const
+Q_ALWAYS_INLINE void QSSGBounds3::expand(QSSGBoxPoints &outPoints) const
 {
     if (isEmpty()) {
         for (quint32 idx = 0; idx < 8; ++idx)
