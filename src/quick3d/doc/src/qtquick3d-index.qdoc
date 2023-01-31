@@ -86,6 +86,7 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D - Lights Example}{Lights and Shadows}
     \li \l{Qt Quick 3D - Dynamic Model Creation Example}{Dynamic Model Creation}
     \li \l{Qt Quick 3D - Principled Material Example}{Principled Material}
+    \li \l{Qt Quick 3D - Scene Effects Example}{Built-in effects and tonemapping}
     \li \l{Qt Quick 3D - Quick Items Example}{Qt Quick Items within the 3D Scene}
     \li \l{Qt Quick 3D - Custom Materials Example}{Custom Materials}
     \li \l{Qt Quick 3D - Custom Shaders Example}{Unshaded Custom Materials}
