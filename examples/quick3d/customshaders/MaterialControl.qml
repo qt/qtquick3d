@@ -15,7 +15,7 @@ Rectangle {
 
     color: "#6b7080"
     width: parent.width
-    height: 35
+    height: 75
 
     Component {
         id: propertySlider
@@ -89,8 +89,21 @@ Rectangle {
         }
     }
 
+    ScrollBar {
+        id: hbar
+        policy: parent.width < columnLayout.width ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
+        orientation: Qt.Horizontal
+        size: parent.width / columnLayout.width
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
     ColumnLayout {
-        anchors.horizontalCenter: parent.horizontalCenter
+        id: columnLayout
+        readonly property int leftMargin: 25
+        x: leftMargin - hbar.position * width
+
         RowLayout {
             spacing: 10
             Loader {
@@ -135,7 +148,7 @@ Rectangle {
                 visible: texControl.checkBoxSet
                 property string checkBoxText: "Texture with Item"
                 property bool checkBoxSet: false
-                sourceComponent: propertyCheckBox
+                sourceComponent: texControl.checkBoxSet ? propertyCheckBox : undefined
             }
         }
     }
