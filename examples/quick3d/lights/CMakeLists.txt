@@ -39,6 +39,7 @@ qt_add_qml_module(lights
         custom.vert
         teapot.mesh
         white.png
+        icon_settings.png
     NO_RESOURCE_TARGET_PATH
 )
 
