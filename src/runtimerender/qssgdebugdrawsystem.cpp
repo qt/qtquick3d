@@ -178,7 +178,7 @@ void QSSGDebugDrawSystem::generateLine(const LineData &line, QVector<VertexData>
 
 void QSSGDebugDrawSystem::generateBox(const BoundsData &bounds, QVector<VertexData> &vertexArray, QVector<quint32> &indexArray)
 {
-    QSSGBounds2BoxPoints points;
+    QSSGBoxPoints points;
     bounds.bounds.expand(points);
     const QVector3D color = {bounds.color.redF(), bounds.color.greenF(), bounds.color.blueF()};
 

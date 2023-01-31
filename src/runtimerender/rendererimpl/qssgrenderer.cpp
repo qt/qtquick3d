@@ -681,18 +681,6 @@ void QSSGRenderer::setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLa
 std::pair<QSSGBoxPoints, QSSGBoxPoints> RenderHelpers::calculateSortedObjectBounds(const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                                                                    const QVector<QSSGRenderableObjectHandle> &sortedTransparentObjects)
 {
-    static const auto boundsToBoxPoints = [](const QSSGBounds3 &bounds)
-    {
-        return QSSGBoxPoints { bounds.minimum,
-                               QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.minimum.z()),
-                               QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.minimum.z()),
-                               QVector3D(bounds.maximum.x(), bounds.maximum.y(), bounds.minimum.z()),
-                               QVector3D(bounds.minimum.x(), bounds.minimum.y(), bounds.maximum.z()),
-                               QVector3D(bounds.maximum.x(), bounds.minimum.y(), bounds.maximum.z()),
-                               QVector3D(bounds.minimum.x(), bounds.maximum.y(), bounds.maximum.z()),
-                               bounds.maximum };
-    };
-
     QSSGBounds3 boundsCasting;
     QSSGBounds3 boundsReceiving;
     for (const auto handles : { &sortedOpaqueObjects, &sortedTransparentObjects }) {
@@ -709,7 +697,13 @@ std::pair<QSSGBoxPoints, QSSGBoxPoints> RenderHelpers::calculateSortedObjectBoun
         }
     }
 
-    return { boundsToBoxPoints(boundsCasting), boundsToBoxPoints(boundsReceiving) };
+    QSSGBoxPoints castingBoxPoints;
+    QSSGBoxPoints receivingBoxPoints;
+
+    boundsCasting.expand(castingBoxPoints);
+    boundsReceiving.expand(receivingBoxPoints);
+
+    return { castingBoxPoints, receivingBoxPoints };
 }
 
 static QVector3D calcCenter(const QSSGBoxPoints &vertices)
