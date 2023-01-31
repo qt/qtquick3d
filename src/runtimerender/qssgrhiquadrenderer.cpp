@@ -186,6 +186,7 @@ void QSSGRhiCubeRenderer::recordRenderCube(QSSGRhiContext *rhiCtx, QSSGRhiGraphi
         return;
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->setGraphicsPipeline(pipeline);
     cb->setShaderResources(srb);
     cb->setViewport(ps->viewport);
 
