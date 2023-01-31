@@ -16,6 +16,12 @@ QT_BEGIN_NAMESPACE
     \brief Lets you configure how a scene is rendered.
 
     SceneEnvironment defines a set of global properties for how a scene should be rendered.
+
+    \note The QtQuick3D.Helpers module offers an \l ExtendedSceneEnvironment
+    type which inherits from SceneEnvironment and adds a number of built-in
+    effects on top.
+
+    \sa ExtendedSceneEnvironment
 */
 
 QQuick3DSceneEnvironment::QQuick3DSceneEnvironment(QQuick3DObject *parent)
@@ -536,10 +542,14 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
     \value SceneEnvironment.TonemapModeFilmic
         Filmic tonemapping is applied.
 
+    See \l{ExtendedSceneEnvironment::tonemapMode}{ExtendedSceneEnvironment} for
+    an example of these different modes.
+
     \note When using post processing effects, many effects expect untonemapped
     linear color data. It is important to bypass the built-in tonemapping in
-    this case by using the \c SceneEnvironment.TonemapModeNone value.
-
+    this case by using the \c SceneEnvironment.TonemapModeNone value. This does
+    not apply to the built-in effects of \l ExtendedSceneEnvironment because
+    those automatically take care of proper tonemapping.
 */
 QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironment::tonemapMode() const
 {
