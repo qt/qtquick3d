@@ -47,6 +47,13 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
         depthWriteMode = static_cast<const QSSGRenderCustomMaterial *>(&mat)->m_depthDrawMode;
     else
         depthWriteMode = static_cast<const QSSGRenderDefaultMaterial *>(&mat)->depthDrawMode;
+
+    const bool modelBlendParticle = (inModelContext.model.particleBuffer != nullptr
+                                     && inModelContext.model.particleBuffer->particleCount());
+    if (modelBlendParticle)
+        globalBounds = inModelContext.model.particleBuffer->bounds();
+    else
+        globalBounds.transform(globalTransform);
 }
 
 QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
@@ -61,7 +68,7 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                            inFlags,
                            inWorldCenterPt,
                            inParticles.globalTransform,
-                           QSSGBounds3(),
+                           inParticles.m_particleBuffer.bounds(),
                            inParticles.m_depthBiasSq)
     , generator(gen)
     , particles(inParticles)
@@ -70,8 +77,10 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
     , lights(inLights)
     , opacity(inOpacity)
 {
-    // Bounds are in global space for particles
+    // Bounds are in global space for _model blend_ particles
     globalBounds = inParticles.m_particleBuffer.bounds();
+    if (inParticles.type != QSSGRenderParticles::Type::ModelBlendParticle)
+        globalBounds.transform(globalTransform);
 }
 
 QT_END_NAMESPACE

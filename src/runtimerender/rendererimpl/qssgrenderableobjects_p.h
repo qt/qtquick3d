@@ -240,8 +240,6 @@ struct QSSGRenderableObject
         , instancingLodMin(inMinThreshold)
         , instancingLodMax(inMaxThreshold)
     {
-        if (type != Type::Particles) // See: QSSGParticlesRenderable's ctor
-            globalBounds.transform(globalTransform);
     }
 };
 
