@@ -240,5 +240,21 @@ Section {
 
             ExpandingSpacer {}
         }
+
+        PropertyLabel {
+            text: qsTr("Override Texture")
+            tooltip: qsTr("Sets an override texture to use for the reflection map instead of rendering the scene.")
+        }
+
+        SecondColumnLayout {
+            IdComboBox {
+                typeFilter: "QtQuick3D.CubeMapTexture"
+                backendValue: backendValues.texture
+                implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+            }
+
+            ExpandingSpacer {}
+        }
     }
 }
