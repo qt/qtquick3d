@@ -66,6 +66,8 @@ qt_copy_or_install(
         ShaderSection.qml
         ShaderSpecifics.qml
         ShadowSection.qml
+        SkinSpecifics.qml
+        SkinSection.qml
         SpecularGlossyMaterialSection.qml
         SpecularGlossyMaterialSpecifics.qml
         SpotLightSection.qml

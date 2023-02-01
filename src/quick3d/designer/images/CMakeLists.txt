@@ -89,6 +89,9 @@ qt_copy_or_install(
         skeleton.png
         skeleton16.png
         skeleton@2x.png
+        skin.png
+        skin16.png
+        skin@2x.png
         sphere.png
         sphere16.png
         sphere@2x.png

@@ -779,4 +779,24 @@ MetaInfo {
             requiredImport: "QtQuick3D"
         }
     }
+
+    Type {
+        name: "QtQuick3D.Skin"
+        icon: "images/skin16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            name: "Skin"
+            category: "Components"
+            libraryIcon: "images/skin.png"
+            version: "6.5"
+            requiredImport: "QtQuick3D"
+        }
+    }
 }
