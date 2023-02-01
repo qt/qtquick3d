@@ -292,6 +292,22 @@ Column {
 
                 ExpandingSpacer {}
             }
+
+            PropertyLabel {
+                text: qsTr("Skin")
+                tooltip: qsTr("Sets the skin for the model.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Skin"
+                    backendValue: backendValues.skin
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
         }
     }
 
