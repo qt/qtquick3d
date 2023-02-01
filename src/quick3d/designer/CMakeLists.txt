@@ -33,6 +33,7 @@ qt_copy_or_install(
         InstanceListEntrySpecifics.qml
         InstanceListSection.qml
         InstanceListSpecifics.qml
+        InstancingSection.qml
         JointSection.qml
         JointSpecifics.qml
         LightmapperSection.qml
