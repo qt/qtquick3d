@@ -11,4 +11,8 @@ Column {
     InstanceListSection {
         width: parent.width
     }
+
+    InstancingSection {
+        width: parent.width
+    }
 }

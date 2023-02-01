@@ -11,4 +11,8 @@ Column {
     FileInstancingSection {
         width: parent.width
     }
+
+    InstancingSection {
+        width: parent.width
+    }
 }
