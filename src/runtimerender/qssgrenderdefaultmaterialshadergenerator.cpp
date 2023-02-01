@@ -845,7 +845,8 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     };
 
     bool metalnessEnabled = materialAdapter->isMetalnessEnabled(); // always true for Custom, true if > 0 with Principled
-    bool vertexColorsEnabled = materialAdapter->isVertexColorsEnabled();
+    bool vertexColorsEnabled = keyProps.m_vertexColorsEnabled.getValue(inKey);
+
 
     bool hasLighting = materialAdapter->hasLighting();
     bool isDoubleSided = keyProps.m_isDoubleSided.getValue(inKey);
