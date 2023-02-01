@@ -157,6 +157,23 @@ Column {
             }
 
             PropertyLabel {
+                text: qsTr("Used in Baked Lighting")
+                tooltip: qsTr("This model is static and suitable to contribute to baked lighting.")
+            }
+
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.usedInBakedLighting.valueToString
+                    backendValue: backendValues.usedInBakedLighting
+                    implicitWidth: StudioTheme.Values.twoControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+
+            PropertyLabel {
                 text: qsTr("Depth Bias")
                 tooltip: qsTr("Sets the depth bias of the model.")
             }
@@ -271,6 +288,50 @@ Column {
                     onAdd: function(value) { backendValues.morphTargets.idListAdd(value) }
                     onRemove: function(idx) { backendValues.morphTargets.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.morphTargets.idListReplace(idx, value) }
+                }
+
+                ExpandingSpacer {}
+            }
+        }
+    }
+
+    Section {
+        caption: qsTr("Lightmapping")
+        width: parent.width
+
+        SectionLayout {
+
+            PropertyLabel {
+                text: qsTr("Resolution")
+                tooltip: qsTr("Sets the target resolution of the baked lightmap texture for the model.")
+            }
+
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 128
+                    maximumValue: 4096
+                    decimals: 0
+                    stepSize: 128
+                    sliderIndicatorVisible: true
+                    backendValue: backendValues.lightmapBaseResolution
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
+            PropertyLabel {
+                text: qsTr("Lightmap")
+                tooltip: qsTr("Sets the baked lightmap texture for the model.")
+            }
+
+            SecondColumnLayout {
+                IdComboBox {
+                    typeFilter: "QtQuick3D.Texture"
+                    backendValue: backendValues.bakedLightmap
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
                 }
 
                 ExpandingSpacer {}

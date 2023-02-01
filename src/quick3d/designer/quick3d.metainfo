@@ -758,4 +758,25 @@ MetaInfo {
             requiredImport: "QtQuick3D"
         }
     }
+
+    Type {
+        name: "QtQuick3D.Lightmapper"
+        icon: "images/lightmapper16.png"
+
+        Hints {
+            visibleInNavigator: true
+            canBeDroppedInNavigator: true
+            canBeDroppedInFormEditor: false
+            canBeDroppedInView3D: false
+        }
+
+        ItemLibraryEntry {
+            // Split the name to avoid ellipsis in UI
+            name: "Light Mapper"
+            category: "Components"
+            libraryIcon: "images/lightmapper.png"
+            version: "6.5"
+            requiredImport: "QtQuick3D"
+        }
+    }
 }

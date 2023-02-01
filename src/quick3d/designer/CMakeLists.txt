@@ -35,6 +35,8 @@ qt_copy_or_install(
         InstanceListSpecifics.qml
         JointSection.qml
         JointSpecifics.qml
+        LightmapperSection.qml
+        LightmapperSpecifics.qml
         Loader3DSection.qml
         Loader3DSpecifics.qml
         MaterialSection.qml
