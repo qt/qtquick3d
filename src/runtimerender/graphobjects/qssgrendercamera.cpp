@@ -216,7 +216,7 @@ QVector3D QSSGRenderCamera::unprojectToPosition(const QVector3D &inGlobalPos, co
     QVector3D theObjGlobalPos = inGlobalPos;
     float theDistance = -1.0f * QVector3D::dotProduct(theObjGlobalPos, theCameraDir);
     QSSGPlane theCameraPlane(theCameraDir, theDistance);
-    return QSSGRenderRay::intersect(theCameraPlane, inRay);
+    return QSSGRenderRay::intersect(theCameraPlane, inRay).value_or(QVector3D{});
 }
 
 float QSSGRenderCamera::verticalFov(float aspectRatio) const

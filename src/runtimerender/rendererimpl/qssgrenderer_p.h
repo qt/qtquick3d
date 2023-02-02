@@ -34,7 +34,6 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderpass_p.h>
 
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
-#include <QtQuick3DUtils/private/qssgoption_p.h>
 #include <QtQuick3DUtils/private/qssgdataref_p.h>
 
 QT_BEGIN_NAMESPACE

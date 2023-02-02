@@ -621,7 +621,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getShaderPipelineForDefaultMaterial
     if (!shaderPipeline.isNull()) {
         if (m_currentLayer && m_currentLayer->camera) {
             QSSGRenderCamera &theCamera(*m_currentLayer->camera);
-            if (!m_currentLayer->cameraData.hasValue())
+            if (!m_currentLayer->cameraData.has_value())
                 m_currentLayer->cameraData = { theCamera };
         }
     }
@@ -635,8 +635,8 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
 {
     QSSGLayerRenderData &theData = *m_currentLayer;
     const QSSGRenderLayer &theLayer = theData.layer;
-    if (!theData.cameraData.hasValue() && theData.camera)
-        theData.cameraData = { *theData.camera };
+    if (!theData.cameraData.has_value()) // NOTE: Ensure we have a valid value!
+        theData.cameraData.emplace(theData.camera ? QSSGCameraData{ *theData.camera } : QSSGCameraData{});
 
     bool isYUpInFramebuffer = true;
     bool isYUpInNDC = true;
@@ -650,7 +650,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
 
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
-                                              theData.cameraData,
+                                              theData.cameraData.value(), // ensured/checked further up in this function
                                               theData.shadowMapManager.data(),
                                               theData.depthMapPass.rhiDepthTexture.texture,
                                               theData.ssaoMapPass.rhiAoTexture.texture,

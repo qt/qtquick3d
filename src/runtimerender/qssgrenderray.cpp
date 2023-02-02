@@ -9,15 +9,17 @@
 #include <QtQuick3DUtils/private/qssgmeshbvh_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendermesh_p.h>
 
+#include <optional>
+
 QT_BEGIN_NAMESPACE
 
 // http://www.siggraph.org/education/materials/HyperGraph/raytrace/rayplane_intersection.htm
 
-QSSGOption<QVector3D> QSSGRenderRay::intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray)
+std::optional<QVector3D> QSSGRenderRay::intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray)
 {
     float Vd = QVector3D::dotProduct(inPlane.n, ray.direction);
     if (std::abs(Vd) < .0001f)
-        return QSSGEmpty();
+        return std::nullopt;
     float V0 = -1.0f * (QVector3D::dotProduct(inPlane.n, ray.origin) + inPlane.d);
     float t = V0 / Vd;
     return ray.origin + (ray.direction * t);
@@ -251,7 +253,7 @@ QVector<QSSGRenderRay::IntersectionResult> QSSGRenderRay::intersectWithBVHTriang
     return results;
 }
 
-QSSGOption<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTransform,
+std::optional<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTransform,
                                                      const QSSGBounds3 &inBounds,
                                                      QSSGRenderBasisPlanes inPlane) const
 {
@@ -285,8 +287,8 @@ QSSGOption<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTransfor
                                  : QVector3D::dotProduct(theDirection, inBounds.minimum));
 
     const QSSGRenderRay relativeRay(theTransformedOrigin, theTransformedDirection);
-    QSSGOption<QVector3D> localIsect = QSSGRenderRay::intersect(thePlane, relativeRay);
-    if (localIsect.hasValue()) {
+    std::optional<QVector3D> localIsect = QSSGRenderRay::intersect(thePlane, relativeRay);
+    if (localIsect.has_value()) {
         float xRange = QVector3D::dotProduct(theRight, inBounds.maximum) - QVector3D::dotProduct(theRight, inBounds.minimum);
         float yRange = QVector3D::dotProduct(theUp, inBounds.maximum) - QVector3D::dotProduct(theUp, inBounds.minimum);
         float xOrigin = xRange / 2.0f + QVector3D::dotProduct(theRight, inBounds.minimum);
@@ -294,7 +296,7 @@ QSSGOption<QVector2D> QSSGRenderRay::relative(const QMatrix4x4 &inGlobalTransfor
         return QVector2D((QVector3D::dotProduct(theRight, *localIsect) - xOrigin) / xRange,
                          (QVector3D::dotProduct(theUp, *localIsect) - yOrigin) / yRange);
     }
-    return QSSGEmpty();
+    return std::nullopt;
 }
 
 QT_END_NAMESPACE

@@ -580,9 +580,9 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
         const auto &clippingFrustum = data.clippingFrustum;
         const auto &opaqueObjects = data.getSortedOpaqueRenderableObjects();
         const auto &transparentObject = data.getSortedTransparentRenderableObjects();
-        if (data.clippingFrustum.hasValue()) {
-            QSSGLayerRenderData::frustumCulling(clippingFrustum, opaqueObjects, sortedOpaqueObjects);
-            QSSGLayerRenderData::frustumCulling(clippingFrustum, transparentObject, sortedTransparentObjects);
+        if (clippingFrustum.has_value()) {
+            QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), opaqueObjects, sortedOpaqueObjects);
+            QSSGLayerRenderData::frustumCulling(clippingFrustum.value(), transparentObject, sortedTransparentObjects);
         } else {
             sortedOpaqueObjects = opaqueObjects;
             sortedTransparentObjects = transparentObject;

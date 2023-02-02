@@ -16,13 +16,14 @@
 // We mean it.
 //
 
-#include <QtQuick3DUtils/private/qssgoption_p.h>
 #include <QtQuick3DUtils/private/qssgbounds3_p.h>
 #include <QtQuick3DUtils/private/qssgplane_p.h>
 
 #include <QtGui/QVector2D>
 #include <QtGui/QVector3D>
 #include <QtGui/QMatrix4x4>
+
+#include <optional>
 
 QT_BEGIN_NAMESPACE
 struct QSSGMeshBVHNode;
@@ -45,7 +46,7 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
     {
     }
     // If we are parallel, then no intersection of course.
-    static QSSGOption<QVector3D> intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray);
+    static std::optional<QVector3D> intersect(const QSSGPlane &inPlane, const QSSGRenderRay &ray);
 
     // Perform an intersection aslo returning Barycentric Coordinates
     static bool triangleIntersect(const QSSGRenderRay &ray,
@@ -124,11 +125,11 @@ struct Q_AUTOTEST_EXPORT QSSGRenderRay
                                                                  int triangleOffset,
                                                                  int triangleCount);
 
-    QSSGOption<QVector2D> relative(const QMatrix4x4 &inGlobalTransform,
+    std::optional<QVector2D> relative(const QMatrix4x4 &inGlobalTransform,
                                         const QSSGBounds3 &inBounds,
                                         QSSGRenderBasisPlanes inPlane) const;
 
-    QSSGOption<QVector2D> relativeXY(const QMatrix4x4 &inGlobalTransform, const QSSGBounds3 &inBounds) const
+    std::optional<QVector2D> relativeXY(const QMatrix4x4 &inGlobalTransform, const QSSGBounds3 &inBounds) const
     {
         return relative(inGlobalTransform, inBounds, QSSGRenderBasisPlanes::XY);
     }
