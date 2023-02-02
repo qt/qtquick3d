@@ -14,7 +14,6 @@ qt_internal_add_module(Quick3DUtils
         qssgdataref.cpp qssgdataref_p.h
         qssginvasivelinkedlist_p.h
         qssgmeshbvh.cpp qssgmeshbvh_p.h
-        qssgoption_p.h
         qssgplane.cpp qssgplane_p.h
         qssgrenderbasetypes.cpp qssgrenderbasetypes_p.h
         qssgutils.cpp qssgutils_p.h

@@ -26,6 +26,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrenderer_p.h>
 
+#include <optional>
+
 #include "qquick3dsceneenvironment_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +60,7 @@ protected:
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
 
-    QSSGOption<QSSGRenderRay> getRayFromViewportPos(const QPointF &pos);
+    std::optional<QSSGRenderRay> getRayFromViewportPos(const QPointF &pos);
     QSSGRenderPickResult syncPick(const QSSGRenderRay &ray);
     QSSGRenderPickResult syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node);
     PickResultList syncPickAll(const QSSGRenderRay &ray);

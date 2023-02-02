@@ -31,6 +31,8 @@
 
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
 
+#include <optional>
+
 #include "qssgrenderpass_p.h"
 
 #define QSSG_RENDER_MINIMUM_RENDER_OPACITY .01f
@@ -304,9 +306,9 @@ public:
     QVector<QSSGBakedLightingModel> renderedBakedLightingModels;
     RenderableItem2DEntries renderedItem2Ds;
 
-    QSSGOption<QSSGClippingFrustum> clippingFrustum;
-    QSSGOption<QSSGLayerRenderPreparationResult> layerPrepResult;
-    QSSGOption<QSSGCameraData> cameraData;
+    std::optional<QSSGClippingFrustum> clippingFrustum;
+    std::optional<QSSGLayerRenderPreparationResult> layerPrepResult;
+    std::optional<QSSGCameraData> cameraData;
 
     TModelContextPtrList modelContexts;
 

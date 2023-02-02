@@ -882,10 +882,10 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
         fboNode->invalidatePending = true;
 }
 
-QSSGOption<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
+std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
 {
     if (!m_layer || !m_layer->renderedCamera)
-        return QSSGEmpty();
+        return std::nullopt;
 
     const QVector2D viewportSize(m_surfaceSize.width(), m_surfaceSize.height());
     const QVector2D position(float(pos.x()), float(pos.y()));
@@ -897,7 +897,7 @@ QSSGOption<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPo
     QVector2D theLocalMouse = toRectRelative(viewportRect, correctCoords);
     if ((theLocalMouse.x() < 0.0f || theLocalMouse.x() >= viewportSize.x() || theLocalMouse.y() < 0.0f
          || theLocalMouse.y() >= viewportSize.y()))
-        return QSSGEmpty();
+        return std::nullopt;
 
     return m_layer->renderedCamera->unproject(theLocalMouse, viewportRect);
 }

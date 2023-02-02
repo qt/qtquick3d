@@ -31,6 +31,8 @@
 
 #include <QtCore/private/qnumeric_p.h>
 
+#include <optional>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
@@ -59,9 +61,9 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
         If it's no longer a "hit" on sceneParentNode, returns the last-good point.
     */
     QPointF map(const QPointF &viewportPoint) override {
-        QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(viewportPoint * dpr);
-        if (rayResult.hasValue()) {
-            auto pickResult = renderer->syncPickOne(rayResult.getValue(), sceneParentNode);
+        std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(viewportPoint * dpr);
+        if (rayResult.has_value()) {
+            auto pickResult = renderer->syncPickOne(rayResult.value(), sceneParentNode);
             auto ret = pickResult.m_localUVCoords.toPointF();
             if (!uvCoordsArePixels) {
                 ret = QPointF(targetItem->x() + ret.x() * targetItem->width(),
@@ -804,11 +806,11 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 
     const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
                            qreal(y) * window()->effectiveDevicePixelRatio());
-    QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
-    if (!rayResult.hasValue())
+    std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
+    if (!rayResult.has_value())
         return QQuick3DPickResult();
 
-    return processPickResult(renderer->syncPick(rayResult.getValue()));
+    return processPickResult(renderer->syncPick(rayResult.value()));
 
 }
 
@@ -832,11 +834,11 @@ QList<QQuick3DPickResult> QQuick3DViewport::pickAll(float x, float y) const
 
     const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
                            qreal(y) * window()->effectiveDevicePixelRatio());
-    QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
-    if (!rayResult.hasValue())
+    std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
+    if (!rayResult.has_value())
         return QList<QQuick3DPickResult>();
 
-    const auto resultList = renderer->syncPickAll(rayResult.getValue());
+    const auto resultList = renderer->syncPickAll(rayResult.value());
     QList<QQuick3DPickResult> processedResultList;
     processedResultList.reserve(resultList.size());
     for (const auto &result : resultList)
@@ -1047,9 +1049,9 @@ bool QQuick3DViewport::internalPick(QPointerEvent *event, const QVector3D &origi
             pickResults = renderer->syncPickAll(ray);
         } else {
             const QPointF realPosition = eventPoint.position() * window()->effectiveDevicePixelRatio();
-            QSSGOption<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(realPosition);
-            if (rayResult.hasValue())
-                pickResults = renderer->syncPickAll(rayResult.getValue());
+            std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(realPosition);
+            if (rayResult.has_value())
+                pickResults = renderer->syncPickAll(rayResult.value());
         }
         if (!isHover)
             qCDebug(lcPick) << pickResults.size() << "pick results for" << event->point(pointIndex);

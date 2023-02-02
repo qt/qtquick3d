@@ -228,7 +228,7 @@ QSSGDefaultMaterialPreparationResult::QSSGDefaultMaterialPreparationResult(QSSGS
 
 QSSGCameraData QSSGLayerRenderData::getCameraDirectionAndPosition()
 {
-    if (!cameraData.hasValue()) {
+    if (!cameraData.has_value()) {
         if (camera)
             cameraData = QSSGCameraData{ camera->getScalingCorrectDirection(), camera->getGlobalPos() };
         else
@@ -1640,7 +1640,7 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
 
 void QSSGLayerRenderData::prepareForRender()
 {
-    if (layerPrepResult.hasValue())
+    if (layerPrepResult.has_value())
         return;
 
     // Verify that the depth write list(s) were cleared between frames
@@ -2030,12 +2030,12 @@ void QSSGLayerRenderData::resetForFrame()
     screenTextureObjects.clear();
     opaqueObjects.clear();
     bakedLightingModels.clear();
-    layerPrepResult.setEmpty();
+    layerPrepResult.reset();
     // The check for if the camera is or is not null is used
     // to figure out if this layer was rendered at all.
     camera = nullptr;
-    cameraData.setEmpty();
-    clippingFrustum.setEmpty();
+    cameraData.reset();
+    clippingFrustum.reset();
     renderedOpaqueObjects.clear();
     renderedTransparentObjects.clear();
     renderedScreenTextureObjects.clear();
