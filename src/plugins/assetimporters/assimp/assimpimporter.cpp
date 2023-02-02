@@ -3,10 +3,6 @@
 
 #include "assimpimporter.h"
 
-#include <assimputils.h>
-
-#include <QtCore/qurl.h>
-#include <QtGui/QQuaternion>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 
