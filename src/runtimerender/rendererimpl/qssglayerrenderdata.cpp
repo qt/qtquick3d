@@ -1288,9 +1288,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 theMaterialObject->type == QSSGRenderGraphObject::Type::PrincipledMaterial ||
                 theMaterialObject->type == QSSGRenderGraphObject::Type::SpecularGlossyMaterial) {
                 QSSGRenderDefaultMaterial &theMaterial(static_cast<QSSGRenderDefaultMaterial &>(*theMaterialObject));
-                // vertexColor should be supported in both DefaultMaterial and PrincipleMaterial
-                // if the mesh has it.
-                theMaterial.vertexColorsEnabled = renderableFlags.hasAttributeColor() || usesInstancing || usesBlendParticles;
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
                         prepareDefaultMaterialForRender(theMaterial, renderableFlags, subsetOpacity, lights, ioFlags));
                 QSSGShaderDefaultMaterialKey &theGeneratedKey(theMaterialPrepResult.materialKey);

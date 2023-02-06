@@ -281,9 +281,7 @@ bool QSSGShaderCustomMaterialAdapter::isSpecularEnabled()
 
 bool QSSGShaderCustomMaterialAdapter::isVertexColorsEnabled()
 {
-    // qt_varColor must always be present. Works also if the mesh does not have
-    // colors, it will assume vec4(1.0).
-    return true;
+    return m_material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::VarColor);
 }
 
 bool QSSGShaderCustomMaterialAdapter::isClearcoatEnabled()

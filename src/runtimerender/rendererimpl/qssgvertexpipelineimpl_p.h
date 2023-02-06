@@ -285,10 +285,11 @@ struct QSSGMaterialVertexPipeline
 
         const bool meshHasColor = hasAttributeInKey(QSSGShaderKeyVertexAttribute::Color, inKey);
 
+        const bool vColorEnabled = defaultMaterialShaderKeyProperties.m_vertexColorsEnabled.getValue(inKey);
         const bool usesVarColor = defaultMaterialShaderKeyProperties.m_usesVarColor.getValue(inKey);
         const bool usesInstancing = defaultMaterialShaderKeyProperties.m_usesInstancing.getValue(inKey);
         const bool usesBlendParticles = defaultMaterialShaderKeyProperties.m_blendParticles.getValue(inKey);
-        if (hasCustomShadedMain || usesVarColor || meshHasColor || usesInstancing || usesBlendParticles) {
+        if ((vColorEnabled && meshHasColor) || usesInstancing || usesBlendParticles || usesVarColor) {
             addInterpolationParameter("qt_varColor", "vec4");
             vertex().append("    qt_varColor = qt_vertColor;");
             fragment().append("    vec4 qt_vertColor = qt_varColor;\n");
