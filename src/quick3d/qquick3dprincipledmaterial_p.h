@@ -381,7 +381,7 @@ private:
     float m_attenuationDistance = std::numeric_limits<float>::infinity();
     QColor m_attenuationColor = Qt::white;
     float m_indexOfRefraction = 1.5f;
-    bool m_vertexColorsEnabled = false;
+    bool m_vertexColorsEnabled = true;
 
     quint32 m_dirtyAttributes = 0xffffffff; // all dirty by default
     void markDirty(DirtyType type);
