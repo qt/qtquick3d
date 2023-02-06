@@ -581,7 +581,7 @@ QT_BEGIN_NAMESPACE
 
     When this property is enabled, the material will use vertex colors from the
     mesh. These will be multiplied by any other colors specified for the
-    material.
+    material. The default value is true.
 */
 
 inline static float ensureNormalized(float val) { return qBound(0.0f, val, 1.0f); }
