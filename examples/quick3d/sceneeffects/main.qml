@@ -59,6 +59,9 @@ Window {
                 id: lutSourceTexture
                 source: "qrc:/luts/identity.png"
             }
+
+            fog: Fog {
+            }
         }
 
         camera: helper.orbitControllerEnabled ? orbitCamera : wasdCamera

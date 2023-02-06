@@ -272,6 +272,166 @@ Rectangle {
 
             }
 
+            // FOG
+            SectionLayout {
+                id: fogSection
+                title: "Fog"
+
+                CheckBox {
+                    text: "Enabled"
+                    checked: sceneEnvironment.fog.enabled
+                    onCheckedChanged: {
+                        sceneEnvironment.fog.enabled = checked
+                    }
+                }
+
+                // DEPTH FOG
+                CheckBox {
+                    text: "Depth fog enabled"
+                    checked: sceneEnvironment.fog.depthEnabled
+                    onCheckedChanged: {
+                        sceneEnvironment.fog.depthEnabled = checked
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Density (" + sceneEnvironment.fog.density.toFixed(2) + ")"
+                    }
+                    Slider {
+                        id: valDensity
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: 0.0
+                        to: 1.0
+                        value: sceneEnvironment.fog.density
+                        onValueChanged: sceneEnvironment.fog.density = value
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Near (" + sceneEnvironment.fog.depthNear.toFixed(2) + ") / Far (" + sceneEnvironment.fog.depthFar.toFixed(2) + ")"
+                    }
+                    RangeSlider {
+                        id: valDepth
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: -1000.0
+                        to: 1000.0
+                        first.value: sceneEnvironment.fog.depthNear
+                        second.value: sceneEnvironment.fog.depthFar
+                        first.onValueChanged: sceneEnvironment.fog.depthNear = first.value
+                        second.onValueChanged: sceneEnvironment.fog.depthFar = second.value
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Curve (" + sceneEnvironment.fog.depthCurve.toFixed(2) + ")"
+                    }
+                    Slider {
+                        id: valDepthCurve
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: 0.0
+                        to: 1.0
+                        value: sceneEnvironment.fog.depthCurve
+                        onValueChanged: sceneEnvironment.fog.depthCurve = value
+                    }
+                }
+
+                // HEIGHT FOG
+                CheckBox {
+                    text: "Height fog enabled"
+                    checked: sceneEnvironment.fog.heightEnabled
+                    onCheckedChanged: {
+                        sceneEnvironment.fog.heightEnabled = checked
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Least Intense Y (" + sceneEnvironment.fog.leastIntenseY.toFixed(2) + ")"
+                    }
+                    Slider {
+                        id: valHeightMin
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: -1000.0
+                        to: 1000.0
+                        value: sceneEnvironment.fog.leastIntenseY
+                        onValueChanged: sceneEnvironment.fog.leastIntenseY = value
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Most Intense Y (" + sceneEnvironment.fog.mostIntenseY.toFixed(2) + ")"
+                    }
+                    Slider {
+                        id: valHeightMax
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: -1000.0
+                        to: 1000.0
+                        value: sceneEnvironment.fog.mostIntenseY
+                        onValueChanged: sceneEnvironment.fog.mostIntenseY = value
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Curve (" + sceneEnvironment.fog.heightCurve.toFixed(2) + ")"
+                    }
+                    Slider {
+                        id: valHeightCurve
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: 0.0
+                        to: 100.0
+                        value: sceneEnvironment.fog.heightCurve
+                        onValueChanged: sceneEnvironment.fog.heightCurve = value
+                    }
+                }
+
+                // TRANSMISSION
+                CheckBox {
+                    text: "Light transmission enabled"
+                    checked: sceneEnvironment.fog.transmitEnabled
+                    onCheckedChanged: {
+                        sceneEnvironment.fog.transmitEnabled = checked
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Curve (" + sceneEnvironment.fog.transmitCurve.toFixed(2) + ")"
+                    }
+                    Slider {
+                        id: valTransmitCurve
+                        focusPolicy: Qt.NoFocus
+                        Layout.fillWidth: true
+                        from: 0.0
+                        to: 100.0
+                        value: sceneEnvironment.fog.transmitCurve
+                        onValueChanged: sceneEnvironment.fog.transmitCurve = value
+                    }
+                }
+
+                Button {
+                    text: "Reset to Defaults"
+                    onClicked: {
+                        sceneEnvironment.fog.enabled = false
+                        sceneEnvironment.fog.depthEnabled = false
+                        sceneEnvironment.fog.heightEnabled = false
+                        sceneEnvironment.fog.transmitEnabled = false
+
+                        sceneEnvironment.fog.density = 1.0;
+                        sceneEnvironment.fog.depthNear = 10.0;
+                        sceneEnvironment.fog.depthFar = 1000.0;
+                        sceneEnvironment.fog.depthCurve = 1.0;
+                        sceneEnvironment.fog.leastIntenseY = 10.0;
+                        sceneEnvironment.fog.mostIntenseY = 0.0;
+                        sceneEnvironment.fog.heightCurve = 1.0;
+                        sceneEnvironment.fog.transmitCurve = 1.0;
+                    }
+                }
+            }
+
             // GLOW
             SectionLayout {
                 id: glowSection
