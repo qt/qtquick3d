@@ -995,6 +995,28 @@ bool QQuick3DTexture::effectiveFlipV(const QSSGRenderImage &imageNode) const
     return m_flipV;
 }
 
+static QSSGRenderPath resolveImagePath(const QUrl &url, const QQmlContext *context)
+{
+    if (context && url.isRelative()) {
+        QString path = url.path();
+        QChar separator = QChar::fromLatin1(';');
+        if (path.contains(separator)) {
+            QString resolvedPath;
+            const QStringList paths = path.split(separator);
+            bool first = true;
+            for (auto &s : paths) {
+                auto mapped =  QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(s));
+                if (!first)
+                    resolvedPath.append(separator);
+                resolvedPath.append(mapped);
+                first = false;
+            }
+            return QSSGRenderPath(resolvedPath);
+        }
+    }
+    return QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(url) : url));
+}
+
 QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject *node)
 {
     if (!node) {
@@ -1023,7 +1045,7 @@ QSSGRenderGraphObject *QQuick3DTexture::updateSpatialNode(QSSGRenderGraphObject 
         m_dirtyFlags.setFlag(DirtyFlag::FlipVDirty, true);
         if (!m_source.isEmpty()) {
             const QQmlContext *context = qmlContext(this);
-            imageNode->m_imagePath = QSSGRenderPath(QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(m_source) : m_source));
+            imageNode->m_imagePath = resolveImagePath(m_source, context);
         } else {
             imageNode->m_imagePath = QSSGRenderPath();
         }
