@@ -1699,6 +1699,11 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
     const auto opt = processSceneOptions(options);
     SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skins, mesh2skin, sourceFile.dir(), opt };
 
+    if (!qFuzzyCompare(opt.globalScaleValue, 1.0f) && !qFuzzyCompare(opt.globalScaleValue, 0.0f)) {
+        const auto gscale = opt.globalScaleValue;
+        QSSGSceneDesc::setProperty(*targetScene.root, "scale", &QQuick3DNode::setScale, QVector3D { gscale, gscale, gscale });
+    }
+
     // Now lets go through the scene
     if (sourceScene->mRootNode)
         processNode(sceneInfo, *sourceScene->mRootNode, *targetScene.root, nodeMap, animatingNodes);
