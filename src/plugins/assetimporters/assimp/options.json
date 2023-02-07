@@ -182,7 +182,7 @@
             "type": "Boolean"
         },
         "generateLightmapUV": {
-            "name": "Generate Lightmap UV Channel",
+            "name": "Generate Lightmap UVs",
             "description": "Unwrap mesh to generate lightmap UV channel",
             "value": false,
             "type": "Boolean"
@@ -220,7 +220,7 @@
             ]
         },
         "recalculateLodNormalsMergeAngle": {
-            "name": "Recalculate Normals for LOD Merge Angle",
+            "name": "Merge Angle for Mesh LODs",
             "description": "Maximum angle in degrees to consider for normal smoothing/merging",
             "value": 60.0,
             "type": "Real",
@@ -233,7 +233,7 @@
             ]
         },
         "recalculateLodNormalsSplitAngle": {
-            "name": "Recalculate Normals for LOD Split Angle",
+            "name": "Split Angle for Mesh LODs",
             "description": "Maximum angle in degrees to consider for normal spliting, which creates new vertex data",
             "value": 25.0,
             "type": "Real",
@@ -264,6 +264,7 @@
         "generateMeshLevelsOfDetail": {
             "name": "Level of Detail",
             "items": [
+                "generateMeshLevelsOfDetail",
                 "recalculateLodNormals",
                 "recalculateLodNormalsMergeAngle",
                 "recalculateLodNormalsSplitAngle"
