@@ -22,12 +22,6 @@ import QtQuick3D
 
 \generatelist qmltypesbymodule QtQuick3D
 
-\code
-import QtQuick3D.Effects
-\endcode
-
-\generatelist qmltypesbymodule QtQuick3D.Effects
-
 \section1 QtQuick3D.Helpers QML Types
 
 Import the QtQuick3D.Helpers module with the following statement:
@@ -57,6 +51,25 @@ import QtQuick3D.Particles3D
 \endcode
 
 \generatelist qmltypesbymodule QtQuick3D.Particles3D
+
+\section1 Obsolete QML Types
+
+The following QML types are now obsolete. Obsolete types are no longer
+maintained. They are provided to keep old source code working, but they can be
+removed in a future release. We strongly advise against using these classes in
+new code.
+
+\generatelist obsoleteqmltypes
+
+\section1 QML Types with Obsolete Properties or Methods
+
+The following QML types contain one or more properties or methods that are now
+obsolete. Obsolete members are no longer maintained. They are provided to keep
+old source code working, but they can be removed in a future release. We
+strongly advise against using these obsolete members in new code. Click on a
+type to see its deprecated members.
+
+\generatelist obsoleteqmlmembers
 
 \noautolist
 */
