@@ -8,5 +8,6 @@
         <file>CustomEffect.qml</file>
         <file>EffectColor.qml</file>
         <file>SettingsGroup.qml</file>
+        <file>FileEffect.qml</file>
     </qresource>
 </RCC>

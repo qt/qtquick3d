@@ -3,7 +3,6 @@
 
 qt_internal_add_example(antialiasing)
 qt_internal_add_example(customshaders)
-qt_internal_add_example(effects)
 qt_internal_add_example(hellocube)
 qt_internal_add_example(intro)
 qt_internal_add_example(view3d)
