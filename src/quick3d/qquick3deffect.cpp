@@ -42,6 +42,12 @@ QT_BEGIN_NAMESPACE
     using the previous step's output as the input to the next one, with the last
     effect's output defining the contents of the View3D.
 
+    \note \l SceneEnvironment and \l ExtendedSceneEnvironment provide a set of
+    built-in effects, such as depth of field, glow/bloom, lens flare, color
+    grading, and vignette. Always consider first if these are sufficient for
+    the application's needs, and prefer using the built-in facilities instead
+    of implementing a custom post-processing effect.
+
     Effects are similar to \l{CustomMaterial}{custom materials} in many
     ways. However, a custom material is associated with a model and is
     responsible for the shading of that given mesh. Whereas an effect's vertex
@@ -141,13 +147,11 @@ QT_BEGIN_NAMESPACE
     and samplers must have a corresponding property declared in the
     Effect object.
 
-    \section1 Getting started with effects
+    \section1 Getting started with user-defined effects
 
-    First, check if a suitable effect is available in the \l{Qt Quick 3D Effects
-    QML Types}{QtQuick3D.Effects module}. If so, there is no need to implement
-    an effect with your own shaders. Otherwise, an Effect object and a fragment
-    shader snippet needs to be written. Some effects will also want a customized
-    vertex shader as well.
+    A custom post-processing effect involves at minimum an Effect object and a
+    fragment shader snippet. Some effects will also want a customized vertex
+    shader as well.
 
     As a simple example, let's create an effect that combines the scene's
     content with an image, while further altering the red channel's value in an

@@ -24,7 +24,6 @@ graph, it's possible to mix Qt Quick 2D content with 3D content.
 The following module imports provide additional functionality:
 
 \qml
-import QtQuick3D.Effects
 import QtQuick3D.AssetUtils
 import QtQuick3D.Helpers
 import QtQuick3D.Particles3D
@@ -104,7 +103,6 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D Helpers QML Types}
     \li \l{QtQuick3D.AssetUtils QML Types}
           {Qt Quick 3D Asset Utility QML Types}
-    \li \l{Qt Quick 3D Effects QML Types}
     \li \l{Qt Quick 3D Particles3D QML Types}
 \endlist
 
