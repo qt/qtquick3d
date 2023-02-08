@@ -113,7 +113,7 @@ void tst_Input::singleTap2D()
 #ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
     QQuickWindowPrivate::get(view.data())->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
 #endif
-    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QVERIFY(QTest::qWaitForWindowActive(view.data()));
 
     QQuickItem *tapItem = find2DChildIn3DNode(view.data(), objectName, tapObjectName);
     QVERIFY(tapItem);
@@ -183,7 +183,7 @@ void tst_Input::dualTouchTap2D()
 #ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
     QQuickWindowPrivate::get(view.data())->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
 #endif
-    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QVERIFY(QTest::qWaitForWindowActive(view.data()));
 
     QQuickItem *tapItem1 = find2DChildIn3DNode(view.data(), objectName1, tapObjectName1);
     QVERIFY(tapItem1);
@@ -249,7 +249,7 @@ void tst_Input::fallthrough()
 #ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
     QQuickWindowPrivate::get(view.data())->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
 #endif
-    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QVERIFY(QTest::qWaitForWindowActive(view.data()));
     QQuickTapHandler *tapHandlerUnderneath = view->contentItem()->findChild<QQuickTapHandler *>();
     QVERIFY(tapHandlerUnderneath);
     QSignalSpy pressedChangedSpy(tapHandlerUnderneath, SIGNAL(pressedChanged()));
@@ -305,7 +305,7 @@ void tst_Input::singleDrag2D()
 #ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
     QQuickWindowPrivate::get(view.data())->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
 #endif
-    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QVERIFY(QTest::qWaitForWindowActive(view.data()));
 
     QQuickItem *dragItem = find2DChildIn3DNode(view.data(), objectName, dragObjectName);
     QVERIFY(dragItem);
