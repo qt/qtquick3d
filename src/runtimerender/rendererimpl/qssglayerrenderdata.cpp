@@ -94,6 +94,16 @@ qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &c
     return back + 1;
 }
 
+[[nodiscard]] constexpr static inline bool nearestToFurthestCompare(const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) noexcept
+{
+    return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
+}
+
+[[nodiscard]] constexpr static inline bool furthestToNearestCompare(const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) noexcept
+{
+    return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
+}
+
 static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
@@ -253,12 +263,8 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedOpaqueR
 
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !opaqueObjects.empty()) {
         renderedOpaqueObjects = opaqueObjects;
-        static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
-            return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
-        };
-
         // Render nearest to furthest objects
-        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), isRenderObjectPtrLessThan);
+        std::sort(renderedOpaqueObjects.begin(), renderedOpaqueObjects.end(), nearestToFurthestCompare);
     }
     return renderedOpaqueObjects;
 }
@@ -275,11 +281,8 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedTranspa
         renderedTransparentObjects.append(opaqueObjects);
 
     if (!renderedTransparentObjects.empty()) {
-        static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
-            return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
-        };
         // render furthest to nearest.
-        std::sort(renderedTransparentObjects.begin(), renderedTransparentObjects.end(), iSRenderObjectPtrGreatThan);
+        std::sort(renderedTransparentObjects.begin(), renderedTransparentObjects.end(), furthestToNearestCompare);
     }
 
     return renderedTransparentObjects;
@@ -291,12 +294,8 @@ const QVector<QSSGRenderableObjectHandle> &QSSGLayerRenderData::getSortedScreenT
         return renderedScreenTextureObjects;
     renderedScreenTextureObjects = screenTextureObjects;
     if (!renderedScreenTextureObjects.empty()) {
-        static const auto iSRenderObjectPtrGreatThan = [](const QSSGRenderableObjectHandle &lhs,
-                                                          const QSSGRenderableObjectHandle &rhs) {
-            return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
-        };
         // render furthest to nearest.
-        std::sort(renderedScreenTextureObjects.begin(), renderedScreenTextureObjects.end(), iSRenderObjectPtrGreatThan);
+        std::sort(renderedScreenTextureObjects.begin(), renderedScreenTextureObjects.end(), furthestToNearestCompare);
     }
     return renderedScreenTextureObjects;
 }
@@ -308,11 +307,8 @@ const QVector<QSSGBakedLightingModel> &QSSGLayerRenderData::getSortedBakedLighti
     if (layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest) && !bakedLightingModels.empty()) {
         renderedBakedLightingModels = bakedLightingModels;
         for (QSSGBakedLightingModel &lm : renderedBakedLightingModels) {
-            static const auto isRenderObjectPtrLessThan = [](const QSSGRenderableObjectHandle &lhs, const QSSGRenderableObjectHandle &rhs) {
-                return lhs.cameraDistanceSq < rhs.cameraDistanceSq;
-            };
             // sort nearest to furthest (front to back)
-            std::sort(lm.renderables.begin(), lm.renderables.end(), isRenderObjectPtrLessThan);
+            std::sort(lm.renderables.begin(), lm.renderables.end(), nearestToFurthestCompare);
         }
     }
     return renderedBakedLightingModels;
