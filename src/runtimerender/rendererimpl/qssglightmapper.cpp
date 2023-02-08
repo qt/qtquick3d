@@ -501,7 +501,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
     // All subsets for a model reference the same QSSGShaderLight list,
     // take the first one, but filter it based on the bake flag.
     for (const QSSGShaderLight &sl : static_cast<QSSGSubsetRenderable *>(bakedLightingModels.first().renderables.first().obj)->lights) {
-        if (!sl.enabled || !sl.light->m_bakingEnabled)
+        if (!sl.light->m_bakingEnabled)
             continue;
 
         Light light;

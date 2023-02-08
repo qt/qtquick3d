@@ -70,7 +70,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                                                     QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                     const QSSGShaderFeatures &inFeatureSet,
                                                                     const QSSGRenderGraphObject &inMaterial,
-                                                                    const QSSGShaderLightList &inLights,
+                                                                    const QSSGShaderLightListView &inLights,
                                                                     QSSGRenderableImage *inFirstImage, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                                     const QSSGRef<QSSGShaderCache> &theCache);
 
@@ -92,7 +92,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
                                          QSSGRenderableImage *inFirstImage,
                                          float inOpacity,
                                          const QSSGLayerGlobalRenderProperties &inRenderProperties,
-                                         const QSSGShaderLightList &inLights,
+                                         const QSSGShaderLightListView &inLights,
                                          const QSSGShaderReflectionProbe &reflectionProbe,
                                          bool receivesShadows,
                                          bool receivesReflections,

@@ -155,7 +155,7 @@ struct QSSGRenderableNodeEntry
 {
     QSSGRenderNode *node = nullptr;
     mutable QSSGRenderMesh *mesh = nullptr;
-    QSSGShaderLightList lights;
+    mutable QSSGShaderLightListView lights;
     QSSGRenderableNodeEntry() = default;
     QSSGRenderableNodeEntry(QSSGRenderNode &inNode) : node(&inNode) {}
 };
@@ -203,7 +203,7 @@ public:
     void rhiRender();
 
     QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType,
-                                                     const QSSGShaderLightList &lights, bool receivesShadows = true);
+                                                     const QSSGShaderLightListView &lights, bool receivesShadows = true);
 
     void prepareImageForRender(QSSGRenderImage &inImage,
                                QSSGRenderableImage::Type inMapType,
@@ -218,15 +218,15 @@ public:
                                 QSSGRenderer *renderer);
 
     QSSGDefaultMaterialPreparationResult prepareDefaultMaterialForRender(QSSGRenderDefaultMaterial &inMaterial,
-                                                                           QSSGRenderableObjectFlags &inExistingFlags,
-                                                                           float inOpacity,
-                                                                         const QSSGShaderLightList &lights,
+                                                                         QSSGRenderableObjectFlags &inExistingFlags,
+                                                                         float inOpacity,
+                                                                         const QSSGShaderLightListView &lights,
                                                                          QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     QSSGDefaultMaterialPreparationResult prepareCustomMaterialForRender(QSSGRenderCustomMaterial &inMaterial,
                                                                         QSSGRenderableObjectFlags &inExistingFlags,
                                                                         float inOpacity, bool alreadyDirty,
-                                                                        const QSSGShaderLightList &lights,
+                                                                        const QSSGShaderLightListView &lights,
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
     // Helper functions used during PrepareForRender and PrepareAndRender
@@ -290,7 +290,7 @@ public:
 
     // Results of prepare for render.
     QSSGRenderCamera *camera = nullptr;
-    QSSGShaderLightList globalLights; // Contains all lights except ones with a scope set
+    QSSGShaderLightList globalLights; // All non-scoped lights
     QSSGRenderableObjectList opaqueObjects;
     QSSGRenderableObjectList transparentObjects;
     QSSGRenderableObjectList screenTextureObjects;

@@ -87,35 +87,30 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
             // Ignore lights which are not specified for the particle
             if (!renderable.particles.m_lights.contains(theLight))
                 continue;
-            const bool lightEnabled = lights[lightIdx].enabled;
-            if (lightEnabled) {
-                if (theLight->m_brightness > 0.0f) {
-                    if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
-                        theLightAmbientTotal += theLight->m_diffuseColor * theLight->m_brightness;
-                    } else if (theLight->type == QSSGRenderLight::Type::PointLight && pointLight < 4) {
-                        lightData.pointLightColor[pointLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
-                        lightData.pointLightPos[pointLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
-                        lightData.pointLightConstantAtt[pointLight] = aux::translateConstantAttenuation(theLight->m_constantFade);
-                        lightData.pointLightLinearAtt[pointLight] = aux::translateLinearAttenuation(theLight->m_linearFade);
-                        lightData.pointLightQuadAtt[pointLight] = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
-                        pointLight++;
-                    } else if (theLight->type == QSSGRenderLight::Type::SpotLight && spotLight < 4) {
-                        lightData.spotLightColor[spotLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
-                        lightData.spotLightPos[spotLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
-                        lightData.spotLightDir[spotLight] = QVector4D(lights[lightIdx].direction, 0.0f);
-                        lightData.spotLightConstantAtt[spotLight] = aux::translateConstantAttenuation(theLight->m_constantFade);
-                        lightData.spotLightLinearAtt[spotLight] = aux::translateLinearAttenuation(theLight->m_linearFade);
-                        lightData.spotLightQuadAtt[spotLight] = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
-                        float coneAngle = theLight->m_coneAngle;
-                        // Inner cone angle must always be < cone angle, to not have possible undefined behavior for shader smoothstep
-                        float innerConeAngle = std::min(theLight->m_innerConeAngle, coneAngle - 0.01f);
-                        lightData.spotLightConeAngle[spotLight] = qDegreesToRadians(coneAngle);
-                        lightData.spotLightInnerConeAngle[spotLight] = qDegreesToRadians(innerConeAngle);
-                        spotLight++;
-                    }
-                }
-                theLightAmbientTotal += theLight->m_ambientColor;
+            if (theLight->type == QSSGRenderLight::Type::DirectionalLight) {
+                theLightAmbientTotal += theLight->m_diffuseColor * theLight->m_brightness;
+            } else if (theLight->type == QSSGRenderLight::Type::PointLight && pointLight < 4) {
+                lightData.pointLightColor[pointLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
+                lightData.pointLightPos[pointLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
+                lightData.pointLightConstantAtt[pointLight] = aux::translateConstantAttenuation(theLight->m_constantFade);
+                lightData.pointLightLinearAtt[pointLight] = aux::translateLinearAttenuation(theLight->m_linearFade);
+                lightData.pointLightQuadAtt[pointLight] = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+                pointLight++;
+            } else if (theLight->type == QSSGRenderLight::Type::SpotLight && spotLight < 4) {
+                lightData.spotLightColor[spotLight] = QVector4D(theLight->m_diffuseColor * theLight->m_brightness, 1.0f);
+                lightData.spotLightPos[spotLight] = QVector4D(theLight->getGlobalPos(), 1.0f);
+                lightData.spotLightDir[spotLight] = QVector4D(lights[lightIdx].direction, 0.0f);
+                lightData.spotLightConstantAtt[spotLight] = aux::translateConstantAttenuation(theLight->m_constantFade);
+                lightData.spotLightLinearAtt[spotLight] = aux::translateLinearAttenuation(theLight->m_linearFade);
+                lightData.spotLightQuadAtt[spotLight] = aux::translateQuadraticAttenuation(theLight->m_quadraticFade);
+                float coneAngle = theLight->m_coneAngle;
+                // Inner cone angle must always be < cone angle, to not have possible undefined behavior for shader smoothstep
+                float innerConeAngle = std::min(theLight->m_innerConeAngle, coneAngle - 0.01f);
+                lightData.spotLightConeAngle[spotLight] = qDegreesToRadians(coneAngle);
+                lightData.spotLightInnerConeAngle[spotLight] = qDegreesToRadians(innerConeAngle);
+                spotLight++;
             }
+            theLightAmbientTotal += theLight->m_ambientColor;
         }
         // Copy light data
         int lightOffset = shaders->offsetOfUniform("qt_pointLightPosition");

@@ -734,7 +734,7 @@ static void generateMainLightCalculation(QSSGStageGeneratorBase &fragmentShader,
                                            QSSGMaterialVertexPipeline &vertexShader,
                                            const QSSGShaderDefaultMaterialKey &inKey,
                                            const QSSGRenderGraphObject &inMaterial,
-                                           const QSSGShaderLightList &lights,
+                                           const QSSGShaderLightListView &lights,
                                            const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                            QSSGRenderableImage *translucencyImage,
                                            bool hasCustomFrag,
@@ -833,7 +833,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGShaderDefaultMaterialKeyProperties &keyProps,
                                    const QSSGShaderFeatures &featureSet,
                                    const QSSGRenderGraphObject &inMaterial,
-                                   const QSSGShaderLightList &lights,
+                                   const QSSGShaderLightListView &lights,
                                    QSSGRenderableImage *firstImage,
                                    const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
 {
@@ -1551,7 +1551,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
             }
         }
 
-        if (!lights.empty()) {
+        if (!lights.isEmpty()) {
             generateMainLightCalculation(fragmentShader,
                                          vertexShader,
                                          inKey,
@@ -1811,7 +1811,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGMaterialShaderGenerator::generateMaterialRhiS
                                                                                       QSSGShaderDefaultMaterialKeyProperties &inProperties,
                                                                                       const QSSGShaderFeatures &inFeatureSet,
                                                                                       const QSSGRenderGraphObject &inMaterial,
-                                                                                      const QSSGShaderLightList &inLights,
+                                                                                      const QSSGShaderLightListView &inLights,
                                                                                       QSSGRenderableImage *inFirstImage,
                                                                                       const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
                                                                                       const QSSGRef<QSSGShaderCache> &theCache)
@@ -1851,7 +1851,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            QSSGRenderableImage *inFirstImage,
                                                            float inOpacity,
                                                            const QSSGLayerGlobalRenderProperties &inRenderProperties,
-                                                           const QSSGShaderLightList &inLights,
+                                                           const QSSGShaderLightListView &inLights,
                                                            const QSSGShaderReflectionProbe &reflectionProbe,
                                                            bool receivesShadows,
                                                            bool receivesReflections,
@@ -1950,11 +1950,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
          lightIdx < lightEnd && lightIdx < QSSG_MAX_NUM_LIGHTS; ++lightIdx)
     {
         QSSGRenderLight *theLight(inLights[lightIdx].light);
-        // For all disabled lights, the shader code will be generated as the same as enabled.
-        // but the light color will be zero, and shadows will not be affected
-        const bool lightEnabled = inLights[lightIdx].enabled;
         const bool lightShadows = inLights[lightIdx].shadows;
-        const float brightness = lightEnabled ? theLight->m_brightness : 0.0f;
+        const float brightness = theLight->m_brightness;
         lightColor[lightIdx][0] = theLight->m_diffuseColor.x() * brightness;
         lightColor[lightIdx][1] = theLight->m_diffuseColor.y() * brightness;
         lightColor[lightIdx][2] = theLight->m_diffuseColor.z() * brightness;
@@ -1980,7 +1977,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // get an all-zero value, which then ensures no shadow contribution
         // for the object in question.
 
-        if (lightEnabled && lightShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
+        if (lightShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
             QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
             ++shadowMapCount;
 
@@ -2044,8 +2041,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             }
         }
 
-        if (lightEnabled)
-            theLightAmbientTotal += theLight->m_ambientColor;
+        theLightAmbientTotal += theLight->m_ambientColor;
     }
 
     shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);

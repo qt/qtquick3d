@@ -24,7 +24,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                                            const QSSGRenderGraphObject &mat,
                                            QSSGRenderableImage *inFirstImage,
                                            QSSGShaderDefaultMaterialKey inShaderKey,
-                                           const QSSGShaderLightList &inLights)
+                                           const QSSGShaderLightListView &inLights)
     : QSSGRenderableObject(type,
                            inFlags,
                            inWorldCenterPt,
@@ -62,7 +62,7 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                                                  const QSSGRenderParticles &inParticles,
                                                  QSSGRenderableImage *inFirstImage,
                                                  QSSGRenderableImage *inColorTable,
-                                                 const QSSGShaderLightList &inLights,
+                                                 const QSSGShaderLightListView &inLights,
                                                  float inOpacity)
     : QSSGRenderableObject(Type::Particles,
                            inFlags,

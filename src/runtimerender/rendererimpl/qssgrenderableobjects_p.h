@@ -147,7 +147,6 @@ struct QSSGRenderableObjectFlags : public QFlags<QSSGRenderableObjectFlag>
 struct QSSGShaderLight
 {
     QSSGRenderLight *light = nullptr;
-    bool enabled = true;
     bool shadows = false;
     QVector3D direction;
 
@@ -176,6 +175,7 @@ struct QSSGShaderReflectionProbe
 // detach somewhere in QSSGLayerRenderPreparationData::prepareForRender so the
 // implicit sharing's benefits do not outweigh the cost of allocations in this case.
 typedef QVarLengthArray<QSSGShaderLight, 16> QSSGShaderLightList;
+using QSSGShaderLightListView = QSSGDataView<QSSGShaderLight>;
 
 struct QSSGRenderableObject;
 
@@ -288,7 +288,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     const QSSGRenderGraphObject &material;
     QSSGRenderableImage *firstImage;
     QSSGShaderDefaultMaterialKey shaderDescription;
-    const QSSGShaderLightList &lights;
+    const QSSGShaderLightListView &lights;
 
     struct {
         // Transient (due to the subsetRenderable being allocated using a
@@ -323,7 +323,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
                          const QSSGRenderGraphObject &mat,
                          QSSGRenderableImage *inFirstImage,
                          QSSGShaderDefaultMaterialKey inShaderKey,
-                         const QSSGShaderLightList &inLights);
+                         const QSSGShaderLightListView &inLights);
 
     const QSSGRenderDefaultMaterial &defaultMaterial() const
     {
@@ -349,7 +349,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
     const QSSGRenderParticles &particles;
     QSSGRenderableImage *firstImage;
     QSSGRenderableImage *colorTable;
-    const QSSGShaderLightList &lights;
+    const QSSGShaderLightListView &lights;
     float opacity;
 
     struct {
@@ -380,7 +380,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
                             const QSSGRenderParticles &inParticles,
                             QSSGRenderableImage *inFirstImage,
                             QSSGRenderableImage *inColorTable,
-                            const QSSGShaderLightList &inLights,
+                            const QSSGShaderLightListView &inLights,
                             float inOpacity);
 };
 
