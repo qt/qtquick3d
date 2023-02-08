@@ -196,7 +196,8 @@ static bool maybeQueueNodeForRender(QSSGRenderNode &inNode,
         } else if (QSSGRenderGraphObject::isCamera(inNode.type)) {
             collectNode(static_cast<QSSGRenderCamera *>(&inNode), outCameras, ioCameraCount);
         } else if (QSSGRenderGraphObject::isLight(inNode.type)) {
-            collectNode(static_cast<QSSGRenderLight *>(&inNode), outLights, ioLightCount);
+            if (auto &light = static_cast<QSSGRenderLight &>(inNode); light.isEnabled())
+                collectNode(&light, outLights, ioLightCount);
         } else if (inNode.type == QSSGRenderGraphObject::Type::ReflectionProbe) {
             collectNode(static_cast<QSSGRenderReflectionProbe *>(&inNode), outReflectionProbes, ioReflectionProbeCount);
         }
@@ -416,8 +417,15 @@ Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Ar
     return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(std::forward<Args>(args)...);
 }
 
+template <typename T, typename... Args>
+Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, size_t asize)
+{
+    static_assert(std::is_trivially_destructible_v<T>, "Objects allocated using the per-frame allocator needs to be trivially destructible!");
+    return reinterpret_cast<T *>(ctx.perFrameAllocator().allocate(asize));
+}
+
 QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
-        QSSGRenderDefaultMaterial::MaterialLighting inLightingType, const QSSGShaderLightList &lights, bool receivesShadows)
+        QSSGRenderDefaultMaterial::MaterialLighting inLightingType, const QSSGShaderLightListView &lights, bool receivesShadows)
 {
     QSSGShaderDefaultMaterialKey theGeneratedKey(qHash(features));
     const bool lighting = inLightingType != QSSGRenderDefaultMaterial::MaterialLighting::NoLighting;
@@ -622,7 +630,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
         QSSGRenderDefaultMaterial &inMaterial,
         QSSGRenderableObjectFlags &inExistingFlags,
         float inOpacity,
-        const QSSGShaderLightList &lights,
+        const QSSGShaderLightListView &lights,
         QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
     QSSGRenderDefaultMaterial *theMaterial = &inMaterial;
@@ -813,7 +821,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
 
 QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialForRender(
         QSSGRenderCustomMaterial &inMaterial, QSSGRenderableObjectFlags &inExistingFlags,
-        float inOpacity, bool alreadyDirty, const QSSGShaderLightList &lights,
+        float inOpacity, bool alreadyDirty, const QSSGShaderLightListView &lights,
         QSSGLayerRenderPreparationResultFlags &ioFlags)
 {
     QSSGDefaultMaterialPreparationResult retval(
@@ -1826,103 +1834,113 @@ void QSSGLayerRenderData::prepareForRender()
     updateDirtySkeletons(renderableModels);
 
     // Lights
-    QSSGShaderLightList renderableLights;
     int shadowMapCount = 0;
+    bool hasScopedLights = false;
     // Determine which lights will actually Render
     // Determine how many lights will need shadow maps
     // NOTE: This culling is specific to our Forward renderer
     const int maxLightCount = effectiveMaxLightCount(features);
-    for (auto rIt = lights.crbegin(); rIt != lights.crend(); rIt++) {
-        if (renderableLights.size() == maxLightCount) {
-            if (!tooManyLightsWarningShown) {
-                qWarning("Too many lights in scene, maximum is %d", maxLightCount);
-                tooManyLightsWarningShown = true;
-            }
-            break;
-        }
-
-        QSSGRenderLight *theLight = *rIt;
-        wasDataDirty = wasDataDirty || theLight->isDirty();
-        bool lightResult = theLight->calculateGlobalVariables();
-        theLight->clearDirty(QSSGRenderLight::DirtyFlag::LightDirty);
-        wasDataDirty = lightResult || wasDataDirty;
-
-        QSSGShaderLight shaderLight;
-        shaderLight.light = theLight;
-        shaderLight.enabled = theLight->getGlobalState(QSSGRenderLight::GlobalState::Active);
-        shaderLight.enabled &= theLight->m_brightness > 0.0f;
-        shaderLight.shadows = theLight->m_castShadow && !theLight->m_fullyBaked;
-        if (shaderLight.shadows && shaderLight.enabled) {
-            if (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
-                ++shadowMapCount;
-            } else {
-                shaderLight.shadows = false;
-                if (!tooManyShadowLightsWarningShown) {
-                    qWarning("Too many shadow casting lights in scene, maximum is %d", QSSG_MAX_NUM_SHADOW_MAPS);
-                    tooManyShadowLightsWarningShown = true;
-                }
-            }
-        }
-
-        if (shaderLight.enabled)
-            renderableLights.push_back(shaderLight);
-
+    const bool showLightCountWarning = !tooManyLightsWarningShown && (lights.size() > maxLightCount);
+    if (showLightCountWarning) {
+        qWarning("Too many lights in scene, maximum is %d", maxLightCount);
+        tooManyLightsWarningShown = true;
     }
-    // Setup Shadow Maps Entries for Lights casting shadows
-    const auto lightCount = renderableLights.size();
-    for (int lightIdx = 0; lightIdx < lightCount; lightIdx++) {
-        auto &shaderLight = renderableLights[lightIdx];
-        if (!shaderLight.light->m_scope)
-            globalLights.append(shaderLight);
-        shaderLight.direction = shaderLight.light->getScalingCorrectDirection();
-        if (shaderLight.shadows) {
-            if (!shadowMapManager)
-                shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
 
-            quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
-            ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
-                    ? ShadowMapModes::CUBE
-                    : ShadowMapModes::VSM;
-            shadowMapManager->addShadowMapEntry(lightIdx,
-                                                mapSize,
-                                                mapSize,
-                                                mapMode,
-                                                shaderLight.light->debugObjectName);
-            thePrepResult.flags.setRequiresShadowMapPass(true);
-            // Any light with castShadow=true triggers shadow mapping
-            // in the generated shaders. The fact that some (or even
-            // all) objects may opt out from receiving shadows plays no
-            // role here whatsoever.
-            features.set(QSSGShaderFeatures::Feature::Ssm, true);
+    QSSGShaderLightList renderableLights; // All lights (upto 'maxLightCount')
+
+    // List should contain only enabled lights (active && birghtness > 0).
+    {
+        auto it = lights.crbegin();
+        const auto end = it + qMin(maxLightCount, lights.size());
+
+        for (; it != end; ++it) {
+            QSSGRenderLight *renderLight = (*it);
+            hasScopedLights |= (renderLight->m_scope != nullptr);
+            const bool mightCastShadows = renderLight->m_castShadow && !renderLight->m_fullyBaked;
+            const bool shadows = mightCastShadows && (shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS);
+            shadowMapCount += int(shadows);
+            const auto &direction = renderLight->getScalingCorrectDirection();
+            renderableLights.push_back(QSSGShaderLight{ renderLight, shadows, direction });
+        }
+
+        if ((shadowMapCount >= QSSG_MAX_NUM_SHADOW_MAPS) && !tooManyShadowLightsWarningShown) {
+            qWarning("Too many shadow casting lights in scene, maximum is %d", QSSG_MAX_NUM_SHADOW_MAPS);
+            tooManyShadowLightsWarningShown = true;
+        }
+    }
+
+    if (shadowMapCount > 0) { // Setup Shadow Maps Entries for Lights casting shadows
+        if (!shadowMapManager)
+            shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
+
+        for (int i = 0, end = renderableLights.size(); i != end; ++i) {
+            const auto &shaderLight = renderableLights.at(i);
+            if (shaderLight.shadows) {
+                quint32 mapSize = 1 << shaderLight.light->m_shadowMapRes;
+                ShadowMapModes mapMode = (shaderLight.light->type != QSSGRenderLight::Type::DirectionalLight)
+                        ? ShadowMapModes::CUBE
+                        : ShadowMapModes::VSM;
+                shadowMapManager->addShadowMapEntry(i,
+                                                    mapSize,
+                                                    mapSize,
+                                                    mapMode,
+                                                    shaderLight.light->debugObjectName);
+                thePrepResult.flags.setRequiresShadowMapPass(true);
+                // Any light with castShadow=true triggers shadow mapping
+                // in the generated shaders. The fact that some (or even
+                // all) objects may opt out from receiving shadows plays no
+                // role here whatsoever.
+                features.set(QSSGShaderFeatures::Feature::Ssm, true);
+            }
         }
     }
 
     // Give each renderable a copy of the lights available
     // Also setup scoping for scoped lights
-    const bool handleScopedLights = renderableLights.size() != globalLights.size();
 
-    const auto prepareLights = [&renderableLights](QVector<QSSGRenderableNodeEntry> &renderableNodes) {
-        for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
-            QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
-            theNodeEntry.lights = renderableLights;
+    QSSG_ASSERT(globalLights.isEmpty(), globalLights.clear());
+    if (hasScopedLights) { // Filter out scoped lights from the global lights list
+        for (const auto &shaderLight : std::as_const(renderableLights)) {
+            if (!shaderLight.light->m_scope)
+                globalLights.push_back(shaderLight);
         }
-    };
 
-    const auto prepareLightsWithScopedLights = [&renderableLights](QVector<QSSGRenderableNodeEntry> &renderableNodes) {
-        for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
-            QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
-            theNodeEntry.lights = renderableLights;
-            for (auto &light : theNodeEntry.lights) {
-                if (light.light->m_scope)
-                    light.enabled = scopeLight(theNodeEntry.node, light.light->m_scope);
+        const auto prepareLightsWithScopedLights = [&renderableLights, this](QVector<QSSGRenderableNodeEntry> &renderableNodes) {
+            for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
+                QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
+                QSSGShaderLightList filteredLights;
+                for (const auto &light : std::as_const(renderableLights)) {
+                    if (light.light->m_scope && !scopeLight(theNodeEntry.node, light.light->m_scope))
+                        continue;
+                    filteredLights.push_back(light);
+                }
+
+                if (filteredLights.isEmpty()) { // Node without scoped lights, just reference the global light list.
+                    theNodeEntry.lights = QSSGDataView(globalLights);
+                } else {
+                    // This node has scoped lights, i.e., it's lights differ from the global list
+                    // we therefore create a bespoke light list for it. Technically this might be the same for
+                    // more then this one node, but the overhead for tracking that is not worth it.
+                    using NodeLights = QSSGShaderLight[16]; // Per-node light list
+                    QSSGShaderLight *customLightList = RENDER_FRAME_NEW<QSSGShaderLight>(*renderer->contextInterface(), sizeof(NodeLights));
+                    std::copy(filteredLights.cbegin(), filteredLights.cend(), customLightList);
+                    theNodeEntry.lights = QSSGDataView(customLightList, filteredLights.size());
+                }
             }
-        }
-    };
+        };
 
-    if (handleScopedLights) {
         prepareLightsWithScopedLights(renderableModels);
         prepareLightsWithScopedLights(renderableParticles);
-    } else {
+    } else { // Just a simple copy
+        globalLights = renderableLights;
+        // No scoped lights, all nodes can just reference the global light list.
+        const auto prepareLights = [this](QVector<QSSGRenderableNodeEntry> &renderableNodes) {
+            for (qint32 idx = 0, end = renderableNodes.size(); idx < end; ++idx) {
+                QSSGRenderableNodeEntry &theNodeEntry(renderableNodes[idx]);
+                theNodeEntry.lights = QSSGDataView(globalLights);
+            }
+        };
+
         prepareLights(renderableModels);
         prepareLights(renderableParticles);
     }

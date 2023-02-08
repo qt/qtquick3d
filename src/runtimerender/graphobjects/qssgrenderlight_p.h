@@ -61,6 +61,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderLight : public QSSGRenderNode
     // Defaults to directional light
     explicit QSSGRenderLight(Type type = Type::DirectionalLight);
 
+    [[nodiscard]] inline bool isEnabled() const { return (m_brightness > 0.0f); }
+
     [[nodiscard]] inline bool isDirty(DirtyFlag dirtyFlag = DirtyMask) const
     {
         return ((m_lightDirtyFlags & FlagT(dirtyFlag)) != 0)
