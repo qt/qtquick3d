@@ -258,11 +258,9 @@ Window {
         width: debugViewToggleText.implicitWidth
         height: debugViewToggleText.implicitHeight
         anchors.right: parent.right
-        Text {
+        Label {
             id: debugViewToggleText
             text: "Click here " + (dbg.visible ? "to hide DebugView" : "for DebugView")
-            font.pointSize: 8
-            color: "black"
             anchors.right: parent.right
             anchors.top: parent.top
         }
