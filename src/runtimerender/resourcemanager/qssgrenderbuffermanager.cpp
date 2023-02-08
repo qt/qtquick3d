@@ -159,7 +159,6 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
     } else if (image->m_rawTextureData) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DTextureLoad);
         result = loadTextureData(image->m_rawTextureData, inMipMode);
-        increaseMemoryStat(result.m_texture);
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DTextureLoad, stats.imageDataSize, image->profilingId);
     } else if (!image->m_imagePath.isEmpty()) {
 
