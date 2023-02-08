@@ -187,6 +187,7 @@ Window {
             id: defaultModel
             source: "#Sphere"
             visible: importNode.status === RuntimeLoader.Empty
+            instancing: instancingButton.checked ? instancing : null
             onBoundsChanged: helper.updateBounds(bounds)
             materials: PrincipledMaterial {
                 baseColor: "green"
