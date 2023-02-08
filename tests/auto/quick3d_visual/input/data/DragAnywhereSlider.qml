@@ -6,8 +6,8 @@ import Qt.labs.animation
 
 Item {
     id: root
-    property int value: 50
-    property int maximumValue: 99
+    property real value: 50
+    property real maximumValue: 99
     width: 100
     height: 240
 
