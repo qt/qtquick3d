@@ -2,7 +2,6 @@ TEMPLATE = subdirs
 SUBDIRS += \
     antialiasing \
     customshaders \
-    effects \
     hellocube \
     intro \
     screenspacereflections \
