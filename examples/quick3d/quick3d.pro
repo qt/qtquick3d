@@ -30,4 +30,5 @@ SUBDIRS += \
     reflectionprobes \
     bakedlightmap \
     lodhelper \
-    simplefog
+    simplefog \
+    sceneeffects
