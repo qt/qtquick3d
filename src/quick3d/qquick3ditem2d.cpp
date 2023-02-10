@@ -148,9 +148,13 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
                 this,
                 [this]() {
                     auto itemNode = static_cast<QSSGRenderItem2D *>(QQuick3DObjectPrivate::get(this)->spatialNode);
-                    if (itemNode && itemNode->m_rp) {
-                        itemNode->m_rp->deleteLater();
-                        itemNode->m_rp = nullptr;
+                    if (itemNode) {
+                        if (itemNode->m_rp) {
+                            itemNode->m_rp->deleteLater();
+                            itemNode->m_rp = nullptr;
+                        }
+                        if (itemNode->m_renderer)
+                            itemNode->m_renderer = nullptr;
                     }
                 },
                 Qt::DirectConnection);
