@@ -669,11 +669,5 @@ Window {
         onClicked: {
             view3D.startGame();
         }
-
-        background: Rectangle {
-            border.color: "#000000"
-            border.width: 2 * px
-            radius: height / 2
-        }
     }
 }
