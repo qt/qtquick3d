@@ -220,6 +220,8 @@ public:
         Visible = 0x00010000,
         HideReference = 0x00020000,
         Antialiasing = 0x00040000,
+
+        InstanceRootChanged = 0x00080000,
         // When you add an attribute here, don't forget to update
         // dirtyToString()
 

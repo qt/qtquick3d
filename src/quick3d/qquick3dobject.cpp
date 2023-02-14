@@ -5,6 +5,7 @@
 #include "qquick3dobject_p.h"
 #include "qquick3dscenemanager_p.h"
 #include "qquick3ditem2d_p.h"
+#include "qquick3dmodel_p.h"
 
 #include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 
@@ -730,12 +731,19 @@ QString QQuick3DObjectPrivate::dirtyToString() const
     DIRTY_TO_STRING(Visible);
     DIRTY_TO_STRING(HideReference);
     DIRTY_TO_STRING(Antialiasing);
+    DIRTY_TO_STRING(InstanceRootChanged);
 
     return rv;
 }
 
 void QQuick3DObjectPrivate::dirty(QQuick3DObjectPrivate::DirtyType type)
 {
+    // NOTE: Models that get an instance root has an "external" node that affects its transform
+    // we therefore give models with an instance root a lower priority in the update list (See: addToDirtyList()).
+    // For this to work we need to re-evaluate models priority when the instance root changes.
+    if ((type & InstanceRootChanged) != 0)
+        removeFromDirtyList();
+
     if (!(dirtyAttributes & type) || (sceneManager && !prevDirtyItem)) {
         dirtyAttributes |= type;
         if (sceneManager && componentComplete) {
@@ -753,7 +761,11 @@ void QQuick3DObjectPrivate::addToDirtyList()
         Q_ASSERT(!nextDirtyItem);
 
         if (QSSGRenderGraphObject::isNodeType(type)) {
-            const auto dirtyListIdx = QQuick3DSceneManager::nodeListIndex(type);
+            // NOTE: We do special handling of models with an instance root (that is not itself...)
+            // to ensure those models are processed after instance root nodes.
+            const bool hasInstanceRoot = (type == Type::Model && static_cast<QQuick3DModel *>(q)->instanceRoot() && static_cast<QQuick3DModel *>(q)->instanceRoot() != q);
+            const auto dirtyListIdx = !hasInstanceRoot ? QQuick3DSceneManager::nodeListIndex(type)
+                                                       : size_t(QQuick3DSceneManager::NodePriority::ModelWithInstanceRoot);
             nextDirtyItem = sceneManager->dirtyNodes[dirtyListIdx];
             if (nextDirtyItem)
                 QQuick3DObjectPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;

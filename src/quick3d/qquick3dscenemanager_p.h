@@ -87,7 +87,10 @@ public:
 
     // Where the enumerator is placed will decide the priority it gets.
     // NOTE: Place new list types before 'Count'.
-    enum class NodePriority { Skeleton, Other, Lights, Count };
+    // NOTE: InstanceNodes are nodes that have an instance root set, we'll process these
+    // after the other nodes but before light nodes; this implies that lights are not good candidates
+    // for being instance roots...
+    enum class NodePriority { Skeleton, Other, ModelWithInstanceRoot, Lights, Count };
     enum class ResourcePriority { TextureData, Texture, Other, Count };
 
     static inline size_t resourceListIndex(QSSGRenderGraphObject::Type type)

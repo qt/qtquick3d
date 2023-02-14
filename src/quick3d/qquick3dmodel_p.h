@@ -188,7 +188,8 @@ private:
         PropertyDirty =          0x00000200,
         ReflectionDirty =        0x00000400,
         SkinDirty =              0x00000800,
-        LodDirty =               0x00001000
+        LodDirty =               0x00001000,
+        InstanceRootDirty =      0x00002000,
     };
 
     QUrl m_source;
