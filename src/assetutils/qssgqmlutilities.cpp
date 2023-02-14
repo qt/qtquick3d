@@ -783,7 +783,7 @@ QString asString(QSSGSceneDesc::Animation::Channel::TargetProperty prop)
 
 using PropertyPair = std::pair<const char * /* name */, QString /* value */>;
 
-static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, OutputContext &output, bool *ok = nullptr)
+static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, OutputContext &output, bool *ok = nullptr, QString *reason = nullptr)
 {
     using namespace QSSGSceneDesc;
     using RuntimeType = Node::RuntimeType;
@@ -908,22 +908,35 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
             //
-            static const auto outputMeshAsset = [](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
+            static const auto outputMeshAsset = [&ok, &reason](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
                 const auto meshFolder = getMeshFolder();
                 const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
                 Q_ASSERT(scene.meshStorage.size() > meshNode.idx);
                 const auto &mesh = scene.meshStorage.at(meshNode.idx);
 
                 // If a mesh folder does not exist, then create one
-                if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder))
+                if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder)) {
+                    qDebug() << "Failed to create meshes folder at" << outdir;
+                    if (ok)
+                        *ok = false;
                     return QString(); // Error out
+                }
 
-                QFile file(outdir.path() + QDir::separator() + meshSourceName);
-                if (!file.open(QIODevice::WriteOnly))
+                const auto path = QString(outdir.path() + QDir::separator() + meshSourceName);
+                QFile file(path);
+                if (!file.open(QIODevice::WriteOnly)) {
+                    if (ok)
+                        *ok = false;
+                    if (reason)
+                        *reason = "Failed to find texture at " + path;
                     return QString();
+                }
 
-                if (mesh.save(&file) == 0)
+                if (mesh.save(&file) == 0) {
+                    if (ok)
+                        *ok = false;
                     return QString();
+                }
 
                 return meshSourceName;
             };
@@ -940,25 +953,43 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.metaType() == QMetaType::fromType<QUrl>()) {
             //
-            static const auto copyTextureAsset = [&output](const QUrl &texturePath, const QDir &outdir) {
-                const auto assetPath = texturePath.path(); // TODO: Use QUrl::resolved() instead of manual string manipulation
+            static const auto copyTextureAsset = [&output, &ok, &reason](const QUrl &texturePath, const QDir &outdir) {
+                QString assetPath;
+                if (outdir.isAbsolutePath(texturePath.path()))
+                    assetPath = texturePath.toString();
+                else
+                    assetPath = texturePath.path(); // TODO: Use QUrl::resolved() instead of manual string manipulation
                 QFileInfo fi(assetPath);
                 if (fi.isRelative() && !output.sourceDir.isEmpty()) {
                     fi = QFileInfo(output.sourceDir + QChar(u'/') + assetPath);
                 }
-                if (!fi.exists())
+                if (!fi.exists()) {
+                    if (ok)
+                        *ok = false;
+                    if (reason)
+                        *reason = "Failed to find texture at " + assetPath;
+                    indent(output) << comment() << "Source texture path expected: " << getTextureFolder() + texturePath.fileName() << "\n";
                     return assetPath;
+                }
 
                 const auto mapsFolder = getTextureFolder();
 
                 // If a maps folder does not exist, then create one
-                if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
+                if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder)) {
+                    qDebug() << "Failed to create maps folder at" << outdir;
+                    if (ok)
+                        *ok = false;
                     return QString(); // Error out
+                }
 
                 const QString relpath = mapsFolder + fi.fileName();
                 const auto newfilepath = QString(outdir.canonicalPath() + QDir::separator() + relpath);
-                if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath))
+                if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath)) {
+                    qDebug() << "Failed to copy file from" << fi.canonicalFilePath() << "to" << newfilepath;
+                    if (ok)
+                        *ok = false;
                     return QString();
+                }
 
                 return relpath;
             };
@@ -1080,13 +1111,18 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     auto it = properties.begin();
     const auto end = properties.end();
     bool ok = false;
+    QString reason;
     for (; it != end; ++it) {
         const auto &property = *it;
-        const auto &[name, value] = valueToQml(node, *property, output, &ok);
+        const auto &[name, value] = valueToQml(node, *property, output, &ok, &reason);
         if (property->type != Property::Type::Dynamic) {
             // Only write the property if the value is different from the default value
             if (!ok) {
-                indent(output) << comment() << "Skipped property: " << property->name << "\n";
+                QString message = QStringLiteral("Skipped property: ") + property->name;
+                if (reason.size())
+                    message.append(QStringLiteral(", reason: ") + reason);
+                qDebug() << message;
+                indent(output) << comment() << message + "\n";
             } else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value)) {
                 const bool doExpandComponents = (output.options & OutputContext::Options::ExpandValueComponents);
                 if (doExpandComponents) {
@@ -1103,6 +1139,8 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
                     indent(output) << name << ": " << value << "\n";
                 }
             }
+            else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value))
+                indent(output) << name << ": " << value << "\n";
         } else if (ok && property->type == Property::Type::Dynamic) {
             indent(output) << "property " << typeName(property->value.metaType()).toByteArray() << ' ' << name << ": " << value << "\n";
         }
