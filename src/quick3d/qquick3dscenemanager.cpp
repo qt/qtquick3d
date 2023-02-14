@@ -194,17 +194,6 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
             }
         }
     }
-
-    if (graphNode) {
-        if (auto *model = qobject_cast<QQuick3DModel*>(spatialNode)) {
-            if (auto *root = model->instanceRoot() ) {
-                auto *rootGraphNode = root ? static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(root)->spatialNode) : nullptr;
-                graphNode->instanceRoot = rootGraphNode;
-            } else {
-                graphNode->instanceRoot = nullptr;
-            }
-        }
-    }
 }
 
 QQuick3DObject *QQuick3DSceneManager::lookUpNode(const QSSGRenderGraphObject *node) const

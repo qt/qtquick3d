@@ -259,6 +259,10 @@ void QQuick3DRuntimeLoader::setInstancing(QQuick3DInstancing *newInstancing)
 {
     if (m_instancing == newInstancing)
         return;
+
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DRuntimeLoader::setInstancing,
+                                         newInstancing, m_instancing);
+
     m_instancing = newInstancing;
     m_instancingChanged = true;
     updateModels();

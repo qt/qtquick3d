@@ -673,7 +673,10 @@ void QQuick3DModel::setInstanceRoot(QQuick3DNode *instanceRoot)
     if (m_instanceRoot == instanceRoot)
         return;
 
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DModel::setInstanceRoot, instanceRoot, m_instanceRoot);
+
     m_instanceRoot = instanceRoot;
+    markDirty(InstanceRootDirty);
     emit instanceRootChanged();
 }
 
@@ -835,7 +838,21 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
         }
     }
 
-    if (m_dirtyAttributes & InstancesDirty) {
+    if (m_dirtyAttributes & quint32(InstancesDirty | InstanceRootDirty)) {
+        // If we have an instance root set we have lower priority and the instance root node should already
+        // have been created.
+        QSSGRenderNode *instanceRootNode = nullptr;
+        if (m_instanceRoot) {
+            if (m_instanceRoot == this)
+                instanceRootNode = modelNode;
+            else
+                instanceRootNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(m_instanceRoot)->spatialNode);
+        }
+        if (instanceRootNode != modelNode->instanceRoot) {
+            modelNode->instanceRoot = instanceRootNode;
+            modelNode->markDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
+        }
+
         if (m_instancing) {
             modelNode->instanceTable = static_cast<QSSGRenderInstanceTable *>(QQuick3DObjectPrivate::get(m_instancing)->spatialNode);
         } else {
@@ -908,6 +925,9 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 
 void QQuick3DModel::markDirty(QQuick3DModel::QSSGModelDirtyType type)
 {
+    if (InstanceRootDirty & quint32(type))
+        QQuick3DObjectPrivate::get(this)->dirty(QQuick3DObjectPrivate::InstanceRootChanged);
+
     if (!(m_dirtyAttributes & quint32(type))) {
         m_dirtyAttributes |= quint32(type);
         update();
