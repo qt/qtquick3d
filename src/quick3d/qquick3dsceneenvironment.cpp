@@ -67,8 +67,12 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     silhouettes.
 
     \b Cons: Usually more expensive than MSAA. Increases video memory usage.
-    Supported with View3D items with all renderMode except Inline as the
-    technique implies rendering to a texture first.
+    Supported with View3D items with all renderMode except Inline, but since
+    the technique implies rendering to a texture first, enabling SSAA with a
+    renderMode of Underlay or Overlay will result in using an intermediate
+    texture and render pass that would normally not be needed, meaning the
+    performance costs may be more noticeable. It is recommended to use SSAA
+    only when the renderMode is the default Offscreen.
 
     \b Multisampling
 
@@ -86,7 +90,7 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     depending on the renderMode. When using Underlay/Overlay with an effect
     applied or Offscreen, MSAA can be controlled for each View3D item. On the
     other hand, using Underlay/Overlay without any effect or Inline will make
-    MSAA contolled per-window.
+    MSAA controlled per-window.
 
     \note For View3D items with a \l{QtQuick3D::View3D::renderMode}{renderMode}
     other than Underlay/Overlay with effects or Offscreen, multisampling can only
@@ -109,6 +113,9 @@ QQuick3DSceneEnvironment::~QQuick3DSceneEnvironment()
     \b Cons: Does not take effect if any visual changes are occurring.
     Expensive due to having to accumulate and blend. Increases video memory
     usage.
+
+    See \l{Anti-Aliasing Best Practices} for further discussion on
+    anti-aliasing methods.
 */
 QQuick3DSceneEnvironment::QQuick3DEnvironmentAAModeValues QQuick3DSceneEnvironment::antialiasingMode() const
 {
@@ -399,6 +406,8 @@ QVector3D QQuick3DSceneEnvironment::probeOrientation() const
     lost; low impact on performance.
 
     \b Cons: Fast-moving objects cause one-frame ghosting.
+
+    \default false
 */
 bool QQuick3DSceneEnvironment::temporalAAEnabled() const
 {
@@ -412,6 +421,8 @@ bool QQuick3DSceneEnvironment::temporalAAEnabled() const
     This property modifies the amount of temporal movement (antialiasing).
     This has an effect only when temporalAAEnabled property is true.
 
+    \default 0.3
+
     \sa temporalAAEnabled
 */
 float QQuick3DSceneEnvironment::temporalAAStrength() const
@@ -424,6 +435,14 @@ float QQuick3DSceneEnvironment::temporalAAStrength() const
     \since 6.4
 
     When this property is enabled specular aliasing will be mitigated.
+
+    An example with specular AA disabled:
+    \image specular_aa_off.jpg
+
+    The same scene with specular AA enabled:
+    \image specular_aa_on.jpg
+
+    \default false
 */
 bool QQuick3DSceneEnvironment::specularAAEnabled() const
 {
