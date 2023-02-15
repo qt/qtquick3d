@@ -2,19 +2,27 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import QtQuick3D
 import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick3D
 import QtQuick3D.Helpers
 
-Window {
+ApplicationWindow {
+    id: window
     width: 1280
     height: 720
     visible: true
     title: qsTr("Lights Example")
 
+    property bool isLandscape: width > height
+
     View3D {
         id: v3d
-        anchors.fill: parent
+
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.left: window.isLandscape ? settingsDrawer.right : parent.left
+        anchors.top: window.isLandscape ? parent.top : settingsDrawer.bottom
 
         environment: SceneEnvironment {
             clearColor: "#808080"
@@ -37,9 +45,9 @@ Window {
             position: Qt.vector3d(0, 200, 0)
             rotation: Quaternion.fromEulerAngles(-135, -90, 0)
             shadowMapQuality: Light.ShadowMapQualityHigh
-            visible: checkBox1.checked
+            visible: directionalLightCheckBox.checked
             castsShadow: checkBoxShadows.checked
-            brightness: slider1.sliderValue
+            brightness: directionalLightSlider.value
             SequentialAnimation on rotation {
                 loops: Animation.Infinite
                 QuaternionAnimation {
@@ -64,9 +72,9 @@ Window {
             position: Qt.vector3d(0, 300, 0)
             shadowMapFar: 2000
             shadowMapQuality: Light.ShadowMapQualityHigh
-            visible: checkBox2.checked
+            visible: pointLightCheckBox.checked
             castsShadow: checkBoxShadows.checked
-            brightness: slider2.sliderValue
+            brightness: pointLightSlider.value
             SequentialAnimation on x {
                 loops: Animation.Infinite
                 NumberAnimation {
@@ -92,9 +100,9 @@ Window {
             eulerRotation.x: -45
             shadowMapFar: 2000
             shadowMapQuality: Light.ShadowMapQualityHigh
-            visible: checkBox4.checked
+            visible: spotLightCheckBox.checked
             castsShadow: checkBoxShadows.checked
-            brightness: slider4.sliderValue
+            brightness: spotLightSlider.value
             coneAngle: 50
             innerConeAngle: 30
             PropertyAnimation on eulerRotation.y {
@@ -157,185 +165,195 @@ Window {
 
         //! [light models]
         Model {
+            // Directional Light Marker
+            property real size: directionalLightSlider.highlight ? 0.2 : 0.1
             source: "#Cube"
             position: light1.position
             rotation: light1.rotation
-            property real size: slider1.highlight ? 0.2 : 0.1
-            scale: Qt.vector3d(size, size, size)
+            scale: Qt.vector3d(size, size, size * 2)
             materials: [
-                DefaultMaterial {
-                    diffuseColor: light1.color
-                    opacity: 0.4
+                PrincipledMaterial {
+                    baseColor: light1.color
+                    lighting: PrincipledMaterial.NoLighting
                 }
             ]
+            castsShadows: false
+            visible: directionalLightCheckBox.checked
         }
         Model {
-            source: "#Cube"
+            // Point Light Marker
+            source: "#Sphere"
             position: light2.position
             rotation: light2.rotation
-            property real size: slider2.highlight ? 0.2 : 0.1
+            property real size: pointLightSlider.highlight ? 0.2 : 0.1
             scale: Qt.vector3d(size, size, size)
             materials: [
-                DefaultMaterial {
-                    diffuseColor: light2.color
-                    opacity: 0.4
+                PrincipledMaterial {
+                    baseColor: light2.color
+                    lighting: PrincipledMaterial.NoLighting
                 }
             ]
+            castsShadows: false
+            visible: pointLightCheckBox.checked
         }
-        Model {
-            source: "#Cube"
+        Node {
+            // Spot Light Marker
             position: light4.position
             rotation: light4.rotation
-            property real size: slider4.highlight ? 0.2 : 0.1
+            property real size: spotLightSlider.highlight ? 0.2 : 0.1
             scale: Qt.vector3d(size, size, size)
-            materials: [
-                DefaultMaterial {
-                    diffuseColor: light4.color
-                    opacity: 0.4
+            Model {
+                source: "#Cone"
+                castsShadows: false
+                eulerRotation.x: 90
+                materials: PrincipledMaterial {
+                    baseColor: light4.color
+                    lighting: PrincipledMaterial.NoLighting
                 }
-            ]
+            }
+            visible: spotLightCheckBox.checked
         }
         //! [light models]
-    }
 
-    Button {
-        x: settingsDrawer.visible ? (settingsDrawer.x + settingsDrawer.width) : 0
-        anchors.top: parent.top
-        width: 50
-        height: width
-        icon.width: width * 0.5
-        icon.height: height * 0.5
-        icon.source: "icon_settings.png"
-        icon.color: "transparent"
-        background: Rectangle {
-            color: "transparent"
-        }
-        onClicked: {
-            inTransition.duration = 400
-            settingsDrawer.visible = !settingsDrawer.visible;
-        }
-    }
-
-    Drawer {
-        id: settingsDrawer
-        edge: Qt.LeftEdge
-        interactive: false
-        modal: false
-        background: Rectangle {
-            color: "#e0e0e0"
-            opacity: 0.8
-        }
-        visible: (Qt.platform.os === ("android" || "ios") ? false : true)
-
-        enter: Transition {
-            NumberAnimation {
-                id: inTransition
-                property: "position"
-                to: 1.0
-                duration: 0
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        exit: Transition {
-            NumberAnimation {
-                property: "position"
-                to: 0.0
-                duration: 400
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        ScrollView {
-            anchors.fill: parent
-            padding: 10
-
-            Flickable{
-                clip: true
-                contentWidth: settingsArea.width
-                contentHeight: settingsArea.height
-
-                Column {
-                    id: settingsArea
-                    CustomCheckBox {
-                        id: checkBoxShadows
-                        text: qsTr("Enable Shadows")
-                        checked: true
-                    }
-                    Item { width: 1; height: 20 }
-                    CustomCheckBox {
-                        id: checkBoxAnimate
-                        text: qsTr("Rotate Teapot")
-                        checked: true
-                    }
-                    Item { width: 1; height: 20 }
-                    CustomCheckBox {
-                        id: checkBoxCustomMaterial
-                        text: qsTr("Custom Material")
-                        checked: false
-                    }
-                    Item { width: 1; height: 40 }
-                    CustomCheckBox {
-                        id: checkBox1
-                        text: qsTr("Directional Light")
-                        checked: true
-                    }
-                    CustomSlider {
-                        id: slider1
-                        sliderValue: 0.5
-                        fromValue: 0
-                        toValue: 1
-                    }
-                    Item { width: 1; height: 40 }
-                    CustomCheckBox {
-                        id: checkBox2
-                        text: qsTr("Point Light")
-                        checked: false
-                    }
-                    CustomSlider {
-                        id: slider2
-                        sliderValue: 6
-                        fromValue: 0
-                        toValue: 10
-                    }
-                    Item { width: 1; height: 40 }
-                    CustomCheckBox {
-                        id: checkBox4
-                        text: qsTr("Spot Light")
-                        checked: false
-                    }
-                    CustomSlider {
-                        id: slider4
-                        sliderValue: 10
-                        fromValue: 0
-                        toValue: 30
-                    }
-                }
-            }
-        }
-    }
-
-    Item {
-        width: debugViewToggleText.implicitWidth
-        height: debugViewToggleText.implicitHeight
-        anchors.right: parent.right
-        Label {
-            id: debugViewToggleText
-            text: "Click here " + (dbg.visible ? "to hide DebugView" : "for DebugView")
-            color: "white"
-            anchors.right: parent.right
+        DebugView {
+            id: dbg
             anchors.top: parent.top
+            anchors.right: parent.right
+            source: v3d
+            visible: debugViewCheckbox.checked
         }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: dbg.visible = !dbg.visible
-            DebugView {
-                y: debugViewToggleText.height * 2
-                anchors.right: parent.right
-                source: v3d
-                id: dbg
-                visible: false
+    }
+
+    RowLayout {
+        anchors.bottom: v3d.bottom
+        anchors.left: v3d.left
+        anchors.margins: 10
+        Item {
+            id: settingsButton
+            implicitWidth: 64
+            implicitHeight: 64
+            Image {
+                anchors.centerIn: parent
+                source: "icon_settings.png"
             }
+
+            HoverHandler {
+                id: hoverHandler
+            }
+        }
+        Text {
+            Layout.alignment: Qt.AlignVCenter
+            text: settingsDrawer.title
+            visible: !settingsDrawer.isOpen
+            color: "white"
+            font.pointSize: 16
+        }
+        TapHandler {
+            // qmllint disable signal-handler-parameters
+            onTapped: settingsDrawer.isOpen = !settingsDrawer.isOpen;
+            // qmllint enable signal-handler-parameters
+        }
+    }
+
+
+
+    component SliderWithValue : RowLayout {
+        property alias value: slider.value
+        property alias from: slider.from
+        property alias to: slider.to
+        readonly property bool highlight: slider.hovered || slider.pressed
+        Slider {
+            id: slider
+            stepSize: 0.01
+            Layout.minimumWidth: 200
+            Layout.maximumWidth: 200
+        }
+        Label {
+            id: valueText
+            text: slider.value.toFixed(2)
+            Layout.minimumWidth: 80
+            Layout.maximumWidth: 80
+        }
+    }
+
+    SettingsDrawer {
+        id: settingsDrawer
+        title: qsTr("Settings")
+        isLandscape: window.isLandscape
+        width: window.isLandscape ? implicitWidth : window.width
+        height: window.isLandscape ? window.height : window.height * 0.33
+
+        CheckBox {
+            id: checkBoxShadows
+            text: qsTr("Enable Shadows")
+            checked: true
+        }
+        CheckBox {
+            id: checkBoxAnimate
+            text: qsTr("Rotate Teapot")
+            checked: true
+        }
+        CheckBox {
+            id: checkBoxCustomMaterial
+            text: qsTr("Custom Material")
+            checked: false
+        }
+
+        Label {
+            // spacer
+        }
+
+        CheckBox {
+            id: directionalLightCheckBox
+            text: qsTr("Directional Light")
+            checked: true
+        }
+        SliderWithValue {
+            id: directionalLightSlider
+            value: 0.5
+            from: 0
+            to: 1
+            enabled: directionalLightCheckBox.checked
+        }
+
+        Label {
+            // spacer
+        }
+
+        CheckBox {
+            id: pointLightCheckBox
+            text: qsTr("Point Light")
+            checked: false
+        }
+        SliderWithValue {
+            id: pointLightSlider
+            value: 6
+            from: 0
+            to: 10
+            enabled: pointLightCheckBox.checked
+        }
+        Label {
+            // spacer
+        }
+        CheckBox {
+            id: spotLightCheckBox
+            text: qsTr("Spot Light")
+            checked: false
+        }
+        SliderWithValue {
+            id: spotLightSlider
+            value: 10
+            from: 0
+            to: 30
+            enabled: spotLightCheckBox.checked
+        }
+        Label {
+            // spacer
+        }
+        CheckBox {
+            id: debugViewCheckbox
+            text: qsTr("Enable Debug View")
+            checked: false
         }
     }
 }

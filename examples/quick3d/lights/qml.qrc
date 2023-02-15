@@ -3,10 +3,13 @@
         <file>main.qml</file>
         <file>RotatingTeaPot.qml</file>
         <file>teapot.mesh</file>
-        <file>CustomSlider.qml</file>
-        <file>CustomCheckBox.qml</file>
-        <file>white.png</file>
         <file>custom.vert</file>
         <file>icon_settings.png</file>
+        <file>icon_settings@4x.png</file>
+        <file>icon_settings@2x.png</file>
+        <file>icon_settings@3x.png</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>SettingsDrawer.qml</file>
+        <file>+windows/qtquickcontrols2.conf</file>
     </qresource>
 </RCC>
