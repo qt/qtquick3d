@@ -6,7 +6,7 @@
     \ingroup quick3d-examples
     \title Qt Quick 3D - Lights Example
     \brief Demonstrates the use of different light types.
-    \image lights-example.png
+    \image lights-example.jpg
 
     This example demonstrates using three different light types in an application.
 

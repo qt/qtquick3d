@@ -34,15 +34,18 @@ qt_add_qml_module(lights
     URI Example
     VERSION 1.0
     QML_FILES
-        CustomCheckBox.qml
-        CustomSlider.qml
         RotatingTeaPot.qml
+        SettingsDrawer.qml
         main.qml
     RESOURCES
         custom.vert
         teapot.mesh
-        white.png
         icon_settings.png
+        icon_settings@2x.png
+        icon_settings@3x.png
+        icon_settings@4x.png
+        qtquickcontrols2.conf
+        +windows/qtquickcontrols2.conf
     NO_RESOURCE_TARGET_PATH
 )
 
