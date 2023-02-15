@@ -119,9 +119,12 @@ QList<QPointer<QQuickDeliveryAgent>> ViewportTransformHelper::owners;
     set simultaneously, then both scenes will be rendered as if they were sibling
     subtrees in the same scene.
 
-    To control how a scene is rendered, you can set the \l environment property.
-    The type \l SceneEnvironment has a number of visual properties that can be
-    adjusted, such as background color, tone mapping, anti-aliasing and more.
+    To control how a scene is rendered, you can set the \l environment
+    property. The type \l SceneEnvironment has a number of visual properties
+    that can be adjusted, such as background color, tone mapping, anti-aliasing
+    and more. \l ExtendedSceneEnvironment in the \c{QtQuick3D.Helpers} module
+    extends \l SceneEnvironment with even more features, adding common
+    post-processing effects.
 
     In addition, in order for anything to be rendered in the View3D, the scene
     needs a \l Camera. If there is only a single \l Camera in the scene, then
