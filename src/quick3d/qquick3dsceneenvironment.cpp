@@ -21,6 +21,99 @@ QT_BEGIN_NAMESPACE
     type which inherits from SceneEnvironment and adds a number of built-in
     effects on top.
 
+    To use SceneEnvironment or \l ExtendedSceneEnvironment, associate the
+    \l{View3D::environment}{environment property} of a View3D with an instance
+    of these types. The object can be declared inline, for example like this:
+
+    \qml
+        View3D {
+            environment: SceneEnvironment {
+                antialiasingMode: SceneEnvironment.MSAA
+                tonemapMode: SceneEnvironment.TonemapModeFilmic
+                backgroundMode: SceneEnvironment.SkyBox
+                lightProbe: Texture {
+                    source: "panoramic_hdri_background.hdr"
+                }
+            }
+        }
+    \endqml
+
+    Alternatively, the environment object can be defined separately. It can
+    then be referenced by one or more View3D objects. An example code snippet,
+    using \l ExtendedSceneEnvironment this time:
+
+    \qml
+        ExtendedSceneEnvironment {
+            id: myEnv
+            vignetteEnabled: true
+        }
+
+        View3D {
+            width: parent.width / 2
+            environment: myEnv
+        }
+
+        View3D {
+            width: parent.width / 2
+            x: parent.width / 2
+            environment: myEnv
+        }
+    \endqml
+
+    \section1 Feature Overview
+
+    \list
+
+    \li Anti-aliasing settings. See \l{Anti-Aliasing Best Practices} for an
+    overview of this topic. The relevant properties are \l antialisingMode, \l
+    antialiasingQuality, \l specularAAEnabled, \l temporalAAEnabled, \l
+    temporalAAStrength. In addition, if \l ExtendedSceneEnvironment is used,
+    another method is available via
+    \l{ExtendedSceneEnvironment::fxaaEnabled}{fxaaEnabled}.
+
+    \li Screen space ambient occlusion. The relevant properties are \l
+    \aoEnabled, \l aoStrength, \l aoBias, \l aoDistance, \l aoDither, \l
+    \aoSampleRate, \l aoSoftness.
+
+    \li Clear color, skybox, image-based lighting. For more information on IBL,
+    see \l{Using Image-Based Lighting}. The relevant properties are \l
+    backgroundMode, \l clearColor, \l lightProbe, \l probeExposure, \l
+    probeHorizon, \l probeOrientation, \l skyboxBlurAmount, \l skyBoxCubeMap.
+
+    \li Tonemapping. \l tonemapMode configures the tonemapping method that is
+    used to convert the high dynamic range color values to the 0-1 range at the
+    end of the graphics pipeline. \l ExtendedSceneEnvironment offers a few
+    additional properties, such as
+    \l{ExtendedSceneEnvironment::whitePoint}{whitePoint} and
+    \l{ExtendedSceneEnvironment::sharpnessAmount}{sharpnessAmount} that can be
+    used to tune the tonemapping calculations.
+
+    \li Depth buffer settings. The relevant properties are \l
+    depthPrePassEnabled, \l depthTestEnabled.
+
+    \li Post-processing effects. In addition to the built-in post-processing
+    effects provided by \l ExtendedSceneEnvironment, applications can provide
+    their own custom effects via the \l Effect type. The \l effects property is
+    a list of \l Effect instances.
+
+    \li Debug visualization settings, such as wireframe mode or rendering only
+    certain color contributions for the materials. This is controlled by the \l
+    DebugSettings object referenced from the \l debugSettings property. Most of
+    these settings can also be controlled interactively when a \l DebugView
+    item is added to the scene.
+
+    \li Fog settings. To enable fog, set an appropriately configured \l Fog
+    object in the \l fog property.
+
+    \li Lightmap baking settings. When pre-baked lightmaps are used for some
+    models in the scene, the \l Lightmapper object set in the \l lightmapper
+    property defines the settings used during the baking process.
+
+    \li Scissor settings. To apply a scissor different than the viewport, set
+    the \l scissorRect property.
+
+    \endlist
+
     \sa ExtendedSceneEnvironment
 */
 
@@ -158,15 +251,16 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
     This property controls if and how the background of the scene should be
     cleared.
 
-    \note Clearing does not always happen: depending on the
-    \l{QtQuick3D::View3D::renderMode}{renderMode} property the View3D may not
-    perform any clearing on its own, in which case
-    SceneEnvironment.Transparent and SceneEnvironment.Color have no effect.
-    Only the Offscreen mode (rendering into a texture) supports all clearing
-    modes. With the Underlay mode, use \l{QQuickWindow::setColor()} or
-    \l[QtQuick]{Window::color}{Window.color} to control the clear color for
-    the Qt Quick scene. SkyBox is handled differently, as it implies drawing
-    actual geometry, so that works identically across all render modes.
+    \note The clearing of the color buffer backing the View 3D does not always
+    happen: depending on the \l{QtQuick3D::View3D::renderMode}{renderMode}
+    property the View3D may not perform any clearing on its own, in which case
+    \c{SceneEnvironment.Transparent} and \c{SceneEnvironment.Color} have no
+    effect. Only the default \c Offscreen \l{View3D::renderMode}{render mode}
+    (rendering into a texture) supports all clearing modes. With the \c
+    Underlay mode, use \l{QQuickWindow::setColor()} or
+    \l[QtQuick]{Window::color}{Window.color} to control the clear color for the
+    Qt Quick scene. SkyBox is handled differently, as it implies drawing actual
+    geometry, so that works identically across all render modes.
 
     \value SceneEnvironment.Transparent
         The scene is cleared to be transparent. This is useful to render 3D content on top of another item.
@@ -185,7 +279,80 @@ QQuick3DSceneEnvironment::QQuick3DEnvironmentAAQualityValues QQuick3DSceneEnviro
 
     The default value is \c SceneEnvironment.Transparent
 
-    \sa QQuickWindow::setColor(), Window::color
+    Take the following example. The Suzanne model is expected to be
+    pre-processed with the \c balsam tool and is sourced from the
+    \l{https://github.com/KhronosGroup/glTF-Sample-Models}{glTF Sample Models}
+    repository.
+
+    \qml
+        import QtQuick
+        import QtQuick3D
+        import QtQuick3D.Helpers
+
+        Item {
+            width: 1280
+            height: 720
+
+            View3D {
+                id: v3d
+                anchors.fill: parent
+
+                environment: ExtendedSceneEnvironment {
+                    backgroundMode: SceneEnvironment.SkyBox
+                    lightProbe: Texture { source: "00455_OpenfootageNET_field_low.hdr" }
+
+                    glowEnabled: true
+                    glowStrength: 1.25
+                    glowBloom: 0.25
+                    glowBlendMode: ExtendedSceneEnvironment.GlowBlendMode.Additive
+                }
+
+                DirectionalLight {
+                }
+
+                Suzanne {
+                    scale: Qt.vector3d(50, 50, 50)
+                    z: -500
+                }
+
+                PerspectiveCamera {
+                    id: camera
+                }
+
+                WasdController {
+                    controlledObject: camera
+                }
+            }
+        }
+    \endqml
+
+    Using image-based lighting in additional to the DirectionalLight and also
+    using the light probe texture as the skybox gives us the following:
+
+    \image sceneenvironment_background_ibl.jpg
+
+    What happens if there is no light probe?
+
+    \qml
+        backgroundMode: SceneEnvironment.Transparent
+    \endqml
+
+    Here the background is provided not by the View3D but by the QQuickWindow
+    or QQuickView hosting the 2D and 3D scene. Lighting is based on the
+    DirectionalLight only.
+
+    \image sceneenvironment_background_transparent.jpg
+
+    Using a fixed clear color:
+
+    \qml
+        backgroundMode: SceneEnvironment.Color
+        clearColor: "green"
+    \endqml
+
+    \image sceneenvironment_background_color.jpg
+
+    \sa lightProbe, QQuickWindow::setColor(), Window::color, View3D
 */
 
 QQuick3DSceneEnvironment::QQuick3DEnvironmentBackgroundTypes QQuick3DSceneEnvironment::backgroundMode() const
@@ -223,6 +390,28 @@ QColor QQuick3DSceneEnvironment::clearColor() const
     All values other than 0 have the same impact to the performance.
 
     The default value is 0.0. The maximum value is 100.0.
+
+    A value of 0 is equivalent to setting \l aoEnabled to false.
+
+    Pictured here with the default aoSoftness and aoDistance:
+
+    \table
+    \header
+    \li aoStrength of 0 (AO disabled)
+    \li aoStrength of 100
+    \li aoStrength of 50
+    \row
+    \li \image sceneenvironment_ao_off.jpg
+    \li \image sceneenvironment_ao_full_strength.jpg
+    \li \image sceneenvironment_ao_half_strength.jpg
+    \endtable
+
+    \note Getting visually good-looking screen space ambient occlusion is
+    dependent on carefully tuning a number of related parameters, such as \l
+    aoStrength, \l aoSoftness, \l aoDistance, \l aoDither, \l aoBias, and \l
+    aoSampleRate.
+
+    \sa aoEnabled, aoDistance, aoSoftness
 */
 float QQuick3DSceneEnvironment::aoStrength() const
 {
@@ -236,6 +425,24 @@ float QQuick3DSceneEnvironment::aoStrength() const
     from objects. Greater distances cause increasing impact to performance.
 
     The default value is 5.0.
+
+    Pictured here with the default aoSoftness and the maximum aoStrength:
+
+    \table
+    \header
+    \li aoDistance of 5
+    \li aoDistance of 1
+    \row
+    \li \image sceneenvironment_ao_distance_5.jpg
+    \li \image sceneenvironment_ao_distance_1.jpg
+    \endtable
+
+    \note Getting visually good-looking screen space ambient occlusion is
+    dependent on carefully tuning a number of related parameters, such as \l
+    aoStrength, \l aoSoftness, \l aoDistance, \l aoDither, \l aoBias, and \l
+    aoSampleRate.
+
+    \sa aoStrength, aoSoftness
 */
 float QQuick3DSceneEnvironment::aoDistance() const
 {
@@ -248,6 +455,24 @@ float QQuick3DSceneEnvironment::aoDistance() const
     This property how smooth the edges of the ambient occlusion shading are.
 
     The value must be between 0.0 and 50.0. The default value is 50.0.
+
+    Pictured here with the default aoDistance and the maximum aoStrength:
+
+    \table
+    \header
+    \li aoSoftness of 50
+    \li aoSoftness of 25
+    \row
+    \li \image sceneenvironment_ao_softness_default.jpg
+    \li \image sceneenvironment_ao_softness_half.jpg
+    \endtable
+
+    \note Getting visually good-looking screen space ambient occlusion is
+    dependent on carefully tuning a number of related parameters, such as \l
+    aoStrength, \l aoSoftness, \l aoDistance, \l aoDither, \l aoBias, and \l
+    aoSampleRate.
+
+    \sa aoStrength, aoDistance
 */
 float QQuick3DSceneEnvironment::aoSoftness() const
 {
@@ -326,6 +551,133 @@ float QQuick3DSceneEnvironment::aoBias() const
     supported in combination with this property. Pre-filtering of all mip
     levels for dynamic Qt Quick content is typically not reasonable in practice
     due to performance implications.
+
+    For more information on image-based lighting, see \l{Using Image-Based Lighting}.
+
+    \note The light probe texture, when the property is set to a valid Texture,
+    is used for lighting regardless of the \l backgroundMode. However, when \l
+    backgroundMode is set to \c{SceneEnvironment.SkyBox}, the texture is also
+    used to render the scene background as a skybox.
+
+    The examples below were generated with varying the \l backgroundMode in the
+    environment of the following scene. The scene has no DirectionLight,
+    PointLight, or SpotLight. All lighting is based on the panoramic HDRI
+    image.
+
+    \qml
+        import QtQuick
+        import QtQuick3D
+        import QtQuick3D.Helpers
+
+        Item {
+            width: 1280
+            height: 720
+
+            View3D {
+                id: v3d
+                anchors.fill: parent
+
+                environment: ExtendedSceneEnvironment {
+                    backgroundMode: SceneEnvironment.SkyBox
+                    lightProbe: Texture { source: "00455_OpenfootageNET_field_low.hdr" }
+
+                    tonemapMode: SceneEnvironment.TonemapModeFilmic
+                    sharpnessAmount: 0.4
+
+                    glowEnabled: true
+                    glowStrength: 1.25
+                    glowBloom: 0.25
+                    glowBlendMode: ExtendedSceneEnvironment.GlowBlendMode.Additive
+                }
+
+                Node {
+                    scale: Qt.vector3d(100, 100, 100)
+
+                    Sponza {
+                    }
+
+                    Suzanne {
+                        y: 1
+                        scale: Qt.vector3d(0.5, 0.5, 0.5)
+                        eulerRotation.y: -90
+                    }
+                }
+
+                PerspectiveCamera {
+                    id: camera
+                    y: 100
+                }
+
+                WasdController {
+                    controlledObject: camera
+                }
+            }
+        }
+    \endqml
+
+    Results with the above environment:
+
+    \image sceneenvironment_lightprobe.jpg
+    \image sceneenvironment_lightprobe_2.jpg
+
+    Switching the backgroundMode to \c{SceneEnvironment.Transparent} would give us:
+
+    \image sceneenvironment_lightprobe_transparent.jpg
+    \image sceneenvironment_lightprobe_transparent_2.jpg
+
+    Here the lighting of the 3D scene is the same as before, meaning the
+    materials use the light probe in the lighting calculations the same way as
+    before, but there is no skybox rendered. The background is white since that
+    is the default clear color of the QQuickWindow hosting the 2D and 3D scene.
+
+    It is valid to set the lightProbe property value back to the default null.
+    This unassigns the previously associated texture. For example, let's use
+    the Delete key to dynamically toggle between image-based lighting with a
+    skybox, and no image-based lighting with a fixed clear color for the
+    background:
+
+    \qml
+        environment: ExtendedSceneEnvironment {
+            id: env
+
+            backgroundMode: SceneEnvironment.SkyBox
+            lightProbe: iblTex
+
+            tonemapMode: SceneEnvironment.TonemapModeFilmic
+            sharpnessAmount: 0.4
+
+            glowEnabled: true
+            glowStrength: 1.25
+            glowBloom: 0.25
+            glowBlendMode: ExtendedSceneEnvironment.GlowBlendMode.Additive
+        }
+
+        Texture {
+            id: iblTex
+            source: "00455_OpenfootageNET_field_low.hdr"
+        }
+
+        focus: true
+        Keys.onDeletePressed: {
+            if (env.backgroundMode == SceneEnvironment.SkyBox) {
+                env.backgroundMode = SceneEnvironment.Color;
+                env.clearColor = "green";
+                env.lightProbe = null;
+            } else {
+                env.backgroundMode = SceneEnvironment.SkyBox;
+                env.lightProbe = iblTex;
+            }
+        }
+    \endqml
+
+    Pressing Delete gives the following result. Remember that the scene used
+    here has no lights so all 3D models appear completely black.
+
+    \image sceneenvironment_lightprobe_null.jpg
+    \image sceneenvironment_lightprobe_null_2.jpg
+
+    \sa backgroundMode, {Using Image-Based Lighting}, {Pre-generating IBL
+    cubemap}, probeExposure, probeHorizon, probeOrientation
 */
 QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 {
@@ -343,6 +695,8 @@ QQuick3DTexture *QQuick3DSceneEnvironment::lightProbe() const
 
     \note This property does not have an effect when \l tonemapMode is set to
     \c SceneEnvironment.TonemapModeNone.
+
+    \sa lightProbe, probeHorizon, probeOrientation
 */
 float QQuick3DSceneEnvironment::probeExposure() const
 {
@@ -370,6 +724,8 @@ float QQuick3DSceneEnvironment::probeExposure() const
 
     \note The probeHorizon property only affects materials lighting, and has
     no effect on the rendering of the sky box.
+
+    \sa lightProbe, probeExposure, probeOrientation
 */
 float QQuick3DSceneEnvironment::probeHorizon() const
 {
@@ -384,6 +740,8 @@ float QQuick3DSceneEnvironment::probeHorizon() const
 
     \note This value augments how the lightProbe Texture is sampled in combination
     with any texture rotations and offsets set on the lightProbe texture.
+
+    \sa lightProbe, probeHorizon, probeExposure
 */
 QVector3D QQuick3DSceneEnvironment::probeOrientation() const
 {
@@ -434,15 +792,20 @@ float QQuick3DSceneEnvironment::temporalAAStrength() const
     \qmlproperty bool QtQuick3D::SceneEnvironment::specularAAEnabled
     \since 6.4
 
-    When this property is enabled specular aliasing will be mitigated.
+    When this property is enabled, specular aliasing will be mitigated.
+    Specular aliasing is often visible in form of bright dots, possibly
+    flickering when moving the camera around.
 
-    An example with specular AA disabled:
-    \image specular_aa_off.jpg
+    The default value is false.
 
-    The same scene with specular AA enabled:
-    \image specular_aa_on.jpg
-
-    \default false
+    \table
+    \header
+    \li Specular AA disabled
+    \li Specular AA enabled
+    \row
+    \li \image specular_aa_off.jpg
+    \li \image specular_aa_on.jpg
+    \endtable
 */
 bool QQuick3DSceneEnvironment::specularAAEnabled() const
 {
@@ -564,11 +927,18 @@ QQmlListProperty<QQuick3DEffect> QQuick3DSceneEnvironment::effects()
     See \l{ExtendedSceneEnvironment::tonemapMode}{ExtendedSceneEnvironment} for
     an example of these different modes.
 
-    \note When using post processing effects, many effects expect untonemapped
-    linear color data. It is important to bypass the built-in tonemapping in
-    this case by using the \c SceneEnvironment.TonemapModeNone value. This does
-    not apply to the built-in effects of \l ExtendedSceneEnvironment because
-    those automatically take care of proper tonemapping.
+    \note When using post-processing effects, most effects expect untonemapped
+    linear color data. With application-provided, custom effects implemented
+    via the \l Effect type, it is important to know that starting with Qt 6.5
+    effects can safely assume that they work with linear color data, and
+    tonemapping is performed automatically on the output of the last effect in
+    the chain. If there is a need to customize tonemapping completely, consider
+    setting the \c SceneEnvironment.TonemapModeNone value to disable the
+    built-in tonemapper, and perform the appropriate adjustments on the color
+    value in the last effect in the chain instead. This does not apply to the
+    built-in effects of \l ExtendedSceneEnvironment, because those
+    automatically take care of proper tonemapping regardless of what
+    combination of built-in effects are enabled in the environment.
 */
 QQuick3DSceneEnvironment::QQuick3DEnvironmentTonemapModes QQuick3DSceneEnvironment::tonemapMode() const
 {
@@ -1069,8 +1439,14 @@ void QQuick3DSceneEnvironment::setGridFlags(uint newGridFlags)
 
     The default value is \c false, which means ambient occlusion is disabled.
 
-    \note If \l aoStrength or \ aoDistance is 0, then setting this property to \c true will also
-    set those values appropriately to make the ambient occlusion effective.
+    \note If \l aoStrength or \ aoDistance is 0, then setting this property to
+    \c true will also set those values appropriately to make the ambient
+    occlusion effective.
+
+    \note Getting visually good-looking screen space ambient occlusion is
+    dependent on carefully tuning a number of related parameters, such as \l
+    aoStrength, \l aoSoftness, \l aoDistance, \l aoDither, \l aoBias, and \l
+    aoSampleRate.
 
     \sa aoStrength, aoDistance
 */
