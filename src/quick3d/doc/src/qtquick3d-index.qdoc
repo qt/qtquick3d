@@ -62,7 +62,6 @@ and functionality that were done for the Qt 6 series of Qt.
     \li \l{Qt Quick 3D Graphics Requirements}
     \li \l{Qt Quick 3D Architecture}
     \li \l{Balsam Asset Import Tool}
-    \li \l{Optimizing 2D Assets}
     \li \l{Optimizing 3D Assets}
     \li \l{quick3d-pbr}{Physically-Based Rendering}
     \li \l{Using Image-Based Lighting}
