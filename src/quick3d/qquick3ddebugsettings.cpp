@@ -13,6 +13,11 @@ QT_BEGIN_NAMESPACE
 
     The renderer can be configured to output many different views to facilitate
     debugging. This component is used to configure these debug views.
+
+    In addition to programatic control, properties such as \l materialOverride
+    and \l wireframeEnabled can also be controlled interactively via the \l
+    DebugView item if an instance of that is added to the Qt Quick scene by the
+    application.
 */
 
 /*!
@@ -60,6 +65,36 @@ QT_BEGIN_NAMESPACE
         This represents the Fresnel Reflectance at 0 Degrees. This will only be
         visible for materials that calculate an F0 value.
 
+    As an example, take the following scene with the
+    \l{https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/Sponza}{Sponza}
+    model. The scene uses image-based lighting via
+    \l{SceneEnvironment::lightProbe} and also has a directional light.
+
+    \image debugsettings_default.jpg
+
+    Setting \c{DebugSettings.BaseColor}:
+
+    \image debugsettings_basecolor.jpg
+
+    Setting \c{DebugSettings.Roughness}:
+
+    \image debugsettings_roughness.jpg
+
+    Setting \c{DebugSettings.Metalness}:
+
+    \image debugsettings_metalness.jpg
+
+    Setting \c{DebugSettings.Diffuse}:
+
+    \image debugsettings_diffuse.jpg
+
+    Setting \c{DebugSettings.Specular}:
+
+    \image debugsettings_specular.jpg
+
+    Setting \c{DebugSettings.Normals}:
+
+    \image debugsettings_normals.jpg
 */
 
 
@@ -98,6 +133,7 @@ void QQuick3DDebugSettings::update()
 
     The default value is \c false.
 
+    \image debugsettings_wireframe.jpg
 */
 
 
