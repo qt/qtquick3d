@@ -1362,14 +1362,29 @@ static bool checkBooleanOption(const QString &optionName, const QJsonObject &opt
 {
     const auto it = options.constFind(optionName);
     const auto end = options.constEnd();
-    return (it != end) ? it->toObject().value("value").toBool() : false;
+    QJsonValue value;
+    if (it != end) {
+        if (it->isObject())
+            value = it->toObject().value("value");
+        else
+            value = it.value();
+    }
+    return value.toBool();
 }
 
 static qreal getRealOption(const QString &optionName, const QJsonObject &options)
 {
     const auto it = options.constFind(optionName);
     const auto end = options.constEnd();
-    return (it != end) ? it->toObject().value("value").toDouble() : 0.0;
+    QJsonValue value;
+    if (it != end) {
+        if (it->isObject())
+            value = it->toObject().value("value");
+        else
+            value = it.value();
+    }
+
+    return value.toDouble();
 }
 
 #define demonPostProcessPresets ( \
