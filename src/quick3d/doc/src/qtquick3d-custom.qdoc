@@ -24,11 +24,22 @@ Post-processing effects, where one or more passes of processing on the color buf
 performed, optionally taking the depth buffer into account, before the View3D's output is
 passed on to Qt Quick, also exist in two varieties:
 \list
-\li a \l{Qt Quick 3D Effects QML Types}{set of built-in, pre-made effects}, such as blur,
-depth of field, distortion, and others,
+\li built-in post-processing steps that can be configured via \l ExtendedSceneEnvironment, such as
+glow/bloom, depth of field, vignette, lens flare,
 \li \c custom effects implemented by the application in form of fragment shader code and a
 specification of the processing passes in an \l Effect object.
 \endlist
+
+In practice there is a third category of post-processing effects: 2D effects
+implemented via Qt Quick, operating on the output of the \l View3D item without
+any involvement from the 3D renderer. For example, to apply a blur to a \l
+View3D item, the simplest approach is to use Qt Quick's existing facilities,
+such as \l MultiEffect. The 3D post-processing system becomes beneficial for
+complex effects that involve 3D scene concepts such as the depth buffer or the
+screen texture, or need to deal with HDR tonemapping or need multiple passes
+with intermediate buffers, etc. Simple 2D effects that do not require any
+insight into the 3D scene and renderer can always be implemented with \l
+ShaderEffect or \l MultiEffect instead.
 
 \table
 \header
