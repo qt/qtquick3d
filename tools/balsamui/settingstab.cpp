@@ -30,6 +30,7 @@ SettingsTab::SettingsTab(QWidget *parent) : QScrollArea(parent)
         for (auto kv_it = options.constBegin(); kv_it != options.constEnd(); ++kv_it) {
             if (kv_it->isObject()) {
                 auto map = kv_it->toObject();
+                auto settingKeyName = kv_it.key();
                 auto description = map.value("description");
                 auto name = map.value(QLatin1String("name"));
                 auto type = map.value("type");
@@ -42,7 +43,7 @@ SettingsTab::SettingsTab(QWidget *parent) : QScrollArea(parent)
                     QCheckBox *checkBox = new QCheckBox();
                     checkBox->setChecked(value.toBool());
                     extensionsLayout->addRow(label, checkBox);
-                    settings.push_back(Setting { checkBox, name.toString(), value.toBool(), 0.0f });
+                    settings.push_back(Setting { checkBox, settingKeyName, value.toBool(), 0.0f });
                 } else if (type == "Real") {
                     QSpinBox *spinBox = new QSpinBox();
                     spinBox->setMinimum(-9999);
@@ -50,7 +51,7 @@ SettingsTab::SettingsTab(QWidget *parent) : QScrollArea(parent)
                     spinBox->setSingleStep(1);
                     spinBox->setValue(value.toDouble());
                     extensionsLayout->addRow(label, spinBox);
-                    settings.push_back(Setting { spinBox, name.toString(), false, value.toDouble() });
+                    settings.push_back(Setting { spinBox, settingKeyName, false, value.toDouble() });
                 } else {
                     qWarning() << "Unsupported setting " << name;
                 }
