@@ -26,6 +26,20 @@ QT_BEGIN_NAMESPACE
     ground cover the top and bottom hemispheres. The position of the sun can be specified by setting
     \l sunLatitude and \l sunLongitude.
 
+    \qml
+    View3D {
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.SkyBox
+            lightProbe: Texture {
+                textureData: ProceduralSkyTextureData {
+                }
+            }
+        }
+    }
+    \endqml
+
+    \image sceneenvironment_lightprobe_proceduralsky.jpg
+
     \sa SceneEnvironment
 */
 
