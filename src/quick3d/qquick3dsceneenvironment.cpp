@@ -972,6 +972,17 @@ float QQuick3DSceneEnvironment::skyboxBlurAmount() const
     the SceneEnvironment automatically creates a DebugSettings object
     associated with itself, and therefore setting a custom DebugSettings
     is usually not required.
+
+    An example of rendering the scene with wireframe mode enabled:
+    \image debugsettings_wireframe.jpg
+
+    Visualizing the normal vectors of the meshes:
+    \image debugsettings_normals.jpg
+
+    Visualizing the specular lighting contribution:
+    \image debugsettings_specular.jpg
+
+    \sa DebugSettings
 */
 
 QQuick3DDebugSettings *QQuick3DSceneEnvironment::debugSettings() const
