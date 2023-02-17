@@ -22,6 +22,7 @@
 #include <QVariant>
 #include <QHash>
 #include <QTextStream>
+#include <QtCore/QJsonObject>
 
 QT_BEGIN_NAMESPACE
 
@@ -47,7 +48,7 @@ QString Q_QUICK3DASSETUTILS_EXPORT sanitizeQmlId(const QString &id);
 QString Q_QUICK3DASSETUTILS_EXPORT sanitizeQmlSourcePath(const QString &source, bool removeParentDirectory = false);
 QString Q_QUICK3DASSETUTILS_EXPORT stripParentDirectory(const QString &filePath);
 
-void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir);
+void Q_QUICK3DASSETUTILS_EXPORT writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir, const QJsonObject &optionsObject = QJsonObject());
 void Q_QUICK3DASSETUTILS_EXPORT writeQmlComponent(const QSSGSceneDesc::Node &node, QTextStream &stream, const QDir &outDir);
 
 Q_REQUIRED_RESULT QString Q_QUICK3DASSETUTILS_EXPORT getMeshSourceName(const QByteArrayView &name);

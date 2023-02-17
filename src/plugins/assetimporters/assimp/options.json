@@ -1,5 +1,11 @@
 {
     "options": {
+        "expandValueComponents": {
+            "name": "Expand value components",
+            "description": "When enabled value types like vector3d and quaternion will be expanded.",
+            "value": false,
+            "type": "Boolean"
+        },
         "calculateTangentSpace": {
             "name": "Calculate Tangent Space",
             "description": "Calculates the tangents and bitangents for the imported meshes.",
