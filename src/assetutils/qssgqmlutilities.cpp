@@ -384,11 +384,13 @@ PropertyMap::PropertyMap()
 struct OutputContext
 {
     enum Type : quint8 { Header, RootNode, NodeTree, Resource };
+    enum Options : quint8 { None, ExpandValueComponents };
     QTextStream &stream;
     QDir outdir;
     QString sourceDir;
     quint8 indent = 0;
     Type type = NodeTree;
+    quint8 options = Options::None;
     quint16 scopeDepth = 0;
 };
 
@@ -990,6 +992,68 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
     return PropertyPair();
 }
 
+static QStringList expandComponents(const QString &value, QMetaType mt)
+{
+    static const QRegularExpression re(QLatin1String("^Qt.[a-z0-9]*\\(([0-9.e\\+\\-, ]*)\\)"));
+    Q_ASSERT(re.isValid());
+
+    switch (mt.id()) {
+    case QMetaType::QVector2D: {
+        QRegularExpressionMatch match = re.match(value);
+        if (match.hasMatch()) {
+            const auto comp = match.captured(1).split(QLatin1Char(','));
+            if (comp.size() == 2) {
+                return { QLatin1String(".x: ") + comp.at(0).trimmed(),
+                         QLatin1String(".y: ") + comp.at(1).trimmed() };
+            }
+        }
+        break;
+    }
+    case QMetaType::QVector3D: {
+        QRegularExpressionMatch match = re.match(value);
+        if (match.hasMatch()) {
+            const auto comp = match.captured(1).split(QLatin1Char(','));
+            if (comp.size() == 3) {
+                return { QLatin1String(".x: ") + comp.at(0).trimmed(),
+                         QLatin1String(".y: ") + comp.at(1).trimmed(),
+                         QLatin1String(".z: ") + comp.at(2).trimmed() };
+            }
+        }
+        break;
+    }
+    case QMetaType::QVector4D: {
+        QRegularExpressionMatch match = re.match(value);
+        if (match.hasMatch()) {
+            const auto comp = match.captured(1).split(QLatin1Char(','));
+            if (comp.size() == 4) {
+                return { QLatin1String(".x: ") + comp.at(0).trimmed(),
+                         QLatin1String(".y: ") + comp.at(1).trimmed(),
+                         QLatin1String(".z: ") + comp.at(2).trimmed(),
+                         QLatin1String(".w: ") + comp.at(3).trimmed() };
+            }
+        }
+        break;
+    }
+    case QMetaType::QQuaternion: {
+        QRegularExpressionMatch match = re.match(value);
+        if (match.hasMatch()) {
+            const auto comp = match.captured(1).split(QLatin1Char(','));
+            if (comp.size() == 4) {
+                return { QLatin1String(".x: ") + comp.at(0).trimmed(),
+                         QLatin1String(".y: ") + comp.at(1).trimmed(),
+                         QLatin1String(".z: ") + comp.at(2).trimmed(),
+                         QLatin1String(".scalar: ") + comp.at(3).trimmed() };
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    return { value };
+}
+
 static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
@@ -1007,10 +1071,22 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
         const auto &[name, value] = valueToQml(node, *property, output, &ok);
         if (property->type != Property::Type::Dynamic) {
             // Only write the property if the value is different from the default value
-            if (!ok)
+            if (!ok) {
                 indent(output) << comment() << "Skipped property: " << property->name << "\n";
-            else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value))
-                indent(output) << name << ": " << value << "\n";
+            } else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value)) {
+                const bool doExpandComponents = (output.options == OutputContext::Options::ExpandValueComponents);
+                if (doExpandComponents) {
+                    const auto &vsList = expandComponents(value, property->value.metaType());
+                    if (vsList.size() > 1) {
+                        for (const auto &va : vsList)
+                            indent(output) << name << va << "\n";
+                    } else {
+                        indent(output) << name << ": " << value << "\n";
+                    }
+                } else {
+                    indent(output) << name << ": " << value << "\n";
+                }
+            }
         } else if (ok && property->type == Property::Type::Dynamic) {
             indent(output) << "property " << typeName(property->value.metaType()).toByteArray() << ' ' << name << ": " << value << "\n";
         }
@@ -1410,11 +1486,34 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
     }
 }
 
-void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir)
+void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir &outdir, const QJsonObject &optionsObject)
 {
+    static const auto checkBooleanOption = [](const QLatin1String &optionName, const QJsonObject &options, bool defaultValue = false) {
+        const auto it = options.constFind(optionName);
+        const auto end = options.constEnd();
+        QJsonValue value;
+        if (it != end) {
+            if (it->isObject())
+                value = it->toObject().value(QLatin1String("value"));
+            else
+                value = it.value();
+        }
+        return value.toBool(defaultValue);
+    };
+
     auto root = scene.root;
     Q_ASSERT(root);
-    OutputContext output { stream, outdir, scene.sourceDir, 0, OutputContext::Header };
+
+    QJsonObject options = optionsObject;
+
+    if (auto it = options.constFind(QLatin1String("options")), end = options.constEnd(); it != end)
+        options = it->toObject();
+
+    quint8 outputOptions{ OutputContext::Options::None };
+    if (checkBooleanOption(QLatin1String("expandValueComponents"), options))
+        outputOptions |= OutputContext::Options::ExpandValueComponents;
+
+    OutputContext output { stream, outdir, scene.sourceDir, 0, OutputContext::Header, outputOptions };
 
     writeImportHeader(output, scene.animations.count() > 0);
 

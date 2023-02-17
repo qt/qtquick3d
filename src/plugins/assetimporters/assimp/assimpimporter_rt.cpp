@@ -1972,7 +1972,7 @@ QString AssimpImporter::import(const QString &sourceFile, const QDir &savePath, 
         errorString += QString("Could not write to file: ") + targetFileName;
     } else {
         QTextStream output(&targetFile);
-        QSSGQmlUtilities::writeQml(scene, output, savePath);
+        QSSGQmlUtilities::writeQml(scene, output, savePath, options);
         if (generatedFiles)
             generatedFiles->append(targetFileName);
     }
