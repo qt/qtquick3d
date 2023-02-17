@@ -18,7 +18,7 @@
 #include "qtquick3druntimerenderglobal_p.h"
 #include <QtCore/qstack.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
-#include <QtGui/private/qrhi_p.h>
+#include <QtGui/private/qrhi_p_p.h>
 #include "private/qquick3dprofiler_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -607,7 +607,7 @@ inline void QSSGRhiShaderResourceBindingList::addUniformBuffer(int binding, QRhi
         return;
     }
 #endif
-    QRhiShaderResourceBinding::Data *d = v[p++].data();
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
     h ^= qintptr(buf);
     d->binding = binding;
     d->stage = stage;
@@ -627,7 +627,7 @@ inline void QSSGRhiShaderResourceBindingList::addTexture(int binding, QRhiShader
         return;
     }
 #endif
-    QRhiShaderResourceBinding::Data *d = v[p++].data();
+    QRhiShaderResourceBinding::Data *d = QRhiImplementation::shaderResourceBindingData(v[p++]);
     h ^= qintptr(tex) ^ qintptr(sampler);
     d->binding = binding;
     d->stage = stage;
