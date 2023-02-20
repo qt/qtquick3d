@@ -507,7 +507,7 @@ QT_BEGIN_NAMESPACE
     increased resource and performance costs can quickly outweigh the benefits
     from better quality on systems with limited GPU power.
 
-    \sa Shader, Pass, Buffer, BufferInput, {Qt Quick 3D - Custom Effect Example}, {Qt Quick 3D - Effects Example}
+    \sa Shader, Pass, Buffer, BufferInput, {Qt Quick 3D - Custom Effect Example}
 */
 
 /*!

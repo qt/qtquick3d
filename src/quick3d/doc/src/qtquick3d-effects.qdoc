@@ -8,7 +8,7 @@
            effect library.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
@@ -21,7 +21,7 @@
     support for tonemapping, and is a better fit for visual design tools such
     as Qt Design Studio. For 2D effects that do not need to be performed within
     the 3D scene, such as bluring the content of a \l View3D item, use
-    \l{QtQuick::MultiEffect}{MultiEffect} on the \l View3D (or a parent of it).
+    \l[QML]{MultiEffect} on the \l View3D (or a parent of it).
     If none of these are suitable, applications can provide their own
     post-processing effects via the \l Effect type.
  */
@@ -60,11 +60,11 @@
     \inqmlmodule QtQuick3D.Effects
     \brief A one-pass blur effect.
 
-    \deprecated [6.5] Use \l{QtQuick::MultiEffect}{MultiEffect} instead.
+    \deprecated [6.5] Use \l[QML]{MultiEffect} instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. To perform blur, use Qt Quick's
-    \l{QtQuick::MultiEffect}{MultiEffect} on the \l View3D item (or a parent of
+    \l[QML]{MultiEffect} on the \l View3D item (or a parent of
     it).
 
     \image effect_blur.png
@@ -83,12 +83,12 @@
     \brief A brush strokes noise effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -121,12 +121,12 @@
     \brief A chromatic aberration effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -259,12 +259,12 @@
     \brief A ripple distortion effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -301,12 +301,12 @@
     \brief A sphere distortion effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -334,12 +334,12 @@
     \brief A spiral distortion effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -366,12 +366,12 @@
     \brief An edge highlighting effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -391,12 +391,12 @@
     \brief An emboss effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -417,12 +417,12 @@
     \brief A scene flipping effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -488,11 +488,11 @@
     \inqmlmodule QtQuick3D.Effects
     \brief A two-pass gaussian blur effect.
 
-    \deprecated [6.5] Use \l{QtQuick::MultiEffect}{MultiEffect} instead.
+    \deprecated [6.5] Use \l[QML]{MultiEffect} instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. To perform blur, use Qt Quick's
-    \l{QtQuick::MultiEffect}{MultiEffect} on the \l View3D item (or a parent of
+    \l[QML]{MultiEffect} on the \l View3D item (or a parent of
     it).
 
     \image effect_gaussian_blur.png
@@ -568,12 +568,12 @@
     \brief A motion blur effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -601,12 +601,12 @@
     \brief A scatter noise effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
@@ -729,12 +729,12 @@
     \brief A tilt shift blur effect.
 
     \deprecated [6.5] Use \l ExtendedSceneEnvironment,
-    \l{QtQuick::MultiEffect}{MultiEffect}, or user-defined effects via the \l
+    \l[QML]{MultiEffect}, or user-defined effects via the \l
     Effect type instead.
 
     \warning All pre-made standalone effects in QtQuick3D.Effects are
     considered deprecated starting with Qt 6.5. Applications are advised to use
-    \l ExtendedSceneEnvironment or \l{QtQuick::MultiEffect}{MultiEffect}
+    \l ExtendedSceneEnvironment or \l[QML]{MultiEffect}
     instead, when applicable, or alternatively provide their own custom
     post-processing effect via the \l Effect type.
 
