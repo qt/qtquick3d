@@ -284,15 +284,6 @@ Rectangle {
                         sceneEnvironment.fog.enabled = checked
                     }
                 }
-
-                // DEPTH FOG
-                CheckBox {
-                    text: "Depth fog enabled"
-                    checked: sceneEnvironment.fog.depthEnabled
-                    onCheckedChanged: {
-                        sceneEnvironment.fog.depthEnabled = checked
-                    }
-                }
                 RowLayout {
                     Label {
                         text: "Density (" + sceneEnvironment.fog.density.toFixed(2) + ")"
@@ -305,6 +296,25 @@ Rectangle {
                         to: 1.0
                         value: sceneEnvironment.fog.density
                         onValueChanged: sceneEnvironment.fog.density = value
+                    }
+                }
+                RowLayout {
+                    Label {
+                        text: "Color"
+                        Layout.fillWidth: true
+                    }
+                    ColorPicker {
+                        color: sceneEnvironment.fog.color
+                        onColorChanged: sceneEnvironment.fog.color = color
+                    }
+                }
+
+                // DEPTH FOG
+                CheckBox {
+                    text: "Depth fog enabled"
+                    checked: sceneEnvironment.fog.depthEnabled
+                    onCheckedChanged: {
+                        sceneEnvironment.fog.depthEnabled = checked
                     }
                 }
                 RowLayout {
@@ -421,6 +431,7 @@ Rectangle {
                         sceneEnvironment.fog.transmitEnabled = false
 
                         sceneEnvironment.fog.density = 1.0;
+                        sceneEnvironment.fog.color = Qt.rgba(0.5, 0.6, 0.7, 1.0);
                         sceneEnvironment.fog.depthNear = 10.0;
                         sceneEnvironment.fog.depthFar = 1000.0;
                         sceneEnvironment.fog.depthCurve = 1.0;
