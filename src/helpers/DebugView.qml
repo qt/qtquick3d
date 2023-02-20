@@ -109,6 +109,10 @@ Pane {
                     id: summaryPane
                     ColumnLayout {
                         Label {
+                            text: "Graphics API: " + source.renderStats.graphicsApiName
+                            visible: resourceDetailsVisible
+                        }
+                        Label {
                             text: source.renderStats.renderPassCount + " render passes"
                             visible: resourceDetailsVisible
                         }

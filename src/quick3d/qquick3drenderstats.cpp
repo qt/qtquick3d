@@ -221,6 +221,14 @@ void QQuick3DRenderStats::setRhiContext(QSSGRhiContext *ctx, QSSGRenderLayer *la
     // all we need to know.
     if (m_extendedDataCollectionEnabled)
         m_contextStats->dynamicDataSources.insert(layer);
+
+    if (m_contextStats && m_contextStats->context.rhi()) {
+        const QString backendName = QString::fromUtf8(m_contextStats->context.rhi()->backendName());
+        if (m_graphicsApiName != backendName) {
+            m_graphicsApiName = backendName;
+            emit graphicsApiNameChanged();
+        }
+    }
 }
 
 void QQuick3DRenderStats::setWindow(QQuickWindow *window)
@@ -872,6 +880,20 @@ quint32 QQuick3DRenderStats::vmemAllocCount() const
 quint64 QQuick3DRenderStats::vmemUsedBytes() const
 {
     return m_results.rhiStats.usedBytes;
+}
+
+/*!
+    \qmlproperty string QtQuick3D::RenderStats::graphicsAPIName
+    \readonly
+
+    This property holds the name of the current graphics API (RHI) backend
+    currently in use.
+
+    \since 6.5
+*/
+QString QQuick3DRenderStats::graphicsApiName() const
+{
+    return m_graphicsApiName;
 }
 
 /*!
