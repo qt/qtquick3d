@@ -790,7 +790,7 @@
     Glow strength. Acceptable values are from \b 0 to \b 2.
 
     The strength is effectively a scale factor (multiplier) that is applied
-    per-level. This means the the more levels are enabled in \l glowLevels, the
+    per-level. This means the the more levels are enabled in \l glowLevel, the
     more pronounced effect a larger glowStrength has.
 
     In practice the values for \l glowStrength, \l glowIntensity, and \l

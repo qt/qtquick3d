@@ -100,8 +100,6 @@ For materials, material slot IDs and UV layouts are imported.
     \b {Using Powers of Two Texture Map Pixel Dimensions}
     As is the case with most real-time graphics, texture maps run optimally when their pixel
     dimensions are set to powers of two.
-    See \l {quick3d-asset-conditioning-2d-assets#image-dimensions}{image dimensions} for more
-    detailed information on images.
 \endlist
 
 \section2 Lights and Cameras

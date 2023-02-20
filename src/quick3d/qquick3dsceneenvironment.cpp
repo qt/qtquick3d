@@ -65,15 +65,15 @@ QT_BEGIN_NAMESPACE
     \list
 
     \li Anti-aliasing settings. See \l{Anti-Aliasing Best Practices} for an
-    overview of this topic. The relevant properties are \l antialisingMode, \l
+    overview of this topic. The relevant properties are \l antialiasingMode, \l
     antialiasingQuality, \l specularAAEnabled, \l temporalAAEnabled, \l
     temporalAAStrength. In addition, if \l ExtendedSceneEnvironment is used,
     another method is available via
     \l{ExtendedSceneEnvironment::fxaaEnabled}{fxaaEnabled}.
 
-    \li Screen space ambient occlusion. The relevant properties are \l
-    \aoEnabled, \l aoStrength, \l aoBias, \l aoDistance, \l aoDither, \l
-    \aoSampleRate, \l aoSoftness.
+    \li Screen space ambient occlusion. The relevant properties are
+    \l aoEnabled, \l aoStrength, \l aoBias, \l aoDistance, \l aoDither,
+    \l aoSampleRate, \l aoSoftness.
 
     \li Clear color, skybox, image-based lighting. For more information on IBL,
     see \l{Using Image-Based Lighting}. The relevant properties are \l
