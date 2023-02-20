@@ -101,6 +101,8 @@ void QSSGSceneDesc::destructNode(Node &node)
     // Not necessary to clear the list as long as we only call this from the destructor
 }
 
+QSSGSceneDesc::Node::~Node() { destructNode(*this); }
+
 void QSSGSceneDesc::Node::cleanupChildren()
 {
     auto firstIt = children.begin();
@@ -122,5 +124,39 @@ QSSGSceneDesc::Property *QSSGSceneDesc::setProperty(Node &node, const char *name
     node.properties.push_back(prop);
     return prop;
 }
+
+QSSGSceneDesc::Model::Model() : Node(Node::Type::Model, Node::RuntimeType::Model) {}
+
+QSSGSceneDesc::Camera::Camera(RuntimeType rt) : Node(Node::Type::Camera, rt) {}
+
+QSSGSceneDesc::Light::Light(RuntimeType rt) : Node(Node::Type::Light, rt) {}
+
+QSSGSceneDesc::Skin::Skin() : Node(Node::Type::Skin, Node::RuntimeType::Skin) {}
+
+QSSGSceneDesc::Skeleton::Skeleton() : Node(Node::Type::Skeleton, Node::RuntimeType::Skeleton) {}
+
+QSSGSceneDesc::Joint::Joint() : Node(Node::Type::Joint, Node::RuntimeType::Joint) {}
+
+QSSGSceneDesc::MorphTarget::MorphTarget() : Node(Node::Type::MorphTarget, Node::RuntimeType::MorphTarget) {}
+
+QSSGSceneDesc::Material::Material(RuntimeType rt) : Node(Node::Type::Material, rt) {}
+
+QSSGSceneDesc::Texture::Texture(RuntimeType rt, const QByteArray &name)
+    : Node(name, Node::Type::Texture, rt)
+{
+}
+
+QSSGSceneDesc::TextureData::TextureData(const QByteArray &textureData, QSize size, Format format, quint8 flags, QByteArray name)
+    : Node(name, Node::Type::Texture, RuntimeType::TextureData)
+    , data(textureData)
+    , sz(size)
+    , fmt(format)
+    , flgs(flags)
+{}
+
+QSSGSceneDesc::Mesh::Mesh(QByteArray name, qsizetype index)
+    : Node(name, Node::Type::Mesh, RuntimeType::Node)
+    , idx(index)
+{}
 
 QT_END_NAMESPACE
