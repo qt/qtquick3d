@@ -1515,6 +1515,8 @@ void QQuick3DSceneEnvironment::setAoEnabled(bool newAoEnabled)
     The default value is null, which means no fog. This is equivalent to
     setting a Fog object with \l{Fog::enabled}{enabled} set to false.
 
+    \image fog.jpg
+
     \sa {QtQuick3D::Fog}{Fog}
  */
 
