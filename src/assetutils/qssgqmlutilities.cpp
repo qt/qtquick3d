@@ -783,252 +783,65 @@ QString asString(QSSGSceneDesc::Animation::Channel::TargetProperty prop)
     return QStringLiteral("unknown");
 }
 
-using PropertyPair = std::pair<const char * /* name */, QString /* value */>;
-
-static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, OutputContext &output, bool *ok = nullptr, QString *reason = nullptr)
+static std::pair<QString, QString> meshAssetName(const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir)
 {
-    using namespace QSSGSceneDesc;
-    using RuntimeType = Node::RuntimeType;
+    // Returns {name, notValidReason}
 
-    const QVariant &value = property.value;
-    if (!value.isNull()) {
+    const auto meshFolder = getMeshFolder();
+    const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
+    Q_ASSERT(scene.meshStorage.size() > meshNode.idx);
+    const auto &mesh = scene.meshStorage.at(meshNode.idx);
 
-        if (ok)
-            *ok = true;
-
-        // Built-in types
-        {
-            QString valueAsString = builtinQmlType(value);
-            if (valueAsString.size() > 0)
-                return { property.name, valueAsString };
-        }
-
-        // Enumerations
-        if (value.metaType().flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
-            const auto qmlEnumString = [](const QLatin1String &element, const QString &enumString) {
-                return QStringLiteral("%1.%2").arg(element).arg(enumString);
-            };
-            QLatin1String qmlElementName(getQmlElementName(target));
-            QString enumValue = asString(value);
-            if (enumValue.size() > 0)
-                return { property.name, qmlEnumString(qmlElementName, enumValue) };
-        }
-
-        if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
-            QByteArray element(getQmlElementName(target));
-            if (element.size() > 0) {
-                const auto flag = qvariant_cast<QSSGSceneDesc::Flag>(value);
-                QByteArray keysString = flag.me.valueToKeys(int(flag.value));
-                if (keysString.size() > 0) {
-                    keysString.prepend(element + '.');
-                    QByteArray replacement(" | " + element + '.');
-                    keysString.replace('|', replacement);
-                    return { property.name, QString::fromLatin1(keysString) };
-                }
-            }
-        }
-
-        if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
-            const auto *list = qvariant_cast<QSSGSceneDesc::NodeList *>(value);
-            if (list->count > 0) {
-                const bool useBrackets = (list->count > 1);
-
-                const QString indentStr = indentString(output);
-                QSSGQmlScopedIndent scopedIndent(output);
-                const QString listIndentStr = indentString(output);
-
-                QString str;
-                if (useBrackets)
-                    str.append(u"[\n");
-
-                for (int i = 0, end = list->count; i != end; ++i) {
-                    if (i != 0)
-                        str.append(u",\n");
-                    if (useBrackets)
-                        str.append(listIndentStr);
-                    str.append(getIdForNode(*(list->head[i])));
-                }
-
-                if (useBrackets)
-                    str.append(u'\n' + indentStr + u']');
-
-                return { property.name, str };
-            }
-        }
-
-        if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::ListView *>()) {
-            const auto &list = *qvariant_cast<QSSGSceneDesc::ListView *>(value);
-            if (list.count > 0) {
-                const bool useBrackets = (list.count > 1);
-
-                const QString indentStr = indentString(output);
-                QSSGQmlScopedIndent scopedIndent(output);
-                const QString listIndentStr = indentString(output);
-
-                QString str;
-                if (useBrackets)
-                    str.append(u"[\n");
-
-                char *vptr = reinterpret_cast<char *>(list.data);
-                auto size = list.mt.sizeOf();
-
-                for (int i = 0, end = list.count; i != end; ++i) {
-                    if (i != 0)
-                        str.append(u",\n");
-
-                    const QVariant var{list.mt, reinterpret_cast<void *>(vptr + (size * i))};
-                    QString valueString = builtinQmlType(var);
-                    if (valueString.isEmpty())
-                        valueString = asString(var);
-
-                    if (useBrackets)
-                        str.append(listIndentStr);
-                    str.append(valueString);
-                }
-
-                if (useBrackets)
-                    str.append(u'\n' + indentStr + u']');
-
-                return { property.name, str };
-            }
-        }
-
-        if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
-            if (const auto node = qvariant_cast<QSSGSceneDesc::Node *>(value)) {
-                // If this assert is triggerd it likely means that the node never got added
-                // to the scene tree (see: addNode()) or that it's a type not handled as a resource, see:
-                // writeQmlForResources()
-                Q_ASSERT(node->id != 0);
-                // The 'TextureData' node will have its data written out and become
-                // a source url.
-                if (node->runtimeType == RuntimeType::TextureData)
-                    return { "source", getIdForNode(*node->scene->root) + QLatin1Char('.') + getIdForNode(*node) };
-
-                return { property.name, getIdForNode(*node) };
-            }
-        }
-
-        if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
-            //
-            const auto outputMeshAsset = [&ok, &reason](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
-                const auto meshFolder = getMeshFolder();
-                const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
-                Q_ASSERT(scene.meshStorage.size() > meshNode.idx);
-                const auto &mesh = scene.meshStorage.at(meshNode.idx);
-
-                // If a mesh folder does not exist, then create one
-                if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder)) {
-                    qDebug() << "Failed to create meshes folder at" << outdir;
-                    if (ok)
-                        *ok = false;
-                    return QString(); // Error out
-                }
-
-                const auto path = QString(outdir.path() + QDir::separator() + meshSourceName);
-                QFile file(path);
-                if (!file.open(QIODevice::WriteOnly)) {
-                    if (ok)
-                        *ok = false;
-                    if (reason)
-                        *reason = u"Failed to find texture at "_s + path;
-                    return QString();
-                }
-
-                if (mesh.save(&file) == 0) {
-                    if (ok)
-                        *ok = false;
-                    return QString();
-                }
-
-                return meshSourceName;
-            };
-
-            if (const auto meshNode = qvariant_cast<const Mesh *>(value)) {
-                Q_ASSERT(meshNode->nodeType == Node::Type::Mesh);
-                Q_ASSERT(meshNode->scene);
-
-                const auto &scene = *meshNode->scene;
-                const auto meshSourceName = outputMeshAsset(scene, *meshNode, output.outdir);
-                return { property.name, toQuotedString(meshSourceName) };
-            }
-        }
-
-        if (value.metaType() == QMetaType::fromType<QUrl>()) {
-            //
-            const auto copyTextureAsset = [&output, &ok, &reason](const QUrl &texturePath, const QDir &outdir) {
-                QString assetPath;
-                if (outdir.isAbsolutePath(texturePath.path()))
-                    assetPath = texturePath.toString();
-                else
-                    assetPath = texturePath.path(); // TODO: Use QUrl::resolved() instead of manual string manipulation
-                QFileInfo fi(assetPath);
-                if (fi.isRelative() && !output.sourceDir.isEmpty()) {
-                    fi = QFileInfo(output.sourceDir + QChar(u'/') + assetPath);
-                }
-                if (!fi.exists()) {
-                    if (ok)
-                        *ok = false;
-                    if (reason)
-                        *reason = u"Failed to find texture at " + assetPath;
-                    indent(output) << comment() << "Source texture path expected: " << getTextureFolder() + texturePath.fileName() << "\n";
-                    return assetPath;
-                }
-
-                const auto mapsFolder = getTextureFolder();
-
-                // If a maps folder does not exist, then create one
-                if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder)) {
-                    qDebug() << "Failed to create maps folder at" << outdir;
-                    if (ok)
-                        *ok = false;
-                    return QString(); // Error out
-                }
-
-                const QString relpath = mapsFolder + fi.fileName();
-                const auto newfilepath = QString(outdir.canonicalPath() + QDir::separator() + relpath);
-                if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath)) {
-                    qDebug() << "Failed to copy file from" << fi.canonicalFilePath() << "to" << newfilepath;
-                    if (ok)
-                        *ok = false;
-                    return QString();
-                }
-
-                return relpath;
-            };
-
-            if (const auto url = qvariant_cast<QUrl>(value); !url.isEmpty()) {
-                // We need to adjust source url(s) as those should contain the canonical path
-
-                if (QSSGRenderGraphObject::isTexture(target.runtimeType)) {
-                    const auto sourcePath = copyTextureAsset(url, output.outdir);
-                    return { property.name, toQuotedString(sourcePath) };
-                }
-
-                return { property.name, toQuotedString(url.path()) };
-            }
-        }
-
-        // Workaround the TextureInput item that wraps textures for the Custom material.
-        if (target.runtimeType == QSSGSceneDesc::Material::RuntimeType::CustomMaterial) {
-            if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Texture *>()) {
-                if (const auto texture = qvariant_cast<QSSGSceneDesc::Texture *>(value)) {
-                    Q_ASSERT(QSSGRenderGraphObject::isTexture(texture->runtimeType));
-                    return { property.name, QLatin1String("TextureInput { texture: ") +
-                                getIdForNode(*texture) + QLatin1String(" }") };
-                }
-            }
-        }
-
-        // Plain strings in the scenedesc should map to QML string values
-        if (value.metaType() == QMetaType::fromType<QString>())
-            return { property.name, toQuotedString(value.toString()) };
+           // If a mesh folder does not exist, then create one
+    if (!outdir.exists(meshFolder) && !outdir.mkdir(meshFolder)) {
+        qDebug() << "Failed to create meshes folder at" << outdir;
+        return {}; // Error out
     }
 
-    if (ok)
-        *ok = false;
+    const QString path = outdir.path() + QDir::separator() + meshSourceName;
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return {QString(), QStringLiteral("Failed to find mesh at ") + path};
+    }
 
-    return PropertyPair();
-}
+    if (mesh.save(&file) == 0) {
+        return {};
+    }
+
+    return {meshSourceName, QString()};
+};
+
+static std::pair<QString, QString> copyTextureAsset(const QUrl &texturePath, OutputContext &output)
+{
+    // Returns {path, notValidReason}
+
+    // TODO: Use QUrl::resolved() instead of manual string manipulation
+    QString assetPath = output.outdir.isAbsolutePath(texturePath.path()) ?  texturePath.toString() : texturePath.path();
+    QFileInfo fi(assetPath);
+    if (fi.isRelative() && !output.sourceDir.isEmpty()) {
+        fi = QFileInfo(output.sourceDir + QChar(u'/') + assetPath);
+    }
+    if (!fi.exists()) {
+        indent(output) << comment() << "Source texture path expected: " << getTextureFolder() + texturePath.fileName() << "\n";
+        return {QString(), QStringLiteral("Failed to find texture at ") + assetPath};
+    }
+
+    const auto mapsFolder = getTextureFolder();
+    // If a maps folder does not exist, then create one
+    if (!output.outdir.exists(mapsFolder) && !output.outdir.mkdir(mapsFolder)) {
+        qDebug() << "Failed to create maps folder at" << output.outdir;
+        return {}; // Error out
+    }
+
+    const QString relpath = mapsFolder + fi.fileName();
+    const auto newfilepath = QString(output.outdir.canonicalPath() + QDir::separator() + relpath);
+    if (!QFile::exists(newfilepath) && !QFile::copy(fi.canonicalFilePath(), newfilepath)) {
+        qDebug() << "Failed to copy file from" << fi.canonicalFilePath() << "to" << newfilepath;
+        return {};
+    }
+
+    return {relpath, QString()};
+};
 
 static QStringList expandComponents(const QString &value, QMetaType mt)
 {
@@ -1101,10 +914,197 @@ static QStringList expandComponentsPartially(const QString &value, QMetaType mt)
     return { value };
 }
 
+struct ValueToQmlResult {
+    bool ok = false;
+    QString name;
+    QString value;
+    QString notValidReason;
+    bool isDynamicProperty = false;
+    QStringList expandedProperties;
+};
+
+static ValueToQmlResult valueToQml(const QSSGSceneDesc::Node &target, const QSSGSceneDesc::Property &property, OutputContext &output)
+{
+    ValueToQmlResult result;
+    if (property.value.isNull()) {
+        result.ok = false;
+        result.notValidReason = QStringLiteral("Property value is null");
+        return result;
+    }
+
+    const QVariant &value = property.value;
+    result.name = QString::fromUtf8(property.name);
+    result.isDynamicProperty = property.type == QSSGSceneDesc::Property::Type::Dynamic;
+
+    // Built-in types
+    QString valueAsString = builtinQmlType(value);
+    if (valueAsString.size() > 0) {
+        result.value = valueAsString;
+        result.ok = true;
+    } else if (value.metaType().flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
+        static const auto qmlEnumString = [](const QLatin1String &element, const QString &enumString) {
+            return QStringLiteral("%1.%2").arg(element).arg(enumString);
+        };
+        QLatin1String qmlElementName(getQmlElementName(target));
+        QString enumValue = asString(value);
+        if (enumValue.size() > 0) {
+            result.value = qmlEnumString(qmlElementName, enumValue);
+            result.ok = true;
+        }
+    } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
+        QByteArray element(getQmlElementName(target));
+        if (element.size() > 0) {
+            const auto flag = qvariant_cast<QSSGSceneDesc::Flag>(value);
+            QByteArray keysString = flag.me.valueToKeys(int(flag.value));
+            if (keysString.size() > 0) {
+                keysString.prepend(element + '.');
+                QByteArray replacement(" | " + element + '.');
+                keysString.replace('|', replacement);
+                result.value = QString::fromLatin1(keysString);
+                result.ok = true;
+            }
+        }
+    } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
+        const auto *list = qvariant_cast<QSSGSceneDesc::NodeList *>(value);
+        if (list->count > 0) {
+            const bool useBrackets = (list->count > 1);
+
+            const QString indentStr = indentString(output);
+            QSSGQmlScopedIndent scopedIndent(output);
+            const QString listIndentStr = indentString(output);
+
+            QString str;
+            if (useBrackets)
+                str.append(u"[\n");
+
+            for (int i = 0, end = list->count; i != end; ++i) {
+                if (i != 0)
+                        str.append(u",\n");
+                if (useBrackets)
+                        str.append(listIndentStr);
+                str.append(getIdForNode(*(list->head[i])));
+            }
+
+            if (useBrackets)
+                str.append(u'\n' + indentStr + u']');
+
+            result.value = str;
+            result.ok = true;
+        }
+    } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::ListView *>()) {
+        const auto &list = *qvariant_cast<QSSGSceneDesc::ListView *>(value);
+        if (list.count > 0) {
+            const bool useBrackets = (list.count > 1);
+
+            const QString indentStr = indentString(output);
+            QSSGQmlScopedIndent scopedIndent(output);
+            const QString listIndentStr = indentString(output);
+
+            QString str;
+            if (useBrackets)
+                str.append(u"[\n");
+
+            char *vptr = reinterpret_cast<char *>(list.data);
+            auto size = list.mt.sizeOf();
+
+            for (int i = 0, end = list.count; i != end; ++i) {
+                if (i != 0)
+                        str.append(u",\n");
+
+                const QVariant var{list.mt, reinterpret_cast<void *>(vptr + (size * i))};
+                QString valueString = builtinQmlType(var);
+                if (valueString.isEmpty())
+                        valueString = asString(var);
+
+                if (useBrackets)
+                        str.append(listIndentStr);
+                str.append(valueString);
+            }
+
+            if (useBrackets)
+                str.append(u'\n' + indentStr + u']');
+
+            result.value = str;
+            result.ok = true;
+        }
+    } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Node *>()) {
+        if (const auto node = qvariant_cast<QSSGSceneDesc::Node *>(value)) {
+            // If this assert is triggerd it likely means that the node never got added
+            // to the scene tree (see: addNode()) or that it's a type not handled as a resource, see:
+            // writeQmlForResources()
+            Q_ASSERT(node->id != 0);
+            // The 'TextureData' node will have its data written out and become
+            // a source url.
+
+            if (node->runtimeType == QSSGSceneDesc::Node::RuntimeType::TextureData) {
+                result.name = QStringLiteral("source");
+                result.value = getIdForNode(*node->scene->root) + QLatin1Char('.') + getIdForNode(*node);
+            } else {
+                result.value = getIdForNode(*node);
+            }
+            result.ok = true;
+        }
+    } else if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
+        if (const auto meshNode = qvariant_cast<const QSSGSceneDesc::Mesh *>(value)) {
+            Q_ASSERT(meshNode->nodeType == QSSGSceneDesc::Node::Type::Mesh);
+            Q_ASSERT(meshNode->scene);
+            const auto &scene = *meshNode->scene;
+            const auto& [meshSourceName, notValidReason] = meshAssetName(scene, *meshNode, output.outdir);
+            result.notValidReason = notValidReason;
+            if (!meshSourceName.isEmpty()) {
+                result.value = toQuotedString(meshSourceName);
+                result.ok = true;
+            }
+        }
+    } else if (value.metaType() == QMetaType::fromType<QUrl>()) {
+        if (const auto url = qvariant_cast<QUrl>(value); !url.isEmpty()) {
+            // We need to adjust source url(s) as those should contain the canonical path
+            QString path;
+            if (QSSGRenderGraphObject::isTexture(target.runtimeType)) {
+                const auto& [relpath, notValidReason] = copyTextureAsset(url, output);
+                result.notValidReason = notValidReason;
+                if (!relpath.isEmpty()) {
+                        path = relpath;
+                }
+            } else
+                path = url.path();
+
+            if (!path.isEmpty()) {
+                result.value = toQuotedString(path);
+                result.ok = true;
+            }
+        }
+    } else if (target.runtimeType == QSSGSceneDesc::Material::RuntimeType::CustomMaterial) {
+        // Workaround the TextureInput item that wraps textures for the Custom material.
+        if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::Texture *>()) {
+            if (const auto texture = qvariant_cast<QSSGSceneDesc::Texture *>(value)) {
+                Q_ASSERT(QSSGRenderGraphObject::isTexture(texture->runtimeType));
+                result.value = QLatin1String("TextureInput { texture: ") +
+                        getIdForNode(*texture) + QLatin1String(" }");
+                result.ok = true;
+            }
+        }
+    } else if (value.metaType() == QMetaType::fromType<QString>()) {
+        // Plain strings in the scenedesc should map to QML string values
+        result.value = toQuotedString(value.toString());
+        result.ok = true;
+    } else {
+        result.notValidReason = QStringLiteral("Unsupported value type: ") + value.metaType().name();
+        qWarning() << result.notValidReason;
+        result.ok = false;
+    }
+
+    if (result.ok && (output.options & OutputContext::Options::ExpandValueComponents)) {
+        result.expandedProperties = ((output.options & OutputContext::Options::DesignStudioWorkarounds) == OutputContext::Options::DesignStudioWorkarounds)
+                ? expandComponentsPartially(result.value, value.metaType())
+                : expandComponents(result.value, value.metaType());
+    }
+
+    return result;
+}
+
 static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
-    using namespace QSSGSceneDesc;
-
     QSSGQmlScopedIndent scopedIndent(output);
 
     indent(output) << "id: " << getIdForNode(node) << "\n";
@@ -1112,39 +1112,27 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
     const auto &properties = node.properties;
     auto it = properties.begin();
     const auto end = properties.end();
-    bool ok = false;
-    QString reason;
     for (; it != end; ++it) {
         const auto &property = *it;
-        const auto &[name, value] = valueToQml(node, *property, output, &ok, &reason);
-        if (property->type != Property::Type::Dynamic) {
-            // Only write the property if the value is different from the default value
-            if (!ok) {
-                QString message = QString::fromUtf8("Skipped property: " + property->name);
-                if (reason.size())
-                    message.append(QStringLiteral(", reason: ") + reason);
-                qDebug() << message;
-                indent(output) << comment() << message << "\n";
+
+        const ValueToQmlResult result = valueToQml(node, *property, output);
+        if (result.ok) {
+            if (result.isDynamicProperty) {
+                indent(output) << "property " << typeName(property->value.metaType()).toByteArray() << ' ' << result.name << ": " << result.value << "\n";
             } else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value)) {
-                const bool doExpandComponents = (output.options & OutputContext::Options::ExpandValueComponents);
-                if (doExpandComponents) {
-                    const auto &vsList = ((output.options & OutputContext::Options::DesignStudioWorkarounds) == OutputContext::Options::DesignStudioWorkarounds)
-                            ? expandComponentsPartially(value, property->value.metaType())
-                            : expandComponents(value, property->value.metaType());
-                    if (vsList.size() > 1) {
-                        for (const auto &va : vsList)
-                            indent(output) << name << va << "\n";
-                    } else {
-                        indent(output) << name << ": " << value << "\n";
-                    }
+                if (result.expandedProperties.size() > 1) {
+                    for (const auto &va : result.expandedProperties)
+                        indent(output) << result.name << va << "\n";
                 } else {
-                    indent(output) << name << ": " << value << "\n";
+                    indent(output) << result.name << ": " << result.value << "\n";
                 }
             }
-            else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value))
-                indent(output) << name << ": " << value << "\n";
-        } else if (ok && property->type == Property::Type::Dynamic) {
-            indent(output) << "property " << typeName(property->value.metaType()).toByteArray() << ' ' << name << ": " << value << "\n";
+        } else if (!result.isDynamicProperty) {
+            QString message = QStringLiteral("Skipped property: ") + property->name;
+            if (!result.notValidReason.isEmpty())
+                message.append(QStringLiteral(", reason: ") + result.notValidReason);
+            qDebug() << message;
+            indent(output) << comment() << message + "\n";
         }
     }
 }
