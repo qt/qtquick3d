@@ -132,7 +132,7 @@ struct NodeList
     qsizetype count = -1;
 };
 
-struct Node
+struct Q_QUICK3DASSETUTILS_EXPORT Node
 {
     // Node type
     enum class Type : quint8
@@ -161,7 +161,7 @@ struct Node
     explicit Node(Node::Type type, Node::RuntimeType rt)
         : Node(nullptr, type, rt) {}
 
-    virtual ~Node() { destructNode(*this); }
+    virtual ~Node();
     void cleanupChildren();
 
     QByteArray name;
@@ -192,17 +192,14 @@ using as_node_type_t = typename TypeMap<T>::type;
 
 QSSG_DECLARE_NODE(Node)
 
-struct Texture : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Texture : Node
 {
     using type = QQuick3DTexture;
-    Texture(Node::RuntimeType rt, const QByteArray &name = {})
-        : Node(name, Node::Type::Texture, rt)
-    {
-    }
+    explicit Texture(Node::RuntimeType rt, const QByteArray &name = {});
 };
 QSSG_DECLARE_NODE(Texture)
 
-struct TextureData : Node
+struct Q_QUICK3DASSETUTILS_EXPORT TextureData : Node
 {
     using type = QQuick3DTextureData;
     enum class Flags : quint8
@@ -211,13 +208,7 @@ struct TextureData : Node
     };
 
     using Format = QQuick3DTextureData::Format;
-    explicit TextureData(const QByteArray &textureData, QSize size, Format format, quint8 flags = 0, QByteArray name = {})
-        : Node(name, Node::Type::Texture, RuntimeType::TextureData)
-        , data(textureData)
-        , sz(size)
-        , fmt(format)
-        , flgs(flags)
-    {}
+    explicit TextureData(const QByteArray &textureData, QSize size, Format format, quint8 flags = 0, QByteArray name = {});
     QByteArray data;
     QSize sz;
     Format fmt;
@@ -225,56 +216,53 @@ struct TextureData : Node
 };
 QSSG_DECLARE_NODE(TextureData)
 
-struct Material : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Material : Node
 {
     using type = QQuick3DMaterial;
-    explicit Material(Node::RuntimeType rt) : Node(Node::Type::Material, rt) {}
+    explicit Material(Node::RuntimeType rt);
 };
 QSSG_DECLARE_NODE(Material)
 
 // The mesh is a special node, as it's not really a node type but
 // a handle to a mesh that will be turned into a source URL...
-struct Mesh : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Mesh : Node
 {
-    explicit Mesh(QByteArray name, qsizetype index)
-        : Node(name, Node::Type::Mesh, RuntimeType::Node)
-        , idx(index)
-    {}
+    explicit Mesh(QByteArray name, qsizetype index);
     qsizetype idx; // idx to the mesh data in the mesh data storage (see Scene).
 };
 
-struct Model : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Model : Node
 {
     using type = QQuick3DModel;
-    Model() : Node(Node::Type::Model, Node::RuntimeType::Model) {}
+    Model();
 };
 QSSG_DECLARE_NODE(Model)
 
-struct Camera : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Camera : Node
 {
     using type = QQuick3DCamera;
-    explicit Camera(RuntimeType rt) : Node(Node::Type::Camera, rt) {}
+    explicit Camera(RuntimeType rt);
 };
 QSSG_DECLARE_NODE(Camera)
 
-struct Light : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Light : Node
 {
     using type = QQuick3DAbstractLight;
-    explicit Light(RuntimeType rt) : Node(Node::Type::Light, rt) {}
+    explicit Light(RuntimeType rt);
 };
 QSSG_DECLARE_NODE(Light)
 
-struct Skin : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Skin : Node
 {
     using type = QQuick3DSkin;
-    Skin() : Node(Node::Type::Skin, Node::RuntimeType::Skin) {}
+    Skin();
 };
 QSSG_DECLARE_NODE(Skin)
 
-struct Skeleton : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Skeleton : Node
 {
     using type = QQuick3DSkeleton;
-    Skeleton() : Node(Node::Type::Skeleton, Node::RuntimeType::Skeleton) {}
+    Skeleton();
     // Skeleton is a virtual node, which is added for the start of the joint heirarchy.
     // parent - joint 1     ->      parent - skeleton - joint 1
     //        - joint 2                               - joint 2
@@ -284,17 +272,17 @@ struct Skeleton : Node
 };
 QSSG_DECLARE_NODE(Skeleton)
 
-struct Joint : Node
+struct Q_QUICK3DASSETUTILS_EXPORT Joint : Node
 {
     using type = QQuick3DJoint;
-    Joint() : Node(Node::Type::Joint, Node::RuntimeType::Joint) {}
+    Joint();
 };
 QSSG_DECLARE_NODE(Joint)
 
-struct MorphTarget : Node
+struct Q_QUICK3DASSETUTILS_EXPORT MorphTarget : Node
 {
     using type = QQuick3DMorphTarget;
-    MorphTarget() : Node(Node::Type::MorphTarget, Node::RuntimeType::MorphTarget) {}
+    MorphTarget();
 };
 QSSG_DECLARE_NODE(MorphTarget)
 
