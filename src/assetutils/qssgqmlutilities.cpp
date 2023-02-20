@@ -384,7 +384,12 @@ PropertyMap::PropertyMap()
 struct OutputContext
 {
     enum Type : quint8 { Header, RootNode, NodeTree, Resource };
-    enum Options : quint8 { None, ExpandValueComponents };
+    enum Options : quint8
+    {
+        None,
+        ExpandValueComponents = 0x1,
+        DesignStudioWorkarounds = ExpandValueComponents | 0x2
+    };
     QTextStream &stream;
     QDir outdir;
     QString sourceDir;
@@ -1054,6 +1059,15 @@ static QStringList expandComponents(const QString &value, QMetaType mt)
     return { value };
 }
 
+static QStringList expandComponentsPartially(const QString &value, QMetaType mt)
+{
+    // Workaround for DS
+    if (mt.id() != QMetaType::QQuaternion)
+        return expandComponents(value, mt);
+
+    return { value };
+}
+
 static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &output)
 {
     using namespace QSSGSceneDesc;
@@ -1074,9 +1088,11 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
             if (!ok) {
                 indent(output) << comment() << "Skipped property: " << property->name << "\n";
             } else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value)) {
-                const bool doExpandComponents = (output.options == OutputContext::Options::ExpandValueComponents);
+                const bool doExpandComponents = (output.options & OutputContext::Options::ExpandValueComponents);
                 if (doExpandComponents) {
-                    const auto &vsList = expandComponents(value, property->value.metaType());
+                    const auto &vsList = ((output.options & OutputContext::Options::DesignStudioWorkarounds) == OutputContext::Options::DesignStudioWorkarounds)
+                            ? expandComponentsPartially(value, property->value.metaType())
+                            : expandComponents(value, property->value.metaType());
                     if (vsList.size() > 1) {
                         for (const auto &va : vsList)
                             indent(output) << name << va << "\n";
@@ -1512,6 +1528,10 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     quint8 outputOptions{ OutputContext::Options::None };
     if (checkBooleanOption(QLatin1String("expandValueComponents"), options))
         outputOptions |= OutputContext::Options::ExpandValueComponents;
+
+    // Workaround for design studio type components
+    if (checkBooleanOption(QLatin1String("designStudioWorkarounds"), options))
+        outputOptions |= OutputContext::Options::DesignStudioWorkarounds;
 
     OutputContext output { stream, outdir, scene.sourceDir, 0, OutputContext::Header, outputOptions };
 
