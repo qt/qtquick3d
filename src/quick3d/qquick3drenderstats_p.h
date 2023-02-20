@@ -50,6 +50,7 @@ class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
     Q_PROPERTY(qint64 pipelineCreationTime READ pipelineCreationTime NOTIFY pipelineCreationTimeChanged)
     Q_PROPERTY(quint32 vmemAllocCount READ vmemAllocCount NOTIFY vmemAllocCountChanged)
     Q_PROPERTY(quint64 vmemUsedBytes READ vmemUsedBytes NOTIFY vmemUsedBytesChanged)
+    Q_PROPERTY(QString graphicsApiName READ graphicsApiName NOTIFY graphicsApiNameChanged)
 
 public:
     QQuick3DRenderStats(QObject *parent = nullptr);
@@ -88,6 +89,7 @@ public:
     qint64 pipelineCreationTime() const;
     quint32 vmemAllocCount() const;
     quint64 vmemUsedBytes() const;
+    QString graphicsApiName() const;
 
     Q_INVOKABLE void releaseCachedResources();
 
@@ -114,6 +116,7 @@ Q_SIGNALS:
     void pipelineCreationTimeChanged();
     void vmemAllocCountChanged();
     void vmemUsedBytesChanged();
+    void graphicsApiNameChanged();
 
 private Q_SLOTS:
     void onFrameSwapped();
@@ -165,6 +168,7 @@ private:
     QMetaObject::Connection m_frameSwappedConnection;
     QQuickWindow *m_window = nullptr;
     bool m_renderingThisFrame = false;
+    QString m_graphicsApiName;
 };
 
 QT_END_NAMESPACE
