@@ -45,6 +45,14 @@ qt_add_qml_module(sceneeffects
     NO_RESOURCE_TARGET_PATH
 )
 
+
+qt_add_shaders(sceneeffects "baked-shaders"
+    PREFIX
+        "/"
+    FILES
+        "shaders/huesaturation.frag"
+)
+
 install(TARGETS sceneeffects
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
