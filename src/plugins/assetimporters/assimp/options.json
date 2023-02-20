@@ -1,5 +1,11 @@
 {
     "options": {
+        "designStudioWorkarounds": {
+            "name": "Design Studio Compatibility Mode",
+            "description": "Enable options that are needed to create Design Studio compatible components.",
+            "value": false,
+            "type": "Boolean"
+        },
         "expandValueComponents": {
             "name": "Expand value components",
             "description": "When enabled value types like vector3d and quaternion will be expanded.",

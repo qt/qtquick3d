@@ -137,6 +137,7 @@ struct SceneInfo
         bool forceMipMapGeneration = false;
         bool useFloatJointIndices = false;
         bool generateLightmapUV = false;
+        bool designStudioWorkarounds = false;
         int lightmapBaseResolution = 1024;
         float globalScaleValue = 1.0;
 
@@ -171,6 +172,7 @@ struct SceneInfo
 
 static void setNodeProperties(QSSGSceneDesc::Node &target,
                               const aiNode &source,
+                              const SceneInfo &sceneInfo,
                               aiMatrix4x4 *transformCorrection)
 {
     // objectName
@@ -195,7 +197,14 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
     }
 
     // translate
-    QSSGSceneDesc::setProperty(target, "position", &QQuick3DNode::setPosition, QVector3D { translation.x, translation.y, translation.z });
+    if (!sceneInfo.opt.designStudioWorkarounds) {
+        QSSGSceneDesc::setProperty(target, "position", &QQuick3DNode::setPosition, QVector3D { translation.x, translation.y, translation.z });
+    } else {
+        QSSGSceneDesc::setProperty(target, "x", &QQuick3DNode::setX, translation.x);
+        QSSGSceneDesc::setProperty(target, "y", &QQuick3DNode::setY, translation.y);
+        QSSGSceneDesc::setProperty(target, "z", &QQuick3DNode::setZ, translation.z);
+    }
+
 
     // rotation
     const QQuaternion rot(rotation.w, rotation.x, rotation.y, rotation.z);
@@ -902,7 +911,7 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
     }
 }
 
-static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &source, const aiNode &sourceNode)
+static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &source, const aiNode &sourceNode, const SceneInfo &sceneInfo)
 {
     using namespace QSSGSceneDesc;
 
@@ -927,7 +936,7 @@ static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &s
         needsCorrection = true;
     }
 
-    setNodeProperties(target, sourceNode, needsCorrection ? &correctionMatrix : nullptr);
+    setNodeProperties(target, sourceNode, sceneInfo, needsCorrection ? &correctionMatrix : nullptr);
 
     // clipNear and clipFar
     if (target.runtimeType == Node::RuntimeType::PerspectiveCamera) {
@@ -965,7 +974,7 @@ static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &s
     // frustomScaleY
 }
 
-static void setLightProperties(QSSGSceneDesc::Light &target, const aiLight &source, const aiNode &sourceNode)
+static void setLightProperties(QSSGSceneDesc::Light &target, const aiLight &source, const aiNode &sourceNode, const SceneInfo &sceneInfo)
 {
     // We assume that the direction vector for a light is (0, 0, -1)
     // so if the direction vector is non-null, but not (0, 0, -1) we
@@ -997,7 +1006,7 @@ static void setLightProperties(QSSGSceneDesc::Light &target, const aiLight &sour
 
     target.runtimeType = asQtLightType(source.mType);
 
-    setNodeProperties(target, sourceNode, needsCorrection ? &correctionMatrix : nullptr);
+    setNodeProperties(target, sourceNode, sceneInfo, needsCorrection ? &correctionMatrix : nullptr);
 
     // brightness
     // Assimp has no property related to brightness or intensity.
@@ -1097,7 +1106,7 @@ static void setModelProperties(QSSGSceneDesc::Model &target, const aiNode &sourc
     auto &targetScene = target.scene;
     const auto &srcScene = sceneInfo.scene;
     // TODO: Correction and scale
-    setNodeProperties(target, source, nullptr);
+    setNodeProperties(target, source, sceneInfo, nullptr);
 
     auto &meshStorage = targetScene->meshStorage;
     auto &materialMap = sceneInfo.materialMap;
@@ -1230,7 +1239,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         // We set the initial rt-type to 'Custom', but we'll change it when updateing the properties.
         auto targetType = new QSSGSceneDesc::Camera(QSSGSceneDesc::Node::RuntimeType::CustomCamera);
         QSSGSceneDesc::addNode(parent, *targetType);
-        setCameraProperties(*targetType, srcType, srcNode);
+        setCameraProperties(*targetType, srcType, srcNode, sceneInfo);
         node = targetType;
     }
         break;
@@ -1240,7 +1249,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         // Initial type is DirectonalLight, but will be change (if needed) when setting the properties.
         auto targetType = new QSSGSceneDesc::Light(QSSGSceneDesc::Node::RuntimeType::DirectionalLight);
         QSSGSceneDesc::addNode(parent, *targetType);
-        setLightProperties(*targetType, srcType, srcNode);
+        setLightProperties(*targetType, srcType, srcNode, sceneInfo);
         node = targetType;
     }
         break;
@@ -1256,7 +1265,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
     {
         auto target = new QSSGSceneDesc::Joint;
         QSSGSceneDesc::addNode(parent, *target);
-        setNodeProperties(*target, srcNode, nullptr);
+        setNodeProperties(*target, srcNode, sceneInfo, nullptr);
         QSSGSceneDesc::setProperty(*target, "index", &QQuick3DJoint::setIndex, qint32(nodeInfo.index));
         node = target;
     }
@@ -1266,7 +1275,7 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
         node = new QSSGSceneDesc::Node(QSSGSceneDesc::Node::Type::Transform, QSSGSceneDesc::Node::RuntimeType::Node);
         QSSGSceneDesc::addNode(parent, *node);
         // TODO: arguments for correction
-        setNodeProperties(*node, srcNode, nullptr);
+        setNodeProperties(*node, srcNode, sceneInfo, nullptr);
     }
         break;
     default:
@@ -1519,6 +1528,7 @@ static SceneInfo::Options processSceneOptions(const QJsonObject &optionsObject) 
             sceneOptions.globalScaleValue = 1.0;
     }
 
+    sceneOptions.designStudioWorkarounds = checkBooleanOption(QStringLiteral("designStudioWorkarounds"), options);
     sceneOptions.useFloatJointIndices = checkBooleanOption(QStringLiteral("useFloatJointIndices"), options);
     sceneOptions.forceMipMapGeneration = checkBooleanOption(QStringLiteral("generateMipMaps"), options);
     sceneOptions.binaryKeyframes = checkBooleanOption(QStringLiteral("useBinaryKeyframes"), options);
