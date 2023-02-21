@@ -455,7 +455,10 @@ void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
     if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
             || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
     {
-        rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
+        if (!data.plainSkyBoxPrepared) {
+            data.plainSkyBoxPrepared = true;
+            rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
+        }
     }
 
     const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
@@ -581,8 +584,14 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     auto &layer = data.layer;
     shaderFeatures = data.getShaderFeatures();
 
-    if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe) || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
-        rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
+    if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+            || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
+    {
+        if (!data.plainSkyBoxPrepared) {
+            data.plainSkyBoxPrepared = true;
+            rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
+        }
+    }
 
     {
         const auto &clippingFrustum = data.clippingFrustum;

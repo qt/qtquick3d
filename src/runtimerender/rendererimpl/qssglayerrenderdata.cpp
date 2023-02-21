@@ -2062,6 +2062,7 @@ void QSSGLayerRenderData::resetForFrame()
     globalLights.clear();
     modelContexts.clear();
     features = QSSGShaderFeatures();
+    plainSkyBoxPrepared = false;
 }
 
 QSSGLayerRenderPreparationResult::QSSGLayerRenderPreparationResult(const QRectF &inViewport, QSSGRenderLayer &inLayer)

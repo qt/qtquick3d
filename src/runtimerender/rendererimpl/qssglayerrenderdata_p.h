@@ -327,6 +327,8 @@ public:
     bool interactiveLightmapBakingRequested = false;
     QSSGLightmapper::Callback lightmapBakingOutputCallback;
 
+    bool plainSkyBoxPrepared = false;
+
 private:
     void updateSortedDepthObjectsListImp();
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state

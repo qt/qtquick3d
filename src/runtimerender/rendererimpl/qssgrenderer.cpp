@@ -1058,7 +1058,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
     using namespace RenderHelpers;
 
     if (inData.layer.background == QSSGRenderLayer::Background::SkyBox && inData.layer.lightProbe)
-        rhiPrepareSkyBox(rhiCtx, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
+        rhiPrepareSkyBoxForReflectionMap(rhiCtx, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     QSSGShaderFeatures features = inData.getShaderFeatures();
 
@@ -2217,19 +2217,16 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &laye
     cb->debugMarkEnd();
 }
 
-void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
-                                     QSSGPassKey passKey,
-                                     QSSGRenderLayer &layer,
-                                     QSSGRenderCamera &inCamera,
-                                     const QSSGRef<QSSGRenderer> &renderer,
-                                     QSSGReflectionMapEntry *entry,
-                                     int cubeFace)
+namespace {
+void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
+                             QSSGPassKey passKey,
+                             QSSGRenderLayer &layer,
+                             QSSGRenderCamera &inCamera,
+                             const QSSGRef<QSSGRenderer> &renderer,
+                             QSSGReflectionMapEntry *entry = nullptr,
+                             int cubeFace = -1)
 {
-    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
-    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
-
-    bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
-
+    const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
     const QSSGRenderImageTexture lightProbeTexture =
             cubeMapMode ? renderer->contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap, QSSGBufferManager::MipModeDisable)
                         : renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
@@ -2302,6 +2299,35 @@ void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
         else
             renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
     }
+}
+} // namespace
+
+void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
+                                     QSSGPassKey passKey,
+                                     QSSGRenderLayer &layer,
+                                     QSSGRenderCamera &inCamera,
+                                     const QSSGRef<QSSGRenderer> &renderer)
+{
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
+
+    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, inCamera, renderer);
+
+    cb->debugMarkEnd();
+}
+
+void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
+                                                     QSSGPassKey passKey,
+                                                     QSSGRenderLayer &layer,
+                                                     QSSGRenderCamera &inCamera,
+                                                     const QSSGRef<QSSGRenderer> &renderer,
+                                                     QSSGReflectionMapEntry *entry,
+                                                     int cubeFace)
+{
+    QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
+    cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox for reflection cube map"));
+
+    rhiPrepareSkyBox_helper(rhiCtx, passKey, layer, inCamera, renderer, entry, cubeFace);
 
     cb->debugMarkEnd();
 }

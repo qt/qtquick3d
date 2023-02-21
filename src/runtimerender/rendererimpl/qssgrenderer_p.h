@@ -271,9 +271,14 @@ void rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer,
 void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                       QSSGRenderLayer &layer,
                       QSSGRenderCamera &inCamera,
-                      const QSSGRef<QSSGRenderer> &renderer,
-                      QSSGReflectionMapEntry *entry = nullptr,
-                      int cubeFace = -1);
+                      const QSSGRef<QSSGRenderer> &renderer);
+
+void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
+                                      QSSGRenderLayer &layer,
+                                      QSSGRenderCamera &inCamera,
+                                      const QSSGRef<QSSGRenderer> &renderer,
+                                      QSSGReflectionMapEntry *entry,
+                                      int cubeFace);
 
 void rhiPrepareRenderable(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                           const QSSGLayerRenderData &inData,
