@@ -121,6 +121,7 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void invalidateSceneGraph();
+    void updateInputProcessing();
 
 Q_SIGNALS:
     void cameraChanged();
@@ -139,7 +140,6 @@ private:
     bool internalPick(QPointerEvent *event, const QVector3D &origin = QVector3D(), const QVector3D &direction = QVector3D()) const;
     QQuick3DPickResult processPickResult(const QSSGRenderPickResult &pickResult) const;
     QQuick3DSceneManager *findChildSceneManager(QQuick3DObject *inObject, QQuick3DSceneManager *manager = nullptr);
-
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;
     QQuick3DSceneRootNode *m_sceneRoot = nullptr;
@@ -151,7 +151,7 @@ private:
     RenderMode m_renderMode = Offscreen;
     QQuickShaderEffectSource::Format m_renderFormat = QQuickShaderEffectSource::RGBA8;
     QQuick3DRenderStats *m_renderStats = nullptr;
-    bool m_enableInputProcessing = true;
+    bool m_enableInputProcessing = false;
     QQuick3DLightmapBaker *m_lightmapBaker = nullptr;
     Q_QUICK3D_PROFILE_ID
 };

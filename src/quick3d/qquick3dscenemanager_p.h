@@ -135,6 +135,7 @@ public:
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
     QSSGRenderContextInterface *rci = nullptr;
+    int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.
     friend QQuick3DObject;
 
 Q_SIGNALS:

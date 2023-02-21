@@ -42,6 +42,10 @@ private:
 
 void tst_Input::initTestCase()
 {
+    // Overrides the internal input handling in QQuick3DViewport so that it's
+    // always true instead of conditionally based on if there are item2Ds in the scene.
+    qputenv("QT_QUICK3D_FORCE_INPUT_HANDLING", "1");
+
     QQuick3DDataTest::initTestCase();
     if (!initialized())
         return;
