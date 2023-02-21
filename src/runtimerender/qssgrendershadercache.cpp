@@ -93,6 +93,7 @@ static void initBakerForNonPersistentUse(QShaderBaker *baker, QRhi *rhi)
     QVector<QShaderBaker::GeneratedShader> outputs;
     switch (rhi->backend()) {
     case QRhi::D3D11:
+    case QRhi::D3D12:
         outputs.append({ QShader::HlslShader, QShaderVersion(50) }); // Shader Model 5.0
         break;
     case QRhi::Metal:

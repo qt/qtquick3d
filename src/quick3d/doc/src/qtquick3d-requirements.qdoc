@@ -16,6 +16,7 @@ particular, the version requirement may be higher for Qt Quick 3D than for Qt Qu
 \li \l{https://www.khronos.org/opengl/}{OpenGL} 3.0 or higher; OpenGL 3.3 or higher is strongly recommended
 \li \l{https://www.khronos.org/opengles/}{OpenGL ES} 2.0 or higher; OpenGL ES 3.0 or higher is strongly recommended
 \li \l{https://docs.microsoft.com/en-us/windows/win32/direct3d11/atoc-dx-graphics-direct3d-11}{Direct3D 11.1}
+\li \l{https://learn.microsoft.com/en-us/windows/win32/direct3d12/what-is-directx-12-}{Direct3D 12}
 \li \l{https://www.khronos.org/vulkan/}{Vulkan} 1.0 or higher
 \li \l{https://developer.apple.com/metal/}{Metal} 1.2 or higher
 \endlist
@@ -46,7 +47,7 @@ setting specific environment variables as listed below:
 
   \row
    \li \c QSG_RHI_BACKEND
-   \li \c vulkan, \c metal, \c opengl, \c d3d11
+   \li \c vulkan, \c metal, \c opengl, \c d3d11, \c d3d12
    \li Requests the specific RHI backend. By default the targeted graphics API
    is chosen based on the platform, unless overridden by this variable or the
    equivalent C++ APIs. The defaults are currently Direct3D 11 for Windows,

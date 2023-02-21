@@ -20,6 +20,7 @@
 #endif
 #ifdef Q_OS_WIN
 #include <QtGui/private/qrhid3d11_p.h>
+#include <QtGui/private/qrhid3d12_p.h>
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 #include <QtGui/private/qrhimetal_p.h>
@@ -627,6 +628,8 @@ QRhi::Implementation getRhiImplementation()
         implementation = QRhi::OpenGLES2;
     } else if (rhiBackend == QByteArrayLiteral("d3d11") || rhiBackend == QByteArrayLiteral("d3d")) {
         implementation = QRhi::D3D11;
+    } else if (rhiBackend == QByteArrayLiteral("d3d12")) {
+        implementation = QRhi::D3D12;
     } else if (rhiBackend == QByteArrayLiteral("vulkan")) {
         implementation = QRhi::Vulkan;
     } else if (rhiBackend == QByteArrayLiteral("metal")) {
@@ -687,6 +690,9 @@ QString renderToKTXFile(const QString &inPath, const QString &outPath)
     if (rhiImplementation == QRhi::D3D11) {
         QRhiD3D11InitParams params;
         return renderToKTXFileInternal("Direct3D 11", inPath, outPath, QRhi::D3D11, &params);
+    } else if (rhiImplementation == QRhi::D3D12) {
+        QRhiD3D12InitParams params;
+        return renderToKTXFileInternal("Direct3D 12", inPath, outPath, QRhi::D3D12, &params);
     }
 #endif
 
