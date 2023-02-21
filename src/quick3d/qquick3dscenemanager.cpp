@@ -134,11 +134,28 @@ void QQuick3DSceneManager::updateDirtyResource(QQuick3DObject *resourceObject)
     quint32 dirty = itemPriv->dirtyAttributes;
     Q_UNUSED(dirty);
     itemPriv->dirtyAttributes = 0;
+
+   // Check if an Image2D has either acquired or lost its SourceItem.
+   // This is used to update inputHandlingEnabled counter that View3D uses to
+   // implicitly enable or disable internal input processing.
+
+    bool beforeSourceItemValid = false;
+    if (itemPriv->spatialNode && itemPriv->spatialNode->type == QSSGRenderGraphObject::Type::Image2D) {
+        auto image = static_cast<QSSGRenderImage *>(itemPriv->spatialNode);
+        beforeSourceItemValid = image && image->m_qsgTexture != nullptr;
+    }
+
     itemPriv->spatialNode = resourceObject->updateSpatialNode(itemPriv->spatialNode);
     if (itemPriv->spatialNode) {
         m_nodeMap.insert(itemPriv->spatialNode, resourceObject);
-        if (itemPriv->spatialNode->type == QSSGRenderGraphObject::Type::ResourceLoader)
+        if (itemPriv->spatialNode->type == QSSGRenderGraphObject::Type::ResourceLoader) {
             resourceLoaders.insert(itemPriv->spatialNode);
+        } else if (itemPriv->spatialNode->type == QSSGRenderGraphObject::Type::Image2D) {
+            auto image = static_cast<QSSGRenderImage *>(itemPriv->spatialNode);
+            bool afterSouceItemValid = image && image->m_qsgTexture != nullptr;
+            if (beforeSourceItemValid != afterSouceItemValid)
+                inputHandlingEnabled += (afterSouceItemValid) ? 1 : -1;
+        }
     }
 
     // resource nodes dont go in the tree, so we dont need to parent them
@@ -149,9 +166,13 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
     QQuick3DObjectPrivate *itemPriv = QQuick3DObjectPrivate::get(spatialNode);
     quint32 dirty = itemPriv->dirtyAttributes;
     itemPriv->dirtyAttributes = 0;
-    itemPriv->spatialNode = spatialNode->updateSpatialNode(itemPriv->spatialNode);
-    if (itemPriv->spatialNode)
+    QSSGRenderGraphObject *oldNode = itemPriv->spatialNode;
+    itemPriv->spatialNode = spatialNode->updateSpatialNode(oldNode);
+    if (itemPriv->spatialNode && itemPriv->spatialNode != oldNode) {
         m_nodeMap.insert(itemPriv->spatialNode, spatialNode);
+        if (itemPriv->type == QQuick3DObjectPrivate::Type::Item2D)
+            ++inputHandlingEnabled;
+    }
 
     QSSGRenderNode *graphNode = static_cast<QSSGRenderNode *>(itemPriv->spatialNode);
 
@@ -230,6 +251,15 @@ void QQuick3DSceneManager::cleanupNodes()
         if (QSSGRenderGraphObject::isNodeType(node->type)) {
             QSSGRenderNode *spatialNode = static_cast<QSSGRenderNode *>(node);
             spatialNode->removeFromGraph();
+        }
+
+        if (node->type == QQuick3DObjectPrivate::Type::Item2D) {
+            --inputHandlingEnabled;
+        } else if (node->type == QQuick3DObjectPrivate::Type::Image2D) {
+            auto image = static_cast<QSSGRenderImage *>(node);
+            if (image && image->m_qsgTexture != nullptr ) {
+                --inputHandlingEnabled;
+            }
         }
 
         // Remove all nodes from the node map because they will no

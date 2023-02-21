@@ -40,6 +40,12 @@ Q_LOGGING_CATEGORY(lcEv, "qt.quick3d.event")
 Q_LOGGING_CATEGORY(lcPick, "qt.quick3d.pick")
 Q_LOGGING_CATEGORY(lcHover, "qt.quick3d.hover")
 
+static bool isforceInputHandlingSet()
+{
+    static const bool v = (qEnvironmentVariableIntValue("QT_QUICK3D_FORCE_INPUT_HANDLING") > 0);
+    return v;
+}
+
 struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
 {
     static void removeAll() {
@@ -162,11 +168,13 @@ QQuick3DViewport::QQuick3DViewport(QQuickItem *parent)
     Q_ASSERT(sceneManager == QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager);
     connect(sceneManager, &QQuick3DSceneManager::needsUpdate,
             this, &QQuickItem::update);
-    if (m_enableInputProcessing) {
-        setAcceptedMouseButtons(Qt::AllButtons);
-        setAcceptTouchEvents(true);
+
+    // Overrides the internal input handling to always be true
+    // instead of potentially updated after a sync (see updatePaintNode)
+    if (isforceInputHandlingSet()) {
+        m_enableInputProcessing = true;
+        updateInputProcessing();
         forceActiveFocus();
-        setAcceptHoverEvents(true);
     }
 }
 
@@ -513,6 +521,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
     m_renderModeDirty = false;
 
+    QSGNode *retVal = nullptr;
     if (m_renderMode == Offscreen) {
         SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
 
@@ -548,13 +557,13 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             n->scheduleRender();
         }
 
-        return n;
+        retVal = n;
     } else if (m_renderMode == Underlay) {
         setupDirectRenderer(Underlay);
-        return node; // node should be nullptr
+        retVal = node; // node should be nullptr
     } else if (m_renderMode == Overlay) {
         setupDirectRenderer(Overlay);
-        return node; // node should be nullptr
+        retVal = node; // node should be nullptr
     } else if (m_renderMode == Inline) {
         // QSGRenderNode-based rendering
         QQuick3DSGRenderNode *n = static_cast<QQuick3DSGRenderNode *>(node);
@@ -582,11 +591,23 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
             n->markDirty(QSGNode::DirtyMaterial);
         }
 
-        return n;
+        retVal = n;
     } else {
         qWarning("Invalid renderMode %d", int(m_renderMode));
-        return nullptr;
     }
+
+    if (!isforceInputHandlingSet()) {
+        // Implicitly enable internal input processing if any item2ds are present.
+        const auto inputHandlingEnabled =
+                QQuick3DObjectPrivate::get(m_sceneRoot)->sceneManager->inputHandlingEnabled;
+        const auto enable = inputHandlingEnabled > 0;
+        if (m_enableInputProcessing != enable) {
+            m_enableInputProcessing = enable;
+            QMetaObject::invokeMethod(this, "updateInputProcessing", Qt::QueuedConnection);
+        }
+    }
+
+    return retVal;
 }
 
 void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -1280,6 +1301,14 @@ QQuick3DSceneManager *QQuick3DViewport::findChildSceneManager(QQuick3DObject *in
         manager = findChildSceneManager(child, manager);
     }
     return manager;
+}
+
+void QQuick3DViewport::updateInputProcessing()
+{
+    // This should be called from the gui thread.
+    setAcceptTouchEvents(m_enableInputProcessing);
+    setAcceptHoverEvents(m_enableInputProcessing);
+    setAcceptedMouseButtons(m_enableInputProcessing ? Qt::AllButtons : Qt::NoButton);
 }
 
 QT_END_NAMESPACE
