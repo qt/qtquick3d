@@ -167,7 +167,7 @@ static void setProperties(QQuick3DObject &obj, const QSSGSceneDesc::Node &node, 
         } else if (var.metaType() == QMetaType::fromType<QUrl>()) {
             const auto url = qvariant_cast<QUrl>(var);
             // TODO: Use QUrl::resolved() instead
-            const QUrl qurl = url.isValid() ? QUrl::fromUserInput(url.path(), workingDir) : QUrl{};
+            const QUrl qurl = url.isValid() ? QUrl::fromUserInput(url.toString(), workingDir) : QUrl{};
             v->call->set(obj, v->name, &qurl);
         } else if (var.metaType().id() == qMetaTypeId<QSSGSceneDesc::Flag>()) {
             const auto flag = qvariant_cast<QSSGSceneDesc::Flag>(var);
