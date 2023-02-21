@@ -6,7 +6,7 @@ import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import Qt.labs.settings
+import QtCore
 
 import QtQuick3D
 import QtQuick3D.MaterialEditor

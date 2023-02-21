@@ -7,7 +7,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Qt.labs.platform
-import Qt.labs.settings
+import QtCore
 
 import QtQuick3D
 import QtQuick3D.Helpers

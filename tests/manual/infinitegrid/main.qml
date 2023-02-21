@@ -6,7 +6,7 @@ import QtQuick.Window
 import QtQuick.Controls
 
 import Qt.labs.platform
-import Qt.labs.settings
+import QtCore
 
 import QtQuick3D
 import QtQuick3D.Helpers
