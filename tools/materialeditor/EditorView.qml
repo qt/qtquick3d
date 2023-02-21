@@ -8,7 +8,7 @@ import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.MaterialEditor
 import Qt.labs.qmlmodels
-import Qt.labs.settings
+import QtCore
 
 SplitView {
     id: editorView
