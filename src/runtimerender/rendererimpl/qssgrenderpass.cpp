@@ -439,7 +439,9 @@ void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
 
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
-    const auto &layer = data.layer;
+    auto camera = data.camera;
+    QSSG_ASSERT(camera, return);
+    auto &layer = data.layer;
     const auto &layerPrepResult = data.layerPrepResult;
     wantsMips = layerPrepResult->flags.requiresMipmapsForScreenTexture();
     sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
@@ -449,6 +451,12 @@ void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
 
     if (layer.background == QSSGRenderLayer::Background::Color)
         clearColor = QColor::fromRgbF(layer.clearColor.x(), layer.clearColor.y(), layer.clearColor.z());
+
+    if ((layer.background == QSSGRenderLayer::Background::SkyBox && layer.lightProbe)
+            || (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap && layer.skyBoxCubeMap))
+    {
+        rhiPrepareSkyBox(rhiCtx.data(), this, layer, *camera, renderer);
+    }
 
     const bool layerEnableDepthTest = layer.layerFlags.testFlag(QSSGRenderLayer::LayerFlag::EnableDepthTest);
     const bool depthTestEnableDefault = layerEnableDepthTest && (!sortedOpaqueObjects.isEmpty() || !renderedOpaqueDepthPrepassObjects.isEmpty() || !renderedDepthWriteObjects.isEmpty());
