@@ -59,6 +59,7 @@ and functionality that were done for the Qt 6 series of Qt.
 
 \list
     \li \l{Qt Quick 3D - Introduction}{Qt Quick 3D Introduction Example}
+    \li \l{quick3d-asset-intro}{Qt Quick 3D Introduction with glTF Assets}
     \li \l{Qt Quick 3D Graphics Requirements}
     \li \l{Qt Quick 3D Architecture}
     \li \l{Balsam Asset Import Tool}
