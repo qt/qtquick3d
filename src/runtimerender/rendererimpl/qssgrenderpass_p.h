@@ -133,7 +133,7 @@ public:
     QSSGRef<QSSGRhiShaderPipeline> ssaoShaderPipeline;
 };
 
-class DepthMapPass : public QSSGRenderPass
+class Q_QUICK3DRUNTIMERENDER_PRIVATE_EXPORT DepthMapPass : public QSSGRenderPass
 {
 public:
     void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
