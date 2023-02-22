@@ -156,7 +156,7 @@ for Generated Mesh levels of detail.
 degrees to consider for normal smoothing/merging when recalculating normals
 for Generated Mesh levels of detail.
 
-\row \li \c {recalculateLodNormalsSplitAngle <value>} \li Maximum angle in
+\row \li \c {--recalculateLodNormalsSplitAngle <value>} \li Maximum angle in
 degrees to consider for normal spliting when recalculating normals for
 Generated Mesh levels of detail.
 
