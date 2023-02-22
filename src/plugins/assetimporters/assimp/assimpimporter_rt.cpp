@@ -275,12 +275,15 @@ static void setTextureProperties(QSSGSceneDesc::Texture &target, const TextureIn
         float rotationUV = qRadiansToDegrees(rotation);
         float posU = transform.mTranslation.x;
         float posV = transform.mTranslation.y;
-        {
+        if (sceneInfo.opt.gltfMode) {
             const float rcos = std::cos(rotation);
             const float rsin = std::sin(rotation);
             posU -= 0.5f * transform.mScaling.x * (-rcos + rsin + 1.0f);
             posV -= (0.5f * transform.mScaling.y * (rcos + rsin - 1.0f) + 1.0f - transform.mScaling.y);
             QSSGSceneDesc::setProperty(target, "pivotV", &QQuick3DTexture::setPivotV, 1.0f);
+        } else {
+            QSSGSceneDesc::setProperty(target, "pivotU", &QQuick3DTexture::setPivotV, 0.5f);
+            QSSGSceneDesc::setProperty(target, "pivotV", &QQuick3DTexture::setPivotV, 0.5f);
         }
 
         QSSGSceneDesc::setProperty(target, "positionU", &QQuick3DTexture::setPositionU, posU);
