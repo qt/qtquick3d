@@ -88,7 +88,7 @@ void QQuick3DRenderStatsPassesModel::setPassData(const QString &newPassData)
     if (!m_passData.isEmpty()) {
         auto lines = m_passData.split(QRegularExpression(QStringLiteral("[\r\n]")), Qt::SkipEmptyParts);
         if (lines.size() > 2) {
-            for (uint i = 2; i < lines.size(); ++i) {
+            for (qsizetype i = 2; i < lines.size(); ++i) {
                 const auto &line = lines.at(i);
                 auto fields = line.split(QLatin1Char('|'), Qt::SkipEmptyParts);
                 if (fields.size() != 4)

@@ -93,7 +93,7 @@ void QQuick3DRenderStatsMeshesModel::setMeshData(const QString &newMeshData)
     if (!m_meshData.isEmpty()) {
         auto lines = m_meshData.split(QRegularExpression(QStringLiteral("[\r\n]")), Qt::SkipEmptyParts);
         if (lines.size() > 2) {
-            for (uint i = 2; i < lines.size(); ++i) {
+            for (qsizetype i = 2; i < lines.size(); ++i) {
                 const auto &line = lines.at(i);
                 auto fields = line.split(QLatin1Char('|'), Qt::SkipEmptyParts);
                 if (fields.size() != 5)
