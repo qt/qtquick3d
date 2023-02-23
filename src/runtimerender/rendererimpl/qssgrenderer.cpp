@@ -40,7 +40,7 @@ struct QSSGSubsetRenderable;
 static constexpr float QSSG_PI = float(M_PI);
 static constexpr float QSSG_HALFPI = float(M_PI_2);
 
-static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
+static const QRhiShaderResourceBinding::StageFlags RENDERER_VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
 static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsPipelineState *ps,
@@ -904,7 +904,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
                             toRhi(renderableImage->m_imageNode.m_verticalTilingMode),
                             QRhiSampler::Repeat
                     });
-                    bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
+                    bindings.addTexture(samplerBinding, RENDERER_VISIBILITY_ALL, texture, sampler);
                 }
             } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
         }
@@ -944,7 +944,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
                     samplerBindingsSpecified.setBit(samplerBinding);
                     QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
                     bindings.addTexture(samplerBinding,
-                                        VISIBILITY_ALL,
+                                        RENDERER_VISIBILITY_ALL,
                                         t.texture,
                                         sampler);
                 }
@@ -962,7 +962,7 @@ static void addOpaqueDepthPrePassBindings(QSSGRhiContext *rhiCtx,
         for (const QShaderDescription::InOutVariable &var : samplerVars) {
             if (!samplerBindingsSpecified.testBit(var.binding)) {
                 QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
-                bindings.addTexture(var.binding, VISIBILITY_ALL, t, dummySampler);
+                bindings.addTexture(var.binding, RENDERER_VISIBILITY_ALL, t, dummySampler);
             }
         }
     }
@@ -1183,7 +1183,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
 
-            bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd->ubuf);
+            bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
 
                  // Depth and SSAO textures, in case a custom material's shader code does something with them.
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
@@ -1344,10 +1344,10 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, cameraDirection, cameraPosition);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
-            bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
+            bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
 
             if (shaderPipeline->isLightingEnabled()) {
-                bindings.addUniformBuffer(1, VISIBILITY_ALL, dcd.ubuf,
+                bindings.addUniformBuffer(1, RENDERER_VISIBILITY_ALL, dcd.ubuf,
                                           shaderPipeline->ub0LightDataOffset(),
                                           shaderPipeline->ub0LightDataSize());
             }
@@ -1372,7 +1372,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                         };
                         rhiCtx->checkAndAdjustForNPoT(texture, &samplerDesc);
                         QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);
-                        bindings.addTexture(samplerBinding, VISIBILITY_ALL, texture, sampler);
+                        bindings.addTexture(samplerBinding, RENDERER_VISIBILITY_ALL, texture, sampler);
                     }
                 } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
                 renderableImage = renderableImage->m_nextImage;
@@ -1752,7 +1752,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         Q_ASSERT(sampler);
 
         QSSGRhiShaderResourceBindingList bindings;
-        bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+        bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
         bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, map, sampler);
         QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
@@ -1771,7 +1771,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         ps.shaderPipeline = shaderPipeline.data();
 
         bindings.clear();
-        bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+        bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
         bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, workMap, sampler);
         srb = rhiCtx->srb(bindings);
 
@@ -2106,7 +2106,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Nearest, QRhiSampler::Nearest, QRhiSampler::None,
                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
     QSSGRhiShaderResourceBindingList bindings;
-    bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+    bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
     bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, rhiDepthTexture.texture, sampler);
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
@@ -2209,7 +2209,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &laye
     memcpy(ubufData + 64 * 2 + 4 * 4, &gridFlags, 4);
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-    bindings.addUniformBuffer(uniformBinding, VISIBILITY_ALL, dcd.ubuf);
+    bindings.addUniformBuffer(uniformBinding, RENDERER_VISIBILITY_ALL, dcd.ubuf);
 
     layer.gridSrb = rhiCtx->srb(bindings);
     renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
@@ -2287,7 +2287,7 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
         memcpy(ubufData + 176, viewProjection.constData(), 64); //###
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-        bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
+        bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
 
         if (cubeFace >= 0)
             entry->m_skyBoxSrbs[cubeFace] = rhiCtx->srb(bindings);
@@ -2404,7 +2404,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
 
             QSSGRhiShaderResourceBindingList bindings;
-            bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd->ubuf);
+            bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
 
             // Depth and SSAO textures, in case a custom material's shader code does something with them.
             addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);

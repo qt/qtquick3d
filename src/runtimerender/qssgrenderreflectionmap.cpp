@@ -28,10 +28,10 @@ void QSSGRenderReflectionMap::releaseCachedResources()
     m_reflectionMapList.clear();
 }
 
-static QRhiTexture *allocateRhiTexture(QRhi *rhi,
-                                       QRhiTexture::Format format,
-                                       const QSize &size,
-                                       QRhiTexture::Flags flags = {})
+static QRhiTexture *allocateRhiReflectionTexture(QRhi *rhi,
+                                                 QRhiTexture::Format format,
+                                                 const QSize &size,
+                                                 QRhiTexture::Flags flags = {})
 {
     auto texture = rhi->newTexture(format, size, 1, flags);
     if (!texture->create())
@@ -39,9 +39,9 @@ static QRhiTexture *allocateRhiTexture(QRhi *rhi,
     return texture;
 }
 
-static QRhiRenderBuffer *allocateRhiRenderBuffer(QRhi *rhi,
-                                                 QRhiRenderBuffer::Type type,
-                                                 const QSize &size)
+static QRhiRenderBuffer *allocateRhiReflectionRenderBuffer(QRhi *rhi,
+                                                           QRhiRenderBuffer::Type type,
+                                                           const QSize &size)
 {
     auto renderBuffer = rhi->newRenderBuffer(type, size, 1);
     if (!renderBuffer->create())
@@ -66,11 +66,11 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
     QSSGReflectionMapEntry *pEntry = reflectionMapEntry(probeIdx);
 
     if (!pEntry) {
-        QRhiRenderBuffer *depthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
-        QRhiTexture *map = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
-                                                          | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
-        QRhiTexture *prefiltered = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
-                                                                  | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
+        QRhiRenderBuffer *depthStencil = allocateRhiReflectionRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
+        QRhiTexture *map = allocateRhiReflectionTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
+                                                                    | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
+        QRhiTexture *prefiltered = allocateRhiReflectionTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
+                                                                            | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
         m_reflectionMapList.push_back(QSSGReflectionMapEntry::withRhiCubeMap(probeIdx, map, prefiltered, depthStencil));
 
         pEntry = &m_reflectionMapList.back();
@@ -84,11 +84,11 @@ void QSSGRenderReflectionMap::addReflectionMapEntry(qint32 probeIdx, const QSSGR
 
         if (!pEntry->m_rhiDepthStencil || mapRes != pEntry->m_rhiCube->pixelSize().width()) {
             pEntry->destroyRhiResources();
-            pEntry->m_rhiDepthStencil = allocateRhiRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
-            pEntry->m_rhiCube = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
-                                                               | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
-            pEntry->m_rhiPrefilteredCube = allocateRhiTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
-                                                                          | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
+            pEntry->m_rhiDepthStencil = allocateRhiReflectionRenderBuffer(rhi, QRhiRenderBuffer::DepthStencil, pixelSize);
+            pEntry->m_rhiCube = allocateRhiReflectionTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
+                                                                         | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
+            pEntry->m_rhiPrefilteredCube = allocateRhiReflectionTexture(rhi, rhiFormat, pixelSize, QRhiTexture::RenderTarget | QRhiTexture::CubeMap
+                                                                                    | QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips);
         }
 
         // Additional graphics resources: samplers, render targets.

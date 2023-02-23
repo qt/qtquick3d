@@ -273,7 +273,7 @@ void QQuick3DParticleModelBlendParticle::regenerate()
     handleEndNodeChanged();
 }
 
-static QSSGMesh::Mesh loadMesh(const QString &source)
+static QSSGMesh::Mesh loadModelBlendParticleMesh(const QString &source)
 {
     QString src = source;
     if (source.startsWith(QLatin1Char('#'))) {
@@ -447,7 +447,7 @@ void QQuick3DParticleModelBlendParticle::updateParticles()
         QString src = m_model->source().toString();
         if (context && !src.startsWith(QLatin1Char('#')))
             src = QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(m_model->source()));
-        QSSGMesh::Mesh mesh = loadMesh(src);
+        QSSGMesh::Mesh mesh = loadModelBlendParticleMesh(src);
         if (!mesh.isValid()) {
             qWarning () << "ModelBlendParticle3D: Unable to load mesh: " << src;
             return;
