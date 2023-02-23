@@ -1149,13 +1149,16 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 }
 
                 int currentLod = -1;
-                const float threshold = distanceThreshold * lodDistanceMultiplier;
-                for (qsizetype i = 0; i < theSubset.lods.count(); ++i) {
-                    float subsetDistance = theSubset.lods[i].distance * modelScale * model.levelOfDetailBias;
-                    float screenSize = subsetDistance / threshold;
-                    if (screenSize > lodThreshold)
-                        break;
-                    currentLod = i;
+                if (model.levelOfDetailBias > 0.0f) {
+                    const float threshold = distanceThreshold * lodDistanceMultiplier;
+                    const float modelBias = 1 / model.levelOfDetailBias;
+                    for (qsizetype i = 0; i < theSubset.lods.count(); ++i) {
+                        float subsetDistance = theSubset.lods[i].distance * modelScale * modelBias;
+                        float screenSize = subsetDistance / threshold;
+                        if (screenSize > lodThreshold)
+                            break;
+                        currentLod = i;
+                    }
                 }
                 if (currentLod == -1)
                     subsetLevelOfDetail = 0;
