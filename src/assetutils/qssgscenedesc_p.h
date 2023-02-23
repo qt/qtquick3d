@@ -208,11 +208,10 @@ struct Q_QUICK3DASSETUTILS_EXPORT TextureData : Node
         Compressed = 0x1
     };
 
-    using Format = QQuick3DTextureData::Format;
-    explicit TextureData(const QByteArray &textureData, QSize size, Format format, quint8 flags = 0, QByteArray name = {});
+    explicit TextureData(const QByteArray &textureData, QSize size, const QByteArray &format, quint8 flags = 0, QByteArray name = {});
     QByteArray data;
     QSize sz;
-    Format fmt;
+    QByteArray fmt;
     quint8 flgs;
 };
 QSSG_DECLARE_NODE(TextureData)

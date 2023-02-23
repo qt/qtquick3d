@@ -1263,7 +1263,7 @@ static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContex
         if (isCompressed) {
             QByteArray data = texData; // Shallow copy since QBuffer requires non-const. Should not lead to detach() as long as we only read.
             QBuffer readBuffer(&data);
-            QImageReader imageReader(&readBuffer);
+            QImageReader imageReader(&readBuffer, textureData.fmt);
             image = imageReader.read();
             if (image.isNull())
                 qWarning() << imageReader.errorString();
