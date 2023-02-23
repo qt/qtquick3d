@@ -93,7 +93,7 @@ void QQuick3DRenderStatsTexturesModel::setTextureData(const QString &newTextureD
     if (!m_textureData.isEmpty()) {
         auto lines = m_textureData.split(QRegularExpression(QStringLiteral("[\r\n]")), Qt::SkipEmptyParts);
         if (lines.size() > 2) {
-            for (uint i = 2; i < lines.size(); ++i) {
+            for (qsizetype i = 2; i < lines.size(); ++i) {
                 const auto &line = lines.at(i);
                 auto fields = line.split(QLatin1Char('|'), Qt::SkipEmptyParts);
                 if (fields.size() < 4) // flags field can be empty

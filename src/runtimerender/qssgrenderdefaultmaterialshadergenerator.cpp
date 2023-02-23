@@ -1943,7 +1943,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
 
     // Morphing
-    const auto morphSize = inProperties.m_targetCount.getValue(inKey);
+    const qsizetype morphSize = inProperties.m_targetCount.getValue(inKey);
     if (morphSize > 0) {
         if (inMorphWeights.mSize >= morphSize) {
             shaders->setUniformArray(ubufData, "qt_morphWeights", inMorphWeights.mData, morphSize,
