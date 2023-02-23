@@ -146,7 +146,7 @@ QSSGSceneDesc::Texture::Texture(RuntimeType rt, const QByteArray &name)
 {
 }
 
-QSSGSceneDesc::TextureData::TextureData(const QByteArray &textureData, QSize size, Format format, quint8 flags, QByteArray name)
+QSSGSceneDesc::TextureData::TextureData(const QByteArray &textureData, QSize size, const QByteArray &format, quint8 flags, QByteArray name)
     : Node(name, Node::Type::Texture, RuntimeType::TextureData)
     , data(textureData)
     , sz(size)

@@ -209,7 +209,7 @@ QQuick3DTextureData *createRuntimeObject<QQuick3DTextureData>(QSSGSceneDesc::Tex
             if (isCompressed) {
                 QByteArray data = texData;
                 QBuffer readBuffer(&data);
-                QImageReader imageReader(&readBuffer);
+                QImageReader imageReader(&readBuffer, node.fmt);
                 image = imageReader.read();
                 if (image.isNull())
                     qWarning() << imageReader.errorString();

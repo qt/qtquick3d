@@ -83,7 +83,7 @@ void CustomMaterial::setUniform(QSSGSceneDesc::Material &material, const Uniform
                 // Note: the image must not be deleted or modified while the textureData node is in the scene
                 auto *imageData = reinterpret_cast<const char *>(image.constBits());
                 QByteArray dataref = QByteArray::fromRawData(imageData, image.sizeInBytes());
-                auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
+                const auto format = QByteArrayLiteral("rgba8888");
                 const auto &baseName = QString(fi.baseName() + QString::number(material.id));
                 auto name = baseName.toUtf8();
                 auto textureData = new QSSGSceneDesc::TextureData(dataref, resSize, format, 0, name);

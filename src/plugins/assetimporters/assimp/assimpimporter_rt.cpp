@@ -349,48 +349,41 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
 
                 auto &textureMap = sceneInfo.textureMap;
 
+                QByteArray texName = QByteArray(texturePath.C_Str(), texturePath.length);
                 // Check if we already processed this texture
-                const auto it = textureMap.constFind(TextureEntry{QByteArray{texturePath.C_Str(), qsizetype(texturePath.length)}, texInfo});
+                const auto it = textureMap.constFind(TextureEntry{texName, texInfo});
                 if (it != textureMap.cend()) {
                     Q_ASSERT(it->texture);
                     tex = it->texture;
                 } else {
                     // Two types, externally referenced or embedded
                     // Use the source file name as the identifier, since that will hopefully be fairly stable for re-import.
-                    // If it's embedded, "*0" will be converted to "_0_texture" when writing to QML.
-                    QByteArray name = texturePath.C_Str();
-                    tex = new QSSGSceneDesc::Texture(QSSGSceneDesc::Texture::RuntimeType::Image2D, name);
+                    tex = new QSSGSceneDesc::Texture(QSSGSceneDesc::Texture::RuntimeType::Image2D, texName);
                     textureMap.insert(TextureEntry{fromAiString(texturePath), texInfo, tex});
-
                     QSSGSceneDesc::addNode(target, *tex);
                     setTextureProperties(*tex, texInfo, sceneInfo); // both
-                    const bool isEmbedded = (*texturePath.C_Str() == '*');
-                    if (isEmbedded) {
+
+                    auto aEmbeddedTex = srcScene.GetEmbeddedTextureAndIndex(texturePath.C_Str());
+                    const auto &embeddedTexId = aEmbeddedTex.second;
+                    if (embeddedTexId > -1) {
                         QSSGSceneDesc::TextureData *textureData = nullptr;
                         auto &embeddedTextures = sceneInfo.embeddedTextureMap;
-                        const auto textureCount = embeddedTextures.size();
-                        const auto &filename = texturePath.data;
-                        const auto idx = qsizetype(std::atoi(filename + 1));
-                        if (idx >= 0 && idx < textureCount)
-                            textureData = embeddedTextures[idx];
-
+                        textureData = embeddedTextures[embeddedTexId];
                         if (!textureData) {
-                            if (auto sourceTexture = srcScene.GetEmbeddedTexture(texturePath.C_Str())) {
-                                Q_ASSERT(sourceTexture->pcData);
-                                // Two cases of embedded textures, uncompress and compressed.
-                                const bool isCompressed = (sourceTexture->mHeight == 0);
+                            const auto *sourceTexture = aEmbeddedTex.first;
+                            Q_ASSERT(sourceTexture->pcData);
+                            // Two cases of embedded textures, uncompress and compressed.
+                            const bool isCompressed = (sourceTexture->mHeight == 0);
 
-                                // For compressed textures this is the size of the image buffer (in bytes)
-                                const qsizetype asize = (isCompressed) ? sourceTexture->mWidth : (sourceTexture->mHeight * sourceTexture->mWidth) * sizeof(aiTexel);
-                                const QSize size = (!isCompressed) ? QSize(int(sourceTexture->mWidth), int(sourceTexture->mHeight)) : QSize();
-                                QByteArray imageData { reinterpret_cast<const char *>(sourceTexture->pcData), asize };
-                                const auto format = QSSGSceneDesc::TextureData::Format::RGBA8;
-                                const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
-                                textureData = new QSSGSceneDesc::TextureData(imageData, size, format, flags);
-                                QSSGSceneDesc::addNode(*tex, *textureData);
-                                Q_ASSERT(idx >= 0 && idx < textureCount);
-                                embeddedTextures[idx] = textureData;
-                            }
+                            // For compressed textures this is the size of the image buffer (in bytes)
+                            const qsizetype asize = (isCompressed) ? sourceTexture->mWidth : (sourceTexture->mHeight * sourceTexture->mWidth) * sizeof(aiTexel);
+                            const QSize size = (!isCompressed) ? QSize(int(sourceTexture->mWidth), int(sourceTexture->mHeight)) : QSize();
+                            QByteArray imageData { reinterpret_cast<const char *>(sourceTexture->pcData), asize };
+                            const auto format = (isCompressed) ? QByteArray(sourceTexture->achFormatHint) : QByteArrayLiteral("rgba8888");
+                            const quint8 flags = isCompressed ? quint8(QSSGSceneDesc::TextureData::Flags::Compressed) : 0;
+                            textureData = new QSSGSceneDesc::TextureData(imageData, size, format, flags);
+                            QSSGSceneDesc::addNode(*tex, *textureData);
+                            embeddedTextures[embeddedTexId] = textureData;
                         }
 
                         if (textureData)
@@ -1697,7 +1690,8 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
 
     // Get Options
     const auto opt = processSceneOptions(options);
-    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures, textureMap, skins, mesh2skin, sourceFile.dir(), opt };
+    SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures,
+                          textureMap, skins, mesh2skin, sourceFile.dir(), opt };
 
     if (!qFuzzyCompare(opt.globalScaleValue, 1.0f) && !qFuzzyCompare(opt.globalScaleValue, 0.0f)) {
         const auto gscale = opt.globalScaleValue;
