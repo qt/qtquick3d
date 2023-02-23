@@ -166,6 +166,7 @@ Pane {
                         spacing: 0
                         HorizontalHeaderView {
                             syncView: passesTableView
+                            resizableColumns: false // otherwise QTBUG-111013 happens
                             boundsBehavior: Flickable.StopAtBounds
                             flickableDirection: Flickable.VerticalFlick
                         }
@@ -231,6 +232,7 @@ Pane {
                         spacing: 0
                         HorizontalHeaderView {
                             syncView: texturesTableView
+                            resizableColumns: false // otherwise QTBUG-111013 happens
                             boundsBehavior: Flickable.StopAtBounds
                             flickableDirection: Flickable.VerticalFlick
                         }
@@ -282,6 +284,7 @@ Pane {
                         spacing: 0
                         HorizontalHeaderView {
                             syncView: meshesTableView
+                            resizableColumns: false // otherwise QTBUG-111013 happens
                             boundsBehavior: Flickable.StopAtBounds
                             flickableDirection: Flickable.VerticalFlick
                         }
