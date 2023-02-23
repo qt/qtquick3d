@@ -102,7 +102,7 @@ QVector3D QQuick3DParticleModelShape::getPosition(int particleIndex)
     return randomPositionModel(particleIndex);
 }
 
-static QSSGMesh::Mesh loadMesh(const QString &source)
+static QSSGMesh::Mesh loadModelShapeMesh(const QString &source)
 {
     QString src = source;
     if (source.startsWith(QLatin1Char('#'))) {
@@ -261,7 +261,7 @@ void QQuick3DParticleModelShape::calculateModelVertexPositions()
                 QString src = m_model->source().toString();
                 if (context && !src.startsWith(QLatin1Char('#')))
                     src = QQmlFile::urlToLocalFileOrQrc(context->resolvedUrl(m_model->source()));
-                QSSGMesh::Mesh mesh = loadMesh(src);
+                QSSGMesh::Mesh mesh = loadModelShapeMesh(src);
                 if (!mesh.isValid())
                     return;
                 if (mesh.drawMode() != QSSGMesh::Mesh::DrawMode::Triangles)

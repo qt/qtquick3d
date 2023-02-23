@@ -159,7 +159,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           renderable.modelContext.lightmapTexture);
 }
 
-static const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
+static const QRhiShaderResourceBinding::StageFlags CUSTOM_MATERIAL_VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
 void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState *ps,
@@ -253,8 +253,8 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         QRhiTexture *dummyCubeTexture = rhiCtx->dummyTexture(QRhiTexture::CubeMap, resourceUpdates);
         rhiCtx->commandBuffer()->resourceUpdate(resourceUpdates);
 
-        bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
-        bindings.addUniformBuffer(1, VISIBILITY_ALL, dcd.ubuf,
+        bindings.addUniformBuffer(0, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
+        bindings.addUniformBuffer(1, CUSTOM_MATERIAL_VISIBILITY_ALL, dcd.ubuf,
                                   shaderPipeline->ub0LightDataOffset(),
                                   shaderPipeline->ub0LightDataSize());
 
@@ -441,7 +441,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                     QRhiSampler *sampler = rhiCtx->sampler(samplerDesc);
                     samplerBindingsSpecified.setBit(samplerBinding);
                     bindings.addTexture(samplerBinding,
-                                        VISIBILITY_ALL,
+                                        CUSTOM_MATERIAL_VISIBILITY_ALL,
                                         texture, sampler);
                 }
             } // else this is not necessarily an error, e.g. having metalness/roughness maps with metalness disabled
@@ -459,7 +459,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                     rhiCtx->checkAndAdjustForNPoT(t.texture, &t.samplerDesc);
                     QRhiSampler *sampler = rhiCtx->sampler(t.samplerDesc);
                     bindings.addTexture(samplerBinding,
-                                        VISIBILITY_ALL,
+                                        CUSTOM_MATERIAL_VISIBILITY_ALL,
                                         t.texture,
                                         sampler);
                 }
@@ -472,7 +472,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
             for (const QShaderDescription::InOutVariable &var : samplerVars) {
                 if (!samplerBindingsSpecified.testBit(var.binding)) {
                     QRhiTexture *t = var.type == QShaderDescription::SamplerCube ? dummyCubeTexture : dummyTexture;
-                    bindings.addTexture(var.binding, VISIBILITY_ALL, t, dummySampler);
+                    bindings.addTexture(var.binding, CUSTOM_MATERIAL_VISIBILITY_ALL, t, dummySampler);
                 }
             }
         }
