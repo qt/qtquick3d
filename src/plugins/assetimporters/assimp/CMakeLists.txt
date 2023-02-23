@@ -53,6 +53,7 @@ qt_internal_add_plugin(AssimpImporterPlugin
         Qt::Quick3DAssetUtilsPrivate
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRenderPrivate
+    NO_UNITY_BUILD
 )
 
 # Work around "command line is too long" issue due to a long list of include directories,

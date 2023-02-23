@@ -78,6 +78,9 @@ qt_internal_add_module(Quick3DRuntimeRender
         resourcemanager/qssgrendershaderlibrarymanager.cpp resourcemanager/qssgrendershaderlibrarymanager_p.h
         rendererimpl/qssgcputonemapper_p.h
         qssgdebugdrawsystem_p.h qssgdebugdrawsystem.cpp
+    NO_UNITY_BUILD_SOURCES
+        rendererimpl/qssglightmapper.cpp              # avoiding possible clash with tinyexr' macros
+        resourcemanager/qssgrenderloadedtexture.cpp   # avoiding possible clash with tinyexr' macros
     DEFINES
         QT_BUILD_QUICK3DRUNTIMERENDER_LIB
     LIBRARIES
@@ -166,6 +169,18 @@ qt_internal_extend_target(Quick3DRuntimeRender
     INCLUDE_DIRECTORIES
         ../3rdparty/tinyexr
         ../3rdparty/embree/include
+    NO_UNITY_BUILD_SOURCES
+        ../3rdparty/tinyexr/tinyexr.h
+        ../3rdparty/embree/include/embree3/rtcore.h
+        ../3rdparty/embree/include/embree3/rtcore_buffer.h
+        ../3rdparty/embree/include/embree3/rtcore_builder.h
+        ../3rdparty/embree/include/embree3/rtcore_common.h
+        ../3rdparty/embree/include/embree3/rtcore_config.h
+        ../3rdparty/embree/include/embree3/rtcore_device.h
+        ../3rdparty/embree/include/embree3/rtcore_geometry.h
+        ../3rdparty/embree/include/embree3/rtcore_quaternion.h
+        ../3rdparty/embree/include/embree3/rtcore_ray.h
+        ../3rdparty/embree/include/embree3/rtcore_scene.h
 )
 
 qt_internal_extend_target(Quick3DRuntimeRender CONDITION QT_FEATURE_system_zlib
