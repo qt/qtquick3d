@@ -105,7 +105,7 @@ provide static global illumination}, it is likely that one will want to pass
 asset import time, instead of performing this potentially consuming process at
 run-time. Similarly, \c{--generateMeshLevelsOfDetail} is essential when it is
 desirable to have simplified versions of the meshes generated in order to have
-\l{Model::levelOfDetailBias}{automatic LOD} enabled in the scene. Other options
+\l{Qt Quick 3D Level of Detail}{automatic LOD} enabled in the scene. Other options
 allow generating missing data (e.g. \c{--generateNormals}) and performing various
 optimizations.
 
