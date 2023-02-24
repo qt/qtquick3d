@@ -235,11 +235,14 @@ With the mouse and the WASDRF keys we can move around:
 glTF form is a single model with 103 submeshes, mapping to a single \l Model
 object with 103 elements in its \l{Model::materials}{materials list}, an asset
 can contain any number of \l{Model}{models}, each with multiple submeshes and
-associated materials, and additional \l{Node}{nodes} e.g. to perform
-transformations. It is therefore more appropriate to look at the imported asset
-as a subscene (a tree of \l{Node}{nodes}), even if it is perceived as a single
-model visually. Open the generated Sponza.qml (or any other imported asset) to
-get an impression of what actually happens under the hood.
+associated materials. These Models can form parent-child relationships and can
+be combined with additional \l{Node}{nodes} to perform transforms such as
+translate, rotate, or scale. It is therefore more appropriate to look at the
+imported asset as a complete subscene, an arbitrary tree of \l{Node}{nodes},
+even if the rendered result is visually perceived as a single model. Open the
+generated Sponza.qml, or any other QML file generated from such assets, in a
+plain text editor to get an impression of the structure (which naturally always
+depends on how the source asset, in this case the glTF file, was designed).
 
 \section2 Importing via balsamui
 
@@ -408,10 +411,10 @@ position of the child node is relative to the parent, so the default \c{(0, 0,
 the light within some geometry (the built-in cube in this case) is not a
 problem for the standard real-time lighting calculations since this system has
 no concept of occlusion, meaning the light has no problems with traveling
-through "walls". If we used pre-baked lightmaps (where lighting is calculated
-using raytracing), that would be a different story. In that case we would need
-to make sure the cube is not blocking the light, perhaps by moving our debug
-cube a bit above the light.
+through "walls". If we used \l{quick3d-lightmap}{pre-baked lightmaps}, where
+lighting is calculated using raytracing, that would be a different story. In
+that case we would need to make sure the cube is not blocking the light,
+perhaps by moving our debug cube a bit above the light.
 
 \qml
         PointLight {
@@ -448,7 +451,7 @@ contributes to lighting?
 
 As we do not necessarily have suitable HDRI panorama image available, let's use
 a procedurally generated high dynamic range sky image. This is easy to do with
-the help of \l ProceduralSkyTexureData and \l{Texture}'s support for non-file
+the help of \l ProceduralSkyTextureData and \l{Texture}'s support for non-file
 based, dynamically generated image data. Instead of specifying
 \l{Texture::source}{source}, we rather use the
 \l{Texture::textureData}{textureData} property.
@@ -482,7 +485,7 @@ set to a valid \l Texture)
 To get some basic insights into the resource and performance aspects of the
 scene, it is a good idea to add a way to show an interactive \l DebugView item
 early on in the development process. Here we choose to add a \l Button that
-toggles the \l DebugView places to the top-right corner.
+toggles the \l DebugView, both anchored in the top-right corner.
 
 \qml
     import QtQuick
