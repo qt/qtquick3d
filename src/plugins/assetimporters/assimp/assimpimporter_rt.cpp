@@ -335,8 +335,6 @@ static void setMaterialProperties(QSSGSceneDesc::Material &target, const aiMater
         aiString texturePath;
         TextureInfo texInfo;
 
-        auto &scene = target.scene;
-
         if (material.GetTexture(textureType, index, &texturePath, &texInfo.mapping, &texInfo.uvIndex, nullptr, nullptr, texInfo.modes) == aiReturn_SUCCESS) {
             if (texturePath.length > 0) {
                 aiUVTransform transform;
@@ -1212,7 +1210,6 @@ static QSSGSceneDesc::Node *createSceneNode(const NodeInfo &nodeInfo,
                                             QSSGSceneDesc::Node &parent,
                                             const SceneInfo &sceneInfo)
 {
-    auto &targetScene = parent.scene;
     QSSGSceneDesc::Node *node = nullptr;
     const auto &srcScene = sceneInfo.scene;
     switch (nodeInfo.type) {
@@ -1285,7 +1282,6 @@ static void processNode(const SceneInfo &sceneInfo, const aiNode &source, QSSGSc
         }
         node = createSceneNode(NodeInfo { 0, QSSGSceneDesc::Node::Type::Model }, source, parent, sceneInfo);
         if (!morphProps.isEmpty()) {
-            auto &targetScene = parent.scene;
             const QString nodeName(source.mName.C_Str());
             QVarLengthArray<QSSGSceneDesc::MorphTarget *> morphTargets;
             morphTargets.reserve(morphProps.size());
