@@ -28,6 +28,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace QSSGQmlUtilities {
 
 class PropertyMap
@@ -928,7 +930,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                     if (ok)
                         *ok = false;
                     if (reason)
-                        *reason = "Failed to find texture at " + path;
+                        *reason = u"Failed to find texture at "_s + path;
                     return QString();
                 }
 
@@ -967,7 +969,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
                     if (ok)
                         *ok = false;
                     if (reason)
-                        *reason = "Failed to find texture at " + assetPath;
+                        *reason = u"Failed to find texture at " + assetPath;
                     indent(output) << comment() << "Source texture path expected: " << getTextureFolder() + texturePath.fileName() << "\n";
                     return assetPath;
                 }
@@ -1118,11 +1120,11 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
         if (property->type != Property::Type::Dynamic) {
             // Only write the property if the value is different from the default value
             if (!ok) {
-                QString message = QStringLiteral("Skipped property: ") + property->name;
+                QString message = QString::fromUtf8("Skipped property: " + property->name);
                 if (reason.size())
                     message.append(QStringLiteral(", reason: ") + reason);
                 qDebug() << message;
-                indent(output) << comment() << message + "\n";
+                indent(output) << comment() << message << "\n";
             } else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value)) {
                 const bool doExpandComponents = (output.options & OutputContext::Options::ExpandValueComponents);
                 if (doExpandComponents) {
