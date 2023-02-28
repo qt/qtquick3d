@@ -1689,7 +1689,10 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
     }
 
     // Get Options
-    const auto opt = processSceneOptions(options);
+    auto opt = processSceneOptions(options);
+    // check if the asset is GLTF format
+    const auto extension = sourceFile.suffix().toLower();
+    opt.gltfMode = (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb"));
     SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures,
                           textureMap, skins, mesh2skin, sourceFile.dir(), opt };
 
