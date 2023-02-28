@@ -490,21 +490,19 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
     // Prepare Key/Value array
     {
-        std::map<std::string, std::string> keyValueList;
+        // Add a key to the metadata to know it was created by our IBL baker
+        static const char key[] = "QT_IBL_BAKER_VERSION";
+        static const char value[] = "1";
 
-        // Add a key to the metadata to know it was created by our IBL baker and what version was used.
-        keyValueList["QT_IBL_BAKER_VERSION"] = "1";
+        constexpr size_t keyAndValueByteSize = sizeof(key) + sizeof(value);   // NB: 2x null terminator
+        appendBinaryVector(keyValueData, keyAndValueByteSize);
+        appendBinaryVector(keyValueData, key);
+        appendBinaryVector(keyValueData, value);
 
-        for (auto &kv : keyValueList) {
-            quint32 keyAndValueByteSize = quint32(kv.first.size() + kv.second.size() + 2); // NB: 2x null terminator
-            appendBinaryVector(keyValueData, keyAndValueByteSize);
-            appendBinaryVector(keyValueData, kv.first);
-            appendBinaryVector(keyValueData, kv.second);
-
-            const quint32 padding = 3 - ((keyAndValueByteSize + 3) % 4); // Pad until next multiple of 4
-            for (quint32 i = 0; i < padding; i++)
-                keyValueData.push_back(char(0x00));
-        }
+        // Pad until next multiple of 4
+        const size_t padding = 3 - ((keyAndValueByteSize + 3) % 4); // Pad until next multiple of 4
+        for (size_t i = 0; i < padding; i++)
+            keyValueData.push_back(char(0x00));
     }
 
     // Header
