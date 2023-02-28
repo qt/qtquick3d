@@ -56,17 +56,16 @@ void writeUInt32(QIODevice &device, quint32 value)
 
 void appendBinaryVector(QVector<char> &dest, const quint32 src)
 {
-    dest.reserve(dest.size() + sizeof(src));
-    for (size_t i = 0; i < sizeof(src); i++)
-        dest.push_back(reinterpret_cast<const char *>(&src)[i]);
+    qsizetype oldsize = dest.size();
+    dest.resize(dest.size() + sizeof(src));
+    memcpy(dest.data() + oldsize, &src, sizeof(src));
 }
 
 void appendBinaryVector(QVector<char> &dest, const std::string &src)
 {
-    dest.reserve(dest.size() + src.size() + 1);
-    for (auto c : src)
-        dest.push_back(c);
-    dest.push_back('\0');
+    qsizetype oldsize = dest.size();
+    dest.resize(dest.size() + src.size() + 1);
+    memcpy(dest.data() + oldsize, src.c_str(), src.size() + 1);
 }
 }
 
