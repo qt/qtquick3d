@@ -51,14 +51,6 @@ private:
 
 };
 
-QString insertTabs(int n)
-{
-    QString tabs;
-    for (int i = 0; i < n; ++i)
-        tabs += QLatin1String("    ");
-    return tabs;
-}
-
 QString qmlComponentName(const QString &name) {
     QString nameCopy = name;
     if (nameCopy.isEmpty())

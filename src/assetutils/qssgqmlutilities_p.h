@@ -40,7 +40,6 @@ class QDir;
 
 namespace QSSGQmlUtilities {
 
-QString Q_QUICK3DASSETUTILS_EXPORT insertTabs(int n);
 QString Q_QUICK3DASSETUTILS_EXPORT qmlComponentName(const QString &name);
 QString Q_QUICK3DASSETUTILS_EXPORT colorToQml(const QColor &color);
 QString Q_QUICK3DASSETUTILS_EXPORT variantToQml(const QVariant &variant);
