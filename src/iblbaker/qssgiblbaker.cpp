@@ -500,8 +500,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
 
         // Pad until next multiple of 4
         const size_t padding = 3 - ((keyAndValueByteSize + 3) % 4); // Pad until next multiple of 4
-        for (size_t i = 0; i < padding; i++)
-            keyValueData.push_back(char(0x00));
+        keyValueData.resize(keyValueData.size() + padding);
     }
 
     // Header
