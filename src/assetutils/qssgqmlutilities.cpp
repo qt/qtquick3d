@@ -803,7 +803,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         // Enumerations
         if (value.metaType().flags() & (QMetaType::IsEnumeration | QMetaType::IsUnsignedEnumeration)) {
-            static const auto qmlEnumString = [](const QLatin1String &element, const QString &enumString) {
+            const auto qmlEnumString = [](const QLatin1String &element, const QString &enumString) {
                 return QStringLiteral("%1.%2").arg(element).arg(enumString);
             };
             QLatin1String qmlElementName(getQmlElementName(target));
@@ -908,7 +908,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.metaType() == QMetaType::fromType<QSSGSceneDesc::Mesh *>()) {
             //
-            static const auto outputMeshAsset = [&ok, &reason](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
+            const auto outputMeshAsset = [&ok, &reason](const QSSGSceneDesc::Scene &scene, const QSSGSceneDesc::Mesh &meshNode, const QDir &outdir) {
                 const auto meshFolder = getMeshFolder();
                 const auto meshSourceName = QSSGQmlUtilities::getMeshSourceName(meshNode.name);
                 Q_ASSERT(scene.meshStorage.size() > meshNode.idx);
@@ -953,7 +953,7 @@ static PropertyPair valueToQml(const QSSGSceneDesc::Node &target, const QSSGScen
 
         if (value.metaType() == QMetaType::fromType<QUrl>()) {
             //
-            static const auto copyTextureAsset = [&output, &ok, &reason](const QUrl &texturePath, const QDir &outdir) {
+            const auto copyTextureAsset = [&output, &ok, &reason](const QUrl &texturePath, const QDir &outdir) {
                 QString assetPath;
                 if (outdir.isAbsolutePath(texturePath.path()))
                     assetPath = texturePath.toString();
