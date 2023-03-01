@@ -206,15 +206,14 @@ Pane {
                                 }
                                 clip: true
                                 model: passesModel
-                                delegate: Rectangle {
-                                    implicitWidth: 100
-                                    implicitHeight: passesDelegateText.implicitHeight + 4
-                                    color: row % 2 !== 0 ? palette.alternateBase : palette.base
-                                    Text {
-                                        id: passesDelegateText
-                                        text: display
-                                        anchors.centerIn: parent
-                                    }
+                                columnSpacing: 1
+                                rowSpacing: 1
+                                implicitWidth: parent.width + columnSpacing
+                                implicitHeight: parent.height + rowSpacing
+                                delegate: CustomTableItemDelegate {
+                                    text: display
+                                    color: passesTableView.palette.base
+                                    textColor: passesTableView.palette.text
                                 }
                             }
                         }
@@ -258,15 +257,14 @@ Pane {
                                 ScrollBar.horizontal: ScrollBar { }
                                 clip: true
                                 model: texturesModel
-                                delegate: Rectangle {
-                                    implicitWidth: 100
-                                    implicitHeight: meshesDelegateText.implicitHeight + 4
-                                    color: row % 2 !== 0 ? palette.alternateBase : palette.base
-                                    Text {
-                                        id: meshesDelegateText
-                                        text: display
-                                        anchors.centerIn: parent
-                                    }
+                                columnSpacing: 1
+                                rowSpacing: 1
+                                implicitWidth: parent.width + columnSpacing
+                                implicitHeight: parent.height + rowSpacing
+                                delegate: CustomTableItemDelegate {
+                                    text: display
+                                    color: texturesTableView.palette.base
+                                    textColor: texturesTableView.palette.text
                                 }
                             }
                         }
@@ -309,15 +307,14 @@ Pane {
                                 }
                                 clip: true
                                 model: meshesModel
-                                delegate: Rectangle {
-                                    implicitWidth: 100
-                                    implicitHeight: meshesDelegateText.implicitHeight + 4
-                                    color: row % 2 !== 0 ? palette.alternateBase : palette.base
-                                    Text {
-                                        id: meshesDelegateText
-                                        text: display
-                                        anchors.centerIn: parent
-                                    }
+                                columnSpacing: 1
+                                rowSpacing: 1
+                                implicitWidth: parent.width + columnSpacing
+                                implicitHeight: parent.height + rowSpacing
+                                delegate: CustomTableItemDelegate {
+                                    text: display
+                                    color: meshesTableView.palette.base
+                                    textColor: meshesTableView.palette.text
                                 }
                             }
                         }
@@ -372,6 +369,19 @@ Pane {
                     }
                 }
             }
+        }
+    }
+
+    component CustomTableItemDelegate : Rectangle {
+        property alias text: textLabel.text
+        property alias textColor: textLabel.color
+        implicitWidth: 100
+        implicitHeight: textLabel.implicitHeight + 4
+        color: palette.base
+        Label {
+            id: textLabel
+            anchors.centerIn: parent
+            color: palette.text
         }
     }
 
