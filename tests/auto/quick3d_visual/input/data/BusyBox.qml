@@ -109,6 +109,8 @@ Rectangle {
                 focus: true
             }
         }
-        DragAnywhereSlider { }
+        DragAnywhereSlider {
+            objectName: root.objectName + " slider"
+        }
     }
 }
