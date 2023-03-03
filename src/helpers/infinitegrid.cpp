@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 
     The grid needs to be a child of the \l{SceneEnvironment}.
 
-    /qml
+    \qml
     View3D {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.SkyBox
@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
         }
         //...
      }
-    /endqml
+    \endqml
 */
 
 /*!
