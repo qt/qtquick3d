@@ -412,6 +412,14 @@
     Example} is therefore often recommendable when aiming to set up a high
     quality scene that looks visually appealing.
 
+    \note Switching SceneEnvironment to ExtendedSceneEnvironment automatically
+    implies at least one additional render pass, just as if an Effect with a
+    single pass was added to the
+    \l{SceneEnvironment::effects}{SceneEnvironment's effect list}.
+    This is true regardless of how many of the individual post-processing steps
+    are enabled. (the more complex effects may involve more than one additional
+    render pass)
+
     \section1 Available Effects
 
     Below is an overview of the effects and related features provided by
