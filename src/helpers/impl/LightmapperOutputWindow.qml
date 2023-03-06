@@ -26,8 +26,6 @@ Item {
             Layout.fillHeight: true
             TextArea {
                 id: textArea
-                implicitHeight: parent.implicitHeight
-                implicitWidth: parent.implicitWidth
                 readOnly: true
                 placeholderText: qsTr("Qt Lightmapper")
                 font.pixelSize: 12
