@@ -921,7 +921,7 @@ QSSGRhiContext::QSSGRhiContext()
 QSSGRhiContext::~QSSGRhiContext()
 {
     for (QSSGRhiDrawCallData &dcd : m_drawCallData)
-        dcd.reset();
+        releaseDrawCallData(dcd);
 
     qDeleteAll(m_pipelines);
     qDeleteAll(m_computePipelines);
@@ -960,6 +960,17 @@ QRhiShaderResourceBindings *QSSGRhiContext::srb(const QSSGRhiShaderResourceBindi
         srb = nullptr;
     }
     return srb;
+}
+
+void QSSGRhiContext::releaseDrawCallData(QSSGRhiDrawCallData &dcd)
+{
+    delete dcd.ubuf;
+    dcd.ubuf = nullptr;
+    auto srb = m_srbCache.take(dcd.bindings);
+    Q_ASSERT(srb == dcd.srb);
+    delete srb;
+    dcd.srb = nullptr;
+    dcd.pipeline = nullptr;
 }
 
 QRhiGraphicsPipeline *QSSGRhiContext::pipeline(const QSSGGraphicsPipelineStateKey &key,
@@ -1071,7 +1082,7 @@ void QSSGRhiContext::cleanupDrawCallData(const QSSGRenderModel *model)
     auto it = m_drawCallData.begin();
     while (it != m_drawCallData.end()) {
         if (it.key().model == modelNode) {
-            it.value().reset();
+            releaseDrawCallData(*it);
             it = m_drawCallData.erase(it);
         } else {
             ++it;
