@@ -697,13 +697,6 @@ struct QSSGRhiDrawCallData
     size_t renderTargetDescriptionHash = 0;
     QVector<quint32> renderTargetDescription;
     QSSGRhiGraphicsPipelineState ps;
-
-    void reset() {
-        delete ubuf;
-        ubuf = nullptr;
-        srb = nullptr;
-        pipeline = nullptr;
-    }
 };
 
 struct QSSGRhiRenderableTexture
@@ -967,6 +960,7 @@ public:
     int mainPassSampleCount() const { return m_mainSamples; }
 
     QRhiShaderResourceBindings *srb(const QSSGRhiShaderResourceBindingList &bindings);
+    void releaseDrawCallData(QSSGRhiDrawCallData &dcd);
     QRhiGraphicsPipeline *pipeline(const QSSGGraphicsPipelineStateKey &key,
                                    QRhiRenderPassDescriptor *rpDesc,
                                    QRhiShaderResourceBindings *srb);
