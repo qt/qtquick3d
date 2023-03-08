@@ -158,6 +158,11 @@ public:
                                          const QSSGRenderRay &ray,
                                          QSSGRenderNode *target = nullptr);
 
+    static PickResultList syncPickSubset(const QSSGRenderLayer &layer,
+                                         QSSGBufferManager &bufferManager,
+                                         const QSSGRenderRay &ray,
+                                         QVarLengthArray<QSSGRenderNode *> subset);
+
     // Setting this true enables picking for all the models, regardless of
     // the models pickable property.
     static bool isGlobalPickingEnabled(const QSSGRenderer &renderer) { return renderer.m_globalPickingEnabled; }

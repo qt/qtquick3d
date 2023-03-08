@@ -1064,6 +1064,18 @@ QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray
                                          node);
 }
 
+QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickSubset(const QSSGRenderRay &ray,
+                                                                            QVarLengthArray<QSSGRenderNode *> subset)
+{
+    if (!m_layer)
+        return QQuick3DSceneRenderer::PickResultList();
+
+    return QSSGRendererPrivate::syncPickSubset(*m_layer,
+                                               *m_sgContext->bufferManager(),
+                                               ray,
+                                               subset);
+}
+
 QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const QSSGRenderRay &ray)
 {
     if (!m_layer)

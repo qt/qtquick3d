@@ -363,7 +363,22 @@ QSSGRenderPickResult QSSGRendererPrivate::syncPick(const QSSGRenderContextInterf
     return QSSGPickResultProcessResult();
 }
 
+QSSGRendererPrivate::PickResultList QSSGRendererPrivate::syncPickSubset(const QSSGRenderLayer &layer,
+                                                                        QSSGBufferManager &bufferManager,
+                                                                        const QSSGRenderRay &ray,
+                                                                        QVarLengthArray<QSSGRenderNode*> subset)
+{
+    QSSGRendererPrivate::PickResultList pickResults;
+    Q_ASSERT(layer.getGlobalState(QSSGRenderNode::GlobalState::Active));
 
+    for (auto target : subset)
+        intersectRayWithSubsetRenderable(bufferManager, ray, *target, pickResults);
+
+    std::stable_sort(pickResults.begin(), pickResults.end(), [](const QSSGRenderPickResult &lhs, const QSSGRenderPickResult &rhs) {
+        return lhs.m_distanceSq < rhs.m_distanceSq;
+    });
+    return pickResults;
+}
 
 void QSSGRendererPrivate::setGlobalPickingEnabled(QSSGRenderer &renderer, bool isEnabled)
 {

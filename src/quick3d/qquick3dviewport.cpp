@@ -952,6 +952,121 @@ QQuick3DPickResult QQuick3DViewport::pick(float x, float y) const
 }
 
 /*!
+    \qmlmethod PickResult View3D::pick(float x, float y, Model model)
+
+    This method will "shoot" a ray into the scene from view coordinates \a x and \a y
+    and return information about the intersection between the ray and the specified \a model.
+
+    This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
+
+    \since 6.8
+*/
+QQuick3DPickResult QQuick3DViewport::pick(float x, float y, QQuick3DModel *model) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return QQuick3DPickResult();
+
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
+                           qreal(y) * window()->effectiveDevicePixelRatio());
+    std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
+
+    if (!rayResult.has_value())
+        return QQuick3DPickResult();
+
+    const auto renderNode = static_cast<QSSGRenderNode *>(QQuick3DObjectPrivate::get(model)->spatialNode);
+    return processPickResult(renderer->syncPickOne(rayResult.value(), renderNode));
+}
+
+/*!
+    \qmlmethod List<PickResult> View3D::pickSubset(float x, float y, list<Model> models)
+
+    This method will "shoot" a ray into the scene from view coordinates \a x and \a y
+    and return information about the intersections with the passed in list of \a models.
+    This will only check against the list of models passed in.
+    The returned list is sorted by distance from the camera with the nearest
+    intersections appearing first and the furthest appearing last.
+
+    This can, for instance, be called with mouse coordinates to find the object under the mouse cursor.
+
+    Works with both property list<Model> and dynamic JavaScript arrays of models.
+
+    \since 6.8
+*/
+QList<QQuick3DPickResult> QQuick3DViewport::pickSubset(float x, float y, const QJSValue &models) const
+{
+    QQuick3DSceneRenderer *renderer = getRenderer();
+    if (!renderer)
+        return {};
+
+    QVarLengthArray<QSSGRenderNode*> renderNodes;
+    // Check for regular JavaScript array
+    if (models.isArray()) {
+        const auto length = models.property(QStringLiteral("length")).toInt();
+        if (length == 0)
+            return {};
+
+        for (int i = 0; i < length; ++i) {
+            const auto isQObject = models.property(i).isQObject();
+            if (!isQObject) {
+                qmlWarning(this) << "Type provided for picking is not a QObject. Needs to be of type QQuick3DModel.";
+                continue;
+            }
+            const auto obj = models.property(i).toQObject();
+            const auto model = qobject_cast<QQuick3DModel *>(obj);
+            if (!model) {
+                qmlWarning(this) << "Type " << obj->metaObject()->className() << " is not supported for picking. Needs to be of type QQuick3DModel.";
+                continue;
+            }
+            const auto priv = QQuick3DObjectPrivate::get(model);
+            if (priv && priv->spatialNode) {
+                renderNodes.push_back(static_cast<QSSGRenderNode*>(priv->spatialNode));
+            }
+        }
+    } else {
+        // Check for property list<Model>
+        const auto subsetVariant = models.toVariant();
+        if (!subsetVariant.isValid() || !subsetVariant.canConvert<QQmlListReference>())
+            return {};
+
+        const auto list = subsetVariant.value<QQmlListReference>();
+
+        // Only support array of models
+        if (list.listElementType()->className() != QQuick3DModel::staticMetaObject.className()) {
+            qmlWarning(this) << "Type " << list.listElementType()->className() << " is not supported for picking. Needs to be of type QQuick3DModel.";
+            return {};
+        }
+        for (int i = 0; i < list.count(); ++i) {
+            auto model = static_cast<QQuick3DModel *>(list.at(i));
+            if (!model)
+                continue;
+            auto priv = QQuick3DObjectPrivate::get(model);
+            if (priv && priv->spatialNode) {
+                renderNodes.push_back(static_cast<QSSGRenderNode*>(priv->spatialNode));
+            }
+        }
+    }
+
+    if (renderNodes.empty())
+        return {};
+
+    const QPointF position(qreal(x) * window()->effectiveDevicePixelRatio(),
+                           qreal(y) * window()->effectiveDevicePixelRatio());
+    std::optional<QSSGRenderRay> rayResult = renderer->getRayFromViewportPos(position);
+    if (!rayResult.has_value())
+        return {};
+
+    const auto resultList = renderer->syncPickSubset(rayResult.value(), renderNodes);
+
+    QList<QQuick3DPickResult> processedResultList;
+    processedResultList.reserve(resultList.size());
+    for (const auto &result : resultList)
+        processedResultList.append(processPickResult(result));
+
+    return processedResultList;
+}
+
+/*!
     \qmlmethod List<PickResult> View3D::pickAll(float x, float y)
 
     This method will "shoot" a ray into the scene from view coordinates \a x and \a y

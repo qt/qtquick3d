@@ -66,6 +66,7 @@ protected:
     std::optional<QSSGRenderRay> getRayFromViewportPos(const QPointF &pos);
     QSSGRenderPickResult syncPick(const QSSGRenderRay &ray);
     QSSGRenderPickResult syncPickOne(const QSSGRenderRay &ray, QSSGRenderNode *node);
+    PickResultList syncPickSubset(const QSSGRenderRay &ray, QVarLengthArray<QSSGRenderNode *> subset);
     PickResultList syncPickAll(const QSSGRenderRay &ray);
 
     void setGlobalPickingEnabled(bool isEnabled);

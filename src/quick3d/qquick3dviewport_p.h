@@ -94,6 +94,8 @@ public:
     Q_INVOKABLE QVector3D mapTo3DScene(const QVector3D &viewPos) const;
 
     Q_INVOKABLE QQuick3DPickResult pick(float x, float y) const;
+    Q_REVISION(6, 8) Q_INVOKABLE QQuick3DPickResult pick(float x, float y, QQuick3DModel *model) const;
+    Q_REVISION(6, 8) Q_INVOKABLE QList<QQuick3DPickResult> pickSubset(float x, float y, const QJSValue &models) const;
     Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> pickAll(float x, float y) const;
     Q_REVISION(6, 2) Q_INVOKABLE QQuick3DPickResult rayPick(const QVector3D &origin, const QVector3D &direction) const;
     Q_REVISION(6, 2) Q_INVOKABLE QList<QQuick3DPickResult> rayPickAll(const QVector3D &origin, const QVector3D &direction) const;

@@ -208,6 +208,52 @@ void tst_Picking::test_object_picking()
     QCOMPARE(result.objectHit(), instancedModel);
     QCOMPARE(result.instanceIndex(), 2);
 
+    // The bottom right of instancedModel,
+    // overlapped by model1 and then model2, should hit model1
+    result = view3d->pick(225, 175);
+    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.objectHit(), model1);
+
+    // Pick one specific based on viewport position
+
+    // Center of model1, overlapping model2,
+    // only check for model2, so should hit model2
+    result = view3d->pick(200, 200, model2);
+    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.objectHit(), model2);
+
+    // The bottom right of instancedModel,
+    // overlapped model1 and then model2,
+    // only check for instancedModel, should hit instancedModel
+    result = view3d->pick(225, 175, instancedModel);
+    QVERIFY(result.objectHit() != nullptr);
+    QCOMPARE(result.objectHit(), instancedModel);
+
+    // Pick subset based on viewport position
+
+    // Upper right corner of model1, center of model2
+    // Check for model2 only
+    // Should hit model2, ignore model1
+    QJSEngine engine;
+    QJSValue array = engine.newArray(1);
+    array.setProperty(0, engine.newQObject(model2));
+    auto resultList = view3d->pickSubset(250, 150, array);
+    QCOMPARE(resultList.size(), 1);
+    QCOMPARE(resultList[0].objectHit(), model2);
+
+    // The bottom right of instancedModel,
+    // overlapped model1 and then model2,
+    // Check for both model2 and instancedModel
+    // Should hit both and ignore model1
+    array = engine.newArray(2);
+    array.setProperty(0, engine.newQObject(model2));
+    array.setProperty(1, engine.newQObject(instancedModel));
+    resultList = view3d->pickSubset(225, 175, array);
+    QCOMPARE(resultList.size(), 2);
+    QCOMPARE(resultList[0].objectHit(), model2);
+    QCOMPARE(resultList[1].objectHit(), instancedModel);
+    QCOMPARE(resultList[1].instanceIndex(), 1);
+
     // Enable the 2D item
     item2d->setEnabled(true);
     QTest::qWait(100);
@@ -225,7 +271,7 @@ void tst_Picking::test_object_picking()
     // Pick all based on viewport position
 
     // Center of model1, bottom left corner of model2
-    auto resultList = view3d->pickAll(200, 200);
+    resultList = view3d->pickAll(200, 200);
     QCOMPARE(resultList.size(), 2);
     QCOMPARE(resultList[0].objectHit(), model1);
     QCOMPARE(resultList[1].objectHit(), model2);
