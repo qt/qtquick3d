@@ -858,12 +858,14 @@ void MainPass::renderPass(QSSGRenderer &renderer)
         QRhiShaderResourceBindings *srb = layer.gridSrb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
+        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_grid"));
     }
 
     // 7. Debug Draw content
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
     if (debugDraw && debugDraw->hasContent()) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick 3D debug objects"));
+        Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         auto shaderPipeline = renderer.getRhiDebugObjectShader();
         QSSG_CHECK(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
@@ -872,7 +874,7 @@ void MainPass::renderPass(QSSGRenderer &renderer)
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
         debugDraw->recordRenderDebugObjects(rhiCtx.get(), &ps, srb, rpDesc);
         cb->debugMarkEnd();
-        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("render_grid"));
+        Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("debug_objects"));
     }
 }
 
