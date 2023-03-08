@@ -1224,17 +1224,27 @@ static void writeQml(const QSSGSceneDesc::MorphTarget &morphTarget, OutputContex
     writeNodeProperties(morphTarget, output);
 }
 
-QString getTextureSourceName(const QString &name)
+QString getTextureSourceName(const QString &name, const QByteArray &fmt)
 {
     const auto textureFolder = getTextureFolder();
 
     const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
-    return QString(textureFolder + sanitizedName +  QLatin1String(".png"));
+    const auto ext = (fmt.length() != 3) ? QByteArrayLiteral(".png")
+                                         : QByteArray(".") + fmt;
+
+    return QString(textureFolder + sanitizedName + ext);
 }
 
-static QString outputTextureAsset(const QString &textureSourceName, const QImage &image, const QDir &outdir)
+static QString outputTextureAsset(const QSSGSceneDesc::TextureData &textureData, const QDir &outdir)
 {
+    if (textureData.data.isEmpty())
+        return QString();
+
     const auto mapsFolder = getTextureFolder();
+    const auto id = getIdForNode(textureData);
+    const QString textureSourceName = getTextureSourceName(id, textureData.fmt);
+
+    const bool isCompressed = ((textureData.flgs & quint8(QSSGSceneDesc::TextureData::Flags::Compressed)) != 0);
 
     // If a maps folder does not exist, then create one
     if (!outdir.exists(mapsFolder) && !outdir.mkdir(mapsFolder))
@@ -1242,8 +1252,19 @@ static QString outputTextureAsset(const QString &textureSourceName, const QImage
 
     const auto imagePath = QString(outdir.path() + QDir::separator() + textureSourceName);
 
-    if (!image.save(imagePath))
-        return QString();
+    if (isCompressed) {
+        QFile file(imagePath);
+        file.open(QIODevice::WriteOnly);
+        file.write(textureData.data);
+        file.close();
+    } else {
+        const auto &texData = textureData.data;
+        const auto &size = textureData.sz;
+        QImage image;
+        image = QImage(reinterpret_cast<const uchar *>(texData.data()), size.width(), size.height(), QImage::Format::Format_RGBA8888);
+        if (!image.save(imagePath))
+            return QString();
+    }
 
     return textureSourceName;
 }
@@ -1253,38 +1274,18 @@ static void writeQml(const QSSGSceneDesc::TextureData &textureData, OutputContex
     using namespace QSSGSceneDesc;
     Q_ASSERT(textureData.nodeType == Node::Type::Texture && textureData.runtimeType == Node::RuntimeType::TextureData);
 
-    const auto &texData = textureData.data;
-    const auto &size = textureData.sz;
-    const bool isCompressed = ((textureData.flgs & quint8(TextureData::Flags::Compressed)) != 0);
-
-    const auto id = getIdForNode(textureData);
-    QString textureSourcePath = getTextureSourceName(id);
-
-    if (!texData.isEmpty()) {
-        QImage image;
-        if (isCompressed) {
-            QByteArray data = texData; // Shallow copy since QBuffer requires non-const. Should not lead to detach() as long as we only read.
-            QBuffer readBuffer(&data);
-            QImageReader imageReader(&readBuffer, textureData.fmt);
-            image = imageReader.read();
-            if (image.isNull())
-                qWarning() << imageReader.errorString();
-        } else {
-            image = QImage(reinterpret_cast<const uchar *>(texData.data()), size.width(), size.height(), QImage::Format::Format_RGBA8888);
-        }
-
-        if (!image.isNull())
-            textureSourcePath = outputTextureAsset(textureSourcePath, image, output.outdir);
-    }
+    QString textureSourcePath = outputTextureAsset(textureData, output.outdir);
 
     static const auto writeProperty = [](const QString &type, const QString &name, const QString &value) {
         return QString::fromLatin1("property %1 %2: %3").arg(type, name, value);
     };
 
-    const auto type = QLatin1String("url");
-    const auto &name = id;
+    if (!textureSourcePath.isEmpty()) {
+        const auto type = QLatin1String("url");
+        const auto name = getIdForNode(textureData);
 
-    indent(output) << writeProperty(type, name, toQuotedString(textureSourcePath)) << '\n';
+        indent(output) << writeProperty(type, name, toQuotedString(textureSourcePath)) << '\n';
+    }
 }
 
 static void writeQml(const QSSGSceneDesc::Light &light, OutputContext &output)
