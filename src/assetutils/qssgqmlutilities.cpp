@@ -1574,6 +1574,8 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     if (checkBooleanOption(QLatin1String("designStudioWorkarounds"), options))
         outputOptions |= OutputContext::Options::DesignStudioWorkarounds;
 
+    const bool useBinaryKeyframes = checkBooleanOption("useBinaryKeyframes"_L1, options);
+
     OutputContext output { stream, outdir, scene.sourceDir, 0, OutputContext::Header, outputOptions };
 
     writeImportHeader(output, scene.animations.count() > 0);
@@ -1596,7 +1598,7 @@ void writeQml(const QSSGSceneDesc::Scene &scene, QTextStream &stream, const QDir
     stream << indent() << "// Animations:\n";
     for (const auto &cld : scene.animations) {
         QSSGQmlScopedIndent scopedIndent(output);
-        writeQmlForAnimation(*cld, animId++, output);
+        writeQmlForAnimation(*cld, animId++, output, useBinaryKeyframes);
         indent(output) << blockEnd(output);
     }
 
