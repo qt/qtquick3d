@@ -521,79 +521,21 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
 
     m_renderModeDirty = false;
 
-    QSGNode *retVal = nullptr;
-    if (m_renderMode == Offscreen) {
-        SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
-
-        if (!n) {
-            if (!m_node)
-                m_node = new SGFramebufferObjectNode;
-            n = m_node;
-        }
-
-        if (!n->renderer) {
-            n->window = window();
-            n->renderer = createRenderer();
-            if (!n->renderer)
-                return nullptr;
-            n->renderer->fboNode = n;
-            n->quickFbo = this;
-            connect(window(), SIGNAL(screenChanged(QScreen*)), n, SLOT(handleScreenChange()));
-        }
-        QSize minFboSize = QQuickItemPrivate::get(this)->sceneGraphContext()->minimumFBOSize();
-        QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
-                             qMax<int>(minFboSize.height(), height()));
-
-        n->devicePixelRatio = window()->effectiveDevicePixelRatio();
-        desiredFboSize *= n->devicePixelRatio;
-
-        n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
-        n->setRect(0, 0, width(), height());
-        if (checkIsVisible() && isComponentComplete()) {
-            n->renderer->synchronize(this, desiredFboSize, n->devicePixelRatio);
-            if (n->renderer->m_textureNeedsFlip)
-                n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
-            updateDynamicTextures();
-            n->scheduleRender();
-        }
-
-        retVal = n;
-    } else if (m_renderMode == Underlay) {
-        setupDirectRenderer(Underlay);
-        retVal = node; // node should be nullptr
-    } else if (m_renderMode == Overlay) {
-        setupDirectRenderer(Overlay);
-        retVal = node; // node should be nullptr
-    } else if (m_renderMode == Inline) {
+    switch (m_renderMode) {
+    // Direct rendering
+    case Underlay:
+        Q_FALLTHROUGH();
+    case Overlay:
+        setupDirectRenderer(m_renderMode);
+        node = nullptr;
+        break;
+    case Offscreen:
+        node = setupOffscreenRenderer(node);
+        break;
+    case Inline:
         // QSGRenderNode-based rendering
-        QQuick3DSGRenderNode *n = static_cast<QQuick3DSGRenderNode *>(node);
-        if (!n) {
-            if (!m_renderNode)
-                m_renderNode = new QQuick3DSGRenderNode;
-            n = m_renderNode;
-        }
-
-        if (!n->renderer) {
-            n->window = window();
-            n->renderer = createRenderer();
-            if (!n->renderer)
-                return nullptr;
-        }
-
-        const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
-
-        // checkIsVisible, not isVisible, because, for example, a
-        // { visible: false; layer.enabled: true } item still needs
-        // to function normally.
-        if (checkIsVisible() && isComponentComplete()) {
-            n->renderer->synchronize(this, targetSize, window()->effectiveDevicePixelRatio());
-            updateDynamicTextures();
-            n->markDirty(QSGNode::DirtyMaterial);
-        }
-
-        retVal = n;
-    } else {
-        qWarning("Invalid renderMode %d", int(m_renderMode));
+        node = setupInlineRenderer(node);
+        break;
     }
 
     if (!isforceInputHandlingSet()) {
@@ -607,7 +549,7 @@ QSGNode *QQuick3DViewport::updatePaintNode(QSGNode *node, QQuickItem::UpdatePain
         }
     }
 
-    return retVal;
+    return node;
 }
 
 void QQuick3DViewport::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -1004,6 +946,76 @@ void QQuick3DViewport::updateDynamicTextures()
         scene = rn ? rn->view3D()->importScene() : nullptr;
     }
 }
+
+QSGNode *QQuick3DViewport::setupOffscreenRenderer(QSGNode *node)
+{
+    SGFramebufferObjectNode *n = static_cast<SGFramebufferObjectNode *>(node);
+
+    if (!n) {
+        if (!m_node)
+            m_node = new SGFramebufferObjectNode;
+        n = m_node;
+    }
+
+    if (!n->renderer) {
+        n->window = window();
+        n->renderer = createRenderer();
+        if (!n->renderer)
+            return nullptr;
+        n->renderer->fboNode = n;
+        n->quickFbo = this;
+        connect(window(), SIGNAL(screenChanged(QScreen*)), n, SLOT(handleScreenChange()));
+    }
+    QSize minFboSize = QQuickItemPrivate::get(this)->sceneGraphContext()->minimumFBOSize();
+    QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
+                         qMax<int>(minFboSize.height(), height()));
+
+    n->devicePixelRatio = window()->effectiveDevicePixelRatio();
+    desiredFboSize *= n->devicePixelRatio;
+
+    n->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
+    n->setRect(0, 0, width(), height());
+    if (checkIsVisible() && isComponentComplete()) {
+        n->renderer->synchronize(this, desiredFboSize, n->devicePixelRatio);
+        if (n->renderer->m_textureNeedsFlip)
+            n->setTextureCoordinatesTransform(QSGSimpleTextureNode::MirrorVertically);
+        updateDynamicTextures();
+        n->scheduleRender();
+    }
+
+    return n;
+}
+
+QSGNode *QQuick3DViewport::setupInlineRenderer(QSGNode *node)
+{
+    QQuick3DSGRenderNode *n = static_cast<QQuick3DSGRenderNode *>(node);
+    if (!n) {
+        if (!m_renderNode)
+            m_renderNode = new QQuick3DSGRenderNode;
+        n = m_renderNode;
+    }
+
+    if (!n->renderer) {
+        n->window = window();
+        n->renderer = createRenderer();
+        if (!n->renderer)
+            return nullptr;
+    }
+
+    const QSize targetSize = window()->effectiveDevicePixelRatio() * QSize(width(), height());
+
+    // checkIsVisible, not isVisible, because, for example, a
+    // { visible: false; layer.enabled: true } item still needs
+    // to function normally.
+    if (checkIsVisible() && isComponentComplete()) {
+        n->renderer->synchronize(this, targetSize, window()->effectiveDevicePixelRatio());
+        updateDynamicTextures();
+        n->markDirty(QSGNode::DirtyMaterial);
+    }
+
+    return n;
+}
+
 
 void QQuick3DViewport::setupDirectRenderer(RenderMode mode)
 {

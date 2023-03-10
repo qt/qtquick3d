@@ -135,6 +135,8 @@ private:
     Q_DISABLE_COPY(QQuick3DViewport)
     QQuick3DSceneRenderer *getRenderer() const;
     void updateDynamicTextures();
+    QSGNode *setupOffscreenRenderer(QSGNode *node);
+    QSGNode *setupInlineRenderer(QSGNode *node);
     void setupDirectRenderer(RenderMode mode);
     bool checkIsVisible() const;
     bool internalPick(QPointerEvent *event, const QVector3D &origin = QVector3D(), const QVector3D &direction = QVector3D()) const;
