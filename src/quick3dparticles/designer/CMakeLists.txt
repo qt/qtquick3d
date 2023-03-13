@@ -26,7 +26,6 @@ qt_copy_or_install(
         ModelParticle3DSpecifics.qml
         NodeSection.qml
         NodeSpecifics.qml
-        IdComboBox.qml
         ParticleCustomShape3DSection.qml
         ParticleCustomShape3DSpecifics.qml
         ParticleModelShape3DSection.qml

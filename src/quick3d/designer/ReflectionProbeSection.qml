@@ -247,7 +247,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.CubeMapTexture"
                 backendValue: backendValues.texture
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

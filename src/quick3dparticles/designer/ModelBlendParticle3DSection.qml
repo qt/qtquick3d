@@ -17,7 +17,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "Component"
                 backendValue: backendValues.delegate
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -33,7 +33,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Node"
                 backendValue: backendValues.endNode
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -84,7 +84,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Node"
                 backendValue: backendValues.activationNode
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

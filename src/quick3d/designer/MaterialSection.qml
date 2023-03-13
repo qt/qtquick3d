@@ -24,7 +24,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Texture"
                 backendValue: backendValues.lightProbe
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

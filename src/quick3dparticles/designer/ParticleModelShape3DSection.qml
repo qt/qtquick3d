@@ -34,7 +34,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "Component"
                 backendValue: backendValues.delegate
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

@@ -28,7 +28,6 @@ qt_copy_or_install(
         FogSpecifics.qml
         FrustumCameraSection.qml
         FrustumCameraSpecifics.qml
-        IdComboBox.qml
         InstanceListEntrySection.qml
         InstanceListEntrySpecifics.qml
         InstanceListSection.qml

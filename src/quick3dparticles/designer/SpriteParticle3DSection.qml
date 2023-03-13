@@ -51,7 +51,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Texture"
                 backendValue: backendValues.sprite
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -67,7 +67,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Particles3D.SpriteSequence3D"
                 backendValue: backendValues.spriteSequence
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -118,7 +118,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Texture"
                 backendValue: backendValues.colorTable
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

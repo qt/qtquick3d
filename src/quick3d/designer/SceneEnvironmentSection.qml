@@ -57,7 +57,7 @@ Column {
 
             SecondColumnLayout {
                 visible: baseSectionLayout.isSkyBoxCubeMapMode
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.CubeMapTexture"
                     backendValue: backendValues.skyBoxCubeMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -134,7 +134,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Fog"
                     backendValue: backendValues.fog
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -408,7 +408,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.lightProbe
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -569,7 +569,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.DebugSettings"
                     backendValue: backendValues.debugSettings
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth

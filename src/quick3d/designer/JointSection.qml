@@ -35,7 +35,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Skeleton"
                 backendValue: backendValues.skeletonRoot
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

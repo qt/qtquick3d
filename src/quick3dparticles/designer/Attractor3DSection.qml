@@ -86,7 +86,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QQuick3DParticleAbstractShape"
                 backendValue: backendValues.shape
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

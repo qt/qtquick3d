@@ -17,7 +17,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Camera"
                 backendValue: backendValues.camera
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -33,7 +33,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.SceneEnvironment"
                 backendValue: backendValues.environment
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -49,7 +49,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Node"
                 backendValue: backendValues.importScene
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

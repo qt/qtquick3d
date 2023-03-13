@@ -32,7 +32,6 @@ qt_copy_or_install(
         Repeater3DSection.qml
         WasdControllerSection.qml
         WasdControllerSpecifics.qml
-        IdComboBox.qml
         helpers.metainfo
     DESTINATION "${destination}"
 )
