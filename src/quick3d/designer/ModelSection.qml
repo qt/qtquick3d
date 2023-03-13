@@ -36,7 +36,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     id: geometryComboBox
                     typeFilter: "QtQuick3D.Geometry"
                     backendValue: backendValues.geometry
@@ -222,7 +222,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Instancing"
                     backendValue: backendValues.instancing
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -238,7 +238,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Node"
                     backendValue: backendValues.instanceRoot
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -261,7 +261,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Skeleton"
                     backendValue: backendValues.skeleton
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -299,7 +299,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Skin"
                     backendValue: backendValues.skin
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -343,7 +343,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.bakedLightmap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth

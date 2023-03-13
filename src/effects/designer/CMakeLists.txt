@@ -36,7 +36,6 @@ qt_copy_or_install(
         GaussianBlurSpecifics.qml
         HDRBloomTonemapSection.qml
         HDRBloomTonemapSpecifics.qml
-        IdComboBox.qml
         MotionBlurSection.qml
         MotionBlurSpecifics.qml
         SCurveTonemapSection.qml

@@ -57,7 +57,7 @@ Column {
 
             SecondColumnLayout {
                 visible: baseSectionLayout.isSkyBoxCubeMapMode
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.CubeMapTexture"
                     backendValue: backendValues.skyBoxCubeMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -451,7 +451,7 @@ Column {
 
             SecondColumnLayout {
                 visible: colorGradingEnabledCheckBox.checked
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.lutTexture
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -1484,7 +1484,7 @@ Column {
 
             SecondColumnLayout {
                 visible: lensFlareEnabledCheckBox.checked
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.lensFlareLensColorTexture
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -1521,7 +1521,7 @@ Column {
 
             SecondColumnLayout {
                 visible: lensFlareEnabledCheckBox.checked && lensFlareDirtEnabledCheckBox.checked
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.lensFlareLensDirtTexture
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -1558,7 +1558,7 @@ Column {
 
             SecondColumnLayout {
                 visible: lensFlareEnabledCheckBox.checked && lensFlareStarburstEnabledCheckBox.checked
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.lensFlareLensStarburstTexture
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -1659,7 +1659,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.lightProbe
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -1810,7 +1810,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Fog"
                     backendValue: backendValues.fog
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -1865,7 +1865,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.DebugSettings"
                     backendValue: backendValues.debugSettings
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth

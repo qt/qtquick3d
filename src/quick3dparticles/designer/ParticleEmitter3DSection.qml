@@ -19,7 +19,7 @@ Column {
                 tooltip: qsTr("Sets the ParticleSystem3D for the emitter. If system is direct parent of the emitter, this property does not need to be defined.")
             }
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Particles3D.ParticleSystem3D"
                     backendValue: backendValues.system
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -57,7 +57,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QQuick3DParticleDirection"
                     backendValue: backendValues.velocity
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -73,7 +73,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Particles3D.Particle3D"
                     backendValue: backendValues.particle
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -106,7 +106,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QQuick3DParticleAbstractShape"
                     backendValue: backendValues.shape
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth

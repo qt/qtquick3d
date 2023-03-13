@@ -20,7 +20,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.maskTexture_texture
                     defaultItem: qsTr("Default")

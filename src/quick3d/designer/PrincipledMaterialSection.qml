@@ -112,7 +112,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.baseColorMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -155,7 +155,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.metalnessMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -215,7 +215,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.roughnessMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -255,7 +255,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.normalMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -318,7 +318,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.occlusionMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -378,7 +378,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.opacityMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -418,7 +418,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.emissiveMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -536,7 +536,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.heightMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -635,7 +635,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.clearcoatMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -688,7 +688,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.clearcoatRoughnessMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -721,7 +721,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.clearcoatNormalMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -765,7 +765,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.transmissionMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -836,7 +836,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.thicknessMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -982,7 +982,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.specularMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
@@ -998,7 +998,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Texture"
                     backendValue: backendValues.specularReflectionMap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth

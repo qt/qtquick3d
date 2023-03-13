@@ -17,7 +17,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Particles3D.ParticleSystem3D"
                 backendValue: backendValues.system
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth

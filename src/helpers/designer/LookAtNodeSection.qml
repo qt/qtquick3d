@@ -20,7 +20,7 @@ Column {
             }
 
             SecondColumnLayout {
-                IdComboBox {
+                ItemFilterComboBox {
                     typeFilter: "QtQuick3D.Node"
                     backendValue: backendValues.target
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth

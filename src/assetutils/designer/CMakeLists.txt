@@ -7,7 +7,6 @@ qt_copy_or_install(
         RuntimeLoaderSection.qml
         RuntimeLoaderSpecifics.qml
         NodeSection.qml
-        IdComboBox.qml
         assetutils.metainfo
     DESTINATION "${destination}"
 )

@@ -17,7 +17,7 @@ Section {
         }
 
         SecondColumnLayout {
-            IdComboBox {
+            ItemFilterComboBox {
                 typeFilter: "QtQuick3D.Instancing"
                 backendValue: backendValues.instancingTable
                 implicitWidth: StudioTheme.Values.singleControlColumnWidth
