@@ -1224,13 +1224,13 @@ static void writeQml(const QSSGSceneDesc::MorphTarget &morphTarget, OutputContex
     writeNodeProperties(morphTarget, output);
 }
 
-QString getTextureSourceName(const QString &name, const QByteArray &fmt)
+QString getTextureSourceName(const QString &name, const QString &fmt)
 {
     const auto textureFolder = getTextureFolder();
 
     const auto sanitizedName = QSSGQmlUtilities::sanitizeQmlId(name);
-    const auto ext = (fmt.length() != 3) ? QByteArrayLiteral(".png")
-                                         : QByteArray(".") + fmt;
+    const auto ext = (fmt.length() != 3) ? u".png"_s
+                                         : u"."_s + fmt;
 
     return QString(textureFolder + sanitizedName + ext);
 }
@@ -1242,7 +1242,7 @@ static QString outputTextureAsset(const QSSGSceneDesc::TextureData &textureData,
 
     const auto mapsFolder = getTextureFolder();
     const auto id = getIdForNode(textureData);
-    const QString textureSourceName = getTextureSourceName(id, textureData.fmt);
+    const QString textureSourceName = getTextureSourceName(id, QString::fromUtf8(textureData.fmt));
 
     const bool isCompressed = ((textureData.flgs & quint8(QSSGSceneDesc::TextureData::Flags::Compressed)) != 0);
 
