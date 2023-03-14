@@ -15,13 +15,14 @@
 // We mean it.
 //
 
+#include <QtQuick3D/qtquick3dglobal.h>
 #include <QtQuick/private/qquickview_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuick3DViewport;
 
-class QQuick3DLightmapBaker : public QObject
+class Q_QUICK3D_EXPORT QQuick3DLightmapBaker : public QObject
 {
     Q_OBJECT
 public:
