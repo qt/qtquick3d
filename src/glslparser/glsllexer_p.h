@@ -108,7 +108,9 @@ private:
     Engine *_engine;
     const char *_source;
     const char *_it;
-    int _size;
+    QT_WARNING_PUSH QT_WARNING_DISABLE_GCC("-Wattributes")
+    [[maybe_unused]] int _size;
+    QT_WARNING_POP
     int _yychar;
     int _lineno;
     int _state;
