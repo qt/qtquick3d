@@ -71,6 +71,10 @@ Column {
                     onAdd: function(value) { backendValues.materials.idListAdd(value) }
                     onRemove: function(idx) { backendValues.materials.idListRemove(idx) }
                     onReplace: function (idx, value) { backendValues.materials.idListReplace(idx, value) }
+
+                    extraButtonIcon: StudioTheme.Constants.material_medium
+                    extraButtonToolTip: qsTr("Edit material")
+                    onExtraButtonClicked: (idx) => { backendValues.materials.openMaterialEditor(idx) }
                 }
 
                 ExpandingSpacer {}
