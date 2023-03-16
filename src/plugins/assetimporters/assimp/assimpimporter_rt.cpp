@@ -166,22 +166,18 @@ static void setNodeProperties(QSSGSceneDesc::Node &target,
     if (target.name.isNull())
         target.name = fromAiString(source.mName);
 
-    const aiMatrix4x4 &transformMatrix = source.mTransformation;
+    // Apply correction if necessary
+    aiMatrix4x4 transformMatrix;
+    if (transformCorrection)
+        transformMatrix = source.mTransformation * *transformCorrection;
+    else
+        transformMatrix = source.mTransformation;
 
     // Decompose Transform Matrix to get properties
     aiVector3D scaling;
     aiQuaternion rotation;
     aiVector3D translation;
     transformMatrix.Decompose(scaling, rotation, translation);
-
-    // Apply correction if necessary
-    // transformCorrection is just for cameras and lights
-    // and its factor just contains rotation.
-    // In this case, this rotation will replace previous rotation.
-    if (transformCorrection) {
-        aiVector3D dummyTrans;
-        transformCorrection->DecomposeNoScaling(rotation, dummyTrans);
-    }
 
     // translate
     if (!sceneInfo.opt.designStudioWorkarounds) {
@@ -904,16 +900,18 @@ static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &s
     // the case we have to do additional transform
     aiMatrix4x4 correctionMatrix;
     bool needsCorrection = false;
+    aiVector3D upQuick3D = aiVector3D(0, 1, 0);
     if (source.mLookAt != aiVector3D(0, 0, -1)) {
         aiMatrix4x4 lookAtCorrection;
         aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), source.mLookAt, lookAtCorrection);
         correctionMatrix *= lookAtCorrection;
         needsCorrection = true;
+        upQuick3D *= lookAtCorrection;
     }
-    if (source.mUp != aiVector3D(0, 1, 0)) {
+    if (source.mUp != upQuick3D) {
         aiMatrix4x4 upCorrection;
-        aiMatrix4x4::FromToMatrix(aiVector3D(0, 1, 0), source.mUp, upCorrection);
-        correctionMatrix *= upCorrection;
+        aiMatrix4x4::FromToMatrix(upQuick3D, source.mUp, upCorrection);
+        correctionMatrix = upCorrection * correctionMatrix;
         needsCorrection = true;
     }
 
