@@ -68,7 +68,14 @@ QT_BEGIN_NAMESPACE
        qWarning() << "Something unexpected here, will probably not work as expected!";
     \endcode
 
-    \sa QSSG_GUARD
+    \sa QSSG_CHECK_X
+*/
+
+/*!
+    \macro QSSG_CHECK_X(condition, message)
+    \internal
+
+    Same as \l QSSG_CHECK() but with a custom \a message that will be print if \a condition is not met.
 */
 
 /*!
@@ -99,8 +106,14 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa QSSG_GUARD
+    \sa QSSG_GUARD_X
+*/
 
+/*!
+    \macro QSSG_GUARD_X(condition, message)
+    \internal
+
+    Same as \l QSSG_GUARD() but with a custom \a message that will be print if \a condition is not met.
 */
 
 void qssgWriteAssertLocation(const char *msg)

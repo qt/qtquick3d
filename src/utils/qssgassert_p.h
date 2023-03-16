@@ -36,6 +36,8 @@ QT_END_NAMESPACE
 #define QSSG_ASSERT(cond, action) if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING(#cond); action; } do {} while (0)
 #define QSSG_ASSERT_X(cond, msg, action) if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING_X(msg); action; } do {} while (0)
 #define QSSG_CHECK(cond) if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING(#cond); } do {} while (0)
+#define QSSG_CHECK_X(cond, msg)  if (Q_LIKELY(cond)) {} else { QSSG_ASSERT_STRING_X(msg); } do {} while (0)
 #define QSSG_GUARD(cond) ((Q_LIKELY(cond)) ? true : (QSSG_ASSERT_STRING(#cond), false))
+#define QSSG_GUARD_X(cond, msg) ((Q_LIKELY(cond)) ? true : (QSSG_ASSERT_STRING_X(msg), false))
 
 #endif // QSSGASSERT_P_H
