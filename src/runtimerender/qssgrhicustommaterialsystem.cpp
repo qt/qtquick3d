@@ -150,7 +150,7 @@ void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiSh
                                                           toDataView(modelNode.morphWeights),
                                                           renderable.firstImage,
                                                           renderable.opacity,
-                                                          renderable.generator->getLayerGlobalRenderProperties(),
+                                                          renderable.renderer->getLayerGlobalRenderProperties(),
                                                           renderable.lights,
                                                           renderable.reflectionProbe,
                                                           true,
@@ -188,7 +188,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
     const QSSGCullFaceMode cullMode = material.m_cullMode;
 
-    const bool blendParticles = renderable.generator->contextInterface()->renderer()->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(renderable.shaderDescription);
+    const bool blendParticles = renderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(renderable.shaderDescription);
 
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForCustomMaterial(ps, material, renderable, featureSet);
 
