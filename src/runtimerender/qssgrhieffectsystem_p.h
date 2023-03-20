@@ -67,9 +67,7 @@ public:
     ~QSSGRhiEffectSystem();
 
     void setup(QSize outputSize);
-    QRhiTexture *process(const QSSGRef<QSSGRhiContext> &rhiCtx,
-                         const QSSGRef<QSSGRenderer> &renderer,
-                         const QSSGRenderEffect &firstEffect,
+    QRhiTexture *process(const QSSGRenderEffect &firstEffect,
                          QRhiTexture *inTexture,
                          QRhiTexture *inDepthTexture,
                          QVector2D cameraClipRange);
@@ -109,8 +107,6 @@ private:
     QRhiTexture *m_depthTexture = nullptr;
     QVector2D m_cameraClipRange;
     int m_currentUbufIndex = 0;
-    QSSGRef<QSSGRhiContext> m_rhiContext;
-    QSSGRenderer *m_renderer = nullptr;
     QHash<QSSGEffectSceneCacheKey, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;
     char *m_currentUBufData = nullptr;

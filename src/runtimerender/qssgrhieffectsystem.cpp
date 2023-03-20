@@ -7,6 +7,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrhiquadrenderer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendercontextcore_p.h>
 
+#include <QtQuick3DUtils/private/qssgassert_p.h>
+
 #include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
@@ -90,7 +92,7 @@ QSSGRhiEffectTexture *QSSGRhiEffectSystem::getTexture(const QByteArray &bufferNa
         m_textures.append(result);
     }
 
-    QRhi *rhi = m_rhiContext->rhi();
+    QRhi *rhi = m_sgContext->rhi();
     const bool formatChanged = result->texture && result->texture->format() != format;
     const bool needsRebuild = result->texture && (result->texture->pixelSize() != size || formatChanged);
 
@@ -149,17 +151,16 @@ void QSSGRhiEffectSystem::releaseTextures()
         releaseTexture(t);
 }
 
-QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRef<QSSGRhiContext> &rhiCtx,
-                                          const QSSGRef<QSSGRenderer> &renderer,
-                                          const QSSGRenderEffect &firstEffect,
+QRhiTexture *QSSGRhiEffectSystem::process(const QSSGRenderEffect &firstEffect,
                                           QRhiTexture *inTexture,
                                           QRhiTexture *inDepthTexture,
                                           QVector2D cameraClipRange)
 {
-    m_rhiContext = rhiCtx;
-    m_renderer = renderer.data();
-    if (!m_rhiContext || !m_renderer)
-        return inTexture;
+    QSSG_ASSERT(m_sgContext != nullptr, return inTexture);
+    const auto &rhiContext = m_sgContext->rhiContext();
+    const auto &renderer = m_sgContext->renderer();
+    QSSG_ASSERT(rhiContext && renderer, return inTexture);
+
     m_depthTexture = inDepthTexture;
     m_cameraClipRange = cameraClipRange;
 
@@ -322,7 +323,7 @@ void QSSGRhiEffectSystem::applyInstanceValueCmd(const QSSGApplyInstanceValue *in
             bool texAdded = false;
             QSSGRenderImage *image = textureProperty.texImage;
             if (image) {
-                const QSSGRef<QSSGBufferManager> &theBufferManager(m_renderer->contextInterface()->bufferManager());
+                const auto &theBufferManager(m_sgContext->bufferManager());
                 const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image);
                 if (texture.m_texture) {
                     const QSSGRhiSamplerDescription desc{
@@ -415,9 +416,9 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     m_pendingClears.clear();
     m_currentShaderPipeline = nullptr;
 
-    QRhi *rhi = m_renderer->contextInterface()->rhiContext()->rhi();
-    const auto &shaderLib = m_renderer->contextInterface()->shaderLibraryManager();
-    const auto &shaderCache = m_renderer->contextInterface()->shaderCache();
+    QRhi *rhi = m_sgContext->rhi();
+    const auto &shaderLib = m_sgContext->shaderLibraryManager();
+    const auto &shaderCache = m_sgContext->shaderCache();
 
     // Now we need a proper unique key (unique in the scene), the filenames are
     // not sufficient. This means that using the same shader source files in
@@ -479,7 +480,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     if (!m_currentShaderPipeline) {
         // Final option, generate the shader pipeline
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-        const QSSGRef<QSSGProgramGenerator> &generator = m_renderer->contextInterface()->shaderProgramGenerator();
+        const auto &generator = m_sgContext->shaderProgramGenerator();
         if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
             m_shaderPipelines.insert(cacheKey, stages);
             m_currentShaderPipeline = stages.data();
@@ -487,17 +488,19 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inEffect->profilingId);
     }
 
+    const auto &rhiContext = m_sgContext->rhiContext();
+
     if (m_currentShaderPipeline) {
         const void *cacheKey1 = reinterpret_cast<const void *>(this);
         const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-        QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+        QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
         m_currentShaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         m_currentUBufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     } else {
         m_currentUBufData = nullptr;
     }
 
-    m_rhiContext->stats().registerEffectShaderGenerationTime(timer.elapsed());
+    rhiContext->stats().registerEffectShaderGenerationTime(timer.elapsed());
 }
 
 void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffectTexture *target)
@@ -512,7 +515,10 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     addTextureToShaderPipeline(QByteArrayLiteral("qt_inputTexture"), inTexture->texture, inTexture->desc);
 
-    QRhiCommandBuffer *cb = m_rhiContext->commandBuffer();
+    const auto &rhiContext = m_sgContext->rhiContext();
+    const auto &renderer = m_sgContext->renderer();
+
+    QRhiCommandBuffer *cb = rhiContext->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Post-processing effect"));
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
@@ -524,9 +530,9 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
         // anyway when rendering the quad.
         if (rt != target->renderTarget) {
             cb->beginPass(rt, Qt::transparent, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
-            QSSGRHICTX_STAT(m_rhiContext, beginRenderPass(rt));
+            QSSGRHICTX_STAT(rhiContext, beginRenderPass(rt));
             cb->endPass();
-            QSSGRHICTX_STAT(m_rhiContext, endRenderPass());
+            QSSGRHICTX_STAT(rhiContext, endRenderPass());
         }
     }
     m_pendingClears.clear();
@@ -537,12 +543,12 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
     const void *cacheKey1 = reinterpret_cast<const void *>(this);
     const void *cacheKey2 = reinterpret_cast<const void *>(qintptr(m_currentUbufIndex));
-    QSSGRhiDrawCallData &dcd = m_rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
+    QSSGRhiDrawCallData &dcd = rhiContext->drawCallData({ cacheKey1, cacheKey2, nullptr, 0, QSSGRhiDrawCallDataKey::Effects });
     dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
     m_currentUBufData = nullptr;
 
-    QRhiResourceUpdateBatch *rub = m_rhiContext->rhi()->nextResourceUpdateBatch();
-    m_renderer->rhiQuadRenderer()->prepareQuad(m_rhiContext.data(), rub);
+    QRhiResourceUpdateBatch *rub = rhiContext->rhi()->nextResourceUpdateBatch();
+    renderer->rhiQuadRenderer()->prepareQuad(rhiContext.get(), rub);
 
     // do resource bindings
     const QRhiShaderResourceBinding::StageFlags VISIBILITY_ALL =
@@ -554,20 +560,20 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
             continue;
         qCDebug(lcEffectSystem) << "    -> texture binding" << binding << "for" << rhiTex.name;
         // Make sure to bind all samplers even if the texture is missing, otherwise we can get crash on some graphics APIs
-        QRhiTexture *texture = rhiTex.texture ? rhiTex.texture : m_rhiContext->dummyTexture({}, rub);
+        QRhiTexture *texture = rhiTex.texture ? rhiTex.texture : rhiContext->dummyTexture({}, rub);
         bindings.addTexture(binding,
                             QRhiShaderResourceBinding::FragmentStage,
                             texture,
-                            m_rhiContext->sampler(rhiTex.samplerDesc));
+                            rhiContext->sampler(rhiTex.samplerDesc));
     }
     bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf);
-    QRhiShaderResourceBindings *srb = m_rhiContext->srb(bindings);
+    QRhiShaderResourceBindings *srb = rhiContext->srb(bindings);
 
     QSSGRhiGraphicsPipelineState ps;
     ps.viewport = QRhiViewport(0, 0, float(outputSize.width()), float(outputSize.height()));
     ps.shaderPipeline = m_currentShaderPipeline;
 
-    m_renderer->rhiQuadRenderer()->recordRenderQuadPass(m_rhiContext.data(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);
+    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiContext.get(), &ps, srb, target->renderTarget, QSSGRhiQuadRenderer::UvCoords);
     m_currentUbufIndex++;
     cb->debugMarkEnd();
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("post_processing_effect"));
@@ -575,7 +581,8 @@ void QSSGRhiEffectSystem::renderCmd(QSSGRhiEffectTexture *inTexture, QSSGRhiEffe
 
 void QSSGRhiEffectSystem::addCommonEffectUniforms(const QSize &inputSize, const QSize &outputSize)
 {
-    QRhi *rhi = m_rhiContext->rhi();
+    const auto &rhiContext = m_sgContext->rhiContext();
+    QRhi *rhi = rhiContext->rhi();
 
     QMatrix4x4 mvp;
     if (rhi->isYUpInFramebuffer() != rhi->isYUpInNDC())
