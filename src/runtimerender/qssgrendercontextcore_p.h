@@ -66,6 +66,7 @@ public:
     const QSSGRef<QSSGCustomMaterialSystem> &customMaterialSystem() const;
     const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator() const;
     const QSSGRef<QSSGDebugDrawSystem> &debugDrawSystem() const;
+    QRhi *rhi() const;
 
     // The memory used for the per frame allocator is released as the first step in BeginFrame.
     // This is useful for short lived objects and datastructures.

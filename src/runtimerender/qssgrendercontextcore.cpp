@@ -168,6 +168,11 @@ const QSSGRef<QSSGDebugDrawSystem> &QSSGRenderContextInterface::debugDrawSystem(
     return m_debugDrawSystem;
 }
 
+QRhi *QSSGRenderContextInterface::rhi() const
+{
+    return m_rhiContext->rhi();
+}
+
 void QSSGRenderContextInterface::cleanupResources(QList<QSSGRenderGraphObject *> &resources)
 {
     m_renderer->cleanupResources(resources);
