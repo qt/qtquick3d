@@ -16,7 +16,7 @@ struct QSSGSubsetRenderable;
 QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                                            QSSGRenderableObjectFlags inFlags,
                                            const QVector3D &inWorldCenterPt,
-                                           const QSSGRef<QSSGRenderer> &gen,
+                                           const QSSGRef<QSSGRenderer> &rendr,
                                            const QSSGRenderSubset &inSubset,
                                            const QSSGModelContext &inModelContext,
                                            float inOpacity,
@@ -34,7 +34,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
                            inModelContext.model.instancingLodMin,
                            inModelContext.model.instancingLodMax)
     , subsetLevelOfDetail(inSubsetLevelOfDetail)
-    , generator(gen)
+    , renderer(rendr)
     , modelContext(inModelContext)
     , subset(inSubset)
     , opacity(inOpacity)
@@ -58,7 +58,7 @@ QSSGSubsetRenderable::QSSGSubsetRenderable(Type type,
 
 QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
                                                  const QVector3D &inWorldCenterPt,
-                                                 const QSSGRef<QSSGRenderer> &gen,
+                                                 const QSSGRef<QSSGRenderer> &rendr,
                                                  const QSSGRenderParticles &inParticles,
                                                  QSSGRenderableImage *inFirstImage,
                                                  QSSGRenderableImage *inColorTable,
@@ -70,7 +70,7 @@ QSSGParticlesRenderable::QSSGParticlesRenderable(QSSGRenderableObjectFlags inFla
                            inParticles.globalTransform,
                            inParticles.m_particleBuffer.bounds(),
                            inParticles.m_depthBiasSq)
-    , generator(gen)
+    , renderer(rendr)
     , particles(inParticles)
     , firstImage(inFirstImage)
     , colorTable(inColorTable)
