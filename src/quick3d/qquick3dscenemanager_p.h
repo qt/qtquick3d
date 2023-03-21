@@ -50,6 +50,7 @@ public:
     void queueForCleanup(QQuick3DSceneManager *manager);
 
 private:
+    QPointer<QQuickWindow> m_window;
     QSSGRenderContextInterface *rci = nullptr;
     QList<QQuick3DSceneManager *> sceneManagers;
     QList<QQuick3DSceneManager *> sceneManagerCleanupQueue;
