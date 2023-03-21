@@ -137,9 +137,6 @@ private:
     QRect m_scissorRect;
     QColor m_sceneColor;
 
-    QMetaObject::Connection m_beforeFrameConnection;
-    QMetaObject::Connection m_afterFrameConnection;
-
     std::function<void()> m_releaseCachedResourcesCallback = nullptr;
 };
 QT_END_NAMESPACE
