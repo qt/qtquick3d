@@ -65,6 +65,11 @@ void QQuick3DSceneManager::dirtyItem(QQuick3DObject *item)
     emit needsUpdate();
 }
 
+void QQuick3DSceneManager::requestUpdate()
+{
+    emit needsUpdate();
+}
+
 void QQuick3DSceneManager::cleanup(QSSGRenderGraphObject *item)
 {
     Q_ASSERT(!cleanupNodeList.contains(item));
@@ -431,7 +436,7 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
         // We know there are shared resources in the scene, so notify the "world".
         // Ideally we should be more targeted, but for now this will do the job.
         for (auto &sceneManager : std::as_const(sceneManagers))
-            emit sceneManager->needsUpdate();
+            sceneManager->requestUpdate();
     }
 
     // Prepare pending (adopted) resources for clean-up (will happen as a result of afterFrameEnd()).

@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE void synchronize(QSSGRenderContextInterface *rci, QSet<QSSGRenderGraphObject *> &resourceLoaders);
 
     QQuickWindow *window() const;
+    QSSGRenderContextInterface *getRci() const { return rci; }
 
     void registerSceneManager(QQuick3DSceneManager &manager);
     void unregisterSceneManager(QQuick3DSceneManager &manager);
@@ -69,6 +70,7 @@ public:
     QQuickWindow *window();
 
     void dirtyItem(QQuick3DObject *item);
+    void requestUpdate();
     void cleanup(QSSGRenderGraphObject *item);
 
     void polishItems();
