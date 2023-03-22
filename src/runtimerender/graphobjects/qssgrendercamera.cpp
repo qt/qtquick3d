@@ -147,16 +147,12 @@ void QSSGRenderCamera::lookAt(const QVector3D &inCameraPos, const QVector3D &inU
 
 void QSSGRenderCamera::calculateViewProjectionMatrix(QMatrix4x4 &outMatrix) const
 {
-    outMatrix = projection * globalTransform.inverted();
-}
-
-static QMatrix4x4 getUpper3x3(const QMatrix4x4 &m)
-{
-    const float values[16] = { m(0, 0), m(0, 1), m(0, 2), 0,
-                               m(1, 0), m(1, 1), m(1, 2), 0,
-                               m(2, 0), m(2, 1), m(2, 2), 0,
-                               0, 0, 0, 1 };
-    return QMatrix4x4(values);
+    QMatrix4x4 nonScaledGlobal(Qt::Uninitialized);
+    nonScaledGlobal.setColumn(0, globalTransform.column(0).normalized());
+    nonScaledGlobal.setColumn(1, globalTransform.column(1).normalized());
+    nonScaledGlobal.setColumn(2, globalTransform.column(2).normalized());
+    nonScaledGlobal.setColumn(3, globalTransform.column(3));
+    outMatrix = projection * nonScaledGlobal.inverted();
 }
 
 void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(float clipNear, float clipFar, QMatrix4x4 &outMatrix) const
@@ -169,7 +165,12 @@ void QSSGRenderCamera::calculateViewProjectionWithoutTranslation(float clipNear,
     QMatrix4x4 proj = projection;
     proj(2, 2) = -(clipFar + clipNear) / (clipFar - clipNear);
     proj(2, 3) = -2 * clipFar * clipNear / (clipFar - clipNear);
-    outMatrix = proj * getUpper3x3(globalTransform).inverted();
+    QMatrix4x4 nonScaledGlobal(Qt::Uninitialized);
+    nonScaledGlobal.setColumn(0, globalTransform.column(0).normalized());
+    nonScaledGlobal.setColumn(1, globalTransform.column(1).normalized());
+    nonScaledGlobal.setColumn(2, globalTransform.column(2).normalized());
+    nonScaledGlobal.setColumn(3, QVector4D(0, 0, 0, 1));
+    outMatrix = proj * nonScaledGlobal.inverted();
 }
 
 QSSGRenderRay QSSGRenderCamera::unproject(const QVector2D &inViewportRelativeCoords,
