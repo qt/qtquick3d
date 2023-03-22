@@ -67,9 +67,13 @@ qt_internal_add_qml_module(${target_name}
         MaterialPropertiesPane.qml
         SaveChangesDialog.qml
         UniformManagerPane.qml
-    RESOURCES
-        qtquickcontrols2.conf
     NO_PLUGIN
+)
+
+qt_add_resources(${target_name}
+    PREFIX "/"
+    FILES
+        qtquickcontrols2.conf
 )
 
 qt_add_shaders(${target_name} "shaders"
