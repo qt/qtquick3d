@@ -1089,7 +1089,7 @@ static ValueToQmlResult valueToQml(const QSSGSceneDesc::Node &target, const QSSG
         result.value = toQuotedString(value.toString());
         result.ok = true;
     } else {
-        result.notValidReason = QStringLiteral("Unsupported value type: ") + value.metaType().name();
+        result.notValidReason = QStringLiteral("Unsupported value type: ") + QString::fromUtf8(value.metaType().name());
         qWarning() << result.notValidReason;
         result.ok = false;
     }
@@ -1107,7 +1107,7 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
 {
     QSSGQmlScopedIndent scopedIndent(output);
 
-    indent(output) << "id: " << getIdForNode(node) << "\n";
+    indent(output) << u"id: "_s << getIdForNode(node) << u'\n';
 
     const auto &properties = node.properties;
     auto it = properties.begin();
@@ -1118,21 +1118,21 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
         const ValueToQmlResult result = valueToQml(node, *property, output);
         if (result.ok) {
             if (result.isDynamicProperty) {
-                indent(output) << "property " << typeName(property->value.metaType()).toByteArray() << ' ' << result.name << ": " << result.value << "\n";
+                indent(output) << "property " << typeName(property->value.metaType()).toByteArray() << ' ' << result.name << u": "_s << result.value << u'\n';
             } else if (!QSSGQmlUtilities::PropertyMap::instance()->isDefaultValue(node.runtimeType, property->name, property->value)) {
                 if (result.expandedProperties.size() > 1) {
                     for (const auto &va : result.expandedProperties)
-                        indent(output) << result.name << va << "\n";
+                        indent(output) << result.name << va << u'\n';
                 } else {
-                    indent(output) << result.name << ": " << result.value << "\n";
+                    indent(output) << result.name << u": "_s << result.value << u'\n';
                 }
             }
         } else if (!result.isDynamicProperty) {
-            QString message = QStringLiteral("Skipped property: ") + property->name;
+            QString message = u"Skipped property: "_s + QString::fromUtf8(property->name);
             if (!result.notValidReason.isEmpty())
-                message.append(QStringLiteral(", reason: ") + result.notValidReason);
+                message.append(u", reason: "_s + result.notValidReason);
             qDebug() << message;
-            indent(output) << comment() << message + "\n";
+            indent(output) << comment() << message + u'\n';
         }
     }
 }
