@@ -579,6 +579,22 @@ Column {
                 ExpandingSpacer {}
             }
 
+            PropertyLabel {
+                text: qsTr("Light Mapper")
+                tooltip: qsTr("Sets the light mapper object for the scene.")
+            }
+
+            SecondColumnLayout {
+                ItemFilterComboBox {
+                    typeFilter: "QtQuick3D.Lightmapper"
+                    backendValue: backendValues.lightmapper
+                    implicitWidth: StudioTheme.Values.singleControlColumnWidth
+                                   + StudioTheme.Values.actionIndicatorWidth
+                }
+
+                ExpandingSpacer {}
+            }
+
             // ### This is not yet implemented in the DS backend since rect does not have
             // a way to access x, y, width, or height via the _ notation.
             // PropertyLabel {
