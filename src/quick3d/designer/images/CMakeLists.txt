@@ -52,6 +52,9 @@ qt_copy_or_install(
         lightdirectional.png
         lightdirectional16.png
         lightdirectional@2x.png
+        lightmapper.png
+        lightmapper16.png
+        lightmapper@2x.png
         lightpoint.png
         lightpoint16.png
         lightpoint@2x.png
