@@ -433,7 +433,7 @@ QMatrix4x4 QQuick3DNodePrivate::sceneRotationMatrix() const
     // the rotation from the sceneMatrix directly. Instead, we need to calculate
     // it separately, which is slightly more costly.
     const QMatrix4x4 parentRotationMatrix = QQuick3DNodePrivate::get(q->parentNode())->sceneRotationMatrix();
-    return localRotationMatrix() * parentRotationMatrix;
+    return parentRotationMatrix * localRotationMatrix();
 }
 
 void QQuick3DNodePrivate::emitChangesToSceneTransform()
