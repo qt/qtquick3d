@@ -345,13 +345,16 @@ void QSSGRendererImpl::beginFrame()
         m_lastFrameLayers[idx]->resetForFrame();
     m_lastFrameLayers.clear();
     for (auto *matObj : qAsConst(m_materialClearDirty)) {
-        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial)
+        if (matObj->type == QSSGRenderGraphObject::Type::CustomMaterial) {
             static_cast<QSSGRenderCustomMaterial *>(matObj)->updateDirtyForFrame();
-        else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial)
+        } else if (matObj->type == QSSGRenderGraphObject::Type::DefaultMaterial ||
+                   matObj->type == QSSGRenderGraphObject::Type::PrincipledMaterial) {
             static_cast<QSSGRenderDefaultMaterial *>(matObj)->dirty.updateDirtyForFrame();
+        }
     }
     m_materialClearDirty.clear();
 }
+
 void QSSGRendererImpl::endFrame()
 {
 }
