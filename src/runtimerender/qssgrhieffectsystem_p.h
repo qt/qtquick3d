@@ -63,7 +63,7 @@ inline size_t qHash(const QSSGEffectSceneCacheKey &key)
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiEffectSystem
 {
 public:
-    QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext);
+    explicit QSSGRhiEffectSystem(const std::shared_ptr<QSSGRenderContextInterface> &sgContext);
     ~QSSGRhiEffectSystem();
 
     void setup(QSize outputSize);
@@ -102,7 +102,7 @@ private:
     void releaseTextures();
 
     QSize m_outSize;
-    QSSGRenderContextInterface *m_sgContext = nullptr;
+    std::shared_ptr<QSSGRenderContextInterface> m_sgContext;
     QVector<QSSGRhiEffectTexture *> m_textures;
     QRhiTexture *m_depthTexture = nullptr;
     QVector2D m_cameraClipRange;

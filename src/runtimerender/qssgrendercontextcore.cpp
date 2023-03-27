@@ -20,10 +20,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using Binding = QPair<const QQuickWindow *, QSSGRenderContextInterface *>;
-using Bindings = QVarLengthArray<Binding, 32>;
-Q_GLOBAL_STATIC(Bindings, g_windowReg)
-
 static bool loadPregenratedShaders()
 {
     return qEnvironmentVariableIntValue("QT_QUICK3D_DISABLE_GENSHADERS") == 0;
@@ -40,16 +36,13 @@ void QSSGRenderContextInterface::init()
         m_shaderLibraryManager->loadPregeneratedShaderInfo();
 }
 
-QSSGRenderContextInterface *QSSGRenderContextInterface::renderContextForWindow(const QQuickWindow &window)
+void QSSGRenderContextInterface::releaseCachedResources()
 {
-    auto it = g_windowReg->cbegin();
-    const auto end = g_windowReg->cend();
-    for (; it != end; ++it) {
-        if (it->first == &window)
-            break;
-    }
-
-    return (it != end) ? it->second : nullptr;
+    m_renderer->releaseCachedResources();
+    m_shaderCache->releaseCachedResources();
+    m_customMaterialSystem->releaseCachedResources();
+    m_bufferManager->releaseCachedResources();
+    m_rhiContext->releaseCachedResources();
 }
 
 QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
@@ -80,8 +73,7 @@ static const QSSGRef<QSSGShaderLibraryManager> &q3ds_shaderLibraryManager()
     return shaderLibraryManager;
 }
 
-QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
-                                                       const QSSGRef<QSSGRhiContext> &ctx)
+QSSGRenderContextInterface::QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx)
     : m_rhiContext(ctx)
     , m_shaderCache(new QSSGShaderCache(ctx))
     , m_bufferManager(new QSSGBufferManager)
@@ -92,40 +84,11 @@ QSSGRenderContextInterface::QSSGRenderContextInterface(QQuickWindow *window,
     , m_debugDrawSystem(new QSSGDebugDrawSystem)
 {
     init();
-    if (window) {
-        g_windowReg->append({ window, this });
-        QObject::connect(window, &QWindow::destroyed, [&](QObject *o){
-            g_windowReg->removeIf([o](const Binding &b) { return (b.first == o); });
-        });
-
-        // Act when the application calls window->releaseResources() and the
-        // render loop emits the corresponding signal in order to forward the
-        // event to us as well. (do not confuse with other release-resources
-        // type of functions, this is about dropping pipeline and other resource
-        // caches than can be automatically recreated if needed on the next frame)
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        QSGRenderContext *rc = wd->context;
-        if (rc) {
-            // the signal is emitted on the render thread, if there is one
-            QObject::connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, [this] {
-                if (m_releaseCachedResourcesCallback)
-                    m_releaseCachedResourcesCallback();
-                m_renderer->releaseCachedResources();
-                m_shaderCache->releaseCachedResources();
-                m_customMaterialSystem->releaseCachedResources();
-                m_bufferManager->releaseCachedResources();
-                m_rhiContext->releaseCachedResources();
-            });
-        } else {
-            qWarning("QQuickWindow %p has no QSGRenderContext, this should not happen", window);
-        }
-    }
 }
 
 QSSGRenderContextInterface::~QSSGRenderContextInterface()
 {
     m_renderer->releaseCachedResources();
-    g_windowReg->removeIf([this](const Binding &b) { return (b.second == this); });
 }
 
 const QSSGRef<QSSGRenderer> &QSSGRenderContextInterface::renderer() const

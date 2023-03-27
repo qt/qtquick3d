@@ -39,13 +39,9 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderContextInterface
 {
     Q_DISABLE_COPY(QSSGRenderContextInterface)
 public:
-    QAtomicInt ref;
-
-    static QSSGRenderContextInterface *renderContextForWindow(const QQuickWindow &window);
-
     // The commonly used version (from QQuick3DSceneRenderer). There is one
     // rendercontext per QQuickWindow (and so scenegraph render thread).
-    QSSGRenderContextInterface(QQuickWindow *window, const QSSGRef<QSSGRhiContext> &ctx);
+    explicit QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx);
 
     // This overload must only be used in special cases, e.g. by the genshaders tool.
     QSSGRenderContextInterface(const QSSGRef<QSSGRhiContext> &ctx,
@@ -113,10 +109,11 @@ public:
     // return value (false if nothing's been done due to pending "frames")
     bool endFrame(QSSGRenderLayer *layer, bool allowRecursion = true);
 
-    void setReleaseCachedResourcesCallback(std::function<void()> f) { m_releaseCachedResourcesCallback = f; }
-
 private:
+    friend class QQuick3DWindowAttachment;
+
     void init();
+    void releaseCachedResources();
 
     const QSSGRef<QSSGRhiContext> m_rhiContext;
     const QSSGRef<QSSGShaderCache> m_shaderCache;
@@ -136,8 +133,6 @@ private:
     float m_dpr = 1.0;
     QRect m_scissorRect;
     QColor m_sceneColor;
-
-    std::function<void()> m_releaseCachedResourcesCallback = nullptr;
 };
 QT_END_NAMESPACE
 

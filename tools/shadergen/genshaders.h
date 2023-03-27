@@ -17,6 +17,7 @@
 QT_BEGIN_NAMESPACE
 class QDir;
 class QQuick3DSceneManager;
+class QQuick3DWindowAttachment;
 QT_END_NAMESPACE
 
 struct GenShaders
@@ -27,9 +28,10 @@ struct GenShaders
                  bool generateMultipleLights, bool dryRun);
 
     QRhi *rhi = nullptr;
-    QSSGRef<QSSGRenderContextInterface> renderContext;
+    std::shared_ptr<QSSGRenderContextInterface> renderContext;
 
     QQuick3DSceneManager *sceneManager = nullptr;
+    QQuick3DWindowAttachment *wa = nullptr;
 };
 
 #endif

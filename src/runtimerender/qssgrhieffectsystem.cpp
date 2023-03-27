@@ -35,8 +35,8 @@ struct QSSGRhiEffectTexture
     QSSGRhiEffectTexture &operator=(const QSSGRhiEffectTexture &) = delete;
 };
 
-QSSGRhiEffectSystem::QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext)
-    : m_sgContext(sgContext.get())
+QSSGRhiEffectSystem::QSSGRhiEffectSystem(const std::shared_ptr<QSSGRenderContextInterface> &sgContext)
+    : m_sgContext(sgContext)
 {
 }
 

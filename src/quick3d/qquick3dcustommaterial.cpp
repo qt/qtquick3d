@@ -1454,7 +1454,7 @@ QSSGRenderGraphObject *QQuick3DCustomMaterial::updateSpatialNode(QSSGRenderGraph
 {
     using namespace QSSGShaderUtils;
 
-    const auto &renderContext = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
+    const auto &renderContext = QQuick3DObjectPrivate::get(this)->sceneManager->wattached->rci();
     if (!renderContext) {
         qWarning("QQuick3DCustomMaterial: No render context interface?");
         return nullptr;

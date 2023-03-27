@@ -122,6 +122,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void invalidateSceneGraph();
     void updateInputProcessing();
+    void onReleaseCachedResources();
 
 Q_SIGNALS:
     void cameraChanged();

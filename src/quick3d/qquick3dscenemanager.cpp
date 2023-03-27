@@ -240,7 +240,6 @@ QQuick3DWindowAttachment *QQuick3DSceneManager::getOrSetWindowAttachment(QQuickW
         // otherwise some resourses deleted after it, will not be cleaned correctly.
         wa = new QQuick3DWindowAttachment(&window);
         window.setProperty(qtQQ3DWAPropName, QVariant::fromValue(wa));
-        QObject::connect(&window, &QObject::destroyed, wa, [wa](QObject *){ delete wa; }, Qt::QueuedConnection);
     }
 
     return wa;
@@ -358,6 +357,21 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
     : m_window(window)
 {
     if (window) {
+        // Act when the application calls window->releaseResources() and the
+        // render loop emits the corresponding signal in order to forward the
+        // event to us as well. (do not confuse with other release-resources
+        // type of functions, this is about dropping pipeline and other resource
+        // caches than can be automatically recreated if needed on the next frame)
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        QSGRenderContext *rc = wd->context;
+        if (QSSG_GUARD_X(rc, "QQuickWindow has no QSGRenderContext, this should not happen")) {
+            // the signal is emitted on the render thread, if there is one
+            connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, this, &QQuick3DWindowAttachment::onReleaseCachedResources);
+            connect(rc, &QSGRenderContext::invalidated, this, &QQuick3DWindowAttachment::onReleaseCachedResources, Qt::DirectConnection);
+        }
+
+        // We put this in the back of the queue to allow any clean-up of resources to happen first.
+        connect(window, &QQuickWindow::destroyed, this, &QObject::deleteLater);
         connect(window, &QQuickWindow::afterAnimating, this, &QQuick3DWindowAttachment::preSync);
         connect(window, &QQuickWindow::afterFrameEnd, this, &QQuick3DWindowAttachment::cleanupResources, Qt::DirectConnection);
     }
@@ -373,6 +387,8 @@ QQuick3DWindowAttachment::~QQuick3DWindowAttachment()
     qDeleteAll(sceneManagers);
     qDeleteAll(resourceCleanupQueue);
     qDeleteAll(pendingResourceCleanupQueue);
+
+    QSSG_CHECK_X(!m_rci || m_rci.use_count() == 1, "RCI has unexpected reference count!");
 }
 
 void QQuick3DWindowAttachment::preSync()
@@ -392,16 +408,23 @@ void QQuick3DWindowAttachment::cleanupResources()
     // In special cases there is no rci because synchronize() is never called.
     // This can happen when running with the software backend of Qt Quick.
     // Handle this gracefully.
-    if (!rci)
+    if (!m_rci)
         return;
 
     // Check if there's orphaned resources that needs to be
     // cleaned out first.
     if (resourceCleanupQueue.size() != 0)
-        rci->cleanupResources(resourceCleanupQueue);
+        m_rci->cleanupResources(resourceCleanupQueue);
 }
 
-void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet<QSSGRenderGraphObject *> &resourceLoaders)
+void QQuick3DWindowAttachment::onReleaseCachedResources()
+{
+    if (m_rci)
+        m_rci->releaseCachedResources();
+    Q_EMIT releaseCachedResources();
+}
+
+void QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)
 {
     // Terminate old scene managers
     for (auto manager: sceneManagerCleanupQueue) {
@@ -411,12 +434,9 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
     // Terminate old scene managers
     sceneManagerCleanupQueue = {};
 
-    // Cleanup (+ rci update)
-    QQuick3DWindowAttachment::rci = rci;
-    for (auto &sceneManager : std::as_const(sceneManagers)) {
-        sceneManager->rci = rci;
+    // Cleanup
+    for (auto &sceneManager : std::as_const(sceneManagers))
         sceneManager->cleanupNodes();
-    }
 
     // Resources
     bool sharedUpdateNeeded = false;
@@ -427,7 +447,7 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
         sceneManager->updateDirtySpatialNodes();
     // Bounding Boxes
     for (auto &sceneManager : std::as_const(sceneManagers))
-        sceneManager->updateBoundingBoxes(rci->bufferManager());
+        sceneManager->updateBoundingBoxes(m_rci->bufferManager());
     // Resource Loaders
     for (auto &sceneManager : std::as_const(sceneManagers))
         resourceLoaders.unite(sceneManager->resourceLoaders);
@@ -447,14 +467,16 @@ void QQuick3DWindowAttachment::synchronize(QSSGRenderContextInterface *rci, QSet
 
 QQuickWindow *QQuick3DWindowAttachment::window() const { return m_window; }
 
+void QQuick3DWindowAttachment::setRci(const std::shared_ptr<QSSGRenderContextInterface> &rciptr)
+{
+    QSSG_CHECK_X(m_rci == nullptr || m_rci.use_count() == 1, "Old render context was not released!");
+    m_rci = rciptr;
+}
+
 void QQuick3DWindowAttachment::registerSceneManager(QQuick3DSceneManager &manager)
 {
-    if (!sceneManagers.contains(&manager)) {
-        // Sanity check: This should not happen.
-        if ((manager.rci && rci) && (manager.rci != rci))
-            qWarning() << "render context differs, this shouldn't happen!";
+    if (!sceneManagers.contains(&manager))
         sceneManagers.push_back(&manager);
-    }
 }
 
 void QQuick3DWindowAttachment::unregisterSceneManager(QQuick3DSceneManager &manager)

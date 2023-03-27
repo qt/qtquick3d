@@ -39,10 +39,12 @@ public:
 
     Q_INVOKABLE void preSync();
     Q_INVOKABLE void cleanupResources();
-    Q_INVOKABLE void synchronize(QSSGRenderContextInterface *rci, QSet<QSSGRenderGraphObject *> &resourceLoaders);
+    Q_INVOKABLE void synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders);
 
     QQuickWindow *window() const;
-    QSSGRenderContextInterface *getRci() const { return rci; }
+
+    const std::shared_ptr<QSSGRenderContextInterface> &rci() const { return m_rci; }
+    void setRci(const std::shared_ptr<QSSGRenderContextInterface> &rciptr);
 
     void registerSceneManager(QQuick3DSceneManager &manager);
     void unregisterSceneManager(QQuick3DSceneManager &manager);
@@ -50,9 +52,14 @@ public:
     void queueForCleanup(QSSGRenderGraphObject *obj);
     void queueForCleanup(QQuick3DSceneManager *manager);
 
+Q_SIGNALS:
+    void releaseCachedResources();
+
 private:
+    Q_INVOKABLE void onReleaseCachedResources();
+
     QPointer<QQuickWindow> m_window;
-    QSSGRenderContextInterface *rci = nullptr;
+    std::shared_ptr<QSSGRenderContextInterface> m_rci;
     QList<QQuick3DSceneManager *> sceneManagers;
     QList<QQuick3DSceneManager *> sceneManagerCleanupQueue;
     QList<QSSGRenderGraphObject *> pendingResourceCleanupQueue;
@@ -137,7 +144,6 @@ public:
     QSet<QSSGRenderGraphObject *> resourceLoaders;
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
-    QSSGRenderContextInterface *rci = nullptr;
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.
     friend QQuick3DObject;
 

@@ -19,6 +19,8 @@
 #include <QtQuick3DRuntimeRender/private/qssgrenderlayer_p.h>
 #include <QtQuick3DRuntimeRender/private/qssglayerrenderdata_p.h>
 
+#include <QtQuick3DUtils/private/qssgassert_p.h>
+
 #include <qsgtextureprovider.h>
 #include <QSGSimpleTextureNode>
 #include <QSGRendererInterface>
@@ -402,37 +404,40 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
     QQuick3DSceneRenderer *renderer = nullptr;
 
     if (QQuickWindow *qw = window()) {
-        QSGRendererInterface *rif = qw->rendererInterface();
-        const bool isRhi = QSGRendererInterface::isApiRhiBased(rif->graphicsApi());
-        if (isRhi) {
-            QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
-            if (!rhi)
-                qWarning("No QRhi from QQuickWindow, this cannot happen");
-
-            // The RenderContextInterface, and the objects owned by it (such
-            // as, the BufferManager) are always per-QQuickWindow, and so per
-            // scenegraph render thread. Hence the association with window.
-            // Multiple View3Ds in the same window can use the same rendering
-            // infrastructure (so e.g. the same QSSGBufferManager), but two
-            // View3D objects in different windows must not, except for certain
-            // components that do not work with and own native graphics
-            // resources (most notably, QSSGShaderLibraryManager - but this
-            // distinction is handled internally by QSSGRenderContextInterface).
-            if (QSSGRenderContextInterface *rci = QSSGRenderContextInterface::renderContextForWindow(*qw)) {
-                renderer = new QQuick3DSceneRenderer(rci);
-            } else {
+        auto wa = QQuick3DSceneManager::getOrSetWindowAttachment(*qw);
+        auto rci = wa->rci();
+        if (!rci) {
+            QSGRendererInterface *rif = qw->rendererInterface();
+            if (QSSG_GUARD(QSGRendererInterface::isApiRhiBased(rif->graphicsApi()))) {
+                QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
+                QSSG_CHECK_X(rhi != nullptr, "No QRhi from QQuickWindow, this cannot happen");
                 QSSGRef<QSSGRhiContext> rhiContext(new QSSGRhiContext);
                 // and this is the magic point where many things internally get
                 // switched over to be QRhi-based.
                 rhiContext->initialize(rhi);
-                rci = new QSSGRenderContextInterface(qw, rhiContext);
-                renderer = new QQuick3DSceneRenderer(rci);
+
+                // The RenderContextInterface, and the objects owned by it (such
+                // as, the BufferManager) are always per-QQuickWindow, and so per
+                // scenegraph render thread. Hence the association with window.
+                // Multiple View3Ds in the same window can use the same rendering
+                // infrastructure (so e.g. the same QSSGBufferManager), but two
+                // View3D objects in different windows must not, except for certain
+                // components that do not work with and own native graphics
+                // resources (most notably, QSSGShaderLibraryManager - but this
+                // distinction is handled internally by QSSGRenderContextInterface).
+                rci = std::make_shared<QSSGRenderContextInterface>(rhiContext);
+                wa->setRci(rci);
+
+                connect(wa, &QQuick3DWindowAttachment::releaseCachedResources, this, &QQuick3DViewport::onReleaseCachedResources);
+
+            } else {
+                qWarning("The Qt Quick scene is using a rendering method that is not based on QRhi and a 3D graphics API. "
+                         "Qt Quick 3D is not functional in such an environment. The View3D item is not going to display anything.");
             }
-            Q_QUICK3D_PROFILE_ASSIGN_ID(this, renderer);
-        } else {
-            qWarning("The Qt Quick scene is using a rendering method that is not based on QRhi and a 3D graphics API. "
-                     "Qt Quick 3D is not functional in such an environment. The View3D item is not going to display anything.");
         }
+
+        if (rci)
+            renderer = new QQuick3DSceneRenderer(rci);
     }
 
     return renderer;
@@ -1321,6 +1326,12 @@ void QQuick3DViewport::updateInputProcessing()
     setAcceptTouchEvents(m_enableInputProcessing);
     setAcceptHoverEvents(m_enableInputProcessing);
     setAcceptedMouseButtons(m_enableInputProcessing ? Qt::AllButtons : Qt::NoButton);
+}
+
+void QQuick3DViewport::onReleaseCachedResources()
+{
+    if (auto renderer = getRenderer())
+        renderer->releaseCachedResources();
 }
 
 QT_END_NAMESPACE

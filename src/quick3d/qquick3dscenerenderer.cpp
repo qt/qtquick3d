@@ -151,18 +151,10 @@ void SGFramebufferObjectNode::handleScreenChange()
 }
 
 
-QQuick3DSceneRenderer::QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInterface> &rci)
+QQuick3DSceneRenderer::QQuick3DSceneRenderer(const std::shared_ptr<QSSGRenderContextInterface> &rci)
     : m_sgContext(rci)
 {
     dumpRenderTimes = (qEnvironmentVariableIntValue("QT_QUICK3D_DUMP_RENDERTIMES") > 0);
-    m_sgContext->setReleaseCachedResourcesCallback([this] {
-        if (m_layer && m_layer->renderData) {
-            if (auto mgr = m_layer->renderData->shadowMapManager)
-                mgr->releaseCachedResources();
-            if (auto mgr = m_layer->renderData->reflectionMapManager)
-                mgr->releaseCachedResources();
-        }
-    });
 }
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
@@ -555,8 +547,11 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         if (!winAttacment || winAttacment->window() != window)
             winAttacment = QQuick3DSceneManager::getOrSetWindowAttachment(*window);
 
+        if (winAttacment && winAttacment->rci() != m_sgContext)
+            winAttacment->setRci(m_sgContext);
+
         if (winAttacment)
-            winAttacment->synchronize(m_sgContext.get(), resourceLoaders);
+            winAttacment->synchronize(resourceLoaders);
     }
 
     // Import scenes used in a multi-window application...
@@ -568,10 +563,10 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
         if (auto window = importSceneManager->window(); window && window != view3D->window()) {
             if (auto winAttacment = importSceneManager->wattached) {
                 // Not the same window but backed by the same rhi?
-                auto rci = winAttacment->getRci();
+                auto rci = winAttacment->rci();
                 const bool inlineSync = (rci && rci->rhi() && (rci->rhi() == m_sgContext->rhi()));
                 if (inlineSync) { // Give the same rhi, and same thread, we can do an immediate sync.
-                    winAttacment->synchronize(rci, resourceLoaders);
+                    winAttacment->synchronize(resourceLoaders);
                 } else if (!rci) {
                     // If there's no RCI for the importscene we'll request an update, which should
                     // mean we only get here once. It also means the update to any secondary windows
@@ -933,6 +928,16 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
 {
     if (fboNode)
         fboNode->invalidatePending = true;
+}
+
+void QQuick3DSceneRenderer::releaseCachedResources()
+{
+    if (m_layer && m_layer->renderData) {
+        if (auto mgr = m_layer->renderData->shadowMapManager)
+            mgr->releaseCachedResources();
+        if (auto mgr = m_layer->renderData->reflectionMapManager)
+            mgr->releaseCachedResources();
+    }
 }
 
 std::optional<QSSGRenderRay> QQuick3DSceneRenderer::getRayFromViewportPos(const QPointF &pos)
