@@ -31,10 +31,8 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderItem2D : public QSSGRenderNode
     float combinedOpacity = 1.0;
     float zOrder = 0;
 
-    QSGRenderer *m_renderer = nullptr;
+    QPointer<QSGRenderer> m_renderer;
     QRhiRenderPassDescriptor *m_rp = nullptr;
-    QSSGRenderContextInterface *m_rci = nullptr;
-    bool m_contextWarningShown = false;
 
     QSSGRenderItem2D();
     ~QSSGRenderItem2D();
