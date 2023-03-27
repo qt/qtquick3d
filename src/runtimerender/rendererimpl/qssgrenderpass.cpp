@@ -661,10 +661,11 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
         // Set the projection matrix
         if (!item2D->m_renderer)
             continue;
-        if (item2D->m_rci != renderer->contextInterface()) {
-            if (!item2D->m_contextWarningShown) {
+        if (item2D->m_renderer && item2D->m_renderer->currentRhi() != renderer.contextInterface()->rhi()) {
+            static bool contextWarningShown = false;
+            if (!contextWarningShown) {
                 qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
-                item2D->m_contextWarningShown = true;
+                contextWarningShown = true;
             }
             continue;
         }
@@ -825,7 +826,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         for (const auto &item : std::as_const(item2Ds)) {
             QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
-            if (item2D->m_rci == renderer->contextInterface())
+            if (item2D->m_renderer && item2D->m_renderer->currentRhi() == renderer.contextInterface()->rhi())
                 item2D->m_renderer->renderSceneInline();
         }
         cb->debugMarkEnd();

@@ -103,11 +103,11 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 {
     auto *sourceItemPrivate = QQuickItemPrivate::get(m_contentItem);
     QQuickWindow *window = m_contentItem->window();
+
     if (!window) {
         const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
         window = manager->window();
     }
-
 
     if (!node) {
         markAllDirty();
@@ -126,7 +126,7 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     if (!m_renderer) {
         m_renderer = rc->createRenderer(QSGRendererInterface::RenderMode3D);
-        connect(window, SIGNAL(sceneGraphInvalidated()), this, SLOT(invalidated()), Qt::DirectConnection);
+        connect(window, &QQuickWindow::sceneGraphInvalidated, this, &QQuick3DItem2D::invalidated, Qt::DirectConnection);
         connect(
                 m_renderer,
                 &QSGAbstractRenderer::sceneGraphChanged,
@@ -153,8 +153,6 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
                             itemNode->m_rp->deleteLater();
                             itemNode->m_rp = nullptr;
                         }
-                        if (itemNode->m_renderer)
-                            itemNode->m_renderer = nullptr;
                     }
                 },
                 Qt::DirectConnection);
@@ -181,12 +179,6 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
     }
 
     itemNode->m_renderer = m_renderer;
-    if (m_sceneManagerValid) {
-        const auto &sm = QQuick3DObjectPrivate::get(this)->sceneManager;
-        itemNode->m_rci = sm->wattached ? sm->wattached->rci().get() : nullptr;
-    } else {
-        itemNode->m_rci = nullptr;
-    }
 
     return node;
 }
@@ -196,24 +188,13 @@ void QQuick3DItem2D::markAllDirty()
     QQuick3DNode::markAllDirty();
 }
 
-void QQuick3DItem2D::itemChange(QQuick3DObject::ItemChange change, const QQuick3DObject::ItemChangeData &value)
-{
-    QQuick3DNode::itemChange(change, value);
-    if (change == QQuick3DObject::ItemSceneChange) {
-        if (value.sceneManager)
-            m_sceneManagerValid = true;
-        else
-            m_sceneManagerValid = false;
-        markAllDirty();
-    }
-}
-
 void QQuick3DItem2D::preSync()
 {
     const auto &manager = QQuick3DObjectPrivate::get(this)->sceneManager;
     auto *sourcePrivate = QQuickItemPrivate::get(m_contentItem);
     auto *window = manager->window();
     if (m_window != window) {
+        update(); // Just schedule an upate immediately.
         if (m_window) {
             disconnect(m_window, SIGNAL(destroyed(QObject*)), this, SLOT(derefWindow(QObject*)));
             sourcePrivate->derefWindow();
