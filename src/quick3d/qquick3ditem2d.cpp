@@ -182,8 +182,8 @@ QSSGRenderGraphObject *QQuick3DItem2D::updateSpatialNode(QSSGRenderGraphObject *
 
     itemNode->m_renderer = m_renderer;
     if (m_sceneManagerValid) {
-        if (itemNode->m_rci != QQuick3DObjectPrivate::get(this)->sceneManager->rci)
-            itemNode->m_rci = QQuick3DObjectPrivate::get(this)->sceneManager->rci;
+        const auto &sm = QQuick3DObjectPrivate::get(this)->sceneManager;
+        itemNode->m_rci = sm->wattached ? sm->wattached->rci().get() : nullptr;
     } else {
         itemNode->m_rci = nullptr;
     }

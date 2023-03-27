@@ -41,7 +41,7 @@ class QQuick3DSceneRenderer
 {
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>;
 public:
-    QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInterface> &rci);
+    explicit QQuick3DSceneRenderer(const std::shared_ptr<QSSGRenderContextInterface> &rci);
     ~QQuick3DSceneRenderer();
 
     static QSSGRenderLayer::TonemapMode getTonemapMode(const QQuick3DSceneEnvironment &environment)
@@ -59,6 +59,7 @@ protected:
     void synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr);
     void invalidateFramebufferObject();
     QSize surfaceSize() const { return m_surfaceSize; }
+    void releaseCachedResources();
 
     std::optional<QSSGRenderRay> getRayFromViewportPos(const QPointF &pos);
     QSSGRenderPickResult syncPick(const QSSGRenderRay &ray);
@@ -74,7 +75,7 @@ private:
     void updateLayerNode(QQuick3DViewport *view3D, const QList<QSSGRenderGraphObject *> &resourceLoaders);
     void addNodeToLayer(QSSGRenderNode *node);
     void removeNodeFromLayer(QSSGRenderNode *node);
-    QSSGRef<QSSGRenderContextInterface> m_sgContext;
+    std::shared_ptr<QSSGRenderContextInterface> m_sgContext;
     QSSGRenderLayer *m_layer = nullptr;
     QPointer<QQuick3DWindowAttachment> winAttacment;
     QSize m_surfaceSize;

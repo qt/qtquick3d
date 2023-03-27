@@ -62,14 +62,16 @@ GenShaders::GenShaders()
     rhiContext->initialize(rhi);
     rhiContext->setCommandBuffer(cb);
 
-    renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
-                                                                                       new QSSGBufferManager,
-                                                                                       new QSSGRenderer,
-                                                                                       new QSSGShaderLibraryManager,
-                                                                                       new QSSGShaderCache(rhiContext, &initBaker),
-                                                                                       new QSSGCustomMaterialSystem,
-                                                                                       new QSSGProgramGenerator));
-    sceneManager->rci = renderContext.get();
+    renderContext = std::make_shared<QSSGRenderContextInterface>(rhiContext,
+                                                                 new QSSGBufferManager,
+                                                                 new QSSGRenderer,
+                                                                 new QSSGShaderLibraryManager,
+                                                                 new QSSGShaderCache(rhiContext, &initBaker),
+                                                                 new QSSGCustomMaterialSystem,
+                                                                 new QSSGProgramGenerator);
+    wa = new QQuick3DWindowAttachment(nullptr);
+    wa->setRci(renderContext);
+    sceneManager->wattached = wa;
 }
 
 GenShaders::~GenShaders() = default;

@@ -25,8 +25,9 @@ private Q_SLOTS:
 
 private:
     QRhi *rhi = nullptr;
-    QSSGRef<QSSGRenderContextInterface> renderContext;
+    std::shared_ptr<QSSGRenderContextInterface> renderContext;
     QSharedPointer<QQuick3DSceneManager> sceneManager;
+    QQuick3DWindowAttachment *wa = nullptr;
 
     QString meshPath;
     int modelCount = 0;
@@ -51,14 +52,17 @@ void tst_renderer::initTestCase()
     rhiContext->setCommandBuffer(cb);
 
     auto shaderCache = new QSSGShaderCache(rhiContext);
-    renderContext = QSSGRef<QSSGRenderContextInterface>(new QSSGRenderContextInterface(rhiContext,
-                                                                                       new QSSGBufferManager,
-                                                                                       new QSSGRenderer,
-                                                                                       new QSSGShaderLibraryManager,
-                                                                                       shaderCache,
-                                                                                       new QSSGCustomMaterialSystem,
-                                                                                       new QSSGProgramGenerator));
-    sceneManager->rci = renderContext.get();
+    renderContext = std::make_shared<QSSGRenderContextInterface>(rhiContext,
+                                                                 new QSSGBufferManager,
+                                                                 new QSSGRenderer,
+                                                                 new QSSGShaderLibraryManager,
+                                                                 shaderCache,
+                                                                 new QSSGCustomMaterialSystem,
+                                                                 new QSSGProgramGenerator);
+
+    wa = new QQuick3DWindowAttachment(nullptr);
+    wa->setRci(renderContext);
+    sceneManager->wattached = wa;
 
     meshPath = qEnvironmentVariable("tst_mesh", "#Cube");
 

@@ -124,7 +124,7 @@ void tst_BufferManager::staticScene()
 
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
 
-    QSSGRenderContextInterface *context = QSSGRenderContextInterface::renderContextForWindow(*renderer.quickWindow);
+    const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
     QVERIFY(context);
 
     auto bufferManager = context->bufferManager();
@@ -153,7 +153,7 @@ void tst_BufferManager::dynamicScene()
 
     renderNextFrame(&renderer, &readCompleted, &readResult, &result);
 
-    QSSGRenderContextInterface *context = QSSGRenderContextInterface::renderContextForWindow(*renderer.quickWindow);
+    const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
     QVERIFY(context);
 
     auto bufferManager = context->bufferManager();
