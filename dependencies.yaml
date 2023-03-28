@@ -3,10 +3,10 @@ dependencies:
     ref: aea92807be2567c4212b96ae67de7137075ba4ee
     required: true
   ../qtdeclarative:
-    ref: 26e86ee9ea26c9031d51d17448b9035a27fa9208
+    ref: 3238e18d6b0dc45d2e765fb0b93da5cbf3f396ec
     required: true
   ../qtquicktimeline:
-    ref: 6c9ff6aecb48a2f4ecf64235a8795cf6fc56ff46
+    ref: 06739c8cb64fa404463b7493a8022d1c892fecc9
     required: false
   ../qtshadertools:
     ref: 2a9f26b893fbc955b7ec1c04c84c5e2de3e987e5
