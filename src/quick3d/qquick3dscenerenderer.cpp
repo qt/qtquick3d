@@ -167,7 +167,7 @@ QQuick3DSceneRenderer::QQuick3DSceneRenderer(const QSSGRef<QSSGRenderContextInte
 
 QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 {
-    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
     rhiCtx->stats().cleanupLayerInfo(m_layer);
     delete m_layer;
 
@@ -179,7 +179,7 @@ QQuick3DSceneRenderer::~QQuick3DSceneRenderer()
 
 void QQuick3DSceneRenderer::releaseAaDependentRhiResources()
 {
-    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
     if (!rhiCtx->isValid())
         return;
 
@@ -242,7 +242,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
-        QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+        QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
 
         rhiCtx->setMainRenderPassDescriptor(m_textureRenderPassDescriptor);
         rhiCtx->setRenderTarget(m_textureRenderTarget);
@@ -375,7 +375,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     QSSGRhiGraphicsPipelineState ps;
                     const QSize textureSize = currentTexture->pixelSize();
                     ps.viewport = QRhiViewport(0, 0, float(textureSize.width()), float(textureSize.height()));
-                    ps.shaderPipeline = shaderPipeline.data();
+                    ps.shaderPipeline = shaderPipeline.get();
 
                     renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_temporalAARenderTarget, QSSGRhiQuadRenderer::UvCoords);
                     blendResult = m_temporalAATexture;
@@ -436,7 +436,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
 
             QSSGRhiGraphicsPipelineState ps;
             ps.viewport = QRhiViewport(0, 0, float(m_surfaceSize.width()), float(m_surfaceSize.height()));
-            ps.shaderPipeline = shaderPipeline.data();
+            ps.shaderPipeline = shaderPipeline.get();
 
             renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, m_ssaaTextureToTextureRenderTarget, QSSGRhiQuadRenderer::UvCoords);
             cb->debugMarkEnd();
@@ -531,7 +531,7 @@ static QVector3D tonemapRgb(const QVector3D &c, QQuick3DSceneEnvironment::QQuick
 void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &size, float dpr)
 {
     Q_ASSERT(view3D != nullptr); // This is not an option!
-    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().data();
+    QSSGRhiContext *rhiCtx = m_sgContext->rhiContext().get();
     Q_ASSERT(rhiCtx != nullptr);
 
     bool newRenderStats = false;
@@ -556,7 +556,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             winAttacment = QQuick3DSceneManager::getOrSetWindowAttachment(*window);
 
         if (winAttacment)
-            winAttacment->synchronize(m_sgContext.data(), resourceLoaders);
+            winAttacment->synchronize(m_sgContext.get(), resourceLoaders);
     }
 
     // Import scenes used in a multi-window application...
@@ -1162,7 +1162,7 @@ void QQuick3DSceneRenderer::updateLayerNode(QQuick3DViewport *view3D, const QLis
     // Now that we have the effect list used for rendering, finalize the shader
     // code based on the layer (scene.env.) settings.
     for (QSSGRenderEffect *effectNode = layerNode->firstEffect; effectNode; effectNode = effectNode->m_nextEffect)
-        effectNode->finalizeShaders(*layerNode, m_sgContext.data());
+        effectNode->finalizeShaders(*layerNode, m_sgContext.get());
 
     // ResourceLoaders
     layerNode->resourceLoaders.clear();
@@ -1268,7 +1268,7 @@ void QQuick3DSGRenderNode::prepare()
         return;
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
 
-    queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().data());
+    queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().get());
 
     qreal dpr = window->devicePixelRatio();
     const QSizeF itemSize = renderer->surfaceSize() / dpr;
@@ -1287,7 +1287,7 @@ void QQuick3DSGRenderNode::render(const QSGRenderNode::RenderState *state)
     if (renderer->m_sgContext->rhiContext()->isValid()) {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
 
-        queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().data());
+        queryInlineRenderPassDescriptorAndCommandBuffer(this, renderer->m_sgContext->rhiContext().get());
 
         renderer->rhiRender();
         renderer->endFrame();
@@ -1355,9 +1355,9 @@ void QQuick3DSGDirectRenderer::prepare()
             if (renderPending) {
                 renderPending = false;
                 m_rhiTexture = m_renderer->renderToRhiTexture(m_window);
-                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
                 auto quadRenderer = m_renderer->m_sgContext->renderer()->rhiQuadRenderer();
-                quadRenderer->prepareQuad(m_renderer->m_sgContext->rhiContext().data(), nullptr);
+                quadRenderer->prepareQuad(m_renderer->m_sgContext->rhiContext().get(), nullptr);
                 if (m_renderer->m_sgContext->renderer()->rendererRequestsFrames()
                         || m_renderer->requestedFramesCount > 0) {
                     requestRender();
@@ -1375,7 +1375,7 @@ void QQuick3DSGDirectRenderer::prepare()
             }
 
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DPrepareFrame);
-            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
             const QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
             m_renderer->beginFrame();
             m_renderer->rhiPrepare(vp, m_window->devicePixelRatio());
@@ -1405,8 +1405,8 @@ void QQuick3DSGDirectRenderer::render()
         // have altered these on the context.
         if (m_renderer->m_postProcessingStack) {
             if (m_rhiTexture) {
-                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
-                auto rhiCtx = m_renderer->m_sgContext->rhiContext().data();
+                queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
+                auto rhiCtx = m_renderer->m_sgContext->rhiContext().get();
                 const auto &renderer = m_renderer->m_sgContext->renderer();
 
                 // Instead of passing in a flip flag we choose to rely on qsb's
@@ -1426,7 +1426,7 @@ void QQuick3DSGDirectRenderer::render()
 
                 QSSGRhiGraphicsPipelineState ps;
                 ps.viewport = QRhiViewport(float(vp.x()), float(vp.y()), float(vp.width()), float(vp.height()));
-                ps.shaderPipeline = shaderPipeline.data();
+                ps.shaderPipeline = shaderPipeline.get();
                 renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, &ps, srb, rhiCtx->mainRenderPassDescriptor(), QSSGRhiQuadRenderer::UvCoords | QSSGRhiQuadRenderer::PremulBlend);
             }
         }
@@ -1434,7 +1434,7 @@ void QQuick3DSGDirectRenderer::render()
         {
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderFrame);
 
-            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().data());
+            queryMainRenderPassDescriptorAndCommandBuffer(m_window, m_renderer->m_sgContext->rhiContext().get());
 
             m_renderer->rhiRender();
             m_renderer->endFrame();

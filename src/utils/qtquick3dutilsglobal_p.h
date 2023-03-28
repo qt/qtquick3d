@@ -29,7 +29,6 @@ class QSSGRef
     T *d;
 
 public:
-    T *data() const { return d; }
     T *get() const { return d; }
     T *take()
     {

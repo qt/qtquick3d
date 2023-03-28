@@ -662,7 +662,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
     // vertex attribute presence flags
-    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
+    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.get());
 
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
@@ -860,7 +860,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, usesInvProjectionMatrix);
 
     // vertex attribute presence flags
-    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.data());
+    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.get());
 
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
@@ -2259,10 +2259,10 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     if (sortedBakedLightingModels.isEmpty())
         return;
 
-    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().data();
+    QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().get();
 
     if (!m_lightmapper)
-        m_lightmapper = new QSSGLightmapper(rhiCtx, renderer.data());
+        m_lightmapper = new QSSGLightmapper(rhiCtx, renderer.get());
 
     // sortedBakedLightingModels contains all models with
     // usedInBakedLighting: true. These, together with lights that

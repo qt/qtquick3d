@@ -36,7 +36,7 @@ struct QSSGRhiEffectTexture
 };
 
 QSSGRhiEffectSystem::QSSGRhiEffectSystem(const QSSGRef<QSSGRenderContextInterface> &sgContext)
-    : m_sgContext(sgContext.data())
+    : m_sgContext(sgContext.get())
 {
 }
 
@@ -434,7 +434,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
     // look for a runtime pipeline
     const auto it = m_shaderPipelines.constFind(cacheKey);
     if (it != m_shaderPipelines.cend())
-        m_currentShaderPipeline = (*it).data();
+        m_currentShaderPipeline = (*it).get();
 
     QByteArray qsbcKey;
     QSSGShaderFeatures features;
@@ -457,7 +457,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
                                                                           *inEffect,
                                                                           QSSGRhiShaderPipeline::UsedWithoutIa);
             m_shaderPipelines.insert(cacheKey, shader);
-            m_currentShaderPipeline = shader.data();
+            m_currentShaderPipeline = shader.get();
         }
     }
 
@@ -473,7 +473,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
                                                                                                        QSSGRhiShaderPipeline::UsedWithoutIa);
         if (shaderPipeline) {
             m_shaderPipelines.insert(cacheKey, shaderPipeline);
-            m_currentShaderPipeline = shaderPipeline.data();
+            m_currentShaderPipeline = shaderPipeline.get();
         }
     }
 
@@ -483,7 +483,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         const auto &generator = m_sgContext->shaderProgramGenerator();
         if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
             m_shaderPipelines.insert(cacheKey, stages);
-            m_currentShaderPipeline = stages.data();
+            m_currentShaderPipeline = stages.get();
         }
         Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, inEffect->profilingId);
     }

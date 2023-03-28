@@ -58,7 +58,7 @@ void tst_renderer::initTestCase()
                                                                                        shaderCache,
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator));
-    sceneManager->rci = renderContext.data();
+    sceneManager->rci = renderContext.get();
 
     meshPath = qEnvironmentVariable("tst_mesh", "#Cube");
 

@@ -50,7 +50,7 @@ static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsP
     const auto &renderer(subsetRenderable.renderer);
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getShaderPipelineForDefaultMaterial(subsetRenderable, featureSet);
     if (shaderPipeline)
-        ps->shaderPipeline = shaderPipeline.data();
+        ps->shaderPipeline = shaderPipeline.get();
     return shaderPipeline;
 }
 
@@ -61,7 +61,7 @@ static QSSGRef<QSSGRhiShaderPipeline> shadersForParticleMaterial(QSSGRhiGraphics
     auto featureLevel = particleRenderable.particles.m_featureLevel;
     QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiParticleShader(featureLevel);
     if (shaderPipeline)
-        ps->shaderPipeline = shaderPipeline.data();
+        ps->shaderPipeline = shaderPipeline.get();
     return shaderPipeline;
 }
 
@@ -149,7 +149,7 @@ void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
     const auto layerPrepResult = theRenderData->layerPrepResult;
     if (layerPrepResult->isLayerVisible()) {
         ///
-        QSSGRhiContext *rhiCtx = contextInterface()->rhiContext().data();
+        QSSGRhiContext *rhiCtx = contextInterface()->rhiContext().get();
         QSSG_ASSERT(rhiCtx->isValid() && rhiCtx->rhi()->isRecordingFrame(), return);
         theRenderData->maybeBakeLightmap();
         beginLayerRender(*theRenderData);
@@ -311,7 +311,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubse
 
 void QSSGRenderer::beginFrame(QSSGRenderLayer *layer)
 {
-    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), start(layer));
+    QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), start(layer));
 }
 
 void QSSGRenderer::endFrame(QSSGRenderLayer *layer)
@@ -328,7 +328,7 @@ void QSSGRenderer::endFrame(QSSGRenderLayer *layer)
     }
     m_materialClearDirty.clear();
 
-    QSSGRHICTX_STAT(m_contextInterface->rhiContext().data(), stop(layer));
+    QSSGRHICTX_STAT(m_contextInterface->rhiContext().get(), stop(layer));
 }
 
 QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer,
@@ -651,7 +651,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
                                               theData.cameraData.value(), // ensured/checked further up in this function
-                                              theData.shadowMapManager.data(),
+                                              theData.shadowMapManager.get(),
                                               theData.depthMapPass.rhiDepthTexture.texture,
                                               theData.ssaoMapPass.rhiAoTexture.texture,
                                               theData.screenMapPass.rhiScreenTexture.texture,
@@ -1156,7 +1156,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         } else if (theObject->type == QSSGSubsetRenderable::Type::CustomMaterialMeshSubset) {
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
 
-            QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().data());
+            QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
             shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, subsetRenderable.customMaterial(), subsetRenderable, objectFeatureSet);
             if (!shaderPipeline)
                 continue;
@@ -1170,7 +1170,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
 
         if (theObject->type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || theObject->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
 
-            ps->shaderPipeline = shaderPipeline.data();
+            ps->shaderPipeline = shaderPipeline.get();
             ps->ia = subsetRenderable.subset.rhi.ia;
             int instanceBufferBinding = setupInstancing(&subsetRenderable, ps, rhiCtx, globalRenderProperties.cameraData.direction, globalRenderProperties.cameraData.position);
             ps->ia.bakeVertexInputLocations(*shaderPipeline, instanceBufferBinding);
@@ -1179,11 +1179,11 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
 
                  // Depth and SSAO textures, in case a custom material's shader code does something with them.
-            addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
+            addDepthTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
 
             if (isOpaqueDepthPrePass) {
                 addOpaqueDepthPrePassBindings(rhiCtx,
-                                              shaderPipeline.data(),
+                                              shaderPipeline.get(),
                                               subsetRenderable.firstImage,
                                               bindings,
                                               (theObject->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset));
@@ -1445,7 +1445,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
             }
 
             // Depth and SSAO textures
-            addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
+            addDepthTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
 
             // Instead of always doing a QHash find in srb(), store the binding
             // list and the srb object in the per-model+material
@@ -1501,7 +1501,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(inObject));
         const QSSGRenderCustomMaterial &material(subsetRenderable.customMaterial());
-        QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().data());
+        QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
 
         featureSet.set(QSSGShaderFeatures::Feature::LightProbe, inData.layer.lightProbe || material.m_iblProbe);
 
@@ -1604,7 +1604,7 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
     case QSSGRenderableObject::Type::CustomMaterialMeshSubset:
     {
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(object));
-        QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().data());
+        QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
         customMaterialSystem.rhiRenderRenderable(rhiCtx, subsetRenderable, needsSetViewport, cubeFace, state);
         break;
     }
@@ -1712,7 +1712,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                                                      : renderer->getRhiCubemapShadowBlurXShader();
         if (!shaderPipeline)
             return;
-        ps.shaderPipeline = shaderPipeline.data();
+        ps.shaderPipeline = shaderPipeline.get();
 
         ps.colorAttachmentCount = orthographic ? 1 : 6;
 
@@ -1761,7 +1761,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                       : renderer->getRhiCubemapShadowBlurYShader();
         if (!shaderPipeline)
             return;
-        ps.shaderPipeline = shaderPipeline.data();
+        ps.shaderPipeline = shaderPipeline.get();
 
         bindings.clear();
         bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
@@ -1966,7 +1966,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
                 auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
                 Q_ASSERT(shaderPipeline);
-                ps->shaderPipeline = shaderPipeline.data();
+                ps->shaderPipeline = shaderPipeline.get();
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
                 if (!renderPassDesc)
                     renderPassDesc = rt->newCompatibleRenderPassDescriptor();
@@ -2058,7 +2058,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
         return;
     }
 
-    ps.shaderPipeline = shaderPipeline.data();
+    ps.shaderPipeline = shaderPipeline.get();
 
     const float R2 = ao.aoDistance * ao.aoDistance * 0.16f;
     const QSize textureSize = rhiAoTexture.texture->pixelSize();
@@ -2374,7 +2374,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*obj));
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
 
-            QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().data());
+            QSSGCustomMaterialSystem &customMaterialSystem(*subsetRenderable.renderer->contextInterface()->customMaterialSystem().get());
             shaderPipeline = customMaterialSystem.shadersForCustomMaterial(ps, subsetRenderable.customMaterial(), subsetRenderable, featureSet);
 
             if (shaderPipeline) {
@@ -2400,11 +2400,11 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd->ubuf);
 
             // Depth and SSAO textures, in case a custom material's shader code does something with them.
-            addDepthTextureBindings(rhiCtx, shaderPipeline.data(), bindings);
+            addDepthTextureBindings(rhiCtx, shaderPipeline.get(), bindings);
 
             if (isOpaqueDepthPrePass) {
                 addOpaqueDepthPrePassBindings(rhiCtx,
-                                              shaderPipeline.data(),
+                                              shaderPipeline.get(),
                                               subsetRenderable.firstImage,
                                               bindings,
                                               (obj->type == QSSGRenderableObject::Type::CustomMaterialMeshSubset));

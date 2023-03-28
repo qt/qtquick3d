@@ -69,7 +69,7 @@ GenShaders::GenShaders()
                                                                                        new QSSGShaderCache(rhiContext, &initBaker),
                                                                                        new QSSGCustomMaterialSystem,
                                                                                        new QSSGProgramGenerator));
-    sceneManager->rci = renderContext.data();
+    sceneManager->rci = renderContext.get();
 }
 
 GenShaders::~GenShaders() = default;
