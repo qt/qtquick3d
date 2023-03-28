@@ -724,7 +724,7 @@ void MainPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 
     // debug objects
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
-    if (debugDraw->hasContent()) {
+    if (debugDraw && debugDraw->hasContent()) {
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
         QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::DebugObjects });
@@ -862,7 +862,7 @@ void MainPass::renderPass(QSSGRenderer &renderer)
 
     // 7. Debug Draw content
     const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
-    if (debugDraw->hasContent()) {
+    if (debugDraw && debugDraw->hasContent()) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick 3D debug objects"));
         auto shaderPipeline = renderer.getRhiDebugObjectShader();
         QSSG_CHECK(shaderPipeline);

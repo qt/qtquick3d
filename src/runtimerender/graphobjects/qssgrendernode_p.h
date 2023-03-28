@@ -127,9 +127,9 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
     [[nodiscard]] static QMatrix4x4 calculateTransformMatrix(QVector3D position, QVector3D scale, QVector3D pivot, QQuaternion rotation);
 
     // Get the bounds of us and our children in our local space.
-    QSSGBounds3 getBounds(const QSSGRef<QSSGBufferManager> &inManager,
+    QSSGBounds3 getBounds(QSSGBufferManager &inManager,
                             bool inIncludeChildren = true) const;
-    QSSGBounds3 getChildBounds(const QSSGRef<QSSGBufferManager> &inManager) const;
+    QSSGBounds3 getChildBounds(QSSGBufferManager &inManager) const;
     // Assumes CalculateGlobalVariables has already been called.
     QVector3D getGlobalPos() const;
     QVector3D getGlobalPivot() const;

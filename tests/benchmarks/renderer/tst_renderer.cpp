@@ -47,18 +47,17 @@ void tst_renderer::initTestCase()
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
 
-    const auto rhiContext = QSSGRef<QSSGRhiContext>(new QSSGRhiContext);
+    std::unique_ptr<QSSGRhiContext> rhiContext = std::make_unique<QSSGRhiContext>();
     rhiContext->initialize(rhi);
     rhiContext->setCommandBuffer(cb);
 
-    auto shaderCache = new QSSGShaderCache(rhiContext);
-    renderContext = std::make_shared<QSSGRenderContextInterface>(rhiContext,
-                                                                 new QSSGBufferManager,
-                                                                 new QSSGRenderer,
-                                                                 new QSSGShaderLibraryManager,
-                                                                 shaderCache,
-                                                                 new QSSGCustomMaterialSystem,
-                                                                 new QSSGProgramGenerator);
+    renderContext = std::make_shared<QSSGRenderContextInterface>(std::make_unique<QSSGBufferManager>(),
+                                                                 std::make_unique<QSSGRenderer>(),
+                                                                 std::make_shared<QSSGShaderLibraryManager>(),
+                                                                 std::make_unique<QSSGShaderCache>(*rhiContext),
+                                                                 std::make_unique<QSSGCustomMaterialSystem>(),
+                                                                 std::make_unique<QSSGProgramGenerator>(),
+                                                                 std::move(rhiContext));
 
     wa = new QQuick3DWindowAttachment(nullptr);
     wa->setRci(renderContext);

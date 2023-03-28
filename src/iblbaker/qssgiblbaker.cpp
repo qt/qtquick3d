@@ -126,7 +126,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
 
-    const auto rhiContext = QSSGRef<QSSGRhiContext>(new QSSGRhiContext);
+    const auto rhiContext = std::make_unique<QSSGRhiContext>();
     rhiContext->initialize(rhi.get());
     rhiContext->setCommandBuffer(cb);
 
@@ -134,7 +134,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     if (!inImage)
         return QStringLiteral("Failed to load hdr file");
 
-    auto shaderCache = std::make_unique<QSSGShaderCache>(rhiContext);
+    auto shaderCache = std::make_unique<QSSGShaderCache>(*rhiContext);
 
     // The objective of this method is to take the equirectangular texture
     // provided by inImage and create a cubeMap that contains both pre-filtered

@@ -411,11 +411,6 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
             if (QSSG_GUARD(QSGRendererInterface::isApiRhiBased(rif->graphicsApi()))) {
                 QRhi *rhi = static_cast<QRhi *>(rif->getResource(qw, QSGRendererInterface::RhiResource));
                 QSSG_CHECK_X(rhi != nullptr, "No QRhi from QQuickWindow, this cannot happen");
-                QSSGRef<QSSGRhiContext> rhiContext(new QSSGRhiContext);
-                // and this is the magic point where many things internally get
-                // switched over to be QRhi-based.
-                rhiContext->initialize(rhi);
-
                 // The RenderContextInterface, and the objects owned by it (such
                 // as, the BufferManager) are always per-QQuickWindow, and so per
                 // scenegraph render thread. Hence the association with window.
@@ -425,7 +420,7 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 // components that do not work with and own native graphics
                 // resources (most notably, QSSGShaderLibraryManager - but this
                 // distinction is handled internally by QSSGRenderContextInterface).
-                rci = std::make_shared<QSSGRenderContextInterface>(rhiContext);
+                rci = std::make_shared<QSSGRenderContextInterface>(rhi);
                 wa->setRci(rci);
 
                 connect(wa, &QQuick3DWindowAttachment::releaseCachedResources, this, &QQuick3DViewport::onReleaseCachedResources);

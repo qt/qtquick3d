@@ -230,7 +230,7 @@ void QSSGRenderer::cleanupResources(QSet<QSSGRenderGraphObject *> &resources)
 QSSGLayerRenderData *QSSGRenderer::getOrCreateLayerRenderData(QSSGRenderLayer &layer)
 {
     if (layer.renderData == nullptr)
-        layer.renderData = new QSSGLayerRenderData(layer, this);
+        layer.renderData = new QSSGLayerRenderData(layer, *this);
 
     return layer.renderData;
 }
@@ -244,9 +244,9 @@ static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material 
 
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
-                                                                           const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                           const QSSGRef<QSSGShaderCache> &shaderCache,
-                                                                           const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+                                                                           QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                           QSSGShaderCache &shaderCache,
+                                                                           QSSGProgramGenerator &shaderProgramGenerator,
                                                                            QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
                                                                            const QSSGShaderFeatures &featureSet,
                                                                            QByteArray &shaderString)
@@ -264,21 +264,21 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     // runtime cache. That may get cleared upon an explicit call to
     // QQuickWindow::releaseResources(), but will otherwise store all
     // encountered shader pipelines in any View3D in the window.
-    QSSGRef<QSSGRhiShaderPipeline> maybePipeline = shaderCache->tryGetRhiShaderPipeline(shaderString, featureSet);
+    QSSGRef<QSSGRhiShaderPipeline> maybePipeline = shaderCache.tryGetRhiShaderPipeline(shaderString, featureSet);
     if (maybePipeline)
         return maybePipeline;
 
     // Check if there's a pre-built (offline generated) shader for available.
     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, QQsbCollection::toFeatureSet(featureSet));
-    const QQsbCollection::EntryMap &pregenEntries = shaderLibraryManager->m_preGeneratedShaderEntries;
+    const QQsbCollection::EntryMap &pregenEntries = shaderLibraryManager.m_preGeneratedShaderEntries;
     if (!pregenEntries.isEmpty()) {
         const auto foundIt = pregenEntries.constFind(QQsbCollection::Entry(qsbcKey));
         if (foundIt != pregenEntries.cend())
-            return shaderCache->newPipelineFromPregenerated(shaderString, featureSet, *foundIt, renderable.material);
+            return shaderCache.newPipelineFromPregenerated(shaderString, featureSet, *foundIt, renderable.material);
     }
 
     // Try the persistent (disk-based) cache then.
-    maybePipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey, shaderString, featureSet);
+    maybePipeline = shaderCache.tryNewPipelineFromPersistentCache(qsbcKey, shaderString, featureSet);
     if (maybePipeline)
         return maybePipeline;
 
@@ -303,10 +303,10 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
 QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
                                                                        const QSSGShaderFeatures &inFeatureSet)
 {
-    const QSSGRef<QSSGShaderCache> &theCache = m_contextInterface->shaderCache();
+    const auto &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
     const auto &shaderLibraryManager = contextInterface()->shaderLibraryManager();
-    return generateRhiShaderPipelineImpl(inRenderable, shaderLibraryManager, theCache, shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
+    return generateRhiShaderPipelineImpl(inRenderable, *shaderLibraryManager, *theCache, *shaderProgramGenerator, m_defaultMaterialShaderKeyProperties, inFeatureSet, m_generatedShaderString);
 }
 
 void QSSGRenderer::beginFrame(QSSGRenderLayer *layer)
@@ -332,7 +332,7 @@ void QSSGRenderer::endFrame(QSSGRenderLayer *layer)
 }
 
 QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &layer,
-                                                       const QSSGRef<QSSGBufferManager> &bufferManager,
+                                                       QSSGBufferManager &bufferManager,
                                                        const QSSGRenderRay &ray)
 {
     PickResultList pickResults;
@@ -346,7 +346,7 @@ QSSGRenderer::PickResultList QSSGRenderer::syncPickAll(const QSSGRenderLayer &la
 }
 
 QSSGRenderPickResult QSSGRenderer::syncPick(const QSSGRenderLayer &layer,
-                                            const QSSGRef<QSSGBufferManager> &bufferManager,
+                                            QSSGBufferManager &bufferManager,
                                             const QSSGRenderRay &ray,
                                             QSSGRenderNode *target)
 {
@@ -434,7 +434,7 @@ static void dfs(const QSSGRenderNode &node, RenderableList &renderables)
 }
 
 void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
-                                         const QSSGRef<QSSGBufferManager> &bufferManager,
+                                         QSSGBufferManager &bufferManager,
                                          const QSSGRenderRay &ray,
                                          bool inPickEverything,
                                          PickResultList &outIntersectionResult)
@@ -450,7 +450,7 @@ void QSSGRenderer::getLayerHitObjectList(const QSSGRenderLayer &layer,
     }
 }
 
-void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
+void QSSGRenderer::intersectRayWithSubsetRenderable(QSSGBufferManager &bufferManager,
                                                     const QSSGRenderRay &inRay,
                                                     const QSSGRenderNode &node,
                                                     QSSGRenderer::PickResultList &outIntersectionResultList)
@@ -472,8 +472,8 @@ void QSSGRenderer::intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferMana
     // is usually true, except for custom geometry which can be updated at any time. So this
     // guard should really only be locked whenever a custom geometry buffer is being updated
     // on the render thread.  Still naughty though because this can block the render thread.
-    QMutexLocker mutexLocker(bufferManager->meshUpdateMutex());
-    auto mesh = bufferManager->getMeshForPicking(model);
+    QMutexLocker mutexLocker(bufferManager.meshUpdateMutex());
+    auto mesh = bufferManager.getMeshForPicking(model);
     if (!mesh)
         return;
 

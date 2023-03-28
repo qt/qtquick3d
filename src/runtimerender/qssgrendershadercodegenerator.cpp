@@ -428,8 +428,8 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
                                                                                const QSSGShaderFeatures &inFeatureSet,
-                                                                               const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                               const QSSGRef<QSSGShaderCache> &theCache,
+                                                                               QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                               QSSGShaderCache &theCache,
                                                                                QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
     // No stages enabled
@@ -452,7 +452,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGProgramGenerator::compileGeneratedRhiShader(c
         QSSGShaderGeneratorStage stageName = static_cast<QSSGShaderGeneratorStage>(1 << stageIdx);
         if (m_enabledStages & stageName) {
             QSSGStageGeneratorBase &theStage(internalGetStage(stageName));
-            shaderLibraryManager->resolveIncludeFiles(theStage.m_finalBuilder, inMaterialInfoString);
+            shaderLibraryManager.resolveIncludeFiles(theStage.m_finalBuilder, inMaterialInfoString);
             registerShaderMetaDataFromSource(&mergeContext, theStage.m_finalBuilder, stageName);
         }
     }
@@ -468,7 +468,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGProgramGenerator::compileGeneratedRhiShader(c
     // qDebug("VERTEX:\n%s\n\n", m_vs.m_finalBuilder.constData());
     // qDebug("FRAGMENT:\n%s\n\n", m_fs.m_finalBuilder.constData());
 
-    return theCache->compileForRhi(inMaterialInfoString,
+    return theCache.compileForRhi(inMaterialInfoString,
                                    m_vs.m_finalBuilder,
                                    m_fs.m_finalBuilder,
                                    inFeatureSet,

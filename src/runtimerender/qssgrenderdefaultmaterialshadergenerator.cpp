@@ -470,7 +470,7 @@ const char *QSSGMaterialShaderGenerator::vertexInstancedMainArgumentList()
 
 static bool hasCustomFunction(const QByteArray &funcName,
                               QSSGShaderMaterialAdapter *materialAdapter,
-                              const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
+                              QSSGShaderLibraryManager &shaderLibraryManager)
 {
     return materialAdapter->hasCustomShaderFunction(QSSGShaderCache::ShaderType::Fragment, funcName, shaderLibraryManager);
 }
@@ -488,7 +488,7 @@ static void generateTempLightColor(QSSGStageGeneratorBase &fragmentShader,
 static void handleSpecularLight(QSSGStageGeneratorBase &fragmentShader,
                                 QSSGMaterialShaderGenerator::LightVariableNames& lightVarNames,
                                 QSSGShaderMaterialAdapter *materialAdapter,
-                                const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                QSSGShaderLibraryManager &shaderLibraryManager,
                                 bool usesSharedVar,
                                 bool hasCustomFrag,
                                 bool specularLightingEnabled,
@@ -560,7 +560,7 @@ static void handleDirectionalLight(QSSGStageGeneratorBase &fragmentShader,
                                    bool usesSharedVar,
                                    bool hasCustomFrag,
                                    QSSGShaderMaterialAdapter *materialAdapter,
-                                   const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                   QSSGShaderLibraryManager &shaderLibraryManager,
                                    bool specularLightingEnabled,
                                    bool enableClearcoat,
                                    bool enableTransmission)
@@ -623,7 +623,7 @@ static void generateDirections(QSSGStageGeneratorBase &fragmentShader,
 static void handlePointLight(QSSGStageGeneratorBase &fragmentShader,
                              QSSGMaterialShaderGenerator::LightVariableNames& lightVarNames,
                              QSSGShaderMaterialAdapter *materialAdapter,
-                             const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                             QSSGShaderLibraryManager &shaderLibraryManager,
                              bool usesSharedVar,
                              bool hasCustomFrag,
                              bool specularLightingEnabled,
@@ -666,7 +666,7 @@ static void handleSpotLight(QSSGStageGeneratorBase &fragmentShader,
                              QSSGMaterialShaderGenerator::LightVariableNames& lightVarNames,
                              const QByteArray& lightVarPrefix,
                              QSSGShaderMaterialAdapter *materialAdapter,
-                             const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                             QSSGShaderLibraryManager &shaderLibraryManager,
                              bool usesSharedVar,
                              bool hasCustomFrag,
                              bool specularLightingEnabled,
@@ -735,7 +735,7 @@ static void generateMainLightCalculation(QSSGStageGeneratorBase &fragmentShader,
                                            const QSSGShaderDefaultMaterialKey &inKey,
                                            const QSSGRenderGraphObject &inMaterial,
                                            const QSSGShaderLightListView &lights,
-                                           const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
+                                           QSSGShaderLibraryManager &shaderLibraryManager,
                                            QSSGRenderableImage *translucencyImage,
                                            bool hasCustomFrag,
                                            bool usesSharedVar,
@@ -835,7 +835,7 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
                                    const QSSGRenderGraphObject &inMaterial,
                                    const QSSGShaderLightListView &lights,
                                    QSSGRenderableImage *firstImage,
-                                   const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
+                                   QSSGShaderLibraryManager &shaderLibraryManager)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
     auto hasCustomFunction = [&shaderLibraryManager, materialAdapter](const QByteArray &funcName) {
@@ -1813,8 +1813,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGMaterialShaderGenerator::generateMaterialRhiS
                                                                                       const QSSGRenderGraphObject &inMaterial,
                                                                                       const QSSGShaderLightListView &inLights,
                                                                                       QSSGRenderableImage *inFirstImage,
-                                                                                      const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                                      const QSSGRef<QSSGShaderCache> &theCache)
+                                                                                      QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                                      QSSGShaderCache &theCache)
 {
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must

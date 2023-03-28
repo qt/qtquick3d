@@ -892,11 +892,13 @@ int QSSGRhiShaderPipeline::bindingForTexture(const char *name, int hint)
     return binding;
 }
 
-QSSGRhiContext::QSSGRhiContext()
-    : m_stats(*this)
+QSSGRhiContext::QSSGRhiContext(QRhi *rhi)
+    : m_rhi(rhi)
+    , m_stats(*this)
 {
     Q_STATIC_ASSERT(int(QSSGRhiSamplerBindingHints::LightProbe) > int(QSSGRenderableImage::Type::Occlusion));
 }
+
 
 QSSGRhiContext::~QSSGRhiContext()
 {

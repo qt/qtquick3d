@@ -21,16 +21,14 @@ private Q_SLOTS:
     void bench_picking1in1kMiss();
 
 private:
-    QSSGRef<QSSGRhiContext> renderContext;
-    QSSGRef<QSSGShaderCache> shaderCache;
-    QSSGRef<QSSGBufferManager> bufferManager;
+    std::unique_ptr<QSSGRhiContext> renderContext;
+    std::unique_ptr<QSSGBufferManager> bufferManager;
 
     void benchImpl(int count, bool hit);
 };
 
 picking::picking()
     : renderContext(new QSSGRhiContext)
-    , shaderCache(new QSSGShaderCache(renderContext))
     , bufferManager(new QSSGBufferManager)
 {
 }
@@ -100,7 +98,7 @@ void picking::benchImpl(int count, bool hit)
     QSSGRenderPickResult res;
     QSSGRenderRay ray = hit ? QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 0.0f, 0.0f, 1.0f } } : QSSGRenderRay{ { 0.0f, 0.0f, -100.0f }, { 1.0f, 0.0f, 0.0f } };
     QBENCHMARK {
-        res = renderer.syncPick(dummyLayer, bufferManager, ray);
+        res = renderer.syncPick(dummyLayer, *bufferManager, ray);
     }
     QVERIFY(res.m_hitObject != nullptr);
 }

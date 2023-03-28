@@ -4,6 +4,7 @@
 
 #include "graphobjects/qssgrendergraphobject_p.h"
 #include "qssgrendershadercache_p.h"
+#include "qssgrendercontextcore_p.h"
 
 #include <QtQuick3DUtils/private/qssgutils_p.h>
 #include <QtQuick3DUtils/private/qquick3dprofiler_p.h>
@@ -227,7 +228,7 @@ static inline QString persistentQsbcFileName()
     return QString();
 }
 
-QSSGShaderCache::QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
+QSSGShaderCache::QSSGShaderCache(QSSGRhiContext &ctx,
                                  const InitBakerFunc initBakeFn)
     : m_rhiContext(ctx),
       m_initBaker(initBakeFn)
@@ -372,7 +373,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     QString vertErr, fragErr;
 
     QShaderBaker baker;
-    m_initBaker(&baker, m_rhiContext->rhi());
+    m_initBaker(&baker, m_rhiContext.rhi());
 
     const bool editorMode = QSSGRhiContext::editorMode();
     // Shader debug is disabled in editor mode
@@ -440,7 +441,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     }
 
     if (vertShaderValid && fragShaderValid) {
-        shaders = new QSSGRhiShaderPipeline(*m_rhiContext.get());
+        shaders = new QSSGRhiShaderPipeline(m_rhiContext);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
         if (shaderDebug)
@@ -500,7 +501,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::newPipelineFromPregenerated(cons
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.get()));
+    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(m_rhiContext));
 
     const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
 
@@ -553,7 +554,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryNewPipelineFromPersistentCach
         if (shaderDebug)
             qDebug("Loading rhi shaders from disk cache for %s (%s)", qsbcKey.constData(), inKey.constData());
 
-        QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.get()));
+        QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(m_rhiContext));
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader), stageFlags);
         QSSGShaderCacheKey cacheKey(inKey);
@@ -578,7 +579,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.get()));
+    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(m_rhiContext));
 
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.

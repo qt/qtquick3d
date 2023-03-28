@@ -58,17 +58,16 @@ GenShaders::GenShaders()
     QRhiCommandBuffer *cb;
     rhi->beginOffscreenFrame(&cb);
 
-    const auto rhiContext = QSSGRef<QSSGRhiContext>(new QSSGRhiContext);
-    rhiContext->initialize(rhi);
+    std::unique_ptr<QSSGRhiContext> rhiContext = std::make_unique<QSSGRhiContext>(rhi);
     rhiContext->setCommandBuffer(cb);
 
-    renderContext = std::make_shared<QSSGRenderContextInterface>(rhiContext,
-                                                                 new QSSGBufferManager,
-                                                                 new QSSGRenderer,
-                                                                 new QSSGShaderLibraryManager,
-                                                                 new QSSGShaderCache(rhiContext, &initBaker),
-                                                                 new QSSGCustomMaterialSystem,
-                                                                 new QSSGProgramGenerator);
+    renderContext = std::make_shared<QSSGRenderContextInterface>(std::make_unique<QSSGBufferManager>(),
+                                                                 std::make_unique<QSSGRenderer>(),
+                                                                 std::make_shared<QSSGShaderLibraryManager>(),
+                                                                 std::make_unique<QSSGShaderCache>(*rhiContext, &initBaker),
+                                                                 std::make_unique<QSSGCustomMaterialSystem>(),
+                                                                 std::make_unique<QSSGProgramGenerator>(),
+                                                                 std::move(rhiContext));
     wa = new QQuick3DWindowAttachment(nullptr);
     wa->setRci(renderContext);
     sceneManager->wattached = wa;
@@ -97,7 +96,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
     QSSGRenderLayer layer;
     renderContext->setViewport(QRect(QPoint(), QSize(888,666)));
     const auto &renderer = renderContext->renderer();
-    QSSGLayerRenderData layerData(layer, renderer);
+    QSSGLayerRenderData layerData(layer, *renderer);
 
     const auto &shaderLibraryManager = renderContext->shaderLibraryManager();
     const auto &shaderCache = renderContext->shaderCache();
@@ -214,7 +213,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
 
         auto generateShader = [&](const QSSGShaderFeatures &features) {
             if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
-                auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), shaderLibraryManager, shaderCache, shaderProgramGenerator, materialPropertis, features, shaderString);
+                auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), *shaderLibraryManager, *shaderCache, *shaderProgramGenerator, materialPropertis, features, shaderString);
                 if (!shaderPipeline.isNull()) {
                     const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
                     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
@@ -305,9 +304,9 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
                 auto bindShaderCommand = static_cast<const QSSGBindShader &>(*command);
                 for (const auto isYUpInFramebuffer : { true, false }) { // Generate effects for both up-directions.
                     const auto shaderPipeline = QSSGRhiEffectSystem::buildShaderForEffect(bindShaderCommand,
-                                                                                          shaderProgramGenerator,
-                                                                                          shaderLibraryManager,
-                                                                                          shaderCache,
+                                                                                          *shaderProgramGenerator,
+                                                                                          *shaderLibraryManager,
+                                                                                          *shaderCache,
                                                                                           isYUpInFramebuffer);
                     if (shaderPipeline) {
                         const auto &key = bindShaderCommand.m_shaderPathKey;

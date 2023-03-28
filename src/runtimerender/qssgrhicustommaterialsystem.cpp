@@ -78,7 +78,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
         if (!shaderPipeline) {
             // Have to generate the shaders and send it all through the shader conditioning pipeline.
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
-            QSSGMaterialVertexPipeline vertexPipeline(context->shaderProgramGenerator(),
+            QSSGMaterialVertexPipeline vertexPipeline(*context->shaderProgramGenerator(),
                                                       context->renderer()->defaultMaterialShaderKeyProperties(),
                                                       material.adapter);
 
@@ -90,8 +90,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
                                                                                     renderable.material,
                                                                                     renderable.lights,
                                                                                     renderable.firstImage,
-                                                                                    context->shaderLibraryManager(),
-                                                                                    context->shaderCache());
+                                                                                    *context->shaderLibraryManager(),
+                                                                                    *context->shaderCache());
             Q_QUICK3D_PROFILE_END_WITH_ID(QQuick3DProfiler::Quick3DGenerateShader, 0, material.profilingId);
         }
 
@@ -519,7 +519,7 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                 reinterpret_cast<QSSGRenderCustomMaterial::TextureProperty *>(propertyValue.value<void *>());
         QSSGRenderImage *image = textureProperty->texImage;
         if (image) {
-            const QSSGRef<QSSGBufferManager> &theBufferManager(context->bufferManager());
+            const auto &theBufferManager(context->bufferManager());
             const QSSGRenderImageTexture texture = theBufferManager->loadRenderImage(image);
             if (texture.m_texture) {
                 const QSSGRhiTexture t = {

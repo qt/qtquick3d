@@ -114,7 +114,7 @@ QSSGRenderImageTexture QSSGBufferManager::loadRenderImage(const QSSGRenderImage 
     if (inMipMode == MipModeFollowRenderImage)
         inMipMode = image->m_generateMipmaps ? MipModeEnable : MipModeDisable;
 
-    auto context = m_contextInterface->rhiContext();
+    const auto &context = m_contextInterface->rhiContext();
     QSSGRenderImageTexture result;
     if (image->m_qsgTexture) {
         QRhi *rhi = context->rhi();
@@ -469,7 +469,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     // It would be better if we could use a separate cubemap for irradiance, but
     // right now there is a 1:1 association between texture sources on the front-
     // end and backend.
-    auto context = m_contextInterface->rhiContext();
+    const auto &context = m_contextInterface->rhiContext();
     auto *rhi = context->rhi();
     // Right now minimum face size needs to be 512x512 to be able to have 6 reasonably sized mips
     int suggestedSize = inImage->height * 0.5f;
@@ -563,7 +563,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     QRhiSampler *sampler = context->sampler(samplerDesc);
 
     // Load shader and setup render pipeline
-    auto shaderCache = m_contextInterface->shaderCache();
+    const auto &shaderCache = m_contextInterface->shaderCache();
     QSSGRef<QSSGRhiShaderPipeline> envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
 
     // Vertex Buffer - Just a single cube that will be viewed from inside
@@ -863,7 +863,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     const bool checkTransp = inFlags.testFlag(ScanForTransparency);
     bool hasTransp = false;
 
-    auto context = m_contextInterface->rhiContext();
+    const auto &context = m_contextInterface->rhiContext();
     auto *rhi = context->rhi();
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
@@ -1122,7 +1122,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     } rhi;
 
     QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
-    auto context = m_contextInterface->rhiContext();
+    const auto &context = m_contextInterface->rhiContext();
     rhi.vertexBuffer = new QSSGRhiBuffer(*context.get(),
                                          QRhiBuffer::Static,
                                          QRhiBuffer::VertexBuffer,

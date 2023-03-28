@@ -127,7 +127,7 @@ void tst_BufferManager::staticScene()
     const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
     QVERIFY(context);
 
-    auto bufferManager = context->bufferManager();
+    const auto &bufferManager = context->bufferManager();
 
     QCOMPARE(bufferManager->getImageMap().size(), pathTextureCount);
     QCOMPARE(bufferManager->getSGImageMap().size(), sgTextureCount);
@@ -156,7 +156,7 @@ void tst_BufferManager::dynamicScene()
     const auto &context = QQuick3DSceneManager::getOrSetWindowAttachment(*renderer.quickWindow)->rci();
     QVERIFY(context);
 
-    auto bufferManager = context->bufferManager();
+    const auto &bufferManager = context->bufferManager();
 
     // Check for the initial state (1 static path model)
     QCOMPARE(bufferManager->getImageMap().size(), 0);

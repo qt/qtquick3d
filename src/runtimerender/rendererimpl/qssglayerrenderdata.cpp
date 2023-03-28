@@ -463,7 +463,7 @@ void QSSGLayerRenderData::prepareImageForRender(QSSGRenderImage &inImage,
                                                            QSSGRenderDefaultMaterial *inMaterial)
 {
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
-    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+    const auto &bufferManager = contextInterface.bufferManager();
 
     if (inImage.clearDirty())
         ioFlags |= QSSGRenderableObjectFlag::Dirty;
@@ -662,7 +662,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareDefaultMaterial
     renderer->defaultMaterialShaderKeyProperties().m_alphaMode.setValue(theGeneratedKey, theMaterial->alphaMode);
 
     // vertex attribute presence flags
-    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.get());
+    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer);
 
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
@@ -860,7 +860,7 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     renderer->defaultMaterialShaderKeyProperties().m_usesInverseProjectionMatrix.setValue(theGeneratedKey, usesInvProjectionMatrix);
 
     // vertex attribute presence flags
-    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer.get());
+    setVertexInputPresence(renderableFlags, theGeneratedKey, renderer);
 
     // set the flag indicating the need for gl_PointSize
     renderer->defaultMaterialShaderKeyProperties().m_usesPointsTopology.setValue(theGeneratedKey, renderableFlags.isPointsTopology());
@@ -921,7 +921,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 {
     const auto &rhiCtx = renderer->contextInterface()->rhiContext();
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
-    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+    const auto &bufferManager = contextInterface.bufferManager();
 
     bool wasDirty = false;
 
@@ -1334,7 +1334,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
 
-                const QSSGRef<QSSGCustomMaterialSystem> &theMaterialSystem(contextInterface.customMaterialSystem());
+                const auto &theMaterialSystem(contextInterface.customMaterialSystem());
                 wasDirty |= theMaterialSystem->prepareForRender(theModelContext.model, theSubset, theMaterial);
 
                 QSSGDefaultMaterialPreparationResult theMaterialPrepResult(
@@ -1438,7 +1438,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 
         QSSGRenderableImage *firstImage = nullptr;
         if (particles.m_sprite) {
-            const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+            const auto &bufferManager = contextInterface.bufferManager();
 
             if (particles.m_sprite->clearDirty())
                 dirty = true;
@@ -1450,7 +1450,7 @@ bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries 
 
         QSSGRenderableImage *colorTable = nullptr;
         if (particles.m_colorTable) {
-            const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+            const auto &bufferManager = contextInterface.bufferManager();
 
             if (particles.m_colorTable->clearDirty())
                 dirty = true;
@@ -1508,7 +1508,7 @@ bool QSSGLayerRenderData::prepareItem2DsForRender(const QSSGRenderContextInterfa
 void QSSGLayerRenderData::prepareResourceLoaders()
 {
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
-    const QSSGRef<QSSGBufferManager> &bufferManager = contextInterface.bufferManager();
+    const auto &bufferManager = contextInterface.bufferManager();
 
     for (const auto resourceLoader : std::as_const(layer.resourceLoaders))
         bufferManager->processResourceLoader(static_cast<QSSGRenderResourceLoader *>(resourceLoader));
@@ -2098,9 +2098,9 @@ QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraF
     return result;
 }
 
-QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer)
+QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer &inRenderer)
     : layer(inLayer)
-    , renderer(inRenderer)
+    , renderer(&inRenderer)
 {
 }
 
@@ -2262,7 +2262,7 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().get();
 
     if (!m_lightmapper)
-        m_lightmapper = new QSSGLightmapper(rhiCtx, renderer.get());
+        m_lightmapper = new QSSGLightmapper(rhiCtx, renderer);
 
     // sortedBakedLightingModels contains all models with
     // usedInBakedLighting: true. These, together with lights that

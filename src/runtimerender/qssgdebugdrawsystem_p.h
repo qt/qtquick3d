@@ -27,8 +27,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGDebugDrawSystem
 {
     Q_DISABLE_COPY(QSSGDebugDrawSystem)
 public:
-    QAtomicInt ref;
-
     QSSGDebugDrawSystem();
     ~QSSGDebugDrawSystem();
 

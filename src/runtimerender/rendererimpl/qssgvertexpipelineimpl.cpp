@@ -15,10 +15,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &programGen,
+QSSGMaterialVertexPipeline::QSSGMaterialVertexPipeline(QSSGProgramGenerator &programGen,
                                                        const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
                                                        QSSGShaderMaterialAdapter *materialAdapter)
-    : m_programGenerator(programGen)
+    : m_programGenerator(&programGen)
     , defaultMaterialShaderKeyProperties(materialProperties)
     , materialAdapter(materialAdapter)
     , hasCustomShadedMain(false)
@@ -100,7 +100,7 @@ static inline const char *customMainCallWithArguments(bool usesInstancing)
 
 void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey,
                                                        const QSSGShaderFeatures &inFeatureSet,
-                                                       const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
+                                                       QSSGShaderLibraryManager &shaderLibraryManager)
 {
     QSSGShaderGeneratorStageFlags theStages(QSSGProgramGenerator::defaultFlags());
     programGenerator()->beginProgram(theStages);
@@ -335,7 +335,7 @@ void QSSGMaterialVertexPipeline::beginVertexGeneration(const QSSGShaderDefaultMa
     } // with a custom vertex shader it is up to it to set gl_PointSize (aka POINT_SIZE)
 }
 
-void QSSGMaterialVertexPipeline::beginFragmentGeneration(const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager)
+void QSSGMaterialVertexPipeline::beginFragmentGeneration(QSSGShaderLibraryManager &shaderLibraryManager)
 {
     fragment().addUniform("qt_material_properties", "vec4");
     fragment().addUniform("qt_rhi_properties", "vec4");

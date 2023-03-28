@@ -199,7 +199,7 @@ void QSSGRenderNode::removeFromGraph()
     }
 }
 
-QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManager,
+QSSGBounds3 QSSGRenderNode::getBounds(QSSGBufferManager &inManager,
                                       bool inIncludeChildren) const
 {
     QSSGBounds3 retval;
@@ -208,12 +208,12 @@ QSSGBounds3 QSSGRenderNode::getBounds(const QSSGRef<QSSGBufferManager> &inManage
 
     if (type == QSSGRenderGraphObject::Type::Model) {
         auto model = static_cast<const QSSGRenderModel *>(this);
-        retval.include(inManager->getModelBounds(model));
+        retval.include(inManager.getModelBounds(model));
     }
     return retval;
 }
 
-QSSGBounds3 QSSGRenderNode::getChildBounds(const QSSGRef<QSSGBufferManager> &inManager) const
+QSSGBounds3 QSSGRenderNode::getChildBounds(QSSGBufferManager &inManager) const
 {
     QSSGBounds3 retval;
     QSSGBounds3 childBounds;
