@@ -280,7 +280,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     float distanceFromReflectionProbe;
     quint32 subsetLevelOfDetail = 0;
     QSSGShaderReflectionProbe reflectionProbe;
-    const QSSGRef<QSSGRenderer> &renderer;
+    QSSGRenderer *renderer = nullptr;
     const QSSGModelContext &modelContext;
     const QSSGRenderSubset &subset;
     QRhiBuffer *instanceBuffer = nullptr;
@@ -315,7 +315,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGSubsetRenderable : public QSSGRenderabl
     QSSGSubsetRenderable(Type type,
                          QSSGRenderableObjectFlags inFlags,
                          const QVector3D &inWorldCenterPt,
-                         const QSSGRef<QSSGRenderer> &rendr,
+                         QSSGRenderer *rendr,
                          const QSSGRenderSubset &inSubset,
                          const QSSGModelContext &inModelContext,
                          float inOpacity,
@@ -345,7 +345,7 @@ Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGSubsetRenderable>::value);
  */
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRenderableObject
 {
-    const QSSGRef<QSSGRenderer> &renderer;
+    QSSGRenderer *renderer = nullptr;
     const QSSGRenderParticles &particles;
     QSSGRenderableImage *firstImage;
     QSSGRenderableImage *colorTable;
@@ -376,7 +376,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGParticlesRenderable : public QSSGRender
 
     QSSGParticlesRenderable(QSSGRenderableObjectFlags inFlags,
                             const QVector3D &inWorldCenterPt,
-                            const QSSGRef<QSSGRenderer> &rendr,
+                            QSSGRenderer *rendr,
                             const QSSGRenderParticles &inParticles,
                             QSSGRenderableImage *inFirstImage,
                             QSSGRenderableImage *inColorTable,

@@ -98,7 +98,7 @@ void QQuick3DSceneManager::sync()
 
 }
 
-void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> &mgr)
+void QQuick3DSceneManager::updateBoundingBoxes(QSSGBufferManager &mgr)
 {
     const QList<QQuick3DObject *> dirtyList = dirtyBoundingBoxList;
     for (auto object : dirtyList) {
@@ -107,7 +107,7 @@ void QQuick3DSceneManager::updateBoundingBoxes(const QSSGRef<QSSGBufferManager> 
             continue;
         auto model = static_cast<QSSGRenderModel *>(itemPriv->spatialNode);
         if (model) {
-            QSSGBounds3 bounds = mgr->getModelBounds(model);
+            QSSGBounds3 bounds = mgr.getModelBounds(model);
             static_cast<QQuick3DModel *>(object)->setBounds(bounds.minimum, bounds.maximum);
         }
         dirtyBoundingBoxList.removeOne(object);
@@ -447,7 +447,7 @@ void QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resour
         sceneManager->updateDirtySpatialNodes();
     // Bounding Boxes
     for (auto &sceneManager : std::as_const(sceneManagers))
-        sceneManager->updateBoundingBoxes(m_rci->bufferManager());
+        sceneManager->updateBoundingBoxes(*m_rci->bufferManager());
     // Resource Loaders
     for (auto &sceneManager : std::as_const(sceneManagers))
         resourceLoaders.unite(sceneManager->resourceLoaders);

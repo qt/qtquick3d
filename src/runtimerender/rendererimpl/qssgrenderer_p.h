@@ -45,10 +45,9 @@ struct QSSGReflectionMapEntry;
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderer
 {
+    Q_DISABLE_COPY(QSSGRenderer)
     using PickResultList = QVarLengthArray<QSSGRenderPickResult, 20>; // Lets assume most items are filtered out already
-
 public:
-    QAtomicInt ref;
     QSSGRenderer();
     ~QSSGRenderer();
 
@@ -75,11 +74,11 @@ public:
     void endFrame(QSSGRenderLayer *layer);
 
     PickResultList syncPickAll(const QSSGRenderLayer &layer,
-                               const QSSGRef<QSSGBufferManager> &bufferManager,
+                               QSSGBufferManager &bufferManager,
                                const QSSGRenderRay &ray);
 
     QSSGRenderPickResult syncPick(const QSSGRenderLayer &layer,
-                                  const QSSGRef<QSSGBufferManager> &bufferManager,
+                                  QSSGBufferManager &bufferManager,
                                   const QSSGRenderRay &ray,
                                   QSSGRenderNode *target = nullptr);
 
@@ -96,9 +95,9 @@ public:
     void endLayerRender();
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
-    static QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager,
-                                                                        const QSSGRef<QSSGShaderCache> &shaderCache,
-                                                                        const QSSGRef<QSSGProgramGenerator> &shaderProgramGenerator,
+    static QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                        QSSGShaderCache &shaderCache,
+                                                                        QSSGProgramGenerator &shaderProgramGenerator,
                                                                         QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
                                                                         const QSSGShaderFeatures &featureSet,
                                                                         QByteArray &shaderString);
@@ -108,7 +107,7 @@ public:
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
 
-    QSSGRenderContextInterface *contextInterface() { return m_contextInterface; }
+    QSSGRenderContextInterface *contextInterface() const { return m_contextInterface; }
 
     // Returns true if the renderer expects new frame to be rendered
     // Happens when progressive AA is enabled
@@ -142,11 +141,11 @@ public:
 
 protected:
     static void getLayerHitObjectList(const QSSGRenderLayer &layer,
-                                      const QSSGRef<QSSGBufferManager> &bufferManager,
+                                      QSSGBufferManager &bufferManager,
                                       const QSSGRenderRay &ray,
                                       bool inPickEverything,
                                       PickResultList &outIntersectionResult);
-    static void intersectRayWithSubsetRenderable(const QSSGRef<QSSGBufferManager> &bufferManager,
+    static void intersectRayWithSubsetRenderable(QSSGBufferManager &bufferManager,
                                                  const QSSGRenderRay &inRay,
                                                  const QSSGRenderNode &node,
                                                  PickResultList &outIntersectionResultList);

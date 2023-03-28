@@ -43,10 +43,6 @@ class QRhiTexture;
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialSystem
 {
     Q_DISABLE_COPY(QSSGCustomMaterialSystem)
-public:
-    QAtomicInt ref;
-
-private:
     typedef QPair<QByteArray, QByteArray> TStrStrPair;
     typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
 

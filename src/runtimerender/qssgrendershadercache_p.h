@@ -29,6 +29,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSSGRenderContextInterface;
 class QSSGRhiShaderPipeline;
 class QShaderBaker;
 class QRhi;
@@ -158,6 +159,7 @@ inline size_t qHash(const QSSGShaderCacheKey &key)
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCache
 {
+    Q_DISABLE_COPY(QSSGShaderCache)
 public:
     enum class ShaderType
     {
@@ -165,12 +167,10 @@ public:
         Fragment = 1
     };
 
-    QAtomicInt ref;
-
     using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi *rhi);
 private:
     typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderPipeline>> TRhiShaderMap;
-    QSSGRef<QSSGRhiContext> m_rhiContext;
+    QSSGRhiContext &m_rhiContext; // Not own, the RCI owns us and the QSSGRhiContext.
     TRhiShaderMap m_rhiShaders;
     QByteArray m_insertStr; // member to potentially reuse the allocation after clear
     InitBakerFunc m_initBaker;
@@ -184,7 +184,7 @@ private:
                                const QSSGShaderFeatures &inFeatures);
 
 public:
-    QSSGShaderCache(const QSSGRef<QSSGRhiContext> &ctx,
+    QSSGShaderCache(QSSGRhiContext &ctx,
                     const InitBakerFunc initBakeFn = nullptr);
     ~QSSGShaderCache();
 

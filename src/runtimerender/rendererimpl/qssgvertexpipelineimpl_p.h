@@ -44,7 +44,7 @@ struct QSSGMaterialVertexPipeline
     typedef TStrTableStrMap::const_iterator TParamIter;
     typedef QFlags<GenerationFlag> GenerationFlags;
 
-    QSSGRef<QSSGProgramGenerator> m_programGenerator;
+    QSSGProgramGenerator *m_programGenerator = nullptr;
     QString m_tempString;
 
     GenerationFlags m_generationFlags;
@@ -60,7 +60,7 @@ struct QSSGMaterialVertexPipeline
     bool usesInstancing;
     bool skipCustomFragmentSnippet;
 
-    QSSGMaterialVertexPipeline(const QSSGRef<QSSGProgramGenerator> &inProgram,
+    QSSGMaterialVertexPipeline(QSSGProgramGenerator &inProgram,
                                const QSSGShaderDefaultMaterialKeyProperties &materialProperties,
                                QSSGShaderMaterialAdapter *materialAdapter);
 
@@ -75,7 +75,7 @@ struct QSSGMaterialVertexPipeline
         return false;
     }
     bool hasCode(GenerationFlag inCode) { return (m_generationFlags & inCode); }
-    const QSSGRef<QSSGProgramGenerator> &programGenerator() const { return m_programGenerator; }
+    QSSGProgramGenerator *programGenerator() const { return m_programGenerator; }
 
     QSSGStageGeneratorBase &vertex()
     {
@@ -354,10 +354,10 @@ struct QSSGMaterialVertexPipeline
     // Responsible for beginning all vertex and fragment generation (void main() { etc).
     void beginVertexGeneration(const QSSGShaderDefaultMaterialKey &inKey,
                                const QSSGShaderFeatures &inFeatureSet,
-                               const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager);
+                               QSSGShaderLibraryManager &shaderLibraryManager);
     // The fragment shader expects a floating point constant, qt_objectOpacity to be defined
     // post this method.
-    void beginFragmentGeneration(const QSSGRef<QSSGShaderLibraryManager> &shaderLibraryManager);
+    void beginFragmentGeneration(QSSGShaderLibraryManager &shaderLibraryManager);
     // Output variables may be mangled in some circumstances so the shader generation system
     // needs an abstraction
     // mechanism around this.

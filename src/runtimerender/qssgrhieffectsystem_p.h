@@ -25,8 +25,8 @@ QT_BEGIN_NAMESPACE
 struct QSSGRhiEffectTexture;
 class QSSGRenderer;
 
-struct QSSGProgramGenerator;
-struct QSSGShaderLibraryManager;
+class QSSGProgramGenerator;
+class QSSGShaderLibraryManager;
 class QSSGShaderCache;
 
 struct QSSGEffectSceneCacheKey
@@ -75,9 +75,9 @@ public:
     static QSSGRenderTextureFormat::Format overriddenOutputFormat(const QSSGRenderEffect *inEffect);
 
     static QSSGRef<QSSGRhiShaderPipeline> buildShaderForEffect(const QSSGBindShader &inCmd,
-                                                               const QSSGRef<QSSGProgramGenerator> &generator,
-                                                               const QSSGRef<QSSGShaderLibraryManager> &shaderLib,
-                                                               const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                               QSSGProgramGenerator &generator,
+                                                               QSSGShaderLibraryManager &shaderLib,
+                                                               QSSGShaderCache &shaderCache,
                                                                bool isYUpInFramebuffer);
 
 private:

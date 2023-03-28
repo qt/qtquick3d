@@ -91,7 +91,7 @@ public:
 
     void updateDirtyResource(QQuick3DObject *resourceObject);
     void updateDirtySpatialNode(QQuick3DNode *spatialNode);
-    void updateBoundingBoxes(const QSSGRef<QSSGBufferManager> &mgr);
+    void updateBoundingBoxes(QSSGBufferManager &mgr);
 
     QQuick3DObject *lookUpNode(const QSSGRenderGraphObject *node) const;
 

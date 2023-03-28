@@ -376,32 +376,32 @@ static const char *effect_builtin_textureMapUVFlipped =
         "}\n";
 
 QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBindShader &inCmd,
-                                                                         const QSSGRef<QSSGProgramGenerator> &generator,
-                                                                         const QSSGRef<QSSGShaderLibraryManager> &shaderLib,
-                                                                         const QSSGRef<QSSGShaderCache> &shaderCache,
+                                                                         QSSGProgramGenerator &generator,
+                                                                         QSSGShaderLibraryManager &shaderLib,
+                                                                         QSSGShaderCache &shaderCache,
                                                                          bool isYUpInFramebuffer)
 {
     const auto &key = inCmd.m_shaderPathKey;
     qCDebug(lcEffectSystem) << "    generating new shader pipeline for: " << key;
 
-    generator->beginProgram();
+    generator.beginProgram();
 
     {
-        const QByteArray src = shaderLib->getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Vertex);
-        QSSGStageGeneratorBase *vStage = generator->getStage(QSSGShaderGeneratorStage::Vertex);
+        const QByteArray src = shaderLib.getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Vertex);
+        QSSGStageGeneratorBase *vStage = generator.getStage(QSSGShaderGeneratorStage::Vertex);
         // The variation based on isYUpInFramebuffer is captured in 'key' as
         // well, so it is safe to vary the source code here.
         vStage->append(isYUpInFramebuffer ? effect_builtin_textureMapUV : effect_builtin_textureMapUVFlipped);
         vStage->append(src);
     }
     {
-        const QByteArray src = shaderLib->getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment);
-        QSSGStageGeneratorBase *fStage = generator->getStage(QSSGShaderGeneratorStage::Fragment);
+        const QByteArray src = shaderLib.getShaderSource(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment);
+        QSSGStageGeneratorBase *fStage = generator.getStage(QSSGShaderGeneratorStage::Fragment);
         fStage->append(src);
     }
 
-    return generator->compileGeneratedRhiShader(key,
-                                                shaderLib->getShaderMetaData(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment).features,
+    return generator.compileGeneratedRhiShader(key,
+                                               shaderLib.getShaderMetaData(inCmd.m_shaderPathKey, QSSGShaderCache::ShaderType::Fragment).features,
                                                 shaderLib,
                                                 shaderCache,
                                                 QSSGRhiShaderPipeline::UsedWithoutIa);
@@ -481,7 +481,7 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         // Final option, generate the shader pipeline
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DGenerateShader);
         const auto &generator = m_sgContext->shaderProgramGenerator();
-        if (auto stages = buildShaderForEffect(*inCmd, generator, shaderLib, shaderCache, rhi->isYUpInFramebuffer())) {
+        if (auto stages = buildShaderForEffect(*inCmd, *generator, *shaderLib, *shaderCache, rhi->isYUpInFramebuffer())) {
             m_shaderPipelines.insert(cacheKey, stages);
             m_currentShaderPipeline = stages.get();
         }

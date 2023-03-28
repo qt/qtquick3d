@@ -262,7 +262,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
     QElapsedTimer geomPrepTimer;
     geomPrepTimer.start();
 
-    const QSSGRef<QSSGBufferManager> &bufferManager(renderer->contextInterface()->bufferManager());
+    const auto &bufferManager(renderer->contextInterface()->bufferManager());
 
     const int bakedLightingModelCount = bakedLightingModels.size();
     subMeshInfos.resize(bakedLightingModelCount);

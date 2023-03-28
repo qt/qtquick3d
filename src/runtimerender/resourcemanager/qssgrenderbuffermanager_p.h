@@ -74,9 +74,8 @@ struct QSSGMeshProcessingOptions
 
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGBufferManager
 {
+    Q_DISABLE_COPY(QSSGBufferManager)
 public:
-    QAtomicInt ref;
-
     struct ImageCacheKey {
         QSSGRenderPath path;
         int mipMode;

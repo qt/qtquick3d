@@ -966,7 +966,7 @@ QSSGRenderPickResult QQuick3DSceneRenderer::syncPick(const QSSGRenderRay &ray)
         return QSSGRenderPickResult();
 
     return m_sgContext->renderer()->syncPick(*m_layer,
-                                             m_sgContext->bufferManager(),
+                                             *m_sgContext->bufferManager(),
                                              ray);
 }
 
@@ -976,7 +976,7 @@ QSSGRenderPickResult QQuick3DSceneRenderer::syncPickOne(const QSSGRenderRay &ray
         return QSSGRenderPickResult();
 
     return m_sgContext->renderer()->syncPick(*m_layer,
-                                             m_sgContext->bufferManager(),
+                                             *m_sgContext->bufferManager(),
                                              ray,
                                              node);
 }
@@ -987,7 +987,7 @@ QQuick3DSceneRenderer::PickResultList QQuick3DSceneRenderer::syncPickAll(const Q
         return QQuick3DSceneRenderer::PickResultList();
 
     return m_sgContext->renderer()->syncPickAll(*m_layer,
-                                                m_sgContext->bufferManager(),
+                                                *m_sgContext->bufferManager(),
                                                 ray);
 }
 

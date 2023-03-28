@@ -192,7 +192,7 @@ public:
         MAX_TEMPORAL_AA_LEVELS = 2,
     };
 
-    QSSGLayerRenderData(QSSGRenderLayer &inLayer, const QSSGRef<QSSGRenderer> &inRenderer);
+    QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer &inRenderer);
     ~QSSGLayerRenderData();
 
     typedef QVector<QSSGModelContext *> TModelContextPtrList;
@@ -276,7 +276,7 @@ public:
     QVarLengthArray<QSSGRenderPass *, 8> activePasses;
 
     QSSGRenderLayer &layer;
-    QSSGRef<QSSGRenderer> renderer;
+    QSSGRenderer *renderer = nullptr;
     // List of nodes we can render, not all may be active.  Found by doing a depth-first
     // search through m_FirstChild if length is zero.
 

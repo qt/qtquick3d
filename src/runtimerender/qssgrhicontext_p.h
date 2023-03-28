@@ -939,8 +939,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiContext
 {
     Q_DISABLE_COPY(QSSGRhiContext)
 public:
-    QAtomicInt ref;
-    QSSGRhiContext();
+    explicit QSSGRhiContext(QRhi *rhi = nullptr);
     ~QSSGRhiContext();
 
     void initialize(QRhi *rhi);
