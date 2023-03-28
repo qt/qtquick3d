@@ -104,7 +104,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
     }
 
     if (shaderPipeline) {
-        ps->shaderPipeline = shaderPipeline.data();
+        ps->shaderPipeline = shaderPipeline.get();
         shaderPipeline->resetExtraTextures();
     }
 
@@ -175,7 +175,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
                                                     QMatrix4x4 *modelViewProjection,
                                                     QSSGReflectionMapEntry *entry)
 {
-    QSSGRhiContext *rhiCtx = context->rhiContext().data();
+    QSSGRhiContext *rhiCtx = context->rhiContext().get();
 
     QRhiGraphicsPipeline::TargetBlend blend; // no blending by default
     if (material.m_renderFlags.testFlag(QSSGRenderCustomMaterial::RenderFlag::Blending)) {

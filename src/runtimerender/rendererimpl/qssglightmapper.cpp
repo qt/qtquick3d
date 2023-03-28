@@ -867,7 +867,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
             }
             QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-            QRhiGraphicsPipeline *pipeline = setupPipeline(lmUvRastShaderPipeline.data(), srb, inputLayout);
+            QRhiGraphicsPipeline *pipeline = setupPipeline(lmUvRastShaderPipeline.get(), srb, inputLayout);
             if (!pipeline->create()) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create graphics pipeline (mesh %1 submesh %2)").
                                                                      arg(lmIdx).
@@ -877,7 +877,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                 return false;
             }
             ps.append(pipeline);
-            pipeline = setupPipeline(lmUvRastShaderPipeline.data(), srb, inputLayout);
+            pipeline = setupPipeline(lmUvRastShaderPipeline.get(), srb, inputLayout);
             pipeline->setPolygonMode(QRhiGraphicsPipeline::Line);
             if (!pipeline->create()) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to create graphics pipeline with line fill mode (mesh %1 submesh %2)").
@@ -1494,7 +1494,7 @@ bool QSSGLightmapperPrivate::postProcess()
         }
         QSSGRhiGraphicsPipelineState dilatePs;
         dilatePs.viewport = viewport;
-        dilatePs.shaderPipeline = lmDilatePipeline.data();
+        dilatePs.shaderPipeline = lmDilatePipeline.get();
         renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &dilatePs, rhiCtx->srb(bindings), rtDilate.get(), QSSGRhiQuadRenderer::UvCoords);
         resUpd = rhi->nextResourceUpdateBatch();
         QRhiReadbackResult dilateReadResult;

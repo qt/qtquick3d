@@ -1125,7 +1125,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
 
     QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
     auto context = m_contextInterface->rhiContext();
-    rhi.vertexBuffer = new QSSGRhiBuffer(*context.data(),
+    rhi.vertexBuffer = new QSSGRhiBuffer(*context.get(),
                                          QRhiBuffer::Static,
                                          QRhiBuffer::VertexBuffer,
                                          vertexBuffer.stride,
@@ -1134,7 +1134,7 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     rub->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBuffer.data);
 
     if (!indexBuffer.data.isEmpty()) {
-        rhi.indexBuffer = new QSSGRhiBuffer(*context.data(),
+        rhi.indexBuffer = new QSSGRhiBuffer(*context.get(),
                                             QRhiBuffer::Static,
                                             QRhiBuffer::IndexBuffer,
                                             0,

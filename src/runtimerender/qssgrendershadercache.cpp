@@ -441,7 +441,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
     }
 
     if (vertShaderValid && fragShaderValid) {
-        shaders = new QSSGRhiShaderPipeline(*m_rhiContext.data());
+        shaders = new QSSGRhiShaderPipeline(*m_rhiContext.get());
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
         if (shaderDebug)
@@ -501,7 +501,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::newPipelineFromPregenerated(cons
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
+    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.get()));
 
     const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
 
@@ -554,7 +554,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryNewPipelineFromPersistentCach
         if (shaderDebug)
             qDebug("Loading rhi shaders from disk cache for %s (%s)", qsbcKey.constData(), inKey.constData());
 
-        QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
+        QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.get()));
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader), stageFlags);
         QSSGShaderCacheKey cacheKey(inKey);
@@ -579,7 +579,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.data()));
+    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(*m_rhiContext.get()));
 
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.
