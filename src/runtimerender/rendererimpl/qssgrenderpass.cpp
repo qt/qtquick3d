@@ -30,7 +30,7 @@ static inline QMatrix4x4 correctMVPForScissor(QRectF viewportRect, QRect scissor
 }
 // SHADOW PASS
 
-void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
@@ -55,7 +55,7 @@ void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
 
     if (enabled) {
         if (!data.shadowMapManager)
-            data.shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
+            data.shadowMapManager = new QSSGRenderShadowMap(*renderer.contextInterface());
 
         shadowMapManager = data.shadowMapManager;
 
@@ -75,7 +75,7 @@ void ShadowMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
     }
 }
 
-void ShadowMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void ShadowMapPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
@@ -88,7 +88,7 @@ void ShadowMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
     // CONDITION: Lights (shadowPassObjects)
 
     if (enabled) {
-        const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+        const auto &rhiCtx = renderer.contextInterface()->rhiContext();
         QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
         QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D shadow map"));
@@ -124,7 +124,7 @@ void ShadowMapPass::release()
 
 // REFLECTIONMAP PASS
 
-void ReflectionMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     Q_UNUSED(renderer);
     Q_UNUSED(data);
@@ -137,7 +137,7 @@ void ReflectionMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLa
     reflectionProbes = data.reflectionProbes;
 
     if (!data.reflectionMapManager)
-        data.reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
+        data.reflectionMapManager = new QSSGRenderReflectionMap(*renderer.contextInterface());
 
     reflectionMapManager = data.reflectionMapManager;
 
@@ -156,7 +156,7 @@ void ReflectionMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLa
     }
 }
 
-void ReflectionMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
@@ -170,14 +170,14 @@ void ReflectionMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // CONDITION: Probes and sorted opaque and transparent
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
     // TODO: Workaroud as we using the layer data in rhiRenderReflectionMap() consider
     // if we can extract the data we need for rendering in the prep step...
-    QSSG_ASSERT(renderer->getLayerGlobalRenderProperties().layer.renderData, return);
-    const auto &data = *renderer->getLayerGlobalRenderProperties().layer.renderData;
+    QSSG_ASSERT(renderer.getLayerGlobalRenderProperties().layer.renderData, return);
+    const auto &data = *renderer.getLayerGlobalRenderProperties().layer.renderData;
 
     QSSG_CHECK(reflectionMapManager);
     if (!reflectionPassObjects.isEmpty() || !reflectionProbes.isEmpty()) {
@@ -205,7 +205,7 @@ void ReflectionMapPass::release()
 }
 
 // ZPrePass
-void ZPrePassPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void ZPrePassPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
@@ -219,7 +219,7 @@ void ZPrePassPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRe
 
     // CONDITION: Input + globally enabled or ?
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     ps = data.getPipelineState();
@@ -252,11 +252,11 @@ void ZPrePassPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRe
     }
 }
 
-void ZPrePassPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void ZPrePassPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
 
     bool needsSetViewport = true;
@@ -286,7 +286,7 @@ void ZPrePassPass::release()
 }
 
 // SSAO PASS
-void SSAOMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void SSAOMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
@@ -294,7 +294,7 @@ void SSAOMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRen
     // I.e., holding data like this should be safe (If that's no longer the case we need to do ref counting
     // for shared data).
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
 
     rhiDepthTexture = &data.depthMapPass.rhiDepthTexture;
@@ -312,7 +312,7 @@ void SSAOMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRen
         rhiAoTexture.reset();
 }
 
-void SSAOMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void SSAOMapPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
@@ -328,7 +328,7 @@ void SSAOMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
     QSSG_ASSERT(camera, return);
     QSSG_ASSERT(rhiDepthTexture && rhiDepthTexture->isValid(), return);
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
 
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -360,11 +360,11 @@ void SSAOMapPass::release()
 }
 
 // DEPTH TEXTURE PASS
-void DepthMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void DepthMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     const auto &layerPrepResult = data.layerPrepResult;
     bool ready = false;
@@ -382,7 +382,7 @@ void DepthMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRe
         rhiDepthTexture.reset();
 }
 
-void DepthMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void DepthMapPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
@@ -397,7 +397,7 @@ void DepthMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // CONDITION:
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D depth texture"));
@@ -433,11 +433,11 @@ void DepthMapPass::release()
 
 // SCREEN TEXTURE PASS
 
-void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void ScreenMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     auto camera = data.camera;
     QSSG_ASSERT(camera, return);
@@ -486,7 +486,7 @@ void ScreenMapPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerR
         rhiScreenTexture.reset();
 }
 
-void ScreenMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void ScreenMapPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
@@ -500,14 +500,14 @@ void ScreenMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // CONDITION:
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D screen texture"));
 
     if (Q_LIKELY(rhiScreenTexture.isValid())) {
-        const auto &layer = renderer->getLayerGlobalRenderProperties().layer;
+        const auto &layer = renderer.getLayerGlobalRenderProperties().layer;
         cb->beginPass(rhiScreenTexture.rt, clearColor, { 1.0f, 0 }, nullptr, QSSGRhiContext::commonPassFlags());
         QSSGRHICTX_STAT(rhiCtx, beginRenderPass(rhiScreenTexture.rt));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
@@ -515,20 +515,20 @@ void ScreenMapPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         if (layer.background == QSSGRenderLayer::Background::SkyBox
             && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
             // This is offscreen, so rendered untonemapped
-            auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, layer.skyBoxIsRgbe8);
+            auto shaderPipeline = renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, layer.skyBoxIsRgbe8);
             QSSG_CHECK(shaderPipeline);
             ps.shaderPipeline = shaderPipeline.get();
             QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
             QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-            renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, {});
+            renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, {});
         } else if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
                    && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch) && layer.skyBoxSrb) {
-            auto shaderPipeline = renderer->getRhiSkyBoxCubeShader();
+            auto shaderPipeline = renderer.getRhiSkyBoxCubeShader();
             QSSG_CHECK(shaderPipeline);
             ps.shaderPipeline = shaderPipeline.get();
             QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
             QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-            renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, {});
+            renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, {});
         }
         bool needsSetViewport = true;
         for (const auto &handle : std::as_const(sortedOpaqueObjects))
@@ -558,7 +558,7 @@ void ScreenMapPass::release()
 }
 
 // MAIN PASS
-void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data)
+void MainPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
     using namespace RenderHelpers;
 
@@ -572,7 +572,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
 
     // CONDITION: Always
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     auto camera = data.camera;
     QSSG_ASSERT(camera, return);
@@ -661,7 +661,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
         // Set the projection matrix
         if (!item2D->m_renderer)
             continue;
-        if (item2D->m_rci != renderer->contextInterface()) {
+        if (item2D->m_rci != renderer.contextInterface()) {
             if (!item2D->m_contextWarningShown) {
                 qWarning () << "Scene with embedded 2D content can only be rendered in one window.";
                 item2D->m_contextWarningShown = true;
@@ -722,7 +722,7 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
         rhiPrepareGrid(rhiCtx.get(), layer, *camera, renderer);
 
     // debug objects
-    const auto &debugDraw = renderer->contextInterface()->debugDrawSystem();
+    const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
     if (debugDraw->hasContent()) {
         QRhiResourceUpdateBatch *rub = rhiCtx->rhi()->nextResourceUpdateBatch();
         debugDraw->prepareGeometry(rhiCtx.get(), rub);
@@ -749,11 +749,11 @@ void MainPass::renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRender
     Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("prepare_renderables"));
 }
 
-void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
+void MainPass::renderPass(QSSGRenderer &renderer)
 {
     using namespace RenderHelpers;
 
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    const auto &rhiCtx = renderer.contextInterface()->rhiContext();
     QSSG_ASSERT(rhiCtx->rhi()->isRecordingFrame(), return);
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
@@ -771,7 +771,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
 
     // 2. Render sky box (opt)
 
-    const auto &layer = renderer->getLayerGlobalRenderProperties().layer;
+    const auto &layer = renderer.getLayerGlobalRenderProperties().layer;
     auto polygonMode = ps.polygonMode;
     ps.polygonMode = QRhiGraphicsPipeline::Fill;
     if (layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap
@@ -779,12 +779,12 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         && layer.skyBoxSrb)
     {
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        auto shaderPipeline = renderer->getRhiSkyBoxCubeShader();
+        auto shaderPipeline = renderer.getRhiSkyBoxCubeShader();
         QSSG_CHECK(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
         QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-        renderer->rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
+        renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_cube"));
 
     } else if (layer.background == QSSGRenderLayer::Background::SkyBox
@@ -799,12 +799,12 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         if (layer.firstEffect)
             tonemapMode = QSSGRenderLayer::TonemapMode::None;
 
-        auto shaderPipeline = renderer->getRhiSkyBoxShader(tonemapMode, layer.skyBoxIsRgbe8);
+        auto shaderPipeline = renderer.getRhiSkyBoxShader(tonemapMode, layer.skyBoxIsRgbe8);
         QSSG_CHECK(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
         QRhiShaderResourceBindings *srb = layer.skyBoxSrb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-        renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
+        renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest | QSSGRhiQuadRenderer::RenderBehind });
         Q_QUICK3D_PROFILE_END_WITH_STRING(QQuick3DProfiler::Quick3DRenderPass, 0, QByteArrayLiteral("skybox_map"));
     }
     ps.polygonMode = polygonMode;
@@ -825,7 +825,7 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
         for (const auto &item : std::as_const(item2Ds)) {
             QSSGRenderItem2D *item2D = static_cast<QSSGRenderItem2D *>(item);
-            if (item2D->m_rci == renderer->contextInterface())
+            if (item2D->m_rci == renderer.contextInterface())
                 item2D->m_renderer->renderSceneInline();
         }
         cb->debugMarkEnd();
@@ -851,19 +851,19 @@ void MainPass::renderPass(const QSSGRef<QSSGRenderer> &renderer)
     if (layer.gridEnabled) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        auto shaderPipeline = renderer->getRhiGridShader();
+        auto shaderPipeline = renderer.getRhiGridShader();
         Q_ASSERT(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
         QRhiShaderResourceBindings *srb = layer.gridSrb;
         QRhiRenderPassDescriptor *rpDesc = rhiCtx->mainRenderPassDescriptor();
-        renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
+        renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx.get(), &ps, srb, rpDesc, { QSSGRhiQuadRenderer::DepthTest });
     }
 
     // 7. Debug Draw content
-    const auto &debugDraw = renderer->contextInterface()->debugDrawSystem();
+    const auto &debugDraw = renderer.contextInterface()->debugDrawSystem();
     if (debugDraw->hasContent()) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick 3D debug objects"));
-        auto shaderPipeline = renderer->getRhiDebugObjectShader();
+        auto shaderPipeline = renderer.getRhiDebugObjectShader();
         QSSG_CHECK(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
         QSSGRhiDrawCallData &dcd = rhiCtx->drawCallData({ &layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::DebugObjects });

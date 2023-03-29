@@ -159,9 +159,9 @@ void QSSGRenderer::rhiPrepare(QSSGRenderLayer &inLayer)
         // execution order.
         const auto &activePasses = theRenderData->activePasses;
         for (const auto &pass : activePasses) {
-            pass->renderPrep(this, *theRenderData);
+            pass->renderPrep(*this, *theRenderData);
             if (pass->passType() == QSSGRenderPass::Type::PreMain)
-                pass->renderPass(this);
+                pass->renderPass(*this);
         }
 
         endLayerRender();
@@ -179,7 +179,7 @@ void QSSGRenderer::rhiRender(QSSGRenderLayer &inLayer)
         const auto &activePasses = theRenderData->activePasses;
         for (const auto &pass : activePasses) {
             if (pass->passType() == QSSGRenderPass::Type::Main)
-                pass->renderPass(this);
+                pass->renderPass(*this);
         }
         endLayerRender();
     }
@@ -1052,7 +1052,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
                                                 QSSGRhiGraphicsPipelineState *ps,
                                                 const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
                                                 QSSGRenderCamera &inCamera,
-                                                const QSSGRef<QSSGRenderer> &renderer,
+                                                QSSGRenderer &renderer,
                                                 int cubeFace)
 {
     using namespace RenderHelpers;
@@ -1068,7 +1068,7 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
         QMatrix4x4 modelViewProjection;
         if (inObject.type == QSSGRenderableObject::Type::DefaultMaterialMeshSubset || inObject.type == QSSGRenderableObject::Type::CustomMaterialMeshSubset) {
             QSSGSubsetRenderable &renderable(static_cast<QSSGSubsetRenderable &>(inObject));
-            const bool hasSkinning = renderer->defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
+            const bool hasSkinning = renderer.defaultMaterialShaderKeyProperties().m_boneCount.getValue(renderable.shaderDescription) > 0;
             modelViewProjection = hasSkinning ? pEntry->m_viewProjection
                                               : pEntry->m_viewProjection * renderable.globalTransform;
         }
@@ -1646,11 +1646,11 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                        const QSSGRenderCamera &camera,
                                        const QSSGShaderLightList &globalLights,
                                        const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
-                                       const QSSGRef<QSSGRenderer> &renderer,
+                                       QSSGRenderer &renderer,
                                        const QSSGBoxPoints &castingObjectsBox,
                                        const QSSGBoxPoints &receivingObjectsBox)
 {
-    const QSSGLayerGlobalRenderProperties &globalRenderProperties = renderer->getLayerGlobalRenderProperties();
+    const QSSGLayerGlobalRenderProperties &globalRenderProperties = renderer.getLayerGlobalRenderProperties();
 
     static const auto rhiRenderOneShadowMap = [](QSSGRhiContext *rhiCtx,
                                                  QSSGRhiGraphicsPipelineState *ps,
@@ -1713,7 +1713,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
     static const auto rhiBlurShadowMap = [](QSSGRhiContext *rhiCtx,
                                             QSSGShadowMapEntry *pEntry,
-                                            const QSSGRef<QSSGRenderer> &renderer,
+                                            QSSGRenderer &renderer,
                                             float shadowFilter,
                                             float shadowMapFar,
                                             bool orthographic) {
@@ -1730,8 +1730,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         const QSize size = map->pixelSize();
         ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = orthographic ? renderer->getRhiOrthographicShadowBlurXShader()
-                                                                     : renderer->getRhiCubemapShadowBlurXShader();
+        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurXShader()
+                                                                     : renderer.getRhiCubemapShadowBlurXShader();
         if (!shaderPipeline)
             return;
         ps.shaderPipeline = shaderPipeline.get();
@@ -1774,13 +1774,13 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         QSSGRhiQuadRenderer::Flags quadFlags;
         if (orthographic) // orthoshadowshadowblurx and y have attr_uv as well
             quadFlags |= QSSGRhiQuadRenderer::UvCoords;
-        renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-        renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, quadFlags);
+        renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget0, quadFlags);
 
         // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
 
-        shaderPipeline = orthographic ? renderer->getRhiOrthographicShadowBlurYShader()
-                                      : renderer->getRhiCubemapShadowBlurYShader();
+        shaderPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurYShader()
+                                      : renderer.getRhiCubemapShadowBlurYShader();
         if (!shaderPipeline)
             return;
         ps.shaderPipeline = shaderPipeline.get();
@@ -1790,8 +1790,8 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, workMap, sampler);
         srb = rhiCtx->srb(bindings);
 
-        renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-        renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1, quadFlags);
+        renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+        renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, pEntry->m_rhiBlurRenderTarget1, quadFlags);
     };
 
     QRhi *rhi = rhiCtx->rhi();
@@ -1924,7 +1924,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                                            const QSSGRef<QSSGRenderReflectionMap> &reflectionMapManager,
                                            const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
                                            const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
-                                           const QSSGRef<QSSGRenderer> &renderer)
+                                           QSSGRenderer &renderer)
 {
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
@@ -1986,14 +1986,14 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
-                auto shaderPipeline = renderer->getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
+                auto shaderPipeline = renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
                 Q_ASSERT(shaderPipeline);
                 ps->shaderPipeline = shaderPipeline.get();
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
                 if (!renderPassDesc)
                     renderPassDesc = rt->newCompatibleRenderPassDescriptor();
                 rt->setRenderPassDescriptor(renderPassDesc);
-                renderer->rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, renderPassDesc, {});
+                renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, renderPassDesc, {});
             }
 
             bool needsSetViewport = true;
@@ -2061,7 +2061,7 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
 
 void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                                        QSSGPassKey passKey,
-                                       const QSSGRef<QSSGRenderer> &renderer,
+                                       QSSGRenderer &renderer,
                                        const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                                        QSSGRhiGraphicsPipelineState &ps,
                                        const SSAOMapPass::AmbientOcclusion &ao,
@@ -2125,8 +2125,8 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
     bindings.addTexture(1, QRhiShaderResourceBinding::FragmentStage, rhiDepthTexture.texture, sampler);
     QRhiShaderResourceBindings *srb = rhiCtx->srb(bindings);
 
-    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
-    renderer->rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, rhiAoTexture.rt, {});
+    renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+    renderer.rhiQuadRenderer()->recordRenderQuadPass(rhiCtx, &ps, srb, rhiAoTexture.rt, {});
 }
 
 bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex)
@@ -2184,7 +2184,7 @@ bool RenderHelpers::rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize 
     return true;
 }
 
-void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer, QSSGRenderCamera &inCamera, const QSSGRef<QSSGRenderer> &renderer)
+void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer, QSSGRenderCamera &inCamera, QSSGRenderer &renderer)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare grid"));
@@ -2227,7 +2227,7 @@ void RenderHelpers::rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &laye
     bindings.addUniformBuffer(uniformBinding, RENDERER_VISIBILITY_ALL, dcd.ubuf);
 
     layer.gridSrb = rhiCtx->srb(bindings);
-    renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+    renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
 
     cb->debugMarkEnd();
 }
@@ -2237,14 +2237,14 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
                              QSSGPassKey passKey,
                              QSSGRenderLayer &layer,
                              QSSGRenderCamera &inCamera,
-                             const QSSGRef<QSSGRenderer> &renderer,
+                             QSSGRenderer &renderer,
                              QSSGReflectionMapEntry *entry = nullptr,
                              int cubeFace = -1)
 {
     const bool cubeMapMode = layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap;
     const QSSGRenderImageTexture lightProbeTexture =
-            cubeMapMode ? renderer->contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap, QSSGBufferManager::MipModeDisable)
-                        : renderer->contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
+            cubeMapMode ? renderer.contextInterface()->bufferManager()->loadRenderImage(layer.skyBoxCubeMap, QSSGBufferManager::MipModeDisable)
+                        : renderer.contextInterface()->bufferManager()->loadRenderImage(layer.lightProbe, QSSGBufferManager::MipModeBsdf);
     const bool hasValidTexture = lightProbeTexture.m_texture != nullptr;
     if (hasValidTexture) {
         if (cubeFace < 0)
@@ -2310,9 +2310,9 @@ void rhiPrepareSkyBox_helper(QSSGRhiContext *rhiCtx,
             layer.skyBoxSrb = rhiCtx->srb(bindings);
 
         if (cubeMapMode)
-            renderer->rhiCubeRenderer()->prepareCube(rhiCtx, nullptr);
+            renderer.rhiCubeRenderer()->prepareCube(rhiCtx, nullptr);
         else
-            renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
+            renderer.rhiQuadRenderer()->prepareQuad(rhiCtx, nullptr);
     }
 }
 } // namespace
@@ -2321,7 +2321,7 @@ void RenderHelpers::rhiPrepareSkyBox(QSSGRhiContext *rhiCtx,
                                      QSSGPassKey passKey,
                                      QSSGRenderLayer &layer,
                                      QSSGRenderCamera &inCamera,
-                                     const QSSGRef<QSSGRenderer> &renderer)
+                                     QSSGRenderer &renderer)
 {
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
     cb->debugMarkBegin(QByteArrayLiteral("Quick3D prepare skybox"));
@@ -2335,7 +2335,7 @@ void RenderHelpers::rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx,
                                                      QSSGPassKey passKey,
                                                      QSSGRenderLayer &layer,
                                                      QSSGRenderCamera &inCamera,
-                                                     const QSSGRef<QSSGRenderer> &renderer,
+                                                     QSSGRenderer &renderer,
                                                      QSSGReflectionMapEntry *entry,
                                                      int cubeFace)
 {

@@ -230,7 +230,7 @@ void rhiRenderShadowMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                         const QSSGRenderCamera &camera,
                         const QSSGShaderLightList &globalLights,
                         const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
-                        const QSSGRef<QSSGRenderer> &renderer,
+                        QSSGRenderer &renderer,
                         const QSSGBoxPoints &castingObjectsBox,
                         const QSSGBoxPoints &receivingObjectsBox);
 
@@ -240,7 +240,7 @@ void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                             const QSSGRef<QSSGRenderReflectionMap> &reflectionMapManager,
                             const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
                             const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
-                            const QSSGRef<QSSGRenderer> &renderer);
+                            QSSGRenderer &renderer);
 
 bool rhiPrepareDepthPass(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                          const QSSGRhiGraphicsPipelineState &basePipelineState,
@@ -258,25 +258,25 @@ void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineSta
 
 bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
 
-void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, const QSSGRef<QSSGRenderer> &renderer, const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderer &renderer, const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
                         QSSGRhiGraphicsPipelineState &ps, const SSAOMapPass::AmbientOcclusion &ao, const QSSGRhiRenderableTexture &rhiAoTexture, const QSSGRhiRenderableTexture &rhiDepthTexture,
                         const QSSGRenderCamera &camera);
 
 bool rhiPrepareScreenTexture(QSSGRhiContext *rhiCtx, const QSize &size, bool wantsMips, QSSGRhiRenderableTexture *renderableTex);
 
 void rhiPrepareGrid(QSSGRhiContext *rhiCtx, QSSGRenderLayer &layer,
-                    QSSGRenderCamera &inCamera, const QSSGRef<QSSGRenderer> &renderer);
+                    QSSGRenderCamera &inCamera, QSSGRenderer &renderer);
 
 
 void rhiPrepareSkyBox(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                       QSSGRenderLayer &layer,
                       QSSGRenderCamera &inCamera,
-                      const QSSGRef<QSSGRenderer> &renderer);
+                      QSSGRenderer &renderer);
 
 void rhiPrepareSkyBoxForReflectionMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                                       QSSGRenderLayer &layer,
                                       QSSGRenderCamera &inCamera,
-                                      const QSSGRef<QSSGRenderer> &renderer,
+                                      QSSGRenderer &renderer,
                                       QSSGReflectionMapEntry *entry,
                                       int cubeFace);
 

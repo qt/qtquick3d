@@ -41,8 +41,8 @@ public:
     };
     // Input:
 
-    virtual void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) = 0;
-    virtual void renderPass(const QSSGRef<QSSGRenderer> &renderer) = 0;
+    virtual void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) = 0;
+    virtual void renderPass(QSSGRenderer &renderer) = 0;
     virtual Type passType() const = 0;
     virtual void release() = 0;
 
@@ -56,8 +56,8 @@ public:
 class ShadowMapPass : public QSSGRenderPass
 {
 public:
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
@@ -74,8 +74,8 @@ public:
 class ReflectionMapPass : public QSSGRenderPass
 {
 public:
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
@@ -96,8 +96,8 @@ public:
     };
 
     // Note: prep phase, there's also the render phase... Should both be specified here?
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::Main; }
     void release() final;
 
@@ -120,8 +120,8 @@ public:
         bool aoDither = false;
     } ambientOcclusion;
 
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
@@ -136,8 +136,8 @@ public:
 class Q_QUICK3DRUNTIMERENDER_PRIVATE_EXPORT DepthMapPass : public QSSGRenderPass
 {
 public:
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
@@ -150,8 +150,8 @@ public:
 class ScreenMapPass : public QSSGRenderPass
 {
 public:
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
@@ -166,8 +166,8 @@ public:
 class MainPass : public QSSGRenderPass
 {
 public:
-    void renderPrep(const QSSGRef<QSSGRenderer> &renderer, QSSGLayerRenderData &data) final;
-    void renderPass(const QSSGRef<QSSGRenderer> &renderer) final;
+    void renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data) final;
+    void renderPass(QSSGRenderer &renderer) final;
     Type passType() const final { return Type::Main; }
     void release() final;
 
