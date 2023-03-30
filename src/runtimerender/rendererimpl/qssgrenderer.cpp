@@ -1050,7 +1050,8 @@ static void rhiPrepareResourcesForReflectionMap(QSSGRhiContext *rhiCtx,
 {
     using namespace RenderHelpers;
 
-    if (inData.layer.background == QSSGRenderLayer::Background::SkyBox && inData.layer.lightProbe)
+    if ((inData.layer.background == QSSGRenderLayer::Background::SkyBox && inData.layer.lightProbe) ||
+         inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap)
         rhiPrepareSkyBoxForReflectionMap(rhiCtx, passKey, inData.layer, inCamera, renderer, pEntry, cubeFace);
 
     QSSGShaderFeatures features = inData.getShaderFeatures();
@@ -1907,7 +1908,8 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
     QRhi *rhi = rhiCtx->rhi();
     QRhiCommandBuffer *cb = rhiCtx->commandBuffer();
 
-    const bool renderSkybox = (inData.layer.background == QSSGRenderLayer::Background::SkyBox)
+    const bool renderSkybox = (inData.layer.background == QSSGRenderLayer::Background::SkyBox ||
+                               inData.layer.background == QSSGRenderLayer::Background::SkyBoxCubeMap)
             && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch);
 
     for (int i = 0, ie = reflectionProbes.size(); i != ie; ++i) {
@@ -1964,14 +1966,18 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
 
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
-                auto shaderPipeline = renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8);
+                const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
+                QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = nullptr;
+                shaderPipeline = isSkyBox ? renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
+                                          : renderer.getRhiSkyBoxCubeShader();
                 Q_ASSERT(shaderPipeline);
                 ps->shaderPipeline = shaderPipeline.get();
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
                 if (!renderPassDesc)
                     renderPassDesc = rt->newCompatibleRenderPassDescriptor();
                 rt->setRenderPassDescriptor(renderPassDesc);
-                renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, renderPassDesc, {});
+                isSkyBox ? renderer.rhiQuadRenderer()->recordRenderQuad(rhiCtx, ps, srb, renderPassDesc, {})
+                         : renderer.rhiCubeRenderer()->recordRenderCube(rhiCtx, ps, srb, renderPassDesc, {});
             }
 
             bool needsSetViewport = true;
