@@ -16,6 +16,8 @@
 //
 
 #include <QtQuick3DGlslParser/private/glsl_p.h>
+
+#include <cstddef>
 #include <new>
 
 QT_BEGIN_NAMESPACE
