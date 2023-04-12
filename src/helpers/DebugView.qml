@@ -78,6 +78,12 @@ Pane {
             value: source.renderStats.maxFrameTime
         }
 
+        TimeLabel {
+            text: "GPU: "
+            value: source.renderStats.lastCompletedGpuTime
+            visible: source.renderStats.lastCompletedGpuTime > 0
+        }
+
         Page {
             Layout.fillWidth: true
             visible: resourceDetailsVisible

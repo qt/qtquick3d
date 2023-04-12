@@ -166,6 +166,19 @@ void QQuick3DRenderStats::onFrameSwapped()
 
         processRhiContextStats();
 
+        if (m_window) {
+            QRhiSwapChain *sc = static_cast<QRhiSwapChain *>(
+                    m_window->rendererInterface()->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
+            if (sc) {
+                QRhiCommandBuffer *cb = sc->currentFrameCommandBuffer();
+                if (cb) {
+                    const float msecs = float(cb->lastCompletedGpuTime() * 1000.0);
+                    if (!qFuzzyIsNull(msecs))
+                        m_results.lastCompletedGpuTime = msecs;
+                }
+            }
+        }
+
         const float notifyInterval = 200.0f;
         if (m_notifyTimer >= notifyInterval) {
             m_notifyTimer -= notifyInterval;
@@ -184,6 +197,11 @@ void QQuick3DRenderStats::onFrameSwapped()
                 m_notifiedResults.renderTime = m_results.renderTime;
                 m_notifiedResults.renderPrepareTime = m_results.renderPrepareTime;
                 emit renderTimeChanged();
+            }
+
+            if (m_results.lastCompletedGpuTime != m_notifiedResults.lastCompletedGpuTime) {
+                m_notifiedResults.lastCompletedGpuTime = m_results.lastCompletedGpuTime;
+                emit lastCompletedGpuTimeChanged();
             }
 
             notifyRhiContextStats();
@@ -894,6 +912,33 @@ quint64 QQuick3DRenderStats::vmemUsedBytes() const
 QString QQuick3DRenderStats::graphicsApiName() const
 {
     return m_graphicsApiName;
+}
+
+/*!
+    \qmlproperty float QtQuick3D::RenderStats::lastCompletedGpuTime
+    \readonly
+
+    When GPU timing collection is
+    \l{QQuickGraphicsConfiguration::setTimestamps()}{enabled in Qt Quick}, and
+    the relevant features are supported by the underlying graphics API, this
+    property contains the last retrieved elapsed GPU time in milliseconds.
+
+    \note The value is retrieved asynchronously, and usually refers to a frame
+    older than the previous one, meaning that the value is not necessarily in
+    sync with the other, CPU-side timings.
+
+    \note The result is based on the rendering of the entire contents of the
+    QQuickWindow the View3D belongs to. It includes all the contents of Qt
+    Quick scene, including all 2D elements and all View3D items within that
+    window.
+
+    \since 6.6
+
+    \sa QQuickGraphicsConfiguration::setTimestamps()
+*/
+float QQuick3DRenderStats::lastCompletedGpuTime() const
+{
+    return m_results.lastCompletedGpuTime;
 }
 
 /*!

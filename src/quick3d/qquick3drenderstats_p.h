@@ -51,6 +51,7 @@ class Q_QUICK3D_EXPORT QQuick3DRenderStats : public QObject
     Q_PROPERTY(quint32 vmemAllocCount READ vmemAllocCount NOTIFY vmemAllocCountChanged)
     Q_PROPERTY(quint64 vmemUsedBytes READ vmemUsedBytes NOTIFY vmemUsedBytesChanged)
     Q_PROPERTY(QString graphicsApiName READ graphicsApiName NOTIFY graphicsApiNameChanged)
+    Q_PROPERTY(float lastCompletedGpuTime READ lastCompletedGpuTime NOTIFY lastCompletedGpuTimeChanged)
 
 public:
     QQuick3DRenderStats(QObject *parent = nullptr);
@@ -90,6 +91,7 @@ public:
     quint32 vmemAllocCount() const;
     quint64 vmemUsedBytes() const;
     QString graphicsApiName() const;
+    float lastCompletedGpuTime() const;
 
     Q_INVOKABLE void releaseCachedResources();
 
@@ -117,6 +119,7 @@ Q_SIGNALS:
     void vmemAllocCountChanged();
     void vmemUsedBytesChanged();
     void graphicsApiNameChanged();
+    void lastCompletedGpuTimeChanged();
 
 private Q_SLOTS:
     void onFrameSwapped();
@@ -144,6 +147,7 @@ private:
         float renderTime = 0;
         float renderPrepareTime = 0;
         float syncTime = 0;
+        float lastCompletedGpuTime = 0;
         quint64 drawCallCount = 0;
         quint64 drawVertexCount = 0;
         quint64 imageDataSize = 0;
