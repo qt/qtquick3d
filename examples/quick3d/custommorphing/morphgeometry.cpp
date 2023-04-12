@@ -148,13 +148,16 @@ void MorphGeometry::calculateGeometry()
 
             m_positions.append({x, y, z});
             m_normals.append(normal.normalized());
-            const float tmp = (y + 3.0f) / 8.0f;
-            m_colors.append({tmp, 0.0f, 1 - tmp, 1.0f});
 
             m_targetPositions.append(targetPosition);
             m_targetNormals.append(targetNormal.normalized());
-            const float ttmp = (targetPosition.y() + 3.0f) / 8.0f;
-            m_targetColors.append({0.0f, 1.0f - ttmp, ttmp, 1.0f});
+
+            // Set custom colors for the vertices:
+            const float tmp = (y + 5.0f) / 10.0f;
+            m_colors.append({1.0, tmp, tmp, 1.0f});
+
+            const float ttmp = (ix % (iw / 8)) < 3 ? 0.5 : 1.0;
+            m_targetColors.append({ttmp, ttmp, ttmp, 1.0f});
 
             // Note: We only use the bounds of the target positions since they are strictly
             // bigger than the original
