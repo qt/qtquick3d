@@ -649,14 +649,17 @@ void QSSGRenderShaderProgram::getShaderParameters()
     for (int idx = 0; idx != constantCount; ++idx) {
         location = m_backend->getConstantInfoByID(m_handle, idx, 512, &elementCount, &type, &binding, nameBuf);
 
+        if (location == -1 || type == QSSGRenderShaderDataType::Unknown)
+            continue;
+
         // sampler arrays have different type
         if (type == QSSGRenderShaderDataType::Texture2D && elementCount > 1) {
             type = QSSGRenderShaderDataType::Texture2DHandle;
         } else if (type == QSSGRenderShaderDataType::TextureCube && elementCount > 1) {
             type = QSSGRenderShaderDataType::TextureCubeHandle;
         }
-        if (location != -1)
-            m_constants.insert(nameBuf, shaderConstantFactory(nameBuf, location, elementCount, type, binding));
+
+        m_constants.insert(nameBuf, shaderConstantFactory(nameBuf, location, elementCount, type, binding));
     }
 
     // next query constant buffers info

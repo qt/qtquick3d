@@ -196,7 +196,7 @@ void QSSGRenderTextureBase::setTextureCompareFunc(QSSGRenderTextureCompareOp val
 
 void QSSGRenderTextureBase::applyTexParams()
 {
-    if (m_samplerParamsDirty) {
+    if (m_samplerParamsDirty && m_texTarget != QSSGRenderTextureTargetType::Texture2D_MS) {
         m_backend->updateSampler(m_sampler->handle(),
                                  m_texTarget,
                                  m_sampler->minFilter,

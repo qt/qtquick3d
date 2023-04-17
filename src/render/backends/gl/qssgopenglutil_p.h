@@ -1796,7 +1796,6 @@ struct GLConversion
         default:
             break;
         }
-        Q_ASSERT(false);
         return QSSGRenderShaderDataType::Unknown;
     }
 
