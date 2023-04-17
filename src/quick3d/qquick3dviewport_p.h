@@ -144,6 +144,10 @@ private:
     friend class QQuick3DExtensionListHelper;
 
     Q_DISABLE_COPY(QQuick3DViewport)
+    struct SubsceneInfo {
+        QQuick3DObject* obj = nullptr;
+        QVarLengthArray<QPointF, 16> eventPointScenePositions;
+    };
     QQuick3DSceneRenderer *getRenderer() const;
     void updateDynamicTextures();
     QSGNode *setupOffscreenRenderer(QSGNode *node);
@@ -151,7 +155,21 @@ private:
     void setupDirectRenderer(RenderMode mode);
     bool checkIsVisible() const;
     bool internalPick(QPointerEvent *event, const QVector3D &origin = QVector3D(), const QVector3D &direction = QVector3D()) const;
+    QVarLengthArray<QSSGRenderPickResult, 20> getPickResults(QQuick3DSceneRenderer *renderer, const QVector3D &origin, const QVector3D &direction) const;
+    QVarLengthArray<QSSGRenderPickResult, 20> getPickResults(QQuick3DSceneRenderer *renderer, const QEventPoint &eventPoint) const;
+    bool forwardEventToSubscenes(QPointerEvent *event,
+                                 bool useRayPicking,
+                                 QQuick3DSceneRenderer *renderer,
+                                 const QFlatMap<QQuickItem *, SubsceneInfo> &visitedSubscenes) const;
+
+    void processPickedObject(const QSSGRenderGraphObject *backendObject,
+                             const QSSGRenderPickResult &pickResult,
+                             int pointIndex,
+                             QPointerEvent *event,
+                             QFlatMap<QQuickItem *, SubsceneInfo> &vistedSubscenes) const;
+    QQuickItem *getSubSceneRootItem(QQuick3DMaterial *material) const;
     QQuick3DPickResult processPickResult(const QSSGRenderPickResult &pickResult) const;
+    QQuick3DObject *findFrontendNode(const QSSGRenderGraphObject *backendObject) const;
     QQuick3DSceneManager *findChildSceneManager(QQuick3DObject *inObject, QQuick3DSceneManager *manager = nullptr);
     QQuick3DCamera *m_camera = nullptr;
     QQuick3DSceneEnvironment *m_environment = nullptr;
