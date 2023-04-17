@@ -120,11 +120,13 @@ struct SceneInfo
     struct Options
     {
         bool gltfMode = false;
+        bool fbxMode = false;
         bool binaryKeyframes = false;
         bool forceMipMapGeneration = false;
         bool useFloatJointIndices = false;
         bool generateLightmapUV = false;
         bool designStudioWorkarounds = false;
+
         int lightmapBaseResolution = 1024;
         float globalScaleValue = 1.0;
 
@@ -900,19 +902,30 @@ static void setCameraProperties(QSSGSceneDesc::Camera &target, const aiCamera &s
     // the case we have to do additional transform
     aiMatrix4x4 correctionMatrix;
     bool needsCorrection = false;
-    aiVector3D upQuick3D = aiVector3D(0, 1, 0);
-    if (source.mLookAt != aiVector3D(0, 0, -1)) {
-        aiMatrix4x4 lookAtCorrection;
-        aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), source.mLookAt, lookAtCorrection);
-        correctionMatrix *= lookAtCorrection;
+
+    // Workaround For FBX,
+    // assimp has a problem to set properties, mLookAt ans mUp
+    // and it takes too much time for correction.
+    // Quick3D will ignore these value and just use
+    // the initial differences between FBX and Quick3D.
+    if (sceneInfo.opt.fbxMode) {
+        aiMatrix4x4::RotationY(M_PI / 2, correctionMatrix);
         needsCorrection = true;
-        upQuick3D *= lookAtCorrection;
-    }
-    if (source.mUp != upQuick3D) {
-        aiMatrix4x4 upCorrection;
-        aiMatrix4x4::FromToMatrix(upQuick3D, source.mUp, upCorrection);
-        correctionMatrix = upCorrection * correctionMatrix;
-        needsCorrection = true;
+    } else {
+        aiVector3D upQuick3D = aiVector3D(0, 1, 0);
+        if (source.mLookAt != aiVector3D(0, 0, -1)) {
+            aiMatrix4x4 lookAtCorrection;
+            aiMatrix4x4::FromToMatrix(aiVector3D(0, 0, -1), source.mLookAt, lookAtCorrection);
+            correctionMatrix *= lookAtCorrection;
+            needsCorrection = true;
+            upQuick3D *= lookAtCorrection;
+        }
+        if (source.mUp != upQuick3D) {
+            aiMatrix4x4 upCorrection;
+            aiMatrix4x4::FromToMatrix(upQuick3D, source.mUp, upCorrection);
+            correctionMatrix = upCorrection * correctionMatrix;
+            needsCorrection = true;
+        }
     }
 
     setNodeProperties(target, sourceNode, sceneInfo, needsCorrection ? &correctionMatrix : nullptr);
@@ -1686,7 +1699,11 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
     auto opt = processSceneOptions(options);
     // check if the asset is GLTF format
     const auto extension = sourceFile.suffix().toLower();
-    opt.gltfMode = (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb"));
+    if (extension == QStringLiteral("gltf") || extension == QStringLiteral("glb"))
+        opt.gltfMode = true;
+    else if (extension == QStringLiteral("fbx"))
+        opt.fbxMode = true;
+
     SceneInfo sceneInfo { *sourceScene, materials, meshes, embeddedTextures,
                           textureMap, skins, mesh2skin, sourceFile.dir(), opt };
 
