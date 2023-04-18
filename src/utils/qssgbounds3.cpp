@@ -56,11 +56,10 @@ QSSGBounds3 QSSGBounds3::transform(const QMatrix3x3 &matrix, const QSSGBounds3 &
 void QSSGBounds3::transform(const QMatrix4x4 &inMatrix)
 {
     if (!isEmpty()) {
-        QSSGBoxPoints thePoints;
-        expandNonEmpty(thePoints);
+        const auto pointsPrevious = toQSSGBoxPointsNoEmptyCheck();
         setEmpty();
-        for (quint32 idx = 0; idx < 8; ++idx)
-            include(inMatrix.map(thePoints[idx]));
+        for (const QVector3D& point : pointsPrevious)
+            include(inMatrix.map(point));
     }
 }
 

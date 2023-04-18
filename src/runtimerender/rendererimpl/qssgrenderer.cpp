@@ -696,14 +696,7 @@ std::pair<QSSGBoxPoints, QSSGBoxPoints> RenderHelpers::calculateSortedObjectBoun
                 boundsReceiving.include(obj.globalBounds);
         }
     }
-
-    QSSGBoxPoints castingBoxPoints;
-    QSSGBoxPoints receivingBoxPoints;
-
-    boundsCasting.expand(castingBoxPoints);
-    boundsReceiving.expand(receivingBoxPoints);
-
-    return { castingBoxPoints, receivingBoxPoints };
+    return { boundsCasting.toQSSGBoxPointsNoEmptyCheck(), boundsReceiving.toQSSGBoxPointsNoEmptyCheck() };
 }
 
 static QVector3D calcCenter(const QSSGBoxPoints &vertices)
@@ -805,14 +798,14 @@ static void setupCameraForShadowMap(const QSSGRenderCamera &inCamera,
         const QSSGBoxPoints frustumPoints = computeFrustumBounds(inCamera);
         const QSSGBounds3 frustumBounds = calculateShadowCameraBoundingBox(frustumPoints, forward, up, right);
         const QSSGBounds3 sceneCastingBounds = calculateShadowCameraBoundingBox(castingBox, forward, up, right);
+        const QSSGBounds3 boundsReceiving = calculateShadowCameraBoundingBox(receivingBox, forward, up, right);
 
         QVector3D finalDims;
         QVector3D center;
         // Select smallest bounds from either scene or camera frustum
-        if (sceneCastingBounds.isFinite() // handle empty scene
+        if (sceneCastingBounds.isFinite() && boundsReceiving.isFinite() // handle empty scene
             && sceneCastingBounds.extents().lengthSquared() < frustumBounds.extents().lengthSquared()) {
             center = calcCenter(castingBox);
-            const QSSGBounds3 boundsReceiving = calculateShadowCameraBoundingBox(receivingBox, forward, up, right);
             const QVector3D centerReceiving = calcCenter(receivingBox);
 
             // Since we need to make sure every rendered geometry can get a valid depth value from the shadow map

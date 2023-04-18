@@ -178,13 +178,11 @@ void QSSGDebugDrawSystem::generateLine(const LineData &line, QVector<VertexData>
 
 void QSSGDebugDrawSystem::generateBox(const BoundsData &bounds, QVector<VertexData> &vertexArray, QVector<quint32> &indexArray)
 {
-    QSSGBoxPoints points;
-    bounds.bounds.expand(points);
     const QVector3D color = {bounds.color.redF(), bounds.color.greenF(), bounds.color.blueF()};
 
     quint32 offset = vertexArray.count();
-    for (int i = 0; i < 8; ++i)
-        vertexArray.append({points[i], color});
+    for (const QVector3D point : bounds.bounds.toQSSGBoxPoints())
+        vertexArray.append({point, color});
 
     indexArray.append(offset + 0);
     indexArray.append(offset + 3);
