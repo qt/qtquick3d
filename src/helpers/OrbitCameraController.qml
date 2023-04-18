@@ -112,6 +112,7 @@ Item {
         orientation: Qt.Vertical
         target: null
         enabled: mouseEnabled
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
             let delta = -event.angleDelta.y * 0.01;
             camera.z += camera.z * 0.1 * delta
