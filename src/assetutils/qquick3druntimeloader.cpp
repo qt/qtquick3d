@@ -118,9 +118,7 @@ static void boxBoundsRecursive(const QQuick3DNode *baseNode, const QQuick3DNode 
 
     if (auto *model = qobject_cast<const QQuick3DModel *>(node)) {
         auto b = model->bounds();
-        QSSGBoxPoints corners;
-        b.bounds.expand(corners);
-        for (const auto &point : corners) {
+        for (const QVector3D point : b.bounds.toQSSGBoxPoints()) {
             auto p = model->mapPositionToNode(const_cast<QQuick3DNode *>(baseNode), point);
             if (Q_UNLIKELY(accBounds.bounds.isEmpty()))
                 accBounds.bounds = { p, p };

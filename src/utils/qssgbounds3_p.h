@@ -175,12 +175,11 @@ public:
     /**
     Use when the bounds is already verified to be non-empty!!!
     */
-    Q_ALWAYS_INLINE void expandNonEmpty(QSSGBoxPoints &outPoints) const;
+    Q_ALWAYS_INLINE QSSGBoxPoints toQSSGBoxPointsNoEmptyCheck() const;
     /**
     Verifies that the bounds is non-empty.
     */
-    Q_ALWAYS_INLINE void expand(QSSGBoxPoints &outPoints) const;
-
+    Q_ALWAYS_INLINE QSSGBoxPoints toQSSGBoxPoints() const;
 
     void transform(const QMatrix4x4 &inMatrix);
 
@@ -315,29 +314,27 @@ Q_ALWAYS_INLINE void QSSGBounds3::fatten(double distance)
     maximum += QVector3D(float(distance), float(distance), float(distance));
 }
 
-Q_ALWAYS_INLINE void QSSGBounds3::expandNonEmpty(QSSGBoxPoints &outPoints) const
+Q_ALWAYS_INLINE QSSGBoxPoints QSSGBounds3::toQSSGBoxPointsNoEmptyCheck() const
 {
-    // Min corner of box
-    outPoints[0] = QVector3D(minimum[0], minimum[1], minimum[2]);
-    outPoints[1] = QVector3D(maximum[0], minimum[1], minimum[2]);
-    outPoints[2] = QVector3D(minimum[0], maximum[1], minimum[2]);
-    outPoints[3] = QVector3D(minimum[0], minimum[1], maximum[2]);
-
-    // Max corner of box
-    outPoints[4] = QVector3D(maximum[0], maximum[1], maximum[2]);
-    outPoints[5] = QVector3D(minimum[0], maximum[1], maximum[2]);
-    outPoints[6] = QVector3D(maximum[0], minimum[1], maximum[2]);
-    outPoints[7] = QVector3D(maximum[0], maximum[1], minimum[2]);
+    return { // Min corner of box
+             QVector3D(minimum[0], minimum[1], minimum[2]),
+             QVector3D(maximum[0], minimum[1], minimum[2]),
+             QVector3D(minimum[0], maximum[1], minimum[2]),
+             QVector3D(minimum[0], minimum[1], maximum[2]),
+             // Max corner of box
+             QVector3D(maximum[0], maximum[1], maximum[2]),
+             QVector3D(minimum[0], maximum[1], maximum[2]),
+             QVector3D(maximum[0], minimum[1], maximum[2]),
+             QVector3D(maximum[0], maximum[1], minimum[2])
+    };
 }
 
-Q_ALWAYS_INLINE void QSSGBounds3::expand(QSSGBoxPoints &outPoints) const
+Q_ALWAYS_INLINE QSSGBoxPoints QSSGBounds3::toQSSGBoxPoints() const
 {
-    if (isEmpty()) {
-        for (quint32 idx = 0; idx < 8; ++idx)
-            outPoints[idx] = QVector3D(0, 0, 0);
-    } else {
-        expandNonEmpty(outPoints);
-    }
+    if (isEmpty())
+        return { QVector3D(0, 0, 0), QVector3D(0, 0, 0), QVector3D(0, 0, 0), QVector3D(0, 0, 0),
+                 QVector3D(0, 0, 0), QVector3D(0, 0, 0), QVector3D(0, 0, 0), QVector3D(0, 0, 0) };
+    return toQSSGBoxPointsNoEmptyCheck();
 }
 
 QT_END_NAMESPACE
