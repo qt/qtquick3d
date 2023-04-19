@@ -94,15 +94,15 @@ public:
     Q_REVISION(6, 3) QString subsetName(int subset) const;
     Q_REVISION(6, 3) void addSubset(int offset, int count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name = {});
 
-    Q_REVISION(6, 4) QByteArray targetData() const;
-    Q_REVISION(6, 4) void setTargetData(const QByteArray &data);
-    Q_REVISION(6, 4) void setTargetData(int offset, const QByteArray &data);
-    Q_REVISION(6, 4) TargetAttribute targetAttribute(int index) const;
-    Q_REVISION(6, 4) int targetAttributeCount() const;
-    Q_REVISION(6, 4) void addTargetAttribute(quint32 targetId,
+    Q_REVISION(6, 6) QByteArray targetData() const;
+    Q_REVISION(6, 6) void setTargetData(const QByteArray &data);
+    Q_REVISION(6, 6) void setTargetData(int offset, const QByteArray &data);
+    Q_REVISION(6, 6) TargetAttribute targetAttribute(int index) const;
+    Q_REVISION(6, 6) int targetAttributeCount() const;
+    Q_REVISION(6, 6) void addTargetAttribute(quint32 targetId,
                                              Attribute::Semantic semantic, int offset,
                                              int stride = 0);
-    Q_REVISION(6, 4) void addTargetAttribute(const TargetAttribute &att);
+    Q_REVISION(6, 6) void addTargetAttribute(const TargetAttribute &att);
 
     void clear();
 

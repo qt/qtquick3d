@@ -249,6 +249,15 @@ QByteArray QQuick3DGeometry::vertexData() const
 }
 
 /*!
+    Returns the target buffer data set by setTargetData.
+*/
+QByteArray QQuick3DGeometry::targetData() const
+{
+    const Q_D(QQuick3DGeometry);
+    return d->m_targetBuffer;
+}
+
+/*!
     Returns the index buffer data.
 */
 QByteArray QQuick3DGeometry::indexData() const
