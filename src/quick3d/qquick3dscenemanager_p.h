@@ -40,6 +40,7 @@ public:
     Q_INVOKABLE void preSync();
     Q_INVOKABLE void cleanupResources();
     Q_INVOKABLE void synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders);
+    Q_INVOKABLE void requestUpdate();
 
     QQuickWindow *window() const;
 
