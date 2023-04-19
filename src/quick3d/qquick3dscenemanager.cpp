@@ -465,6 +465,12 @@ void QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resour
     pendingResourceCleanupQueue.clear();
 }
 
+void QQuick3DWindowAttachment::requestUpdate()
+{
+    for (const auto &sm : std::as_const(sceneManagers))
+        sm->requestUpdate();
+}
+
 QQuickWindow *QQuick3DWindowAttachment::window() const { return m_window; }
 
 void QQuick3DWindowAttachment::setRci(const std::shared_ptr<QSSGRenderContextInterface> &rciptr)

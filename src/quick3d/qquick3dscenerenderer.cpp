@@ -564,15 +564,20 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             if (auto winAttacment = importSceneManager->wattached) {
                 // Not the same window but backed by the same rhi?
                 auto rci = winAttacment->rci();
-                const bool inlineSync = (rci && rci->rhi() && (rci->rhi() == m_sgContext->rhi()));
-                if (inlineSync) { // Give the same rhi, and same thread, we can do an immediate sync.
+                const bool inlineSync = (rci && rci->rhi() && (rci->rhi()->thread() == m_sgContext->rhi()->thread()));
+                if (inlineSync) {
+                    // Given that we're on the same thread, we can do an immediate sync
+                    // (rhi instances can differ, e.g., basic renderloop).
+                    winAttacment->synchronize(resourceLoaders);
+                } else if (rci && !window->isExposed()) { // Forced sync of non-exposed windows
+                    // Not exposed, so not rendering (playing with fire here)...
                     winAttacment->synchronize(resourceLoaders);
                 } else if (!rci) {
                     // If there's no RCI for the importscene we'll request an update, which should
                     // mean we only get here once. It also means the update to any secondary windows
                     // will be delayed. Note that calling this function on each sync would cause the
                     // different views to ping-pong for updated forever...
-                    importSceneManager->requestUpdate();
+                    winAttacment->requestUpdate();
                 }
             }
         }
