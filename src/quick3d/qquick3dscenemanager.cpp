@@ -75,8 +75,11 @@ void QQuick3DSceneManager::cleanup(QSSGRenderGraphObject *item)
     Q_ASSERT(!cleanupNodeList.contains(item));
     cleanupNodeList.append(item);
 
-    if (auto front = m_nodeMap[item])
-        QQuick3DObjectPrivate::get(front)->spatialNode = nullptr;
+    if (auto front = m_nodeMap[item]) {
+        auto *po = QQuick3DObjectPrivate::get(front);
+        sharedResourceRemoved |= po->sharedResource;
+        po->spatialNode = nullptr;
+    }
 
     // The front-end object is no longer reachable (destroyed) so make sure we don't return it
     // when doing a node look-up.
@@ -245,8 +248,10 @@ QQuick3DWindowAttachment *QQuick3DSceneManager::getOrSetWindowAttachment(QQuickW
     return wa;
 }
 
-void QQuick3DSceneManager::cleanupNodes()
+bool QQuick3DSceneManager::cleanupNodes()
 {
+    bool ret = sharedResourceRemoved;
+    sharedResourceRemoved = false;
     for (auto node : std::as_const(cleanupNodeList)) {
         // Remove "spatial" nodes from scenegraph
         if (QSSGRenderGraphObject::isNodeType(node->type)) {
@@ -281,6 +286,8 @@ void QQuick3DSceneManager::cleanupNodes()
 
     // Nodes are now "cleaned up" so clear the cleanup list
     cleanupNodeList.clear();
+
+    return ret;
 }
 
 bool QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
@@ -300,7 +307,7 @@ bool QQuick3DSceneManager::updateResources(QQuick3DObject **listHead)
         Q_ASSERT(!QSSGRenderGraphObject::isNodeType(QQuick3DObjectPrivate::get(item)->type));
         // handle hierarchical nodes
         updateDirtyResource(item);
-        auto po = QQuick3DObjectPrivate::get(item);
+        auto *po = QQuick3DObjectPrivate::get(item);
         ret |= po->sharedResource;
         po->removeFromDirtyList();
         item = updateList;
@@ -424,7 +431,7 @@ void QQuick3DWindowAttachment::onReleaseCachedResources()
     Q_EMIT releaseCachedResources();
 }
 
-void QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)
+bool QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders)
 {
     // Terminate old scene managers
     for (auto manager: sceneManagerCleanupQueue) {
@@ -434,12 +441,13 @@ void QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resour
     // Terminate old scene managers
     sceneManagerCleanupQueue = {};
 
+    bool sharedUpdateNeeded = false;
+
     // Cleanup
     for (auto &sceneManager : std::as_const(sceneManagers))
-        sceneManager->cleanupNodes();
+        sharedUpdateNeeded |= sceneManager->cleanupNodes();
 
     // Resources
-    bool sharedUpdateNeeded = false;
     for (auto &sceneManager : std::as_const(sceneManagers))
         sharedUpdateNeeded |= sceneManager->updateDirtyResourceNodes();
     // Spatial Nodes
@@ -463,6 +471,8 @@ void QQuick3DWindowAttachment::synchronize(QSet<QSSGRenderGraphObject *> &resour
     for (const auto &pr : std::as_const(pendingResourceCleanupQueue))
         resourceCleanupQueue.insert(pr);
     pendingResourceCleanupQueue.clear();
+
+    return sharedUpdateNeeded;
 }
 
 void QQuick3DWindowAttachment::requestUpdate()
