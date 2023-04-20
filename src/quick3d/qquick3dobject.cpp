@@ -877,8 +877,14 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
         }
 
         // NOTE: Simple tracking for resources that are shared between scenes.
-        if (&c != sceneManager && QSSGRenderGraphObject::isResource(type))
+        if (&c != sceneManager) {
             sharedResource = true;
+            for (int ii = 0; ii < childItems.size(); ++ii) {
+                QQuick3DObject *child = childItems.at(ii);
+                QQuick3DObjectPrivate::get(child)->sharedResource = sharedResource;
+                QQuick3DObjectPrivate::refSceneManager(child, c);
+            }
+        }
 
         return; // Scene manager already set.
     }
@@ -891,9 +897,12 @@ void QQuick3DObjectPrivate::refSceneManager(QQuick3DSceneManager &c)
 
     if (!parentItem)
         sceneManager->parentlessItems.insert(q);
+    else
+        sharedResource = QQuick3DObjectPrivate::get(parentItem)->sharedResource;
 
     for (int ii = 0; ii < childItems.size(); ++ii) {
         QQuick3DObject *child = childItems.at(ii);
+        QQuick3DObjectPrivate::get(child)->sharedResource = sharedResource;
         QQuick3DObjectPrivate::refSceneManager(child, c);
     }
 

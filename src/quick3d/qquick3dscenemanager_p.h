@@ -39,7 +39,7 @@ public:
 
     Q_INVOKABLE void preSync();
     Q_INVOKABLE void cleanupResources();
-    Q_INVOKABLE void synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders);
+    Q_INVOKABLE bool synchronize(QSet<QSSGRenderGraphObject *> &resourceLoaders);
     Q_INVOKABLE void requestUpdate();
 
     QQuickWindow *window() const;
@@ -86,7 +86,7 @@ public:
     void sync();
     void preSync();
 
-    void cleanupNodes();
+    bool cleanupNodes();
     bool updateDirtyResourceNodes();
     void updateDirtySpatialNodes();
 
@@ -146,6 +146,7 @@ public:
     QQuickWindow *m_window = nullptr;
     QPointer<QQuick3DWindowAttachment> wattached;
     int inputHandlingEnabled = 0; // Holds the count of active item2Ds, input disabled if zero.
+    bool sharedResourceRemoved = false;
     friend QQuick3DObject;
 
 Q_SIGNALS:

@@ -543,6 +543,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
 
     // Synchronize scene managers under this window
     QSet<QSSGRenderGraphObject *> resourceLoaders;
+    bool requestSharedUpdate = false;
     if (auto window = view3D->window()) {
         if (!winAttacment || winAttacment->window() != window)
             winAttacment = QQuick3DSceneManager::getOrSetWindowAttachment(*window);
@@ -551,7 +552,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
             winAttacment->setRci(m_sgContext);
 
         if (winAttacment)
-            winAttacment->synchronize(resourceLoaders);
+            requestSharedUpdate = winAttacment->synchronize(resourceLoaders);
     }
 
     // Import scenes used in a multi-window application...
@@ -572,7 +573,7 @@ void QQuick3DSceneRenderer::synchronize(QQuick3DViewport *view3D, const QSize &s
                 } else if (rci && !window->isExposed()) { // Forced sync of non-exposed windows
                     // Not exposed, so not rendering (playing with fire here)...
                     winAttacment->synchronize(resourceLoaders);
-                } else if (!rci) {
+                } else if (!rci || requestSharedUpdate) {
                     // If there's no RCI for the importscene we'll request an update, which should
                     // mean we only get here once. It also means the update to any secondary windows
                     // will be delayed. Note that calling this function on each sync would cause the
