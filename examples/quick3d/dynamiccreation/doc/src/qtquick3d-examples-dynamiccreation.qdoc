@@ -9,7 +9,7 @@
 
     This example demonstrates creating models dynamically in an application. 10 models are created
     dynamically at the start of the application, and more can be added or removed using the
-    \e {Add Model} and \e {Remove Model} buttons.
+    \e {+} and \e {-} buttons.
     \image dynamiccreation-example.png
 
     \section1 Setting Up
