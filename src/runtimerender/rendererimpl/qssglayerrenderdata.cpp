@@ -2268,8 +2268,6 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     }
 
     const auto &sortedBakedLightingModels = getSortedBakedLightingModels(); // front to back
-    if (sortedBakedLightingModels.isEmpty())
-        return;
 
     QSSGRhiContext *rhiCtx = renderer->contextInterface()->rhiContext().get();
 
