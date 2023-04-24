@@ -1709,6 +1709,12 @@ bool QSSGLightmapper::bake()
 
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Bake starting..."));
     d->sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Total models registered: %1").arg(d->bakedLightingModels.size()));
+
+    if (d->bakedLightingModels.isEmpty()) {
+        d->sendOutputInfo(QSSGLightmapper::BakingStatus::Cancelled, QStringLiteral("Cancelled by LightMapper, No Models to bake"));
+        return false;
+    }
+
     if (!d->commitGeometry()) {
         d->sendOutputInfo(QSSGLightmapper::BakingStatus::Progress, QStringLiteral("Baking failed"));
         return false;
