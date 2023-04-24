@@ -13,59 +13,39 @@ Window {
     color: "black"
     title: "Dynamic Model Creation example"
 
-    Button {
-        id: addButton
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.margins: 20
-        text: "Add Model"
-        implicitWidth: 150
-
-        background: Rectangle {
-            implicitWidth: 150
-            implicitHeight: 40
-            opacity: enabled ? 1 : 0.3
-            color: parent.down ? "#6b7080" : "#848895"
-            border.color: "#222840"
-            border.width: 1
-            radius: 5
-        }
-
-        onClicked: shapeSpawner.addShape()
-    }
-
-    Label {
-        id: countLabel
+    Column {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.margins: 20
-        font.pointSize: 20
-        font.bold: true
-        color: "#848895"
 
-        text: "Models in Scene: " + shapeSpawner.count
-    }
-
-    Button {
-        id: removeButton
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: 20
-        text: "Remove Model"
-        implicitWidth: 150
-        enabled: shapeSpawner.count > 0
-
-        background: Rectangle {
-            implicitWidth: 150
-            implicitHeight: 40
-            opacity: enabled ? 1 : 0.3
-            color: parent.down ? "#6b7080" : "#848895"
-            border.color: "#222840"
-            border.width: 1
-            radius: 5
+        Label {
+            id: countLabel
+            font.pointSize: 20
+            font.bold: true
+            color: "slategrey"
+            text: "No. models: " + shapeSpawner.count
         }
 
-        onClicked: shapeSpawner.removeShape()
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 10
+
+            RoundButton {
+                text: "-"
+                font.bold: true
+                palette.button: "slategrey"
+
+                onClicked: shapeSpawner.removeShape()
+            }
+
+            RoundButton {
+                text: "+"
+                font.bold: true
+                palette.button: "slategrey"
+
+                onClicked: shapeSpawner.addShape()
+            }
+        }
     }
 
     View3D {
