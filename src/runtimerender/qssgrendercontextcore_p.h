@@ -195,6 +195,8 @@ public:
     // of everything.
     // Next call end frame.
     void endFrame();
+
+    void deleteLayerResources(QSSGRenderLayer &inLayer);
 };
 QT_END_NAMESPACE
 

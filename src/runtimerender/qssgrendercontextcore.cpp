@@ -265,5 +265,10 @@ void QSSGRenderContextInterface::endFrame()
     ++m_frameCount;
 }
 
+void QSSGRenderContextInterface::deleteLayerResources(QSSGRenderLayer &inLayer)
+{
+    renderer()->releaseLayerRenderResources(inLayer);
+}
+
 QT_END_NAMESPACE
 
