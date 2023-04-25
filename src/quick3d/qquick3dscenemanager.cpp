@@ -176,9 +176,12 @@ void QQuick3DSceneManager::updateDirtySpatialNode(QQuick3DNode *spatialNode)
     itemPriv->dirtyAttributes = 0;
     QSSGRenderGraphObject *oldNode = itemPriv->spatialNode;
     itemPriv->spatialNode = spatialNode->updateSpatialNode(oldNode);
-    if (itemPriv->spatialNode && itemPriv->spatialNode != oldNode) {
+    // NOTE: We always update the node map, as we can end-up with the a node map where the mapping
+    // has been 'disconnected', e.g., the front-end object removed from the scene only to be later
+    // re-used.
+    if (itemPriv->spatialNode) {
         m_nodeMap.insert(itemPriv->spatialNode, spatialNode);
-        if (itemPriv->type == QQuick3DObjectPrivate::Type::Item2D)
+        if (itemPriv->type == QQuick3DObjectPrivate::Type::Item2D && itemPriv->spatialNode != oldNode)
             ++inputHandlingEnabled;
     }
 
