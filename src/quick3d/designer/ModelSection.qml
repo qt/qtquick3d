@@ -343,12 +343,12 @@ Column {
 
             PropertyLabel {
                 text: qsTr("Lightmap")
-                tooltip: qsTr("Sets the baked lightmap texture for the model.")
+                tooltip: qsTr("Sets the baked lightmap data for the model.")
             }
 
             SecondColumnLayout {
                 ItemFilterComboBox {
-                    typeFilter: "QtQuick3D.Texture"
+                    typeFilter: "QtQuick3D.BakedLightmap"
                     backendValue: backendValues.bakedLightmap
                     implicitWidth: StudioTheme.Values.singleControlColumnWidth
                                    + StudioTheme.Values.actionIndicatorWidth
