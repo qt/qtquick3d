@@ -260,7 +260,7 @@ void QQuick3DRenderStats::setWindow(QQuickWindow *window)
     m_window = window;
 
     if (m_window) {
-        m_frameSwappedConnection = connect(m_window, &QQuickWindow::frameSwapped,
+        m_frameSwappedConnection = connect(m_window, &QQuickWindow::afterFrameEnd,
                                            this, &QQuick3DRenderStats::onFrameSwapped,
                                            Qt::DirectConnection);
     }
