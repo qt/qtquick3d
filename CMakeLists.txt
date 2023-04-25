@@ -15,6 +15,7 @@ project(QtQuick3D
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core)
 find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Concurrent Network Quick Widgets PacketProtocolPrivate)
+qt_internal_project_setup()
 
 include(src/quick3d/Qt6Quick3DMacros.cmake)
 
