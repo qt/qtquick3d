@@ -225,7 +225,7 @@ std::pair<QSSGBoxPoints, QSSGBoxPoints> calculateSortedObjectBounds(const QVecto
 
 void rhiRenderShadowMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
                         QSSGRhiGraphicsPipelineState &ps,
-                        const QSSGRef<QSSGRenderShadowMap> &shadowMapManager,
+                        QSSGRenderShadowMap &shadowMapManager,
                         const QSSGRenderCamera &camera,
                         const QSSGShaderLightList &globalLights,
                         const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
@@ -236,7 +236,7 @@ void rhiRenderShadowMap(QSSGRhiContext *rhiCtx, QSSGPassKey passKey,
 void rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                             QSSGPassKey passKey,
                             const QSSGLayerRenderData &inData, QSSGRhiGraphicsPipelineState *ps,
-                            const QSSGRef<QSSGRenderReflectionMap> &reflectionMapManager,
+                            QSSGRenderReflectionMap &reflectionMapManager,
                             const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
                             const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
                             QSSGRenderer &renderer);

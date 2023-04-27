@@ -119,6 +119,8 @@ private:
     friend class QSSGRhiShaderPipeline;
 };
 
+using QSSGRhiBufferPtr = QSSGRef<QSSGRhiBuffer>;
+
 QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op);
 QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
 

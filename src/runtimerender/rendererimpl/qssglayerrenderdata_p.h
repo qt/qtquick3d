@@ -323,8 +323,8 @@ public:
     bool tooManyLightsWarningShown = false;
     bool tooManyShadowLightsWarningShown = false;
 
-    QSSGRef<QSSGRenderShadowMap> shadowMapManager;
-    QSSGRef<QSSGRenderReflectionMap> reflectionMapManager;
+    QSSGRenderShadowMapPtr shadowMapManager;
+    QSSGRenderReflectionMapPtr reflectionMapManager;
 
     QSSGLightmapper *m_lightmapper = nullptr;
 

@@ -101,6 +101,8 @@ private:
     TShadowMapEntryList m_shadowMapList;
 };
 
+using QSSGRenderShadowMapPtr = QSSGRef<QSSGRenderShadowMap>;
+
 QT_END_NAMESPACE
 
 #endif

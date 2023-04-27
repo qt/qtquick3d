@@ -103,6 +103,8 @@ private:
     TReflectionMapEntryList m_reflectionMapList;
 };
 
+using QSSGRenderReflectionMapPtr = QSSGRef<QSSGRenderReflectionMap>;
+
 QT_END_NAMESPACE
 
 #endif

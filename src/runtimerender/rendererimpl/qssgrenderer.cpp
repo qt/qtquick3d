@@ -1634,7 +1634,7 @@ void RenderHelpers::rhiRenderRenderable(QSSGRhiContext *rhiCtx,
 void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
                                        QSSGPassKey passKey,
                                        QSSGRhiGraphicsPipelineState &ps,
-                                       const QSSGRef<QSSGRenderShadowMap> &shadowMapManager,
+                                       QSSGRenderShadowMap &shadowMapManager,
                                        const QSSGRenderCamera &camera,
                                        const QSSGShaderLightList &globalLights,
                                        const QVector<QSSGRenderableObjectHandle> &sortedOpaqueObjects,
@@ -1807,7 +1807,7 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         if (!globalLights[i].shadows || globalLights[i].light->m_fullyBaked)
             continue;
 
-        QSSGShadowMapEntry *pEntry = shadowMapManager->shadowMapEntry(i);
+        QSSGShadowMapEntry *pEntry = shadowMapManager.shadowMapEntry(i);
         if (!pEntry)
             continue;
 
@@ -1913,7 +1913,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
                                            QSSGPassKey passKey,
                                            const QSSGLayerRenderData &inData,
                                            QSSGRhiGraphicsPipelineState *ps,
-                                           const QSSGRef<QSSGRenderReflectionMap> &reflectionMapManager,
+                                           QSSGRenderReflectionMap &reflectionMapManager,
                                            const QVector<QSSGRenderReflectionProbe *> &reflectionProbes,
                                            const QVector<QSSGRenderableObjectHandle> &reflectionPassObjects,
                                            QSSGRenderer &renderer)
@@ -1926,7 +1926,7 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
             && rhiCtx->rhi()->isFeatureSupported(QRhi::TexelFetch);
 
     for (int i = 0, ie = reflectionProbes.size(); i != ie; ++i) {
-        QSSGReflectionMapEntry *pEntry = reflectionMapManager->reflectionMapEntry(i);
+        QSSGReflectionMapEntry *pEntry = reflectionMapManager.reflectionMapEntry(i);
         if (!pEntry)
             continue;
 

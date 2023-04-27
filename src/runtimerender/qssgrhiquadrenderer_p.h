@@ -50,8 +50,8 @@ public:
 private:
     void ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub);
 
-    QSSGRef<QSSGRhiBuffer> m_vbuf;
-    QSSGRef<QSSGRhiBuffer> m_ibuf;
+    QSSGRhiBufferPtr m_vbuf;
+    QSSGRhiBufferPtr m_ibuf;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiQuadRenderer::Flags)
@@ -68,8 +68,8 @@ public:
 private:
     void ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpdateBatch *rub);
 
-    QSSGRef<QSSGRhiBuffer> m_vbuf;
-    QSSGRef<QSSGRhiBuffer> m_ibuf;
+    QSSGRhiBufferPtr m_vbuf;
+    QSSGRhiBufferPtr m_ibuf;
 };
 
 

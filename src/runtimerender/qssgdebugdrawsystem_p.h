@@ -78,9 +78,9 @@ private:
     QVector<VertexData> m_persistentPoints;
     QVector<VertexData> m_points;
 
-    QSSGRef<QSSGRhiBuffer> m_lineVertexBuffer;
-    QSSGRef<QSSGRhiBuffer> m_lineIndexBuffer;
-    QSSGRef<QSSGRhiBuffer> m_pointVertexBuffer;
+    QSSGRhiBufferPtr m_lineVertexBuffer;
+    QSSGRhiBufferPtr m_lineIndexBuffer;
+    QSSGRhiBufferPtr m_pointVertexBuffer;
 };
 
 QT_END_NAMESPACE
