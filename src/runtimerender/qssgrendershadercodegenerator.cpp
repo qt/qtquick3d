@@ -426,11 +426,11 @@ void QSSGProgramGenerator::registerShaderMetaDataFromSource(QSSGShaderResourceMe
     }
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
-                                                                               const QSSGShaderFeatures &inFeatureSet,
-                                                                               QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                               QSSGShaderCache &theCache,
-                                                                               QSSGRhiShaderPipeline::StageFlags stageFlags)
+QSSGRhiShaderPipelinePtr QSSGProgramGenerator::compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
+                                                                         const QSSGShaderFeatures &inFeatureSet,
+                                                                         QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                         QSSGShaderCache &theCache,
+                                                                         QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
     // No stages enabled
     if (((quint32)m_enabledStages) == 0) {

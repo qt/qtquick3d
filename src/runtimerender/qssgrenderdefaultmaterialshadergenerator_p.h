@@ -64,18 +64,18 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGMaterialShaderGenerator
 
     static const char* getSamplerName(QSSGRenderableImage::Type type);
 
-    static QSSGRef<QSSGRhiShaderPipeline> generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
-                                                                    QSSGMaterialVertexPipeline &vertexGenerator,
-                                                                    const QSSGShaderDefaultMaterialKey &key,
-                                                                    QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                                                    const QSSGShaderFeatures &inFeatureSet,
-                                                                    const QSSGRenderGraphObject &inMaterial,
-                                                                    const QSSGShaderLightListView &inLights,
-                                                                    QSSGRenderableImage *inFirstImage, QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                    QSSGShaderCache &theCache);
+    static QSSGRhiShaderPipelinePtr generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
+                                                              QSSGMaterialVertexPipeline &vertexGenerator,
+                                                              const QSSGShaderDefaultMaterialKey &key,
+                                                              QSSGShaderDefaultMaterialKeyProperties &inProperties,
+                                                              const QSSGShaderFeatures &inFeatureSet,
+                                                              const QSSGRenderGraphObject &inMaterial,
+                                                              const QSSGShaderLightListView &inLights,
+                                                              QSSGRenderableImage *inFirstImage, QSSGShaderLibraryManager &shaderLibraryManager,
+                                                              QSSGShaderCache &theCache);
 
     static void setRhiMaterialProperties(const QSSGRenderContextInterface &,
-                                         QSSGRef<QSSGRhiShaderPipeline> &shaders,
+                                         QSSGRhiShaderPipeline &shaders,
                                          char *ubufData,
                                          QSSGRhiGraphicsPipelineState *inPipelineState,
                                          const QSSGRenderGraphObject &inMaterial,

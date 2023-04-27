@@ -375,11 +375,11 @@ static const char *effect_builtin_textureMapUVFlipped =
         "    return vec2(uv.x, 1.0 - uv.y);\n"
         "}\n";
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBindShader &inCmd,
-                                                                         QSSGProgramGenerator &generator,
-                                                                         QSSGShaderLibraryManager &shaderLib,
-                                                                         QSSGShaderCache &shaderCache,
-                                                                         bool isYUpInFramebuffer)
+QSSGRhiShaderPipelinePtr QSSGRhiEffectSystem::buildShaderForEffect(const QSSGBindShader &inCmd,
+                                                                   QSSGProgramGenerator &generator,
+                                                                   QSSGShaderLibraryManager &shaderLib,
+                                                                   QSSGShaderCache &shaderCache,
+                                                                   bool isYUpInFramebuffer)
 {
     const auto &key = inCmd.m_shaderPathKey;
     qCDebug(lcEffectSystem) << "    generating new shader pipeline for: " << key;
@@ -467,10 +467,10 @@ void QSSGRhiEffectSystem::bindShaderCmd(const QSSGBindShader *inCmd, const QSSGR
         // of our local cache (cmd/ubufIndex in cacheKey, not needed here since
         // the result is a new object). Alternatively, the result may be null
         // if there was no hit.
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey,
-                                                                                                       inCmd->m_shaderPathKey,
-                                                                                                       features,
-                                                                                                       QSSGRhiShaderPipeline::UsedWithoutIa);
+        const auto &shaderPipeline = shaderCache->tryNewPipelineFromPersistentCache(qsbcKey,
+                                                                                    inCmd->m_shaderPathKey,
+                                                                                    features,
+                                                                                    QSSGRhiShaderPipeline::UsedWithoutIa);
         if (shaderPipeline) {
             m_shaderPipelines.insert(cacheKey, shaderPipeline);
             m_currentShaderPipeline = shaderPipeline.get();

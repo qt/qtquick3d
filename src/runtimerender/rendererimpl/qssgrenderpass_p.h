@@ -130,7 +130,7 @@ public:
     AmbientOcclusion ao;
     QSSGRhiGraphicsPipelineState ps;
     QSSGRhiRenderableTexture rhiAoTexture;
-    QSSGRef<QSSGRhiShaderPipeline> ssaoShaderPipeline;
+    QSSGRhiShaderPipelinePtr ssaoShaderPipeline;
 };
 
 class Q_QUICK3DRUNTIMERENDER_PRIVATE_EXPORT DepthMapPass : public QSSGRenderPass

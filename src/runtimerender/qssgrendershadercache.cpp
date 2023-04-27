@@ -284,7 +284,7 @@ void QSSGShaderCache::releaseCachedResources()
     // otherwise we would permanently lose what got loaded at startup.
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryGetRhiShaderPipeline(const QByteArray &inKey,
+QSSGRhiShaderPipelinePtr QSSGShaderCache::tryGetRhiShaderPipeline(const QByteArray &inKey,
                                                                         const QSSGShaderFeatures &inFeatures)
 {
     QSSGShaderCacheKey cacheKey(inKey);
@@ -347,11 +347,11 @@ QByteArray QSSGShaderCache::shaderCollectionFile()
     return QByteArrayLiteral("qtappshaders.qsbc");
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
-                                                              const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey, const QByteArray &inVert, const QByteArray &inFrag,
+                                                        const QSSGShaderFeatures &inFeatures, QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = tryGetRhiShaderPipeline(inKey, inFeatures);
+    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, inFeatures);
     if (rhiShaders)
         return rhiShaders;
 
@@ -370,7 +370,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 
     // lo and behold the final shader strings are ready
 
-    QSSGRef<QSSGRhiShaderPipeline> shaders;
+    QSSGRhiShaderPipelinePtr shaders;
     QString vertErr, fragErr;
 
     QShaderBaker baker;
@@ -458,7 +458,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
         s_statusCallback(inKey, fragStatus, fragErr, QShader::FragmentStage);
     }
 
-    QSSGRef<QSSGRhiShaderPipeline> result = m_rhiShaders.insert(tempKey, shaders).value();
+    const auto &result = m_rhiShaders.insert(tempKey, shaders).value();
     if (result && result->vertexStage() && result->fragmentStage()) {
         QQsbCollection::EntryDesc entryDesc = {
             inKey,
@@ -482,11 +482,11 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::compileForRhi(const QByteArray &
 #endif
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::newPipelineFromPregenerated(const QByteArray &inKey,
-                                                                            const QSSGShaderFeatures &inFeatures,
-                                                                            QQsbCollection::Entry entry,
-                                                                            const QSSGRenderGraphObject &obj,
-                                                                            QSSGRhiShaderPipeline::StageFlags stageFlags)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::newPipelineFromPregenerated(const QByteArray &inKey,
+                                                                      const QSSGShaderFeatures &inFeatures,
+                                                                      QQsbCollection::Entry entry,
+                                                                      const QSSGRenderGraphObject &obj,
+                                                                      QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
     // No lookup in m_rhiShaders. It is up to the caller to do that, if they
     // want to. We will insert into it at the end, but there is intentionally
@@ -502,7 +502,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::newPipelineFromPregenerated(cons
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(m_rhiContext));
+    QSSGRhiShaderPipelinePtr shaders(new QSSGRhiShaderPipeline(m_rhiContext));
 
     const QString collectionFile = QString::fromLatin1(resourceFolder() + shaderCollectionFile());
 
@@ -531,10 +531,10 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::newPipelineFromPregenerated(cons
     return inserted.value();
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryNewPipelineFromPersistentCache(const QByteArray &qsbcKey,
-                                                                                  const QByteArray &inKey,
-                                                                                  const QSSGShaderFeatures &inFeatures,
-                                                                                  QSSGRhiShaderPipeline::StageFlags stageFlags)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::tryNewPipelineFromPersistentCache(const QByteArray &qsbcKey,
+                                                                            const QByteArray &inKey,
+                                                                            const QSSGShaderFeatures &inFeatures,
+                                                                            QSSGRhiShaderPipeline::StageFlags stageFlags)
 {
     // No lookup in m_rhiShaders. it is up to the caller to do that, if they
     // want to. We will insert into it at the end, but there is intentionally
@@ -555,7 +555,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryNewPipelineFromPersistentCach
         if (shaderDebug)
             qDebug("Loading rhi shaders from disk cache for %s (%s)", qsbcKey.constData(), inKey.constData());
 
-        QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(m_rhiContext));
+        QSSGRhiShaderPipelinePtr shaders(new QSSGRhiShaderPipeline(m_rhiContext));
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, entryDesc.vertShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, entryDesc.fragShader), stageFlags);
         QSSGShaderCacheKey cacheKey(inKey);
@@ -567,9 +567,9 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::tryNewPipelineFromPersistentCach
     return {};
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
+QSSGRhiShaderPipelinePtr QSSGShaderCache::loadBuiltinForRhi(const QByteArray &inKey)
 {
-    const QSSGRef<QSSGRhiShaderPipeline> &rhiShaders = tryGetRhiShaderPipeline(inKey, QSSGShaderFeatures());
+    const QSSGRhiShaderPipelinePtr &rhiShaders = tryGetRhiShaderPipeline(inKey, QSSGShaderFeatures());
     if (rhiShaders)
         return rhiShaders;
 
@@ -580,7 +580,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGShaderCache::loadBuiltinForRhi(const QByteArr
     Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DLoadShader);
 
     // Note that we are required to return a non-null (but empty) shader set even if loading fails.
-    QSSGRef<QSSGRhiShaderPipeline> shaders(new QSSGRhiShaderPipeline(m_rhiContext));
+    QSSGRhiShaderPipelinePtr shaders(new QSSGRhiShaderPipeline(m_rhiContext));
 
     // inShaderName is a prefix of a .qsb file, so "abc" means we should
     // look for abc.vert.qsb and abc.frag.qsb.

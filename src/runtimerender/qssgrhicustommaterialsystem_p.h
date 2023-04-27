@@ -44,7 +44,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialSystem
 {
     Q_DISABLE_COPY(QSSGCustomMaterialSystem)
     typedef QPair<QByteArray, QByteArray> TStrStrPair;
-    typedef QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> TShaderMap;
+    typedef QHash<QSSGShaderMapKey, QSSGRhiShaderPipelinePtr> TShaderMap;
 
     QSSGRenderContextInterface *context = nullptr;
     TShaderMap shaderMap;
@@ -54,7 +54,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGCustomMaterialSystem
                             const QByteArray &inPropertyName,
                             const QVariant &propertyValue,
                             QSSGRenderShaderDataType inPropertyType,
-                            const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline);
+                            QSSGRhiShaderPipeline &shaderPipeline);
 
 public:
     QSSGCustomMaterialSystem();
@@ -70,12 +70,12 @@ public:
                           const QSSGRenderSubset &inSubset,
                           QSSGRenderCustomMaterial &inMaterial);
 
-    QSSGRef<QSSGRhiShaderPipeline> shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
-                                                            const QSSGRenderCustomMaterial &material,
-                                                            QSSGSubsetRenderable &renderable,
-                                                            const QSSGShaderFeatures &featureSet);
+    QSSGRhiShaderPipelinePtr shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
+                                                      const QSSGRenderCustomMaterial &material,
+                                                      QSSGSubsetRenderable &renderable,
+                                                      const QSSGShaderFeatures &featureSet);
 
-    void updateUniformsForCustomMaterial(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+    void updateUniformsForCustomMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
                                          char *ubufData,
                                          QSSGRhiGraphicsPipelineState *ps,
@@ -98,7 +98,7 @@ public:
                               QSSGReflectionMapEntry *entry = nullptr);
     void applyRhiShaderPropertyValues(char *ubufData,
                                       const QSSGRenderCustomMaterial &inMaterial,
-                                      const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline);
+                                      QSSGRhiShaderPipeline &shaderPipeline);
     void rhiRenderRenderable(QSSGRhiContext *rhiCtx,
                              QSSGSubsetRenderable &renderable,
                              bool *needsSetViewport,

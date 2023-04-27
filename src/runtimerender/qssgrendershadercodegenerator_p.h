@@ -164,11 +164,11 @@ public:
                                           const QByteArray &contents,
                                           QSSGShaderGeneratorStage stage);
 
-    QSSGRef<QSSGRhiShaderPipeline> compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
-                                                             const QSSGShaderFeatures &inFeatureSet,
-                                                             QSSGShaderLibraryManager &shaderLibraryManager,
-                                                             QSSGShaderCache &theCache,
-                                                             QSSGRhiShaderPipeline::StageFlags stageFlags);
+    QSSGRhiShaderPipelinePtr compileGeneratedRhiShader(const QByteArray &inMaterialInfoString,
+                                                       const QSSGShaderFeatures &inFeatureSet,
+                                                       QSSGShaderLibraryManager &shaderLibraryManager,
+                                                       QSSGShaderCache &theCache,
+                                                       QSSGRhiShaderPipeline::StageFlags stageFlags);
 };
 
 QT_END_NAMESPACE

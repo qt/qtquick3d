@@ -77,7 +77,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderMaterialAdapter
                                          const QByteArray &funcName,
                                          QSSGShaderLibraryManager &shaderLibraryManager);
     virtual void setCustomPropertyUniforms(char *ubufData,
-                                           QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                           QSSGRhiShaderPipeline &shaderPipeline,
                                            const QSSGRenderContextInterface &context);
     virtual bool usesSharedVariables();
 };
@@ -180,7 +180,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGShaderCustomMaterialAdapter final : pub
                                  const QByteArray &funcName,
                                  QSSGShaderLibraryManager &shaderLibraryManager) override;
     void setCustomPropertyUniforms(char *ubufData,
-                                   QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                   QSSGRhiShaderPipeline &shaderPipeline,
                                    const QSSGRenderContextInterface &context) override;
     bool usesSharedVariables() override;
 

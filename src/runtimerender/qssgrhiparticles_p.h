@@ -34,16 +34,16 @@ class QRhiTexture;
 class QSSGParticleRenderer
 {
 public:
-    static void updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+    static void updateUniformsForParticles(QSSGRhiShaderPipeline &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
                                          char *ubufData,
                                          QSSGParticlesRenderable &renderable,
                                          QSSGRenderCamera &inCamera);
-    static void updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+    static void updateUniformsForParticleModel(QSSGRhiShaderPipeline &shaderPipeline,
                                                char *ubufData,
                                                const QSSGRenderModel *model, quint32 offset);
 
-    static void rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline, QSSGPassKey passKey,
+    static void rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPipeline, QSSGPassKey passKey,
                                      QSSGRhiContext *rhiCtx,
                                      QSSGRhiGraphicsPipelineState *ps,
                                      QSSGParticlesRenderable &renderable,
@@ -58,7 +58,7 @@ public:
                                     bool *needsSetViewport,
                                     int cubeFace,
                                     const QSSGRhiGraphicsPipelineState &state);
-    static void prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+    static void prepareParticlesForModel(QSSGRhiShaderPipeline &shaderPipeline,
                                          QSSGRhiContext *rhiCtx,
                                          QSSGRhiShaderResourceBindingList &bindings,
                                          const QSSGRenderModel *model);

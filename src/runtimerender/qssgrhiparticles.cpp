@@ -34,7 +34,7 @@ struct ParticleLightData
     float spotLightInnerConeAngle[4] = {0.0f};
 };
 
-void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipeline> &shaders,
+void QSSGParticleRenderer::updateUniformsForParticles(QSSGRhiShaderPipeline &shaders,
                                                       QSSGRhiContext *rhiCtx,
                                                       char *ubufData,
                                                       QSSGParticlesRenderable &renderable,
@@ -42,36 +42,36 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
 {
     const QMatrix4x4 clipSpaceCorrMatrix = rhiCtx->rhi()->clipSpaceCorrMatrix();
 
-    QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders->commonUniformIndices;
+    QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
     const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
-    shaders->setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
+    shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
 
     const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
-    shaders->setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+    shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
 
     const QMatrix4x4 &modelMatrix = renderable.globalTransform;
-    shaders->setUniform(ubufData, "qt_modelMatrix", modelMatrix.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
+    shaders.setUniform(ubufData, "qt_modelMatrix", modelMatrix.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     QVector2D oneOverSize = QVector2D(1.0f, 1.0f);
     auto &particleBuffer = renderable.particles.m_particleBuffer;
     const quint32 particlesPerSlice = particleBuffer.particlesPerSlice();
     oneOverSize = QVector2D(1.0f / particleBuffer.size().width(), 1.0f / particleBuffer.size().height());
-    shaders->setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
-    shaders->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, 1 * sizeof(quint32));
+    shaders.setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
+    shaders.setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, 1 * sizeof(quint32));
 
     // Global opacity of the particles node
-    shaders->setUniform(ubufData, "qt_opacity", &renderable.opacity, 1 * sizeof(float));
+    shaders.setUniform(ubufData, "qt_opacity", &renderable.opacity, 1 * sizeof(float));
 
     float blendImages = renderable.particles.m_blendImages ? 1.0f : 0.0f;
     float imageCount = float(renderable.particles.m_spriteImageCount);
     float ooImageCount = 1.0f / imageCount;
 
     QVector4D spriteConfig(imageCount, ooImageCount, 0.0f, blendImages);
-    shaders->setUniform(ubufData, "qt_spriteConfig", &spriteConfig, 4 * sizeof(float));
+    shaders.setUniform(ubufData, "qt_spriteConfig", &spriteConfig, 4 * sizeof(float));
 
     const float billboard = renderable.particles.m_billboard ? 1.0f : 0.0f;
-    shaders->setUniform(ubufData, "qt_billboard", &billboard, 1 * sizeof(float));
+    shaders.setUniform(ubufData, "qt_billboard", &billboard, 1 * sizeof(float));
 
     // Lights
     QVector3D theLightAmbientTotal;
@@ -113,20 +113,20 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
             theLightAmbientTotal += theLight->m_ambientColor;
         }
         // Copy light data
-        int lightOffset = shaders->offsetOfUniform("qt_pointLightPosition");
+        int lightOffset = shaders.offsetOfUniform("qt_pointLightPosition");
         if (lightOffset >= 0)
             memcpy(ubufData + lightOffset, &lightData, sizeof(ParticleLightData));
     }
-    shaders->setUniform(ubufData, "qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);
+    shaders.setUniform(ubufData, "qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);
     int enablePointLights = pointLight > 0 ? 1 : 0;
     int enableSpotLights = spotLight > 0 ? 1 : 0;
-    shaders->setUniform(ubufData, "qt_pointLights", &enablePointLights, sizeof(int));
-    shaders->setUniform(ubufData, "qt_spotLights", &enableSpotLights, sizeof(int));
+    shaders.setUniform(ubufData, "qt_pointLights", &enablePointLights, sizeof(int));
+    shaders.setUniform(ubufData, "qt_spotLights", &enableSpotLights, sizeof(int));
 
     // Line particle uniform
     int segmentCount = particleBuffer.segments();
     if (segmentCount) {
-        shaders->setUniform(ubufData, "qt_lineSegmentCount", &segmentCount, sizeof(int));
+        shaders.setUniform(ubufData, "qt_lineSegmentCount", &segmentCount, sizeof(int));
         float alphaFade = renderable.particles.m_alphaFade;
         float sizeModifier = renderable.particles.m_sizeModifier;
         float texcoordScale = renderable.particles.m_texcoordScale;
@@ -135,13 +135,13 @@ void QSSGParticleRenderer::updateUniformsForParticles(QSSGRef<QSSGRhiShaderPipel
             const auto size = image->m_texture.m_texture->pixelSize();
             texcoordScale *= float(size.height()) / float(size.width());
         }
-        shaders->setUniform(ubufData, "qt_alphaFade", &alphaFade, sizeof(float));
-        shaders->setUniform(ubufData, "qt_sizeModifier", &sizeModifier, sizeof(float));
-        shaders->setUniform(ubufData, "qt_texcoordScale", &texcoordScale, sizeof(float));
+        shaders.setUniform(ubufData, "qt_alphaFade", &alphaFade, sizeof(float));
+        shaders.setUniform(ubufData, "qt_sizeModifier", &sizeModifier, sizeof(float));
+        shaders.setUniform(ubufData, "qt_texcoordScale", &texcoordScale, sizeof(float));
     }
 }
 
-void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRhiShaderPipeline &shaderPipeline,
                                                           char *ubufData,
                                                           const QSSGRenderModel *model,
                                                           quint32 offset)
@@ -149,11 +149,11 @@ void QSSGParticleRenderer::updateUniformsForParticleModel(QSSGRef<QSSGRhiShaderP
     auto &particleBuffer = *model->particleBuffer;
     const quint32 particlesPerSlice = particleBuffer.particlesPerSlice();
     const QVector2D oneOverSize = QVector2D(1.0f / particleBuffer.size().width(), 1.0f / particleBuffer.size().height());
-    shaderPipeline->setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
-    shaderPipeline->setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, sizeof(quint32));
+    shaderPipeline.setUniform(ubufData, "qt_oneOverParticleImageSize", &oneOverSize, 2 * sizeof(float));
+    shaderPipeline.setUniform(ubufData, "qt_countPerSlice", &particlesPerSlice, sizeof(quint32));
     const QMatrix4x4 &particleMatrix = model->particleMatrix;
-    shaderPipeline->setUniform(ubufData, "qt_particleMatrix", &particleMatrix, 16 * sizeof(float));
-    shaderPipeline->setUniform(ubufData, "qt_particleIndexOffset", &offset, sizeof(quint32));
+    shaderPipeline.setUniform(ubufData, "qt_particleMatrix", &particleMatrix, 16 * sizeof(float));
+    shaderPipeline.setUniform(ubufData, "qt_particleIndexOffset", &offset, sizeof(quint32));
 }
 
 static void fillTargetBlend(QRhiGraphicsPipeline::TargetBlend &targetBlend, QSSGRenderParticles::BlendMode mode)
@@ -321,7 +321,7 @@ static QByteArray convertParticleData(QByteArray &dest, const QByteArray &data, 
     return dest;
 }
 
-void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRhiShaderPipeline &shaderPipeline,
                                                 QSSGPassKey passKey,
                                                 QSSGRhiContext *rhiCtx,
                                                 QSSGRhiGraphicsPipelineState *ps,
@@ -340,7 +340,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
                                                     nullptr, 0, QSSGRhiDrawCallDataKey::Main })
                                           : rhiCtx->drawCallData({ passKey, node,
                                                                    entry, cubeFace, QSSGRhiDrawCallDataKey::Reflection }));
-    shaderPipeline->ensureUniformBuffer(&dcd.ubuf);
+    shaderPipeline.ensureUniformBuffer(&dcd.ubuf);
 
     char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
     if (!camera)
@@ -403,13 +403,13 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
         ps->targetBlend = QRhiGraphicsPipeline::TargetBlend();
 
     QSSGRhiShaderResourceBindingList bindings;
-    bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline->ub0Size());
+    bindings.addUniformBuffer(0, VISIBILITY_ALL, dcd.ubuf, 0, shaderPipeline.ub0Size());
 
     // Texture maps
     // we only have one image
     QSSGRenderableImage *renderableImage = renderable.firstImage;
 
-    int samplerBinding = shaderPipeline->bindingForTexture("qt_sprite");
+    int samplerBinding = shaderPipeline.bindingForTexture("qt_sprite");
     if (samplerBinding >= 0) {
         QRhiTexture *texture = renderableImage ? renderableImage->m_texture.m_texture : nullptr;
         if (samplerBinding >= 0 && texture) {
@@ -437,7 +437,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
         }
     }
 
-    samplerBinding = shaderPipeline->bindingForTexture("qt_particleTexture");
+    samplerBinding = shaderPipeline.bindingForTexture("qt_particleTexture");
     if (samplerBinding >= 0) {
         QRhiTexture *texture = particleData.texture;
         if (samplerBinding >= 0 && texture) {
@@ -452,7 +452,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
         }
     }
 
-    samplerBinding = shaderPipeline->bindingForTexture("qt_colorTable");
+    samplerBinding = shaderPipeline.bindingForTexture("qt_colorTable");
     if (samplerBinding >= 0) {
         bool hasTexture = false;
         if (renderable.colorTable) {
@@ -528,7 +528,7 @@ void QSSGParticleRenderer::rhiPrepareRenderable(QSSGRef<QSSGRhiShaderPipeline> &
     }
 }
 
-void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void QSSGParticleRenderer::prepareParticlesForModel(QSSGRhiShaderPipeline &shaderPipeline,
                                                     QSSGRhiContext *rhiCtx,
                                                     QSSGRhiShaderResourceBindingList &bindings,
                                                     const QSSGRenderModel *model)
@@ -560,7 +560,7 @@ void QSSGParticleRenderer::prepareParticlesForModel(QSSGRef<QSSGRhiShaderPipelin
         rhiCtx->commandBuffer()->resourceUpdate(rub);
     }
     particleData.serial = particleBuffer.serial();
-    int samplerBinding = shaderPipeline->bindingForTexture("qt_particleTexture");
+    int samplerBinding = shaderPipeline.bindingForTexture("qt_particleTexture");
     if (samplerBinding >= 0) {
         QRhiTexture *texture = particleData.texture;
         if (samplerBinding >= 0 && texture) {

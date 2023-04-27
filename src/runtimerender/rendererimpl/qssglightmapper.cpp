@@ -800,7 +800,7 @@ bool QSSGLightmapperPrivate::prepareLightmaps()
                     shaderVariant = QSSGRenderer::LightmapUVRasterizationShaderMode::UvTangent;
             }
 
-            QSSGRef<QSSGRhiShaderPipeline> lmUvRastShaderPipeline = renderer->getRhiLightmapUVRasterizationShader(shaderVariant);
+            const auto &lmUvRastShaderPipeline = renderer->getRhiLightmapUVRasterizationShader(shaderVariant);
             if (!lmUvRastShaderPipeline) {
                 sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
                 return false;
@@ -1487,7 +1487,7 @@ bool QSSGLightmapperPrivate::postProcess()
                                                         QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
         bindings.addTexture(0, QRhiShaderResourceBinding::FragmentStage, lightmapTex.get(), nearestSampler);
         renderer->rhiQuadRenderer()->prepareQuad(rhiCtx, resUpd);
-        QSSGRef<QSSGRhiShaderPipeline> lmDilatePipeline = renderer->getRhiLightmapDilateShader();
+        const auto &lmDilatePipeline = renderer->getRhiLightmapDilateShader();
         if (!lmDilatePipeline) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Failed to load shaders"));
             return false;

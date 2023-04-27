@@ -43,29 +43,29 @@ static constexpr float QSSG_HALFPI = float(M_PI_2);
 static const QRhiShaderResourceBinding::StageFlags RENDERER_VISIBILITY_ALL =
         QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage;
 
-static QSSGRef<QSSGRhiShaderPipeline> shadersForDefaultMaterial(QSSGRhiGraphicsPipelineState *ps,
-                                                                QSSGSubsetRenderable &subsetRenderable,
-                                                                const QSSGShaderFeatures &featureSet)
+static QSSGRhiShaderPipelinePtr shadersForDefaultMaterial(QSSGRhiGraphicsPipelineState *ps,
+                                                          QSSGSubsetRenderable &subsetRenderable,
+                                                          const QSSGShaderFeatures &featureSet)
 {
     const auto &renderer(subsetRenderable.renderer);
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getShaderPipelineForDefaultMaterial(subsetRenderable, featureSet);
+    const auto &shaderPipeline = renderer->getShaderPipelineForDefaultMaterial(subsetRenderable, featureSet);
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.get();
     return shaderPipeline;
 }
 
-static QSSGRef<QSSGRhiShaderPipeline> shadersForParticleMaterial(QSSGRhiGraphicsPipelineState *ps,
-                                                                 QSSGParticlesRenderable &particleRenderable)
+static QSSGRhiShaderPipelinePtr shadersForParticleMaterial(QSSGRhiGraphicsPipelineState *ps,
+                                                           QSSGParticlesRenderable &particleRenderable)
 {
     const auto &renderer(particleRenderable.renderer);
     auto featureLevel = particleRenderable.particles.m_featureLevel;
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiParticleShader(featureLevel);
+    const auto &shaderPipeline = renderer->getRhiParticleShader(featureLevel);
     if (shaderPipeline)
         ps->shaderPipeline = shaderPipeline.get();
     return shaderPipeline;
 }
 
-static void updateUniformsForDefaultMaterial(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+static void updateUniformsForDefaultMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                              QSSGRhiContext *rhiCtx,
                                              char *ubufData,
                                              QSSGRhiGraphicsPipelineState *ps,
@@ -243,13 +243,13 @@ void QSSGRenderer::addMaterialDirtyClear(QSSGRenderGraphObject *material)
 static QByteArray logPrefix() { return QByteArrayLiteral("mesh default material pipeline-- "); }
 
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
-                                                                           QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                           QSSGShaderCache &shaderCache,
-                                                                           QSSGProgramGenerator &shaderProgramGenerator,
-                                                                           QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                           const QSSGShaderFeatures &featureSet,
-                                                                           QByteArray &shaderString)
+QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable,
+                                                                     QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                     QSSGShaderCache &shaderCache,
+                                                                     QSSGProgramGenerator &shaderProgramGenerator,
+                                                                     QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                     const QSSGShaderFeatures &featureSet,
+                                                                     QByteArray &shaderString)
 {
     shaderString = logPrefix();
     QSSGShaderDefaultMaterialKey theKey(renderable.shaderDescription);
@@ -264,8 +264,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     // runtime cache. That may get cleared upon an explicit call to
     // QQuickWindow::releaseResources(), but will otherwise store all
     // encountered shader pipelines in any View3D in the window.
-    QSSGRef<QSSGRhiShaderPipeline> maybePipeline = shaderCache.tryGetRhiShaderPipeline(shaderString, featureSet);
-    if (maybePipeline)
+    if (const auto &maybePipeline = shaderCache.tryGetRhiShaderPipeline(shaderString, featureSet))
         return maybePipeline;
 
     // Check if there's a pre-built (offline generated) shader for available.
@@ -278,8 +277,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
     }
 
     // Try the persistent (disk-based) cache then.
-    maybePipeline = shaderCache.tryNewPipelineFromPersistentCache(qsbcKey, shaderString, featureSet);
-    if (maybePipeline)
+    if (const auto &maybePipeline = shaderCache.tryNewPipelineFromPersistentCache(qsbcKey, shaderString, featureSet))
         return maybePipeline;
 
     // Otherwise, build new shader code and run the resulting shaders through
@@ -300,8 +298,8 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipelineImpl(QSSGS
                                                                   shaderCache);
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
-                                                                       const QSSGShaderFeatures &inFeatureSet)
+QSSGRhiShaderPipelinePtr QSSGRenderer::generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable,
+                                                                 const QSSGShaderFeatures &inFeatureSet)
 {
     const auto &theCache = m_contextInterface->shaderCache();
     const auto &shaderProgramGenerator = contextInterface()->shaderProgramGenerator();
@@ -579,8 +577,8 @@ void QSSGRenderer::intersectRayWithItem2D(const QSSGRenderRay &inRay, const QSSG
     }
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
-                                                                                 const QSSGShaderFeatures &inFeatureSet)
+QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
+                                                                           const QSSGShaderFeatures &inFeatureSet)
 {
     if (Q_UNLIKELY(m_currentLayer == nullptr)) {
         Q_ASSERT(false);
@@ -598,7 +596,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGRenderer::getShaderPipelineForDefaultMaterial
     QElapsedTimer timer;
     timer.start();
 
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
+    QSSGRhiShaderPipelinePtr shaderPipeline;
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find()
@@ -1137,7 +1135,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
         }
 
         QSSGRhiShaderResourceBindingList bindings;
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
+        QSSGRhiShaderPipelinePtr shaderPipeline;
         QSSGSubsetRenderable &subsetRenderable(static_cast<QSSGSubsetRenderable &>(*theObject));
         if (theObject->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset) {
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.defaultMaterial().cullMode);
@@ -1148,12 +1146,12 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
                 continue;
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
+            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, inCamera, depthAdjust, &modelViewProjection);
             if (blendParticles)
-                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
+                QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             if (blendParticles)
-                QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
+                QSSGParticleRenderer::prepareParticlesForModel(*shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
         } else if (theObject->type == QSSGSubsetRenderable::Type::CustomMaterialMeshSubset) {
             ps->cullMode = QSSGRhiGraphicsPipelineState::toCullMode(subsetRenderable.customMaterial().m_cullMode);
 
@@ -1164,7 +1162,7 @@ static void rhiPrepareResourcesForShadowMap(QSSGRhiContext *rhiCtx,
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
             char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
             // inCamera is the shadow camera, not the same as inData.camera
-            customMaterialSystem.updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
+            customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
                                                                  inCamera, depthAdjust, &modelViewProjection);
             dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
         }
@@ -1274,7 +1272,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
         if (subsetRenderable.renderableFlags.rendersWithLightmap())
             featureSet.set(QSSGShaderFeatures::Feature::Lightmap, true);
 
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
+        const auto &shaderPipeline = shadersForDefaultMaterial(ps, subsetRenderable, featureSet);
         if (shaderPipeline) {
             // Unlike the subsetRenderable (which is allocated per frame so is
             // not persistent in any way), the model reference is persistent in
@@ -1295,13 +1293,13 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
 
             shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
             char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-            updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *camera, nullptr, alteredModelViewProjection);
+            updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *camera, nullptr, alteredModelViewProjection);
             if (blendParticles)
-                QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
+                QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &subsetRenderable.modelContext.model, subsetRenderable.subset.offset);
             dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
             if (blendParticles)
-                QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
+                QSSGParticleRenderer::prepareParticlesForModel(*shaderPipeline, rhiCtx, bindings, &subsetRenderable.modelContext.model);
 
                  // Skinning
             if (modelNode.boneCount != 0) {
@@ -1540,9 +1538,9 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
     case QSSGRenderableObject::Type::Particles:
     {
         QSSGParticlesRenderable &particleRenderable(static_cast<QSSGParticlesRenderable &>(inObject));
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
+        const auto &shaderPipeline = shadersForParticleMaterial(ps, particleRenderable);
         if (shaderPipeline) {
-            QSSGParticleRenderer::rhiPrepareRenderable(shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples,
+            QSSGParticleRenderer::rhiPrepareRenderable(*shaderPipeline, passKey, rhiCtx, ps, particleRenderable, inData, renderPassDescriptor, samples,
                                                        inCamera, cubeFace, entry);
         }
         break;
@@ -1724,11 +1722,11 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
         const QSize size = map->pixelSize();
         ps.viewport = QRhiViewport(0, 0, float(size.width()), float(size.height()));
 
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurXShader()
-                                                                     : renderer.getRhiCubemapShadowBlurXShader();
-        if (!shaderPipeline)
+        const auto &blurXPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurXShader()
+                                                  : renderer.getRhiCubemapShadowBlurXShader();
+        if (!blurXPipeline)
             return;
-        ps.shaderPipeline = shaderPipeline.get();
+        ps.shaderPipeline = blurXPipeline.get();
 
         ps.colorAttachmentCount = orthographic ? 1 : 6;
 
@@ -1773,11 +1771,11 @@ void RenderHelpers::rhiRenderShadowMap(QSSGRhiContext *rhiCtx,
 
         // repeat for blur Y, now depthCopy -> depthMap or cubeCopy -> depthCube
 
-        shaderPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurYShader()
-                                      : renderer.getRhiCubemapShadowBlurYShader();
-        if (!shaderPipeline)
+        const auto &blurYPipeline = orthographic ? renderer.getRhiOrthographicShadowBlurYShader()
+                                                 : renderer.getRhiCubemapShadowBlurYShader();
+        if (!blurYPipeline)
             return;
-        ps.shaderPipeline = shaderPipeline.get();
+        ps.shaderPipeline = blurYPipeline.get();
 
         bindings.clear();
         bindings.addUniformBuffer(0, RENDERER_VISIBILITY_ALL, dcd.ubuf);
@@ -1982,9 +1980,8 @@ void RenderHelpers::rhiRenderReflectionMap(QSSGRhiContext *rhiCtx,
 
             if (renderSkybox && pEntry->m_skyBoxSrbs[quint8(face)]) {
                 const bool isSkyBox = inData.layer.background == QSSGRenderLayer::Background::SkyBox;
-                QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = nullptr;
-                shaderPipeline = isSkyBox ? renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
-                                          : renderer.getRhiSkyBoxCubeShader();
+                const auto &shaderPipeline = isSkyBox ? renderer.getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode::None, inData.layer.skyBoxIsRgbe8)
+                                                      : renderer.getRhiSkyBoxCubeShader();
                 Q_ASSERT(shaderPipeline);
                 ps->shaderPipeline = shaderPipeline.get();
                 QRhiShaderResourceBindings *srb = pEntry->m_skyBoxSrbs[quint8(face)];
@@ -2061,7 +2058,7 @@ bool RenderHelpers::rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &siz
 void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
                                        QSSGPassKey passKey,
                                        QSSGRenderer &renderer,
-                                       const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+                                       QSSGRhiShaderPipeline &shaderPipeline,
                                        QSSGRhiGraphicsPipelineState &ps,
                                        const SSAOMapPass::AmbientOcclusion &ao,
                                        const QSSGRhiRenderableTexture &rhiAoTexture,
@@ -2079,7 +2076,7 @@ void RenderHelpers::rhiRenderAoTexture(QSSGRhiContext *rhiCtx,
         return;
     }
 
-    ps.shaderPipeline = shaderPipeline.get();
+    ps.shaderPipeline = &shaderPipeline;
 
     const float R2 = ao.aoDistance * ao.aoDistance * 0.16f;
     const QSize textureSize = rhiAoTexture.texture->pixelSize();
@@ -2363,7 +2360,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
                                                         QRhiRenderPassDescriptor *rpDesc,
                                                         QSSGRhiGraphicsPipelineState *ps,
                                                         QSSGRhiDrawCallDataKey::Selector ubufSel) {
-        QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
+        QSSGRhiShaderPipelinePtr shaderPipeline;
 
         const bool isOpaqueDepthPrePass = obj->depthWriteMode == QSSGDepthDrawMode::OpaquePrePass;
         QSSGShaderFeatures featureSet;
@@ -2386,7 +2383,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                updateUniformsForDefaultMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
+                updateUniformsForDefaultMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable, *inData.camera, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {
                 return false;
@@ -2401,7 +2398,7 @@ bool RenderHelpers::rhiPrepareDepthPass(QSSGRhiContext *rhiCtx,
             if (shaderPipeline) {
                 shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd->ubuf);
                 char *ubufData = dcd->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-                customMaterialSystem.updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
+                customMaterialSystem.updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, subsetRenderable.customMaterial(), subsetRenderable,
                                                                      *inData.camera, nullptr, nullptr);
                 dcd->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
             } else {
