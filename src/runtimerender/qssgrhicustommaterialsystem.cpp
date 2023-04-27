@@ -46,15 +46,15 @@ void QSSGCustomMaterialSystem::releaseCachedResources()
     shaderMap.clear();
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
-                                                                                  const QSSGRenderCustomMaterial &material,
-                                                                                  QSSGSubsetRenderable &renderable,
-                                                                                  const QSSGShaderFeatures &featureSet)
+QSSGRhiShaderPipelinePtr QSSGCustomMaterialSystem::shadersForCustomMaterial(QSSGRhiGraphicsPipelineState *ps,
+                                                                            const QSSGRenderCustomMaterial &material,
+                                                                            QSSGSubsetRenderable &renderable,
+                                                                            const QSSGShaderFeatures &featureSet)
 {
     QElapsedTimer timer;
     timer.start();
 
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline;
+    QSSGRhiShaderPipelinePtr shaderPipeline;
 
     // This just references inFeatureSet and inRenderable.shaderDescription -
     // cheap to construct and is good enough for the find(). This is the first
@@ -113,7 +113,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGCustomMaterialSystem::shadersForCustomMateria
     return shaderPipeline;
 }
 
-void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void QSSGCustomMaterialSystem::updateUniformsForCustomMaterial(QSSGRhiShaderPipeline &shaderPipeline,
                                                                QSSGRhiContext *rhiCtx,
                                                                char *ubufData,
                                                                QSSGRhiGraphicsPipelineState *ps,
@@ -190,7 +190,7 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
 
     const bool blendParticles = renderable.renderer->defaultMaterialShaderKeyProperties().m_blendParticles.getValue(renderable.shaderDescription);
 
-    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = shadersForCustomMaterial(ps, material, renderable, featureSet);
+    const auto &shaderPipeline = shadersForCustomMaterial(ps, material, renderable, featureSet);
 
     if (shaderPipeline) {
         QSSGRhiShaderResourceBindingList bindings;
@@ -209,15 +209,15 @@ void QSSGCustomMaterialSystem::rhiPrepareRenderable(QSSGRhiGraphicsPipelineState
         shaderPipeline->ensureCombinedMainLightsUniformBuffer(&dcd.ubuf);
         char *ubufData = dcd.ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
         if (!camera)
-            updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, *layerData.camera, nullptr, nullptr);
+            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, material, renderable, *layerData.camera, nullptr, nullptr);
         else
-            updateUniformsForCustomMaterial(shaderPipeline, rhiCtx, ubufData, ps, material, renderable, *camera, nullptr, modelViewProjection);
+            updateUniformsForCustomMaterial(*shaderPipeline, rhiCtx, ubufData, ps, material, renderable, *camera, nullptr, modelViewProjection);
         if (blendParticles)
-            QSSGParticleRenderer::updateUniformsForParticleModel(shaderPipeline, ubufData, &renderable.modelContext.model, renderable.subset.offset);
+            QSSGParticleRenderer::updateUniformsForParticleModel(*shaderPipeline, ubufData, &renderable.modelContext.model, renderable.subset.offset);
         dcd.ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
         if (blendParticles)
-            QSSGParticleRenderer::prepareParticlesForModel(shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
+            QSSGParticleRenderer::prepareParticlesForModel(*shaderPipeline, rhiCtx, bindings, &renderable.modelContext.model);
         bool instancing = false;
         if (!camera)
             instancing = renderable.prepareInstancing(rhiCtx, layerData.cameraData->direction, layerData.cameraData->position, renderable.instancingLodMin, renderable.instancingLodMax);
@@ -510,7 +510,7 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                                                   const QByteArray &inPropertyName,
                                                   const QVariant &propertyValue,
                                                   QSSGRenderShaderDataType inPropertyType,
-                                                  const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline)
+                                                  QSSGRhiShaderPipeline &shaderPipeline)
 {
     Q_UNUSED(inMaterial);
 
@@ -533,17 +533,17 @@ void QSSGCustomMaterialSystem::setShaderResources(char *ubufData,
                       QRhiSampler::Repeat
                     }
                 };
-                shaderPipeline->addExtraTexture(t);
+                shaderPipeline.addExtraTexture(t);
             }
         }
     } else {
-        shaderPipeline->setUniformValue(ubufData, inPropertyName, propertyValue, inPropertyType);
+        shaderPipeline.setUniformValue(ubufData, inPropertyName, propertyValue, inPropertyType);
     }
 }
 
 void QSSGCustomMaterialSystem::applyRhiShaderPropertyValues(char *ubufData,
                                                             const QSSGRenderCustomMaterial &material,
-                                                            const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline)
+                                                            QSSGRhiShaderPipeline &shaderPipeline)
 {
     const auto &properties = material.m_properties;
     for (const auto &prop : properties)

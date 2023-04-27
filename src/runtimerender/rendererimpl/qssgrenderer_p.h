@@ -95,15 +95,15 @@ public:
     void endLayerRender();
     void addMaterialDirtyClear(QSSGRenderGraphObject *material);
 
-    static QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                        QSSGShaderCache &shaderCache,
-                                                                        QSSGProgramGenerator &shaderProgramGenerator,
-                                                                        QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
-                                                                        const QSSGShaderFeatures &featureSet,
-                                                                        QByteArray &shaderString);
+    static QSSGRhiShaderPipelinePtr generateRhiShaderPipelineImpl(QSSGSubsetRenderable &renderable, QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                  QSSGShaderCache &shaderCache,
+                                                                  QSSGProgramGenerator &shaderProgramGenerator,
+                                                                  QSSGShaderDefaultMaterialKeyProperties &shaderKeyProperties,
+                                                                  const QSSGShaderFeatures &featureSet,
+                                                                  QByteArray &shaderString);
 
-    QSSGRef<QSSGRhiShaderPipeline> getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
-                                                                       const QSSGShaderFeatures &inFeatureSet);
+    QSSGRhiShaderPipelinePtr getShaderPipelineForDefaultMaterial(QSSGSubsetRenderable &inRenderable,
+                                                                 const QSSGShaderFeatures &inFeatureSet);
 
     QSSGLayerGlobalRenderProperties getLayerGlobalRenderProperties();
 
@@ -120,22 +120,22 @@ public:
     };
 
     // shader implementations, RHI, implemented in qssgrendererimplshaders_rhi.cpp
-    QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurXShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiCubemapShadowBlurYShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiGridShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurXShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiOrthographicShadowBlurYShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiSsaoShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiSkyBoxCubeShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
-    QSSGRef<QSSGRhiShaderPipeline> getRhiSupersampleResolveShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiProgressiveAAShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiTexturedQuadShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel);
-    QSSGRef<QSSGRhiShaderPipeline> getRhiSimpleQuadShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
-    QSSGRef<QSSGRhiShaderPipeline> getRhiLightmapDilateShader();
-    QSSGRef<QSSGRhiShaderPipeline> getRhiDebugObjectShader();
+    QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurXShader();
+    QSSGRhiShaderPipelinePtr getRhiCubemapShadowBlurYShader();
+    QSSGRhiShaderPipelinePtr getRhiGridShader();
+    QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurXShader();
+    QSSGRhiShaderPipelinePtr getRhiOrthographicShadowBlurYShader();
+    QSSGRhiShaderPipelinePtr getRhiSsaoShader();
+    QSSGRhiShaderPipelinePtr getRhiSkyBoxCubeShader();
+    QSSGRhiShaderPipelinePtr getRhiSkyBoxShader(QSSGRenderLayer::TonemapMode tonemapMode, bool isRGBE);
+    QSSGRhiShaderPipelinePtr getRhiSupersampleResolveShader();
+    QSSGRhiShaderPipelinePtr getRhiProgressiveAAShader();
+    QSSGRhiShaderPipelinePtr getRhiTexturedQuadShader();
+    QSSGRhiShaderPipelinePtr getRhiParticleShader(QSSGRenderParticles::FeatureLevel featureLevel);
+    QSSGRhiShaderPipelinePtr getRhiSimpleQuadShader();
+    QSSGRhiShaderPipelinePtr getRhiLightmapUVRasterizationShader(LightmapUVRasterizationShaderMode mode);
+    QSSGRhiShaderPipelinePtr getRhiLightmapDilateShader();
+    QSSGRhiShaderPipelinePtr getRhiDebugObjectShader();
 
     static void setTonemapFeatures(QSSGShaderFeatures &features, QSSGRenderLayer::TonemapMode tonemapMode);
 
@@ -154,9 +154,9 @@ protected:
 private:
     friend class QSSGRenderContextInterface;
     void releaseCachedResources();
-    QSSGRef<QSSGRhiShaderPipeline> getBuiltinRhiShader(const QByteArray &name,
-                                                       QSSGRef<QSSGRhiShaderPipeline> &storage);
-    QSSGRef<QSSGRhiShaderPipeline> generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable, const QSSGShaderFeatures &inFeatureSet);
+    QSSGRhiShaderPipelinePtr getBuiltinRhiShader(const QByteArray &name,
+                                                 QSSGRhiShaderPipelinePtr &storage);
+    QSSGRhiShaderPipelinePtr generateRhiShaderPipeline(QSSGSubsetRenderable &inRenderable, const QSSGShaderFeatures &inFeatureSet);
 
     QSSGRenderContextInterface *m_contextInterface = nullptr; //  We're own by the context interface
 
@@ -164,36 +164,36 @@ private:
     // shader. This does not mean we were successul, however.
 
     // RHI
-    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurXRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_cubemapShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_gridShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurXRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_orthographicShadowBlurYRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_ssaoRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_skyBoxRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_skyBoxCubeRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_supersampleResolveRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_progressiveAARhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_texturedQuadRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_simpleQuadRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_uv;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapUVRasterShader_uv_tangent;
-    QSSGRef<QSSGRhiShaderPipeline> m_lightmapDilateShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_debugObjectShader;
+    QSSGRhiShaderPipelinePtr m_cubemapShadowBlurXRhiShader;
+    QSSGRhiShaderPipelinePtr m_cubemapShadowBlurYRhiShader;
+    QSSGRhiShaderPipelinePtr m_gridShader;
+    QSSGRhiShaderPipelinePtr m_orthographicShadowBlurXRhiShader;
+    QSSGRhiShaderPipelinePtr m_orthographicShadowBlurYRhiShader;
+    QSSGRhiShaderPipelinePtr m_ssaoRhiShader;
+    QSSGRhiShaderPipelinePtr m_skyBoxRhiShader;
+    QSSGRhiShaderPipelinePtr m_skyBoxCubeRhiShader;
+    QSSGRhiShaderPipelinePtr m_supersampleResolveRhiShader;
+    QSSGRhiShaderPipelinePtr m_progressiveAARhiShader;
+    QSSGRhiShaderPipelinePtr m_texturedQuadRhiShader;
+    QSSGRhiShaderPipelinePtr m_simpleQuadRhiShader;
+    QSSGRhiShaderPipelinePtr m_lightmapUVRasterShader;
+    QSSGRhiShaderPipelinePtr m_lightmapUVRasterShader_uv;
+    QSSGRhiShaderPipelinePtr m_lightmapUVRasterShader_uv_tangent;
+    QSSGRhiShaderPipelinePtr m_lightmapDilateShader;
+    QSSGRhiShaderPipelinePtr m_debugObjectShader;
 
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingSimpleRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingMappedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesNoLightingAnimatedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingSimpleRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingMappedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_particlesVLightingAnimatedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesMappedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesAnimatedRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesVLightRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesMappedVLightRhiShader;
-    QSSGRef<QSSGRhiShaderPipeline> m_lineParticlesAnimatedVLightRhiShader;
+    QSSGRhiShaderPipelinePtr m_particlesNoLightingSimpleRhiShader;
+    QSSGRhiShaderPipelinePtr m_particlesNoLightingMappedRhiShader;
+    QSSGRhiShaderPipelinePtr m_particlesNoLightingAnimatedRhiShader;
+    QSSGRhiShaderPipelinePtr m_particlesVLightingSimpleRhiShader;
+    QSSGRhiShaderPipelinePtr m_particlesVLightingMappedRhiShader;
+    QSSGRhiShaderPipelinePtr m_particlesVLightingAnimatedRhiShader;
+    QSSGRhiShaderPipelinePtr m_lineParticlesRhiShader;
+    QSSGRhiShaderPipelinePtr m_lineParticlesMappedRhiShader;
+    QSSGRhiShaderPipelinePtr m_lineParticlesAnimatedRhiShader;
+    QSSGRhiShaderPipelinePtr m_lineParticlesVLightRhiShader;
+    QSSGRhiShaderPipelinePtr m_lineParticlesMappedVLightRhiShader;
+    QSSGRhiShaderPipelinePtr m_lineParticlesAnimatedVLightRhiShader;
 
     bool m_globalPickingEnabled = false;
 
@@ -210,7 +210,7 @@ private:
     QSSGRhiQuadRenderer *m_rhiQuadRenderer = nullptr;
     QSSGRhiCubeRenderer *m_rhiCubeRenderer = nullptr;
 
-    QHash<QSSGShaderMapKey, QSSGRef<QSSGRhiShaderPipeline>> m_shaderMap;
+    QHash<QSSGShaderMapKey, QSSGRhiShaderPipelinePtr> m_shaderMap;
 
     // Skybox shader state
     QSSGRenderLayer::TonemapMode m_skyboxTonemapMode = QSSGRenderLayer::TonemapMode::None;
@@ -257,7 +257,7 @@ void rhiRenderDepthPass(QSSGRhiContext *rhiCtx, const QSSGRhiGraphicsPipelineSta
 
 bool rhiPrepareAoTexture(QSSGRhiContext *rhiCtx, const QSize &size, QSSGRhiRenderableTexture *renderableTex);
 
-void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderer &renderer, const QSSGRef<QSSGRhiShaderPipeline> &shaderPipeline,
+void rhiRenderAoTexture(QSSGRhiContext *rhiCtx, QSSGPassKey passKey, QSSGRenderer &renderer, QSSGRhiShaderPipeline &shaderPipeline,
                         QSSGRhiGraphicsPipelineState &ps, const SSAOMapPass::AmbientOcclusion &ao, const QSSGRhiRenderableTexture &rhiAoTexture, const QSSGRhiRenderableTexture &rhiDepthTexture,
                         const QSSGRenderCamera &camera);
 

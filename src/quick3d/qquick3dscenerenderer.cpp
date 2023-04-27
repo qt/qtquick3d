@@ -338,7 +338,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
                     // The fragment shader relies on per-target compilation and
                     // QSHADER_ macros of qsb, hence no need to communicate a flip
                     // flag from here.
-                    QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiProgressiveAAShader();
+                    const auto &shaderPipeline = renderer->getRhiProgressiveAAShader();
                     QRhiResourceUpdateBatch *rub = nullptr;
 
                     QSSGRhiDrawCallData &dcd(rhiCtx->drawCallData({ m_layer, nullptr, nullptr, 0, QSSGRhiDrawCallDataKey::ProgressiveAA }));
@@ -418,7 +418,7 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
             // flipping based on QSHADER_ macros) This is just better for
             // performance and the shaders are very simple so introducing a
             // uniform block and branching dynamically would be an overkill.
-            QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiSupersampleResolveShader();
+            const auto &shaderPipeline = renderer->getRhiSupersampleResolveShader();
 
             QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
@@ -1427,7 +1427,7 @@ void QQuick3DSGDirectRenderer::render()
                 // uniform block and branching dynamically would be an overkill.
                 QRect vp = convertQtRectToGLViewport(m_viewport, m_window->size() * m_window->devicePixelRatio());
 
-                QSSGRef<QSSGRhiShaderPipeline> shaderPipeline = renderer->getRhiSimpleQuadShader();
+                const auto &shaderPipeline = renderer->getRhiSimpleQuadShader();
 
                 QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
                                                          QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge });

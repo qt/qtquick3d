@@ -339,7 +339,7 @@ void SSAOMapPass::renderPass(QSSGRenderer &renderer)
         rhiRenderAoTexture(rhiCtx.get(),
                            this,
                            renderer,
-                           ssaoShaderPipeline,
+                           *ssaoShaderPipeline,
                            ps,
                            ambientOcclusion,
                            rhiAoTexture,
@@ -852,7 +852,7 @@ void MainPass::renderPass(QSSGRenderer &renderer)
     if (layer.gridEnabled) {
         cb->debugMarkBegin(QByteArrayLiteral("Quick3D render grid"));
         Q_QUICK3D_PROFILE_START(QQuick3DProfiler::Quick3DRenderPass);
-        auto shaderPipeline = renderer.getRhiGridShader();
+        const auto &shaderPipeline = renderer.getRhiGridShader();
         Q_ASSERT(shaderPipeline);
         ps.shaderPipeline = shaderPipeline.get();
         QRhiShaderResourceBindings *srb = layer.gridSrb;

@@ -1805,16 +1805,16 @@ static void generateFragmentShader(QSSGStageGeneratorBase &fragmentShader,
     }
 }
 
-QSSGRef<QSSGRhiShaderPipeline> QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
-                                                                                      QSSGMaterialVertexPipeline &vertexPipeline,
-                                                                                      const QSSGShaderDefaultMaterialKey &key,
-                                                                                      QSSGShaderDefaultMaterialKeyProperties &inProperties,
-                                                                                      const QSSGShaderFeatures &inFeatureSet,
-                                                                                      const QSSGRenderGraphObject &inMaterial,
-                                                                                      const QSSGShaderLightListView &inLights,
-                                                                                      QSSGRenderableImage *inFirstImage,
-                                                                                      QSSGShaderLibraryManager &shaderLibraryManager,
-                                                                                      QSSGShaderCache &theCache)
+QSSGRhiShaderPipelinePtr QSSGMaterialShaderGenerator::generateMaterialRhiShader(const QByteArray &inShaderKeyPrefix,
+                                                                                QSSGMaterialVertexPipeline &vertexPipeline,
+                                                                                const QSSGShaderDefaultMaterialKey &key,
+                                                                                QSSGShaderDefaultMaterialKeyProperties &inProperties,
+                                                                                const QSSGShaderFeatures &inFeatureSet,
+                                                                                const QSSGRenderGraphObject &inMaterial,
+                                                                                const QSSGShaderLightListView &inLights,
+                                                                                QSSGRenderableImage *inFirstImage,
+                                                                                QSSGShaderLibraryManager &shaderLibraryManager,
+                                                                                QSSGShaderCache &theCache)
 {
     QByteArray materialInfoString; // also serves as the key for the cache in compileGeneratedRhiShader
     // inShaderKeyPrefix can be a static string for default materials, but must
@@ -1834,7 +1834,7 @@ QSSGRef<QSSGRhiShaderPipeline> QSSGMaterialShaderGenerator::generateMaterialRhiS
 static float ZERO_MATRIX[16] = {};
 
 void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderContextInterface &renderContext,
-                                                           QSSGRef<QSSGRhiShaderPipeline> &shaders,
+                                                           QSSGRhiShaderPipeline &shaders,
                                                            char *ubufData,
                                                            QSSGRhiGraphicsPipelineState *inPipelineState,
                                                            const QSSGRenderGraphObject &inMaterial,
@@ -1859,16 +1859,16 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                                            QRhiTexture *lightmapTexture)
 {
     QSSGShaderMaterialAdapter *materialAdapter = getMaterialAdapter(inMaterial);
-    QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders->commonUniformIndices;
+    QSSGRhiShaderPipeline::CommonUniformIndices &cui = shaders.commonUniformIndices;
 
     materialAdapter->setCustomPropertyUniforms(ubufData, shaders, renderContext);
 
     const QVector3D camGlobalPos = inCamera.getGlobalPos();
     const QVector2D camProperties(inCamera.clipNear, inCamera.clipFar);
 
-    shaders->setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
-    shaders->setUniform(ubufData, "qt_cameraDirection", &inRenderProperties.cameraData, 3 * sizeof(float), &cui.cameraDirectionIdx);
-    shaders->setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
+    shaders.setUniform(ubufData, "qt_cameraPosition", &camGlobalPos, 3 * sizeof(float), &cui.cameraPositionIdx);
+    shaders.setUniform(ubufData, "qt_cameraDirection", &inRenderProperties.cameraData, 3 * sizeof(float), &cui.cameraDirectionIdx);
+    shaders.setUniform(ubufData, "qt_cameraProperties", &camProperties, 2 * sizeof(float), &cui.cameraPropertiesIdx);
 
     // Only calculate and update Matrix uniforms if they are needed
     bool usesProjectionMatrix = false;
@@ -1904,46 +1904,46 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     if (usesProjectionMatrix || usesInvProjectionMatrix) {
         const QMatrix4x4 projection = clipSpaceCorrMatrix * inCamera.projection;
         if (usesProjectionMatrix)
-            shaders->setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
+            shaders.setUniform(ubufData, "qt_projectionMatrix", projection.constData(), 16 * sizeof(float), &cui.projectionMatrixIdx);
         if (usesInvProjectionMatrix)
-            shaders->setUniform(ubufData, "qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
+            shaders.setUniform(ubufData, "qt_inverseProjectionMatrix", projection.inverted().constData(), 16 * sizeof (float), &cui.inverseProjectionMatrixIdx);
     }
     if (usesViewMatrix) {
         const QMatrix4x4 viewMatrix = inCamera.globalTransform.inverted();
-        shaders->setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
+        shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     }
     if (usesViewProjectionMatrix) {
         QMatrix4x4 viewProj;
         inCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;
-        shaders->setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
+        shaders.setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
     }
 
     // qt_modelMatrix is always available, but differnt when using instancing
     if (usesInstancing)
-        shaders->setUniform(ubufData, "qt_modelMatrix", localInstanceTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
+        shaders.setUniform(ubufData, "qt_modelMatrix", localInstanceTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
     else
-        shaders->setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
+        shaders.setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     if (usesModelViewProjectionMatrix) {
         const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
-        shaders->setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
+        shaders.setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
     }
     if (usesNormalMatrix)
-        shaders->setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
+        shaders.setUniform(ubufData, "qt_normalMatrix", inNormalMatrix.constData(), 12 * sizeof(float), &cui.normalMatrixIdx,
                             QSSGRhiShaderPipeline::UniformFlag::Mat3); // real size will be 12 floats, setUniform repacks as needed
     if (usesParentMatrix)
-        shaders->setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
+        shaders.setUniform(ubufData, "qt_parentMatrix", globalInstanceTransform.constData(), 16 * sizeof(float));
 
     // Morphing
     if (inMorphWeights.mSize > 0)
-        shaders->setUniformArray(ubufData, "qt_morphWeights",inMorphWeights.mData, inMorphWeights.mSize,
+        shaders.setUniformArray(ubufData, "qt_morphWeights",inMorphWeights.mData, inMorphWeights.mSize,
                                  QSSGRenderShaderDataType::Float, &cui.morphWeightsIdx);
 
     QVector3D theLightAmbientTotal;
-    shaders->resetShadowMaps();
+    shaders.resetShadowMaps();
     float lightColor[QSSG_MAX_NUM_LIGHTS][3];
-    QSSGShaderLightsUniformData &lightsUniformData(shaders->lightsUniformData());
+    QSSGShaderLightsUniformData &lightsUniformData(shaders.lightsUniformData());
     lightsUniformData.count = 0;
 
     for (quint32 lightIdx = 0, shadowMapCount = 0, lightEnd = inLights.size();
@@ -1978,7 +1978,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // for the object in question.
 
         if (lightShadows && shadowMapCount < QSSG_MAX_NUM_SHADOW_MAPS) {
-            QSSGRhiShadowMapProperties &theShadowMapProperties(shaders->addShadowMap());
+            QSSGRhiShadowMapProperties &theShadowMapProperties(shaders.addShadowMap());
             ++shadowMapCount;
 
             QSSGShadowMapEntry *pEntry = inRenderProperties.shadowMapManager->shadowMapEntry(lightIdx);
@@ -1990,9 +1990,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthCube;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowCubeStem;
                 if (receivesShadows)
-                    shaders->setUniform(ubufData, names.shadowMatrixStem, pEntry->m_lightView.constData(), 16 * sizeof(float));
+                    shaders.setUniform(ubufData, names.shadowMatrixStem, pEntry->m_lightView.constData(), 16 * sizeof(float));
                 else
-                    shaders->setUniform(ubufData, names.shadowMatrixStem, ZERO_MATRIX, 16 * sizeof(float));
+                    shaders.setUniform(ubufData, names.shadowMatrixStem, ZERO_MATRIX, 16 * sizeof(float));
             } else {
                 theShadowMapProperties.shadowMapTexture = pEntry->m_rhiDepthMap;
                 theShadowMapProperties.shadowMapTextureUniformName = names.shadowMapStem;
@@ -2004,9 +2004,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                         0.0, 0.0, 0.5, 0.5,
                         0.0, 0.0, 0.0, 1.0 };
                     const QMatrix4x4 m = bias * pEntry->m_lightVP;
-                    shaders->setUniform(ubufData, names.shadowMatrixStem, m.constData(), 16 * sizeof(float));
+                    shaders.setUniform(ubufData, names.shadowMatrixStem, m.constData(), 16 * sizeof(float));
                 } else {
-                    shaders->setUniform(ubufData, names.shadowMatrixStem, ZERO_MATRIX, 16 * sizeof(float));
+                    shaders.setUniform(ubufData, names.shadowMatrixStem, ZERO_MATRIX, 16 * sizeof(float));
                 }
             }
 
@@ -2015,9 +2015,9 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
                                               theLight->m_shadowFactor,
                                               theLight->m_shadowMapFar,
                                               inRenderProperties.isYUpInFramebuffer ? 0.0f : 1.0f);
-                shaders->setUniform(ubufData, names.shadowControlStem, &shadowControl, 4 * sizeof(float));
+                shaders.setUniform(ubufData, names.shadowControlStem, &shadowControl, 4 * sizeof(float));
             } else {
-                shaders->setUniform(ubufData, names.shadowControlStem, ZERO_MATRIX, 4 * sizeof(float));
+                shaders.setUniform(ubufData, names.shadowControlStem, ZERO_MATRIX, 4 * sizeof(float));
             }
         }
 
@@ -2044,10 +2044,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         theLightAmbientTotal += theLight->m_ambientColor;
     }
 
-    shaders->setDepthTexture(inRenderProperties.rhiDepthTexture);
-    shaders->setSsaoTexture(inRenderProperties.rhiSsaoTexture);
-    shaders->setScreenTexture(inRenderProperties.rhiScreenTexture);
-    shaders->setLightmapTexture(lightmapTexture);
+    shaders.setDepthTexture(inRenderProperties.rhiDepthTexture);
+    shaders.setSsaoTexture(inRenderProperties.rhiSsaoTexture);
+    shaders.setScreenTexture(inRenderProperties.rhiScreenTexture);
+    shaders.setLightmapTexture(lightmapTexture);
 
     QSSGRenderImage *theLightProbe = inRenderProperties.lightProbe;
 
@@ -2064,33 +2064,33 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         const int maxMipLevel = lightProbeTexture.m_mipmapCount - 1;
 
         if (!materialIblProbe && !inRenderProperties.probeOrientation.isIdentity()) {
-            shaders->setUniform(ubufData, "qt_lightProbeOrientation",
+            shaders.setUniform(ubufData, "qt_lightProbeOrientation",
                                 inRenderProperties.probeOrientation.constData(),
                                 12 * sizeof(float), &cui.lightProbeOrientationIdx,
                                 QSSGRhiShaderPipeline::UniformFlag::Mat3);
         }
 
         const float props[4] = { 0.0f, float(maxMipLevel), inRenderProperties.probeHorizon, inRenderProperties.probeExposure };
-        shaders->setUniform(ubufData, "qt_lightProbeProperties", props, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
+        shaders.setUniform(ubufData, "qt_lightProbeProperties", props, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
-        shaders->setLightProbeTexture(lightProbeTexture.m_texture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
+        shaders.setLightProbeTexture(lightProbeTexture.m_texture, theHorzLightProbeTilingMode, theVertLightProbeTilingMode);
     } else {
         // no lightprobe
         const float emptyProps[4] = { 0.0f, 0.0f, -1.0f, 0.0f };
-        shaders->setUniform(ubufData, "qt_lightProbeProperties", emptyProps, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
+        shaders.setUniform(ubufData, "qt_lightProbeProperties", emptyProps, 4 * sizeof(float), &cui.lightProbePropertiesIdx);
 
-        shaders->setLightProbeTexture(nullptr);
+        shaders.setLightProbeTexture(nullptr);
     }
 
     if (receivesReflections && reflectionProbe.enabled) {
-        shaders->setUniform(ubufData, "qt_reflectionProbeCubeMapCenter", &reflectionProbe.probeCubeMapCenter, 3 * sizeof(float), &cui.reflectionProbeCubeMapCenter);
-        shaders->setUniform(ubufData, "qt_reflectionProbeBoxMin", &reflectionProbe.probeBoxMin, 3 * sizeof(float), &cui.reflectionProbeBoxMin);
-        shaders->setUniform(ubufData, "qt_reflectionProbeBoxMax", &reflectionProbe.probeBoxMax, 3 * sizeof(float), &cui.reflectionProbeBoxMax);
-        shaders->setUniform(ubufData, "qt_reflectionProbeCorrection", &reflectionProbe.parallaxCorrection, sizeof(int), &cui.reflectionProbeCorrection);
+        shaders.setUniform(ubufData, "qt_reflectionProbeCubeMapCenter", &reflectionProbe.probeCubeMapCenter, 3 * sizeof(float), &cui.reflectionProbeCubeMapCenter);
+        shaders.setUniform(ubufData, "qt_reflectionProbeBoxMin", &reflectionProbe.probeBoxMin, 3 * sizeof(float), &cui.reflectionProbeBoxMin);
+        shaders.setUniform(ubufData, "qt_reflectionProbeBoxMax", &reflectionProbe.probeBoxMax, 3 * sizeof(float), &cui.reflectionProbeBoxMax);
+        shaders.setUniform(ubufData, "qt_reflectionProbeCorrection", &reflectionProbe.parallaxCorrection, sizeof(int), &cui.reflectionProbeCorrection);
     }
 
     const QVector3D emissiveColor = materialAdapter->emissiveColor();
-    shaders->setUniform(ubufData, "qt_material_emissive_color", &emissiveColor, 3 * sizeof(float), &cui.material_emissiveColorIdx);
+    shaders.setUniform(ubufData, "qt_material_emissive_color", &emissiveColor, 3 * sizeof(float), &cui.material_emissiveColorIdx);
 
     const auto qMix = [](float x, float y, float a) {
         return (x * (1.0f - a) + (y * a));
@@ -2104,15 +2104,15 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
     const QVector3D materialSpecularTint = materialAdapter->specularTint();
     const QVector3D specularTint = materialAdapter->isPrincipled() ? qMix3(QVector3D(1.0f, 1.0f, 1.0f), color.toVector3D(), materialSpecularTint.x())
                                                                    : materialSpecularTint;
-    shaders->setUniform(ubufData, "qt_material_base_color", &color, 4 * sizeof(float), &cui.material_baseColorIdx);
+    shaders.setUniform(ubufData, "qt_material_base_color", &color, 4 * sizeof(float), &cui.material_baseColorIdx);
 
     const float ior = materialAdapter->ior();
     QVector4D specularColor(specularTint, ior);
-    shaders->setUniform(ubufData, "qt_material_specular", &specularColor, 4 * sizeof(float), &cui.material_specularIdx);
+    shaders.setUniform(ubufData, "qt_material_specular", &specularColor, 4 * sizeof(float), &cui.material_specularIdx);
 
      // metalnessAmount cannot be multiplied in here yet due to custom materials
     const bool hasLighting = materialAdapter->hasLighting();
-    shaders->setLightsEnabled(hasLighting);
+    shaders.setLightsEnabled(hasLighting);
     if (hasLighting) {
         for (int lightIdx = 0; lightIdx < lightsUniformData.count; ++lightIdx) {
             QSSGShaderLightData &lightData(lightsUniformData.lightData[lightIdx]);
@@ -2121,10 +2121,10 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             lightData.diffuse[2] = lightColor[lightIdx][2];
             lightData.diffuse[3] = 1.0f;
         }
-        memcpy(ubufData + shaders->ub0LightDataOffset(), &lightsUniformData, shaders->ub0LightDataSize());
+        memcpy(ubufData + shaders.ub0LightDataOffset(), &lightsUniformData, shaders.ub0LightDataSize());
     }
 
-    shaders->setUniform(ubufData, "qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);
+    shaders.setUniform(ubufData, "qt_light_ambient_total", &theLightAmbientTotal, 3 * sizeof(float), &cui.light_ambient_totalIdx);
 
     const float materialProperties[4] = {
         materialAdapter->specularAmount(),
@@ -2132,7 +2132,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->metalnessAmount(),
         inOpacity
     };
-    shaders->setUniform(ubufData, "qt_material_properties", materialProperties, 4 * sizeof(float), &cui.material_propertiesIdx);
+    shaders.setUniform(ubufData, "qt_material_properties", materialProperties, 4 * sizeof(float), &cui.material_propertiesIdx);
 
     const float materialProperties2[4] = {
         materialAdapter->fresnelPower(),
@@ -2140,7 +2140,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->translucentFallOff(),
         materialAdapter->diffuseLightWrap()
     };
-    shaders->setUniform(ubufData, "qt_material_properties2", materialProperties2, 4 * sizeof(float), &cui.material_properties2Idx);
+    shaders.setUniform(ubufData, "qt_material_properties2", materialProperties2, 4 * sizeof(float), &cui.material_properties2Idx);
 
     const float materialProperties3[4] = {
         materialAdapter->occlusionAmount(),
@@ -2148,7 +2148,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->clearcoatAmount(),
         materialAdapter->clearcoatRoughnessAmount()
     };
-    shaders->setUniform(ubufData, "qt_material_properties3", materialProperties3, 4 * sizeof(float), &cui.material_properties3Idx);
+    shaders.setUniform(ubufData, "qt_material_properties3", materialProperties3, 4 * sizeof(float), &cui.material_properties3Idx);
 
     const float materialProperties4[4] = {
         materialAdapter->heightAmount(),
@@ -2156,15 +2156,15 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         materialAdapter->maxHeightSamples(),
         materialAdapter->transmissionFactor()
     };
-    shaders->setUniform(ubufData, "qt_material_properties4", materialProperties4, 4 * sizeof(float), &cui.material_properties4Idx);
+    shaders.setUniform(ubufData, "qt_material_properties4", materialProperties4, 4 * sizeof(float), &cui.material_properties4Idx);
 
     // We only ever use attenuation and thickness uniforms when using transmission
     if (materialAdapter->isTransmissionEnabled()) {
         const QVector4D attenuationProperties(materialAdapter->attenuationColor(), materialAdapter->attenuationDistance());
-        shaders->setUniform(ubufData, "qt_material_attenuation", &attenuationProperties, 4 * sizeof(float), &cui.material_attenuationIdx);
+        shaders.setUniform(ubufData, "qt_material_attenuation", &attenuationProperties, 4 * sizeof(float), &cui.material_attenuationIdx);
 
         const float thickness = materialAdapter->thicknessFactor();
-        shaders->setUniform(ubufData, "qt_material_thickness", &thickness, sizeof(float), &cui.thicknessFactorIdx);
+        shaders.setUniform(ubufData, "qt_material_thickness", &thickness, sizeof(float), &cui.thicknessFactorIdx);
     }
 
     const float rhiProperties[4] = {
@@ -2173,7 +2173,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         inRenderProperties.isClipDepthZeroToOne ? 0.0f : -1.0f,
         0.0f // unused
     };
-    shaders->setUniform(ubufData, "qt_rhi_properties", rhiProperties, 4 * sizeof(float), &cui.rhiPropertiesIdx);
+    shaders.setUniform(ubufData, "qt_rhi_properties", rhiProperties, 4 * sizeof(float), &cui.rhiPropertiesIdx);
 
     qsizetype imageIdx = 0;
     for (QSSGRenderableImage *theImage = inFirstImage; theImage; theImage = theImage->m_nextImage, ++imageIdx) {
@@ -2191,19 +2191,19 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         // premultiplied or not.
         // We use this to mix the texture alpha.
         const float offsets[3] = { dataPtr[12], dataPtr[13], 0.0f /* non-premultiplied */ };
-        shaders->setUniform(ubufData, names.imageOffsets, offsets, sizeof(offsets), &indices.imageOffsetsUniformIndex);
+        shaders.setUniform(ubufData, names.imageOffsets, offsets, sizeof(offsets), &indices.imageOffsetsUniformIndex);
         // Grab just the upper 2x2 rotation matrix from the larger matrix.
         const float rotations[4] = { dataPtr[0], dataPtr[4], dataPtr[1], dataPtr[5] };
-        shaders->setUniform(ubufData, names.imageRotations, rotations, sizeof(rotations), &indices.imageRotationsUniformIndex);
+        shaders.setUniform(ubufData, names.imageRotations, rotations, sizeof(rotations), &indices.imageRotationsUniformIndex);
     }
 
     if (shadowDepthAdjust)
-        shaders->setUniform(ubufData, "qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), &cui.shadowDepthAdjustIdx);
+        shaders.setUniform(ubufData, "qt_shadowDepthAdjust", shadowDepthAdjust, 2 * sizeof(float), &cui.shadowDepthAdjustIdx);
 
     const bool usesPointsTopology = inProperties.m_usesPointsTopology.getValue(inKey);
     if (usesPointsTopology) {
         const float pointSize = materialAdapter->pointSize();
-        shaders->setUniform(ubufData, "qt_materialPointSize", &pointSize, sizeof(float), &cui.pointSizeIdx);
+        shaders.setUniform(ubufData, "qt_materialPointSize", &pointSize, sizeof(float), &cui.pointSizeIdx);
     }
 
     // qt_fogColor = (fogColor.x, fogColor.y, fogColor.z, fogDensity)
@@ -2217,28 +2217,28 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
             inRenderProperties.layer.fog.color.z(),
             inRenderProperties.layer.fog.density
         };
-        shaders->setUniform(ubufData, "qt_fogColor", fogColor, 4 * sizeof(float), &cui.fogColorIdx);
+        shaders.setUniform(ubufData, "qt_fogColor", fogColor, 4 * sizeof(float), &cui.fogColorIdx);
         const float fogDepthProperties[4] = {
             inRenderProperties.layer.fog.depthBegin,
             inRenderProperties.layer.fog.depthEnd,
             inRenderProperties.layer.fog.depthCurve,
             inRenderProperties.layer.fog.depthEnabled ? 1.0f : 0.0f
         };
-        shaders->setUniform(ubufData, "qt_fogDepthProperties", fogDepthProperties, 4 * sizeof(float), &cui.fogDepthPropertiesIdx);
+        shaders.setUniform(ubufData, "qt_fogDepthProperties", fogDepthProperties, 4 * sizeof(float), &cui.fogDepthPropertiesIdx);
         const float fogHeightProperties[4] = {
             inRenderProperties.layer.fog.heightMin,
             inRenderProperties.layer.fog.heightMax,
             inRenderProperties.layer.fog.heightCurve,
             inRenderProperties.layer.fog.heightEnabled ? 1.0f : 0.0f
         };
-        shaders->setUniform(ubufData, "qt_fogHeightProperties", fogHeightProperties, 4 * sizeof(float), &cui.fogHeightPropertiesIdx);
+        shaders.setUniform(ubufData, "qt_fogHeightProperties", fogHeightProperties, 4 * sizeof(float), &cui.fogHeightPropertiesIdx);
         const float fogTransmitProperties[4] = {
             inRenderProperties.layer.fog.transmitCurve,
             0.0f,
             0.0f,
             inRenderProperties.layer.fog.transmitEnabled ? 1.0f : 0.0f
         };
-        shaders->setUniform(ubufData, "qt_fogTransmitProperties", fogTransmitProperties, 4 * sizeof(float), &cui.fogTransmitPropertiesIdx);
+        shaders.setUniform(ubufData, "qt_fogTransmitProperties", fogTransmitProperties, 4 * sizeof(float), &cui.fogTransmitPropertiesIdx);
     }
 
     inPipelineState->lineWidth = materialAdapter->lineWidth();

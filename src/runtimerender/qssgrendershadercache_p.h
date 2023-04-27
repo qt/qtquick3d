@@ -169,7 +169,7 @@ public:
 
     using InitBakerFunc = void (*)(QShaderBaker *baker, QRhi *rhi);
 private:
-    typedef QHash<QSSGShaderCacheKey, QSSGRef<QSSGRhiShaderPipeline>> TRhiShaderMap;
+    typedef QHash<QSSGShaderCacheKey, QSSGRhiShaderPipelinePtr> TRhiShaderMap;
     QSSGRhiContext &m_rhiContext; // Not own, the RCI owns us and the QSSGRhiContext.
     TRhiShaderMap m_rhiShaders;
     QByteArray m_insertStr; // member to potentially reuse the allocation after clear
@@ -190,27 +190,27 @@ public:
 
     void releaseCachedResources();
 
-    QSSGRef<QSSGRhiShaderPipeline> tryGetRhiShaderPipeline(const QByteArray &inKey,
-                                                           const QSSGShaderFeatures &inFeatures);
+    QSSGRhiShaderPipelinePtr tryGetRhiShaderPipeline(const QByteArray &inKey,
+                                                     const QSSGShaderFeatures &inFeatures);
 
-    QSSGRef<QSSGRhiShaderPipeline> tryNewPipelineFromPersistentCache(const QByteArray &qsbcKey,
-                                                                     const QByteArray &inKey,
-                                                                     const QSSGShaderFeatures &inFeatures,
-                                                                     QSSGRhiShaderPipeline::StageFlags stageFlags = {});
-
-    QSSGRef<QSSGRhiShaderPipeline> newPipelineFromPregenerated(const QByteArray &inKey,
+    QSSGRhiShaderPipelinePtr tryNewPipelineFromPersistentCache(const QByteArray &qsbcKey,
+                                                               const QByteArray &inKey,
                                                                const QSSGShaderFeatures &inFeatures,
-                                                               QQsbCollection::Entry entry,
-                                                               const QSSGRenderGraphObject &obj,
                                                                QSSGRhiShaderPipeline::StageFlags stageFlags = {});
 
-    QSSGRef<QSSGRhiShaderPipeline> compileForRhi(const QByteArray &inKey,
-                                               const QByteArray &inVert,
-                                               const QByteArray &inFrag,
-                                               const QSSGShaderFeatures &inFeatures,
-                                               QSSGRhiShaderPipeline::StageFlags stageFlags);
+    QSSGRhiShaderPipelinePtr newPipelineFromPregenerated(const QByteArray &inKey,
+                                                         const QSSGShaderFeatures &inFeatures,
+                                                         QQsbCollection::Entry entry,
+                                                         const QSSGRenderGraphObject &obj,
+                                                         QSSGRhiShaderPipeline::StageFlags stageFlags = {});
 
-    QSSGRef<QSSGRhiShaderPipeline> loadBuiltinForRhi(const QByteArray &inKey);
+    QSSGRhiShaderPipelinePtr compileForRhi(const QByteArray &inKey,
+                                           const QByteArray &inVert,
+                                           const QByteArray &inFrag,
+                                           const QSSGShaderFeatures &inFeatures,
+                                           QSSGRhiShaderPipeline::StageFlags stageFlags);
+
+    QSSGRhiShaderPipelinePtr loadBuiltinForRhi(const QByteArray &inKey);
 
     static QByteArray resourceFolder();
     static QByteArray shaderCollectionFile();

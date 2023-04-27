@@ -233,7 +233,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     QRhiSampler *sampler = rhiContext->sampler(samplerDesc);
 
     // Load shader and setup render pipeline
-    QSSGRef<QSSGRhiShaderPipeline> envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
+    const auto &envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
 
     // Vertex Buffer - Just a single cube that will be viewed from inside
     QRhiBuffer *vertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(cube));
@@ -378,7 +378,7 @@ QString renderToKTXFileInternal(const char *name, const QString &inPath, const Q
     }
 
     // Load the prefilter shader stages
-    QSSGRef<QSSGRhiShaderPipeline> prefilterShaderStages;
+    QSSGRhiShaderPipelinePtr prefilterShaderStages;
     if (isRGBE)
         prefilterShaderStages = shaderCache->loadBuiltinForRhi("environmentmapprefilter_rgbe");
     else

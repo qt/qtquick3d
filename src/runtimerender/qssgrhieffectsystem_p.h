@@ -74,11 +74,11 @@ public:
 
     static QSSGRenderTextureFormat::Format overriddenOutputFormat(const QSSGRenderEffect *inEffect);
 
-    static QSSGRef<QSSGRhiShaderPipeline> buildShaderForEffect(const QSSGBindShader &inCmd,
-                                                               QSSGProgramGenerator &generator,
-                                                               QSSGShaderLibraryManager &shaderLib,
-                                                               QSSGShaderCache &shaderCache,
-                                                               bool isYUpInFramebuffer);
+    static QSSGRhiShaderPipelinePtr buildShaderForEffect(const QSSGBindShader &inCmd,
+                                                         QSSGProgramGenerator &generator,
+                                                         QSSGShaderLibraryManager &shaderLib,
+                                                         QSSGShaderCache &shaderCache,
+                                                         bool isYUpInFramebuffer);
 
 private:
     void releaseResources();
@@ -107,7 +107,7 @@ private:
     QRhiTexture *m_depthTexture = nullptr;
     QVector2D m_cameraClipRange;
     int m_currentUbufIndex = 0;
-    QHash<QSSGEffectSceneCacheKey, QSSGRef<QSSGRhiShaderPipeline>> m_shaderPipelines;
+    QHash<QSSGEffectSceneCacheKey, QSSGRhiShaderPipelinePtr> m_shaderPipelines;
     QSSGRhiShaderPipeline *m_currentShaderPipeline = nullptr;
     char *m_currentUBufData = nullptr;
     QHash<QByteArray, QSSGRhiTexture> m_currentTextures;

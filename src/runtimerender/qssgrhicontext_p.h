@@ -215,7 +215,7 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderPipeline
 public:
     QAtomicInt ref;
 
-    QSSGRhiShaderPipeline(QSSGRhiContext &context) : m_context(context) { }
+    explicit QSSGRhiShaderPipeline(QSSGRhiContext &context) : m_context(context) { }
 
     QSSGRhiContext &context() const { return m_context; }
     bool isNull() const { return m_stages.isEmpty(); }
@@ -405,6 +405,8 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::StageFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::UniformFlags)
+
+using QSSGRhiShaderPipelinePtr = QSSGRef<QSSGRhiShaderPipeline>;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 {

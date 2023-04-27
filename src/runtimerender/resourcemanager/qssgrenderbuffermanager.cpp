@@ -564,7 +564,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
 
     // Load shader and setup render pipeline
     const auto &shaderCache = m_contextInterface->shaderCache();
-    QSSGRef<QSSGRhiShaderPipeline> envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
+    const auto &envMapShaderStages = shaderCache->loadBuiltinForRhi("environmentmap");
 
     // Vertex Buffer - Just a single cube that will be viewed from inside
     QRhiBuffer *vertexBuffer = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(cube));
@@ -730,7 +730,7 @@ bool QSSGBufferManager::createEnvironmentMap(const QSSGLoadedTexture *inImage, Q
     }
 
     // Load the prefilter shader stages
-    QSSGRef<QSSGRhiShaderPipeline> prefilterShaderStages;
+    QSSGRhiShaderPipelinePtr prefilterShaderStages;
     if (isRGBE)
         prefilterShaderStages = shaderCache->loadBuiltinForRhi("environmentmapprefilter_rgbe");
     else
