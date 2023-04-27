@@ -1116,8 +1116,8 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
     }
 
     struct {
-        QSSGRef<QSSGRhiBuffer> vertexBuffer;
-        QSSGRef<QSSGRhiBuffer> indexBuffer;
+        QSSGRhiBufferPtr vertexBuffer;
+        QSSGRhiBufferPtr indexBuffer;
         QSSGRhiInputAssemblerState ia;
     } rhi;
 
@@ -1887,7 +1887,7 @@ static inline quint64 textureMemorySize(QRhiTexture *texture)
     return s;
 }
 
-static inline quint64 bufferMemorySize(const QSSGRef<QSSGRhiBuffer> &buffer)
+static inline quint64 bufferMemorySize(const QSSGRhiBufferPtr &buffer)
 {
     quint64 s = 0;
     if (!buffer)

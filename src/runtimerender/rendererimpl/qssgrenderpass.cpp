@@ -98,7 +98,7 @@ void ShadowMapPass::renderPass(QSSGRenderer &renderer)
         rhiRenderShadowMap(rhiCtx.get(),
                            this,
                            ps,
-                           shadowMapManager,
+                           *shadowMapManager,
                            *camera,
                            globalLights, // scoped lights are not relevant here
                            shadowPassObjects,
@@ -187,7 +187,7 @@ void ReflectionMapPass::renderPass(QSSGRenderer &renderer)
                                this,
                                data,
                                &ps,
-                               reflectionMapManager,
+                               *reflectionMapManager,
                                reflectionProbes,
                                reflectionPassObjects,
                                renderer);

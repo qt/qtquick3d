@@ -30,8 +30,8 @@ struct QSSGRenderSubset
     QSSGBounds3 bounds; // Vertex buffer bounds
     QSSGMeshBVHNode *bvhRoot = nullptr;
     struct {
-        QSSGRef<QSSGRhiBuffer> vertexBuffer;
-        QSSGRef<QSSGRhiBuffer> indexBuffer;
+        QSSGRhiBufferPtr vertexBuffer;
+        QSSGRhiBufferPtr indexBuffer;
         QSSGRhiInputAssemblerState ia;
     } rhi;
 

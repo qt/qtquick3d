@@ -313,8 +313,8 @@ public:
     bool tooManyShadowLightsWarningShown = false;
     bool particlesNotSupportedWarningShown = false;
 
-    QSSGRef<QSSGRenderShadowMap> shadowMapManager;
-    QSSGRef<QSSGRenderReflectionMap> reflectionMapManager;
+    QSSGRenderShadowMapPtr shadowMapManager;
+    QSSGRenderReflectionMapPtr reflectionMapManager;
 
     QSSGLightmapper *m_lightmapper = nullptr;
 
