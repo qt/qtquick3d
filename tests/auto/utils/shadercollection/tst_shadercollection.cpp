@@ -6,9 +6,7 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qfile.h>
 
-#include <QtGui/private/qshader_p.h>
-
-#include <QtShaderTools/private/qshaderbaker_p.h>
+#include <rhi/qshaderbaker.h>
 
 #include <QtQuick3DUtils/private/qqsbcollection_p.h>
 

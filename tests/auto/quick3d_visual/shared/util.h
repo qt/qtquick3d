@@ -18,7 +18,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtTest/QTest>
 
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 #include <QtQuick/private/qquickrendercontrol_p.h>
 
 /* Base class for tests with data that are located in a "data" subfolder. */

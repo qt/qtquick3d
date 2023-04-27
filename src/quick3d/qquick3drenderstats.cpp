@@ -167,8 +167,7 @@ void QQuick3DRenderStats::onFrameSwapped()
         processRhiContextStats();
 
         if (m_window) {
-            QRhiSwapChain *sc = static_cast<QRhiSwapChain *>(
-                    m_window->rendererInterface()->getResource(m_window, QSGRendererInterface::RhiSwapchainResource));
+            QRhiSwapChain *sc = m_window->swapChain();
             if (sc) {
                 QRhiCommandBuffer *cb = sc->currentFrameCommandBuffer();
                 if (cb) {

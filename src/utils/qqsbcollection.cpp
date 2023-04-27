@@ -5,7 +5,7 @@
 #include <QtCore/QLockFile>
 #include <QtCore/QSaveFile>
 #include <QtCore/QCryptographicHash>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

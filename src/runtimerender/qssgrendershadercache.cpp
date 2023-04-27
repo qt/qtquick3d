@@ -20,11 +20,10 @@
 #include <QtGui/qsurfaceformat.h>
 #if QT_CONFIG(opengl)
 # include <QtGui/qopenglcontext.h>
-# include <QtGui/private/qrhigles2_p.h>
 #endif
 
 #ifdef QT_QUICK3D_HAS_RUNTIME_SHADERS
-#include <QtShaderTools/private/qshaderbaker_p.h>
+#include <rhi/qshaderbaker.h>
 #endif
 
 #include <QtCore/qmutex.h>

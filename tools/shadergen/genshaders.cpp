@@ -5,8 +5,6 @@
 
 #include <QtCore/qdir.h>
 
-#include <QtGui/private/qrhinull_p_p.h>
-
 #include <QtQml/qqmllist.h>
 
 #include <QtQuick3D/private/qquick3dsceneenvironment_p.h>
@@ -28,7 +26,7 @@
 
 #include <QtQuick3DRuntimeRender/private/qssgrhieffectsystem_p.h>
 
-#include <QtShaderTools/private/qshaderbaker_p.h>
+#include <rhi/qshaderbaker.h>
 
 static inline void qDryRunPrintQsbcAdd(const QByteArray &id)
 {

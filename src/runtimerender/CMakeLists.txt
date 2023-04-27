@@ -103,8 +103,6 @@ qt_internal_extend_target(Quick3DRuntimeRender CONDITION TARGET Qt::ShaderTools
         Qt::ShaderTools
     LIBRARIES
         Qt::ShaderToolsPrivate
-    PRIVATE_MODULE_INTERFACE
-        Qt::ShaderToolsPrivate
     DEFINES
         QT_QUICK3D_HAS_RUNTIME_SHADERS
 )

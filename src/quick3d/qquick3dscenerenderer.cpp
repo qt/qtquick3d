@@ -240,13 +240,12 @@ QRhiTexture *QQuick3DSceneRenderer::renderToRhiTexture(QQuickWindow *qw)
         rhiCtx->setRenderTarget(m_textureRenderTarget);
 
         QRhiCommandBuffer *cb = nullptr;
-        QSGRendererInterface *rif = qw->rendererInterface();
-        QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
-            rif->getResource(qw, QSGRendererInterface::RhiSwapchainResource));
+        QRhiSwapChain *swapchain = qw->swapChain();
         if (swapchain) {
             cb = swapchain->currentFrameCommandBuffer();
             rhiCtx->setCommandBuffer(cb);
         } else {
+            QSGRendererInterface *rif = qw->rendererInterface();
             cb = static_cast<QRhiCommandBuffer *>(
                 rif->getResource(qw, QSGRendererInterface::RhiRedirectCommandBuffer));
             if (cb)
@@ -1219,15 +1218,14 @@ inline void queryMainRenderPassDescriptorAndCommandBuffer(QQuickWindow *window, 
         // copies of the rp and cb are not there until the render
         // phase of the scenegraph.
         int sampleCount = 1;
-        QSGRendererInterface *rif = window->rendererInterface();
-        QRhiSwapChain *swapchain = static_cast<QRhiSwapChain *>(
-            rif->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+        QRhiSwapChain *swapchain = window->swapChain();
         if (swapchain) {
             rhiCtx->setMainRenderPassDescriptor(swapchain->renderPassDescriptor());
             rhiCtx->setCommandBuffer(swapchain->currentFrameCommandBuffer());
             rhiCtx->setRenderTarget(swapchain->currentFrameRenderTarget());
             sampleCount = swapchain->sampleCount();
         } else {
+            QSGRendererInterface *rif = window->rendererInterface();
             // no swapchain when using a QQuickRenderControl (redirecting to a texture etc.)
             QRhiCommandBuffer *cb = static_cast<QRhiCommandBuffer *>(
                 rif->getResource(window, QSGRendererInterface::RhiRedirectCommandBuffer));

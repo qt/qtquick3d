@@ -18,7 +18,7 @@
 #include "qtquick3druntimerenderglobal_p.h"
 #include <QtCore/qstack.h>
 #include <QtQuick3DUtils/private/qssgrenderbasetypes_p.h>
-#include <QtGui/private/qrhi_p_p.h>
+#include <QtGui/private/qrhi_p.h>
 #include "private/qquick3dprofiler_p.h"
 
 QT_BEGIN_NAMESPACE

@@ -22,5 +22,6 @@ qt_internal_add_tool(${target_name}
         Qt::Quick3DPrivate
         Qt::Quick3DRuntimeRender
         Qt::Quick3DRuntimeRenderPrivate
+        Qt::ShaderToolsPrivate
 )
 qt_internal_return_unless_building_tools()

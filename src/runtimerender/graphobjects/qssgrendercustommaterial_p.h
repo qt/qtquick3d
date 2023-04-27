@@ -21,7 +21,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 QT_BEGIN_NAMESPACE
 

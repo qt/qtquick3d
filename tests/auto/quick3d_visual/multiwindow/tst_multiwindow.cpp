@@ -6,7 +6,7 @@
 #include <QQuickView>
 #include <QQmlEngine>
 #include <QQmlComponent>
-#include <QtGui/private/qrhi_p.h>
+#include <rhi/qrhi.h>
 
 #include "../shared/util.h"
 
