@@ -441,7 +441,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
     }
 
     if (vertShaderValid && fragShaderValid) {
-        shaders = new QSSGRhiShaderPipeline(m_rhiContext);
+        shaders = std::make_shared<QSSGRhiShaderPipeline>(m_rhiContext);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Vertex, vertexShader), stageFlags);
         shaders->addStage(QRhiShaderStage(QRhiShaderStage::Fragment, fragmentShader), stageFlags);
         if (shaderDebug)

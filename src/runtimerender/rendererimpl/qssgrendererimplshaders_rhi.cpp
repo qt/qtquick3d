@@ -19,7 +19,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getBuiltinRhiShader(const QByteArray &nam
                                                            QSSGRhiShaderPipelinePtr &storage)
 {
     QSSGRhiShaderPipelinePtr &result = storage;
-    if (result.isNull()) {
+    if (!result) {
         // loadBuiltin must always return a valid QSSGRhiShaderPipeline.
         // There will just be no stages if loading fails.
         result = m_contextInterface->shaderCache()->loadBuiltinForRhi(name);
@@ -68,7 +68,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getRhiSkyBoxShader(QSSGRenderLayer::Tonem
     // a bit of manual work here.
 
     QSSGRhiShaderPipelinePtr &result = m_skyBoxRhiShader;
-    if (result.isNull() || tonemapMode != m_skyboxTonemapMode || isRGBE != m_isSkyboxRGBE) {
+    if (!result || tonemapMode != m_skyboxTonemapMode || isRGBE != m_isSkyboxRGBE) {
         QByteArray name = QByteArrayLiteral("skybox");
         if (isRGBE)
             name.append(QByteArrayLiteral("_rgbe"));

@@ -79,13 +79,11 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiBuffer
 {
     Q_DISABLE_COPY(QSSGRhiBuffer)
 public:
-    QAtomicInt ref;
-
     QSSGRhiBuffer(QSSGRhiContext &context,
                   QRhiBuffer::Type type,
                   QRhiBuffer::UsageFlags usageMask,
                   quint32 stride,
-                  int size,
+                  qsizetype size,
                   QRhiCommandBuffer::IndexFormat indexFormat = QRhiCommandBuffer::IndexUInt16);
 
     virtual ~QSSGRhiBuffer();
@@ -130,7 +128,7 @@ private:
     friend class QSSGRhiShaderPipeline;
 };
 
-using QSSGRhiBufferPtr = QSSGRef<QSSGRhiBuffer>;
+using QSSGRhiBufferPtr = std::shared_ptr<QSSGRhiBuffer>;
 
 QRhiSampler::Filter toRhi(QSSGRenderTextureFilterOp op);
 QRhiSampler::AddressMode toRhi(QSSGRenderTextureCoordOp tiling);
@@ -215,8 +213,6 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiShaderPipeline
 {
     Q_DISABLE_COPY(QSSGRhiShaderPipeline)
 public:
-    QAtomicInt ref;
-
     explicit QSSGRhiShaderPipeline(QSSGRhiContext &context) : m_context(context) { }
 
     QSSGRhiContext &context() const { return m_context; }
@@ -408,7 +404,7 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::StageFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSSGRhiShaderPipeline::UniformFlags)
 
-using QSSGRhiShaderPipelinePtr = QSSGRef<QSSGRhiShaderPipeline>;
+using QSSGRhiShaderPipelinePtr = std::shared_ptr<QSSGRhiShaderPipeline>;
 
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRhiGraphicsPipelineState
 {

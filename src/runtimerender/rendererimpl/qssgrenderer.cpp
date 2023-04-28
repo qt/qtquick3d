@@ -616,7 +616,7 @@ QSSGRhiShaderPipelinePtr QSSGRenderer::getShaderPipelineForDefaultMaterial(QSSGS
         shaderPipeline = it.value();
     }
 
-    if (!shaderPipeline.isNull()) {
+    if (shaderPipeline != nullptr) {
         if (m_currentLayer && m_currentLayer->camera) {
             QSSGRenderCamera &theCamera(*m_currentLayer->camera);
             if (!m_currentLayer->cameraData.has_value())

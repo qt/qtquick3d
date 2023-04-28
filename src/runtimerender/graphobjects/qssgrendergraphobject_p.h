@@ -129,7 +129,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderGraphObject
                 || (type == Type::ResourceLoader));
     }
 
-    QAtomicInt ref;
     // Id's help debugging the object and are optionally set
 #if QSSG_DEBUG_ID
     QByteArray id;

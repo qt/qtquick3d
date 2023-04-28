@@ -75,24 +75,24 @@ void QSSGDebugDrawSystem::prepareGeometry(QSSGRhiContext *rhiCtx, QRhiResourceUp
         QByteArray indexBufferData(reinterpret_cast<const char*>(indexData.constData()), qsizetype(indexData.count() * sizeof(quint32)));
 
         if (m_lineVertexBuffer)
-            m_lineVertexBuffer.clear();
+            m_lineVertexBuffer.reset();
         if (m_lineIndexBuffer)
-            m_lineIndexBuffer.clear();
+            m_lineIndexBuffer.reset();
 
-        m_lineVertexBuffer = new QSSGRhiBuffer(*rhiCtx,
-                                               QRhiBuffer::Immutable,
-                                               QRhiBuffer::VertexBuffer,
-                                               6 * sizeof(float),
-                                               6 * sizeof(float) * vertexData.count());
+        m_lineVertexBuffer = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                             QRhiBuffer::Immutable,
+                                                             QRhiBuffer::VertexBuffer,
+                                                             quint32(6 * sizeof(float)),
+                                                             6 * sizeof(float) * vertexData.count());
         m_lineVertexBuffer->buffer()->setName(QByteArrayLiteral("debug lines vertex buffer"));
         rub->uploadStaticBuffer(m_lineVertexBuffer->buffer(), vertexBufferData.constData());
 
-        m_lineIndexBuffer = new QSSGRhiBuffer(*rhiCtx,
-                                              QRhiBuffer::Immutable,
-                                              QRhiBuffer::IndexBuffer,
-                                              0,
-                                              indexBufferData.size(),
-                                              QRhiCommandBuffer::IndexUInt32);
+        m_lineIndexBuffer = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                            QRhiBuffer::Immutable,
+                                                            QRhiBuffer::IndexBuffer,
+                                                            0,
+                                                            indexBufferData.size(),
+                                                            QRhiCommandBuffer::IndexUInt32);
         m_lineIndexBuffer->buffer()->setName(QByteArrayLiteral("debug lines index buffer"));
         rub->uploadStaticBuffer(m_lineIndexBuffer->buffer(), indexBufferData.constData());
 
@@ -104,13 +104,13 @@ void QSSGDebugDrawSystem::prepareGeometry(QSSGRhiContext *rhiCtx, QRhiResourceUp
         QByteArray vertexBufferData(reinterpret_cast<const char*>(pointsData.constData()), qsizetype(pointsData.count() * 6 * sizeof(float)));
 
         if (m_pointVertexBuffer)
-            m_pointVertexBuffer.clear();
+            m_pointVertexBuffer.reset();
 
-        m_pointVertexBuffer = new QSSGRhiBuffer(*rhiCtx,
-                                                QRhiBuffer::Immutable,
-                                                QRhiBuffer::VertexBuffer,
-                                                6 * sizeof(float),
-                                                vertexBufferData.size());
+        m_pointVertexBuffer = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                              QRhiBuffer::Immutable,
+                                                              QRhiBuffer::VertexBuffer,
+                                                              quint32(6 * sizeof(float)),
+                                                              vertexBufferData.size());
         m_pointVertexBuffer->buffer()->setName(QByteArrayLiteral("debug points vertex buffer"));
         rub->uploadStaticBuffer(m_pointVertexBuffer->buffer(), vertexBufferData.constData());
         m_pointsSize = pointsData.count();
