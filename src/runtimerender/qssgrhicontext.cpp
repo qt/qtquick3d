@@ -16,13 +16,14 @@ QSSGRhiBuffer::QSSGRhiBuffer(QSSGRhiContext &context,
                              QRhiBuffer::Type type,
                              QRhiBuffer::UsageFlags usageMask,
                              quint32 stride,
-                             int size,
+                             qsizetype size,
                              QRhiCommandBuffer::IndexFormat indexFormat)
     : m_context(context),
       m_stride(stride),
       m_indexFormat(indexFormat)
 {
-    m_buffer = m_context.rhi()->newBuffer(type, usageMask, size);
+    QSSG_ASSERT(size >= 0, size = 0);
+    m_buffer = m_context.rhi()->newBuffer(type, usageMask, quint32(size));
     if (!m_buffer->create())
         qWarning("Failed to build QRhiBuffer with size %d", m_buffer->size());
 }

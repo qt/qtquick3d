@@ -185,8 +185,6 @@ struct QSSGBakedLightingModel
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLayerRenderData
 {
 public:
-    QAtomicInt ref;
-
     enum Enum {
         MAX_AA_LEVELS = 8,
         MAX_TEMPORAL_AA_LEVELS = 2,

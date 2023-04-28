@@ -1125,21 +1125,21 @@ QSSGRenderMesh *QSSGBufferManager::createRenderMesh(const QSSGMesh::Mesh &mesh, 
 
     QRhiResourceUpdateBatch *rub = meshBufferUpdateBatch();
     const auto &context = m_contextInterface->rhiContext();
-    rhi.vertexBuffer = new QSSGRhiBuffer(*context.get(),
-                                         QRhiBuffer::Static,
-                                         QRhiBuffer::VertexBuffer,
-                                         vertexBuffer.stride,
-                                         vertexBuffer.data.size());
+    rhi.vertexBuffer = std::make_shared<QSSGRhiBuffer>(*context.get(),
+                                                       QRhiBuffer::Static,
+                                                       QRhiBuffer::VertexBuffer,
+                                                       vertexBuffer.stride,
+                                                       vertexBuffer.data.size());
     rhi.vertexBuffer->buffer()->setName(debugObjectName.toLatin1()); // this is what shows up in DebugView
     rub->uploadStaticBuffer(rhi.vertexBuffer->buffer(), vertexBuffer.data);
 
     if (!indexBuffer.data.isEmpty()) {
-        rhi.indexBuffer = new QSSGRhiBuffer(*context.get(),
-                                            QRhiBuffer::Static,
-                                            QRhiBuffer::IndexBuffer,
-                                            0,
-                                            indexBuffer.data.size(),
-                                            rhiIndexFormat);
+        rhi.indexBuffer = std::make_shared<QSSGRhiBuffer>(*context.get(),
+                                                          QRhiBuffer::Static,
+                                                          QRhiBuffer::IndexBuffer,
+                                                          0,
+                                                          indexBuffer.data.size(),
+                                                          rhiIndexFormat);
         rub->uploadStaticBuffer(rhi.indexBuffer->buffer(), indexBuffer.data);
     }
 

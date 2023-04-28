@@ -43,11 +43,11 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
 {
     if (!m_vbuf) {
         constexpr int vertexCount = 8;
-        m_vbuf = new QSSGRhiBuffer(*rhiCtx,
-                                   QRhiBuffer::Immutable,
-                                   QRhiBuffer::VertexBuffer,
-                                   5 * sizeof(float),
-                                   5 * vertexCount * sizeof(float));
+        m_vbuf = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                 QRhiBuffer::Immutable,
+                                                 QRhiBuffer::VertexBuffer,
+                                                 quint32(5 * sizeof(float)),
+                                                 5 * vertexCount * sizeof(float));
         m_vbuf->buffer()->setName(QByteArrayLiteral("quad vertex buffer"));
         float buf[5 * vertexCount];
         float *p = buf;
@@ -61,12 +61,12 @@ void QSSGRhiQuadRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
         rub->uploadStaticBuffer(m_vbuf->buffer(), buf);
     }
     if (!m_ibuf) {
-        m_ibuf = new QSSGRhiBuffer(*rhiCtx,
-                                   QRhiBuffer::Immutable,
-                                   QRhiBuffer::IndexBuffer,
-                                   0,
-                                   6 * sizeof(quint16),
-                                   QRhiCommandBuffer::IndexUInt16);
+        m_ibuf = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                 QRhiBuffer::Immutable,
+                                                 QRhiBuffer::IndexBuffer,
+                                                 0,
+                                                 6 * sizeof(quint16),
+                                                 QRhiCommandBuffer::IndexUInt16);
         m_ibuf->buffer()->setName(QByteArrayLiteral("quad index buffer"));
         const quint16 buf[] = { 0, 1, 2, 0, 2, 3 };
         rub->uploadStaticBuffer(m_ibuf->buffer(), buf);
@@ -202,11 +202,11 @@ void QSSGRhiCubeRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
 {
     if (!m_vbuf) {
         constexpr int vertexCount = 8;
-        m_vbuf = new QSSGRhiBuffer(*rhiCtx,
-                                   QRhiBuffer::Immutable,
-                                   QRhiBuffer::VertexBuffer,
-                                   3 * sizeof(float),
-                                   3 * vertexCount * sizeof(float));
+        m_vbuf = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                 QRhiBuffer::Immutable,
+                                                 QRhiBuffer::VertexBuffer,
+                                                 quint32(3 * sizeof(float)),
+                                                 3 * vertexCount * sizeof(float));
         m_vbuf->buffer()->setName(QByteArrayLiteral("cube vertex buffer"));
 
         float buf[3 * vertexCount];
@@ -219,12 +219,12 @@ void QSSGRhiCubeRenderer::ensureBuffers(QSSGRhiContext *rhiCtx, QRhiResourceUpda
         rub->uploadStaticBuffer(m_vbuf->buffer(), buf);
     }
     if (!m_ibuf) {
-        m_ibuf = new QSSGRhiBuffer(*rhiCtx,
-                                   QRhiBuffer::Immutable,
-                                   QRhiBuffer::IndexBuffer,
-                                   0,
-                                   sizeof(g_rectIndex),
-                                   QRhiCommandBuffer::IndexUInt16);
+        m_ibuf = std::make_shared<QSSGRhiBuffer>(*rhiCtx,
+                                                 QRhiBuffer::Immutable,
+                                                 QRhiBuffer::IndexBuffer,
+                                                 0,
+                                                 sizeof(g_rectIndex),
+                                                 QRhiCommandBuffer::IndexUInt16);
         m_ibuf->buffer()->setName(QByteArrayLiteral("cube index buffer"));
         rub->uploadStaticBuffer(m_ibuf->buffer(), g_rectIndex);
     }

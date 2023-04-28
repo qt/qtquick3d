@@ -214,7 +214,7 @@ bool GenShaders::process(const MaterialParser::SceneData &sceneData,
         auto generateShader = [&](const QSSGShaderFeatures &features) {
             if ((renderable->type == QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset)) {
                 auto shaderPipeline = QSSGRenderer::generateRhiShaderPipelineImpl(*static_cast<QSSGSubsetRenderable *>(renderable), *shaderLibraryManager, *shaderCache, *shaderProgramGenerator, materialPropertis, features, shaderString);
-                if (!shaderPipeline.isNull()) {
+                if (shaderPipeline != nullptr) {
                     const auto qsbcFeatureList = QQsbCollection::toFeatureSet(features);
                     const QByteArray qsbcKey = QQsbCollection::EntryDesc::generateSha(shaderString, qsbcFeatureList);
                     const auto vertexStage = shaderPipeline->vertexStage();
