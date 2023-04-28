@@ -32,6 +32,7 @@ static inline QMatrix4x4 correctMVPForScissor(QRectF viewportRect, QRect scissor
 
 void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data)
 {
+    Q_UNUSED(renderer)
     using namespace RenderHelpers;
 
     camera = data.camera;
@@ -54,10 +55,7 @@ void ShadowMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &data
     enabled = !shadowPassObjects.isEmpty() || !globalLights.isEmpty();
 
     if (enabled) {
-        if (!data.shadowMapManager)
-            data.shadowMapManager = new QSSGRenderShadowMap(*renderer.contextInterface());
-
-        shadowMapManager = data.shadowMapManager;
+        shadowMapManager = data.requestShadowMapManager();
 
         ps = data.getPipelineState();
         ps.depthTestEnable = true;
@@ -135,11 +133,7 @@ void ReflectionMapPass::renderPrep(QSSGRenderer &renderer, QSSGLayerRenderData &
     ps.blendEnable = true;
 
     reflectionProbes = data.reflectionProbes;
-
-    if (!data.reflectionMapManager)
-        data.reflectionMapManager = new QSSGRenderReflectionMap(*renderer.contextInterface());
-
-    reflectionMapManager = data.reflectionMapManager;
+    reflectionMapManager = data.requestReflectionMapManager();
 
     const auto &sortedOpaqueObjects = data.getSortedOpaqueRenderableObjects();
     const auto &sortedTransparentObjects = data.getSortedTransparentRenderableObjects();

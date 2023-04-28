@@ -649,7 +649,7 @@ QSSGLayerGlobalRenderProperties QSSGRenderer::getLayerGlobalRenderProperties()
     return QSSGLayerGlobalRenderProperties{ theLayer,
                                               *theData.camera,
                                               theData.cameraData.value(), // ensured/checked further up in this function
-                                              theData.shadowMapManager.get(),
+                                              theData.getShadowMapManager().get(),
                                               theData.depthMapPass.rhiDepthTexture.texture,
                                               theData.ssaoMapPass.rhiAoTexture.texture,
                                               theData.screenMapPass.rhiScreenTexture.texture,
@@ -1412,7 +1412,7 @@ void RenderHelpers::rhiPrepareRenderable(QSSGRhiContext *rhiCtx,
                     int reflectionSampler = shaderPipeline->bindingForTexture("qt_reflectionMap");
                     QRhiSampler *sampler = rhiCtx->sampler({ QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::Linear,
                                                              QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge, QRhiSampler::Repeat });
-                    QRhiTexture* reflectionTexture = inData.reflectionMapManager->reflectionMapEntry(subsetRenderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
+                    QRhiTexture* reflectionTexture = inData.getReflectionMapManager()->reflectionMapEntry(subsetRenderable.reflectionProbeIndex)->m_rhiPrefilteredCube;
                     if (reflectionSampler >= 0 && reflectionTexture)
                         bindings.addTexture(reflectionSampler, QRhiShaderResourceBinding::FragmentStage, reflectionTexture, sampler);
                 } else if (shaderPipeline->lightProbeTexture()) {

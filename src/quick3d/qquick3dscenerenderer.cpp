@@ -939,9 +939,9 @@ void QQuick3DSceneRenderer::invalidateFramebufferObject()
 void QQuick3DSceneRenderer::releaseCachedResources()
 {
     if (m_layer && m_layer->renderData) {
-        if (auto mgr = m_layer->renderData->shadowMapManager)
+        if (const auto &mgr = m_layer->renderData->getShadowMapManager())
             mgr->releaseCachedResources();
-        if (auto mgr = m_layer->renderData->reflectionMapManager)
+        if (const auto &mgr = m_layer->renderData->getReflectionMapManager())
             mgr->releaseCachedResources();
     }
 }

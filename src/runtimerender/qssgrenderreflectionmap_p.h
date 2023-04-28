@@ -83,12 +83,12 @@ struct QSSGReflectionMapEntry
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderReflectionMap
 {
     typedef QVector<QSSGReflectionMapEntry> TReflectionMapEntryList;
+    Q_DISABLE_COPY(QSSGRenderReflectionMap)
 
 public:
-    QAtomicInt ref;
     const QSSGRenderContextInterface &m_context;
 
-    QSSGRenderReflectionMap(const QSSGRenderContextInterface &inContext);
+    explicit QSSGRenderReflectionMap(const QSSGRenderContextInterface &inContext);
     ~QSSGRenderReflectionMap();
     void releaseCachedResources();
 
@@ -103,7 +103,7 @@ private:
     TReflectionMapEntryList m_reflectionMapList;
 };
 
-using QSSGRenderReflectionMapPtr = QSSGRef<QSSGRenderReflectionMap>;
+using QSSGRenderReflectionMapPtr = std::shared_ptr<QSSGRenderReflectionMap>;
 
 QT_END_NAMESPACE
 
