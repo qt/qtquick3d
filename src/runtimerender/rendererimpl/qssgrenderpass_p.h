@@ -61,7 +61,7 @@ public:
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
-    QSSGRef<QSSGRenderShadowMap> shadowMapManager;
+    std::shared_ptr<QSSGRenderShadowMap> shadowMapManager;
     QSSGRenderableObjectList shadowPassObjects;
     QSSGShaderLightList globalLights;
     QSSGRenderCamera *camera = nullptr;
@@ -79,7 +79,7 @@ public:
     Type passType() const final { return Type::PreMain; }
     void release() final;
 
-    QSSGRef<QSSGRenderReflectionMap> reflectionMapManager;
+    std::shared_ptr<QSSGRenderReflectionMap> reflectionMapManager;
     QVector<QSSGRenderReflectionProbe *> reflectionProbes;
     QSSGRenderableObjectList reflectionPassObjects;
     QSSGRhiGraphicsPipelineState ps;

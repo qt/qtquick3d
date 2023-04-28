@@ -1518,8 +1518,7 @@ void QSSGLayerRenderData::prepareResourceLoaders()
 void QSSGLayerRenderData::prepareReflectionProbesForRender()
 {
     const auto probeCount = reflectionProbes.size();
-    if (!reflectionMapManager)
-        reflectionMapManager = new QSSGRenderReflectionMap(*renderer->contextInterface());
+    requestReflectionMapManager(); // ensure that we have a reflection map manager
 
     for (int i = 0; i < probeCount; i++) {
         QSSGRenderReflectionProbe* probe = reflectionProbes.at(i);
@@ -1858,8 +1857,7 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     if (shadowMapCount > 0) { // Setup Shadow Maps Entries for Lights casting shadows
-        if (!shadowMapManager)
-            shadowMapManager = new QSSGRenderShadowMap(*renderer->contextInterface());
+        requestShadowMapManager(); // Ensure we have a shadow map manager
 
         for (int i = 0, end = renderableLights.size(); i != end; ++i) {
             const auto &shaderLight = renderableLights.at(i);
@@ -2286,6 +2284,20 @@ void QSSGLayerRenderData::maybeBakeLightmap()
     }
 
     interactiveLightmapBakingRequested = false;
+}
+
+const QSSGRenderShadowMapPtr &QSSGLayerRenderData::requestShadowMapManager()
+{
+    if (!shadowMapManager && QSSG_GUARD(renderer && renderer->contextInterface()))
+        shadowMapManager.reset(new QSSGRenderShadowMap(*renderer->contextInterface()));
+    return shadowMapManager;
+}
+
+const QSSGRenderReflectionMapPtr &QSSGLayerRenderData::requestReflectionMapManager()
+{
+    if (!reflectionMapManager && QSSG_GUARD(renderer && renderer->contextInterface()))
+        reflectionMapManager.reset(new QSSGRenderReflectionMap(*renderer->contextInterface()));
+    return reflectionMapManager;
 }
 
 QT_END_NAMESPACE

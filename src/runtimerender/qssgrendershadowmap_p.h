@@ -78,12 +78,12 @@ struct QSSGShadowMapEntry
 class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderShadowMap
 {
     typedef QVector<QSSGShadowMapEntry> TShadowMapEntryList;
+    Q_DISABLE_COPY(QSSGRenderShadowMap)
 
 public:
-    QAtomicInt ref;
     const QSSGRenderContextInterface &m_context;
 
-    QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext);
+    explicit QSSGRenderShadowMap(const QSSGRenderContextInterface &inContext);
     ~QSSGRenderShadowMap();
     void releaseCachedResources();
 
@@ -101,7 +101,7 @@ private:
     TShadowMapEntryList m_shadowMapList;
 };
 
-using QSSGRenderShadowMapPtr = QSSGRef<QSSGRenderShadowMap>;
+using QSSGRenderShadowMapPtr = std::shared_ptr<QSSGRenderShadowMap>;
 
 QT_END_NAMESPACE
 

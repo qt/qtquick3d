@@ -313,9 +313,6 @@ public:
     bool tooManyShadowLightsWarningShown = false;
     bool particlesNotSupportedWarningShown = false;
 
-    QSSGRenderShadowMapPtr shadowMapManager;
-    QSSGRenderReflectionMapPtr reflectionMapManager;
-
     QSSGLightmapper *m_lightmapper = nullptr;
 
     QSSGShaderFeatures getShaderFeatures() const { return features; }
@@ -326,10 +323,19 @@ public:
 
     bool plainSkyBoxPrepared = false;
 
+    // Temp. API. Ideally there shouldn't be a reason for anyone to hold onto these,
+    // but we follow the existing pattern for now.
+    const QSSGRenderShadowMapPtr &requestShadowMapManager();
+    const QSSGRenderReflectionMapPtr &requestReflectionMapManager();
+    const QSSGRenderShadowMapPtr &getShadowMapManager() const { return shadowMapManager; }
+    const QSSGRenderReflectionMapPtr &getReflectionMapManager() const { return reflectionMapManager; }
+
 private:
     void updateSortedDepthObjectsListImp();
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
+    QSSGRenderShadowMapPtr shadowMapManager;
+    QSSGRenderReflectionMapPtr reflectionMapManager;
 };
 
 QT_END_NAMESPACE
