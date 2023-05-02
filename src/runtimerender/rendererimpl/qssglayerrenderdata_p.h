@@ -199,9 +199,6 @@ public:
     using RenderableNodeEntries = QVector<QSSGRenderableNodeEntry>;
     using RenderableItem2DEntries = QVector<QSSGRenderItem2D *>;
 
-    void rhiPrepare();
-    void rhiRender();
-
     QSSGShaderDefaultMaterialKey generateLightingKey(QSSGRenderDefaultMaterial::MaterialLighting inLightingType,
                                                      const QSSGShaderLightListView &lights, bool receivesShadows = true);
 
