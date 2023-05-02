@@ -607,7 +607,6 @@ QVector<QPair<float, QVector<quint32>>> generateMeshLevelsOfDetail(QVector<Verte
                         // Don't test against the current face under test
                         newNormal += faceNormal;
                     } else {
-                        const quint32 index2 = newIndexes[positionIndex2];
                         const QVector3D &faceNormal2 = faceNormals[positionIndex2];
                         if (QVector3D::dotProduct(faceNormal2, faceNormal) >= normalMergeThreshold)
                             newNormal += faceNormal2;
