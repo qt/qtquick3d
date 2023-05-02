@@ -374,7 +374,7 @@ MetaInfo {
          }
 
         ItemLibraryEntry {
-            name: "Attractor"
+            name: "Attractor System"
             category: "Qt Quick 3D Particle System Templates"
             libraryIcon: "images/particle-system-24px.png"
             version: "6.2"
