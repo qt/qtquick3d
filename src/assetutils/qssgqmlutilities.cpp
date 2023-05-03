@@ -967,26 +967,21 @@ static ValueToQmlResult valueToQml(const QSSGSceneDesc::Node &target, const QSSG
     } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::NodeList *>()) {
         const auto *list = qvariant_cast<QSSGSceneDesc::NodeList *>(value);
         if (list->count > 0) {
-            const bool useBrackets = (list->count > 1);
-
             const QString indentStr = indentString(output);
             QSSGQmlScopedIndent scopedIndent(output);
             const QString listIndentStr = indentString(output);
 
             QString str;
-            if (useBrackets)
-                str.append(u"[\n");
+            str.append(u"[\n");
 
             for (int i = 0, end = list->count; i != end; ++i) {
                 if (i != 0)
                         str.append(u",\n");
-                if (useBrackets)
-                        str.append(listIndentStr);
+                str.append(listIndentStr);
                 str.append(getIdForNode(*(list->head[i])));
             }
 
-            if (useBrackets)
-                str.append(u'\n' + indentStr + u']');
+            str.append(u'\n' + indentStr + u']');
 
             result.value = str;
             result.ok = true;
@@ -994,15 +989,12 @@ static ValueToQmlResult valueToQml(const QSSGSceneDesc::Node &target, const QSSG
     } else if (value.metaType().id() == qMetaTypeId<QSSGSceneDesc::ListView *>()) {
         const auto &list = *qvariant_cast<QSSGSceneDesc::ListView *>(value);
         if (list.count > 0) {
-            const bool useBrackets = (list.count > 1);
-
             const QString indentStr = indentString(output);
             QSSGQmlScopedIndent scopedIndent(output);
             const QString listIndentStr = indentString(output);
 
             QString str;
-            if (useBrackets)
-                str.append(u"[\n");
+            str.append(u"[\n");
 
             char *vptr = reinterpret_cast<char *>(list.data);
             auto size = list.mt.sizeOf();
@@ -1016,13 +1008,11 @@ static ValueToQmlResult valueToQml(const QSSGSceneDesc::Node &target, const QSSG
                 if (valueString.isEmpty())
                         valueString = asString(var);
 
-                if (useBrackets)
-                        str.append(listIndentStr);
+                str.append(listIndentStr);
                 str.append(valueString);
             }
 
-            if (useBrackets)
-                str.append(u'\n' + indentStr + u']');
+            str.append(u'\n' + indentStr + u']');
 
             result.value = str;
             result.ok = true;
