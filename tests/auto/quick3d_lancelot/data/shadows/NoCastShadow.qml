@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick3D
 
-Window {
+Item {
     width: 640
     height: 480
     visible: true
