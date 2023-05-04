@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick3D
 
-Window {
+Item {
     id: window
     width: 600
     height: 800
