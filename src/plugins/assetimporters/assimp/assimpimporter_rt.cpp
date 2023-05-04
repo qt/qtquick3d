@@ -1750,6 +1750,8 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
         auto &channels = targetAnimation.channels;
         qreal freq = qFuzzyIsNull(srcAnim.mTicksPerSecond) ? 1.0
                                         : 1000.0 / srcAnim.mTicksPerSecond;
+        targetAnimation.framesPerSecond = srcAnim.mTicksPerSecond;
+        targetAnimation.name = fromAiString(srcAnim.mName);
         // Process property channels
         for (It i = 0, end = srcAnim.mNumChannels; i != end; ++i) {
             const auto &srcChannel = *srcAnim.mChannels[i];

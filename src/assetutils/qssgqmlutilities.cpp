@@ -1099,6 +1099,13 @@ static void writeNodeProperties(const QSSGSceneDesc::Node &node, OutputContext &
 
     indent(output) << u"id: "_s << getIdForNode(node) << u'\n';
 
+    // Set Object Name if one exists
+    if (node.name.size()) {
+        const QString objectName = QString::fromLocal8Bit(node.name);
+        if (!objectName.startsWith(u'*'))
+            indent(output) << u"objectName: \""_s << node.name << u"\"\n"_s;
+    }
+
     const auto &properties = node.properties;
     auto it = properties.begin();
     const auto end = properties.end();
@@ -1462,6 +1469,9 @@ void writeQmlForAnimation(const QSSGSceneDesc::Animation &anim, qsizetype index,
     QSSGQmlScopedIndent scopedIndent(output);
     // The duration property of the TimelineAnimation is an int...
     const int duration = qCeil(anim.length);
+    indent(output) << "id: " << sanitizeQmlId(QString::fromLocal8Bit(anim.name)) << "\n";
+    indent(output) << "objectName: \"" << anim.name << "\"\n";
+    indent(output) << "property real framesPerSecond: " << anim.framesPerSecond << "\n";
     indent(output) << "startFrame: 0\n";
     indent(output) << "endFrame: " << duration << "\n";
     indent(output) << "currentFrame: 0\n";
@@ -1616,6 +1626,7 @@ void createTimelineAnimation(const QSSGSceneDesc::Animation &anim, QObject *pare
     timeline->setEnabled(isEnabled);
 
     auto timelineAnimation = new QQuickTimelineAnimation(timeline);
+    timelineAnimation->setObjectName(anim.name);
     timelineAnimation->setDuration(int(anim.length));
     timelineAnimation->setFrom(0.0f);
     timelineAnimation->setTo(anim.length);

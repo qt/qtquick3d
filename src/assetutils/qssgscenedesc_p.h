@@ -383,6 +383,10 @@ struct Animation
     // an animation will have the same KeyType and it will be a type of
     // the length
     float length = 0.0f;
+
+    float framesPerSecond = 0.0f; // for translation back to frames
+
+    QByteArray name;
 };
 
 // Add a child node to parent node.
