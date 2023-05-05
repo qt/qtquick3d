@@ -15,21 +15,27 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
 #include <QtQuick3DRuntimeRender/private/qssgrendernode_p.h>
+#include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 
 QT_BEGIN_NAMESPACE
 
+class QSSGRenderTextureData;
+
 struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkeleton : public QSSGRenderNode
 {
+    explicit QSSGRenderSkeleton();
+    ~QSSGRenderSkeleton();
     Q_DISABLE_COPY(QSSGRenderSkeleton)
 
     int maxIndex = -1;
 
     bool boneTransformsDirty = false;
-
-    QSSGRenderSkeleton();
-    ~QSSGRenderSkeleton();
+    bool skinningDirty = false;
+    bool containsNonJointNodes = false;
+    QByteArray boneData;
+    QSSGRenderTextureData boneTexData;
+    quint32 boneCount = 0;
 };
 QT_END_NAMESPACE
 

@@ -123,7 +123,7 @@ qsizetype QSSGLayerRenderData::frustumCullingInline(const QSSGClippingFrustum &c
     return lhs.cameraDistanceSq > rhs.cameraDistanceSq;
 }
 
-static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNode, const QVector<QMatrix4x4> &poses)
+static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderSkeleton *skeletonNode, const QVector<QMatrix4x4> &poses)
 {
     if (node->type == QSSGRenderGraphObject::Type::Joint) {
         QSSGRenderJoint *jointNode = static_cast<QSSGRenderJoint *>(node);
@@ -132,18 +132,18 @@ static void collectBoneTransforms(QSSGRenderNode *node, QSSGRenderModel *modelNo
         // if user doesn't give the inverseBindPose, identity matrices are used.
         if (poses.size() > jointNode->index)
             globalTrans *= poses[jointNode->index];
-        memcpy(modelNode->boneData.data() + POS4BONETRANS(jointNode->index),
+        memcpy(skeletonNode->boneData.data() + POS4BONETRANS(jointNode->index),
                reinterpret_cast<const void *>(globalTrans.constData()),
                sizeof(float) * 16);
         // only upper 3x3 is meaningful
-        memcpy(modelNode->boneData.data() + POS4BONENORM(jointNode->index),
+        memcpy(skeletonNode->boneData.data() + POS4BONENORM(jointNode->index),
                reinterpret_cast<const void *>(QMatrix4x4(globalTrans.normalMatrix()).constData()),
                sizeof(float) * 11);
     } else {
-        modelNode->skeletonContainsNonJointNodes = true;
+        skeletonNode->containsNonJointNodes = true;
     }
     for (auto &child : node->children)
-        collectBoneTransforms(&child, modelNode, poses);
+        collectBoneTransforms(&child, skeletonNode, poses);
 }
 
 static bool hasDirtyNonJointNodes(QSSGRenderNode *node, bool &hasChildJoints)
@@ -990,41 +990,6 @@ void QSSGLayerRenderData::prepareModelMeshesForRender(const QSSGRenderContextInt
     bufferManager->commitBufferResourceUpdates();
 }
 
-void QSSGLayerRenderData::prepareModelBoneTextures(const QSSGRenderContextInterface &contextInterface,
-                                                   const RenderableNodeEntries &renderableModels)
-{
-    const auto &rhiCtx = contextInterface.rhiContext();
-
-    { // 2. Ensure texture for the bone texture
-        for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
-            const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
-            // Prepare boneTexture for skinning
-            // NOTE: In the future the boneTexture should not be stored in the render model but in the model context.
-            if (!model.boneData.isEmpty()) {
-                const int boneTexWidth = qCeil(qSqrt(model.boneCount * 4 * 2));
-                const QSize texSize(boneTexWidth, boneTexWidth);
-                if (!model.boneTexture) {
-                    model.boneTexture = rhiCtx->rhi()->newTexture(QRhiTexture::RGBA32F, texSize);
-                    model.boneTexture->setName(QByteArrayLiteral("Bone texture"));
-                    model.boneTexture->create();
-                    rhiCtx->registerTexture(model.boneTexture);
-                } else if (model.boneTexture->pixelSize() != texSize) {
-                    model.boneTexture->setPixelSize(texSize);
-                    model.boneTexture->create();
-                }
-                // Make sure boneData is the same size as the destination texture
-                const int textureSizeInBytes = boneTexWidth * boneTexWidth * 16; //NB: Assumes RGBA32F set above (16 bytes per color)
-                if (textureSizeInBytes != model.boneData.size())
-                    const_cast<QSSGRenderModel &>(model).boneData.resize(textureSizeInBytes);
-            } else if (model.boneTexture) {
-                // This model had a skin but it was removed
-                rhiCtx->releaseTexture(model.boneTexture);
-                model.boneTexture = nullptr;
-            }
-        }
-    }
-}
-
 // inModel is const to emphasize the fact that its members cannot be written
 // here: in case there is a scene shared between multiple View3Ds in different
 // QQuickWindows, each window may run this in their own render thread, while
@@ -1056,6 +1021,16 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
         const auto meshSubsetCount = meshSubsets.size();
         theModelContext.subsets = RENDER_FRAME_NEW_BUFFER<QSSGSubsetRenderable>(contextInterface, meshSubsetCount);
 
+        // Prepare boneTexture for skinning
+        if (model.skin) {
+            auto boneTexture = bufferManager->loadSkinmap(model.skin);
+            theModelContext.boneTexture = boneTexture.m_texture;
+        } else if (model.skeleton) {
+            auto boneTexture = bufferManager->loadSkinmap(&(model.skeleton->boneTexData));
+            theModelContext.boneTexture = boneTexture.m_texture;
+        } else {
+            theModelContext.boneTexture = nullptr;
+        }
 
         // many renderableFlags are the same for all the subsets
         QSSGRenderableObjectFlags renderableFlagsForModel;
@@ -1331,7 +1306,9 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, usesBlendParticles);
 
                 // Skin
-                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, model.boneCount);
+                const auto boneCount = model.skin ? model.skin->boneCount :
+                                                    model.skeleton ? model.skeleton->boneCount : 0;
+                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneCount);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
                 // Instancing
@@ -1387,7 +1364,9 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                     renderer->defaultMaterialShaderKeyProperties().m_blendParticles.setValue(theGeneratedKey, false);
 
                 // Skin
-                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, model.boneCount);
+                const auto boneCount = model.skin ? model.skin->boneCount :
+                                                    model.skeleton ? model.skeleton->boneCount : 0;
+                renderer->defaultMaterialShaderKeyProperties().m_boneCount.setValue(theGeneratedKey, boneCount);
                 renderer->defaultMaterialShaderKeyProperties().m_usesFloatJointIndices.setValue(
                         theGeneratedKey, !rhiCtx->rhi()->isFeatureSupported(QRhi::IntAttributes));
 
@@ -1643,31 +1622,28 @@ void updateDirtySkeletons(const QVector<QSSGRenderableNodeEntry> &renderableNode
             auto modelNode = static_cast<QSSGRenderModel *>(node.node);
             auto skeletonNode = modelNode->skeleton;
             bool hcj = false;
-            if (modelNode->skin) {
-                modelNode->boneData = modelNode->skin->boneData;
-                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
-            } else if (skeletonNode) {
+            if (skeletonNode) {
                 const bool dirtySkeleton = dirtySkeletons.contains(skeletonNode);
-                const bool hasDirtyNonJoints = (modelNode->skeletonContainsNonJointNodes
+                const bool hasDirtyNonJoints = (skeletonNode->containsNonJointNodes
                                                 && (hasDirtyNonJointNodes(skeletonNode, hcj) || dirtySkeleton));
                 const bool dirtyTransform = skeletonNode->isDirty(QSSGRenderNode::DirtyFlag::TransformDirty);
-                if (modelNode->skinningDirty || hasDirtyNonJoints || dirtyTransform) {
+                if (skeletonNode->skinningDirty || hasDirtyNonJoints || dirtyTransform) {
                     skeletonNode->boneTransformsDirty = false;
                     if (hasDirtyNonJoints && !dirtySkeleton)
                         dirtySkeletons.insert(skeletonNode);
-                    modelNode->skinningDirty = false;
+                    skeletonNode->skinningDirty = false;
                     const qsizetype dataSize = BONEDATASIZE4ID(skeletonNode->maxIndex);
-                    if (modelNode->boneData.size() < dataSize)
-                        modelNode->boneData.resize(dataSize);
+                    if (skeletonNode->boneData.size() < dataSize)
+                        skeletonNode->boneData.resize(dataSize);
                     skeletonNode->calculateGlobalVariables();
-                    modelNode->skeletonContainsNonJointNodes = false;
+                    skeletonNode->containsNonJointNodes = false;
                     for (auto &child : skeletonNode->children)
-                        collectBoneTransforms(&child, modelNode, modelNode->inverseBindPoses);
+                        collectBoneTransforms(&child, skeletonNode, modelNode->inverseBindPoses);
                 }
-                modelNode->boneCount = modelNode->boneData.size() / 2 / 4 / 16;
-            } else {
-                modelNode->boneData.clear();
-                modelNode->boneCount = 0;
+                skeletonNode->boneCount = skeletonNode->boneData.size() / 2 / 4 / 16;
+                const int boneTexWidth = qCeil(qSqrt(skeletonNode->boneCount * 4 * 2));
+                skeletonNode->boneTexData.setSize(QSize(boneTexWidth, boneTexWidth));
+                skeletonNode->boneTexData.setTextureData(skeletonNode->boneData);
             }
             const int numMorphTarget = modelNode->morphTargets.size();
             for (int i = 0; i < numMorphTarget; ++i) {
@@ -1998,11 +1974,8 @@ void QSSGLayerRenderData::prepareForRender()
 
     const QSSGCameraData &cameraData = getCameraDirectionAndPosition();
 
-    // 1. Ensure meshes for models
+    // Ensure meshes for models
     prepareModelMeshesForRender(*renderer->contextInterface(), renderableModels, renderer->isGlobalPickingEnabled());
-
-    // 2. Ensure bone textures (we should be able to skip this if we now it's not needed...)
-    prepareModelBoneTextures(*renderer->contextInterface(), renderableModels);
 
     wasDirty |= prepareModelForRender(renderableModels, viewProjection, thePrepResult.flags, cameraData, meshLodThreshold);
     if (particlesEnabled)

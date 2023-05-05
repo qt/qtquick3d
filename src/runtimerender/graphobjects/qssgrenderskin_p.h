@@ -15,20 +15,18 @@
 // We mean it.
 //
 
-#include <QtQuick3DRuntimeRender/private/qssgrendergraphobject_p.h>
-
-#include <QtCore/QVector>
-#include <QtGui/QMatrix4x4>
+#include <QtQuick3DRuntimeRender/private/qssgrendertexturedata_p.h>
 
 QT_BEGIN_NAMESPACE
 
-struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkin : public QSSGRenderGraphObject
+struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderSkin : public QSSGRenderTextureData
 {
-    QSSGRenderSkin();
+    explicit QSSGRenderSkin();
     ~QSSGRenderSkin() override;
     Q_DISABLE_COPY(QSSGRenderSkin)
 
-    QByteArray boneData;
+    QByteArray &boneData();
+    quint32 boneCount = 0;
 };
 QT_END_NAMESPACE
 

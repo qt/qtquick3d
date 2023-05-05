@@ -49,10 +49,9 @@ QQuick3DSkeleton::~QQuick3DSkeleton()
 
 QSSGRenderGraphObject *QQuick3DSkeleton::updateSpatialNode(QSSGRenderGraphObject *node)
 {
-    if (!node) {
+    if (!node)
         node = new QSSGRenderSkeleton();
-        emit skeletonNodeDirty();
-    }
+
     QQuick3DNode::updateSpatialNode(node);
 
     auto skeletonNode = static_cast<QSSGRenderSkeleton *>(node);

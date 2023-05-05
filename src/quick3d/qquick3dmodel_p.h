@@ -222,7 +222,6 @@ private:
     QQuick3DInstancing *m_instancing = nullptr;
     QQuick3DNode *m_instanceRoot = nullptr;
     QMetaObject::Connection m_geometryConnection;
-    QMetaObject::Connection m_skeletonConnection;
     QMetaObject::Connection m_instancingConnection;
     float m_depthBias = 0.0f;
     bool m_castsShadows = true;

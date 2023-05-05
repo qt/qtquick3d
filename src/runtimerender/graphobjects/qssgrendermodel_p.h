@@ -45,11 +45,6 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderModel : public QSSGRenderNode
     float m_depthBiasSq = 0.0f; // Depth bias is expected to be squared!
     bool castsShadows = true;
     bool receivesShadows = true;
-    bool skinningDirty = false;
-    bool skeletonContainsNonJointNodes = false;
-    QByteArray boneData;
-    mutable QRhiTexture *boneTexture = nullptr;
-    quint32 boneCount = 0;
     float instancingLodMin = -1;
     float instancingLodMax = -1;
 

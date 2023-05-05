@@ -290,6 +290,11 @@ QSSGRenderImageTexture QSSGBufferManager::loadLightmap(const QSSGRenderModel &mo
     return result;
 }
 
+QSSGRenderImageTexture QSSGBufferManager::loadSkinmap(QSSGRenderTextureData *skin)
+{
+    return loadTextureData(skin, MipModeDisable);
+}
+
 QSSGRenderMesh *QSSGBufferManager::getMeshForPicking(const QSSGRenderModel &model) const
 {
     if (!model.meshPath.isNull()) {

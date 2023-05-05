@@ -6,12 +6,18 @@
 QT_BEGIN_NAMESPACE
 
 QSSGRenderSkin::QSSGRenderSkin()
-    : QSSGRenderGraphObject(QSSGRenderGraphObject::Type::Skin)
+    : QSSGRenderTextureData(QSSGRenderGraphObject::Type::Skin)
 {
+    setFormat(QSSGRenderTextureFormat::RGBA32F);
 }
 
 QSSGRenderSkin::~QSSGRenderSkin()
 {
+}
+
+QByteArray &QSSGRenderSkin::boneData()
+{
+    return m_textureData;
 }
 
 QT_END_NAMESPACE
