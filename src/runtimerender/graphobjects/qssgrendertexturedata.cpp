@@ -11,6 +11,12 @@ QSSGRenderTextureData::QSSGRenderTextureData()
 
 }
 
+QSSGRenderTextureData::QSSGRenderTextureData(QSSGRenderGraphObject::Type type)
+    : QSSGRenderGraphObject(type)
+{
+
+}
+
 QSSGRenderTextureData::~QSSGRenderTextureData()
 {
 

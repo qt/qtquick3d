@@ -28,6 +28,8 @@ class Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderTextureData : public QSSGRenderGra
 {
 public:
     explicit QSSGRenderTextureData();
+    // it's specially used for Type::Skin
+    explicit QSSGRenderTextureData(QSSGRenderGraphObject::Type inType);
     virtual ~QSSGRenderTextureData();
 
     const QByteArray &textureData() const;

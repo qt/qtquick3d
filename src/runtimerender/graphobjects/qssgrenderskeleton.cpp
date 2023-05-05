@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 QSSGRenderSkeleton::QSSGRenderSkeleton()
     : QSSGRenderNode(QSSGRenderGraphObject::Type::Skeleton)
 {
+    boneTexData.setFormat(QSSGRenderTextureFormat::RGBA32F);
 }
 
 QSSGRenderSkeleton::~QSSGRenderSkeleton() = default;

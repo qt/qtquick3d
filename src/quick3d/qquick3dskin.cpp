@@ -219,7 +219,12 @@ QSSGRenderGraphObject *QQuick3DSkin::updateSpatialNode(QSSGRenderGraphObject *no
 
     if (m_dirty) {
         m_dirty = false;
-        skinNode->boneData = m_boneData;
+        const int boneTexWidth = qCeil(qSqrt(m_joints.size() * 4 * 2));
+        const int textureSizeInBytes = boneTexWidth * boneTexWidth * 16;  //NB: Assumes RGBA32F set above (16 bytes per color)
+        m_boneData.resize(textureSizeInBytes);
+        skinNode->setSize(QSize(boneTexWidth, boneTexWidth));
+        skinNode->setTextureData(m_boneData);
+        skinNode->boneCount = m_joints.size();
     }
 
     return node;

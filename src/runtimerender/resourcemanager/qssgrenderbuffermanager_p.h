@@ -40,6 +40,7 @@ struct QSSGRenderModel;
 struct QSSGRenderImage;
 struct QSSGRenderResourceLoader;
 struct QSSGRenderLayer;
+struct QSSGRenderSkin;
 
 // There is one QSSGBufferManager per QSSGRenderContextInterface, and so per
 // QQuickWindow, and by extension, per scenegraph render thread. This is
@@ -128,6 +129,7 @@ public:
                                            MipMode inMipMode = MipModeFollowRenderImage,
                                            LoadRenderImageFlags flags = LoadWithFlippedY);
     QSSGRenderImageTexture loadLightmap(const QSSGRenderModel &model);
+    QSSGRenderImageTexture loadSkinmap(QSSGRenderTextureData *skin);
 
     QSSGRenderMesh *getMeshForPicking(const QSSGRenderModel &model) const;
     QSSGBounds3 getModelBounds(const QSSGRenderModel *model) const;

@@ -104,11 +104,21 @@ void QQuick3DJoint::setSkeletonRoot(QQuick3DSkeleton *skeleton)
     if (skeleton == m_skeletonRoot)
         return;
 
-    disconnect(m_skeletonConnection);
-    m_skeletonRootDirty = true;
+    QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DJoint::setSkeletonRoot, skeleton, m_skeletonRoot);
+    if (m_skeletonRoot)
+        QObject::disconnect(m_skeletonConnection);
+
     m_skeletonRoot = skeleton;
-    m_skeletonConnection = connect(this, &QQuick3DJoint::sceneTransformChanged,
-                                   m_skeletonRoot, &QQuick3DSkeleton::skeletonNodeDirty);
+
+    if (m_skeletonRoot) {
+        m_skeletonConnection = connect(this, &QQuick3DJoint::sceneTransformChanged,
+                                       skeleton, [skeleton]() {
+                                   auto skeletonNode = static_cast<QSSGRenderSkeleton *>(QQuick3DNodePrivate::get(skeleton)->spatialNode);
+                                   if (skeletonNode)
+                                       skeletonNode->skinningDirty = true;
+                                });
+    }
+    m_skeletonRootDirty = true;
     emit skeletonRootChanged();
 }
 

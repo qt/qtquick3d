@@ -275,7 +275,7 @@ bool QSSGLightmapperPrivate::commitGeometry()
                                                                  arg(lm.model->debugObjectName));
             return false;
         }
-        if (lm.model->boneCount > 0) {
+        if (lm.model->skin || lm.model->skeleton) {
             sendOutputInfo(QSSGLightmapper::BakingStatus::Warning, QStringLiteral("Skinned models not supported: %1").
                                                                  arg(lm.model->debugObjectName));
             return false;

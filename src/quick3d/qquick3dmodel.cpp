@@ -110,7 +110,6 @@ QQuick3DModel::QQuick3DModel(QQuick3DNode *parent)
 
 QQuick3DModel::~QQuick3DModel()
 {
-    disconnect(m_skeletonConnection);
     disconnect(m_geometryConnection);
 
     auto matList = materials();
@@ -609,17 +608,8 @@ void QQuick3DModel::setSkeleton(QQuick3DSkeleton *skeleton)
     // Make sure to disconnect if the skeleton gets deleted out from under us
     QQuick3DObjectPrivate::attachWatcher(this, &QQuick3DModel::setSkeleton, skeleton, m_skeleton);
 
-    if (m_skeleton)
-        QObject::disconnect(m_skeletonConnection);
     m_skeleton = skeleton;
-    if (m_skeleton) {
-        m_skeletonConnection
-                = QObject::connect(m_skeleton, &QQuick3DSkeleton::skeletonNodeDirty, [this]() {
-            auto modelNode = static_cast<QSSGRenderModel *>(QQuick3DNodePrivate::get(this)->spatialNode);
-            if (modelNode)
-                modelNode->skinningDirty = true;
-        });
-    }
+
     emit skeletonChanged();
     markDirty(SkeletonDirty);
 }
@@ -879,11 +869,13 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
     }
 
     if (m_dirtyAttributes & SkeletonDirty) {
-        modelNode->skinningDirty = true;
-        if (m_skeleton)
+        if (m_skeleton) {
             modelNode->skeleton = static_cast<QSSGRenderSkeleton *>(QQuick3DObjectPrivate::get(m_skeleton)->spatialNode);
-        else
+            if (modelNode->skeleton)
+                modelNode->skeleton->skinningDirty = true;
+        } else {
             modelNode->skeleton = nullptr;
+        }
     }
 
     if (m_dirtyAttributes & SkinDirty) {
@@ -900,7 +892,8 @@ QSSGRenderGraphObject *QQuick3DModel::updateSpatialNode(QSSGRenderGraphObject *n
 
     if (m_dirtyAttributes & PoseDirty) {
         modelNode->inverseBindPoses = m_inverseBindPoses.toVector();
-        modelNode->skinningDirty = true;
+        if (modelNode->skeleton)
+            modelNode->skeleton->skinningDirty = true;
     }
 
     if (m_dirtyAttributes & PropertyDirty) {

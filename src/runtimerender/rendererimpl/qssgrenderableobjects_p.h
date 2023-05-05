@@ -254,16 +254,17 @@ struct QSSGModelContext
     QMatrix4x4 modelViewProjection;
     QMatrix3x3 normalMatrix;
     QRhiTexture *lightmapTexture = nullptr;
+    QRhiTexture *boneTexture = nullptr;
 
     QSSGModelContext(const QSSGRenderModel &inModel, const QMatrix4x4 &inViewProjection) : model(inModel)
     {
         // For skinning, node's global transformation will be ignored and
         // an identity matrix will be used for the normalMatrix
-        if (model.boneCount == 0) {
-            model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
-        } else {
+        if (model.skin || model.skeleton) {
             modelViewProjection = inViewProjection;
             normalMatrix = QMatrix3x3();
+        } else {
+            model.calculateMVPAndNormalMatrix(inViewProjection, modelViewProjection, normalMatrix);
         }
     }
 };
