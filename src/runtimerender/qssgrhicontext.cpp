@@ -1090,6 +1090,11 @@ void QSSGRhiContext::registerMesh(QSSGRenderMesh *mesh)
 
 void QSSGRhiContext::releaseMesh(QSSGRenderMesh *mesh)
 {
+    QSSG_ASSERT(mesh, return);
+    for (auto subset : mesh->subsets) {
+        if (subset.rhi.targetsTexture)
+            releaseTexture(subset.rhi.targetsTexture);
+    }
     m_meshes.remove(mesh);
     delete mesh;
 }
