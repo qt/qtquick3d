@@ -375,14 +375,16 @@ QQuick3DWindowAttachment::QQuick3DWindowAttachment(QQuickWindow *window)
         QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
         QSGRenderContext *rc = wd->context;
         if (QSSG_GUARD_X(rc, "QQuickWindow has no QSGRenderContext, this should not happen")) {
-            // the signal is emitted on the render thread, if there is one
-            connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, this, &QQuick3DWindowAttachment::onReleaseCachedResources);
+            // QSGRenderContext signals are emitted on the render thread, if there is one; use DirectConnection
+            connect(rc, &QSGRenderContext::releaseCachedResourcesRequested, this, &QQuick3DWindowAttachment::onReleaseCachedResources, Qt::DirectConnection);
             connect(rc, &QSGRenderContext::invalidated, this, &QQuick3DWindowAttachment::onReleaseCachedResources, Qt::DirectConnection);
         }
 
         // We put this in the back of the queue to allow any clean-up of resources to happen first.
         connect(window, &QQuickWindow::destroyed, this, &QObject::deleteLater);
+        // afterAnimating is emitted on the main thread.
         connect(window, &QQuickWindow::afterAnimating, this, &QQuick3DWindowAttachment::preSync);
+        // afterFrameEnd is emitted on render thread.
         connect(window, &QQuickWindow::afterFrameEnd, this, &QQuick3DWindowAttachment::cleanupResources, Qt::DirectConnection);
     }
 }
@@ -427,6 +429,7 @@ void QQuick3DWindowAttachment::cleanupResources()
         m_rci->cleanupResources(resourceCleanupQueue);
 }
 
+// Called on the render thread, if there is one
 void QQuick3DWindowAttachment::onReleaseCachedResources()
 {
     if (m_rci)

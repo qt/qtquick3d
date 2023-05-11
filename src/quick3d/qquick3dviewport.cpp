@@ -423,7 +423,9 @@ QQuick3DSceneRenderer *QQuick3DViewport::createRenderer() const
                 rci = std::make_shared<QSSGRenderContextInterface>(rhi);
                 wa->setRci(rci);
 
-                connect(wa, &QQuick3DWindowAttachment::releaseCachedResources, this, &QQuick3DViewport::onReleaseCachedResources);
+                // Use DirectConnection to stay on the render thread, if there is one.
+                connect(wa, &QQuick3DWindowAttachment::releaseCachedResources, this,
+                        &QQuick3DViewport::onReleaseCachedResources, Qt::DirectConnection);
 
             } else {
                 qWarning("The Qt Quick scene is using a rendering method that is not based on QRhi and a 3D graphics API. "
