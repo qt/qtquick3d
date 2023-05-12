@@ -413,11 +413,12 @@ Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, Ar
     return new (ctx.perFrameAllocator().allocate(sizeof(T)))T(std::forward<Args>(args)...);
 }
 
-template <typename T, typename... Args>
-Q_REQUIRED_RESULT inline T *RENDER_FRAME_NEW(QSSGRenderContextInterface &ctx, size_t asize)
+template <typename T>
+Q_REQUIRED_RESULT inline QSSGDataRef<T> RENDER_FRAME_NEW_BUFFER(QSSGRenderContextInterface &ctx, size_t count)
 {
     static_assert(std::is_trivially_destructible_v<T>, "Objects allocated using the per-frame allocator needs to be trivially destructible!");
-    return reinterpret_cast<T *>(ctx.perFrameAllocator().allocate(asize));
+    const size_t asize = sizeof(T) * count;
+    return { reinterpret_cast<T *>(ctx.perFrameAllocator().allocate(asize)), qsizetype(count) };
 }
 
 QSSGShaderDefaultMaterialKey QSSGLayerRenderData::generateLightingKey(
@@ -1908,10 +1909,9 @@ void QSSGLayerRenderData::prepareForRender()
                     // This node has scoped lights, i.e., it's lights differ from the global list
                     // we therefore create a bespoke light list for it. Technically this might be the same for
                     // more then this one node, but the overhead for tracking that is not worth it.
-                    using NodeLights = QSSGShaderLight[16]; // Per-node light list
-                    QSSGShaderLight *customLightList = RENDER_FRAME_NEW<QSSGShaderLight>(*renderer->contextInterface(), sizeof(NodeLights));
-                    std::copy(filteredLights.cbegin(), filteredLights.cend(), customLightList);
-                    theNodeEntry.lights = QSSGDataView(customLightList, filteredLights.size());
+                    auto customLightList = RENDER_FRAME_NEW_BUFFER<QSSGShaderLight>(*renderer->contextInterface(), filteredLights.size());
+                    std::copy(filteredLights.cbegin(), filteredLights.cend(), customLightList.begin());
+                    theNodeEntry.lights = customLightList;
                 }
             }
         };
