@@ -229,6 +229,14 @@ public:
                                                                         const QSSGShaderLightListView &lights,
                                                                         QSSGLayerRenderPreparationResultFlags &ioFlags);
 
+    // Load meshes as needed
+    static void prepareModelMeshesForRender(const QSSGRenderContextInterface &contextInterface,
+                                            RenderableNodeEntries &renderableModels,
+                                            bool globalPickingEnabled);
+
+    static void prepareModelBoneTextures(const QSSGRenderContextInterface &contextInterface,
+                                         const RenderableNodeEntries &renderableModels);
+
     // Helper functions used during PrepareForRender and PrepareAndRender
     // Updates lights with model receivesShadows. Do not pass globalLights.
     bool prepareModelForRender(const RenderableNodeEntries &renderableModels,

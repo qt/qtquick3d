@@ -909,73 +909,71 @@ QSSGDefaultMaterialPreparationResult QSSGLayerRenderData::prepareCustomMaterialF
     return retval;
 }
 
-// inModel is const to emphasize the fact that its members cannot be written
-// here: in case there is a scene shared between multiple View3Ds in different
-// QQuickWindows, each window may run this in their own render thread, while
-// inModel is the same.
-bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &renderableModels,
-                                                const QMatrix4x4 &inViewProjection,
-                                                QSSGLayerRenderPreparationResultFlags &ioFlags,
-                                                const QSSGCameraData &cameraData,
-                                                float lodThreshold)
+void QSSGLayerRenderData::prepareModelMeshesForRender(const QSSGRenderContextInterface &contextInterface,
+                                                      RenderableNodeEntries &renderableModels,
+                                                      bool globalPickingEnabled)
 {
-    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
-    QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
     const auto &bufferManager = contextInterface.bufferManager();
 
-    bool wasDirty = false;
+    const auto originalModelCount = renderableModels.size();
+    auto end = originalModelCount;
 
-    bool blendParticlesEnabled = true;
-    const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
-    const bool supportRgba16f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F);
-    if (!supportRgba32f && !supportRgba16f) {
-        if (!particlesNotSupportedWarningShown)
-            qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
-        particlesNotSupportedWarningShown = true;
-        blendParticlesEnabled = false;
-    }
+    for (int idx = 0; idx < end; ++idx) {
+        // It's up to the BufferManager to employ the appropriate caching mechanisms, so
+        // loadMesh() is expected to be fast if already loaded. Note that preparing
+        // the same QSSGRenderModel in different QQuickWindows (possible when a
+        // scene is shared between View3Ds where the View3Ds belong to different
+        // windows) leads to a different QSSGRenderMesh since the BufferManager is,
+        // very correctly, per window, and so per scenegraph render thread.
 
-    { // 1. Load meshes as needed
-        for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
-            // It's up to the BufferManager to employ the appropriate caching mechanisms, so
-            // loadMesh() is expected to be fast if already loaded. Note that preparing
-            // the same QSSGRenderModel in different QQuickWindows (possible when a
-            // scene is shared between View3Ds where the View3Ds belong to different
-            // windows) leads to a different QSSGRenderMesh since the BufferManager is,
-            // very correctly, per window, and so per scenegraph render thread.
+        const auto &renderable = renderableModels.at(idx);
+        const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
+        // Ensure we have a mesh and at least 1 material
+        if (auto theMesh = bufferManager->loadMesh(&model); theMesh && model.materials.size() > 0) {
+            renderable.mesh = theMesh;
+            // Completely transparent models cannot be pickable.  But models with completely
+            // transparent materials still are.  This allows the artist to control pickability
+            // in a somewhat fine-grained style.
+            const bool canModelBePickable = (model.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
+                    && (globalPickingEnabled
+                        || model.getGlobalState(QSSGRenderModel::GlobalState::Pickable));
+            if (canModelBePickable) {
+                // Check if there is BVH data, if not generate it
+                if (!theMesh->bvh) {
+                    if (!model.meshPath.isNull())
+                        theMesh->bvh = bufferManager->loadMeshBVH(model.meshPath);
+                    else if (model.geometry)
+                        theMesh->bvh = bufferManager->loadMeshBVH(model.geometry);
 
-            const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
-            renderable.mesh = bufferManager->loadMesh(&model);
-            if (auto theMesh = renderable.mesh) {
-                // Completely transparent models cannot be pickable.  But models with completely
-                // transparent materials still are.  This allows the artist to control pickability
-                // in a somewhat fine-grained style.
-                const bool canModelBePickable = (model.globalOpacity > QSSG_RENDER_MINIMUM_RENDER_OPACITY)
-                        && (renderer->isGlobalPickingEnabled()
-                            || model.getGlobalState(QSSGRenderModel::GlobalState::Pickable));
-                if (canModelBePickable) {
-                    // Check if there is BVH data, if not generate it
-                    if (!theMesh->bvh) {
-                        if (!model.meshPath.isNull())
-                            theMesh->bvh = bufferManager->loadMeshBVH(model.meshPath);
-                        else if (model.geometry)
-                            theMesh->bvh = bufferManager->loadMeshBVH(model.geometry);
-
-                        if (theMesh->bvh) {
-                            for (int i = 0; i < theMesh->bvh->roots.size(); ++i)
-                                theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
-                        }
+                    if (theMesh->bvh) {
+                        for (int i = 0; i < theMesh->bvh->roots.size(); ++i)
+                            theMesh->subsets[i].bvhRoot = theMesh->bvh->roots.at(i);
                     }
                 }
             }
+        } else {
+            // Swap current (idx) and last item (--end).
+            // Note, post-decrement idx to ensure we recheck the new current item on next iteration
+            // and pre-decrement the end move the end of the list to not include the culled renderable.
+            renderableModels.swapItemsAt(idx--, --end);
         }
-
-        // Now is the time to kick off the vertex/index buffer updates for all the
-        // new meshes (and their submeshes). This here is the last possible place
-        // to kick this off because the rest of the rendering pipeline will only
-        // see the individual sub-objects as "renderable objects".
-        bufferManager->commitBufferResourceUpdates();
     }
+
+    // Any models without a mesh get dropped right here
+    if (end != originalModelCount)
+        renderableModels.resize(end);
+
+    // Now is the time to kick off the vertex/index buffer updates for all the
+    // new meshes (and their submeshes). This here is the last possible place
+    // to kick this off because the rest of the rendering pipeline will only
+    // see the individual sub-objects as "renderable objects".
+    bufferManager->commitBufferResourceUpdates();
+}
+
+void QSSGLayerRenderData::prepareModelBoneTextures(const QSSGRenderContextInterface &contextInterface,
+                                                   const RenderableNodeEntries &renderableModels)
+{
+    const auto &rhiCtx = contextInterface.rhiContext();
 
     { // 2. Ensure texture for the bone texture
         for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
@@ -1005,14 +1003,40 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
             }
         }
     }
+}
+
+// inModel is const to emphasize the fact that its members cannot be written
+// here: in case there is a scene shared between multiple View3Ds in different
+// QQuickWindows, each window may run this in their own render thread, while
+// inModel is the same.
+bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &renderableModels,
+                                                const QMatrix4x4 &inViewProjection,
+                                                QSSGLayerRenderPreparationResultFlags &ioFlags,
+                                                const QSSGCameraData &cameraData,
+                                                float lodThreshold)
+{
+    const auto &rhiCtx = renderer->contextInterface()->rhiContext();
+    QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
+    const auto &bufferManager = contextInterface.bufferManager();
+
+    bool wasDirty = false;
+
+    bool blendParticlesEnabled = true;
+    const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
+    const bool supportRgba16f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F);
+    if (!supportRgba32f && !supportRgba16f) {
+        if (!particlesNotSupportedWarningShown)
+            qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
+        particlesNotSupportedWarningShown = true;
+        blendParticlesEnabled = false;
+    }
 
     for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
         const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
         const auto &lights = renderable.lights;
         QSSGRenderMesh *theMesh = renderable.mesh;
 
-        if (theMesh == nullptr)
-            continue;
+        QSSG_ASSERT_X(theMesh != nullptr, "Only renderables with a mesh will be processed!", continue);
 
         QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, model, inViewProjection);
         modelContexts.push_back(&theModelContext);
@@ -1968,6 +1992,12 @@ void QSSGLayerRenderData::prepareForRender()
     }
 
     const QSSGCameraData &cameraData = getCameraDirectionAndPosition();
+
+    // 1. Ensure meshes for models
+    prepareModelMeshesForRender(*renderer->contextInterface(), renderableModels, renderer->isGlobalPickingEnabled());
+
+    // 2. Ensure bone textures (we should be able to skip this if we now it's not needed...)
+    prepareModelBoneTextures(*renderer->contextInterface(), renderableModels);
 
     wasDirty |= prepareModelForRender(renderableModels, viewProjection, thePrepResult.flags, cameraData, meshLodThreshold);
     wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
