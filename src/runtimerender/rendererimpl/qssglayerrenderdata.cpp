@@ -1050,12 +1050,18 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 
         QSSGModelContext &theModelContext = *RENDER_FRAME_NEW<QSSGModelContext>(contextInterface, model, inViewProjection);
         modelContexts.push_back(&theModelContext);
+        // We might over-allocate here, as the material list technically can contain an invalid (nullptr) material.
+        // We'll fix that by adjusting the size at the end for now...
+        const auto &meshSubsets = theMesh->subsets;
+        const auto meshSubsetCount = meshSubsets.size();
+        theModelContext.subsets = RENDER_FRAME_NEW_BUFFER<QSSGSubsetRenderable>(contextInterface, meshSubsetCount);
+
 
         // many renderableFlags are the same for all the subsets
         QSSGRenderableObjectFlags renderableFlagsForModel;
 
-        if (theMesh->subsets.size() > 0) {
-            QSSGRenderSubset &theSubset = theMesh->subsets[0];
+        if (meshSubsetCount > 0) {
+            const QSSGRenderSubset &theSubset = meshSubsets.at(0);
 
             renderableFlagsForModel.setCastsShadows(model.castsShadows);
             renderableFlagsForModel.setReceivesShadows(model.receivesShadows);
@@ -1113,25 +1119,22 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 && model.particleBuffer->particleCount();
 
         // Subset(s)
-        for (int idx = 0; idx < theMesh->subsets.size(); ++idx) {
+        auto &renderableSubsets = theModelContext.subsets;
+        const auto &materials = model.materials;
+        const auto materialCount = materials.size();
+        QSSGRenderGraphObject *lastMaterial = !materials.isEmpty() ? materials.last() : nullptr;
+        int idx = 0, subsetIdx = 0;
+        for (; idx < meshSubsetCount; ++idx) {
             // If the materials list < size of subsets, then use the last material for the rest
-            QSSGRenderGraphObject *theMaterialObject = nullptr;
-            if (model.materials.isEmpty())
-                break;
-            if (idx + 1 > model.materials.size())
-                theMaterialObject = model.materials.last();
-            else
-                theMaterialObject = model.materials.at(idx);
+            QSSGRenderGraphObject *theMaterialObject = (idx >= materialCount) ? lastMaterial : materials.at(idx);
+            QSSG_ASSERT_X(theMaterialObject != nullptr, "No material found for model!", continue);
 
-            if (theMaterialObject == nullptr)
-                continue;
-
-            const QSSGRenderSubset &theSubset = theMesh->subsets.at(idx);
+            const QSSGRenderSubset &theSubset = meshSubsets.at(idx);
             QSSGRenderableObjectFlags renderableFlags = renderableFlagsForModel;
             float subsetOpacity = model.globalOpacity;
 
             renderableFlags.setPointsTopology(theSubset.rhi.ia.topology == QRhiGraphicsPipeline::Points);
-            QSSGRenderableObject *theRenderableObject = nullptr;
+            QSSGRenderableObject *theRenderableObject = &renderableSubsets[subsetIdx++];
 
             bool usesInstancing = theModelContext.model.instancing()
                     && rhiCtx->rhi()->isFeatureSupported(QRhi::Instancing);
@@ -1351,19 +1354,18 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 renderer->defaultMaterialShaderKeyProperties().m_targetColorOffset.setValue(theGeneratedKey,
                                         theSubset.rhi.ia.targetOffsets[QSSGRhiInputAssemblerState::ColorSemantic]);
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
-                                                                             QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset,
-                                                                             renderableFlags,
-                                                                             theModelCenter,
-                                                                             renderer,
-                                                                             theSubset,
-                                                                             theModelContext,
-                                                                             subsetOpacity,
-                                                                             subsetLevelOfDetail,
-                                                                             theMaterial,
-                                                                             firstImage,
-                                                                             theGeneratedKey,
-                                                                             lights);
+                new (theRenderableObject) QSSGSubsetRenderable(QSSGSubsetRenderable::Type::DefaultMaterialMeshSubset,
+                                                               renderableFlags,
+                                                               theModelCenter,
+                                                               renderer,
+                                                               theSubset,
+                                                               theModelContext,
+                                                               subsetOpacity,
+                                                               subsetLevelOfDetail,
+                                                               theMaterial,
+                                                               firstImage,
+                                                               theGeneratedKey,
+                                                               lights);
                 wasDirty = wasDirty || renderableFlags.isDirty();
             } else if (theMaterialObject->type == QSSGRenderGraphObject::Type::CustomMaterial) {
                 QSSGRenderCustomMaterial &theMaterial(static_cast<QSSGRenderCustomMaterial &>(*theMaterialObject));
@@ -1414,19 +1416,18 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                 if (theMaterial.m_iblProbe)
                     theMaterial.m_iblProbe->clearDirty();
 
-                theRenderableObject = RENDER_FRAME_NEW<QSSGSubsetRenderable>(contextInterface,
-                                                                             QSSGSubsetRenderable::Type::CustomMaterialMeshSubset,
-                                                                             renderableFlags,
-                                                                             theModelCenter,
-                                                                             renderer,
-                                                                             theSubset,
-                                                                             theModelContext,
-                                                                             subsetOpacity,
-                                                                             subsetLevelOfDetail,
-                                                                             theMaterial,
-                                                                             firstImage,
-                                                                             theGeneratedKey,
-                                                                             lights);
+                new (theRenderableObject) QSSGSubsetRenderable(QSSGSubsetRenderable::Type::CustomMaterialMeshSubset,
+                                                               renderableFlags,
+                                                               theModelCenter,
+                                                               renderer,
+                                                               theSubset,
+                                                               theModelContext,
+                                                               subsetOpacity,
+                                                               subsetLevelOfDetail,
+                                                               theMaterial,
+                                                               firstImage,
+                                                               theGeneratedKey,
+                                                               lights);
             }
             if (theRenderableObject) {
                 if (theRenderableObject->renderableFlags.requiresScreenTexture())
@@ -1440,6 +1441,10 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
                     bakedLightingObjects.push_back({theRenderableObject, getCameraDistanceSq(*theRenderableObject, cameraData)});
             }
         }
+
+        // If the indices don't match then something's off and we need to adjust the subset renderable list size.
+        if (Q_UNLIKELY(idx != subsetIdx))
+            renderableSubsets.mSize = subsetIdx + 1;
 
         if (!bakedLightingObjects.isEmpty())
             bakedLightingModels.push_back(QSSGBakedLightingModel(&model, bakedLightingObjects));

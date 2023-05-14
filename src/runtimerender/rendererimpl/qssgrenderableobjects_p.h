@@ -245,6 +245,8 @@ struct QSSGRenderableObject
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGRenderableObject>::value);
 
+struct QSSGSubsetRenderable;
+
 // Different subsets from the same model will get the same
 // model context so we can generate the MVP and normal matrix once
 // and only once per subset.
@@ -266,6 +268,8 @@ struct QSSGModelContext
             normalMatrix = QMatrix3x3();
         }
     }
+
+    QSSGDataRef<QSSGSubsetRenderable> subsets;
 };
 
 Q_STATIC_ASSERT(std::is_trivially_destructible<QSSGModelContext>::value);
