@@ -50,6 +50,25 @@ Q_LOGGING_CATEGORY(lcQuick3DRender, "qt.quick3d.render");
 #define POS4BONENORM(x)     (sizeof(float) * 16 * ((x) * 2 + 1))
 #define BONEDATASIZE4ID(x)  POS4BONETRANS(x + 1)
 
+static bool checkParticleSupport(QRhi *rhi)
+{
+    QSSG_ASSERT(rhi, return false);
+
+    bool ret = true;
+    const bool supportRgba32f = rhi->isTextureFormatSupported(QRhiTexture::RGBA32F);
+    const bool supportRgba16f = rhi->isTextureFormatSupported(QRhiTexture::RGBA16F);
+    if (!supportRgba32f && !supportRgba16f) {
+        static bool warningShown = false;
+        if (!warningShown) {
+            qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
+            warningShown = true;
+        }
+        ret = false;
+    }
+
+    return ret;
+}
+
 // These are meant to be pixel offsets, so you need to divide them by the width/height
 // of the layer respectively.
 static const QVector2D s_ProgressiveAAVertexOffsets[QSSGLayerRenderData::MAX_AA_LEVELS] = {
@@ -1022,16 +1041,6 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 
     bool wasDirty = false;
 
-    bool blendParticlesEnabled = true;
-    const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
-    const bool supportRgba16f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F);
-    if (!supportRgba32f && !supportRgba16f) {
-        if (!particlesNotSupportedWarningShown)
-            qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
-        particlesNotSupportedWarningShown = true;
-        blendParticlesEnabled = false;
-    }
-
     for (const QSSGRenderableNodeEntry &renderable : renderableModels) {
         const QSSGRenderModel &model = *static_cast<QSSGRenderModel *>(renderable.node);
         const auto &lights = renderable.lights;
@@ -1100,7 +1109,7 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
         }
 
         QSSGRenderableObjectList bakedLightingObjects;
-        bool usesBlendParticles = blendParticlesEnabled && theModelContext.model.particleBuffer != nullptr
+        bool usesBlendParticles = particlesEnabled && theModelContext.model.particleBuffer != nullptr
                 && model.particleBuffer->particleCount();
 
         // Subset(s)
@@ -1442,16 +1451,9 @@ bool QSSGLayerRenderData::prepareModelForRender(const RenderableNodeEntries &ren
 bool QSSGLayerRenderData::prepareParticlesForRender(const RenderableNodeEntries &renderableParticles,
                                                     const QSSGCameraData &cameraData)
 {
+    QSSG_ASSERT(particlesEnabled, return false);
+
     QSSGRenderContextInterface &contextInterface = *renderer->contextInterface();
-    // TODO/NOTE: We probably want to do this at an earlier stage!
-    const bool supportRgba32f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA32F);
-    const bool supportRgba16f = contextInterface.rhiContext()->rhi()->isTextureFormatSupported(QRhiTexture::RGBA16F);
-    if (!supportRgba32f && !supportRgba16f) {
-        if (!particlesNotSupportedWarningShown)
-            qWarning () << "Particles not supported due to missing RGBA32F and RGBA16F texture format support";
-        particlesNotSupportedWarningShown = true;
-        return false;
-    }
 
     bool dirty = false;
 
@@ -2000,7 +2002,8 @@ void QSSGLayerRenderData::prepareForRender()
     prepareModelBoneTextures(*renderer->contextInterface(), renderableModels);
 
     wasDirty |= prepareModelForRender(renderableModels, viewProjection, thePrepResult.flags, cameraData, meshLodThreshold);
-    wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
+    if (particlesEnabled)
+        wasDirty |= prepareParticlesForRender(renderableParticles, cameraData);
     wasDirty |= prepareItem2DsForRender(*renderer->contextInterface(), renderableItem2Ds, viewProjection);
 
     prepareReflectionProbesForRender();
@@ -2143,6 +2146,7 @@ QSSGCameraGlobalCalculationResult QSSGLayerRenderPreparationResult::setupCameraF
 QSSGLayerRenderData::QSSGLayerRenderData(QSSGRenderLayer &inLayer, QSSGRenderer &inRenderer)
     : layer(inLayer)
     , renderer(&inRenderer)
+    , particlesEnabled(checkParticleSupport(inRenderer.contextInterface()->rhi()))
 {
 }
 

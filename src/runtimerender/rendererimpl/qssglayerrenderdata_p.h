@@ -322,7 +322,6 @@ public:
 
     bool tooManyLightsWarningShown = false;
     bool tooManyShadowLightsWarningShown = false;
-    bool particlesNotSupportedWarningShown = false;
 
     QSSGRef<QSSGRenderShadowMap> shadowMapManager;
     QSSGRef<QSSGRenderReflectionMap> reflectionMapManager;
@@ -341,6 +340,7 @@ private:
     void updateSortedDepthObjectsListImp();
     QSSGRhiGraphicsPipelineState ps; // Base pipleline state
     QSSGShaderFeatures features; // Base feature set
+    bool particlesEnabled = true;
 };
 
 QT_END_NAMESPACE
