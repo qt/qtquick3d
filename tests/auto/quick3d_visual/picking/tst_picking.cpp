@@ -170,6 +170,11 @@ void tst_Picking::test_object_picking()
     QQuickItem *item2d = qmlobject_cast<QQuickItem *>(find2DChildIn3DNode(view.data(), "item2dNode", "item2d"));
     QVERIFY(item2d);
 
+    const qreal dpr = view->devicePixelRatio();
+    if (dpr != 1.0) {
+        QSKIP("Test uses window positions to get exact values and those assume DPR of 1.0");
+    }
+
     // Pick nearest based on viewport position
 
     // Center of model1
@@ -299,6 +304,11 @@ void tst_Picking::test_object_picking2()
     QScopedPointer<QQuickView> view(createView(QLatin1String("picking2.qml"), QSize(100, 100)));
     QVERIFY(view);
     QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+
+    const qreal dpr = view->devicePixelRatio();
+    if (dpr != 1.0) {
+        QSKIP("Test uses window positions to get exact values and those assume DPR of 1.0");
+    }
 
     const auto viewSize = view->size();
     const float halfWidth = viewSize.width() * 0.5f;
