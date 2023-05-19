@@ -1897,7 +1897,7 @@ static QString importImp(const QUrl &url, const QJsonObject &options, QSSGSceneD
                     }
                     if (!targetChannel.keys.isEmpty()) {
                         channels.push_back(new Animation::Channel(targetChannel));
-                        float endTime = float(srcMorphChannel.mKeys[weightKeyEnd - 1].mTime);
+                        float endTime = float(srcMorphChannel.mKeys[weightKeyEnd - 1].mTime) * freq;
                         if (targetAnimation.length < endTime)
                             targetAnimation.length = endTime;
                     }
