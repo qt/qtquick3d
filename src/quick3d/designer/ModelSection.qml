@@ -67,6 +67,8 @@ Column {
                     backendValue: backendValues.materials
                     model: backendValues.materials.expressionAsList
                     Layout.fillWidth: true
+                    typeFilter: "QtQuick3D.Material"
+                    textRole: "idAndName"
 
                     onAdd: function(value) { backendValues.materials.idListAdd(value) }
                     onRemove: function(idx) { backendValues.materials.idListRemove(idx) }
