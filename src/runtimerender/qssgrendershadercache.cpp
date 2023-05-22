@@ -457,7 +457,7 @@ QSSGRhiShaderPipelinePtr QSSGShaderCache::compileForRhi(const QByteArray &inKey,
         s_statusCallback(inKey, fragStatus, fragErr, QShader::FragmentStage);
     }
 
-    const auto &result = m_rhiShaders.insert(tempKey, shaders).value();
+    auto result = m_rhiShaders.insert(tempKey, shaders).value();
     if (result && result->vertexStage() && result->fragmentStage()) {
         QQsbCollection::EntryDesc entryDesc = {
             inKey,
