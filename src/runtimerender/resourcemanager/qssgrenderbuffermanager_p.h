@@ -180,7 +180,8 @@ private:
     static QSSGMesh::Mesh loadPrimitive(const QString &inRelativePath);
     enum CreateRhiTextureFlag {
         ScanForTransparency = 0x01,
-        CubeMap = 0x02
+        CubeMap = 0x02,
+        Texture3D = 0x04
     };
     Q_DECLARE_FLAGS(CreateRhiTextureFlags, CreateRhiTextureFlag)
     bool createRhiTexture(QSSGRenderImageTexture &texture,

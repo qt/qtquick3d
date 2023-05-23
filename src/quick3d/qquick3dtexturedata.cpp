@@ -275,6 +275,26 @@ void QQuick3DTextureData::setSize(const QSize &size)
 }
 
 /*!
+    Returns the depth of the texture data in pixels.
+*/
+int QQuick3DTextureData::depth() const
+{
+    const Q_D(QQuick3DTextureData);
+    return d->depth;
+}
+
+/*!
+    Sets the \a depth of the texture data in pixels. Setting the depth above
+    0 means that the texture is handled as a 3D texture.
+*/
+void QQuick3DTextureData::setDepth(int depth)
+{
+    Q_D(QQuick3DTextureData);
+    d->depth = depth;
+    update();
+}
+
+/*!
     Returns the format of the texture data.
 */
 QQuick3DTextureData::Format QQuick3DTextureData::format() const
@@ -428,6 +448,11 @@ QSSGRenderGraphObject *QQuick3DTextureData::updateSpatialNode(QSSGRenderGraphObj
     // Can't use qUpdateIfNeeded unfortunately
     if (d->size != textureData->size()) {
         textureData->setSize(d->size);
+        changed = true;
+    }
+
+    if (d->depth != textureData->depth()) {
+        textureData->setDepth(d->depth);
         changed = true;
     }
 

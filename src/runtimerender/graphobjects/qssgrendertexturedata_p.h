@@ -36,6 +36,9 @@ public:
     QSize size() const;
     void setSize(const QSize &size);
 
+    int depth() const;
+    void setDepth(int depth);
+
     QSSGRenderTextureFormat format() const;
     void setFormat(QSSGRenderTextureFormat format);
 
@@ -53,6 +56,7 @@ protected:
 
     QByteArray m_textureData;
     QSize m_size;
+    int m_depth = 0;
     QSSGRenderTextureFormat m_format = QSSGRenderTextureFormat::Unknown;
     bool m_hasTransparency = false;
     uint32_t m_generationId = 1;

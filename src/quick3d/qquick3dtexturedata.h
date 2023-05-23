@@ -69,6 +69,9 @@ public:
     QSize size() const;
     void setSize(const QSize &size);
 
+    int depth() const;
+    void setDepth(int depth);
+
     Format format() const;
     void setFormat(Format format);
 

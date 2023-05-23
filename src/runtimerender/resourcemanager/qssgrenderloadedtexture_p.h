@@ -53,6 +53,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGLoadedTexture
 public:
     qint32 width = 0;
     qint32 height = 0;
+    qint32 depth = 0;
     qint32 components = 0;
     void *data = nullptr;
     bool ownsData = true;

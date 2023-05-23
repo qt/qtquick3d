@@ -30,6 +30,7 @@ public:
 
     QByteArray textureData;
     QSize size;
+    int depth = 0;
     QQuick3DTextureData::Format format = QQuick3DTextureData::RGBA8;
     bool hasTransparency = false;
     bool textureDataDirty = false;

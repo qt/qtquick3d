@@ -669,6 +669,8 @@ QSSGRenderGraphObject *QQuick3DEffect::updateSpatialNode(QSSGRenderGraphObject *
 
             if (tex && QQuick3DObjectPrivate::get(tex)->type == QQuick3DObjectPrivate::Type::ImageCube)
                 uniforms.append({ QByteArrayLiteral("samplerCube"), name });
+            else if (tex && tex->textureData() && tex->textureData()->depth() > 0)
+                uniforms.append({ QByteArrayLiteral("sampler3D"), name });
             else
                 uniforms.append({ QByteArrayLiteral("sampler2D"), name });
 

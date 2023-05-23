@@ -222,7 +222,10 @@ QSSGRenderImageTexture QSSGBufferManager::loadTextureData(QSSGRenderTextureData 
     if (!data->textureData().isNull()) {
         theLoadedTexture.reset(QSSGLoadedTexture::loadTextureData(data));
         theLoadedTexture->ownsData = false;
-        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, {}, data->debugObjectName)) {
+        CreateRhiTextureFlags rhiTexFlags = {};
+        if (theLoadedTexture->depth > 0)
+            rhiTexFlags |= Texture3D;
+        if (createRhiTexture(theImageData.value().renderImageTexture, theLoadedTexture.data(), inMipMode, rhiTexFlags, data->debugObjectName)) {
 #ifdef QSSG_RENDERBUFFER_DEBUGGING
                 qDebug() << "+ uploadTexture: " << data << currentLayer;
 #endif
@@ -867,6 +870,7 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
     auto *rhi = context->rhi();
     QRhiTexture::Format rhiFormat = QRhiTexture::UnknownFormat;
     QSize size;
+    int depth = 0;
     if (inTexture->format.format == QSSGRenderTextureFormat::Format::RGBE8)
         texture.m_flags.setRgbe8(true);
     if (inMipMode == MipModeBsdf && (inTexture->data || inTexture->textureFileData.isValid())) {
@@ -938,6 +942,21 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
             auto glFormat = tex.glInternalFormat() ? tex.glInternalFormat() : tex.glFormat();
             hasTransp = !QSGCompressedTexture::formatIsOpaque(glFormat);
         }
+    } else if (inFlags.testFlag(Texture3D)) {
+        // 3D textures are currently only setup via QQuick3DTextureData
+        quint32 formatSize = (quint32)inTexture->format.getSizeofFormat();
+        quint32 size2D = inTexture->width * inTexture->height * formatSize;
+        if (inTexture->dataSizeInBytes >= (quint32)(size2D * inTexture->depth)) {
+            size = QSize(inTexture->width, inTexture->height);
+            depth = inTexture->depth;
+            rhiFormat = toRhiFormat(inTexture->format.format);
+            for (int slice = 0; slice < inTexture->depth; ++slice) {
+                QRhiTextureSubresourceUploadDescription sliceUpload((char *)inTexture->data + slice * size2D, size2D);
+                textureUploads << QRhiTextureUploadEntry(slice, 0, sliceUpload);
+            }
+        } else {
+            qWarning() << "Texture size set larger than the data";
+        }
     } else {
         QRhiTextureSubresourceUploadDescription subDesc;
         if (!inTexture->image.isNull()) {
@@ -981,7 +1000,11 @@ bool QSSGBufferManager::createRhiTexture(QSSGRenderImageTexture &texture,
         return false;
     }
 
-    auto *tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
+    QRhiTexture *tex = nullptr;
+    if (inFlags.testFlag(Texture3D) && depth > 0)
+        tex = rhi->newTexture(rhiFormat, size.width(), size.height(), depth, textureSampleCount, textureFlags);
+    else
+        tex = rhi->newTexture(rhiFormat, size, textureSampleCount, textureFlags);
     tex->setName(debugObjectName.toLatin1());
     tex->create();
 

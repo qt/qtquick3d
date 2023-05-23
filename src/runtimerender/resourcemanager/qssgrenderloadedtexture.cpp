@@ -725,13 +725,16 @@ QSSGLoadedTexture *QSSGLoadedTexture::loadTextureData(QSSGRenderTextureData *tex
     const int bytesPerPixel = textureData->format().getSizeofFormat();
     const int bitCount = bytesPerPixel * 8;
     const int pitch = calculatePitch(calculateLine(textureData->size().width(), bitCount));
-    const quint32 dataSize = quint32(textureData->size().height() * pitch);
+    quint32 dataSize = quint32(textureData->size().height() * pitch);
+    if (textureData->depth() > 0)
+        dataSize *= textureData->depth();
     QSSGLoadedTexture *imageData = new QSSGLoadedTexture;
     imageData->dataSizeInBytes = dataSize;
     // We won't modifiy the data, but that is a nasty cast...
     imageData->data = const_cast<void*>(reinterpret_cast<const void*>(textureData->textureData().data()));
     imageData->width = textureData->size().width();
     imageData->height = textureData->size().height();
+    imageData->depth = textureData->depth();
     imageData->format = textureData->format();
     imageData->components = textureData->format().getNumberOfComponent();
 

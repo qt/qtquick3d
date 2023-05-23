@@ -40,6 +40,19 @@ void QSSGRenderTextureData::setSize(const QSize &size)
     markDirty();
 }
 
+int QSSGRenderTextureData::depth() const
+{
+    return m_depth;
+}
+
+void QSSGRenderTextureData::setDepth(int depth)
+{
+    if (m_depth == depth)
+        return;
+    m_depth = depth;
+    markDirty();
+}
+
 QSSGRenderTextureFormat QSSGRenderTextureData::format() const
 {
     return m_format;
