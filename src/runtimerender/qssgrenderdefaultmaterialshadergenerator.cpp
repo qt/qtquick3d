@@ -1920,7 +1920,7 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders.setUniform(ubufData, "qt_viewMatrix", viewMatrix.constData(), 16 * sizeof(float), &cui.viewMatrixIdx);
     }
     if (usesViewProjectionMatrix) {
-        QMatrix4x4 viewProj;
+        QMatrix4x4 viewProj(Qt::Uninitialized);
         inCamera.calculateViewProjectionMatrix(viewProj);
         viewProj = clipSpaceCorrMatrix * viewProj;
         shaders.setUniform(ubufData, "qt_viewProjectionMatrix", viewProj.constData(), 16 * sizeof(float), &cui.viewProjectionMatrixIdx);
@@ -1933,7 +1933,8 @@ void QSSGMaterialShaderGenerator::setRhiMaterialProperties(const QSSGRenderConte
         shaders.setUniform(ubufData, "qt_modelMatrix", inGlobalTransform.constData(), 16 * sizeof(float), &cui.modelMatrixIdx);
 
     if (usesModelViewProjectionMatrix) {
-        const QMatrix4x4 mvp = clipSpaceCorrMatrix * inModelViewProjection;
+        QMatrix4x4 mvp{ clipSpaceCorrMatrix };
+        mvp *= inModelViewProjection;
         shaders.setUniform(ubufData, "qt_modelViewProjection", mvp.constData(), 16 * sizeof(float), &cui.modelViewProjectionIdx);
     }
     if (usesNormalMatrix)

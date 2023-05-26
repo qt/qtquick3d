@@ -131,7 +131,7 @@ struct Q_QUICK3DRUNTIMERENDER_EXPORT QSSGRenderNode : public QSSGRenderGraphObje
                             bool inIncludeChildren = true) const;
     QSSGBounds3 getChildBounds(QSSGBufferManager &inManager) const;
     // Assumes CalculateGlobalVariables has already been called.
-    QVector3D getGlobalPos() const;
+    QVector3D getGlobalPos() const { return QVector3D(globalTransform(0, 3), globalTransform(1, 3), globalTransform(2, 3)); }
     QVector3D getGlobalPivot() const;
     // Pulls the 3rd column out of the global transform.
     QVector3D getDirection() const;

@@ -228,11 +228,6 @@ QSSGBounds3 QSSGRenderNode::getChildBounds(QSSGBufferManager &inManager) const
     return retval;
 }
 
-QVector3D QSSGRenderNode::getGlobalPos() const
-{
-    return QVector3D(globalTransform(0, 3), globalTransform(1, 3), globalTransform(2, 3));
-}
-
 QVector3D QSSGRenderNode::getDirection() const
 {
     const float *dataPtr(globalTransform.data());
